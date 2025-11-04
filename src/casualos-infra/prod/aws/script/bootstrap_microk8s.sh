@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-cat "${launch_config}" > "/var/snap/microk8s/common/.microk8s.yaml"
+echo "${launch_config}" > "/var/snap/microk8s/common/.microk8s.yaml"
 
 sudo snap install microk8s --classic --channel 1.32/stable
 
@@ -12,3 +12,9 @@ until microk8s.status --wait-ready; do
 done
 
 echo "Microk8s is ready!"
+if [ -n "${bootstrap}" ]; then
+    echo "Applying bootstrap..."
+    echo "${bootstrap}" > /var/snap/microk8s/common/bootstrap.yaml
+    microk8s kubectl apply -f /var/snap/microk8s/common/bootstrap.yaml
+    echo "Bootstrap applied!"
+fi

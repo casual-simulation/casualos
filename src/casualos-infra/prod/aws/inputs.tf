@@ -29,6 +29,11 @@ variable "customer" {
     default = "default"
 }
 
+variable "ami_id" {
+    type = string
+    default = "ami-0ecb62995f68bb549" // Ubuntu Server 24.04 LTS Latest Stable AMD64
+}
+
 variable "primary_instance_type" {
     type = string
     default = "t3.micro"

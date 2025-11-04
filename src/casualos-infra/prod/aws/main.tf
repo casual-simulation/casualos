@@ -22,8 +22,28 @@ resource "random_password" "cluster_token" {
     special = false
 }
 
+resource "random_password" "k8s_encryption_secret" {
+    length = 32
+}
+
+resource "random_password" "k8s_bootstrap_token_secret" {
+    length = 16
+    special = false
+}
+
+resource "random_string" "k8s_bootstrap_token_id" {
+    length = 6
+    special = false
+}
+
 locals {
     project_name = "${var.project_name}-${random_string.deployment_id.result}"
+    k8s_bootstrap_token = sensitive("${random_string.k8s_bootstrap_token_id.result}.${random_password.k8s_bootstrap_token_secret.result}")
+}
+
+output "k8s_bootstrap_token" {
+    value = local.k8s_bootstrap_token
+    sensitive = true
 }
 
 // The bucket for storing file records
@@ -51,7 +71,7 @@ resource "aws_s3_bucket_public_access_block" "files_bucket_public_access_block" 
     restrict_public_buckets = false
 }
 
-resource "aws_s3_ownership_controls" "files_bucket_ownership_controls" {
+resource "aws_s3_bucket_ownership_controls" "files_bucket_ownership_controls" {
     bucket = aws_s3_bucket.files_bucket.id
 
     rule {
@@ -71,22 +91,6 @@ resource "aws_s3_bucket_cors_configuration" "files_bucket_cors" {
     }
 }
 
-data "aws_ami" "ubuntu" {
-    most_recent = true
-
-    filter {
-        name   = "name"
-        values = ["ubuntu/images/hvm-ssd/ubuntu-24.04-amd64-server-*"]
-    }
-
-    filter {
-        name   = "virtualization-type"
-        values = ["hvm"]
-    }
-
-    owners = ["099720109477"] # Canonical
-}
-
 resource "tls_private_key" "cluster_key" {
     algorithm = "ED25519"
 }
@@ -98,7 +102,7 @@ resource "aws_key_pair" "cluster_key_pair" {
 }
 
 resource "aws_vpc" "cluster_vpc" {
-    cidr_block = "10.0.0.0/8"
+    cidr_block = "10.0.0.0/16"
     instance_tenancy = "default"
 
     tags = {
@@ -111,13 +115,13 @@ resource "aws_vpc" "cluster_vpc" {
 
 resource "aws_subnet" "cluster_subnet" {
     vpc_id            = aws_vpc.cluster_vpc.id
-    cidr_block        = "10.0.0.0/8"
+    cidr_block        = "10.0.0.0/24"
 }
 
 # The primary cluster node
 # This is the first node that is created in the cluster
 resource "aws_instance" "cluster_primary" {
-    ami           = data.aws_ami.ubuntu.id
+    ami           = var.ami_id
     instance_type = var.primary_instance_type
     key_name      = aws_key_pair.cluster_key_pair.key_name
     associate_public_ip_address = true
@@ -132,18 +136,27 @@ resource "aws_instance" "cluster_primary" {
 
     user_data_base64 = base64encode(
         templatefile("${path.module}/script/bootstrap_microk8s.sh", {
-            launch_config = templatefile("${path.module}/primary_cluster_launch_config.tftpl", {
-                token = random_string.cluster_token.result
+            launch_config = templatefile("${path.module}/config/primary_cluster_launch_config.tftpl", {
+                token = random_password.cluster_token.result
+                encryption_secret = base64encode(random_password.k8s_encryption_secret.result)
+            })
+            bootstrap = templatefile("${path.module}/config/bootstrap.tftpl", {
+                token_id = random_string.k8s_bootstrap_token_id.result
+                token_secret = random_password.k8s_bootstrap_token_secret.result
             })
         })
     )
+}
+
+output "cluster_primary_ip" {
+    value = aws_instance.cluster_primary.public_ip
 }
 
 # Launch configuration for secondary cluster nodes
 # These nodes help run the k8s control plane
 resource "aws_launch_configuration" "cluster_secondary_launch_configuration" {
     name_prefix   = "${local.project_name}-lc-"
-    image_id      = data.aws_ami.ubuntu.id
+    image_id      = var.ami_id
     instance_type = var.secondary_instance_type
     key_name      = aws_key_pair.cluster_key_pair.key_name
 
@@ -153,9 +166,12 @@ resource "aws_launch_configuration" "cluster_secondary_launch_configuration" {
 
     user_data = base64encode(
         templatefile("${path.module}/script/bootstrap_microk8s.sh", {
-            launch_config = templatefile("${path.module}/secondary_cluster_launch_config.tftpl", {
-                token = random_string.cluster_token.result,
+            launch_config = templatefile("${path.module}/config/secondary_cluster_launch_config.tftpl", {
+                token = random_password.cluster_token.result,
+                encryption_secret = base64encode(random_password.k8s_encryption_secret.result)
+                worker = false
             })
+            bootstrap = ""
         })
     )
 }
@@ -164,7 +180,7 @@ resource "aws_launch_configuration" "cluster_secondary_launch_configuration" {
 # These nodes run the workloads
 resource "aws_launch_configuration" "cluster_worker_launch_configuration" {
     name_prefix   = "${local.project_name}-lc-"
-    image_id      = data.aws_ami.ubuntu.id
+    image_id      = var.ami_id
     instance_type = var.worker_instance_type
     key_name      = aws_key_pair.cluster_key_pair.key_name
 
@@ -174,10 +190,12 @@ resource "aws_launch_configuration" "cluster_worker_launch_configuration" {
 
     user_data = base64encode(
         templatefile("${path.module}/script/bootstrap_microk8s.sh", {
-            launch_config = templatefile("${path.module}/secondary_cluster_launch_config.tftpl", {
-                token = random_string.cluster_token.result,
+            launch_config = templatefile("${path.module}/config/secondary_cluster_launch_config.tftpl", {
+                token = random_password.cluster_token.result,
+                encryption_secret = base64encode(random_password.k8s_encryption_secret.result)
                 worker = true
             })
+            bootstrap = ""
         })
     )
 }
@@ -249,3 +267,82 @@ resource "aws_autoscaling_group" "worker_asg" {
         propagate_at_launch = true
     }
 }
+
+locals {
+    cluster_endpoint = "https://${aws_instance.cluster_primary.public_ip}"
+}
+
+# provider "kubernetes" {
+#     host = local.cluster_endpoint
+#     token = local.k8s_bootstrap_token
+#     insecure = true
+# }
+
+# resource "kubernetes_namespace" "prod" {
+#     metadata {
+#         name = "prod"
+#         labels = {
+#             environment = "prod"
+#         }
+#     }
+# }
+
+# resource "kubernetes_pod" "test" {
+#   metadata {
+#     name = "terraform-example"
+#     namespace = kubernetes_namespace.prod.metadata[0].name
+#   }
+
+#   spec {
+#     container {
+#       image = "nginx:1.21.6"
+#       name  = "example"
+
+#       env {
+#         name  = "environment"
+#         value = "test"
+#       }
+
+#       port {
+#         container_port = 80
+#       }
+
+#       liveness_probe {
+#         http_get {
+#           path = "/"
+#           port = 80
+
+#           http_header {
+#             name  = "X-Custom-Header"
+#             value = "Awesome"
+#           }
+#         }
+
+#         initial_delay_seconds = 3
+#         period_seconds        = 3
+#       }
+#     }
+#   }
+# }
+
+# resource "kubernetes_service" "test_service" {
+#   metadata {
+#     name      = "terraform-example-service"
+#     namespace = kubernetes_namespace.prod.metadata[0].name
+#   }
+
+#   spec {
+#     selector = {
+#       app = kubernetes_pod.test.metadata[0].name
+#     }
+
+#     port {
+#       port        = 80
+#       target_port = 80
+#     }
+
+#     type = "LoadBalancer"
+
+#     external_ips = [aws_instance.cluster_primary.public_ip]
+#   }
+# }
