@@ -31,9 +31,6 @@ import { Vector3 } from '@casual-simulation/three';
 import type { LabelDecorator } from './LabelDecorator';
 
 export class WordBubbleDecorator extends AuxBot3DDecoratorBase {
-    /**
-     * The world bubble for the cube.
-     */
     wordBubble: WordBubble3D;
 
     private _label: LabelDecorator;
@@ -107,7 +104,8 @@ export class WordBubbleDecorator extends AuxBot3DDecoratorBase {
 
         if (anchor !== 'floatingBillboard') {
             arrowPoint = new Vector3(0, 0, 0);
-            arrowPoint.z += this.bot3D.boundingBox.max.z;
+            arrowPoint.z += this.bot3D.scaleContainer.scale.z;
+        }
         }
 
         let elementsBoundingBox: Vector2 = this._label.getSize();
