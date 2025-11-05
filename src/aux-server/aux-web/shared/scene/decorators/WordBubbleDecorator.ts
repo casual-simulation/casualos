@@ -17,7 +17,7 @@
  */
 import { AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import type { AuxBot3D } from '../AuxBot3D';
-import type { BotCalculationContext } from '@casual-simulation/aux-common';
+import type { BotCalculationContext, BotLabelAnchor } from '@casual-simulation/aux-common';
 import {
     calculateBotValue,
     calculateFormattedBotValue,
@@ -34,6 +34,7 @@ export class WordBubbleDecorator extends AuxBot3DDecoratorBase {
     wordBubble: WordBubble3D;
 
     private _label: LabelDecorator;
+    private _anchor: BotLabelAnchor;
 
     constructor(bot3D: AuxBot3D, label: LabelDecorator) {
         super(bot3D);
@@ -62,28 +63,34 @@ export class WordBubbleDecorator extends AuxBot3DDecoratorBase {
     }
 
     private _updateWorldBubble(calc: BotCalculationContext): void {
-        const anchor = getBotLabelAnchor(calc, this.bot3D.bot);
         const label = calculateFormattedBotValue(
             calc,
             this.bot3D.bot,
             'auxLabel'
         );
 
-        const prevVisible = this.wordBubble.visible;
-        const nowVisible = (this.wordBubble.visible = isFloatingAnchor(anchor) && !!label);
+        const prevAnchor = this._anchor;
+        this._anchor = getBotLabelAnchor(calc, this.bot3D.bot);
 
-        if (prevVisible && !nowVisible) {
+        if (prevAnchor !== this._anchor) {
+            // label anchor has changed
             this.wordBubble.removeFromParent();
-        } else if (!prevVisible && nowVisible) {
-            if (anchor === 'floatingBillboard') {
-                this._label.text3D.add(this.wordBubble);
-            } else {
-                this.bot3D.container.add(this.wordBubble);
+            this.wordBubble.visible = false;
+
+            if (isFloatingAnchor(this._anchor)) {
+                this.wordBubble.visible = true;
+                
+                if (this._anchor === 'floatingBillboard') {
+                    this._label.text3D.add(this.wordBubble);
+                } else {
+                    this.bot3D.container.add(this.wordBubble);
+                }
+
+                this.wordBubble.updateMatrixWorld(true);
             }
-            this.wordBubble.updateMatrixWorld(true);
         }
 
-        if (!nowVisible || !this._label || !this._label.text3D) {
+        if (!this.wordBubble.visible || !this._label || !this._label.text3D) {
             return;
         }
 
@@ -102,7 +109,7 @@ export class WordBubbleDecorator extends AuxBot3DDecoratorBase {
 
         let arrowPoint: Vector3 | null;
 
-        if (anchor !== 'floatingBillboard') {
+        if (this._anchor !== 'floatingBillboard') {
             arrowPoint = new Vector3(0, 0, 0);
             arrowPoint.z += this.bot3D.scaleContainer.scale.z;
         }
@@ -110,7 +117,7 @@ export class WordBubbleDecorator extends AuxBot3DDecoratorBase {
         let elementsBoundingBox: Vector2 = this._label.getSize();
 
         let labelPosition: Vector3 =
-            anchor === 'floatingBillboard'
+            this._anchor === 'floatingBillboard'
                 ? new Vector3()
                 : this._label.text3D.position;
 
