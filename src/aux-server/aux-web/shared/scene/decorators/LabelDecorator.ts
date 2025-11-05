@@ -107,7 +107,15 @@ export class LabelDecorator
             botLength = botSize.z;
         }
 
+        const prevBillboard = this._billboard;
         this._billboard = anchor === 'floatingBillboard';
+
+        if (prevBillboard !== this._billboard) {
+            if (this.text3D && !this._billboard) {
+                // Reset the text3D rotation, it was previously being set while billboarding.
+                this.text3D.quaternion.identity();
+            }
+        }
 
         if (label) {
             if (!this.text3D) {
