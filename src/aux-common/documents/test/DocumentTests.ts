@@ -186,6 +186,40 @@ export function testDocumentImplementation(
             });
         });
 
+        it('should be able to set an array in a map', () => {
+            const map1 = document.getMap('abc');
+            const array1 = document.createArray();
+
+            array1.push('hello', 'world');
+
+            map1.set('array', array1);
+
+            expect(map1.get('array')).toBe(array1);
+            expect(array1.parent).toBe(map1);
+            expect(array1.doc).toBe(document);
+
+            expect(map1.toJSON()).toEqual({
+                array: ['hello', 'world'],
+            });
+        });
+
+        it('should be able to set text in a map', () => {
+            const map1 = document.getMap('abc');
+            const text1 = document.createText();
+
+            text1.insert(0, 'hello world');
+
+            map1.set('text', text1);
+
+            expect(map1.get('text')).toBe(text1);
+            expect(text1.parent).toBe(map1);
+            expect(text1.doc).toBe(document);
+
+            expect(map1.toJSON()).toEqual({
+                text: 'hello world',
+            });
+        });
+
         it('should throw an error if setting a top-level map inside another map', () => {
             const map1 = document.getMap('abc');
             const map2 = document.getMap('top');
@@ -471,6 +505,40 @@ export function testDocumentImplementation(
             expect(array2.doc === document).toBe(true);
 
             expect(array1.toJSON()).toEqual([['hello']]);
+        });
+
+        it('should be able to set a map in an array', () => {
+            const array1 = document.getArray('abc');
+            const map1 = document.createMap();
+
+            map1.set('hello', 'world');
+
+            array1.push(map1);
+
+            expect(array1.get(0) === map1).toBe(true);
+            expect(map1.parent === array1).toBe(true);
+            expect(map1.doc === document).toBe(true);
+
+            expect(array1.toJSON()).toEqual([
+                {
+                    hello: 'world',
+                },
+            ]);
+        });
+
+        it('should be able to set text in an array', () => {
+            const array1 = document.getArray('abc');
+            const text1 = document.createText();
+
+            text1.insert(0, 'hello');
+
+            array1.push(text1);
+
+            expect(array1.get(0) === text1).toBe(true);
+            expect(text1.parent === array1).toBe(true);
+            expect(text1.doc === document).toBe(true);
+
+            expect(array1.toJSON()).toEqual(['hello']);
         });
 
         it('should be able to emit changes', async () => {

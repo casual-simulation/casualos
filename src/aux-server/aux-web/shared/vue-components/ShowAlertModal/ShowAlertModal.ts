@@ -21,29 +21,31 @@ import { Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { appManager } from '../../AppManager';
 import type { Simulation } from '@casual-simulation/aux-vm';
-import {
-    writeTextToClipboard,
-    readTextFromClipboard,
-} from '../../ClipboardHelpers';
-import Hotkey from '../Hotkey/Hotkey';
-import {
-    ON_PASTE_ACTION_NAME,
-    onPasteArg,
+import type {
+    ShowAlertAction,
+    ShowAlertOptions,
 } from '@casual-simulation/aux-common';
+import { asyncResult, hasValue } from '@casual-simulation/aux-common';
 
-@Component({
-    components: {
-        hotkey: Hotkey,
-    },
-})
-export default class ClipboardModal extends Vue {
-    open: boolean = false;
-    text: string = '';
-
+@Component({})
+export default class ShowAlertModal extends Vue {
     private _sub: Subscription;
     private _simulationSubs: Map<Simulation, Subscription>;
 
+    title: string = '';
+    content: string = '';
+    dismissText: string = 'OK';
+
+    showAlertDialog: boolean = false;
+
+    private _currentTask: number | string = null;
+    private _alertDialogSimulation: Simulation = null;
+
     created() {
+        this.title = '';
+        this.content = '';
+        this.dismissText = 'OK';
+        this.showAlertDialog = false;
         this._sub = new Subscription();
         this._simulationSubs = new Map();
 
@@ -63,44 +65,14 @@ export default class ClipboardModal extends Vue {
         this._sub.unsubscribe();
     }
 
-    closeDialog() {
-        this.open = false;
-        this.text = '';
-    }
-
-    async doCopy() {
-        await writeTextToClipboard(this.text);
-        this.closeDialog();
-    }
-
-    async onPaste(e: KeyboardEvent) {
-        if (e.target instanceof HTMLElement) {
-            if (e.target.matches('input') || e.target.matches('textarea')) {
-                return;
-            }
-        }
-
-        const text = await readTextFromClipboard();
-        if (text) {
-            for (let [id, sim] of appManager.simulationManager.simulations) {
-                sim.helper.action(ON_PASTE_ACTION_NAME, null, onPasteArg(text));
-            }
-        }
-    }
-
     private _simulationAdded(sim: Simulation): void {
         let sub = new Subscription();
         this._sub.add(sub);
 
         sub.add(
-            sim.localEvents.subscribe(async (e) => {
-                if (e.type === 'set_clipboard') {
-                    try {
-                        await writeTextToClipboard(e.text);
-                    } catch (ex) {
-                        this.text = e.text;
-                        this.open = true;
-                    }
+            sim.localEvents.subscribe((e) => {
+                if (e.type === 'show_alert') {
+                    this._showAlert(sim, e);
                 }
             })
         );
@@ -112,5 +84,40 @@ export default class ClipboardModal extends Vue {
             sub.unsubscribe();
         }
         this._simulationSubs.delete(sim);
+    }
+
+    private _showAlert(simulation: Simulation, event: ShowAlertAction) {
+        this._updateOptions(event.options);
+        this._alertDialogSimulation = simulation;
+        this._currentTask = event.taskId;
+        this.showAlertDialog = true;
+    }
+
+    async onDismiss() {
+        if (this.showAlertDialog) {
+            this.showAlertDialog = false;
+        }
+
+        this._sendResult();
+
+        this._currentTask = null;
+        this._alertDialogSimulation = null;
+    }
+
+    private _sendResult() {
+        if (this._alertDialogSimulation && hasValue(this._currentTask)) {
+            this._alertDialogSimulation.helper.transaction(
+                asyncResult(this._currentTask, undefined)
+            );
+        }
+    }
+
+    private _updateOptions(options: ShowAlertOptions) {
+        this.title = options.title;
+        this.content = options.content;
+        this.dismissText =
+            typeof options.dismissText === 'string'
+                ? options.dismissText
+                : 'OK';
     }
 }

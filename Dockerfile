@@ -23,7 +23,12 @@ COPY ./src/aux-server/aux-web/dist ./aux-web/dist/
 COPY ./src/aux-server/aux-web/aux-auth/dist ./aux-web/aux-auth/dist/
 COPY ./src/aux-server/aux-backend/schemas/auth.prisma ./aux-backend/schemas/auth.prisma
 COPY ./src/aux-server/aux-backend/schemas/migrations ./aux-backend/schemas/migrations
+COPY ./src/aux-server/aux-backend/schemas/sqlite/auth.sqlite.prisma ./aux-backend/schemas/sqlite/auth.sqlite.prisma
+COPY ./src/aux-server/aux-backend/schemas/sqlite/migrations ./aux-backend/schemas/sqlite/migrations
 COPY ./src/aux-server/aux-backend/prisma/generated/libquery_engine-debian-openssl-3.0.x.so.node ./aux-backend/prisma/generated/libquery_engine-debian-openssl-3.0.x.so.node
+COPY ./src/aux-server/aux-backend/prisma-sqlite/generated/libquery_engine-debian-openssl-3.0.x.so.node ./aux-backend/prisma-sqlite/generated/libquery_engine-debian-openssl-3.0.x.so.node
+COPY ./docker-entrypoint.sh ./docker-entrypoint.sh
+RUN chmod +x ./docker-entrypoint.sh
 
 # HTTP
 EXPOSE 3000
@@ -32,4 +37,5 @@ EXPOSE 3002
 # WebSocket
 EXPOSE 4567
 
+ENTRYPOINT [ "./docker-entrypoint.sh" ]
 CMD [ "npm", "run", "docker:start" ]
