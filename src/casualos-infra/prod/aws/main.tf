@@ -41,6 +41,7 @@ resource "random_string" "k8s_bootstrap_token_id" {
 locals {
     project_name = "${var.project_name}-${random_string.deployment_id.result}"
     k8s_bootstrap_token = sensitive("${random_string.k8s_bootstrap_token_id.result}.${random_password.k8s_bootstrap_token_secret.result}")
+    k8s_encryption_secret = sensitive(base64encode(random_password.k8s_encryption_secret.result))
 }
 
 output "k8s_bootstrap_token" {
@@ -93,18 +94,67 @@ resource "aws_s3_bucket_cors_configuration" "files_bucket_cors" {
     }
 }
 
-resource "tls_private_key" "cluster_key" {
+resource "tls_private_key" "cluster_ssh_key" {
     algorithm = "ED25519"
 }
 
+resource "tls_private_key" "cluster_ca_key" {
+    algorithm = "RSA"
+    rsa_bits = 4096
+}
+
+resource "tls_self_signed_cert" "cluster_ca" {
+    private_key_pem = tls_private_key.cluster_ca_key.private_key_pem
+
+    allowed_uses = [
+        "crl_signing",
+        "cert_signing",
+    ]
+
+    subject {
+      common_name = "CA"
+    }
+
+    is_ca_certificate = true
+
+    validity_period_hours = 24 * 365 * 10 // 10 years
+}
+
+resource "tls_private_key" "terraform_k8s_client_key" {
+    algorithm = "RSA"
+    rsa_bits = 4096
+}
+
+resource "tls_cert_request" "terraform_k8s_client_csr" {
+    private_key_pem = tls_private_key.terraform_k8s_client_key.private_key_pem
+
+    subject {
+        common_name  = "terraform"
+        organization = "terraform:admin"
+    }
+}
+
+resource "tls_locally_signed_cert" "terraform_k8s_client_cert" {
+    cert_request_pem = tls_cert_request.terraform_k8s_client_csr.cert_request_pem
+    ca_private_key_pem = tls_private_key.cluster_ca_key.private_key_pem
+    ca_cert_pem = tls_self_signed_cert.cluster_ca.cert_pem
+
+    validity_period_hours = 24 * 365 * 10 // 10 years
+
+    allowed_uses = [
+        "server_auth",
+        "client_auth",
+    ]
+}
+
 output "cluster_ssh_private_key" {
-    value     = tls_private_key.cluster_key.private_key_pem
+    value     = tls_private_key.cluster_ssh_key.private_key_pem
     sensitive = true
 }
 
-resource "aws_key_pair" "cluster_key_pair" {
+resource "aws_key_pair" "cluster_ssh_key_pair" {
     key_name   = "${local.project_name}-key"
-    public_key = tls_private_key.cluster_key.public_key_openssh
+    public_key = tls_private_key.cluster_ssh_key.public_key_openssh
 }
 
 # TODO: Add VPC, Subnets, and NAT Gateway resources
@@ -189,7 +239,7 @@ resource "aws_instance" "cluster_primary" {
     ]
     ami           = var.ami_id
     instance_type = var.primary_instance_type
-    key_name      = aws_key_pair.cluster_key_pair.key_name
+    key_name      = aws_key_pair.cluster_ssh_key_pair.key_name
     associate_public_ip_address = true
     security_groups = [ aws_security_group.cluster_security_group.name ]
 
@@ -204,14 +254,20 @@ resource "aws_instance" "cluster_primary" {
         templatefile("${path.module}/script/bootstrap_microk8s.sh", {
             launch_config = base64encode(templatefile("${path.module}/config/primary_cluster_launch_config.tftpl", {
                 token = random_password.cluster_token.result
-                encryption_secret = base64encode(random_password.k8s_encryption_secret.result)
+                encryption_secret = local.k8s_encryption_secret
             }))
+            ca_cert = base64encode(tls_self_signed_cert.cluster_ca.cert_pem)
+            ca_key = base64encode(tls_private_key.cluster_ca_key.private_key_pem)
             bootstrap = base64encode(templatefile("${path.module}/config/bootstrap.tftpl", {
                 token_id = random_string.k8s_bootstrap_token_id.result
                 token_secret = random_password.k8s_bootstrap_token_secret.result
             }))
         })
     )
+
+    lifecycle {
+        ignore_changes = [ user_data_base64 ]
+    }
 }
 
 output "cluster_primary_ip" {
@@ -224,7 +280,7 @@ resource "aws_launch_configuration" "cluster_secondary_launch_configuration" {
     name_prefix   = "${local.project_name}-lc-"
     image_id      = var.ami_id
     instance_type = var.secondary_instance_type
-    key_name      = aws_key_pair.cluster_key_pair.key_name
+    key_name      = aws_key_pair.cluster_ssh_key_pair.key_name
     security_groups = [ aws_security_group.cluster_security_group.name ]
 
     lifecycle {
@@ -235,9 +291,11 @@ resource "aws_launch_configuration" "cluster_secondary_launch_configuration" {
         templatefile("${path.module}/script/bootstrap_microk8s.sh", {
             launch_config = base64encode(templatefile("${path.module}/config/secondary_cluster_launch_config.tftpl", {
                 token = random_password.cluster_token.result,
-                encryption_secret = base64encode(random_password.k8s_encryption_secret.result)
+                encryption_secret = local.k8s_encryption_secret
                 worker = false
             }))
+            ca_cert=""
+            ca_key=""
             bootstrap = ""
         })
     )
@@ -249,7 +307,7 @@ resource "aws_launch_configuration" "cluster_worker_launch_configuration" {
     name_prefix   = "${local.project_name}-lc-"
     image_id      = var.ami_id
     instance_type = var.worker_instance_type
-    key_name      = aws_key_pair.cluster_key_pair.key_name
+    key_name      = aws_key_pair.cluster_ssh_key_pair.key_name
     security_groups = [ aws_security_group.cluster_security_group.name ]
 
     lifecycle {
@@ -260,9 +318,11 @@ resource "aws_launch_configuration" "cluster_worker_launch_configuration" {
         templatefile("${path.module}/script/bootstrap_microk8s.sh", {
             launch_config = base64encode(templatefile("${path.module}/config/secondary_cluster_launch_config.tftpl", {
                 token = random_password.cluster_token.result,
-                encryption_secret = base64encode(random_password.k8s_encryption_secret.result)
+                encryption_secret = local.k8s_encryption_secret
                 worker = true
             }))
+            ca_cert=""
+            ca_key=""
             bootstrap = ""
         })
     )
@@ -342,9 +402,10 @@ locals {
 
 provider "kubernetes" {
     host = local.cluster_endpoint
-    token = local.k8s_bootstrap_token
-    username = "system:bootstrap:${random_string.k8s_bootstrap_token_id.result}"
-    insecure = true
+
+    client_certificate = tls_locally_signed_cert.terraform_k8s_client_cert.cert_pem
+    client_key = tls_private_key.terraform_k8s_client_key.private_key_pem
+    cluster_ca_certificate = tls_self_signed_cert.cluster_ca.cert_pem
 }
 
 resource "kubernetes_namespace" "prod" {
