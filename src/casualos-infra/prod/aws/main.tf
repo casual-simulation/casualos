@@ -202,10 +202,10 @@ resource "aws_instance" "cluster_primary" {
 
     user_data_base64 = base64encode(
         templatefile("${path.module}/script/bootstrap_microk8s.sh", {
-            launch_config = templatefile("${path.module}/config/primary_cluster_launch_config.tftpl", {
+            launch_config = base64encode(templatefile("${path.module}/config/primary_cluster_launch_config.tftpl", {
                 token = random_password.cluster_token.result
                 encryption_secret = base64encode(random_password.k8s_encryption_secret.result)
-            })
+            }))
             bootstrap = base64encode(templatefile("${path.module}/config/bootstrap.tftpl", {
                 token_id = random_string.k8s_bootstrap_token_id.result
                 token_secret = random_password.k8s_bootstrap_token_secret.result
@@ -233,11 +233,11 @@ resource "aws_launch_configuration" "cluster_secondary_launch_configuration" {
 
     user_data = base64encode(
         templatefile("${path.module}/script/bootstrap_microk8s.sh", {
-            launch_config = templatefile("${path.module}/config/secondary_cluster_launch_config.tftpl", {
+            launch_config = base64encode(templatefile("${path.module}/config/secondary_cluster_launch_config.tftpl", {
                 token = random_password.cluster_token.result,
                 encryption_secret = base64encode(random_password.k8s_encryption_secret.result)
                 worker = false
-            })
+            }))
             bootstrap = ""
         })
     )
@@ -258,11 +258,11 @@ resource "aws_launch_configuration" "cluster_worker_launch_configuration" {
 
     user_data = base64encode(
         templatefile("${path.module}/script/bootstrap_microk8s.sh", {
-            launch_config = templatefile("${path.module}/config/secondary_cluster_launch_config.tftpl", {
+            launch_config = base64encode(templatefile("${path.module}/config/secondary_cluster_launch_config.tftpl", {
                 token = random_password.cluster_token.result,
                 encryption_secret = base64encode(random_password.k8s_encryption_secret.result)
                 worker = true
-            })
+            }))
             bootstrap = ""
         })
     )
