@@ -106,13 +106,14 @@ export class WordBubbleDecorator extends AuxBot3DDecoratorBase {
             arrowPoint = new Vector3(0, 0, 0);
             arrowPoint.z += this.bot3D.scaleContainer.scale.z;
         }
-        }
 
         let elementsBoundingBox: Vector2 = this._label.getSize();
+
         let labelPosition: Vector3 =
             anchor === 'floatingBillboard'
                 ? new Vector3()
                 : this._label.text3D.position;
+
         if (elementsBoundingBox) {
             this.wordBubble.update(
                 arrowPoint,
