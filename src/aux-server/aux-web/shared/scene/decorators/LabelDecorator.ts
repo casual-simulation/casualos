@@ -324,6 +324,7 @@ export class LabelDecorator
 
         return this.text3D.setPositionForObject(
             this.bot3D.scaleContainer,
+            this.bot3D.gridScale,
             objCenter
         );
     }
