@@ -1,0 +1,19 @@
+apiVersion: v1
+clusters:
+  - name: "${cluster_name}"
+    cluster:
+      certificate-authority-data: "${cert_authority_data}"
+      server: "${server}"
+contexts:
+  - name: "${project_name}"
+    context:
+      cluster: "${cluster_name}"
+      user: admin
+current-context: "${project_name}"
+kind: Config
+preferences: {}
+users:
+    - name: admin
+      user:
+        client-certificate-data: "${client_cert_data}"
+        client-key-data: "${client_key_data}"

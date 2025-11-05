@@ -27,3 +27,5 @@ extraConfigFiles:
                 - name: key1
                   secret: ${ encryption_secret }
           - identity: {}
+extraSANs:
+  - "${primary_ip}"

@@ -147,9 +147,55 @@ resource "tls_locally_signed_cert" "terraform_k8s_client_cert" {
     ]
 }
 
+resource "tls_private_key" "admin_k8s_client_key" {
+    algorithm = "RSA"
+    rsa_bits = 4096
+}
+
+resource "tls_cert_request" "admin_k8s_client_csr" {
+    private_key_pem = tls_private_key.admin_k8s_client_key.private_key_pem
+
+    subject {
+        common_name  = "admin"
+        organization = "system:masters"
+    }
+}
+
+resource "tls_locally_signed_cert" "admin_k8s_client_cert" {
+    cert_request_pem = tls_cert_request.admin_k8s_client_csr.cert_request_pem
+    ca_private_key_pem = tls_private_key.cluster_ca_key.private_key_pem
+    ca_cert_pem = tls_self_signed_cert.cluster_ca.cert_pem
+
+    validity_period_hours = 24 * 365 * 10 // 10 years
+
+    allowed_uses = [
+        "server_auth",
+        "client_auth",
+    ]
+}
+
+output "k8s_admin_client_cert" {
+    value     = tls_locally_signed_cert.admin_k8s_client_cert.cert_pem
+    sensitive = true
+    description = "The client certificate for the k8s admin user"
+}
+
+output "k8s_admin_client_key" {
+    value     = tls_private_key.admin_k8s_client_key.private_key_pem
+    sensitive = true
+    description = "The private key for the k8s admin user"
+}
+
+output "k8s_cluster_ca_cert" {
+    value = tls_self_signed_cert.cluster_ca.cert_pem
+    sensitive = true
+    description = "The certificate for the k8s cluster certificate authority"
+}
+
 output "cluster_ssh_private_key" {
     value     = tls_private_key.cluster_ssh_key.private_key_pem
     sensitive = true
+    description = "The SSH key that can be used to SSH into the AWS instances"
 }
 
 resource "aws_key_pair" "cluster_ssh_key_pair" {
@@ -227,6 +273,19 @@ resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4" {
   ip_protocol       = "-1" # semantically equivalent to all ports
 }
 
+resource "aws_eip" "cluster_primary_eip" {
+    tags = {
+      Name = "${local.project_name}-primary-eip"
+      Environment = var.environment
+      Project = var.project_name
+      Customer = var.customer
+    }
+}
+
+locals {
+    cluster_primary_ip = aws_eip.cluster_primary_eip.public_ip
+}
+
 # The primary cluster node
 # This is the first node that is created in the cluster
 resource "aws_instance" "cluster_primary" {
@@ -240,7 +299,6 @@ resource "aws_instance" "cluster_primary" {
     ami           = var.ami_id
     instance_type = var.primary_instance_type
     key_name      = aws_key_pair.cluster_ssh_key_pair.key_name
-    associate_public_ip_address = true
     security_groups = [ aws_security_group.cluster_security_group.name ]
 
     tags = {
@@ -255,6 +313,7 @@ resource "aws_instance" "cluster_primary" {
             launch_config = base64encode(templatefile("${path.module}/config/primary_cluster_launch_config.tftpl", {
                 token = random_password.cluster_token.result
                 encryption_secret = local.k8s_encryption_secret
+                primary_ip = local.cluster_primary_ip
             }))
             ca_cert = base64encode(tls_self_signed_cert.cluster_ca.cert_pem)
             ca_key = base64encode(tls_private_key.cluster_ca_key.private_key_pem)
@@ -270,8 +329,14 @@ resource "aws_instance" "cluster_primary" {
     }
 }
 
+resource "aws_eip_association" "cluster_primary_eip_association" {
+    instance_id   = aws_instance.cluster_primary.id
+    allocation_id = aws_eip.cluster_primary_eip.id
+}
+
 output "cluster_primary_ip" {
-    value = aws_instance.cluster_primary.public_ip
+    value = local.cluster_primary_ip
+    description = "The public IP address of the primary cluster node"
 }
 
 # Launch configuration for secondary cluster nodes
@@ -397,7 +462,25 @@ resource "aws_launch_configuration" "cluster_worker_launch_configuration" {
 # }
 
 locals {
-    cluster_endpoint = "https://${aws_instance.cluster_primary.public_ip}:16443"
+    cluster_endpoint = "https://${local.cluster_primary_ip}:16443"
+}
+
+output "k8s_cluster_endpoint" {
+    value = local.cluster_endpoint
+    description = "The endpoint that the k8s cluster can be reached at."
+}
+
+output "k8s_kubectl_config" {
+    value = templatefile("${path.module}/client/kubectl.tftpl", {
+        cluster_name = local.project_name
+        project_name = var.project_name
+        cert_authority_data = base64encode(tls_self_signed_cert.cluster_ca.cert_pem)
+        client_cert_data = base64encode(tls_locally_signed_cert.admin_k8s_client_cert.cert_pem)
+        client_key_data = base64encode(tls_private_key.admin_k8s_client_key.private_key_pem)
+        server = local.cluster_endpoint
+    })
+    sensitive = true
+    description = "The kubectl config file to access the cluster."
 }
 
 provider "kubernetes" {
@@ -409,6 +492,12 @@ provider "kubernetes" {
 }
 
 resource "kubernetes_namespace" "prod" {
+    depends_on = [ 
+        local.cluster_primary_ip,
+        aws_instance.cluster_primary,
+        tls_self_signed_cert.cluster_ca,
+    ]
+
     metadata {
         name = "prod"
         labels = {
@@ -417,21 +506,16 @@ resource "kubernetes_namespace" "prod" {
     }
 }
 
-resource "kubernetes_pod" "test" {
+resource "kubernetes_pod" "casualos" {
   metadata {
-    name = "terraform-example"
+    name = "casualos"
     namespace = kubernetes_namespace.prod.metadata[0].name
   }
 
   spec {
     container {
-      image = "nginx:1.21.6"
-      name  = "example"
-
-      env {
-        name  = "environment"
-        value = "test"
-      }
+      image = "ghcr.io/casual-simulation/casualos:v3.6.0"
+      name  = "casualos"
 
       port {
         container_port = 80
@@ -441,11 +525,6 @@ resource "kubernetes_pod" "test" {
         http_get {
           path = "/"
           port = 80
-
-          http_header {
-            name  = "X-Custom-Header"
-            value = "Awesome"
-          }
         }
 
         initial_delay_seconds = 3
@@ -455,15 +534,15 @@ resource "kubernetes_pod" "test" {
   }
 }
 
-resource "kubernetes_service" "test_service" {
+resource "kubernetes_service" "casualos" {
   metadata {
-    name      = "terraform-example-service"
+    name      = "casualos"
     namespace = kubernetes_namespace.prod.metadata[0].name
   }
 
   spec {
     selector = {
-      app = kubernetes_pod.test.metadata[0].name
+      app = kubernetes_pod.casualos.metadata[0].name
     }
 
     port {
@@ -471,8 +550,6 @@ resource "kubernetes_service" "test_service" {
       target_port = 80
     }
 
-    type = "LoadBalancer"
-
-    external_ips = [aws_instance.cluster_primary.public_ip]
+    type = "NodePort"
   }
 }

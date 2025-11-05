@@ -8,12 +8,6 @@ CA_CERT=$(echo "${ca_cert}" | base64 -d)
 CA_KEY=$(echo "${ca_key}" | base64 -d)
 echo "$LAUNCH_CONFIG" > "/var/snap/microk8s/common/.microk8s.yaml"
 
-CURRENT_IP=$(curl -s http://checkip.amazonaws.com)
-EXTRA_SANS="
-extraSANs:
-  - \"$CURRENT_IP\""
-echo "$EXTRA_SANS" >> "/var/snap/microk8s/common/.microk8s.yaml"
-
 if [ -n "$CA_CERT" ] && [ -n "$CA_KEY" ]; then
     echo "$CA_CERT" > "/var/snap/microk8s/common/certs/ca.crt"
     echo "$CA_KEY" > "/var/snap/microk8s/common/certs/ca.key"
