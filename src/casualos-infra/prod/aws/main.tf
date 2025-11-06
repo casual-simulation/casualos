@@ -493,7 +493,7 @@ provider "kubernetes" {
 
 resource "kubernetes_namespace" "prod" {
     depends_on = [ 
-        local.cluster_primary_ip,
+        aws_eip_association.cluster_primary_eip_association,
         aws_instance.cluster_primary,
         tls_self_signed_cert.cluster_ca,
     ]
