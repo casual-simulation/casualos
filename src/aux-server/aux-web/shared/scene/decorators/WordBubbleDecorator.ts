@@ -35,6 +35,7 @@ export class WordBubbleDecorator extends AuxBot3DDecoratorBase {
 
     private _label: LabelDecorator;
     private _anchor: BotLabelAnchor;
+    private _labelText: string;
 
     constructor(bot3D: AuxBot3D, label: LabelDecorator) {
         super(bot3D);
@@ -45,13 +46,13 @@ export class WordBubbleDecorator extends AuxBot3DDecoratorBase {
     }
 
     botUpdated(calc: BotCalculationContext): void {
-        this._updateWorldBubble(calc);
+        this._updateWordBubble(calc);
     }
 
     frameUpdate(calc: BotCalculationContext): void {
         if (this._label) {
-            if (this._label.shouldUpdateWorldBubbleThisFrame()) {
-                this._updateWorldBubble(calc);
+            if (this._label.shouldUpdateWordBubbleThisFrame()) {
+                this._updateWordBubble(calc);
                 return;
             }
         }
@@ -62,8 +63,9 @@ export class WordBubbleDecorator extends AuxBot3DDecoratorBase {
         this.wordBubble.removeFromParent();
     }
 
-    private _updateWorldBubble(calc: BotCalculationContext): void {
-        const label = calculateFormattedBotValue(
+    private _updateWordBubble(calc: BotCalculationContext): void {
+        const prevLabelText = this._labelText;
+        this._labelText = calculateFormattedBotValue(
             calc,
             this.bot3D.bot,
             'auxLabel'
@@ -71,13 +73,17 @@ export class WordBubbleDecorator extends AuxBot3DDecoratorBase {
 
         const prevAnchor = this._anchor;
         this._anchor = getBotLabelAnchor(calc, this.bot3D.bot);
-
-        if (prevAnchor !== this._anchor) {
+        
+        // Update word bubble parenting.
+        if (prevAnchor !== this._anchor || // Case 1: Label anchor changed
+            (prevLabelText && !this._labelText) || // Case 2: Label has become empty
+            (!prevLabelText && this._labelText) // Case 3: Label has become filled
+        ) {
             // label anchor has changed
             this.wordBubble.removeFromParent();
             this.wordBubble.visible = false;
 
-            if (isFloatingAnchor(this._anchor)) {
+            if (isFloatingAnchor(this._anchor) && this._labelText) {
                 this.wordBubble.visible = true;
                 
                 if (this._anchor === 'floatingBillboard') {

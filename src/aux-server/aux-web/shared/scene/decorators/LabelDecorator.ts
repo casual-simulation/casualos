@@ -315,7 +315,7 @@ export class LabelDecorator
         }
     }
 
-    shouldUpdateWorldBubbleThisFrame(): boolean {
+    shouldUpdateWordBubbleThisFrame(): boolean {
         // Should update word bubble every frame if the label is in auto size mode.
         let rendered = this.text3D ? this.text3D.renderedThisFrame() : false;
         return this._autoSizeMode || rendered;
