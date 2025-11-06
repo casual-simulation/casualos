@@ -17,14 +17,16 @@
  */
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Prop, Watch } from 'vue-property-decorator';
+import { Prop } from 'vue-property-decorator';
 import BotLibrary from '../../../BotLibrary/BotLibrary.vue';
+import OutputLogs from './OutputLogs/OutputLogs.vue';
 import type { SourceControlController } from 'aux-web/shared/SourceControlProvider';
 
 @Component({
     name: 'editor-panel',
     components: {
         'search-bot-library': BotLibrary,
+        'output-logs': OutputLogs,
     },
 })
 export default class EditorPanel extends Vue {
@@ -32,44 +34,6 @@ export default class EditorPanel extends Vue {
 
     get reactiveStore() {
         return this.scc.reactiveStore;
-    }
-
-    outputAutoScroll = true;
-
-    downloadOutputLogs() {
-        const logs = this.reactiveStore.outputPanel.logs
-            .map((l) => `${l[0].tms}_${l[0].scope.join(' ')} ${l[1]}`)
-            .join('\n');
-        const blob = new Blob([logs], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `aux-source-control-output-logs-${Date.now()}.txt`;
-        a.click();
-        setTimeout(() => {
-            URL.revokeObjectURL(url);
-            a.remove();
-        }, 1000);
-    }
-
-    clearOutputLogs() {
-        this.reactiveStore.outputPanel.logs = [];
-        this.scc.logOutput('Output logs cleared.');
-    }
-
-    toggleOutputScroll() {
-        this.outputAutoScroll = !this.outputAutoScroll;
-    }
-
-    @Watch('reactiveStore.outputPanel.logs')
-    onLogsChanged() {
-        if (this.outputAutoScroll === false) {
-            return;
-        }
-        this.$nextTick(() => {
-            const el = this.$refs.logs as HTMLElement;
-            if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
-        });
     }
 
     private rect: DOMRect | null = null;

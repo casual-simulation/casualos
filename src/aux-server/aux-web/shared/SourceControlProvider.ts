@@ -307,7 +307,10 @@ export class SourceControlController {
 
     async init(): Promise<void> {
         if (!this.repoName) {
-            //TODO: Handle error
+            this.logOutput(
+                'You must first provide information to initialize a repo.',
+                SccOutputLevel.Warning
+            );
             return;
         }
         this.reactiveStore.visualFS.root = new VRoot('/', 'root');
