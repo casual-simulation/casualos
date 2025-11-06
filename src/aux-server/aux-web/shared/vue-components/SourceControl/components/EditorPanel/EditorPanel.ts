@@ -20,12 +20,14 @@ import Component from 'vue-class-component';
 import { Prop } from 'vue-property-decorator';
 import BotLibrary from '../../../BotLibrary/BotLibrary.vue';
 import OutputLogs from './OutputLogs/OutputLogs.vue';
+import EditorActionSection from './EditorActionSection/EditorActionSection.vue';
 import type { SourceControlController } from 'aux-web/shared/SourceControlProvider';
 
 @Component({
     name: 'editor-panel',
     components: {
         'search-bot-library': BotLibrary,
+        'editor-action-section': EditorActionSection,
         'output-logs': OutputLogs,
     },
 })

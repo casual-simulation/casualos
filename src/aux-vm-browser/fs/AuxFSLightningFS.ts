@@ -64,15 +64,15 @@ export class AuxFSLightningFS implements AuxFileSystem {
         }
     }
 
-    readFile(path: string, opts?: any): Promise<string> {
+    async readFile(path: string, opts?: any): Promise<string> {
         return this._fs.promises.readFile(path, opts ?? { encoding: 'utf8' });
     }
-    writeFile(path: string, content: string, opts?: any): Promise<void> {
+    async writeFile(path: string, content: string, opts?: any): Promise<void> {
         return this._fs.promises.writeFile(path, content, opts).then(() => {
             this.$emit(AuxFileSystemEvent.FileChanged, path);
         });
     }
-    unlink(path: string, opts?: any): Promise<void> {
+    async unlink(path: string, opts?: any): Promise<void> {
         return this._fs.promises.unlink(path, opts).then(() => {
             this.$emit(AuxFileSystemEvent.FileDeleted, path);
         });
@@ -93,8 +93,16 @@ export class AuxFSLightningFS implements AuxFileSystem {
         }
     }
     async mkdir(path: string): Promise<void> {
-        await this._fs.promises.mkdir(path);
-        this.$emit(AuxFileSystemEvent.DirectoryCreated, path);
+        const parts = path.split('/').filter(Boolean);
+        let parentPath = '';
+        for (const dir of parts) {
+            const currentPath = parentPath + '/' + dir;
+            if (!(await this.exists(currentPath))) {
+                await this._fs.promises.mkdir(currentPath);
+                this.$emit(AuxFileSystemEvent.DirectoryCreated, currentPath);
+            }
+            parentPath = currentPath;
+        }
     }
     async rmdir(path: string): Promise<void> {
         await this._fs.promises.rmdir(path);
@@ -108,6 +116,12 @@ export class AuxFSLightningFS implements AuxFileSystem {
     }
     async lstat(path: string): Promise<any> {
         return this._fs.promises.lstat(path);
+    }
+    async readlink(path: string): Promise<string> {
+        return this._fs.promises.readlink(path);
+    }
+    async symlink(target: string, path: string): Promise<void> {
+        return this._fs.promises.symlink(target, path);
     }
 }
 

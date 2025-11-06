@@ -57,4 +57,6 @@ export interface AuxFileSystem {
     readdir(path: string): Promise<string[]>;
     stat(path: string): Promise<any>;
     lstat(path: string): Promise<any>;
+    readlink(path: string): Promise<string>;
+    symlink(target: string, path: string): Promise<void>;
 }

@@ -171,7 +171,7 @@ export class IsomorphicGitSCPProvider implements GitSCPProvider {
             repositoryName,
             this._gitAuthor,
             this.fs,
-            this._gitHelper
+            this.gitHelper
         );
         this._repoSCPs.set(repositoryName, repoSCP);
         return repoSCP;
@@ -208,6 +208,10 @@ export class IsomorphicGitRepoSCP implements GitRepoSCP {
         }
     }
 
+    get fs() {
+        return this._fs;
+    }
+
     get gitAuthor(): GitAuthor {
         return this._gitAuthor;
     }
@@ -229,7 +233,7 @@ export class IsomorphicGitRepoSCP implements GitRepoSCP {
         opts?: { cache?: object; force?: boolean; parallel?: boolean }
     ): Promise<void> {
         return await this.git.add({
-            fs: this._fs,
+            fs: this.fs,
             dir: this.PWD,
             filepath: path,
             cache: opts.cache,
@@ -240,7 +244,7 @@ export class IsomorphicGitRepoSCP implements GitRepoSCP {
 
     async commit(message: string): Promise<string> {
         return await this.git.commit({
-            fs: this._fs,
+            fs: this.fs,
             dir: this.PWD,
             message,
             author: this._gitAuthor,
@@ -249,7 +253,7 @@ export class IsomorphicGitRepoSCP implements GitRepoSCP {
 
     async log(opts?: { depth?: number }): Promise<Record<any, any>[]> {
         return await this.git.log({
-            fs: this._fs,
+            fs: this.fs,
             dir: this.PWD,
             depth: opts.depth,
         });
@@ -257,7 +261,7 @@ export class IsomorphicGitRepoSCP implements GitRepoSCP {
 
     async remove(path: string, opts?: { cache?: object }): Promise<void> {
         return await this.git.remove({
-            fs: this._fs,
+            fs: this.fs,
             dir: this.PWD,
             filepath: path,
             cache: opts.cache,
@@ -266,7 +270,7 @@ export class IsomorphicGitRepoSCP implements GitRepoSCP {
 
     async status(path: string, opts?: { cache?: object }): Promise<string> {
         return await this.git.status({
-            fs: this._fs,
+            fs: this.fs,
             dir: this.PWD,
             filepath: path,
             cache: opts.cache,
@@ -275,17 +279,17 @@ export class IsomorphicGitRepoSCP implements GitRepoSCP {
 
     async init(): Promise<void> {
         const dir = this.PWD;
-        if (await this._fs.exists(dir)) {
-            if (await this._fs.exists(dir + '/.git')) {
+        if (await this.fs.exists(dir)) {
+            if (await this.fs.exists(dir + '/.git')) {
                 console.warn(
                     `[GitSCP]: Repository already initialized at ${dir}`
                 );
                 return;
             }
         }
-        await this._fs.mkdir(dir);
+        await this.fs.mkdir(dir);
         return await this.git.init({
-            fs: this._fs,
+            fs: this.fs,
             dir: dir,
         });
     }
@@ -300,7 +304,7 @@ export class IsomorphicGitRepoSCP implements GitRepoSCP {
         }
     ): Promise<void> {
         return await this.git.clone({
-            fs: this._fs,
+            fs: this.fs,
             http: AuxIsomorphicGit.http,
             dir: this.PWD,
             url: url,

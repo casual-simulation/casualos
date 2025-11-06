@@ -1,8 +1,10 @@
 <template>
     <div class="source-control-editor-panel" ref="container">
-        <div class="sc-container" :style="{ flex: topFlex }">
-            <h2>Source Control Editor Panel</h2>
-        </div>
+        <editor-action-section
+            :scc="scc"
+            class="sc-container"
+            :style="{ flex: topFlex }"
+        ></editor-action-section>
         <div @mousedown="onDown" @touchstart.prevent="onDown" class="drag-spacer"></div>
         <output-logs
             class="sc-container-output"

@@ -224,6 +224,10 @@ export class SourceControlController {
         return this.reactiveStore.editorPanel.initialize.repoName;
     }
 
+    get workingDir() {
+        return this.reactiveStore.instanceWorkingDirectory;
+    }
+
     reactiveStore = Vue.observable({
         /** The working directory inside the selected repo where source control concerns are rooted. */
         instanceWorkingDirectory: undefined,
@@ -271,10 +275,7 @@ export class SourceControlController {
             AuxFileSystemEvent.DirectoryDeleted,
             async (path: string) => this.storeDirectoryDeletion(path)
         );
-        this.logOutput(
-            'Source Control Controller initialized.',
-            SccOutputLevel.Info
-        );
+        this.logOutput('Source Control Ready.', SccOutputLevel.Info);
     }
 
     storeFileChange(path: string) {
@@ -305,7 +306,36 @@ export class SourceControlController {
         ]);
     }
 
+    // eslint-disable-next-line no-useless-escape
+    sanitizeFSName(
+        input: string,
+        regExp: RegExp = /[^a-zA-Z0-9-_\/]/g
+    ): string {
+        return input.replace(regExp, '');
+    }
+
+    sanitizeFSPath(input: string): string {
+        return input
+            .replace(/[^A-Za-z0-9_./]/g, '')
+            .replace(/\/\/+/g, '/')
+            .replace(/\.\.+/g, '.');
+    }
+
+    splitFSPath(input: string): string[] {
+        return input.split('/').filter((part) => part.length > 0);
+    }
+
     async init(): Promise<void> {
+        if (
+            (await this._gitSCP.getRepoSCP(this.repoName)) ==
+            this._currentRepoSCP
+        ) {
+            this.logOutput(
+                `Already initialized repo: '${this.repoName}'.`,
+                SccOutputLevel.Warning
+            );
+            return;
+        }
         if (!this.repoName) {
             this.logOutput(
                 'You must first provide information to initialize a repo.',
@@ -313,7 +343,29 @@ export class SourceControlController {
             );
             return;
         }
-        this.reactiveStore.visualFS.root = new VRoot('/', 'root');
+        const dirStructure = this.splitFSPath(this.workingDir);
+        const parentDirPath = dirStructure
+            .slice(0, dirStructure.length - 1)
+            .join('/');
+        const rootDirName = dirStructure[dirStructure.length - 1];
+        this._currentRepoSCP = await this._gitSCP.getRepoSCP(this.repoName);
+        if (!this._currentRepoSCP) {
+            this.logOutput(
+                `Failed to initialize repo: '${this.repoName}'.`,
+                SccOutputLevel.Error
+            );
+            return;
+        }
+        this.reactiveStore.visualFS.rootMeta = `${parentDirPath}/${rootDirName}`;
+        this.reactiveStore.visualFS.root = new VRoot(
+            parentDirPath,
+            rootDirName
+        );
+        await this._currentRepoSCP.init();
+        this.logOutput(
+            `Initialized repo: '${this.repoName}'.`,
+            SccOutputLevel.Info
+        );
         console.log(await this._gitSCP.gitStore.listLocalRepoEntries());
     }
 }
