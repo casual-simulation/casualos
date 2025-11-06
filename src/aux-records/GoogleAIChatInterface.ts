@@ -108,7 +108,13 @@ export class GoogleAIChatInterface implements AIChatInterface {
             const chat = model.startChat({
                 history: historyMessages,
                 generationConfig: {
-                    maxOutputTokens: request.maxTokens,
+                    maxOutputTokens: Math.min(
+                        ...[
+                            request.maxCompletionTokens,
+                            request.maxTokens,
+                            4096,
+                        ].filter((x) => x != null)
+                    ),
                     topP: request.topP,
                     temperature: request.temperature,
                     stopSequences: request.stopWords,
@@ -204,7 +210,13 @@ export class GoogleAIChatInterface implements AIChatInterface {
             const chat = model.startChat({
                 history: historyMessages,
                 generationConfig: {
-                    maxOutputTokens: request.maxTokens,
+                    maxOutputTokens: Math.min(
+                        ...[
+                            request.maxCompletionTokens,
+                            request.maxTokens,
+                            4096,
+                        ].filter((x) => x != null)
+                    ),
                     topP: request.topP,
                     temperature: request.temperature,
                     stopSequences: request.stopWords,

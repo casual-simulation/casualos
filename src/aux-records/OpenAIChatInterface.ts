@@ -145,6 +145,9 @@ export class OpenAIChatInterface implements AIChatInterface {
                     frequency_penalty: request.frequencyPenalty,
                     stop: request.stopWords,
                     user: request.userId,
+                    max_tokens: request.maxTokens,
+                    max_completion_tokens: request.maxCompletionTokens,
+                    reasoning_effort: request.reasoningEffort,
                 },
                 {
                     headers: {
@@ -244,6 +247,15 @@ export class OpenAIChatInterface implements AIChatInterface {
                 name: m.author,
                 function: m.functionCall,
             })) as any[],
+            temperature: request.temperature,
+            top_p: request.topP,
+            presence_penalty: request.presencePenalty,
+            frequency_penalty: request.frequencyPenalty,
+            stop: request.stopWords,
+            user: request.userId,
+            max_tokens: request.maxTokens,
+            max_completion_tokens: request.maxCompletionTokens,
+            reasoning_effort: request.reasoningEffort,
             stream: true,
             stream_options: {
                 include_usage: true,
