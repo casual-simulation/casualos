@@ -195,14 +195,51 @@ export class VDir extends VGenericDirectory {
     }
 }
 
+export enum SccEditorPanel {
+    AuthorConfig = 'authorConfig',
+    Initialize = 'initialize',
+    Commit = 'commit',
+    History = 'history',
+    Branches = 'branches',
+    Remotes = 'remotes',
+}
+
+export enum SccHintLevel {
+    Info = 'info',
+    Warning = 'warning',
+    Error = 'error',
+    Link = 'link',
+}
+
 export class SourceControlController {
     private _currentRepoSCP: GitRepoSCP;
+
+    get repoName() {
+        return this.reactiveStore.editorPanel.initialize.repoName;
+    }
+
     reactiveStore = Vue.observable({
         /** The working directory inside the selected repo where source control concerns are rooted. */
         instanceWorkingDirectory: undefined,
         visualFS: {
             rootMeta: '',
             root: null,
+        },
+        editorPanel: {
+            currentPanel: SccEditorPanel.Initialize,
+            initialize: {
+                repoName: null,
+            },
+        },
+        outputPanel: {
+            logs: ['// Logs appear here...'] as string[],
+        },
+        hintPanel: {
+            title: {
+                title: '',
+                hintLevel: SccHintLevel.Info,
+            },
+            messageLines: [] as { message: string; hintLevel: SccHintLevel }[],
         },
     });
 
@@ -242,6 +279,10 @@ export class SourceControlController {
     }
 
     async init(): Promise<void> {
+        if (!this.repoName) {
+            //TODO: Handle error
+            return;
+        }
         this.reactiveStore.visualFS.root = new VRoot('/', 'root');
         console.log(await this._gitSCP.gitStore.listLocalRepoEntries());
     }
