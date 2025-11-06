@@ -26,27 +26,9 @@ resource "random_password" "k8s_encryption_secret" {
     length = 32
 }
 
-resource "random_password" "k8s_bootstrap_token_secret" {
-    length = 16
-    special = false
-}
-
-resource "random_string" "k8s_bootstrap_token_id" {
-    length = 6
-    special = false
-    upper = false
-    lower = true
-}
-
 locals {
     project_name = "${var.project_name}-${random_string.deployment_id.result}"
-    k8s_bootstrap_token = sensitive("${random_string.k8s_bootstrap_token_id.result}.${random_password.k8s_bootstrap_token_secret.result}")
     k8s_encryption_secret = sensitive(base64encode(random_password.k8s_encryption_secret.result))
-}
-
-output "k8s_bootstrap_token" {
-    value = local.k8s_bootstrap_token
-    sensitive = true
 }
 
 // The bucket for storing file records
@@ -317,10 +299,7 @@ resource "aws_instance" "cluster_primary" {
             }))
             ca_cert = base64encode(tls_self_signed_cert.cluster_ca.cert_pem)
             ca_key = base64encode(tls_private_key.cluster_ca_key.private_key_pem)
-            bootstrap = base64encode(templatefile("${path.module}/config/bootstrap.tftpl", {
-                token_id = random_string.k8s_bootstrap_token_id.result
-                token_secret = random_password.k8s_bootstrap_token_secret.result
-            }))
+            bootstrap = base64encode(templatefile("${path.module}/config/bootstrap.tftpl", {}))
         })
     )
 
