@@ -342,6 +342,7 @@
                                 :tag="tag"
                                 :selected="isTagSelected(tag)"
                                 @click="selectTag(tag)"
+                                @contextmenu.prevent="openTagContextMenu(tag, $event)"
                                 @pin="pinTag(tag)"
                                 @focusChanged="onTagFocusChanged(selectedBotSimId, tag, $event)"
                             >
@@ -361,6 +362,15 @@
                                     <img alt="Add Tag" src="../../public/icons/tag-add.png" />
                                 </picture>
                                 <md-tooltip>Add Tag</md-tooltip>
+                            </md-button>
+                            <!-- Test button for multi-tab functionality -->
+                            <md-button
+                                class="md-raised pin-tag-button"
+                                @click="createTestTab"
+                                v-if="selectedBot"
+                            >
+                                <md-icon>tab</md-icon>
+                                <md-tooltip>Create Test Tab</md-tooltip>
                             </md-button>
                         </div>
                         <div class="tags-sort-options">
@@ -445,8 +455,17 @@
                             </md-button>
                         </div>
                         <div class="editor-code">
+                            <!-- Multi-tab editor using dockview -->
+                            <div
+                                v-if="selectedPane === 'bots' && editorTabs.length > 0"
+                                class="multi-tab-editor"
+                            >
+                                <div ref="dockviewContainer" class="dockview-container"></div>
+                            </div>
+
+                            <!-- Fallback to single editor for diff mode and when no tabs -->
                             <tag-diff-editor
-                                v-if="
+                                v-else-if="
                                     selectedPane === 'diff' &&
                                     diffOriginalBot &&
                                     diffNewBot &&
@@ -480,7 +499,7 @@
                             >
                             </tag-value-editor>
                             <tag-value-editor
-                                v-else-if="selectedBot && hasTag()"
+                                v-else-if="selectedBot && hasTag() && editorTabs.length === 0"
                                 ref="multilineEditor"
                                 :simId="selectedBotSimId"
                                 :bot="selectedBot"
