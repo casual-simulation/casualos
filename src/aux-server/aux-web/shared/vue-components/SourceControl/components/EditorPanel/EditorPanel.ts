@@ -37,12 +37,14 @@ export default class EditorPanel extends Vue {
     outputAutoScroll = true;
 
     downloadOutputLogs() {
-        const logs = this.reactiveStore.outputPanel.logs.join('\n');
+        const logs = this.reactiveStore.outputPanel.logs
+            .map((l) => `${l[0].tms}_${l[0].scope.join(' ')} ${l[1]}`)
+            .join('\n');
         const blob = new Blob([logs], { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'aux-output-logs.txt';
+        a.download = `aux-source-control-output-logs-${Date.now()}.txt`;
         a.click();
         setTimeout(() => {
             URL.revokeObjectURL(url);
@@ -51,7 +53,8 @@ export default class EditorPanel extends Vue {
     }
 
     clearOutputLogs() {
-        this.reactiveStore.outputPanel.logs = ['// Logs cleared.'];
+        this.reactiveStore.outputPanel.logs = [];
+        this.scc.logOutput('Output logs cleared.');
     }
 
     toggleOutputScroll() {

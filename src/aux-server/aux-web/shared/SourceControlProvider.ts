@@ -211,6 +211,12 @@ export enum SccHintLevel {
     Link = 'link',
 }
 
+export enum SccOutputLevel {
+    Info = 'info',
+    Warning = 'warning',
+    Error = 'error',
+}
+
 export class SourceControlController {
     private _currentRepoSCP: GitRepoSCP;
 
@@ -232,7 +238,9 @@ export class SourceControlController {
             },
         },
         outputPanel: {
-            logs: ['// Logs appear here...'] as string[],
+            logs: [] as Array<
+                [{ lvl: SccOutputLevel; tms: number; scope: string[] }, string]
+            >,
         },
         hintPanel: {
             title: {
@@ -263,6 +271,10 @@ export class SourceControlController {
             AuxFileSystemEvent.DirectoryDeleted,
             async (path: string) => this.storeDirectoryDeletion(path)
         );
+        this.logOutput(
+            'Source Control Controller initialized.',
+            SccOutputLevel.Info
+        );
     }
 
     storeFileChange(path: string) {
@@ -276,6 +288,21 @@ export class SourceControlController {
     }
     storeDirectoryDeletion(path: string) {
         //TODO: Implement
+    }
+
+    logOutput(message: string, level: SccOutputLevel = SccOutputLevel.Info) {
+        const scope =
+            level === SccOutputLevel.Info
+                ? `[info]:`
+                : level === SccOutputLevel.Warning
+                ? `[WARN]:`
+                : level === SccOutputLevel.Error
+                ? `[ERROR]:`
+                : '';
+        this.reactiveStore.outputPanel.logs.push([
+            { lvl: level, scope: [scope], tms: Date.now() },
+            message,
+        ]);
     }
 
     async init(): Promise<void> {

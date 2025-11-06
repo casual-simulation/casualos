@@ -26,7 +26,13 @@
                 </div>
                 <div class="sc-container-output-logs" ref="logs">
                     <div v-for="(log, index) in reactiveStore.outputPanel.logs" :key="index">
-                        <span>{{ log }}</span>
+                        <i class="output-log-type-tms">@{{ log[0]?.tms ?? 'NA' }}</i
+                        ><span
+                            :class="`output-log-type-scope output-log-type-${
+                                log[0]?.lvl ?? 'info'
+                            }`"
+                            >{{ log[0]?.scope?.join(' > ') ?? '' }}</span
+                        ><span>{{ log[1] ?? '' }}</span>
                     </div>
                 </div>
             </div>
@@ -118,6 +124,29 @@
     border-top-left-radius: 0;
     background: linear-gradient(55deg, rgba(255, 255, 255, 0.5), rgba(241, 241, 241, 0.5));
     padding: 8px 15px;
+}
+
+.output-log-type-tms {
+    font-size: 50%;
+    color: #999;
+    margin-right: 6px;
+}
+
+.output-log-type-scope {
+    font-weight: bold;
+    margin-right: 6px;
+}
+
+.output-log-type-info {
+    color: #466f9a99;
+}
+
+.output-log-type-warning {
+    color: #ffc107;
+}
+
+.output-log-type-error {
+    color: #dc3545;
 }
 </style>
 
