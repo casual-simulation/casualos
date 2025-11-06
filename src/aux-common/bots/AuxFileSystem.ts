@@ -15,10 +15,37 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
+export enum AuxFileSystemEvent {
+    FileChanged = 'fileChanged',
+    FileDeleted = 'fileDeleted',
+    DirectoryCreated = 'directoryCreated',
+    DirectoryDeleted = 'directoryDeleted',
+}
+
+export interface AuxFileSystemEvents {
+    [AuxFileSystemEvent.FileChanged]: (path: string) => void;
+    [AuxFileSystemEvent.FileDeleted]: (path: string) => void;
+    [AuxFileSystemEvent.DirectoryCreated]: (path: string) => void;
+    [AuxFileSystemEvent.DirectoryDeleted]: (path: string) => void;
+}
+
 /**
  * Basic POSIX-like file system interface.
+ * * Includes events for basic file system operations.
  */
 export interface AuxFileSystem {
+    /** Add an event listener to an event. */
+    on<e extends keyof AuxFileSystemEvents>(
+        event: e,
+        callback: AuxFileSystemEvents[e]
+    ): void;
+    /** Remove an event listener from an event. */
+    off<e extends keyof AuxFileSystemEvents>(
+        event: e,
+        callback: AuxFileSystemEvents[e]
+    ): void;
+    /** Read a file as a string. */
     readFile(path: string, opts?: any): Promise<string>;
     writeFile(path: string, content: string, opts?: any): Promise<void>;
     /** Delete a file. */

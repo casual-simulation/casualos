@@ -16,19 +16,18 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import Vue from 'vue';
-import Component from 'vue-class-component';
-import { Prop } from 'vue-property-decorator';
-import BotLibrary from '../../../BotLibrary/BotLibrary.vue';
-import type { SourceControlController } from 'aux-web/shared/SourceControlProvider';
+import { Component, Prop } from 'vue-property-decorator';
 
 @Component({
-    name: 'editor-panel',
-    components: {
-        'search-bot-library': BotLibrary,
-    },
+    name: 'file-system-item',
 })
-export default class EditorPanel extends Vue {
-    @Prop({ required: true }) readonly scc: SourceControlController;
+export default class FileSystemItem extends Vue {
+    @Prop({ required: true, default: '' }) readonly name: string;
+    @Prop({ required: false, default: 'grey' })
+    readonly itemStatusColor: string;
+    @Prop({ required: false, default: 'file' }) readonly iconName: string;
+    @Prop({ required: false, default: '' }) readonly metaMessage: string;
+
     constructor() {
         super();
     }

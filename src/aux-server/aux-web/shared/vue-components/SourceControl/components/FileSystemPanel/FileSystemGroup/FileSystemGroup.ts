@@ -15,21 +15,30 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+import type { CreateElement } from 'vue';
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Prop } from 'vue-property-decorator';
-import BotLibrary from '../../../BotLibrary/BotLibrary.vue';
-import type { SourceControlController } from 'aux-web/shared/SourceControlProvider';
 
 @Component({
-    name: 'editor-panel',
-    components: {
-        'search-bot-library': BotLibrary,
-    },
+    name: 'file-system-group',
 })
-export default class EditorPanel extends Vue {
-    @Prop({ required: true }) readonly scc: SourceControlController;
+export default class FileSystemGroup extends Vue {
     constructor() {
         super();
+    }
+    render(h: CreateElement) {
+        const children = this.$slots.default || [];
+
+        return h('div', { class: 'file-system-group' }, [
+            h('div', children.slice(0, 1)),
+            children
+                .slice(1)
+                .map((c) =>
+                    h('div', { class: 'file-system-group-item' }, [
+                        h('div', { class: 'file-system-group-item-index' }),
+                        c,
+                    ])
+                ),
+        ]);
     }
 }

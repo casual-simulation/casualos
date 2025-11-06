@@ -106,6 +106,7 @@ export interface GitRepoSCP {
 
 export interface GitSCPProvider {
     gitStore: AuxGitStore;
+    get fs(): AuxFileSystem;
     getRepoSCP(repositoryName: string): Promise<GitRepoSCP>;
 }
 
@@ -124,10 +125,10 @@ export class IsomorphicGitSCPProvider implements GitSCPProvider {
     constructor(
         /** The directory the git repository should be stored in. */
         protected _rootDir: string,
-        /** The author config to use in git actions (e.g. commits). */
-        protected _gitAuthor?: GitAuthor,
         /** The file system to use for git operations. */
         private _fs?: AuxFileSystem,
+        /** The author config to use in git actions (e.g. commits). */
+        protected _gitAuthor?: GitAuthor,
         /** The git helper to use for git operations. */
         private _gitHelper?: AuxIsomorphicGit
     ) {

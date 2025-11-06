@@ -15,24 +15,67 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import type { AuxFileSystem } from '../../aux-common/bots/AuxFileSystem';
+import {
+    AuxFileSystemEvent,
+    type AuxFileSystem,
+    type AuxFileSystemEvents,
+} from '../../aux-common/bots/AuxFileSystem';
 import LightningFS from '@isomorphic-git/lightning-fs';
 
 /** The IDB store name LightningFS will use. */
 export const LIGHTNING_FS_NAME = 'AuxLightningFS' as const;
 
 export class AuxFSLightningFS implements AuxFileSystem {
+    private _handlers: { [event: string]: ((...args: any[]) => void)[] } = {};
+
     constructor(
         private _fs: LightningFS = new LightningFS(LIGHTNING_FS_NAME)
     ) {}
+
+    on<e extends keyof AuxFileSystemEvents>(
+        event: e,
+        callback: AuxFileSystemEvents[e]
+    ): void {
+        if (!this._handlers[event]) {
+            this._handlers[event] = [];
+        }
+        this._handlers[event].push(callback);
+    }
+
+    off<e extends keyof AuxFileSystemEvents>(
+        event: e,
+        callback: AuxFileSystemEvents[e]
+    ): void {
+        if (this._handlers[event]) {
+            this._handlers[event] = this._handlers[event].filter(
+                (cb) => cb !== callback
+            );
+        }
+    }
+
+    $emit<e extends keyof AuxFileSystemEvents>(
+        event: e,
+        ...args: Parameters<AuxFileSystemEvents[e]>
+    ): void {
+        if (this._handlers[event]) {
+            for (const cb of this._handlers[event]) {
+                cb(...args);
+            }
+        }
+    }
+
     readFile(path: string, opts?: any): Promise<string> {
         return this._fs.promises.readFile(path, opts ?? { encoding: 'utf8' });
     }
     writeFile(path: string, content: string, opts?: any): Promise<void> {
-        return this._fs.promises.writeFile(path, content, opts);
+        return this._fs.promises.writeFile(path, content, opts).then(() => {
+            this.$emit(AuxFileSystemEvent.FileChanged, path);
+        });
     }
     unlink(path: string, opts?: any): Promise<void> {
-        return this._fs.promises.unlink(path, opts);
+        return this._fs.promises.unlink(path, opts).then(() => {
+            this.$emit(AuxFileSystemEvent.FileDeleted, path);
+        });
     }
     async exists(path: string): Promise<boolean> {
         try {
@@ -51,9 +94,11 @@ export class AuxFSLightningFS implements AuxFileSystem {
     }
     async mkdir(path: string): Promise<void> {
         await this._fs.promises.mkdir(path);
+        this.$emit(AuxFileSystemEvent.DirectoryCreated, path);
     }
     async rmdir(path: string): Promise<void> {
         await this._fs.promises.rmdir(path);
+        this.$emit(AuxFileSystemEvent.DirectoryDeleted, path);
     }
     async readdir(path: string): Promise<string[]> {
         return this._fs.promises.readdir(path);

@@ -5,8 +5,7 @@
         @clone-repo="cloneRepo"
         @load-repo="loadRepo"
         @select-bot="selectBot"
-        :botId="botId"
-        :botSystem="botSystem"
+        :scc="scc"
     ></default-panel>
 </template>
 <script src="./SourceControl.ts"></script>

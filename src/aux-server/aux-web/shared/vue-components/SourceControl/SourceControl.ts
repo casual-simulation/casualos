@@ -20,10 +20,8 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 
 import DefaultPanel from './components/DefaultPanel/DefaultPanel.vue';
-import type { SubscriptionLike } from 'rxjs';
-import type { Bot } from '@casual-simulation/aux-common';
-import type { SystemPortalSelectionUpdate } from '@casual-simulation/aux-vm-browser';
-import { appManager } from '../../AppManager';
+import { Prop } from 'vue-property-decorator';
+import type { SourceControlController } from 'aux-web/shared/SourceControlProvider';
 
 @Component({
     name: 'source-control',
@@ -32,52 +30,14 @@ import { appManager } from '../../AppManager';
     },
 })
 export default class SourceControl extends Vue {
-    private _subs: SubscriptionLike[] = [];
-    private _selectedBot: Bot | null = null;
+    @Prop({ required: true }) readonly scc: SourceControlController;
     currentPanel: string = 'default-panel';
-
-    get botId() {
-        return this._selectedBot ? this._selectedBot.id : null;
-    }
-    get botSystem() {
-        return this._selectedBot
-            ? this._selectedBot.tags['system'] || null
-            : null;
-    }
-
-    get selectedBot() {
-        return this._selectedBot;
-    }
-    set selectedBot(value: Bot | null) {
-        this._selectedBot = value;
-    }
-
-    get selectedBotId() {
-        return this._selectedBot ? this._selectedBot.id : null;
-    }
-
-    private loadGitConfig(config: any) {
-        console.log('load git panel', config);
-    }
-
-    private onSelectionUpdated(e: SystemPortalSelectionUpdate) {
-        if (e.hasSelection === false) return;
-        // Tag change specific logic should go before the botId check
-        if (e.bot.id === this.selectedBotId) return;
-        console.log('selection updated', e, this.selectedBot);
-        const b = (this.selectedBot = e.bot);
-    }
 
     constructor() {
         super();
-        this._subs.push(
-            appManager.systemPortal.onSelectionUpdated.subscribe(
-                this.onSelectionUpdated
-            )
-        );
     }
     initRepo() {
-        appManager.sourceControlController.init();
+        this.scc.init();
     }
     cloneRepo() {
         console.log('clone repo');

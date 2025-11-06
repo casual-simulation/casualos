@@ -17,18 +17,22 @@
  */
 import Vue from 'vue';
 import Component from 'vue-class-component';
+import FileSystemGroup from '../FileSystemGroup/FileSystemGroup';
+import FileSystemDirectory from '../FileSystemDirectory/FileSystemDirectory';
+import FileSystemItem from '../FileSystemItem/FileSystemItem';
 import { Prop } from 'vue-property-decorator';
-import BotLibrary from '../../../BotLibrary/BotLibrary.vue';
-import type { SourceControlController } from 'aux-web/shared/SourceControlProvider';
+import type { VDir, VRoot } from 'aux-web/shared/SourceControlProvider';
 
 @Component({
-    name: 'editor-panel',
+    name: 'file-system-node',
     components: {
-        'search-bot-library': BotLibrary,
+        'file-system-group': FileSystemGroup,
+        'file-system-directory': FileSystemDirectory,
+        'file-system-item': FileSystemItem,
     },
 })
-export default class EditorPanel extends Vue {
-    @Prop({ required: true }) readonly scc: SourceControlController;
+export default class FileSystemNode extends Vue {
+    @Prop({ required: true }) readonly nodeData: VRoot | VDir;
     constructor() {
         super();
     }

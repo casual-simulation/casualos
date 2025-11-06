@@ -2,11 +2,6 @@
     <div class="source-control-editor-panel">
         <div class="sc-container">
             <h2>Source Control Editor Panel</h2>
-            <div class="sc-content" v-if="!selectedBot">
-                <!-- <search-bot-library
-                    :searchBotsBySystemOrId="searchBotsBySystemOrId"
-                ></search-bot-library> -->
-            </div>
         </div>
         <div class="sc-container-output">
             <h3>Output Section</h3>

@@ -15,15 +15,30 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+import type { SourceControlController } from 'aux-web/shared/SourceControlProvider';
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Prop } from 'vue-property-decorator';
+import FileSystemItem from './FileSystemItem/FileSystemItem.vue';
+import FileSystemDirectory from './FileSystemDirectory/FileSystemDirectory.vue';
+import FileSystemGroup from './FileSystemGroup/FileSystemGroup';
+import FileSystemNode from './FileSystemNode/FileSystemNode';
 
 @Component({
     name: 'file-system-panel',
+    components: {
+        'file-system-item': FileSystemItem,
+        'file-system-directory': FileSystemDirectory,
+        'file-system-group': FileSystemGroup,
+        'file-system-node': FileSystemNode,
+    },
 })
 export default class FileSystemPanel extends Vue {
-    @Prop({ required: true, default: {} }) readonly fs: unknown; //TODO: implement.
+    @Prop({ required: true }) readonly scc: SourceControlController;
+
+    get reactiveStore() {
+        return this.scc.reactiveStore;
+    }
 
     constructor() {
         super();

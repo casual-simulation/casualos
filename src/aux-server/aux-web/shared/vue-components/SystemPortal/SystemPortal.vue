@@ -237,7 +237,7 @@
                         </div>
                     </div>
                     <div class="areas" v-else-if="selectedPane === 'source'" ref="areas">
-                        <source-control />
+                        <source-control :scc="sourceControlController" />
                     </div>
                     <div class="areas" v-else ref="areas">
                         <div class="filter">
@@ -508,8 +508,7 @@
                     </div>
                     <div v-else-if="selectedPane === 'source'" class="editor">
                         <source-control-editor
-                            :selectedBot="selectedBot"
-                            :searchBotsBySystemOrId="findBotsBySystemOrId"
+                            :scc="sourceControlController"
                         ></source-control-editor>
                     </div>
                 </div>

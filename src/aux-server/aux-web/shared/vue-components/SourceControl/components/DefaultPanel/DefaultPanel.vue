@@ -8,7 +8,7 @@
             <div class="spacer-div"></div>
         </div>
         <div class="container-body">
-            <file-system-panel class="container-body-fs"></file-system-panel>
+            <file-system-panel class="container-body-fs" :scc="scc"></file-system-panel>
             <div class="spacer-div"></div>
             <div class="list-container">
                 <md-button class="btn btn-primary shadow-box" @click="$emit('init-repo')"

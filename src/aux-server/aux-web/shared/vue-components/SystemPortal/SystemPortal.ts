@@ -229,6 +229,10 @@ export default class SystemPortal extends Vue {
         }
     }
 
+    get sourceControlController() {
+        return appManager.sourceControlController;
+    }
+
     multilineEditor() {
         return this.$refs.multilineEditor as TagValueEditor;
     }
