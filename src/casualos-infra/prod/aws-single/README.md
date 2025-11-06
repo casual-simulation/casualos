@@ -1,4 +1,4 @@
-# AWS Deployment
+# AWS Single-Server Deployment
 
 ## Requirements
 
