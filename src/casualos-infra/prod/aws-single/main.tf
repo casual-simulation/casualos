@@ -439,6 +439,11 @@ resource "kubernetes_pod" "casualos" {
         value = var.casualos_database_url
       }
 
+      env {
+        name = "VM_ORIGIN"
+        value = "https://${var.casualos_auth_domain}"
+      }
+
     dynamic "env" {
         for_each = var.casualos_extra_env
         content {
