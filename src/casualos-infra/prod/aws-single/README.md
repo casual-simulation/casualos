@@ -8,6 +8,13 @@ Ensure that the following are installed:
 -   [AWS CLI](https://aws.amazon.com/cli/)
 -   [kubectl](https://kubernetes.io/docs/reference/kubectl/)
 
+## Deployment
+
+-   A Single Node [Microk8s](https://microk8s.io/) cluster
+-   IPv4 + IPv6 support
+-   S3 for file records
+-   CockroachDB for DB
+
 ## Usage
 
 To deploy, follow these steps:

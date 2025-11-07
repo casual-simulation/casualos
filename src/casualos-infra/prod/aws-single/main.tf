@@ -316,6 +316,7 @@ resource "aws_volume_attachment" "cluster_primary_image_storage_attachment" {
 }
 
 resource "aws_eip_association" "cluster_primary_eip_association" {
+    depends_on = [ aws_volume_attachment.cluster_primary_image_storage_attachment ]
     instance_id   = aws_instance.cluster_primary.id
     allocation_id = aws_eip.cluster_primary_eip.id
 }
@@ -385,6 +386,7 @@ locals {
                 region: var.aws_region,
                 filesBucket: aws_s3_bucket.files_bucket.bucket,
                 filesStorageClass: var.files_storage_class,
+                options: try(local.input_server_config.s3.options, {})
             }, try(local.input_server_config.s3, {})),
             ws: try(local.input_server_config.ws, {}),
             jobs: merge({
@@ -407,6 +409,9 @@ resource "kubernetes_pod" "casualos" {
   metadata {
     name = "casualos"
     namespace = kubernetes_namespace.prod.metadata[0].name
+    labels = {
+        app = "casualos"
+    }
   }
 
   spec {
@@ -415,17 +420,48 @@ resource "kubernetes_pod" "casualos" {
       name  = "casualos"
 
       port {
-        container_port = 80
+        name = "http"
+        container_port = 3000
       }
+
+      env {
+        name = "SERVER_CONFIG"
+        value = jsonencode(local.server_config)
+      }
+
+      env {
+        name = "DATABASE_URL"
+        value = var.casualos_database_url
+      }
+
+    dynamic "env" {
+        for_each = var.casualos_extra_env
+        content {
+            name  = env.key
+            value = env.value
+        }
+    }
 
       liveness_probe {
         http_get {
-          path = "/"
-          port = 80
+          path = "/api/config"
+          port = 3000
         }
 
         initial_delay_seconds = 3
         period_seconds        = 3
+      }
+
+      resources {
+        limits = {
+          memory = "2Gi"
+          cpu = "1"
+        }
+
+        requests = {
+          memory = "1Gi"
+          cpu = "0.5"
+        }
       }
     }
   }
@@ -439,14 +475,33 @@ resource "kubernetes_service" "casualos" {
 
   spec {
     selector = {
-      app = kubernetes_pod.casualos.metadata[0].name
+      app = kubernetes_pod.casualos.metadata[0].labels.app
     }
 
     port {
       port        = 80
-      target_port = 80
+      target_port = "http"
+      name = "http"
     }
 
     type = "NodePort"
   }
+}
+
+resource "kubernetes_ingress_v1" "casualos" {
+    metadata {
+      name = "casualos"
+      namespace = kubernetes_namespace.prod.metadata[0].name
+    }
+
+    spec {
+        default_backend {
+          service {
+            name = kubernetes_service.casualos.metadata[0].name
+            port {
+                name = "http"
+            }
+          }
+        }
+    }
 }
