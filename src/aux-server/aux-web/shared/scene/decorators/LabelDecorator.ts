@@ -45,7 +45,7 @@ import {
 import type { WordBubbleElement } from '../WordBubbleElement';
 import type { Game } from '../Game';
 import { Orthographic_FrustrumSize } from '../CameraRigFactory';
-import { buildSRGBColor } from '../SceneUtils';
+import { buildSRGBColor, getRootAuxBot3D } from '../SceneUtils';
 import NotoSansKR from '@casual-simulation/aux-components/fonts/NotoSansKR/NotoSansKR-Regular.otf';
 import Roboto from '@casual-simulation/aux-components/fonts/Roboto/roboto-v18-latin-regular.woff';
 import { WordBubbleDecorator } from './WordBubbleDecorator';
@@ -322,17 +322,25 @@ export class LabelDecorator
     }
 
     private _updateTextPosition() {
-        let botBoundingBox = this.bot3D.boundingBox;
+        let boundingSphere = this.bot3D.boundingSphere;
         let objCenter: Vector3 = null;
 
-        if (botBoundingBox) {
-            objCenter = new Vector3();
-            botBoundingBox.getCenter(objCenter);
+        if (boundingSphere) {
+            objCenter = boundingSphere.center.clone();
+        }
+        
+        let gridScale = this.bot3D.gridScale;
+        if (!this.bot3D.isOnGrid) {
+            const rootAuxBot3D = getRootAuxBot3D(this.bot3D);
+
+            if (rootAuxBot3D) {
+                gridScale = rootAuxBot3D.gridScale;
+            }
         }
 
         return this.text3D.setPositionForObject(
             this.bot3D.scaleContainer,
-            this.bot3D.gridScale,
+            gridScale,
             objCenter
         );
     }
