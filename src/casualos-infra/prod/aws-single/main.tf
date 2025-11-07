@@ -76,6 +76,17 @@ resource "aws_s3_bucket_cors_configuration" "files_bucket_cors" {
     }
 }
 
+resource "aws_sns_topic" "search_jobs" {
+    name = "${local.project_name}-search-jobs-topic"
+
+    tags = {
+      Name = "${local.project_name}-search-jobs-topic"
+      Environment = var.environment
+      Project = var.project_name
+      Customer = var.customer
+    }
+}
+
 resource "tls_private_key" "cluster_ssh_key" {
     algorithm = "ED25519"
 }
@@ -239,6 +250,20 @@ resource "aws_eip" "cluster_primary_eip" {
 
 locals {
     cluster_primary_ip = aws_eip.cluster_primary_eip.public_ip
+    availability_zone_primary = "${var.aws_region}${var.aws_availability_zone_primary}"
+}
+
+resource "aws_ebs_volume" "cluster_primary_image_storage" {
+    availability_zone = local.availability_zone_primary
+    size = 20
+    type = "gp3"
+
+    tags = {
+      Name = "${local.project_name}-primary-image-storage"
+      Environment = var.environment
+      Project = var.project_name
+      Customer = var.customer
+    }
 }
 
 # The primary cluster node
@@ -255,6 +280,7 @@ resource "aws_instance" "cluster_primary" {
     instance_type = var.primary_instance_type
     key_name      = aws_key_pair.cluster_ssh_key_pair.key_name
     security_groups = [ aws_security_group.cluster_security_group.name ]
+    availability_zone = local.availability_zone_primary
 
     tags = {
       Name        = "${local.project_name}-primary"
@@ -273,12 +299,20 @@ resource "aws_instance" "cluster_primary" {
             ca_cert = base64encode(tls_self_signed_cert.cluster_ca.cert_pem)
             ca_key = base64encode(tls_private_key.cluster_ca_key.private_key_pem)
             bootstrap = base64encode(templatefile("${path.module}/config/bootstrap.tftpl", {}))
+            attach_device = base64encode("/dev/nvme1n1")
+            attach_device_mount_path = base64encode("/var/snap/microk8s/common")
         })
     )
 
     lifecycle {
         ignore_changes = [ user_data_base64 ]
     }
+}
+
+resource "aws_volume_attachment" "cluster_primary_image_storage_attachment" {
+    device_name = "/dev/sdh" // this is pointless
+    volume_id   = aws_ebs_volume.cluster_primary_image_storage.id
+    instance_id = aws_instance.cluster_primary.id
 }
 
 resource "aws_eip_association" "cluster_primary_eip_association" {
@@ -324,6 +358,7 @@ provider "kubernetes" {
 resource "kubernetes_namespace" "prod" {
     depends_on = [ 
         aws_eip_association.cluster_primary_eip_association,
+        aws_volume_attachment.cluster_primary_image_storage_attachment,
         aws_instance.cluster_primary,
         tls_self_signed_cert.cluster_ca,
     ]
@@ -336,6 +371,38 @@ resource "kubernetes_namespace" "prod" {
     }
 }
 
+locals {
+    input_server_config = var.casualos_server_config
+    server_config = merge(
+        local.input_server_config,
+        {
+            prisma: merge({
+                options: {
+                    datasourceUrl: var.casualos_database_url
+                }
+            }, try(local.input_server_config.prisma, {})),
+            s3: merge({
+                region: var.aws_region,
+                filesBucket: aws_s3_bucket.files_bucket.bucket,
+                filesStorageClass: var.files_storage_class,
+            }, try(local.input_server_config.s3, {})),
+            ws: try(local.input_server_config.ws, {}),
+            jobs: merge({
+                search: merge({
+                    type: "sns",
+                    topicArn: aws_sns_topic.search_jobs.arn,
+                }, try(local.input_server_config.jobs.search, {})),
+            }, try(local.input_server_config.jobs, {})),
+        },
+    )
+}
+
+output "casualos_server_config" {
+    value = jsonencode(local.server_config)
+    sensitive = true
+    description = "The server config that was produced for the casualos pod."
+}
+
 resource "kubernetes_pod" "casualos" {
   metadata {
     name = "casualos"
@@ -344,7 +411,7 @@ resource "kubernetes_pod" "casualos" {
 
   spec {
     container {
-      image = "ghcr.io/casual-simulation/casualos:v3.6.0"
+      image = "${var.casualos_image}:${var.casualos_version}"
       name  = "casualos"
 
       port {
