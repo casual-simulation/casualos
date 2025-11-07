@@ -420,8 +420,13 @@ resource "kubernetes_pod" "casualos" {
       name  = "casualos"
 
       port {
-        name = "http"
+        name = "frontend"
         container_port = 3000
+      }
+
+      port {
+        name = "auth"
+        container_port = 3002
       }
 
       env {
@@ -479,29 +484,82 @@ resource "kubernetes_service" "casualos" {
     }
 
     port {
-      port        = 80
-      target_port = "http"
-      name = "http"
+        port = 3000
+        target_port = "frontend"
+        name = "frontend"
     }
 
-    type = "NodePort"
+    port {
+        port = 3002
+        target_port = "auth"
+        name = "auth"
+    }
+
+    type = "ClusterIP"
   }
 }
 
 resource "kubernetes_ingress_v1" "casualos" {
+    depends_on = [ kubernetes_manifest.letsencrypt_cluster_issuer ]
+
     metadata {
       name = "casualos"
       namespace = kubernetes_namespace.prod.metadata[0].name
+      annotations = {
+        "cert-manager.io/cluster-issuer" = "lets-encrypt"
+      }
     }
 
     spec {
-        default_backend {
-          service {
-            name = kubernetes_service.casualos.metadata[0].name
-            port {
-                name = "http"
+        tls {
+            hosts = [
+                var.casualos_frontend_domain,
+                var.casualos_auth_domain
+            ]
+            secret_name = "casualos-tls-cert"
+        }
+
+        rule {
+            host = var.casualos_frontend_domain
+            http {
+                path {
+                    path = "/"
+                    path_type = "Prefix"
+                    backend {
+                      service {
+                        name = kubernetes_service.casualos.metadata[0].name
+                        port {
+                            name = "frontend"
+                        }
+                      }
+                    }
+                }
             }
-          }
+        }
+
+        rule {
+            host = var.casualos_auth_domain
+            http {
+                path {
+                    path = "/"
+                    path_type = "Prefix"
+                    backend {
+                      service {
+                        name = kubernetes_service.casualos.metadata[0].name
+                        port {
+                            name = "auth"
+                        }
+                      }
+                    }
+                }
+            }
         }
     }
+}
+
+resource "kubernetes_manifest" "letsencrypt_cluster_issuer" {
+    depends_on = [ kubernetes_namespace.prod ]
+    manifest = yamldecode(templatefile("${path.module}/config/letsencrypt_cluster_issuer.yaml.tftpl", {
+        email = var.lets_encrypt_email
+    }))
 }

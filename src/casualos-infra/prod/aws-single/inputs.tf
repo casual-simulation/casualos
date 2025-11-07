@@ -65,3 +65,18 @@ variable "files_storage_class" {
     type = string
     default = "STANDARD"
 }
+
+variable "lets_encrypt_email" {
+    type = string
+    description = "The email address to use for Let's Encrypt registration."
+}
+
+variable "casualos_frontend_domain" {
+    type = string
+    description = "The domain name for the CasualOS frontend."
+}
+
+variable "casualos_auth_domain" {
+    type = string
+    description = "The domain name for the CasualOS auth service."
+}
