@@ -16,8 +16,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import type { ServerConfig } from '@casual-simulation/aux-records';
-import { serverConfigSchema } from '@casual-simulation/aux-records';
 import { merge, tryParseJson } from '@casual-simulation/aux-common';
+import type { CasualOSConfig } from './CasualOSConfig';
+import { casualosConfigSchema } from './CasualOSConfig';
 
 declare const DEVELOPMENT: boolean;
 declare const SERVER_CONFIG: string;
@@ -26,8 +27,9 @@ export const DEV_CONFIG: ServerConfig = {};
 
 export function loadConfig(
     required: boolean = true,
-    dynamicConfig: ServerConfig = {}
-) {
+    dynamicConfig: ServerConfig = {},
+    schema: typeof casualosConfigSchema = casualosConfigSchema
+): CasualOSConfig {
     const injectedConfig = parseObject(SERVER_CONFIG);
     const envConfig = parseObject(process.env.SERVER_CONFIG);
 
@@ -42,7 +44,7 @@ export function loadConfig(
         dynamicConfig
     );
 
-    const optionsResult = serverConfigSchema.safeParse(merged);
+    const optionsResult = schema.safeParse(merged);
 
     if (optionsResult.success === false) {
         console.error(

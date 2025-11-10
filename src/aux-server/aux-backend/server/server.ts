@@ -20,12 +20,10 @@ import * as Https from 'https';
 import type { Request, Response } from 'express';
 import express from 'express';
 import * as bodyParser from 'body-parser';
-import * as path from 'path';
 import cors from 'cors';
 import { Binary } from 'mongodb';
 import { asyncMiddleware } from './utils';
-import type { Config } from './config';
-import { DRIVES_URL } from './config';
+import { DRIVES_URL, type CasualOSConfig } from '../shared/CasualOSConfig';
 import type {
     GenericHttpHeaders,
     GenericHttpRequest,
@@ -49,24 +47,24 @@ export class Server {
     private _frontendHttp: Http.Server;
     private _backendHttp: Http.Server;
     private _wsServer: WebSocketServer;
-    private _config: Config;
+    private _config: CasualOSConfig;
 
-    constructor(config: Config) {
+    constructor(config: CasualOSConfig) {
         this._config = config;
         this._frontendApp = express();
         this._backendApp = express();
-        if (this._config.collaboration.tls) {
+        if (this._config.app.tls) {
             this._frontendHttp = <any>Https.createServer(
                 {
-                    cert: this._config.collaboration.tls.cert,
-                    key: this._config.collaboration.tls.key,
+                    cert: this._config.app.tls.cert,
+                    key: this._config.app.tls.key,
                 },
                 this._frontendApp
             );
             this._backendHttp = <any>Https.createServer(
                 {
-                    cert: this._config.collaboration.tls.cert,
-                    key: this._config.collaboration.tls.key,
+                    cert: this._config.app.tls.cert,
+                    key: this._config.app.tls.key,
                 },
                 this._backendApp
             );
@@ -79,14 +77,12 @@ export class Server {
     }
 
     async configure() {
-        if (
-            this._config.collaboration.proxy &&
-            this._config.collaboration.proxy.trust
-        ) {
-            this._frontendApp.set(
-                'trust proxy',
-                this._config.collaboration.proxy.trust
-            );
+        if (!this._config.app.enabled) {
+            console.warn('[Server] CasualOS app is disabled.');
+            return;
+        }
+        if (this._config.app.proxy?.trust) {
+            this._frontendApp.set('trust proxy', this._config.app.proxy.trust);
         }
 
         await this._configureBackend();
@@ -107,68 +103,68 @@ export class Server {
             next();
         });
 
-        const player = this._config.collaboration.player;
+        const webConfig = this._config.app.webConfig;
         this._frontendApp.get(
             '/api/config',
             asyncMiddleware(async (req, res) => {
                 const config: WebConfig = {
-                    ...player.web,
+                    ...(webConfig as WebConfig),
                     version: 2,
                 };
                 res.send(config);
             })
         );
 
-        this._frontendApp.use(express.static(this._config.collaboration.dist));
+        // TODO:
+        // this._frontendApp.use(express.static(this._config.collaboration.dist));
 
-        const driveMiddleware = [
-            express.static(this._config.collaboration.drives),
-            ...[...new Array(5)].map((_, i) =>
-                express.static(
-                    path.join(this._config.collaboration.drives, i.toString())
-                )
-            ),
-        ];
+        const driveMiddleware = (this._config.app.serveDrives ?? []).map(
+            (dir) => express.static(dir)
+        );
+
         this._frontendApp.use(DRIVES_URL, driveMiddleware);
 
         this._frontendApp.get('/api/*', (req, res) => {
             res.sendStatus(404);
         });
 
-        this._frontendApp.get('/terms', (req, res) => {
-            res.sendFile(
-                path.join(
-                    this._config.collaboration.dist,
-                    'terms-of-service.txt'
-                )
-            );
-        });
+        // TODO:
+        // this._frontendApp.get('/terms', (req, res) => {
+        //     res.sendFile(
+        //         path.join(
+        //             this._config.collaboration.dist,
+        //             'terms-of-service.txt'
+        //         )
+        //     );
+        // });
 
-        this._frontendApp.get('/privacy-policy', (req, res) => {
-            res.sendFile(
-                path.join(this._config.collaboration.dist, 'privacy-policy.txt')
-            );
-        });
+        // TODO:
+        // this._frontendApp.get('/privacy-policy', (req, res) => {
+        //     res.sendFile(
+        //         path.join(this._config.collaboration.dist, 'privacy-policy.txt')
+        //     );
+        // });
 
-        this._frontendApp.get('*', (req, res) => {
-            res.sendFile(
-                path.join(
-                    this._config.collaboration.dist,
-                    this._config.collaboration.player.index
-                )
-            );
-        });
+        // TODO:
+        // this._frontendApp.get('*', (req, res) => {
+        //     res.sendFile(
+        //         path.join(
+        //             this._config.collaboration.dist,
+        //             this._config.collaboration.player.index
+        //         )
+        //     );
+        // });
     }
 
     private async _configureBackend() {
         const app = this._backendApp;
-        const options = this._config.backend.config;
-        if (!options) {
-            console.log('[Server] Skipping Backend.');
-            return;
-        }
+        // const options = this._config.backend.config;
+        // if (!options) {
+        //     console.log('[Server] Skipping Backend.');
+        //     return;
+        // }
 
-        const builder = constructServerBuilder(options);
+        const builder = constructServerBuilder(this._config);
 
         const {
             server,
@@ -185,7 +181,7 @@ export class Server {
             ...builder.allowedAccountOrigins,
         ]);
 
-        const dist = this._config.backend.dist;
+        // const dist = this._config.backend.dist;
 
         async function handleRequest(req: Request, res: Response) {
             const query: GenericHttpRequest['query'] = {};
@@ -245,7 +241,8 @@ export class Server {
             }
         }
 
-        app.use(express.static(dist));
+        // TODO:
+        // app.use(express.static(dist));
 
         app.get(
             '/api/v2/records/file/list',
@@ -399,9 +396,10 @@ export class Server {
             })
         );
 
-        app.get('*', (req, res) => {
-            res.sendFile(path.join(dist, 'index.html'));
-        });
+        // TODO:
+        // app.get('*', (req, res) => {
+        //     res.sendFile(path.join(dist, 'index.html'));
+        // });
 
         app.all('*', (req, res) => {
             res.sendStatus(404);
@@ -485,35 +483,28 @@ export class Server {
     }
 
     start() {
-        this._frontendHttp.listen(this._config.collaboration.httpPort, () =>
+        this._frontendHttp.listen(this._config.app.frontendPort, () =>
             console.log(
-                `[Server] Frontend listening on port ${this._config.collaboration.httpPort}!`
+                `[Server] Frontend listening on port ${this._config.app.frontendPort}!`
             )
         );
 
-        if (this._config.backend.config) {
-            const server = this._backendHttp.listen(
-                this._config.backend.httpPort,
-                () =>
-                    console.log(
-                        `[Server] Backend listening on port ${this._config.backend.httpPort}!`
-                    )
-            );
+        const server = this._backendHttp.listen(
+            this._config.app.backendPort,
+            () =>
+                console.log(
+                    `[Server] Backend listening on port ${this._config.app.backendPort}!`
+                )
+        );
 
-            server.on('upgrade', (request, socket, head) => {
-                socket.on('error', (err) => {
-                    console.error('[Server] Error on websocket.', err);
-                });
-
-                this._wsServer.handleUpgrade(
-                    request,
-                    socket as any,
-                    head,
-                    (ws) => {
-                        this._wsServer.emit('connection', ws, request);
-                    }
-                );
+        server.on('upgrade', (request, socket, head) => {
+            socket.on('error', (err) => {
+                console.error('[Server] Error on websocket.', err);
             });
-        }
+
+            this._wsServer.handleUpgrade(request, socket as any, head, (ws) => {
+                this._wsServer.emit('connection', ws, request);
+            });
+        });
     }
 }

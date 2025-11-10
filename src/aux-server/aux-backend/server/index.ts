@@ -20,20 +20,9 @@ import './env';
 import './instrumentation';
 import process from 'process';
 import { Server } from './server';
-import prodConfig from './config.prod';
-import devConfig from './config.dev';
-import type { Config } from './config';
+import { loadConfig } from 'aux-backend/shared/ConfigUtils';
 
-const env = process.env.NODE_ENV;
-let config: Config;
-if (env === 'production') {
-    console.log('[Server] Using production config.');
-    config = prodConfig();
-} else {
-    console.log('[Server] Using dev config.');
-    config = devConfig();
-}
-
+const config = loadConfig();
 const server = new Server(config);
 
 async function init() {
