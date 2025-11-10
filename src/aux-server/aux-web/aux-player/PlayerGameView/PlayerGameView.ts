@@ -425,6 +425,11 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
             camera,
         });
 
+        // Disable double-click zooming functionality for this map view.
+        this._mapView.on("double-click", (event) => {
+            event.stopPropagation();
+        });
+
         try {
             // wait for the map to load
             await this._mapView.when();
@@ -495,6 +500,11 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
                 components: [],
             },
             camera,
+        });
+
+        // Disable double-click zooming functionality for this map view.
+        this._miniMapView.on("double-click", (event) => {
+            event.stopPropagation();
         });
 
         try {
