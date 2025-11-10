@@ -395,29 +395,6 @@ export default defineConfig(({ command, mode }) => ({
                 : {}),
         },
     },
-    server: {
-        port: 3000,
-        host: '::',
-        watch: {
-            ignored: [
-                ...casualOsPackages.map((p) => `!**/node_modules/${p}/**`),
-            ],
-        },
-        fs: {
-            strict: true,
-            allow: [
-                path.resolve(__dirname, '..', '..', '..'), // src folder
-                path.resolve(__dirname, '..', '..', '..', '..', 'node_modules'), // node_modules
-            ],
-        },
-        proxy: {
-            '/api': 'http://localhost:2999',
-            '/websocket': {
-                target: 'http://localhost:2998',
-                ws: true,
-            },
-        },
-    },
     optimizeDeps: {
         exclude: [...casualOsPackages, 'monaco-editor'],
     },
