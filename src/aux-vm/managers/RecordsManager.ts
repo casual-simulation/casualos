@@ -22,7 +22,6 @@ import type {
     GetRecordsEndpointAction,
     StoredAux,
     PublicRecordKeyPolicy,
-    SignOutAction,
 } from '@casual-simulation/aux-common';
 import {
     hasValue,
@@ -83,7 +82,6 @@ import type { AuxConfigParameters } from '../vm/AuxConfig';
 import axios from 'axios';
 import type { AxiosResponse, AxiosRequestConfig } from 'axios';
 import type { BotHelper } from './BotHelper';
-import type { AuthHelperInterface } from './AuthHelperInterface';
 import { sha256 } from 'hash.js';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
 import '@casual-simulation/aux-common/BlobPolyfill';
@@ -200,10 +198,6 @@ export type GetEndpointInfoFunction = (
     authenticateIfNotLoggedIn: boolean
 ) => Promise<RecordsEndpointInfo | null>;
 
-export type GetAuthHelperFunction = (
-    endpoint: string
-) => AuthHelperInterface | null;
-
 export const RECORDS_WS_PROTOCOL = 'casualos.records';
 
 /**
@@ -213,7 +207,6 @@ export class RecordsManager {
     private _config: AuxConfigParameters;
     private _helper: BotHelper;
     private _getEndpointInfo: GetEndpointInfoFunction;
-    private _getAuthHelper: GetAuthHelperFunction;
     private _connectionClientFactory: (
         endpoint: string,
         protocol: RemoteCausalRepoProtocol
@@ -311,14 +304,12 @@ export class RecordsManager {
      * @param config The AUX Config that should be used.
      * @param helper The Bot Helper that the simulation is using.
      * @param getEndpointInfo The function that should be used to resolve the info for the given endpoint. Should return null if the endpoint is not supported.
-     * @param getAuthHelper The function that should be used to resolve the auth helper for the given endpoint. Should return null if the endpoint is not supported.
      * @param skipTimers Whether to skip the timers used for skybox requests.
      */
     constructor(
         config: AuxConfigParameters,
         helper: BotHelper,
         getEndpointInfo: GetEndpointInfoFunction,
-        getAuthHelper: GetAuthHelperFunction,
         skipTimers: boolean = false,
         connectionClientFactory: (
             endpoint: string,
@@ -328,7 +319,6 @@ export class RecordsManager {
         this._config = config;
         this._helper = helper;
         this._getEndpointInfo = getEndpointInfo;
-        this._getAuthHelper = getAuthHelper;
         this._axiosOptions = {
             validateStatus: (status) => {
                 return status < 500;
@@ -395,8 +385,6 @@ export class RecordsManager {
                 this._listUserStudios(event);
             } else if (event.type === 'get_records_endpoint') {
                 this._getRecordsEndpoint(event);
-            } else if (event.type === 'sign_out') {
-                this._signOut(event);
             } else if (event.type === 'records_call_procedure') {
                 this._recordsCallProcedure(event);
             } else if (event.type === 'record_package_version') {
@@ -464,38 +452,6 @@ export class RecordsManager {
             this._helper.transaction(
                 asyncResult(event.taskId, this._config.authOrigin)
             );
-        }
-    }
-
-    private async _signOut(event: SignOutAction) {
-        const auth = this._getAuthHelper(this._config.authOrigin);
-        if (!auth) {
-            console.warn(
-                '[RecordsManager] Unable to sign out: No auth helper available.'
-            );
-            if (hasValue(event.taskId)) {
-                await this._helper.transaction(
-                    asyncError(
-                        event.taskId,
-                        new Error(
-                            'Unable to sign out: No auth helper available.'
-                        )
-                    )
-                );
-            }
-            return;
-        }
-
-        try {
-            await auth.logout();
-            if (hasValue(event.taskId)) {
-                await this._helper.transaction(asyncResult(event.taskId, null));
-            }
-        } catch (error) {
-            console.error('[RecordsManager] Error signing out:', error);
-            if (hasValue(event.taskId)) {
-                await this._helper.transaction(asyncError(event.taskId, error));
-            }
         }
     }
 

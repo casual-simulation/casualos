@@ -374,7 +374,6 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                     endpoint,
                     authenticateIfNotLoggedIn
                 ),
-            (endpoint) => this._getAuthEndpointHelper(endpoint),
             undefined,
             (endpoint, protocol) => {
                 if (protocol === 'apiary-aws') {
