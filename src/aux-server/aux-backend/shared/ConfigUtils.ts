@@ -27,8 +27,7 @@ export const DEV_CONFIG: ServerConfig = {};
 
 export function loadConfig(
     required: boolean = true,
-    dynamicConfig: ServerConfig = {},
-    schema: typeof casualosConfigSchema = casualosConfigSchema
+    dynamicConfig: ServerConfig = {}
 ): CasualOSConfig {
     const injectedConfig = parseObject(SERVER_CONFIG);
     const envConfig = parseObject(process.env.SERVER_CONFIG);
@@ -44,7 +43,7 @@ export function loadConfig(
         dynamicConfig
     );
 
-    const optionsResult = schema.safeParse(merged);
+    const optionsResult = casualosConfigSchema.safeParse(merged);
 
     if (optionsResult.success === false) {
         console.error(

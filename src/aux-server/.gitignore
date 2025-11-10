@@ -2,3 +2,4 @@ drives
 secrets.env.json
 secrets.dev.env.json
 stats.html
+vite.config.mts.timestamp-*

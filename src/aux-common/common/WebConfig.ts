@@ -217,9 +217,8 @@ export interface WebConfig {
 }
 
 export const WEB_CONFIG_SCHEMA = z.object({
-    version: null,
     causalRepoConnectionProtocol: z.enum(['websocket', 'apiary-aws']),
-    causalRepoConnectionUrl: z.string().min(1).max(512),
+    causalRepoConnectionUrl: z.string().min(1).max(512).optional(),
     collaborativeRepoLocalPersistence: z.boolean(),
     staticRepoLocalPersistence: z.boolean(),
     sharedPartitionsVersion: z.enum(['v2']),

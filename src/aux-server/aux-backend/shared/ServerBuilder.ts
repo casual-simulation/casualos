@@ -231,8 +231,8 @@ import {
     SqliteDatabaseInterface,
     TursoDatabaseInterface,
 } from '@casual-simulation/aux-records/database';
-import { SqliteDatabaseRecordsStore } from 'aux-backend/prisma/sqlite/SqliteDatabaseRecordsStore';
-import { PrismaDatabaseRecordsStore } from 'aux-backend/prisma/PrismaDatabaseRecordsStore';
+import { SqliteDatabaseRecordsStore } from '../prisma/sqlite/SqliteDatabaseRecordsStore';
+import { PrismaDatabaseRecordsStore } from '../prisma/PrismaDatabaseRecordsStore';
 
 const automaticPlugins: ServerPlugin[] = [
     ...xpApiPlugins.map((p: any) => p.default),

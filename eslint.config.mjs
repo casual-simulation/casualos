@@ -103,6 +103,7 @@ export default defineConfig([
             'src/aux-components/**/*.{js,ts,vue}',
             'src/aux-server/aux-web/shared/vue-components/**/*.{js,ts,vue}',
             'src/aux-server/aux-web/shared/public/**/*.{js,ts,vue}',
+            'src/aux-server/aux-web/aux-auth/site/index.server.{js,ts,vue,tsx}',
         ],
         rules: {
             'vue/multi-word-component-names': 'off',

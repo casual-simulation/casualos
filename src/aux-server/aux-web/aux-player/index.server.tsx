@@ -15,28 +15,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+import { renderToStringAsync } from 'preact-render-to-string';
+// import { createApp } from './main'
 
-import './env';
-import './instrumentation';
-import process from 'process';
-import { Server } from './server';
-import { loadConfig } from '../shared/ConfigUtils';
+export async function render(_url: string) {
+    const ctx = {};
+    const html = await renderToStringAsync(<div>Aux Player SSR</div>, ctx);
+    const head = '';
 
-const config = loadConfig();
-const server = new Server(config);
-
-async function init() {
-    await configure();
-    server.start();
-}
-
-init();
-
-async function configure() {
-    try {
-        await server.configure();
-    } catch (ex) {
-        console.error(ex);
-        process.exit(1);
-    }
+    return { html, head };
 }

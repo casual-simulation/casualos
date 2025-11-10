@@ -23,7 +23,9 @@ import * as bodyParser from 'body-parser';
 import cors from 'cors';
 import { Binary } from 'mongodb';
 import { asyncMiddleware } from './utils';
-import { DRIVES_URL, type CasualOSConfig } from '../shared/CasualOSConfig';
+import { type CasualOSConfig } from '../shared/CasualOSConfig';
+import path from 'node:path';
+import fs from 'node:fs/promises';
 import type {
     GenericHttpHeaders,
     GenericHttpRequest,
@@ -37,6 +39,11 @@ import { WSWebsocketMessenger } from '../ws/WSWebsocketMessenger';
 import { concatMap, interval } from 'rxjs';
 import { constructServerBuilder } from '../shared/LoadServer';
 import { RedisWSWebsocketMessenger } from '../redis/RedisWSWebsocketMessenger';
+import { render as renderPlayer } from '../../aux-web/aux-player/index.server';
+
+declare let DEVELOPMENT: boolean;
+
+const isProduction = !DEVELOPMENT;
 
 /**
  * Defines a class that represents a fully featured SO4 server.
@@ -81,30 +88,33 @@ export class Server {
             console.warn('[Server] CasualOS app is disabled.');
             return;
         }
+        console.log('[Server] Configuring CasualOS app...');
         if (this._config.app.proxy?.trust) {
             this._frontendApp.set('trust proxy', this._config.app.proxy.trust);
         }
 
         await this._configureBackend();
 
+        const app = this._frontendApp;
+
         // TODO: Enable CSP when we know where it works and does not work
         // this._frontendApplyCSP();
-        this._frontendApp.use(cors());
-        this._frontendApp.use(compression());
-        this._frontendApp.use(
+        app.use(cors());
+        app.use(compression());
+        app.use(
             bodyParser.json({
                 limit: '5mb',
             })
         );
 
-        this._frontendApp.use((req, res, next) => {
+        app.use((req, res, next) => {
             res.setHeader('Referrer-Policy', 'same-origin');
             res.setHeader('Access-Control-Allow-Credentials', 'true');
             next();
         });
 
         const webConfig = this._config.app.webConfig;
-        this._frontendApp.get(
+        app.get(
             '/api/config',
             asyncMiddleware(async (req, res) => {
                 const config: WebConfig = {
@@ -115,45 +125,143 @@ export class Server {
             })
         );
 
-        // TODO:
-        // this._frontendApp.use(express.static(this._config.collaboration.dist));
+        if (this._config.app.drives) {
+            const driveMiddleware = this._config.app.drives.dirs.map((dir) =>
+                express.static(dir)
+            );
 
-        const driveMiddleware = (this._config.app.serveDrives ?? []).map(
-            (dir) => express.static(dir)
-        );
+            app.use(this._config.app.drives.path, driveMiddleware);
+        }
 
-        this._frontendApp.use(DRIVES_URL, driveMiddleware);
-
-        this._frontendApp.get('/api/*', (req, res) => {
+        app.get('/api/*', (req, res) => {
             res.sendStatus(404);
         });
 
-        // TODO:
-        // this._frontendApp.get('/terms', (req, res) => {
-        //     res.sendFile(
-        //         path.join(
-        //             this._config.collaboration.dist,
-        //             'terms-of-service.txt'
-        //         )
-        //     );
-        // });
+        const dist = path.resolve(
+            __dirname,
+            '..',
+            '..',
+            '..',
+            'aux-web',
+            'dist'
+        );
 
-        // TODO:
-        // this._frontendApp.get('/privacy-policy', (req, res) => {
-        //     res.sendFile(
-        //         path.join(this._config.collaboration.dist, 'privacy-policy.txt')
-        //     );
-        // });
+        app.get('/terms', (req, res) => {
+            res.sendFile(path.join(dist, 'terms-of-service.txt'));
+        });
 
-        // TODO:
-        // this._frontendApp.get('*', (req, res) => {
-        //     res.sendFile(
-        //         path.join(
-        //             this._config.collaboration.dist,
-        //             this._config.collaboration.player.index
-        //         )
-        //     );
-        // });
+        app.get('/privacy-policy', (req, res) => {
+            res.sendFile(path.join(dist, 'privacy-policy.txt'));
+        });
+
+        if (!isProduction) {
+            console.log(
+                '[Server] Running CasualOS frontend in development mode.'
+            );
+            const frontendSourcePath = path.resolve(
+                __dirname,
+                '../../../aux-web/aux-player'
+            );
+            const frontendConfigPath = path.resolve(
+                frontendSourcePath,
+                'vite.config.mts'
+            );
+            const frontendIndex = path.resolve(
+                frontendSourcePath,
+                'index.html'
+            );
+            const { createServer } = await import('vite');
+            const vite = await createServer({
+                configFile: frontendConfigPath,
+                server: { middlewareMode: true },
+                appType: 'custom',
+                root: frontendSourcePath,
+            });
+
+            app.use(vite.middlewares);
+
+            app.use('*', async (req, res, next) => {
+                const url = req.originalUrl;
+
+                try {
+                    const template = await fs.readFile(frontendIndex, 'utf-8');
+
+                    const transformedTemplate = await vite.transformIndexHtml(
+                        url,
+                        template
+                    );
+
+                    const html = await this._renderPlayerIndex(
+                        transformedTemplate,
+                        url
+                    );
+
+                    // 6. Send the rendered HTML back.
+                    res.status(200)
+                        .set({ 'Content-Type': 'text/html' })
+                        .end(html);
+                } catch (e) {
+                    // If an error is caught, let Vite fix the stack trace so it maps back
+                    // to your actual source code.
+                    vite.ssrFixStacktrace(e);
+                    next(e);
+                }
+            });
+        } else {
+            app.use(express.static(dist));
+
+            const index = await fs.readFile(
+                path.resolve(dist, 'index.html'),
+                'utf-8'
+            );
+            app.use('*', async (req, res) => {
+                const url = req.originalUrl;
+
+                const html = await this._renderPlayerIndex(index, url);
+
+                // 6. Send the rendered HTML back.
+                res.status(200).set({ 'Content-Type': 'text/html' }).end(html);
+            });
+        }
+    }
+
+    private async _renderPlayerIndex(
+        template: string,
+        url: string
+    ): Promise<string> {
+        const rendered = await renderPlayer(url);
+
+        // 5. Inject the app-rendered HTML into the template.
+        const html = template
+            .replace(`<!--app-head-->`, () => rendered.head)
+            .replace(`<!--app-ssr-->`, () => rendered.html);
+        return html;
+    }
+
+    private async _renderAuthIndex(
+        template: string,
+        url: string
+    ): Promise<string> {
+        // const rendered = await renderAuth(url);
+
+        // 5. Inject the app-rendered HTML into the template.
+        // const html = template
+        //     .replace(`<!--app-head-->`, () => rendered.head)
+        //     .replace(`<!--app-ssr-->`, () => rendered.html);
+        return template;
+    }
+
+    private async _renderAuthIframe(
+        template: string,
+        url: string
+    ): Promise<string> {
+        // const rendered = await renderAuth(url);
+
+        // 5. Inject the app-rendered HTML into the template.
+        // const html = template
+        //     .replace(`<!--app-head-->`, () => rendered.head)
+        //     .replace(`<!--app-ssr-->`, () => rendered.html);
+        return template;
     }
 
     private async _configureBackend() {
@@ -240,9 +348,6 @@ export class Server {
                 res.send();
             }
         }
-
-        // TODO:
-        // app.use(express.static(dist));
 
         app.get(
             '/api/v2/records/file/list',
@@ -396,10 +501,119 @@ export class Server {
             })
         );
 
-        // TODO:
-        // app.get('*', (req, res) => {
-        //     res.sendFile(path.join(dist, 'index.html'));
-        // });
+        const authDist = path.resolve(
+            __dirname,
+            '..',
+            '..',
+            '..',
+            'aux-web',
+            'aux-auth',
+            'dist'
+        );
+        if (!isProduction) {
+            console.log(
+                '[Server] Running CasualOS backend in development mode.'
+            );
+            const backendSourcePath = path.resolve(
+                __dirname,
+                '../../../aux-web/aux-auth'
+            );
+            const backendConfigPath = path.resolve(
+                backendSourcePath,
+                'vite.config.mts'
+            );
+            const backendIndex = path.resolve(backendSourcePath, 'index.html');
+            const backendIframe = path.resolve(
+                backendSourcePath,
+                'iframe.html'
+            );
+            const { createServer } = await import('vite');
+            const vite = await createServer({
+                configFile: backendConfigPath,
+                server: { middlewareMode: true },
+                appType: 'custom',
+                root: backendSourcePath,
+            });
+
+            app.use(vite.middlewares);
+
+            app.use('/iframe.html', async (req, res, next) => {
+                const url = req.originalUrl;
+
+                try {
+                    // 1. Read index.html
+                    let template = await fs.readFile(backendIframe, 'utf-8');
+
+                    // 2. Apply Vite HTML transforms. This injects the Vite HMR client,
+                    //    and also applies HTML transforms from Vite plugins, e.g. global
+                    //    preambles from @vitejs/plugin-react
+                    template = await vite.transformIndexHtml(url, template);
+
+                    const html = await this._renderAuthIframe(template, url);
+
+                    // 6. Send the rendered HTML back.
+                    res.status(200)
+                        .set({ 'Content-Type': 'text/html' })
+                        .end(html);
+                } catch (e) {
+                    // If an error is caught, let Vite fix the stack trace so it maps back
+                    // to your actual source code.
+                    vite.ssrFixStacktrace(e);
+                    next(e);
+                }
+            });
+            app.use('*', async (req, res, next) => {
+                const url = req.originalUrl;
+
+                try {
+                    // 1. Read index.html
+                    let template = await fs.readFile(backendIndex, 'utf-8');
+
+                    // 2. Apply Vite HTML transforms. This injects the Vite HMR client,
+                    //    and also applies HTML transforms from Vite plugins, e.g. global
+                    //    preambles from @vitejs/plugin-react
+                    template = await vite.transformIndexHtml(url, template);
+
+                    const html = await this._renderAuthIndex(template, url);
+
+                    // 6. Send the rendered HTML back.
+                    res.status(200)
+                        .set({ 'Content-Type': 'text/html' })
+                        .end(html);
+                } catch (e) {
+                    // If an error is caught, let Vite fix the stack trace so it maps back
+                    // to your actual source code.
+                    vite.ssrFixStacktrace(e);
+                    next(e);
+                }
+            });
+        } else {
+            const iframeTemplate = await fs.readFile(
+                path.resolve(authDist, 'iframe.html'),
+                'utf-8'
+            );
+            app.use('/iframe.html', async (req, res) => {
+                const url = req.originalUrl;
+                const html = await this._renderAuthIframe(iframeTemplate, url);
+
+                // 6. Send the rendered HTML back.
+                res.status(200).set({ 'Content-Type': 'text/html' }).end(html);
+            });
+
+            app.use(express.static(authDist));
+
+            const indexTemplate = await fs.readFile(
+                path.resolve(authDist, 'index.html'),
+                'utf-8'
+            );
+            app.use('*', async (req, res) => {
+                const url = req.originalUrl;
+                const html = await this._renderAuthIndex(indexTemplate, url);
+
+                // 6. Send the rendered HTML back.
+                res.status(200).set({ 'Content-Type': 'text/html' }).end(html);
+            });
+        }
 
         app.all('*', (req, res) => {
             res.sendStatus(404);

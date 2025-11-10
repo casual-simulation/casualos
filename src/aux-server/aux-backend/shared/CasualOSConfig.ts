@@ -30,7 +30,8 @@ export const DRIVES_URL = '/drives';
 /**
  * The configuration schema needed to run a CasualOS server.
  */
-export const casualosConfigSchema = serverConfigSchema.extend({
+export const casualosConfigSchema = z.object({
+    ...serverConfigSchema.shape,
     app: z
         .object({
             enabled: z
@@ -63,7 +64,8 @@ export const casualosConfigSchema = serverConfigSchema.extend({
                         )
                         .optional(),
                 })
-                .describe('The proxy configuration for the CasualOS app.'),
+                .describe('The proxy configuration for the CasualOS app.')
+                .optional(),
 
             debug: z
                 .boolean()
@@ -90,16 +92,46 @@ export const casualosConfigSchema = serverConfigSchema.extend({
                 'The web configuration for the CasualOS frontend.'
             ).default({
                 causalRepoConnectionProtocol: 'websocket',
+                collaborativeRepoLocalPersistence: true,
+                staticRepoLocalPersistence: true,
+                sharedPartitionsVersion: 'v2',
+                vmOrigin: null,
+                authOrigin: null,
+                recordsOrigin: null,
+                disableCollaboration: null,
+                ab1BootstrapURL: null,
+                arcGisApiKey: null,
+                jitsiAppName:
+                    'vpaas-magic-cookie-332b53bd630448a18fcb3be9740f2caf',
+                what3WordsApiKey: null,
+                playerMode: 'player',
+                requirePrivoLogin: false,
+                allowedBiosOptions: null,
+                defaultBiosOption: null,
+                automaticBiosOption: null,
             }),
 
-            serveDrives: z
-                .array(z.string())
-                .describe(
-                    'The list of extra directories that should be served by the CasualOS app on the /drives path.'
-                )
+            drives: z
+                .object({
+                    dirs: z
+                        .array(z.string())
+                        .describe(
+                            'The list of extra directories that should be served by the CasualOS app on the /drives path.'
+                        ),
+
+                    path: z
+                        .string()
+                        .describe(
+                            'The base path that drives should be served from.'
+                        )
+                        .default('/drives'),
+                })
                 .optional(),
         })
-        .describe('The configuration for the CasualOS app.'),
+        .describe('The configuration for the CasualOS app.')
+        .default({
+            enabled: false,
+        }),
 });
 
 export type CasualOSConfig = z.infer<typeof casualosConfigSchema>;

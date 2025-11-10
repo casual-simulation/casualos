@@ -15,28 +15,3 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
-import './env';
-import './instrumentation';
-import process from 'process';
-import { Server } from './server';
-import { loadConfig } from '../shared/ConfigUtils';
-
-const config = loadConfig();
-const server = new Server(config);
-
-async function init() {
-    await configure();
-    server.start();
-}
-
-init();
-
-async function configure() {
-    try {
-        await server.configure();
-    } catch (ex) {
-        console.error(ex);
-        process.exit(1);
-    }
-}

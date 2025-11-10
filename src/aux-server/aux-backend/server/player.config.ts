@@ -52,9 +52,7 @@ const config: ClientConfig = {
         disableCollaboration: process.env.DISABLE_COLLABORATION === 'true',
         ab1BootstrapURL: process.env.AB1_BOOTSTRAP_URL || null,
         arcGisApiKey: process.env.ARC_GIS_API_KEY,
-        jitsiAppName:
-            process.env.JITSI_APP_NAME ||
-            'vpaas-magic-cookie-332b53bd630448a18fcb3be9740f2caf',
+        jitsiAppName: process.env.JITSI_APP_NAME || '',
         what3WordsApiKey: process.env.WHAT_3_WORDS_API_KEY || 'Z0NHMSXQ',
         playerMode: process.env.AUX_PLAYER_MODE as 'player' | 'builder',
         requirePrivoLogin: process.env.REQUIRE_PRIVO_LOGIN === 'true',
