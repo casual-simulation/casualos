@@ -39,6 +39,8 @@ import type { CoordinateTransformer } from './CoordinateSystem';
  * Whether or not anything is visualized in the dimension depends on the bot tags.
  */
 export class DimensionGroup3D extends GameObject implements DimensionGroup {
+    name = 'DimensionGroup3D';
+    
     private _helper: DimensionGroupHelper<AuxBot3D>;
     /**
      * The coordinate transformer that should be used by the group.

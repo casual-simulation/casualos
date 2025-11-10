@@ -35,6 +35,8 @@ import type { Simulation3D } from './Simulation3D';
  * That is, a dimension group that is specific to the AUX Builder.
  */
 export class BuilderGroup3D extends DimensionGroup3D {
+    name = 'BuilderGroup3D';
+
     /**
      * The workspace that this dimension contains.
      */
