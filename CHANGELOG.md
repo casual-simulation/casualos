@@ -16,6 +16,7 @@
     -   Fixed label transforms not being updated properly when switching between `labelPosition` types.
     -   Fixed child bot decorators not being updated when a transformer bot changes scale.
 -   Fixed internal `DebugObjectManager` not rendering properly when in the map portal.
+-   Disabled double-click to zoom in the map portal.
 
 ## V3.8.1
 
