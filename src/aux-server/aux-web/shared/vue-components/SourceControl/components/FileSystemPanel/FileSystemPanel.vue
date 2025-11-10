@@ -21,6 +21,19 @@
     text-align: center;
     color: grey;
 }
+
+@media (prefers-color-scheme: dark) {
+    .file-system-container {
+        background: linear-gradient(50deg, rgb(32 32 32 / 53%), rgb(48 48 48 / 53%));
+        box-shadow: inset 1px 0 4px rgb(0 0 0 / 30%);
+    }
+
+    .file-system-message-box {
+        background: linear-gradient(0deg, rgba(32, 32, 32, 0.45), rgba(48, 48, 48, 0.95));
+        box-shadow: inset 1px 0 4px rgb(0 0 0 / 30%);
+        color: lightgrey;
+    }
+}
 </style>
 
 <script src="./FileSystemPanel.ts"></script>

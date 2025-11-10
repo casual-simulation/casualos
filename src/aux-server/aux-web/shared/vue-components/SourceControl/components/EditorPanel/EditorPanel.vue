@@ -54,6 +54,13 @@
 .sc-content {
     height: 100%;
 }
+
+@media (prefers-color-scheme: dark) {
+    .drag-spacer {
+        border-bottom: 1px solid #333;
+        border-top: 1px solid #2c2c2c7c;
+    }
+}
 </style>
 
 <script src="./EditorPanel.ts"></script>

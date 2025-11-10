@@ -45,6 +45,17 @@
     font-family: monospace;
     color: grey;
 }
+
+@media (prefers-color-scheme: dark) {
+    .file-system-dir {
+        background: linear-gradient(50deg, rgba(64, 64, 64, 0.5), rgba(40, 40, 40, 0));
+        box-shadow: 0 0 2px #0000005e;
+    }
+
+    .file-system-dir-meta > span {
+        color: lightgrey;
+    }
+}
 </style>
 
 <script src="./FileSystemDirectory.ts"></script>

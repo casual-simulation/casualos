@@ -94,6 +94,18 @@
 .output-log-type-error {
     color: #dc3545;
 }
+
+@media (prefers-color-scheme: dark) {
+    .output-logs {
+        background: linear-gradient(55deg, rgba(32, 32, 32, 0.5), rgba(48, 48, 48, 0.5));
+        box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.7);
+        color: lightgrey;
+    }
+
+    .output-log-type-info {
+        color: #61a0ffcc;
+    }
+}
 </style>
 
 <script src="./OutputLogs.ts"></script>
