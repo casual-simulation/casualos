@@ -66,7 +66,7 @@ export default class EditorPanel extends Vue {
 
             if (!this.rect || clientY == null) return;
             const r = (clientY - this.rect.top) / this.rect.height;
-            this.ratio = Math.max(0.1, Math.min(0.9, r));
+            this.ratio = Math.max(0.5, Math.min(0.8, r));
         };
 
         const up = () => {

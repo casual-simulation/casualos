@@ -2,14 +2,13 @@
     <div class="editor-action-section">
         <slot v-if="reactiveStore.editorPanel.currentPanel == SccEditorPanel.Initialize">
             <md-card class="editor-action-card-init-repo">
-                <md-card-header>
-                    <div class="md-title action-card-title">Repository Setup</div>
-                    <div class="md-subhead">
-                        Initialize a new repository or open an existing one.
-                    </div>
-                </md-card-header>
-
                 <md-card-content>
+                    <md-card-header>
+                        <div class="md-title action-card-title">Repository Setup</div>
+                        <div class="md-subhead">
+                            Initialize a new repository or open an existing one.
+                        </div>
+                    </md-card-header>
                     <div class="md-radio-container">
                         <md-radio v-model="setupOption" name="setupOption" value="init"
                             >Initialize New Repository</md-radio
@@ -57,13 +56,19 @@
 <style>
 .editor-action-card-init-repo {
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    justify-content: space-between;
+    overflow-y: auto;
     height: 100%;
 }
 
 .action-card-submit {
     display: flex;
-    height: 100%;
     box-sizing: border-box;
+    justify-self: baseline;
+    padding: 0 20px 20px;
 }
 
 .action-card-title {
