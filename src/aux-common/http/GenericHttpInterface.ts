@@ -60,6 +60,11 @@ export interface GenericHttpRequest {
      * Null if the IP address is not available.
      */
     ipAddress: string | null;
+
+    /**
+     * The scope that the request is for.
+     */
+    scope?: 'auth' | 'player';
 }
 
 /**

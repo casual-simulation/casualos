@@ -136,6 +136,22 @@ export interface Procedure<TInput, TOutput extends ProcedureOutput, TQuery> {
          */
         path: string;
     };
+
+    /**
+     * The view-specific configuration for the procedure.
+     */
+    view?: {
+        /**
+         * The scope of the view (e.g. player or auth).
+         */
+        scope: 'player' | 'auth';
+
+        /**
+         * The path for the view.
+         * If true, then the path will be treated as a default path.
+         */
+        path: string | true;
+    };
 }
 
 export interface Procedures {
@@ -212,6 +228,13 @@ export interface ProcedureBuilder {
      * @param method The method that should be used for http requests to this RPC.
      */
     http(method: GenericHttpRequest['method'], path: string): this;
+
+    /**
+     * Configures the view for this RPC.
+     * @param scope The scope of the view (e.g. player or auth).
+     * @param path The path for the view. If true, then the path will be treated as a default path.
+     */
+    view(scope: 'player' | 'auth', path: string | true): this;
 }
 
 export interface InputlessProcedureBuilder extends ProcedureBuilder {
@@ -273,6 +296,7 @@ class ProcBuilder
     private _schema: z.ZodType<any, z.ZodTypeDef, any>;
     private _querySchema: z.ZodType<any, z.ZodTypeDef, any>;
     private _http: Procedure<any, any, any>['http'];
+    private _view: Procedure<any, any, any>['view'];
 
     origins(allowedOrigins: Set<string> | true | 'account' | 'api'): this {
         this._allowedOrigins = allowedOrigins;
@@ -283,6 +307,14 @@ class ProcBuilder
         this._http = {
             method: method,
             path: path,
+        };
+        return this;
+    }
+
+    view(scope: 'player' | 'auth', path: string | true): this {
+        this._view = {
+            scope,
+            path,
         };
         return this;
     }
@@ -324,6 +356,7 @@ class ProcBuilder
             mapToResponse,
             allowedOrigins: this._allowedOrigins,
             http: this._http,
+            view: this._view,
         };
     }
 }

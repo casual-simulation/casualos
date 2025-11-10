@@ -157,6 +157,7 @@ import type { SearchQuery, SearchRecordsController } from './search';
 import { SEARCH_COLLECTION_SCHEMA, SEARCH_DOCUMENT_SCHEMA } from './search';
 import { genericResult } from '@casual-simulation/aux-common';
 import type { DatabaseRecordsController, DatabaseStatement } from './database';
+import type { ViewTemplateRenderer } from './ViewTemplateRenderer';
 
 declare const GIT_TAG: string;
 declare const GIT_HASH: string;
@@ -237,8 +238,10 @@ export const MODERATION_NOT_SUPPORTED_RESULT = {
 export interface Route<T, TQuery = any> {
     /**
      * The path that the route must match.
+     *
+     * If true, then the route will match all paths as a default route.
      */
-    path: string;
+    path: string | true;
 
     /**
      * The schema that should be used for the route.
@@ -265,6 +268,12 @@ export interface Route<T, TQuery = any> {
      * If omitted, then the route will not be named.
      */
     name?: string;
+
+    /**
+     * The scope for the route.
+     * Used to filter requests based on their context.
+     */
+    scope?: 'player' | 'auth';
 
     /**
      * The handler that should be called when the route is matched.
@@ -417,6 +426,11 @@ export interface RecordsServerOptions {
      * If null, then database records are not supported.
      */
     databaseRecordsController?: DatabaseRecordsController | null;
+
+    /**
+     * The interface that should be used for rendering view templates.
+     */
+    viewTemplateRenderer?: ViewTemplateRenderer | null;
 }
 
 /**
@@ -441,6 +455,7 @@ export class RecordsServer {
     private _packageVersionController: PackageVersionRecordsController | null;
     private _searchRecordsController: SearchRecordsController | null;
     private _databaseRecordsController: DatabaseRecordsController | null;
+    private _viewTemplateRenderer: ViewTemplateRenderer | null;
 
     /**
      * The set of origins that are allowed for API requests.
@@ -512,6 +527,7 @@ export class RecordsServer {
         packageVersionController,
         searchRecordsController,
         databaseRecordsController,
+        viewTemplateRenderer,
     }: RecordsServerOptions) {
         this._allowedAccountOrigins = allowedAccountOrigins;
         this._allowedApiOrigins = allowedApiOrigins;
@@ -537,6 +553,7 @@ export class RecordsServer {
         this._packageVersionController = packageVersionController;
         this._searchRecordsController = searchRecordsController;
         this._databaseRecordsController = databaseRecordsController;
+        this._viewTemplateRenderer = viewTemplateRenderer;
         this._tracer = trace.getTracer(
             'RecordsServer',
             typeof GIT_TAG === 'undefined' ? undefined : GIT_TAG
@@ -547,6 +564,27 @@ export class RecordsServer {
 
     private _createProcedures() {
         return {
+            playerIndex: procedure()
+                .origins(true)
+                .view('player', true)
+                .handler(async (_, context) => {
+                    return <div>AUX Player SSR</div>;
+                }),
+
+            authIndex: procedure()
+                .origins(true)
+                .view('auth', true)
+                .handler(async (_, context) => {
+                    return <div>AUX Auth SSR</div>;
+                }),
+
+            authIframe: procedure()
+                .origins(true)
+                .view('auth', '/iframe.html')
+                .handler(async (_, context) => {
+                    return <div>AUX Auth Iframe SSR</div>;
+                }),
+
             getUserInfo: procedure()
                 .origins('account')
                 .inputs(
@@ -5037,7 +5075,10 @@ export class RecordsServer {
             if (Object.prototype.hasOwnProperty.call(procs, procedureName)) {
                 const procedure = (procs as any)[procedureName];
                 if (procedure.http) {
-                    this._addProcedureRoute(procedure, procedureName);
+                    this._addProcedureApiRoute(procedure, procedureName);
+                }
+                if (procedure.view) {
+                    this._addProcedureViewRoute(procedure, procedureName);
                 }
             }
         }
@@ -5154,7 +5195,7 @@ export class RecordsServer {
         }
         (this._procedures as any)[name] = procedure;
         if (procedure.http) {
-            this._addProcedureRoute(procedure, name);
+            this._addProcedureApiRoute(procedure, name);
         }
     }
 
@@ -5172,7 +5213,7 @@ export class RecordsServer {
      * Adds the given procedural route to the server.
      * @param route The route that should be added.
      */
-    private _addProcedureRoute<T, TQuery>(
+    private _addProcedureApiRoute<T, TQuery>(
         procedure: Procedure<T, ProcedureOutput, TQuery>,
         name: string
     ): void {
@@ -5214,10 +5255,62 @@ export class RecordsServer {
     }
 
     /**
+     * Adds the given procedural route to the server.
+     * @param route The route that should be added.
+     */
+    private _addProcedureViewRoute<T, TQuery>(
+        procedure: Procedure<T, ProcedureOutput, TQuery>,
+        name: string
+    ): void {
+        if (!procedure.view) {
+            throw new Error('Procedure must have an view route defined.');
+        }
+
+        const route = procedure.view;
+        const r: Route<T> = {
+            method: 'GET',
+            path: route.path,
+            schema: procedure.schema,
+            querySchema: procedure.querySchema,
+            scope: route.scope,
+            name: name,
+            handler: async (request, data, query) => {
+                const context: RPCContext = {
+                    ipAddress: request.ipAddress,
+                    sessionKey: getSessionKey(request),
+                    httpRequest: request,
+                    origin: request.headers.origin ?? null,
+                };
+                const result = await procedure.handler(data, context, query);
+
+                const rendered = this._viewTemplateRenderer
+                    ? await this._viewTemplateRenderer.render(name, result)
+                    : JSON.stringify(result);
+
+                // TODO: Finish view rendering
+                const response = returnProcedureOutput(result);
+
+                if (procedure.mapToResponse) {
+                    const procedureResponse = await procedure.mapToResponse(
+                        result,
+                        context
+                    );
+                    return merge(response, procedureResponse);
+                }
+
+                return response;
+            },
+            allowedOrigins: procedure.allowedOrigins,
+        };
+
+        this.addRoute(r);
+    }
+
+    /**
      * Adds the given route to the server.
      */
     addRoute<T>(route: Route<T>) {
-        const routeKey = `${route.method}:${route.path}`;
+        const routeKey = this._getRouteKey(route);
         if (this._routes.has(routeKey)) {
             throw new Error(
                 `A route already exists for the given method and path: ${routeKey}`
@@ -5226,12 +5319,20 @@ export class RecordsServer {
         this._routes.set(routeKey, route);
     }
 
+    private _getRouteKey<T>(route: Route<T>) {
+        if (typeof route.path === 'boolean' && route.path === true) {
+            return `${route.scope ?? 'auth'}:${route.method}:**default**`;
+        } else {
+            return `${route.scope ?? 'auth'}:${route.method}:${route.path}`;
+        }
+    }
+
     /**
      * Forcefully adds the given route to the server, overwriting any routes that already exist.
      * @param route The route that should be added.
      */
     overrideRoute<T>(route: Route<T>) {
-        const routeKey = `${route.method}:${route.path}`;
+        const routeKey = this._getRouteKey(route);
         this._routes.set(routeKey, route);
     }
 
@@ -5385,7 +5486,16 @@ export class RecordsServer {
             );
         }
 
-        const route = this._routes.get(`${request.method}:${request.path}`);
+        let route = this._routes.get(
+            `${request.scope ?? 'auth'}:${request.method}:${request.path}`
+        );
+
+        if (!route) {
+            route = this._routes.get(
+                `${request.scope ?? 'auth'}:${request.method}:**default**`
+            );
+        }
+
         if (route) {
             if (span && route.name) {
                 span.updateName(`http:${route.name}`);

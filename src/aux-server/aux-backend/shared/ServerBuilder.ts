@@ -233,6 +233,7 @@ import {
 } from '@casual-simulation/aux-records/database';
 import { SqliteDatabaseRecordsStore } from '../prisma/sqlite/SqliteDatabaseRecordsStore';
 import { PrismaDatabaseRecordsStore } from '../prisma/PrismaDatabaseRecordsStore';
+import type { ViewTemplateRenderer } from '@casual-simulation/aux-records/ViewTemplateRenderer';
 
 const automaticPlugins: ServerPlugin[] = [
     ...xpApiPlugins.map((p: any) => p.default),
@@ -368,6 +369,8 @@ export class ServerBuilder implements SubscriptionLike {
 
     private _rekognition: Rekognition | null = null;
     private _moderationJobProvider: ModerationJobProvider | null = null;
+
+    private _viewTemplateRenderer: ViewTemplateRenderer | null = null;
 
     private _allowedAccountOrigins: Set<string> = new Set([
         'http://localhost:3000',
@@ -1879,6 +1882,11 @@ export class ServerBuilder implements SubscriptionLike {
         return this;
     }
 
+    useViewTemplateRenderer(renderer: ViewTemplateRenderer): this {
+        this._viewTemplateRenderer = renderer;
+        return this;
+    }
+
     async buildAsync(): Promise<BuildReturn> {
         const actions = sortBy(this._actions, (a) => a.priority);
 
@@ -2121,6 +2129,7 @@ export class ServerBuilder implements SubscriptionLike {
             packageVersionController: this._packageVersionController,
             searchRecordsController: this._searchController,
             databaseRecordsController: this._databasesController,
+            viewTemplateRenderer: this._viewTemplateRenderer,
         });
 
         const buildReturn: BuildReturn = {
