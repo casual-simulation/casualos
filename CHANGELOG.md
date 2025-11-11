@@ -17,6 +17,7 @@
     -   Fixed child bot decorators not being updated when a transformer bot changes scale.
 -   Fixed internal `DebugObjectManager` not rendering properly when in the map portal.
 -   Disabled double-click to zoom in the map portal.
+-   Fixed camera rotation in mapPortal continuing after releasing the right mouse button outside the browser window.
 
 ## V3.8.1
 
