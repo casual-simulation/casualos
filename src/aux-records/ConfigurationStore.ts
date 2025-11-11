@@ -18,12 +18,15 @@
 import type { SubscriptionConfiguration } from './SubscriptionConfiguration';
 import type { PrivoConfiguration } from './PrivoConfiguration';
 import type { ModerationConfiguration } from './ModerationConfiguration';
+import type { WebConfig } from '@casual-simulation/aux-common';
 
 export const SUBSCRIPTIONS_CONFIG_KEY = 'subscriptions';
 
 export const PRIVO_CONFIG_KEY = 'privo';
 
 export const MODERATION_CONFIG_KEY = 'moderation';
+
+export const WEB_CONFIG_KEY = 'web';
 
 /**
  * Defines an interface that is used for storing configuration data.
@@ -44,4 +47,10 @@ export interface ConfigurationStore {
      * Resolves with null if no configuration is found.
      */
     getModerationConfig(): Promise<ModerationConfiguration | null>;
+
+    /**
+     * Retrieves the web configuration from the store.
+     * Resolves with null if no configuration is found.
+     */
+    getWebConfig(): Promise<WebConfig | null>;
 }

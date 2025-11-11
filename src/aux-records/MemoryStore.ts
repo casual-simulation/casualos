@@ -111,6 +111,7 @@ import type {
     PrivacyFeatures,
     Entitlement,
     GrantedEntitlementScope,
+    WebConfig,
 } from '@casual-simulation/aux-common';
 import type {
     AIChatMetrics,
@@ -220,6 +221,7 @@ export class MemoryStore
     private _subscriptionConfiguration: SubscriptionConfiguration | null;
     private _privoConfiguration: PrivoConfiguration | null = null;
     private _moderationConfiguration: ModerationConfiguration | null = null;
+    private _webConfig: WebConfig | null = null;
     private _recordNotifications: RecordsNotification[] = [];
     private _comIdRequests: StudioComIdRequest[] = [];
 
@@ -342,6 +344,14 @@ export class MemoryStore
 
     set moderationConfiguration(value: ModerationConfiguration | null) {
         this._moderationConfiguration = value;
+    }
+
+    get webConfig() {
+        return this._webConfig;
+    }
+
+    set webConfig(value: WebConfig | null) {
+        this._webConfig = value;
     }
 
     get userInstReports() {
@@ -540,6 +550,10 @@ export class MemoryStore
 
     async getModerationConfig(): Promise<ModerationConfiguration | null> {
         return this._moderationConfiguration;
+    }
+
+    async getWebConfig(): Promise<WebConfig | null> {
+        return this._webConfig;
     }
 
     async getRecordByName(name: string): Promise<Record> {

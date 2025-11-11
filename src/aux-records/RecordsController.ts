@@ -59,7 +59,12 @@ import {
 import type { ComIdConfig, ComIdPlayerConfig } from './ComIdConfig';
 import { isActiveSubscription } from './Utils';
 import type { SystemNotificationMessenger } from './SystemNotificationMessenger';
-import { isSuperUserRole } from '@casual-simulation/aux-common';
+import type {
+    Result,
+    SimpleError,
+    WebConfig,
+} from '@casual-simulation/aux-common';
+import { isSuperUserRole, success } from '@casual-simulation/aux-common';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
 import type { PrivoClientInterface } from './PrivoClient';
@@ -1337,6 +1342,15 @@ export class RecordsController {
                 errorMessage: 'A server error occurred.',
             };
         }
+    }
+
+    /**
+     * Attempts to get the web config.
+     */
+    @traced(TRACE_NAME)
+    async getWebConfig(): Promise<Result<WebConfig, SimpleError>> {
+        const config = await this._config.getWebConfig();
+        return success(config);
     }
 
     /**

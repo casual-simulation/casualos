@@ -944,18 +944,42 @@ describe('RecordsServer', () => {
             const indexPaths = [['/'], ['/index.html']];
 
             describe.each(indexPaths)('GET %s', (path) => {
-                it('should return the player default view', async () => {
+                it('should include the web config', async () => {
+                    store.webConfig = {
+                        causalRepoConnectionProtocol: 'websocket',
+                        version: 2,
+                        logoTitle: 'Test Logo',
+                        logoUrl: 'https://example.com/logo.png',
+                    };
+
                     const result = await server.handleHttpRequest(
                         scoped('player', httpGet(path, defaultHeaders))
                     );
 
-                    expect(result).toEqual({
-                        statusCode: 200,
-                        body: `<postApp><div>AUX Player SSR</div></postApp>`,
-                        headers: {
-                            ...corsHeaders(defaultHeaders.origin),
-                            'Content-Type': 'text/html; charset=utf-8',
-                        },
+                    expect(result.statusCode).toBe(200);
+
+                    const body = result.body as string;
+
+                    expect(body).toContain(
+                        '<script type="application/json" id="casualos-web-config">'
+                    );
+
+                    const webConfigJson = body!.match(
+                        /<script type="application\/json" id="casualos-web-config">([\s\S]*?)<\/script>/
+                    )?.[1];
+
+                    expect(webConfigJson).toBeDefined();
+                    const webConfig = JSON.parse(webConfigJson!);
+                    expect(webConfig).toEqual({
+                        causalRepoConnectionProtocol: 'websocket',
+                        version: 2,
+                        logoTitle: 'Test Logo',
+                        logoUrl: 'https://example.com/logo.png',
+                    });
+
+                    expect(result.headers).toEqual({
+                        ...corsHeaders(defaultHeaders.origin),
+                        'Content-Type': 'text/html; charset=utf-8',
                     });
                 });
             });
@@ -23672,6 +23696,33 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                 removedUserId: 'userId2',
             })
         );
+    });
+
+    describe.only('GET /api/config', () => {
+        it('should return the web config', async () => {
+            store.webConfig = {
+                causalRepoConnectionProtocol: 'websocket',
+                version: 2,
+                logoTitle: 'Custom Logo Title',
+                logoUrl: 'http://example.com/logo.png',
+            };
+
+            const result = await server.handleHttpRequest(
+                httpGet('/api/config', apiHeaders)
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    causalRepoConnectionProtocol: 'websocket',
+                    version: 2,
+                    logoTitle: 'Custom Logo Title',
+                    logoUrl: 'http://example.com/logo.png',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
     });
 
     describe('GET /api/v2/player/config', () => {

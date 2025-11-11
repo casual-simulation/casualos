@@ -570,8 +570,19 @@ export class RecordsServer {
                 .origins(true)
                 .view('player', true)
                 .handler(async (_, context) => {
+                    const config = await this._records.getWebConfig();
+
                     const result = success<ViewParams>({
-                        postApp: <div>AUX Player SSR</div>,
+                        postApp: (
+                            <>
+                                <script
+                                    type="application/json"
+                                    id="casualos-web-config"
+                                >
+                                    {JSON.stringify(config)}
+                                </script>
+                            </>
+                        ),
                     });
 
                     return genericResult<ViewParams, SimpleError>(result);
@@ -4639,6 +4650,15 @@ export class RecordsServer {
                     return result;
                 }),
 
+            getWebConfig: procedure()
+                .origins('api')
+                .http('GET', '/api/config')
+                .inputs(z.object({}))
+                .handler(async (inputs, context) => {
+                    const result = await this._records.getWebConfig();
+                    return genericResult(result);
+                }),
+
             getPlayerConfig: procedure()
                 .origins('api')
                 .http('GET', '/api/v2/player/config')
@@ -5513,7 +5533,8 @@ export class RecordsServer {
             `${request.scope ?? 'auth'}:${request.method}:${request.path}`
         );
 
-        if (!route) {
+        // Default routes shouldn't work for API routes (for now)
+        if (!route && !request.path.startsWith('/api/')) {
             route = this._routes.get(
                 `${request.scope ?? 'auth'}:${request.method}:**default**`
             );
