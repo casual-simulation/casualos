@@ -56,6 +56,7 @@ export class BotRenderer {
 
     constructor() {
         this._scene = new Scene();
+        this._scene.name = 'BotRenderer_Scene';
         this._camera = new OrthographicCamera(-1, 1, 1, -1, 1, 1);
         this._renderer = new WebGLRenderer({
             alpha: true,

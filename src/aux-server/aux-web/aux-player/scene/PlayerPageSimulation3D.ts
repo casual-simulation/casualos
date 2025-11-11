@@ -125,6 +125,8 @@ const wristOffsets = {
 const WRIST_ACTIVE_DOT_PRODUCT_RANGE = -0.57;
 
 export class PlayerPageSimulation3D extends PlayerSimulation3D {
+    name = 'PlayerPageSimulation3D';
+    
     private _handBindings = new Map<string, Subscription>();
 
     constructor(game: Game, simulation: BrowserSimulation) {

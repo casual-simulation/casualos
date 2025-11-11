@@ -80,20 +80,6 @@ jobs:
                   done
               env:
                   NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-            - name: Publish Docs
-              if: ${{ github.ref == 'refs/heads/master' }}
-              run: |
-                  cd docs
-
-                  echo "Upgrading Casual Simulation NPM Packages.."
-                  pnpm upgrade "@casual-simulation/" --latest
-
-                  git config --global user.name DevOps
-                  git config --global user.email devops@casualsimulation.org
-                  git remote set-url origin https://x-access-token:${{ secrets.DEPLOY_SECRET }}@github.com/${{ github.repository }}
-
-                  echo "Building and deploying..."
-                  GIT_USER="DevOps" GIT_PASS="${{ secrets.DEPLOY_SECRET }}" npm run deploy
             - name: Build Docker
               run: |
                   echo "Building..."
@@ -173,6 +159,42 @@ jobs:
                   docker push $CASUALOS_IMAGE_ID:alpha
                   docker push $PROXY_IMAGE_ID:alpha
                   docker push $REDIRECTOR_IMAGE_ID:alpha
+    docs:
+        name: Deploy Docs
+        runs-on: ubuntu-latest
+        env:
+            CI: true
+        steps:
+            - uses: actions/checkout@v1
+            - name: Use Node.js 20.x
+              uses: actions/setup-node@v2
+              with:
+                  node-version: 20.x
+                  registry-url: 'https://registry.npmjs.org'
+            - name: Fix node-gyp (Windows Only)
+              if: matrix.os == 'windows-latest'
+              shell: pwsh
+              run: |
+                  npm install -g node-gyp
+                  npm prefix -g | % {npm config set node_gyp "$_\node_modules\node-gyp\bin\node-gyp.js"}
+            - name: NPM Install
+              run: |
+                  corepack enable
+                  npm run bootstrap
+            - name: Find Version
+              run: |
+                  echo "GIT_TAG=$(git describe --abbrev=0 --tags)" >> $GITHUB_ENV
+            - name: Publish Docs
+              if: ${{ github.ref == 'refs/heads/master' }}
+              run: |
+                  cd docs
+
+                  git config --global user.name DevOps
+                  git config --global user.email devops@casualsimulation.org
+                  git remote set-url origin https://x-access-token:${{ secrets.DEPLOY_SECRET }}@github.com/${{ github.repository }}
+
+                  echo "Building and deploying..."
+                  GIT_USER="DevOps" GIT_PASS="${{ secrets.DEPLOY_SECRET }}" npm run deploy
     arm32:
         name: ARM32 Docker Build
         needs: build
