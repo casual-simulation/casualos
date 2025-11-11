@@ -1,8 +1,26 @@
 # CasualOS Changelog
 
-## V3.8.1
+## V3.8.2
 
 #### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Various fixes to bot labels:
+    -   Fixed z-fighting that was common on floating labels in the map portal.
+    -   Fixed bug that would cause bots with empty floating labels to prevent the page from loading properly.
+    -   Fixed floating label positioning in the map portal.
+    -   Fixed floating label billboarding on bots with non-identity rotations.
+    -   Fixed floating label bot spacing to stay consistent between grid's of different scales.
+    -   Fixed floating label shape generation to be compatible with the map portal.
+    -   Fixed label transforms not being updated properly when switching between `labelPosition` types.
+    -   Fixed child bot decorators not being updated when a transformer bot changes scale.
+-   Fixed internal `DebugObjectManager` not rendering properly when in the map portal.
+-   Disabled double-click to zoom in the map portal.
+
+## V3.8.1
+
+#### Date: 11/5/2025
 
 ### :rocket: Features
 
@@ -20,6 +38,9 @@
 
 -   Fixed an issue where `ai.listChatModels()` wouldn't work unless an options object was provided.
 -   Fixed an issue where empty JSX expressions with comments weren't supported.
+-   Fixed an issue where `portalPannableMin` and `portalPannableMax` constraints did not properly restrict camera movement when the camera was rotated. The fix includes:
+    -   Removed camera-relative constraint checking that failed at different rotation angles
+    -   Added world-space clamping after camera target updates
 -   Fixed an issue where CasualOS wasn't able to properly reload shared documents with nested maps or arrays.
 -   Reduced the amount of code that gets cached on first load.
 -   Changed the QR and Barcode components to load lazily to reduce the size of the initial load.

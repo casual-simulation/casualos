@@ -26,6 +26,8 @@ import { MiniMapPortalConfig } from './MiniMapPortalConfig';
 import type { DimensionGroup3D } from '../../shared/scene/DimensionGroup3D';
 
 export class MiniMapSimulation3D extends MapSimulation3D {
+    name = 'MiniMapSimulation3D';
+    
     get miniConfig() {
         return <MiniMapPortalConfig>this.getPortalConfig(this._portalTag);
     }

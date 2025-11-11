@@ -78,9 +78,32 @@ export class CameraControls {
     public minPanX: number = null;
     public maxPanX: number = null;
 
+    // Internal storage for pan constraints
+    // These handle the Y-axis inversion automatically
+    private _minPanY: number = null;
+    private _maxPanY: number = null;
+
     // How far you can pan up and down
-    public minPanY: number = null;
-    public maxPanY: number = null;
+    // Getters/setters handle Y-axis inversion for world coordinates
+    get minPanY(): number {
+        return this._minPanY;
+    }
+
+    set minPanY(value: number) {
+        // When setting minPanY in world coordinates, it becomes maxPanY in camera space
+        // because Y is inverted
+        this._minPanY = value;
+    }
+
+    get maxPanY(): number {
+        return this._maxPanY;
+    }
+
+    set maxPanY(value: number) {
+        // When setting maxPanY in world coordinates, it becomes minPanY in camera space
+        // because Y is inverted
+        this._maxPanY = value;
+    }
 
     // Set to true to automatically rotate around the target
     // If auto-rotate is enabled, you must call controls.update() in your animation loop
@@ -285,32 +308,6 @@ export class CameraControls {
     }
 
     public panLeft(distance: number, objectMatrix: Matrix4) {
-        let initialDist = distance;
-
-        if (
-            this.minPanX != null &&
-            initialDist < 0 &&
-            this.currentDistX + initialDist < this.minPanX
-        ) {
-            if (this.minPanX < this.currentDistX) {
-                distance = this.minPanX - this.currentDistX;
-            } else {
-                return;
-            }
-        }
-
-        if (
-            this.maxPanX != null &&
-            initialDist > 0 &&
-            this.currentDistX + initialDist > this.maxPanX
-        ) {
-            if (this.maxPanX > this.currentDistX) {
-                distance = this.maxPanX - this.currentDistX;
-            } else {
-                return;
-            }
-        }
-
         // Get X axis direction for the object
         let xDirection = new Vector3();
         xDirection.setFromMatrixColumn(objectMatrix, 0);
@@ -322,38 +319,10 @@ export class CameraControls {
             xDirection
         );
 
-        this.currentDistX += distance;
-
         this.panOffset.add(delta);
     }
 
     public panUp(distance: number, objectMatrix: Matrix4) {
-        let initialDist = distance;
-
-        if (
-            this.minPanY != null &&
-            initialDist > 0 &&
-            this.currentDistY + initialDist > this.minPanY
-        ) {
-            if (this.minPanX > this.currentDistY) {
-                distance = this.minPanY - this.currentDistY;
-            } else {
-                return;
-            }
-        }
-
-        if (
-            this.maxPanY != null &&
-            initialDist < 0 &&
-            this.currentDistY + initialDist < this.maxPanY
-        ) {
-            if (this.maxPanY < this.currentDistY) {
-                distance = this.maxPanY - this.currentDistY;
-            } else {
-                return;
-            }
-        }
-
         // Get Y axis direction for the object
         let yDirection = new Vector3();
         if (this.screenSpacePanning === true) {
@@ -370,8 +339,6 @@ export class CameraControls {
             this.groundPlane,
             yDirection
         );
-
-        this.currentDistY += distance;
 
         this.panOffset.add(delta);
     }
@@ -1485,10 +1452,23 @@ export class CameraControls {
             this.target.add(this.panOffset);
             this.target.add(this.cameraFrameOffset);
 
-            if (this.cameraFrameOffset.length() > 0) {
-                this.currentDistX = this.target.x;
-                this.currentDistY = this.target.y;
+            // Clamp target to stay within pan bounds (world space)
+            if (this.minPanX != null) {
+                this.target.x = Math.max(this.minPanX, this.target.x);
             }
+            if (this.maxPanX != null) {
+                this.target.x = Math.min(this.maxPanX, this.target.x);
+            }
+            if (this._minPanY != null) {
+                this.target.y = Math.min(this._minPanY * -1, this.target.y);
+            }
+            if (this._maxPanY != null) {
+                this.target.y = Math.max(this._maxPanY * -1, this.target.y);
+            }
+
+            // Update current distance trackers
+            this.currentDistX = this.target.x;
+            this.currentDistY = this.target.y;
         }
         this._setRot = false;
 

@@ -142,6 +142,7 @@ import { LDrawLoader } from '../../shared/public/ldraw-loader/LDrawLoader';
 import { Subscription } from 'rxjs';
 import { v4 as uuid } from 'uuid';
 import { loadModules as loadEsriModules } from 'esri-loader';
+import { DebugObjectManager } from '../../shared/scene/debugobjectmanager/DebugObjectManager';
 
 const MINI_PORTAL_SLIDER_HALF_HEIGHT = 36 / 2;
 const MINI_PORTAL_SLIDER_HALF_WIDTH = 30 / 2;
@@ -1664,9 +1665,6 @@ export class PlayerGame extends Game {
             super.renderMainViewport(true);
         } else {
             this.renderMapViewport();
-            // super.renderMainViewport(false);
-            // this.renderer.clear();
-            // this.renderMapToMainViewport();
         }
 
         //
@@ -1763,6 +1761,14 @@ export class PlayerGame extends Game {
 
         // Render the map portal scene with the map portal main camera.
         this.renderer.render(this.mapScene, this.mapCameraRig.mainCamera);
+
+        // Render debug object manager if it's enabled.
+        if (DebugObjectManager.enabled) {
+            DebugObjectManager.render(
+                this.renderer,
+                this.mapCameraRig.mainCamera
+            );
+        }
     }
 
     /**
@@ -1881,6 +1887,7 @@ export class PlayerGame extends Game {
 
     protected setupMiniScene() {
         this.miniScene = new Scene();
+        this.miniScene.name = 'MiniScene';
         this.miniScene.autoUpdate = false;
 
         // miniGridPortal camera.
@@ -1916,6 +1923,7 @@ export class PlayerGame extends Game {
 
     protected setupMapScene() {
         this.mapScene = new Scene();
+        this.mapScene.name = 'MapScene';
         this.mapScene.autoUpdate = false;
 
         this._mapGlobeMask = this._createGlobeMask();
@@ -1941,6 +1949,7 @@ export class PlayerGame extends Game {
 
     protected setupMiniMapScene() {
         this.miniMapScene = new Scene();
+        this.miniMapScene.name = 'MiniMapScene';
         this.miniMapScene.autoUpdate = false;
 
         this._miniMapGlobeMask = this._createGlobeMask();
@@ -2525,20 +2534,8 @@ export class PlayerGame extends Game {
 
             mainControls.controls.minPanX = this.getPanMinX();
             mainControls.controls.maxPanX = this.getPanMaxX();
-
             mainControls.controls.minPanY = this.getPanMinY();
-
-            if (this.getPanMinY() != null) {
-                mainControls.controls.minPanY = this.getPanMinY() * -1;
-            } else {
-                mainControls.controls.minPanY = null;
-            }
-
-            if (this.getPanMaxY() != null) {
-                mainControls.controls.maxPanY = this.getPanMaxY() * -1;
-            } else {
-                mainControls.controls.maxPanY = null;
-            }
+            mainControls.controls.maxPanY = this.getPanMaxY();
 
             const showFocus = this.getPlayerShowFocusPoint();
             if (showFocus && !this.xrSession) {
@@ -2601,21 +2598,10 @@ export class PlayerGame extends Game {
                 this.getMiniPortalPanMinX();
             this.miniPortalControls.controls.maxPanX =
                 this.getMiniPortalPanMaxX();
-
-            //this.invController.controls.minPanY = this.getPanMinY();
-            if (this.getMiniPortalPanMinY() != null) {
-                this.miniPortalControls.controls.minPanY =
-                    this.getMiniPortalPanMinY() * -1;
-            } else {
-                this.miniPortalControls.controls.minPanY = null;
-            }
-
-            if (this.getMiniPortalPanMaxY() != null) {
-                this.miniPortalControls.controls.maxPanY =
-                    this.getMiniPortalPanMaxY() * -1;
-            } else {
-                this.miniPortalControls.controls.maxPanY = null;
-            }
+            this.miniPortalControls.controls.minPanY =
+                this.getMiniPortalPanMinY();
+            this.miniPortalControls.controls.maxPanY =
+                this.getMiniPortalPanMaxY();
 
             const showFocus = this.getMiniPortalShowFocusPoint();
             if (showFocus && !this.xrSession) {

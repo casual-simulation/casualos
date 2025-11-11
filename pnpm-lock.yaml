@@ -230,9 +230,6 @@ importers:
       jest-html-reporter:
         specifier: ^3.7.1
         version: 3.10.2(jest@29.7.0(@types/node@18.19.98))(typescript@5.8.3)
-      jest-raw-loader:
-        specifier: 1.0.1
-        version: 1.0.1
       js-yaml:
         specifier: ^3.13.1
         version: 3.14.1
@@ -388,7 +385,7 @@ importers:
   src/aux-benchmarks:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-common
       benchmark:
         specifier: 2.1.4
@@ -516,22 +513,22 @@ importers:
   src/aux-components:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-common
       '@casual-simulation/aux-vm':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-vm
       '@casual-simulation/aux-vm-browser':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-vm-browser
       '@casual-simulation/aux-vm-client':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-vm-client
       '@casual-simulation/aux-vm-deno':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-vm-deno
       '@casual-simulation/aux-vm-node':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-vm-node
       '@casual-simulation/crypto':
         specifier: ^3.5.0
@@ -694,7 +691,7 @@ importers:
         specifier: 0.24.3
         version: 0.24.3(encoding@0.1.13)
       '@casual-simulation/aux-common':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-common
       '@casual-simulation/crypto':
         specifier: ^3.5.0
@@ -802,10 +799,10 @@ importers:
         specifier: ^3.609.0
         version: 3.862.0
       '@casual-simulation/aux-common':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-records
       axios:
         specifier: 1.7.7
@@ -826,10 +823,10 @@ importers:
   src/aux-runtime:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-records
       '@casual-simulation/crypto':
         specifier: ^3.5.0
@@ -989,31 +986,31 @@ importers:
         specifier: ^3.609.0
         version: 3.862.0
       '@casual-simulation/aux-common':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-records
       '@casual-simulation/aux-records-aws':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-records-aws
       '@casual-simulation/aux-runtime':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-vm
       '@casual-simulation/aux-vm-browser':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-vm-browser
       '@casual-simulation/aux-vm-client':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-vm-client
       '@casual-simulation/aux-vm-deno':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-vm-deno
       '@casual-simulation/aux-vm-node':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-vm-node
       '@casual-simulation/crypto':
         specifier: ^3.5.0
@@ -1344,7 +1341,7 @@ importers:
         version: 3.22.4
     devDependencies:
       '@casual-simulation/aux-components':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-components
       '@rollup/plugin-virtual':
         specifier: 3.0.2
@@ -1431,13 +1428,13 @@ importers:
   src/aux-vm:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-records
       '@casual-simulation/aux-runtime':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-runtime
       '@casual-simulation/crypto':
         specifier: ^3.5.0
@@ -1482,25 +1479,25 @@ importers:
   src/aux-vm-browser:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-records
       '@casual-simulation/aux-runtime':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-vm
       '@casual-simulation/aux-vm-client':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-vm-client
       '@casual-simulation/aux-websocket':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-websocket
       '@casual-simulation/aux-websocket-aws':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-websocket-aws
       '@casual-simulation/crypto':
         specifier: ^3.5.0
@@ -1540,19 +1537,19 @@ importers:
   src/aux-vm-client:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-common
       '@casual-simulation/aux-runtime':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-vm
       '@casual-simulation/aux-websocket':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-websocket
       '@casual-simulation/aux-websocket-aws':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-websocket-aws
       '@casual-simulation/crypto':
         specifier: ^3.5.0
@@ -1582,16 +1579,16 @@ importers:
   src/aux-vm-deno:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-common
       '@casual-simulation/aux-runtime':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-vm
       '@casual-simulation/aux-vm-client':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-vm-client
       '@casual-simulation/crypto':
         specifier: ^3.5.0
@@ -1618,16 +1615,16 @@ importers:
   src/aux-vm-node:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-common
       '@casual-simulation/aux-runtime':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-vm
       '@casual-simulation/aux-vm-client':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-vm-client
       '@casual-simulation/crypto':
         specifier: ^3.5.0
@@ -1648,7 +1645,7 @@ importers:
   src/aux-websocket:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-common
       '@casual-simulation/websocket':
         specifier: ^3.5.3
@@ -1660,7 +1657,7 @@ importers:
   src/aux-websocket-aws:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-common
       '@casual-simulation/websocket':
         specifier: ^3.5.3
@@ -1675,10 +1672,10 @@ importers:
   src/casualos-cli:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: link:../aux-records
       '@octokit/app':
         specifier: ^15.1.0
@@ -3779,6 +3776,7 @@ packages:
 
   '@libsql/linux-arm64-gnu@0.5.22':
     resolution: {integrity: sha512-KSdnOMy88c9mpOFKUEzPskSaF3VLflfSUCBwas/pn1/sV3pEhtMF6H8VUCd2rsedwoukeeCSEONqX7LLnQwRMA==}
+    cpu: [arm64]
     os: [linux]
 
   '@libsql/linux-arm64-musl@0.5.20':
@@ -3793,6 +3791,7 @@ packages:
 
   '@libsql/linux-x64-gnu@0.5.22':
     resolution: {integrity: sha512-kNBHaIkSg78Y4BqAdgjcR2mBilZXs4HYkAmi58J+4GRwDQZh5fIUWbnQvB9f95DkWUIGVeenqLRFY2pcTmlsew==}
+    cpu: [x64]
     os: [linux]
 
   '@libsql/linux-x64-musl@0.5.20':
@@ -3807,6 +3806,7 @@ packages:
 
   '@libsql/win32-x64-msvc@0.5.22':
     resolution: {integrity: sha512-Fj0j8RnBpo43tVZUVoNK6BV/9AtDUM5S7DF3LB4qTYg1LMSZqi3yeCneUTLJD6XomQJlZzbI4mst89yspVSAnA==}
+    cpu: [x64]
     os: [win32]
 
   '@livekit/protocol@1.15.0':
@@ -10487,9 +10487,6 @@ packages:
       jest-resolve:
         optional: true
 
-  jest-raw-loader@1.0.1:
-    resolution: {integrity: sha512-g9oaAjeC4/rIJk1Wd3RxVbOfMizowM7LSjEJqa4R9qDX0OjQNABXOhH+GaznUp+DjTGVPi2vPPbQXyX87DOnYg==}
-
   jest-regex-util@27.5.1:
     resolution: {integrity: sha512-4bfKq2zie+x16okqDXjXn9ql2B0dScQu+vcwe4TvFVhkVyuWLqpZrZtXxLLWoXYgn0E87I6r6GRYHF7wFZBUvg==}
     engines: {node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0}
@@ -10787,6 +10784,7 @@ packages:
 
   libsql@0.5.20:
     resolution: {integrity: sha512-hkWCsiwTbNsrKeWqPh91ZZEcLDo0+WUnFv2QzITD33F7Er9KOlr7N2SGfNjAbnkciN+iPJ7g108Jkno1JFmzTw==}
+    cpu: [x64, arm64, wasm32, arm]
     os: [darwin, linux, win32]
 
   lie@3.3.0:
@@ -28319,8 +28317,6 @@ snapshots:
   jest-pnp-resolver@1.2.3(jest-resolve@29.7.0):
     optionalDependencies:
       jest-resolve: 29.7.0
-
-  jest-raw-loader@1.0.1: {}
 
   jest-regex-util@27.5.1: {}
 
