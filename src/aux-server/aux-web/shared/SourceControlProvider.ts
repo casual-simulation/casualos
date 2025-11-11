@@ -196,12 +196,10 @@ export class VDir extends VGenericDirectory {
 }
 
 export enum SccEditorPanel {
-    AuthorConfig = 'authorConfig',
     Initialize = 'initialize',
-    Commit = 'commit',
-    History = 'history',
-    Branches = 'branches',
+    Settings = 'settings',
     Remotes = 'remotes',
+    GitActions = 'gitActions',
 }
 
 export enum SccHintLevel {
@@ -220,6 +218,10 @@ export enum SccOutputLevel {
 export class SourceControlController {
     private _currentRepoSCP: GitRepoSCP;
 
+    get isInitialized(): boolean {
+        return this._currentRepoSCP != null;
+    }
+
     get repoName() {
         return this.reactiveStore.editorPanel.initialize.repoName;
     }
@@ -236,6 +238,7 @@ export class SourceControlController {
             root: null,
         },
         editorPanel: {
+            isInitialized: this.isInitialized,
             currentPanel: SccEditorPanel.Initialize,
             initialize: {
                 repoName: null,
@@ -306,9 +309,9 @@ export class SourceControlController {
         ]);
     }
 
-    // eslint-disable-next-line no-useless-escape
     sanitizeFSName(
         input: string,
+        // eslint-disable-next-line no-useless-escape
         regExp: RegExp = /[^a-zA-Z0-9-_\/]/g
     ): string {
         return input.replace(regExp, '');

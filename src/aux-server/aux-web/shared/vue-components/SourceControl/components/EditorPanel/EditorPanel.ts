@@ -21,7 +21,10 @@ import { Prop } from 'vue-property-decorator';
 import BotLibrary from '../../../BotLibrary/BotLibrary.vue';
 import OutputLogs from './OutputLogs/OutputLogs.vue';
 import EditorActionSection from './EditorActionSection/EditorActionSection.vue';
-import type { SourceControlController } from 'aux-web/shared/SourceControlProvider';
+import {
+    SccEditorPanel,
+    type SourceControlController,
+} from '../../../../SourceControlProvider';
 
 @Component({
     name: 'editor-panel',
@@ -36,6 +39,10 @@ export default class EditorPanel extends Vue {
 
     get reactiveStore() {
         return this.scc.reactiveStore;
+    }
+
+    get SccEditorPanel() {
+        return SccEditorPanel;
     }
 
     private rect: DOMRect | null = null;

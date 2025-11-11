@@ -11,15 +11,7 @@
             <file-system-panel class="container-body-fs" :scc="scc"></file-system-panel>
             <div class="spacer-div"></div>
             <div class="list-container">
-                <md-button class="btn btn-primary shadow-box" @click="$emit('init-repo')"
-                    >Init</md-button
-                >
-                <md-button class="btn btn-primary shadow-box" @click="$emit('clone-repo')"
-                    >Clone</md-button
-                >
-                <md-button class="btn btn-secondary shadow-box" @click="$emit('load-repo')"
-                    >Load Local</md-button
-                >
+                <div><md-button>Origin</md-button><md-button>Branch</md-button></div>
             </div>
         </div>
         <div class="container-footer">
