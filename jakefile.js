@@ -49,7 +49,11 @@ let patterns = [
 
 let negativePatterns = [`/typings/**/*`, `/node_modules/**/*`];
 
-let globs = [`${__dirname}/src/aux-server/aux-web/dist`];
+let globs = [
+    `${__dirname}/src/aux-server/aux-web/dist`,
+    `${__dirname}/src/aux-server/aux-web/aux-player/vite.config.mts.timestamp-*`,
+    `${__dirname}/src/aux-server/aux-web/aux-auth/vite.config.mts.timestamp-*`,
+];
 folders.forEach((f) => {
     patterns.forEach((p) => {
         globs.push(f + p);
