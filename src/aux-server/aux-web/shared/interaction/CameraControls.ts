@@ -184,6 +184,10 @@ export class CameraControls {
     private zooming: boolean = false;
     private groundPlane = new Plane(WORLD_UP);
 
+    private _previousRightButtonHeld: boolean = false;
+    private _needsSyntheticMouseUp: boolean = false;
+    private _passthroughTargetElement: Element = null;
+
     currentDistX: number = 0;
     currentDistY: number = 0;
 
@@ -595,6 +599,12 @@ export class CameraControls {
             return;
         }
 
+        // Check if synthetic mouseup event is needed
+        if (this._needsSyntheticMouseUp && this.viewport) {
+            this._sendSyntheticMouseUp();
+            this._needsSyntheticMouseUp = false;
+        }
+
         this.updateInput();
         this.updateCamera();
     }
@@ -712,6 +722,23 @@ export class CameraControls {
         if (this.viewport && this.passthroughEvents) {
             const over = input.isMouseOnViewport(this.viewport);
 
+            // Track right button state for passthrough mode BEFORE setting state
+            const rightButtonHeld = input.getMouseButtonHeld(
+                MouseButtonId.Right
+            );
+
+            // When rotation starts, capture the target element (only once per drag)
+            if (!this._previousRightButtonHeld && rightButtonHeld && over) {
+                this._capturePassthroughTargetElement();
+            }
+
+            // Detect transition from held to released - send synthetic mouseup ONCE
+            if (this._previousRightButtonHeld && !rightButtonHeld) {
+                this._sendSyntheticMouseUp();
+            }
+
+            this._previousRightButtonHeld = rightButtonHeld;
+
             if (over) {
                 this.state = STATE.PASSTHROUGH;
             } else {
@@ -727,12 +754,124 @@ export class CameraControls {
             }
         }
 
+        // Track the right mouse button state for non-passthrough
+        const rightButtonHeld = input.getMouseButtonHeld(MouseButtonId.Right);
+
+        this._previousRightButtonHeld = rightButtonHeld;
+
         if (this.isOverViewport(input)) {
             if (input.currentInputType === InputType.Mouse) {
                 this.updateMouseState(input);
             } else if (input.currentInputType === InputType.Touch) {
                 this.updateTouchState(input);
             }
+        }
+    }
+
+    private _capturePassthroughTargetElement() {
+        const input = this._game.getInput();
+        const mousePos = input.getMouseClientPos();
+
+        if (!mousePos) {
+            return;
+        }
+
+        if (this.viewport.targetElement) {
+            this._passthroughTargetElement = this.viewport.targetElement;
+        } else {
+            const dom = this.viewport.getRootElement();
+            if (dom) {
+                const container = dom.parentElement;
+                const elements = document.elementsFromPoint(
+                    mousePos.x,
+                    mousePos.y
+                );
+
+                let state = PassthroughStates.Start;
+
+                for (let element of elements) {
+                    if (
+                        state === PassthroughStates.Start ||
+                        state === PassthroughStates.SkippingViewport
+                    ) {
+                        if (Input.isElementContainedByOrEqual(element, dom)) {
+                            if (element === dom) {
+                                state = PassthroughStates.End;
+                            } else {
+                                state = PassthroughStates.SkippingViewport;
+                            }
+                            continue;
+                        } else if (state === PassthroughStates.Start) {
+                            break;
+                        }
+                    } else {
+                        if (
+                            element !== container &&
+                            Input.isElementContainedByOrEqual(
+                                element,
+                                container
+                            )
+                        ) {
+                            this._passthroughTargetElement = element;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private _sendSyntheticMouseUp() {
+        if (!this._passthroughTargetElement) {
+            return;
+        }
+
+        const input = this._game.getInput();
+        const mousePos = input.getMouseClientPos();
+
+        if (!mousePos) {
+            return;
+        }
+
+        // Create PointerEvent for synthetic mouseup
+        const eventOptions = {
+            bubbles: true,
+            cancelable: true,
+            view: window,
+            button: MouseButtonId.Right,
+            buttons: 0, // No buttons are pressed
+            clientX: mousePos.x,
+            clientY: mousePos.y,
+            screenX: window.screenX + mousePos.x,
+            screenY: window.screenY + mousePos.y,
+            pointerId: 1,
+            pointerType: 'mouse' as any,
+            isPrimary: true,
+        };
+
+        try {
+            const originalSetPointerCapture =
+                Element.prototype.setPointerCapture;
+            const originalReleasePointerCapture =
+                Element.prototype.releasePointerCapture;
+
+            try {
+                Element.prototype.setPointerCapture =
+                    Element.prototype.releasePointerCapture = () => {};
+
+                const pointerEvent = new PointerEvent(
+                    'pointerup',
+                    eventOptions
+                );
+                (pointerEvent as any).__ignoreForInput = true;
+                this._passthroughTargetElement.dispatchEvent(pointerEvent);
+            } finally {
+                Element.prototype.setPointerCapture = originalSetPointerCapture;
+                Element.prototype.releasePointerCapture =
+                    originalReleasePointerCapture;
+            }
+        } catch (err) {
+            console.error(`Error dispatching synthetic event:`, err);
         }
     }
 
@@ -1138,12 +1277,15 @@ export class CameraControls {
         // Pan/Dolly/Rotate [Start]
         //
 
-        if (input.getMouseButtonDown(MouseButtonId.Left) && this.enablePan) {
+        if (
+            input.getMouseButtonDown(MouseButtonId.Right) &&
+            this.enableRotate
+        ) {
             this.zooming = false;
             this._setRot = false;
-            // Pan start.
-            this.panStart.copy(input.getMouseClientPos());
-            this.state = STATE.PAN;
+            // Rotate start.
+            this.mouseRotateStart.copy(input.getMouseClientPos());
+            this.state = STATE.ROTATE;
         } else if (
             input.getMouseButtonDown(MouseButtonId.Middle) &&
             this.enableZoom
@@ -1163,15 +1305,6 @@ export class CameraControls {
             this._setRot = false;
             // Pinch dolly start.
             this.state = STATE.PINCH_DOLLY;
-        } else if (
-            input.getMouseButtonDown(MouseButtonId.Right) &&
-            this.enableRotate
-        ) {
-            this.zooming = false;
-            this._setRot = false;
-            // Rotate start.
-            this.mouseRotateStart.copy(input.getMouseClientPos());
-            this.state = STATE.ROTATE;
         }
 
         //
