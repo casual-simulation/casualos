@@ -28,6 +28,7 @@ import type {
     GenericPathParameters,
     GenericQueryStringParameters,
     GenericWebsocketRequest,
+    RequestScope,
     UserRole,
 } from '@casual-simulation/aux-common';
 import {
@@ -193,6 +194,8 @@ import {
     MemoryDatabaseRecordsStore,
 } from './database';
 import { MemoryDatabaseInterface } from './database/MemoryDatabaseInterface';
+import type { ViewParams, ViewTemplateRenderer } from './ViewTemplateRenderer';
+import { render } from 'preact-render-to-string/jsx';
 
 jest.mock('@simplewebauthn/server');
 let verifyRegistrationResponseMock: jest.Mock<
@@ -470,6 +473,8 @@ describe('RecordsServer', () => {
     const recordName = 'testRecord';
     let privoClient: PrivoClientInterface;
     let privoClientMock: jest.MockedObject<PrivoClientInterface>;
+
+    let viewTemplateRenderer: ViewTemplateRenderer;
 
     beforeEach(async () => {
         allowedAccountOrigins = new Set([accountOrigin]);
@@ -834,6 +839,19 @@ describe('RecordsServer', () => {
             policies: policyController,
         });
 
+        viewTemplateRenderer = {
+            render: async (template: string, args: ViewParams) => {
+                let result = '';
+                for (let key of Object.keys(args)) {
+                    const value = args[key];
+                    result += `<${key}>${render(value, undefined, {
+                        pretty: true,
+                    })}</${key}>`;
+                }
+                return result;
+            },
+        };
+
         server = new RecordsServer({
             allowedAccountOrigins,
             allowedApiOrigins,
@@ -858,6 +876,7 @@ describe('RecordsServer', () => {
             packageVersionController: packageVersionController,
             searchRecordsController: searchRecordsController,
             databaseRecordsController: databaseController,
+            viewTemplateRenderer: viewTemplateRenderer,
         });
         defaultHeaders = {
             origin: 'test.com',
@@ -919,6 +938,50 @@ describe('RecordsServer', () => {
             pushSubscriptionId: !sub.userId ? pushSubId : null,
         });
     }
+
+    describe.only('views', () => {
+        describe('player', () => {
+            const indexPaths = [['/'], ['/index.html']];
+
+            describe.each(indexPaths)('GET %s', (path) => {
+                it('should return the player default view', async () => {
+                    const result = await server.handleHttpRequest(
+                        scoped('player', httpGet(path, defaultHeaders))
+                    );
+
+                    expect(result).toEqual({
+                        statusCode: 200,
+                        body: `<postApp><div>AUX Player SSR</div></postApp>`,
+                        headers: {
+                            ...corsHeaders(defaultHeaders.origin),
+                            'Content-Type': 'text/html; charset=utf-8',
+                        },
+                    });
+                });
+            });
+        });
+
+        describe('auth', () => {
+            const indexPaths = [['/'], ['/index.html']];
+
+            describe.each(indexPaths)('GET %s', (path) => {
+                it('should return the player default view', async () => {
+                    const result = await server.handleHttpRequest(
+                        scoped('auth', httpGet(path, defaultHeaders))
+                    );
+
+                    expect(result).toEqual({
+                        statusCode: 200,
+                        body: `<postApp><div>AUX Auth SSR</div></postApp>`,
+                        headers: {
+                            ...corsHeaders(defaultHeaders.origin),
+                            'Content-Type': 'text/html; charset=utf-8',
+                        },
+                    });
+                });
+            });
+        });
+    });
 
     describe('GET /api/v2/procedures', () => {
         it('should return the list of procedures', async () => {
@@ -27382,6 +27445,16 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
 
             expect(result.statusCode).not.toEqual(429);
         });
+    }
+
+    function scoped(
+        scope: RequestScope,
+        request: GenericHttpRequest
+    ): GenericHttpRequest {
+        return {
+            ...request,
+            scope,
+        };
     }
 
     function httpGet(

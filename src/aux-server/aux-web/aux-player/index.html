@@ -36,13 +36,13 @@
                 transform: none;
             }
         </style>
-        <!--app-head-->
+        <!--ssr-head-->
     </head>
 
     <body>
-        <div id="app"></div>
+        <div id="app"><!--ssr-app--></div>
         <div id="loading"></div>
-        <div id="ssr"><!--app-ssr--></div>
+        <div id="post-app"><!--ssr-post-app--></div>
 
         <script type="module" src="./index.ts"></script>
         <script

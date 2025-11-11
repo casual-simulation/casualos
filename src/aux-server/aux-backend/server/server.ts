@@ -29,6 +29,7 @@ import fs from 'node:fs/promises';
 import type {
     GenericHttpHeaders,
     GenericHttpRequest,
+    RequestScope,
 } from '@casual-simulation/aux-common';
 import { hasValue } from '@casual-simulation/aux-common';
 import type { WebConfig } from '@casual-simulation/aux-common/common/WebConfig';
@@ -40,6 +41,8 @@ import { concatMap, interval } from 'rxjs';
 import { constructServerBuilder } from '../shared/LoadServer';
 import { RedisWSWebsocketMessenger } from '../redis/RedisWSWebsocketMessenger';
 import type { RecordsServer } from '@casual-simulation/aux-records';
+import type { ViewParams } from '@casual-simulation/aux-records/ViewTemplateRenderer';
+import { renderToStringAsync } from 'preact-render-to-string';
 
 declare let DEVELOPMENT: boolean;
 
@@ -133,6 +136,7 @@ export class Server {
 
             app.use(this._config.app.drives.path, driveMiddleware);
         }
+        const scope: RequestScope = 'player';
 
         app.get('/api/*', (req, res) => {
             res.sendStatus(404);
@@ -155,101 +159,20 @@ export class Server {
             res.sendFile(path.join(dist, 'privacy-policy.txt'));
         });
 
-        if (!isProduction) {
-            // const { createServer } = await import('vite');
-            // const vite = await createServer({
-            //     configFile: frontendConfigPath,
-            //     server: { middlewareMode: true },
-            //     appType: 'custom',
-            //     root: frontendSourcePath,
-            // });
-            // app.use('*', async (req, res, next) => {
-            //     const url = req.originalUrl;
-            //     try {
-            //         const template = await fs.readFile(frontendIndex, 'utf-8');
-            //         const transformedTemplate = await vite.transformIndexHtml(
-            //             url,
-            //             template
-            //         );
-            //         const html = await this._renderPlayerIndex(
-            //             transformedTemplate,
-            //             url
-            //         );
-            //         // 6. Send the rendered HTML back.
-            //         res.status(200)
-            //             .set({ 'Content-Type': 'text/html' })
-            //             .end(html);
-            //     } catch (e) {
-            //         // If an error is caught, let Vite fix the stack trace so it maps back
-            //         // to your actual source code.
-            //         vite.ssrFixStacktrace(e);
-            //         next(e);
-            //     }
-            // });
-        }
-
         if (isProduction) {
             app.use(express.static(dist));
-            // const index = await fs.readFile(
-            //     path.resolve(dist, 'index.html'),
-            //     'utf-8'
-            // );
-            // app.use('*', async (req, res) => {
-            //     const url = req.originalUrl;
-
-            //     const html = await this._renderPlayerIndex(index, url);
-
-            //     // 6. Send the rendered HTML back.
-            //     res.status(200).set({ 'Content-Type': 'text/html' }).end(html);
-            // });
         }
 
         app.all('*', async (req, res) => {
-            await this._handleRequest(req, res);
+            await this._handleRequest(req, res, scope);
         });
     }
 
-    // private async _renderPlayerIndex(
-    //     template: string,
-    //     url: string
-    // ): Promise<string> {
-    //     const result = await this._server.procedures
-    //     const rendered = await renderPlayer(url);
-
-    //     // 5. Inject the app-rendered HTML into the template.
-    //     const html = template
-    //         .replace(`<!--app-head-->`, () => rendered.head)
-    //         .replace(`<!--app-ssr-->`, () => rendered.html);
-    //     return html;
-    // }
-
-    // private async _renderAuthIndex(
-    //     template: string,
-    //     url: string
-    // ): Promise<string> {
-    //     // const rendered = await renderAuth(url);
-
-    //     // 5. Inject the app-rendered HTML into the template.
-    //     // const html = template
-    //     //     .replace(`<!--app-head-->`, () => rendered.head)
-    //     //     .replace(`<!--app-ssr-->`, () => rendered.html);
-    //     return template;
-    // }
-
-    // private async _renderAuthIframe(
-    //     template: string,
-    //     url: string
-    // ): Promise<string> {
-    //     // const rendered = await renderAuth(url);
-
-    //     // 5. Inject the app-rendered HTML into the template.
-    //     // const html = template
-    //     //     .replace(`<!--app-head-->`, () => rendered.head)
-    //     //     .replace(`<!--app-ssr-->`, () => rendered.html);
-    //     return template;
-    // }
-
-    private async _handleRequest(req: Request, res: Response) {
+    private async _handleRequest(
+        req: Request,
+        res: Response,
+        scope: RequestScope
+    ) {
         const query: GenericHttpRequest['query'] = {};
         for (let key in req.query) {
             const value = req.query[key];
@@ -279,6 +202,7 @@ export class Server {
             pathParams: req.params,
             query,
             headers,
+            scope,
         });
 
         for (let key in response.headers) {
@@ -307,11 +231,15 @@ export class Server {
         }
     }
 
-    private _renderTemplate(template: string, args: any): string {
+    private async _renderTemplate(
+        template: string,
+        args: ViewParams
+    ): Promise<string> {
         for (let key in args) {
             const value = args[key];
             if (value) {
-                template = template.replace(`<!--app-${key}-->`, value);
+                const rendered = await renderToStringAsync(value);
+                template = template.replace(`<!--ssr-${key}-->`, rendered);
             }
         }
         return template;
@@ -411,14 +339,14 @@ export class Server {
         }
 
         builder.useViewTemplateRenderer({
-            render: async (name: string, args: any) => {
+            render: async (name: string, args: ViewParams) => {
                 const fileReader = viewMap.get(name);
                 if (fileReader) {
                     const template =
                         typeof fileReader === 'string'
                             ? fileReader
                             : await fileReader();
-                    return this._renderTemplate(template, args);
+                    return await this._renderTemplate(template, args);
                 }
                 return null;
             },
@@ -439,6 +367,7 @@ export class Server {
             ...builder.allowedApiOrigins,
             ...builder.allowedAccountOrigins,
         ]);
+        const scope: RequestScope = 'auth';
 
         backend.get(
             '/api/v2/records/file/list',
@@ -446,7 +375,7 @@ export class Server {
                 type: 'application/json',
             }),
             asyncMiddleware(async (req, res) => {
-                await this._handleRequest(req, res);
+                await this._handleRequest(req, res, scope);
             })
         );
 
@@ -570,25 +499,25 @@ export class Server {
         );
 
         backend.get('/api/:userId/metadata', async (req, res) => {
-            await this._handleRequest(req, res);
+            await this._handleRequest(req, res, scope);
         });
 
         backend.put('/api/:userId/metadata', async (req, res) => {
-            await this._handleRequest(req, res);
+            await this._handleRequest(req, res, scope);
         });
 
         backend.get('/api/:userId/subscription', async (req, res) => {
-            await this._handleRequest(req, res);
+            await this._handleRequest(req, res, scope);
         });
 
         backend.post('/api/:userId/subscription/manage', async (req, res) => {
-            await this._handleRequest(req, res);
+            await this._handleRequest(req, res, scope);
         });
 
         backend.all(
             '/api/*',
             asyncMiddleware(async (req, res) => {
-                await this._handleRequest(req, res);
+                await this._handleRequest(req, res, scope);
             })
         );
 
@@ -601,93 +530,9 @@ export class Server {
             'aux-auth',
             'dist'
         );
-        // if (!isProduction) {
-        //     console.log(
-        //         '[Server] Running CasualOS backend in development mode.'
-        //     );
-
-        //     backend.use(vite.middlewares);
-
-        //     backend.use('/iframe.html', async (req, res, next) => {
-        //         const url = req.originalUrl;
-
-        //         try {
-        //             // 1. Read index.html
-        //             let template = await fs.readFile(backendIframe, 'utf-8');
-
-        //             // 2. Apply Vite HTML transforms. This injects the Vite HMR client,
-        //             //    and also applies HTML transforms from Vite plugins, e.g. global
-        //             //    preambles from @vitejs/plugin-react
-        //             template = await vite.transformIndexHtml(url, template);
-
-        //             const html = await this._renderAuthIframe(template, url);
-
-        //             // 6. Send the rendered HTML back.
-        //             res.status(200)
-        //                 .set({ 'Content-Type': 'text/html' })
-        //                 .end(html);
-        //         } catch (e) {
-        //             // If an error is caught, let Vite fix the stack trace so it maps back
-        //             // to your actual source code.
-        //             vite.ssrFixStacktrace(e);
-        //             next(e);
-        //         }
-        //     });
-        //     backend.use('*', async (req, res, next) => {
-        //         const url = req.originalUrl;
-
-        //         try {
-        //             // 1. Read index.html
-        //             let template = await fs.readFile(backendIndex, 'utf-8');
-
-        //             // 2. Apply Vite HTML transforms. This injects the Vite HMR client,
-        //             //    and also applies HTML transforms from Vite plugins, e.g. global
-        //             //    preambles from @vitejs/plugin-react
-        //             template = await vite.transformIndexHtml(url, template);
-
-        //             const html = await this._renderAuthIndex(template, url);
-
-        //             // 6. Send the rendered HTML back.
-        //             res.status(200)
-        //                 .set({ 'Content-Type': 'text/html' })
-        //                 .end(html);
-        //         } catch (e) {
-        //             // If an error is caught, let Vite fix the stack trace so it maps back
-        //             // to your actual source code.
-        //             vite.ssrFixStacktrace(e);
-        //             next(e);
-        //         }
-        //     });
-        // } else {
-        //     const iframeTemplate = await fs.readFile(
-        //         path.resolve(authDist, 'iframe.html'),
-        //         'utf-8'
-        //     );
-        //     backend.use('/iframe.html', async (req, res) => {
-        //         const url = req.originalUrl;
-        //         const html = await this._renderAuthIframe(iframeTemplate, url);
-
-        //         // 6. Send the rendered HTML back.
-        //         res.status(200).set({ 'Content-Type': 'text/html' }).end(html);
-        //     });
-
-        //     backend.use(express.static(authDist));
-
-        //     const indexTemplate = await fs.readFile(
-        //         path.resolve(authDist, 'index.html'),
-        //         'utf-8'
-        //     );
-        //     backend.use('*', async (req, res) => {
-        //         const url = req.originalUrl;
-        //         const html = await this._renderAuthIndex(indexTemplate, url);
-
-        //         // 6. Send the rendered HTML back.
-        //         res.status(200).set({ 'Content-Type': 'text/html' }).end(html);
-        //     });
-        // }
 
         backend.all('*', async (req, res) => {
-            await this._handleRequest(req, res);
+            await this._handleRequest(req, res, scope);
         });
 
         if (

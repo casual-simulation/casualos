@@ -32,6 +32,7 @@ import {
 import {
     isSuperUserRole,
     parseSessionKey,
+    success,
 } from '@casual-simulation/aux-common';
 import type { LivekitController } from './LivekitController';
 import type { RecordsController } from './RecordsController';
@@ -90,6 +91,7 @@ import type {
     ProcedureOutputStream,
     Procedures,
     RPCContext,
+    SimpleError,
 } from '@casual-simulation/aux-common';
 import { getStatusCode } from '@casual-simulation/aux-common';
 import type { ModerationController } from './ModerationController';
@@ -157,7 +159,7 @@ import type { SearchQuery, SearchRecordsController } from './search';
 import { SEARCH_COLLECTION_SCHEMA, SEARCH_DOCUMENT_SCHEMA } from './search';
 import { genericResult } from '@casual-simulation/aux-common';
 import type { DatabaseRecordsController, DatabaseStatement } from './database';
-import type { ViewTemplateRenderer } from './ViewTemplateRenderer';
+import type { ViewParams, ViewTemplateRenderer } from './ViewTemplateRenderer';
 
 declare const GIT_TAG: string;
 declare const GIT_HASH: string;
@@ -568,21 +570,33 @@ export class RecordsServer {
                 .origins(true)
                 .view('player', true)
                 .handler(async (_, context) => {
-                    return <div>AUX Player SSR</div>;
+                    const result = success<ViewParams>({
+                        postApp: <div>AUX Player SSR</div>,
+                    });
+
+                    return genericResult<ViewParams, SimpleError>(result);
                 }),
 
             authIndex: procedure()
                 .origins(true)
                 .view('auth', true)
                 .handler(async (_, context) => {
-                    return <div>AUX Auth SSR</div>;
+                    const result = success<ViewParams>({
+                        postApp: <div>AUX Auth SSR</div>,
+                    });
+
+                    return genericResult<ViewParams, SimpleError>(result);
                 }),
 
             authIframe: procedure()
                 .origins(true)
                 .view('auth', '/iframe.html')
                 .handler(async (_, context) => {
-                    return <div>AUX Auth Iframe SSR</div>;
+                    const result = success<ViewParams>({
+                        postApp: <div>AUX Auth Iframe SSR</div>,
+                    });
+
+                    return genericResult<ViewParams, SimpleError>(result);
                 }),
 
             getUserInfo: procedure()
@@ -5265,6 +5279,13 @@ export class RecordsServer {
         if (!procedure.view) {
             throw new Error('Procedure must have an view route defined.');
         }
+        if (!this._viewTemplateRenderer) {
+            console.warn(
+                '[RecordsServer] No view template renderer defined. Skipping view route for procedure:',
+                name
+            );
+            return;
+        }
 
         const route = procedure.view;
         const r: Route<T> = {
@@ -5283,22 +5304,24 @@ export class RecordsServer {
                 };
                 const result = await procedure.handler(data, context, query);
 
-                const rendered = this._viewTemplateRenderer
-                    ? await this._viewTemplateRenderer.render(name, result)
-                    : JSON.stringify(result);
+                if (Symbol.asyncIterator in result) {
+                    throw new Error('View procedures cannot return streams.');
+                } else {
+                    if (result.success === false) {
+                        return returnProcedureOutput(result);
+                    } else {
+                        const { success, ...viewParams } = result;
+                        const rendered =
+                            await this._viewTemplateRenderer.render(
+                                name,
+                                viewParams
+                            );
 
-                // TODO: Finish view rendering
-                const response = returnProcedureOutput(result);
-
-                if (procedure.mapToResponse) {
-                    const procedureResponse = await procedure.mapToResponse(
-                        result,
-                        context
-                    );
-                    return merge(response, procedureResponse);
+                        return returnResult(result, rendered, {
+                            'Content-Type': 'text/html; charset=utf-8',
+                        });
+                    }
                 }
-
-                return response;
             },
             allowedOrigins: procedure.allowedOrigins,
         };
@@ -6759,6 +6782,12 @@ export class RecordsServer {
     }
 }
 
+/**
+ * Returns the given result and body as a GenericHttpResponse.
+ * @param result The result.
+ * @param body The body. If undefined, the result will be stringified and used as the body.
+ * @returns
+ */
 export function returnResult<
     T extends
         | {
@@ -6768,7 +6797,11 @@ export function returnResult<
               reason?: DenialReason;
           }
         | { success: true }
->(result: T): GenericHttpResponse {
+>(
+    result: T,
+    body: string = undefined,
+    headers?: GenericHttpHeaders
+): GenericHttpResponse {
     const span = trace.getActiveSpan();
     if (span) {
         if (result.success === false) {
@@ -6790,7 +6823,8 @@ export function returnResult<
 
     return {
         statusCode: getStatusCode(result),
-        body: JSON.stringify(result),
+        body: body ?? JSON.stringify(result),
+        headers,
     };
 }
 

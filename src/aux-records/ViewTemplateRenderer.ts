@@ -16,6 +16,33 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import type { JSX } from 'preact';
+
+export interface ViewParams {
+    /**
+     * The body content of the document.
+     */
+    [key: string]: JSX.Element;
+
+    /**
+     * The content to be placed in the head of the document.
+     */
+    head?: JSX.Element;
+
+    /**
+     * The main application content.
+     * This matches up with what the client renders.
+     *
+     * @deprecated Should only be used when SSR rendering with vue.
+     */
+    app?: JSX.Element;
+
+    /**
+     * The content to be placed just after the main application content.
+     */
+    postApp?: JSX.Element;
+}
+
 /**
  * Defines an interface for rendering view templates.
  */
@@ -26,5 +53,5 @@ export interface ViewTemplateRenderer {
      * @param args The arguments to use when rendering the template.
      * @returns The rendered template, or null if the template could not be found.
      */
-    render(name: string, args: any): Promise<string | null>;
+    render(name: string, args: ViewParams): Promise<string | null>;
 }
