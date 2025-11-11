@@ -4,6 +4,12 @@
 
 #### Date: TBD
 
+### :rocket: Features
+
+-   Added the `os.signOut()` function to sign out the current user
+    -   Returns a promise that resolves when the sign out request has been processed
+    -   Uses the auth helper's logout method to properly sign out the user
+
 ### :bug: Bug Fixes
 
 -   Various fixes to bot labels:
