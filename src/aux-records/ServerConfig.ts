@@ -20,6 +20,7 @@ import { notificationsSchema } from './SystemNotificationMessenger';
 import { privoSchema } from './PrivoConfiguration';
 import { subscriptionConfigSchema } from './SubscriptionConfiguration';
 import { z } from 'zod';
+import { WEB_CONFIG_SCHEMA } from '@casual-simulation/aux-common';
 
 /**
  * The schema for the S3 configuration.
@@ -1358,6 +1359,107 @@ export const serverConfigSchema = z.object({
             'Configuration options for database records. If omitted, then database records will be disabled.'
         )
         .optional(),
+
+    server: z
+        .object({
+            enabled: z
+                .boolean()
+                .describe('Whether serving CasualOS should be enabled.')
+                .default(true),
+
+            tls: z
+                .object({
+                    key: z
+                        .string()
+                        .describe('The TLS private key(s) in PEM format.'),
+                    cert: z
+                        .string()
+                        .describe('The TLS certificate chains in PEM format.'),
+                })
+                .describe(
+                    'The TLS configuration for the CasualOS app. If not provided, then TLS will not be used.'
+                )
+                .optional(),
+
+            proxy: z
+                .object({
+                    trust: z
+                        .string()
+                        .describe(
+                            'The IP Address range of proxies that should be trusted.'
+                        )
+                        .optional(),
+                })
+                .describe('The proxy configuration for the CasualOS app.')
+                .optional(),
+
+            debug: z
+                .boolean()
+                .describe(
+                    'Whether to enable debug logging for the CasualOS app.'
+                )
+                .default(false),
+
+            frontendPort: z
+                .number()
+                .describe(
+                    'The port that the CasualOS app frontend should listen on.'
+                )
+                .default(3000),
+
+            backendPort: z
+                .number()
+                .describe(
+                    'The port that the CasualOS app backend API should listen on.'
+                )
+                .default(3002),
+
+            webConfig: WEB_CONFIG_SCHEMA.describe(
+                'The web configuration for the CasualOS frontend.'
+            ).default({
+                causalRepoConnectionProtocol: 'websocket',
+                collaborativeRepoLocalPersistence: true,
+                staticRepoLocalPersistence: true,
+                sharedPartitionsVersion: 'v2',
+                vmOrigin: null,
+                authOrigin: null,
+                recordsOrigin: null,
+                disableCollaboration: null,
+                ab1BootstrapURL: null,
+                arcGisApiKey: null,
+                jitsiAppName:
+                    'vpaas-magic-cookie-332b53bd630448a18fcb3be9740f2caf',
+                what3WordsApiKey: null,
+                playerMode: 'player',
+                requirePrivoLogin: false,
+                allowedBiosOptions: null,
+                defaultBiosOption: null,
+                automaticBiosOption: null,
+            }),
+
+            drives: z
+                .object({
+                    dirs: z
+                        .array(z.string())
+                        .describe(
+                            'The list of extra directories that should be served by the CasualOS app on the /drives path.'
+                        ),
+
+                    path: z
+                        .string()
+                        .describe(
+                            'The base path that drives should be served from.'
+                        )
+                        .default('/drives'),
+                })
+                .optional(),
+        })
+        .describe(
+            'The configuration for the CasualOS server. Defaults to disabled.'
+        )
+        .default({
+            enabled: false,
+        }),
 });
 
 export type S3Config = z.infer<typeof s3Schema>;

@@ -23,7 +23,6 @@ import * as bodyParser from 'body-parser';
 import cors from 'cors';
 import { Binary } from 'mongodb';
 import { asyncMiddleware } from './utils';
-import { type CasualOSConfig } from '../shared/CasualOSConfig';
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import type {
@@ -40,7 +39,10 @@ import { WSWebsocketMessenger } from '../ws/WSWebsocketMessenger';
 import { concatMap, interval } from 'rxjs';
 import { constructServerBuilder } from '../shared/LoadServer';
 import { RedisWSWebsocketMessenger } from '../redis/RedisWSWebsocketMessenger';
-import type { RecordsServer } from '@casual-simulation/aux-records';
+import type {
+    RecordsServer,
+    ServerConfig,
+} from '@casual-simulation/aux-records';
 import type { ViewParams } from '@casual-simulation/aux-records/ViewTemplateRenderer';
 import { renderToStringAsync } from 'preact-render-to-string';
 
@@ -57,25 +59,25 @@ export class Server {
     private _frontendHttp: Http.Server;
     private _backendHttp: Http.Server;
     private _wsServer: WebSocketServer;
-    private _config: CasualOSConfig;
+    private _config: ServerConfig;
     private _server: RecordsServer;
 
-    constructor(config: CasualOSConfig) {
+    constructor(config: ServerConfig) {
         this._config = config;
         this._frontendApp = express();
         this._backendApp = express();
-        if (this._config.app.tls) {
+        if (this._config.server.tls) {
             this._frontendHttp = <any>Https.createServer(
                 {
-                    cert: this._config.app.tls.cert,
-                    key: this._config.app.tls.key,
+                    cert: this._config.server.tls.cert,
+                    key: this._config.server.tls.key,
                 },
                 this._frontendApp
             );
             this._backendHttp = <any>Https.createServer(
                 {
-                    cert: this._config.app.tls.cert,
-                    key: this._config.app.tls.key,
+                    cert: this._config.server.tls.cert,
+                    key: this._config.server.tls.key,
                 },
                 this._backendApp
             );
@@ -88,13 +90,16 @@ export class Server {
     }
 
     async configure() {
-        if (!this._config.app.enabled) {
+        if (!this._config.server.enabled) {
             console.warn('[Server] CasualOS app is disabled.');
             return;
         }
         console.log('[Server] Configuring CasualOS app...');
-        if (this._config.app.proxy?.trust) {
-            this._frontendApp.set('trust proxy', this._config.app.proxy.trust);
+        if (this._config.server.proxy?.trust) {
+            this._frontendApp.set(
+                'trust proxy',
+                this._config.server.proxy.trust
+            );
         }
 
         await this._configureBackend();
@@ -117,7 +122,7 @@ export class Server {
             next();
         });
 
-        const webConfig = this._config.app.webConfig;
+        const webConfig = this._config.server.webConfig;
         app.get(
             '/api/config',
             asyncMiddleware(async (req, res) => {
@@ -129,12 +134,12 @@ export class Server {
             })
         );
 
-        if (this._config.app.drives) {
-            const driveMiddleware = this._config.app.drives.dirs.map((dir) =>
+        if (this._config.server.drives) {
+            const driveMiddleware = this._config.server.drives.dirs.map((dir) =>
                 express.static(dir)
             );
 
-            app.use(this._config.app.drives.path, driveMiddleware);
+            app.use(this._config.server.drives.path, driveMiddleware);
         }
         const scope: RequestScope = 'player';
 
@@ -613,17 +618,17 @@ export class Server {
     }
 
     start() {
-        this._frontendHttp.listen(this._config.app.frontendPort, () =>
+        this._frontendHttp.listen(this._config.server.frontendPort, () =>
             console.log(
-                `[Server] Frontend listening on port ${this._config.app.frontendPort}!`
+                `[Server] Frontend listening on port ${this._config.server.frontendPort}!`
             )
         );
 
         const server = this._backendHttp.listen(
-            this._config.app.backendPort,
+            this._config.server.backendPort,
             () =>
                 console.log(
-                    `[Server] Backend listening on port ${this._config.app.backendPort}!`
+                    `[Server] Backend listening on port ${this._config.server.backendPort}!`
                 )
         );
 
