@@ -1399,14 +1399,6 @@ export class Input {
             const state = buttonStates[i];
             const buttonId = buttonIds[i];
 
-            // Skip if this button was force-released
-            if (this._forceReleasedButtons.has(buttonId)) {
-                console.log(
-                    `[Input] Ignoring re-trigger for force-released button ${buttonId}`
-                );
-                continue;
-            }
-
             let down = state.getDownFrame();
             let up = state.getUpFrame();
 

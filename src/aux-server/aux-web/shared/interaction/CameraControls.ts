@@ -566,12 +566,6 @@ export class CameraControls {
             return;
         }
 
-        // Check if synthetic mouseup event is needed
-        if (this._needsSyntheticMouseUp && this.viewport) {
-            this._sendSyntheticMouseUp();
-            this._needsSyntheticMouseUp = false;
-        }
-
         this.updateInput();
         this.updateCamera();
     }
