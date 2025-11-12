@@ -30,6 +30,7 @@ import {
     validateSessionKey,
 } from './AuthController';
 import {
+    isSuccess,
     isSuperUserRole,
     parseSessionKey,
     success,
@@ -160,6 +161,7 @@ import { SEARCH_COLLECTION_SCHEMA, SEARCH_DOCUMENT_SCHEMA } from './search';
 import { genericResult } from '@casual-simulation/aux-common';
 import type { DatabaseRecordsController, DatabaseStatement } from './database';
 import type { ViewParams, ViewTemplateRenderer } from './ViewTemplateRenderer';
+import type { JSX } from 'preact';
 
 declare const GIT_TAG: string;
 declare const GIT_HASH: string;
@@ -572,17 +574,22 @@ export class RecordsServer {
                 .handler(async (_, context) => {
                     const config = await this._records.getWebConfig();
 
+                    const postApp: JSX.Element[] = [];
+
+                    if (isSuccess(config) && config.value) {
+                        postApp.push(
+                            <script
+                                type="application/json"
+                                id="casualos-web-config"
+                                dangerouslySetInnerHTML={{
+                                    __html: JSON.stringify(config.value),
+                                }}
+                            />
+                        );
+                    }
+
                     const result = success<ViewParams>({
-                        postApp: (
-                            <>
-                                <script
-                                    type="application/json"
-                                    id="casualos-web-config"
-                                >
-                                    {JSON.stringify(config)}
-                                </script>
-                            </>
-                        ),
+                        postApp: <>{postApp}</>,
                     });
 
                     return genericResult<ViewParams, SimpleError>(result);

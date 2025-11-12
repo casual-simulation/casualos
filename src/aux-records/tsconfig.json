@@ -10,8 +10,8 @@
         "jsx": "preserve",
         "jsxImportSource": "preact"
     },
-    "include": ["**/*.ts"],
-    "exclude": ["node_modules", "lib", "**/*.spec.ts"],
+    "include": ["**/*.ts", "**/*.tsx"],
+    "exclude": ["node_modules", "lib", "**/*.spec.ts", "**/*.views.spec.ts"],
     "references": [
         { "path": "../aux-common" },
         { "path": "../crypto" },

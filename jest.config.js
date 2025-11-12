@@ -1,6 +1,9 @@
 module.exports = {
     preset: 'ts-jest',
     testEnvironment: './jest/test_environment.js',
+    testEnvironmentOptions: {
+        customExportConditions: ['node', 'node-addons'],
+    },
     moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
     testPathIgnorePatterns: [
         '/node_modules/',
@@ -26,9 +29,6 @@ module.exports = {
     modulePathIgnorePatterns: ['/node_modules/', '/docker/services/'],
     setupFiles: ['fake-indexeddb/auto'],
     setupFilesAfterEnv: ['<rootDir>/jest/jest-setup.ts'],
-    transformIgnorePatterns: [
-        '/node_modules/\\.pnpm/(?!livekit-server-sdk|@livekit\\+protocol|camelcase-keys|map-obj|camelcase|quick-lru).+\\.js$',
-    ],
     moduleNameMapper: {
         '^aux-common/(.*)$': '<rootDir>/src/aux-common/$1',
         '^@casual-simulation/three/examples/js/renderers/CSS3DRenderer$':
@@ -42,10 +42,10 @@ module.exports = {
             '<rootDir>/__mocks__/@simplewebauthn/browser.js',
     },
     transform: {
-        '^.+\\.tsx?$': [
+        '^.+\\.(ts|tsx)?$': [
             'ts-jest',
             {
-                tsconfig: 'tsconfig.test.json',
+                tsconfig: '<rootDir>/tsconfig.test.json',
                 diagnostics: {
                     ignoreCodes: [1343],
                 },
@@ -66,6 +66,9 @@ module.exports = {
         '^.+\\.(js|jsx)$': 'babel-jest',
         '.*\\.txt$': './jest/raw-transformer.js',
     },
+    transformIgnorePatterns: [
+        '/node_modules/\\.pnpm/(?!livekit-server-sdk|@livekit\\+protocol|camelcase-keys|map-obj|camelcase|quick-lru|parse5).+\\.js$',
+    ],
     snapshotFormat: {
         escapeString: true,
         printBasicPrototype: true,

@@ -76,7 +76,7 @@ export default defineConfig([
         languageOptions: { parserOptions: { parser: tseslint.parser } },
     },
     {
-        files: ['**/*.spec.ts'],
+        files: ['**/*.spec.ts', 'jest/*.{js,ts}'],
         rules: {
             '@typescript-eslint/no-require-imports': 'off',
         },
