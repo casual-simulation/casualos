@@ -43,6 +43,7 @@ const serverExternals = [...getExternals(serverPackageJson), 'esbuild'];
 const auxWeb = path.resolve(auxServer, 'aux-web');
 const auxWebDist = path.resolve(auxWeb, 'dist');
 
+const auxPlayer = path.resolve(auxWeb, 'aux-player');
 const auxAuth = path.resolve(auxWeb, 'aux-auth');
 const auxAuthDist = path.resolve(auxAuth, 'dist');
 
@@ -121,7 +122,20 @@ export function createConfigs(dev, version) {
                     ...developmentVariables,
                     ...configVariables,
                 },
-                external: ['deno-vm', 'vite'],
+                external: [
+                    'deno-vm',
+                    'vite',
+                    'rollup',
+                    '@rollup/plugin-virtual',
+                    '@vitejs/plugin-vue2',
+                    'vite-plugin-html',
+                    'vite-plugin-svg-icons',
+                    'vite-plugin-pwa',
+                    'rollup-plugin-copy',
+                    'vite-plugin-singlefile',
+                    'vite-plugin-commonjs',
+                    'vite.config.mts',
+                ],
                 minify: !dev,
                 plugins: [
                     replaceThreePlugin(),

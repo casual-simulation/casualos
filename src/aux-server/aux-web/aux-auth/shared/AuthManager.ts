@@ -45,7 +45,7 @@ import type {
     GetSubscriptionStatusRequest,
 } from '@casual-simulation/aux-records/SubscriptionController';
 import type { PrivoSignUpInfo } from '@casual-simulation/aux-vm';
-import type { RemoteCausalRepoProtocol } from '@casual-simulation/aux-common';
+import type { RemoteCausalRepoProtocol, WebConfig } from '@casual-simulation/aux-common';
 
 import {
     startAuthentication,
@@ -100,6 +100,7 @@ export class AuthManager {
     private _subscriptionsSupported: boolean;
     private _studiosSupported: boolean;
     private _usePrivoLogin: boolean;
+    private _supportUrl: string;
 
     private _loginState: Subject<boolean>;
     private _apiEndpoint: string;
@@ -112,25 +113,24 @@ export class AuthManager {
     private _temporaryConnectionKey: string;
 
     constructor(
-        apiEndpoint: string,
-        websocketEndpoint: string,
-        websocketProtocol: RemoteCausalRepoProtocol,
+        config: WebConfig,
         gitTag: string
     ) {
-        this._apiEndpoint = apiEndpoint;
-        this._websocketEndpoint = websocketEndpoint;
-        this._websocketProtocol = websocketProtocol;
+        this._apiEndpoint = config.recordsOrigin;
+        this._websocketEndpoint = config.causalRepoConnectionUrl;
+        this._websocketProtocol = config.causalRepoConnectionProtocol;
         this._gitTag = gitTag;
         this._loginState = new BehaviorSubject<boolean>(false);
         this._subscriptionsSupported = ASSUME_SUBSCRIPTIONS_SUPPORTED;
         this._studiosSupported = ASSUME_STUDIOS_SUPPORTED;
-        this._usePrivoLogin = USE_PRIVO_LOGIN;
+        this._usePrivoLogin = config.requirePrivoLogin ?? USE_PRIVO_LOGIN;
+        this._supportUrl = SUPPORT_URL;
         this._client = createRecordsClient(this.apiEndpoint);
         this._updateClientSessionKey();
     }
 
     get supportUrl() {
-        return SUPPORT_URL;
+        return this._supportUrl;
     }
 
     get userId() {

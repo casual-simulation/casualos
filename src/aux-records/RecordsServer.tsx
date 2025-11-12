@@ -621,8 +621,23 @@ export class RecordsServer {
                 .origins(true)
                 .view('auth', true)
                 .handler(async (_, context) => {
+                    const config = await this._records.getWebConfig();
+                    const postApp: JSX.Element[] = [];
+
+                    if (isSuccess(config) && config.value) {
+                        postApp.push(
+                            <script
+                                type="application/json"
+                                id="casualos-web-config"
+                                dangerouslySetInnerHTML={{
+                                    __html: JSON.stringify(config.value),
+                                }}
+                            />
+                        );
+                    }
+
                     const result = success<ViewParams>({
-                        postApp: <div>AUX Auth SSR</div>,
+                        postApp: <>{postApp}</>,
                     });
 
                     return genericResult<ViewParams, SimpleError>(result);
@@ -632,8 +647,23 @@ export class RecordsServer {
                 .origins(true)
                 .view('auth', '/iframe.html')
                 .handler(async (_, context) => {
+                    const config = await this._records.getWebConfig();
+                    const postApp: JSX.Element[] = [];
+
+                    if (isSuccess(config) && config.value) {
+                        postApp.push(
+                            <script
+                                type="application/json"
+                                id="casualos-web-config"
+                                dangerouslySetInnerHTML={{
+                                    __html: JSON.stringify(config.value),
+                                }}
+                            />
+                        );
+                    }
+
                     const result = success<ViewParams>({
-                        postApp: <div>AUX Auth Iframe SSR</div>,
+                        postApp: <>{postApp}</>,
                     });
 
                     return genericResult<ViewParams, SimpleError>(result);

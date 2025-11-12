@@ -260,10 +260,17 @@ export class Server {
                 __dirname,
                 '../../../aux-web/aux-player'
             );
-            const frontendConfigPath = path.resolve(
-                frontendSourcePath,
-                'vite.config.mts'
-            );
+            const frontendConfig = await (await import("../../aux-web/aux-player/vite.config.mts"))({
+                command: 'serve',
+                mode: 'development'
+            });
+
+
+
+            // const frontendConfigPath = path.resolve(
+            //     frontendSourcePath,
+            //     'vite.config.mts'
+            // );
             const frontendIndex = path.resolve(
                 frontendSourcePath,
                 'index.html'
@@ -272,10 +279,10 @@ export class Server {
                 __dirname,
                 '../../../aux-web/aux-auth'
             );
-            const backendConfigPath = path.resolve(
-                backendSourcePath,
-                'vite.config.mts'
-            );
+            const backendConfig = await (await import("../../aux-web/aux-auth/vite.config.mts"))({
+                command: 'serve',
+                mode: 'development'
+            });
             const backendIndex = path.resolve(backendSourcePath, 'index.html');
             const backendIframe = path.resolve(
                 backendSourcePath,
@@ -290,22 +297,21 @@ export class Server {
                 'aux-vm-iframe-dom.html'
             );
 
-            const { createServer } = await import('vite');
-            const playerVite = await createServer({
-                configFile: frontendConfigPath,
+            const { createServer, mergeConfig } = await import('vite');
+            const playerVite = await createServer(mergeConfig(frontendConfig,
+                {
                 server: { middlewareMode: true },
                 appType: 'custom',
                 root: frontendSourcePath,
-            });
+            }));
             process.on('exit', () => {
                 playerVite.close();
             });
-            const authVite = await createServer({
-                configFile: backendConfigPath,
+            const authVite = await createServer(mergeConfig(backendConfig, {
                 server: { middlewareMode: true },
                 appType: 'custom',
                 root: backendSourcePath,
-            });
+            }));
             process.on('exit', () => {
                 authVite.close();
             });
