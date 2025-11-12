@@ -46,9 +46,7 @@ import type {
 import type { ViewParams } from '@casual-simulation/aux-records/ViewTemplateRenderer';
 import { renderToStringAsync } from 'preact-render-to-string';
 
-declare let DEVELOPMENT: boolean;
-
-const isProduction = !DEVELOPMENT;
+const isProduction = process.env.NODE_ENV === 'production';
 
 /**
  * Defines a class that represents a fully featured SO4 server.
@@ -104,26 +102,26 @@ export class Server {
 
         await this._configureBackend();
 
-        const app = this._frontendApp;
+        const frontend = this._frontendApp;
 
         // TODO: Enable CSP when we know where it works and does not work
         // this._frontendApplyCSP();
-        app.use(cors());
-        app.use(compression());
-        app.use(
+        frontend.use(cors());
+        frontend.use(compression());
+        frontend.use(
             bodyParser.json({
                 limit: '5mb',
             })
         );
 
-        app.use((req, res, next) => {
+        frontend.use((req, res, next) => {
             res.setHeader('Referrer-Policy', 'same-origin');
             res.setHeader('Access-Control-Allow-Credentials', 'true');
             next();
         });
 
         const webConfig = this._config.server.webConfig;
-        app.get(
+        frontend.get(
             '/api/config',
             asyncMiddleware(async (req, res) => {
                 const config: WebConfig = {
@@ -139,11 +137,11 @@ export class Server {
                 express.static(dir)
             );
 
-            app.use(this._config.server.drives.path, driveMiddleware);
+            frontend.use(this._config.server.drives.path, driveMiddleware);
         }
         const scope: RequestScope = 'player';
 
-        app.get('/api/*', (req, res) => {
+        frontend.get('/api/*', (req, res) => {
             res.sendStatus(404);
         });
 
@@ -156,19 +154,19 @@ export class Server {
             'dist'
         );
 
-        app.get('/terms', (req, res) => {
+        frontend.get('/terms', (req, res) => {
             res.sendFile(path.join(dist, 'terms-of-service.txt'));
         });
 
-        app.get('/privacy-policy', (req, res) => {
+        frontend.get('/privacy-policy', (req, res) => {
             res.sendFile(path.join(dist, 'privacy-policy.txt'));
         });
 
         if (isProduction) {
-            app.use(express.static(dist));
+            frontend.use(express.static(dist));
         }
 
-        app.all('*', async (req, res) => {
+        frontend.all('*', async (req, res) => {
             await this._handleRequest(req, res, scope);
         });
     }
@@ -256,7 +254,7 @@ export class Server {
         const builder = constructServerBuilder(this._config);
 
         let viewMap: Map<string, (() => Promise<string>) | string> = new Map();
-        if (isProduction) {
+        if (!isProduction) {
             console.log('[Server] Using Vite view rendering.');
             const frontendSourcePath = path.resolve(
                 __dirname,
@@ -283,6 +281,14 @@ export class Server {
                 backendSourcePath,
                 'iframe.html'
             );
+            const playerVmIframe = path.resolve(
+                frontendSourcePath,
+                'aux-vm-iframe.html'
+            );
+            const playerVmIframeDom = path.resolve(
+                frontendSourcePath,
+                'aux-vm-iframe-dom.html'
+            );
 
             const { createServer } = await import('vite');
             const playerVite = await createServer({
@@ -291,24 +297,37 @@ export class Server {
                 appType: 'custom',
                 root: frontendSourcePath,
             });
+            process.on('exit', () => {
+                playerVite.close();
+            });
             const authVite = await createServer({
                 configFile: backendConfigPath,
                 server: { middlewareMode: true },
                 appType: 'custom',
                 root: backendSourcePath,
             });
+            process.on('exit', () => {
+                authVite.close();
+            });
 
-            this._frontendApp.use(playerVite.middlewares);
-            this._backendApp.use(authVite.middlewares);
+            frontend.use(playerVite.middlewares);
+            backend.use(authVite.middlewares);
 
             viewMap.set('playerIndex', () =>
                 fs.readFile(frontendIndex, 'utf-8')
+            );
+            viewMap.set('playerVmIframe', () =>
+                fs.readFile(playerVmIframe, 'utf-8')
+            );
+            viewMap.set('playerVmIframeDom', () =>
+                fs.readFile(playerVmIframeDom, 'utf-8')
             );
             viewMap.set('authIndex', () => fs.readFile(backendIndex, 'utf-8'));
             viewMap.set('authIframe', () =>
                 fs.readFile(backendIframe, 'utf-8')
             );
         } else {
+            console.log('[Server] Using production view rendering.');
             const dist = path.resolve(
                 __dirname,
                 '..',
@@ -338,7 +357,17 @@ export class Server {
                 path.resolve(authDist, 'iframe.html'),
                 'utf-8'
             );
+            const playerVmIframe = await fs.readFile(
+                path.resolve(dist, 'aux-vm-iframe.html'),
+                'utf-8'
+            );
+            const playerVmIframeDom = await fs.readFile(
+                path.resolve(dist, 'aux-vm-iframe-dom.html'),
+                'utf-8'
+            );
             viewMap.set('playerIndex', frontendIndex);
+            viewMap.set('playerVmIframe', playerVmIframe);
+            viewMap.set('playerVmIframeDom', playerVmIframeDom);
             viewMap.set('authIndex', backendIndex);
             viewMap.set('authIframe', backendIframe);
         }
@@ -524,16 +553,6 @@ export class Server {
             asyncMiddleware(async (req, res) => {
                 await this._handleRequest(req, res, scope);
             })
-        );
-
-        const authDist = path.resolve(
-            __dirname,
-            '..',
-            '..',
-            '..',
-            'aux-web',
-            'aux-auth',
-            'dist'
         );
 
         backend.all('*', async (req, res) => {

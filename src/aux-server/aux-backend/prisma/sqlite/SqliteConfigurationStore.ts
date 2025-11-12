@@ -24,6 +24,7 @@ import {
     MODERATION_CONFIG_KEY,
     PRIVO_CONFIG_KEY,
     SUBSCRIPTIONS_CONFIG_KEY,
+    WEB_CONFIG_KEY,
     parseSubscriptionConfig,
 } from '@casual-simulation/aux-records';
 import type { PrivoConfiguration } from '@casual-simulation/aux-records/PrivoConfiguration';
@@ -31,6 +32,8 @@ import { parsePrivoConfiguration } from '@casual-simulation/aux-records/PrivoCon
 import type { PrismaClient } from '../generated-sqlite';
 import { parseModerationConfiguration } from '@casual-simulation/aux-records/ModerationConfiguration';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
+import type { WebConfig } from '@casual-simulation/aux-common';
+import { parseWebConfig } from '@casual-simulation/aux-common';
 
 const TRACE_NAME = 'SqliteConfigurationStore';
 
@@ -41,6 +44,20 @@ export class SqliteConfigurationStore implements ConfigurationStore {
     constructor(client: PrismaClient, defaultConfig: MemoryConfiguration) {
         this._client = client;
         this._defaultConfiguration = defaultConfig;
+    }
+
+    @traced(TRACE_NAME)
+    async getWebConfig(): Promise<WebConfig | null> {
+        const result = await this._client.configuration.findUnique({
+            where: {
+                key: WEB_CONFIG_KEY,
+            },
+        });
+
+        return parseWebConfig(
+            result?.data,
+            this._defaultConfiguration.webConfig
+        );
     }
 
     @traced(TRACE_NAME)

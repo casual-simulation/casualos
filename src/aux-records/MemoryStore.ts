@@ -169,6 +169,7 @@ export interface MemoryConfiguration {
     subscriptions: SubscriptionConfiguration;
     privo?: PrivoConfiguration;
     moderation?: ModerationConfiguration;
+    webConfig: WebConfig;
 }
 
 export class MemoryStore
@@ -398,6 +399,7 @@ export class MemoryStore
             subscriptions: cloneDeep(this._subscriptionConfiguration),
             privo: cloneDeep(this._privoConfiguration),
             moderation: cloneDeep(this._moderationConfiguration),
+            webConfig: cloneDeep(this._webConfig),
         });
 
         newStore._users = cloneDeep(this._users);

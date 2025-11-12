@@ -178,6 +178,7 @@ import { PrismaWebhookRecordsStore } from '../prisma/PrismaWebhookRecordsStore';
 import { AuxVMNode } from '@casual-simulation/aux-vm-node';
 import { MessageChannel, MessagePort } from 'deno-vm';
 import { LambdaWebhookEnvironment } from './webhooks/LambdaWebhookEnvironment';
+import type { WebConfig } from '@casual-simulation/aux-common';
 import { getConnectionId } from '@casual-simulation/aux-common';
 import { RemoteSimulationImpl } from '@casual-simulation/aux-vm-client';
 import type { AuxConfigParameters } from '@casual-simulation/aux-vm';
@@ -587,7 +588,7 @@ export class ServerBuilder implements SubscriptionLike {
     useMongoDB(
         options: Pick<
             ServerConfig,
-            'mongodb' | 'subscriptions' | 'moderation'
+            'mongodb' | 'subscriptions' | 'moderation' | 'server'
         > = this._options
     ): this {
         console.log('[ServerBuilder] Using MongoDB.');
@@ -636,6 +637,7 @@ export class ServerBuilder implements SubscriptionLike {
                             options.subscriptions as SubscriptionConfiguration,
                         moderation:
                             options.moderation as ModerationConfiguration,
+                        webConfig: options.server?.webConfig as WebConfig,
                     },
                     configuration
                 );
@@ -717,7 +719,7 @@ export class ServerBuilder implements SubscriptionLike {
     private _usePrismaStores(
         options: Pick<
             ServerConfig,
-            'prisma' | 'subscriptions' | 'moderation'
+            'prisma' | 'subscriptions' | 'moderation' | 'server'
         > = this._options
     ) {
         const prismaClient = this._ensurePrisma(options);
@@ -2429,7 +2431,7 @@ export class ServerBuilder implements SubscriptionLike {
         prismaClient: PrismaClient,
         options: Pick<
             ServerConfig,
-            'prisma' | 'subscriptions' | 'moderation' | 'privo'
+            'prisma' | 'subscriptions' | 'moderation' | 'privo' | 'server'
         >
     ): ConfigurationStore {
         let configStore: ConfigurationStore;
@@ -2439,6 +2441,7 @@ export class ServerBuilder implements SubscriptionLike {
                     options.subscriptions as SubscriptionConfiguration,
                 privo: options.privo as PrivoConfiguration,
                 moderation: options.moderation as ModerationConfiguration,
+                webConfig: options.server?.webConfig as WebConfig,
             });
         } else {
             configStore = new PrismaConfigurationStore(prismaClient, {
@@ -2446,10 +2449,14 @@ export class ServerBuilder implements SubscriptionLike {
                     options.subscriptions as SubscriptionConfiguration,
                 privo: options.privo as PrivoConfiguration,
                 moderation: options.moderation as ModerationConfiguration,
+                webConfig: options.server?.webConfig as WebConfig,
             });
         }
 
         if (this._multiCache && options.prisma.configurationCacheSeconds) {
+            console.log(
+                `[ServerBuilder] Caching configuration values for ${options.prisma.configurationCacheSeconds} seconds.`
+            );
             const cache = this._multiCache.getCache('config');
             return new CachingConfigStore(
                 configStore,
@@ -2457,6 +2464,7 @@ export class ServerBuilder implements SubscriptionLike {
                 options.prisma.configurationCacheSeconds
             );
         } else {
+            console.log(`[ServerBuilder] Not caching configuration values.`);
             return configStore;
         }
     }

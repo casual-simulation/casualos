@@ -696,6 +696,8 @@ export class AppManager {
             console.warn(
                 '[AppManager] Config not able to be fetched from the server or local storage.'
             );
+        } else {
+            console.log('[AppManager] Config loaded:', this._config);
         }
     }
 

@@ -23,6 +23,7 @@ import {
     MODERATION_CONFIG_KEY,
     PRIVO_CONFIG_KEY,
     SUBSCRIPTIONS_CONFIG_KEY,
+    WEB_CONFIG_KEY,
     parseSubscriptionConfig,
 } from '@casual-simulation/aux-records';
 import type { SubscriptionConfiguration } from '@casual-simulation/aux-records/SubscriptionConfiguration';
@@ -31,6 +32,8 @@ import { parsePrivoConfiguration } from '@casual-simulation/aux-records/PrivoCon
 import type { Collection } from 'mongodb';
 import type { ModerationConfiguration } from '@casual-simulation/aux-records/ModerationConfiguration';
 import { parseModerationConfiguration } from '@casual-simulation/aux-records/ModerationConfiguration';
+import type { WebConfig } from '@casual-simulation/aux-common';
+import { parseWebConfig } from '@casual-simulation/aux-common';
 
 export class MongoDBConfigurationStore implements ConfigurationStore {
     private _defaultConfiguration: MemoryConfiguration;
@@ -42,6 +45,17 @@ export class MongoDBConfigurationStore implements ConfigurationStore {
     ) {
         this._defaultConfiguration = defaultConfig;
         this._collection = collection;
+    }
+
+    async getWebConfig(): Promise<WebConfig | null> {
+        const result = await this._collection.findOne({
+            _id: WEB_CONFIG_KEY,
+        });
+
+        return parseWebConfig(
+            result?.data,
+            this._defaultConfiguration.webConfig
+        );
     }
 
     async getSubscriptionConfiguration(): Promise<SubscriptionConfiguration> {

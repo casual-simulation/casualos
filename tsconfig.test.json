@@ -17,7 +17,8 @@
             "aux-jest-matchers": ["jest/jest-matchers.ts"]
         },
         "jsx": "react-jsx",
-        "jsxImportSource": "preact"
+        "jsxImportSource": "preact",
+        "noEmit": true
     },
     "files": ["src/aux-server/typings/casual-simulation.three.d.ts"],
     "references": [

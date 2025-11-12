@@ -595,6 +595,28 @@ export class RecordsServer {
                     return genericResult<ViewParams, SimpleError>(result);
                 }),
 
+            playerVmIframe: procedure()
+                .origins(true)
+                .view('player', '/aux-vm-iframe.html')
+                .handler(async (_, context) => {
+                    const result = success<ViewParams>({
+                        postApp: <div>Player VM SSR</div>,
+                    });
+
+                    return genericResult<ViewParams, SimpleError>(result);
+                }),
+
+            playerVmIframeDom: procedure()
+                .origins(true)
+                .view('player', '/aux-vm-iframe-dom.html')
+                .handler(async (_, context) => {
+                    const result = success<ViewParams>({
+                        postApp: <div>Player VM SSR</div>,
+                    });
+
+                    return genericResult<ViewParams, SimpleError>(result);
+                }),
+
             authIndex: procedure()
                 .origins(true)
                 .view('auth', true)

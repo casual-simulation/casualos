@@ -41,7 +41,9 @@ let folders = [
 
 let patterns = [
     `/**/*.js`,
+    `/**/*.jsx`,
     `/**/*.js.map`,
+    `/**/*.jsx.map`,
     `/**/*.ts.map`,
     `/**/*.d.ts`,
     `/*.tsbuildinfo`,

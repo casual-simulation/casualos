@@ -217,26 +217,45 @@ export interface WebConfig {
 }
 
 export const WEB_CONFIG_SCHEMA = z.object({
-    causalRepoConnectionProtocol: z.enum(['websocket', 'apiary-aws']),
+    causalRepoConnectionProtocol: z
+        .enum(['websocket', 'apiary-aws'])
+        .default('websocket'),
     causalRepoConnectionUrl: z.string().min(1).max(512).optional(),
-    collaborativeRepoLocalPersistence: z.boolean(),
-    staticRepoLocalPersistence: z.boolean(),
-    sharedPartitionsVersion: z.enum(['v2']),
-    vmOrigin: z.string().min(1).max(128).nullable(),
-    authOrigin: z.string().min(1).max(128).nullable(),
-    recordsOrigin: z.string().min(1).max(128).nullable(),
-    disableCollaboration: z.boolean().nullable(),
-    ab1BootstrapURL: z.string().min(1).max(512).nullable(),
-    arcGisApiKey: z.string().min(1).max(128).nullable(),
-    jitsiAppName: z.string().min(1).max(128).nullable(),
-    what3WordsApiKey: z.string().min(1).max(128).nullable(),
-    playerMode: z.enum(['player', 'builder']).nullable(),
-    requirePrivoLogin: z.boolean(),
-    allowedBiosOptions: z.array(BIOS_OPTION_SCHEMA).nullable(),
-    defaultBiosOption: BIOS_OPTION_SCHEMA.nullable(),
-    automaticBiosOption: BIOS_OPTION_SCHEMA.nullable(),
+    collaborativeRepoLocalPersistence: z.boolean().default(false),
+    staticRepoLocalPersistence: z.boolean().default(true),
+    sharedPartitionsVersion: z.enum(['v2']).default('v2'),
+    vmOrigin: z.string().min(1).max(128).nullable().optional(),
+    authOrigin: z.string().min(1).max(128).nullable().optional(),
+    recordsOrigin: z.string().min(1).max(128).nullable().optional(),
+    disableCollaboration: z.boolean().nullable().optional(),
+    ab1BootstrapURL: z.string().min(1).max(512).nullable().optional(),
+    arcGisApiKey: z.string().min(1).max(128).nullable().optional(),
+    jitsiAppName: z.string().min(1).max(128).nullable().optional(),
+    what3WordsApiKey: z.string().min(1).max(128).nullable().optional(),
+    playerMode: z.enum(['player', 'builder']).nullable().optional(),
+    requirePrivoLogin: z.boolean().default(false),
+    allowedBiosOptions: z.array(BIOS_OPTION_SCHEMA).nullable().optional(),
+    defaultBiosOption: BIOS_OPTION_SCHEMA.nullable().optional(),
+    automaticBiosOption: BIOS_OPTION_SCHEMA.nullable().optional(),
+    enableDom: z.boolean().default(false),
+    debug: z.boolean().default(false),
 
     logoUrl: z.string().min(1).max(512).nullable().optional(),
     logoBackgroundColor: z.string().min(1).max(32).nullable().optional(),
     logoTitle: z.string().min(1).max(128).nullable().optional(),
 });
+
+export function parseWebConfig(
+    config: any,
+    defaultConfig: WebConfig
+): WebConfig {
+    if (config) {
+        const result = WEB_CONFIG_SCHEMA.safeParse(config);
+        if (result.success) {
+            return result.data as WebConfig;
+        } else {
+            console.error('[WebConfig] Invalid web config', result);
+        }
+    }
+    return defaultConfig;
+}
