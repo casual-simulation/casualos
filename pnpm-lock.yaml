@@ -24,6 +24,9 @@ patchedDependencies:
   fake-indexeddb@5.0.1:
     hash: d597b2b144531a822d7a504855823767cbd16a0644fa2a214fa0dce0d573ec34
     path: patches/fake-indexeddb@5.0.1.patch
+  parse5@7.3.0:
+    hash: 45caeb8ab7738b23d9d8d4d3ad51db27f1a2c964995bd94d53757866c91cc87c
+    path: patches/parse5@7.3.0.patch
 
 importers:
 
@@ -23408,19 +23411,19 @@ snapshots:
     dependencies:
       '@types/node': 18.19.98
       '@types/tough-cookie': 4.0.5
-      parse5: 7.3.0
+      parse5: 7.3.0(patch_hash=45caeb8ab7738b23d9d8d4d3ad51db27f1a2c964995bd94d53757866c91cc87c)
 
   '@types/jsdom@21.1.6':
     dependencies:
       '@types/node': 18.19.98
       '@types/tough-cookie': 4.0.5
-      parse5: 7.3.0
+      parse5: 7.3.0(patch_hash=45caeb8ab7738b23d9d8d4d3ad51db27f1a2c964995bd94d53757866c91cc87c)
 
   '@types/jsdom@27.0.0':
     dependencies:
       '@types/node': 18.19.98
       '@types/tough-cookie': 4.0.5
-      parse5: 7.3.0
+      parse5: 7.3.0(patch_hash=45caeb8ab7738b23d9d8d4d3ad51db27f1a2c964995bd94d53757866c91cc87c)
 
   '@types/json-schema@7.0.15': {}
 
@@ -24947,7 +24950,7 @@ snapshots:
       domhandler: 5.0.3
       domutils: 3.2.2
       htmlparser2: 8.0.2
-      parse5: 7.3.0
+      parse5: 7.3.0(patch_hash=45caeb8ab7738b23d9d8d4d3ad51db27f1a2c964995bd94d53757866c91cc87c)
       parse5-htmlparser2-tree-adapter: 7.1.0
 
   chokidar@3.5.2:
@@ -27525,7 +27528,7 @@ snapshots:
       hast-util-to-parse5: 8.0.0
       html-void-elements: 3.0.0
       mdast-util-to-hast: 13.2.0
-      parse5: 7.3.0
+      parse5: 7.3.0(patch_hash=45caeb8ab7738b23d9d8d4d3ad51db27f1a2c964995bd94d53757866c91cc87c)
       unist-util-position: 5.0.0
       unist-util-visit: 5.0.0
       vfile: 6.0.3
@@ -28857,7 +28860,7 @@ snapshots:
       https-proxy-agent: 5.0.1
       is-potential-custom-element-name: 1.0.1
       nwsapi: 2.2.20
-      parse5: 7.3.0
+      parse5: 7.3.0(patch_hash=45caeb8ab7738b23d9d8d4d3ad51db27f1a2c964995bd94d53757866c91cc87c)
       saxes: 6.0.0
       symbol-tree: 3.2.4
       tough-cookie: 4.1.4
@@ -28884,7 +28887,7 @@ snapshots:
       https-proxy-agent: 7.0.6
       is-potential-custom-element-name: 1.0.1
       nwsapi: 2.2.20
-      parse5: 7.3.0
+      parse5: 7.3.0(patch_hash=45caeb8ab7738b23d9d8d4d3ad51db27f1a2c964995bd94d53757866c91cc87c)
       rrweb-cssom: 0.7.1
       saxes: 6.0.0
       symbol-tree: 3.2.4
@@ -31113,11 +31116,11 @@ snapshots:
   parse5-htmlparser2-tree-adapter@7.1.0:
     dependencies:
       domhandler: 5.0.3
-      parse5: 7.3.0
+      parse5: 7.3.0(patch_hash=45caeb8ab7738b23d9d8d4d3ad51db27f1a2c964995bd94d53757866c91cc87c)
 
   parse5@6.0.1: {}
 
-  parse5@7.3.0:
+  parse5@7.3.0(patch_hash=45caeb8ab7738b23d9d8d4d3ad51db27f1a2c964995bd94d53757866c91cc87c):
     dependencies:
       entities: 6.0.0
 
