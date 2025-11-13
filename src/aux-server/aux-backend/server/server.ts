@@ -166,16 +166,37 @@ export class Server {
             frontend.use(express.static(dist));
         }
 
-        frontend.all('*', async (req, res) => {
-            await this._handleRequest(req, res, scope);
+        frontend.all('*', async (req, res, next) => {
+            await this._handleRequest(req, res, scope, next);
         });
     }
 
     private async _handleRequest(
         req: Request,
         res: Response,
-        scope: RequestScope
+        scope: RequestScope,
+        next: express.NextFunction
     ) {
+        // ignore requests for websockets
+        if (
+            (req.headers.upgrade &&
+                req.headers.upgrade.toLowerCase() === 'websocket') ||
+            req.method === 'CONNECT'
+        ) {
+            console.log('[Server] Passing through websocket/connect request.');
+            if (scope === 'auth') {
+                this._backendHttp.emit(
+                    'upgrade',
+                    req,
+                    req.socket,
+                    Buffer.alloc(0)
+                );
+            } else {
+                next();
+            }
+            return;
+        }
+
         const query: GenericHttpRequest['query'] = {};
         for (let key in req.query) {
             const value = req.query[key];
@@ -394,8 +415,8 @@ export class Server {
             express.text({
                 type: 'application/json',
             }),
-            asyncMiddleware(async (req, res) => {
-                await this._handleRequest(req, res, scope);
+            asyncMiddleware(async (req, res, next) => {
+                await this._handleRequest(req, res, scope, next);
             })
         );
 
@@ -518,31 +539,34 @@ export class Server {
             })
         );
 
-        backend.get('/api/:userId/metadata', async (req, res) => {
-            await this._handleRequest(req, res, scope);
+        backend.get('/api/:userId/metadata', async (req, res, next) => {
+            await this._handleRequest(req, res, scope, next);
         });
 
-        backend.put('/api/:userId/metadata', async (req, res) => {
-            await this._handleRequest(req, res, scope);
+        backend.put('/api/:userId/metadata', async (req, res, next) => {
+            await this._handleRequest(req, res, scope, next);
         });
 
-        backend.get('/api/:userId/subscription', async (req, res) => {
-            await this._handleRequest(req, res, scope);
+        backend.get('/api/:userId/subscription', async (req, res, next) => {
+            await this._handleRequest(req, res, scope, next);
         });
 
-        backend.post('/api/:userId/subscription/manage', async (req, res) => {
-            await this._handleRequest(req, res, scope);
-        });
+        backend.post(
+            '/api/:userId/subscription/manage',
+            async (req, res, next) => {
+                await this._handleRequest(req, res, scope, next);
+            }
+        );
 
         backend.all(
             '/api/*',
-            asyncMiddleware(async (req, res) => {
-                await this._handleRequest(req, res, scope);
+            asyncMiddleware(async (req, res, next) => {
+                await this._handleRequest(req, res, scope, next);
             })
         );
 
-        backend.all('*', async (req, res) => {
-            await this._handleRequest(req, res, scope);
+        backend.all('*', async (req, res, next) => {
+            await this._handleRequest(req, res, scope, next);
         });
 
         if (
@@ -638,6 +662,7 @@ export class Server {
         );
 
         server.on('upgrade', (request, socket, head) => {
+            console.log('[Server] Handling websocket upgrade request.');
             socket.on('error', (err) => {
                 console.error('[Server] Error on websocket.', err);
             });
