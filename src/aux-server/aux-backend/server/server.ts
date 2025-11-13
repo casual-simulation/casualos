@@ -282,7 +282,7 @@ export class Server {
                     /@vite/g.test(request.path) ||
                     /@fs/g.test(request.path) ||
                     /@id/g.test(request.path) ||
-                    /^[\w/\\-_+:%]+\.(?!html)\w+$/gi.test(request.path)
+                    /^[\w/\\\-_+:%]+\.(?!html)\w+$/gi.test(request.path)
                 );
             }
 
