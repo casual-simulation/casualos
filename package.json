@@ -145,6 +145,7 @@
         "eslint-plugin-header": "3.1.1",
         "eslint-plugin-unused-imports": "4.1.4",
         "eslint-plugin-vue": "^10.0.0",
+        "express-http-proxy": "^2.1.2",
         "fake-indexeddb": "5.0.1",
         "faker": "5.1.0",
         "globals": "^16.0.0",

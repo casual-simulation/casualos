@@ -395,6 +395,22 @@ export default defineConfig(({ command, mode }) => ({
                 : {}),
         },
     },
+    server: {
+        port: 5173,
+        host: '::',
+        watch: {
+            ignored: [
+                ...casualOsPackages.map((p) => `!**/node_modules/${p}/**`),
+            ],
+        },
+        fs: {
+            strict: true,
+            allow: [
+                path.resolve(__dirname, '..', '..', '..'), // src folder
+                path.resolve(__dirname, '..', '..', '..', '..', 'node_modules'), // node_modules
+            ],
+        },
+    },
     optimizeDeps: {
         exclude: [...casualOsPackages, 'monaco-editor'],
     },

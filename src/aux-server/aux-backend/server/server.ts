@@ -255,83 +255,121 @@ export class Server {
 
         let viewMap: Map<string, (() => Promise<string>) | string> = new Map();
         if (!isProduction) {
+            // TODO: Refactor to work the other way:
+            // grab templates from the vite dev server instead of running in middleware mode
             console.log('[Server] Using Vite view rendering.');
-            const frontendSourcePath = path.resolve(
-                __dirname,
-                '../../../aux-web/aux-player'
-            );
-            const frontendConfig = await (await import("../../aux-web/aux-player/vite.config.mts"))({
-                command: 'serve',
-                mode: 'development'
-            });
 
+            function conditional(
+                test: (request: Request, response: Response) => boolean,
+                middleware: express.RequestHandler
+            ): express.RequestHandler {
+                return (req, res, next) => {
+                    if (test(req, res)) {
+                        console.log(`[Proxy] Proxying request for ${req.path}`);
+                        return middleware(req, res, next);
+                    } else {
+                        // else, skip to next middleware
+                        next();
+                    }
+                };
+            }
 
+            function isViteOrAssetOrIndex(
+                request: Request,
+                response: Response
+            ): boolean {
+                return (
+                    /@vite/g.test(request.path) ||
+                    /@fs/g.test(request.path) ||
+                    /@id/g.test(request.path) ||
+                    /\.\w+$/gi.test(request.path) ||
+                    request.path === '/' ||
+                    request.path.endsWith('index.html')
+                );
+            }
 
-            // const frontendConfigPath = path.resolve(
-            //     frontendSourcePath,
-            //     'vite.config.mts'
+            // if the request is for an asset, load from vite
+            const expressHttpProxy = (await import('express-http-proxy'))
+                .default;
+            const frontendProxy = expressHttpProxy('localhost:5173', {});
+            const backendProxy = expressHttpProxy('localhost:5174', {});
+            frontend.use(conditional(isViteOrAssetOrIndex, frontendProxy));
+            backend.use(conditional(isViteOrAssetOrIndex, backendProxy));
+
+            // const frontendSourcePath = path.resolve(
+            //     __dirname,
+            //     '../../../aux-web/aux-player'
             // );
-            const frontendIndex = path.resolve(
-                frontendSourcePath,
-                'index.html'
-            );
-            const backendSourcePath = path.resolve(
-                __dirname,
-                '../../../aux-web/aux-auth'
-            );
-            const backendConfig = await (await import("../../aux-web/aux-auth/vite.config.mts"))({
-                command: 'serve',
-                mode: 'development'
-            });
-            const backendIndex = path.resolve(backendSourcePath, 'index.html');
-            const backendIframe = path.resolve(
-                backendSourcePath,
-                'iframe.html'
-            );
-            const playerVmIframe = path.resolve(
-                frontendSourcePath,
-                'aux-vm-iframe.html'
-            );
-            const playerVmIframeDom = path.resolve(
-                frontendSourcePath,
-                'aux-vm-iframe-dom.html'
-            );
+            // const frontendConfig = await (await import("../../aux-web/aux-player/vite.config.mts"))({
+            //     command: 'serve',
+            //     mode: 'development'
+            // });
 
-            const { createServer, mergeConfig } = await import('vite');
-            const playerVite = await createServer(mergeConfig(frontendConfig,
-                {
-                server: { middlewareMode: true },
-                appType: 'custom',
-                root: frontendSourcePath,
-            }));
-            process.on('exit', () => {
-                playerVite.close();
-            });
-            const authVite = await createServer(mergeConfig(backendConfig, {
-                server: { middlewareMode: true },
-                appType: 'custom',
-                root: backendSourcePath,
-            }));
-            process.on('exit', () => {
-                authVite.close();
-            });
+            // // const frontendConfigPath = path.resolve(
+            // //     frontendSourcePath,
+            // //     'vite.config.mts'
+            // // );
+            // const frontendIndex = path.resolve(
+            //     frontendSourcePath,
+            //     'index.html'
+            // );
+            // const backendSourcePath = path.resolve(
+            //     __dirname,
+            //     '../../../aux-web/aux-auth'
+            // );
+            // const backendConfig = await (await import("../../aux-web/aux-auth/vite.config.mts"))({
+            //     command: 'serve',
+            //     mode: 'development'
+            // });
+            // const backendIndex = path.resolve(backendSourcePath, 'index.html');
+            // const backendIframe = path.resolve(
+            //     backendSourcePath,
+            //     'iframe.html'
+            // );
+            // const playerVmIframe = path.resolve(
+            //     frontendSourcePath,
+            //     'aux-vm-iframe.html'
+            // );
+            // const playerVmIframeDom = path.resolve(
+            //     frontendSourcePath,
+            //     'aux-vm-iframe-dom.html'
+            // );
 
-            frontend.use(playerVite.middlewares);
-            backend.use(authVite.middlewares);
+            // const { createServer, mergeConfig } = await import('vite');
+            // const playerVite = await createServer(mergeConfig(frontendConfig,
+            //     {
+            //     server: { middlewareMode: true },
+            //     appType: 'custom',
+            //     root: frontendSourcePath,
+            // }));
+            // process.on('exit', () => {
+            //     playerVite.close();
+            // });
+            // const authVite = await createServer(mergeConfig(backendConfig, {
+            //     server: { middlewareMode: true },
+            //     appType: 'custom',
+            //     root: backendSourcePath,
+            // }));
+            // process.on('exit', () => {
+            //     authVite.close();
+            // });
 
-            viewMap.set('playerIndex', () =>
-                fs.readFile(frontendIndex, 'utf-8')
-            );
-            viewMap.set('playerVmIframe', () =>
-                fs.readFile(playerVmIframe, 'utf-8')
-            );
-            viewMap.set('playerVmIframeDom', () =>
-                fs.readFile(playerVmIframeDom, 'utf-8')
-            );
-            viewMap.set('authIndex', () => fs.readFile(backendIndex, 'utf-8'));
-            viewMap.set('authIframe', () =>
-                fs.readFile(backendIframe, 'utf-8')
-            );
+            // frontend.use(playerVite.middlewares);
+            // backend.use(authVite.middlewares);
+
+            // viewMap.set('playerIndex', () =>
+            //     fs.readFile(frontendIndex, 'utf-8')
+            // );
+            // viewMap.set('playerVmIframe', () =>
+            //     fs.readFile(playerVmIframe, 'utf-8')
+            // );
+            // viewMap.set('playerVmIframeDom', () =>
+            //     fs.readFile(playerVmIframeDom, 'utf-8')
+            // );
+            // viewMap.set('authIndex', () => fs.readFile(backendIndex, 'utf-8'));
+            // viewMap.set('authIframe', () =>
+            //     fs.readFile(backendIframe, 'utf-8')
+            // );
         } else {
             console.log('[Server] Using production view rendering.');
             const dist = path.resolve(

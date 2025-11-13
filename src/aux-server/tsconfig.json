@@ -29,10 +29,10 @@
     "exclude": [
         "**/node_modules/**",
         "./aux-web/aux-player/sw.ts",
-        // "./aux-web/aux-player/vite.config.mts",
+        "./aux-web/aux-player/vite.config.mts",
         "./aux-web/aux-player/vite.config.mts.timestamp-*",
         "./aux-web/aux-auth/sw.ts",
-        // "./aux-web/aux-auth/vite.config.mts",
+        "./aux-web/aux-auth/vite.config.mts",
         "./aux-web/aux-auth/vite.config.mts.timestamp-*"
     ],
     "references": [
