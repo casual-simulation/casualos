@@ -23636,7 +23636,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
         );
     });
 
-    describe.only('GET /api/config', () => {
+    describe('GET /api/config', () => {
         it('should return the web config', async () => {
             store.webConfig = {
                 causalRepoConnectionProtocol: 'websocket',

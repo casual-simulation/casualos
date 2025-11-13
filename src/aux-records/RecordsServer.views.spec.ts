@@ -823,7 +823,7 @@ describe('RecordsServer', () => {
         jest.useRealTimers();
     });
 
-    describe.only('views', () => {
+    describe('views', () => {
         describe('player', () => {
             const indexPaths = [['/'], ['/index.html']];
 
