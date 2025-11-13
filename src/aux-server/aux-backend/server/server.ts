@@ -282,9 +282,7 @@ export class Server {
                     /@vite/g.test(request.path) ||
                     /@fs/g.test(request.path) ||
                     /@id/g.test(request.path) ||
-                    /\.\w+$/gi.test(request.path) ||
-                    request.path === '/' ||
-                    request.path.endsWith('index.html')
+                    /^[\w/\\-_+:%]+\.(?!html)\w+$/gi.test(request.path)
                 );
             }
 
@@ -296,80 +294,24 @@ export class Server {
             frontend.use(conditional(isViteOrAssetOrIndex, frontendProxy));
             backend.use(conditional(isViteOrAssetOrIndex, backendProxy));
 
-            // const frontendSourcePath = path.resolve(
-            //     __dirname,
-            //     '../../../aux-web/aux-player'
-            // );
-            // const frontendConfig = await (await import("../../aux-web/aux-player/vite.config.mts"))({
-            //     command: 'serve',
-            //     mode: 'development'
-            // });
+            const getTemplateFromVite = async (url: string) => {
+                return await (await fetch(url)).text();
+            };
 
-            // // const frontendConfigPath = path.resolve(
-            // //     frontendSourcePath,
-            // //     'vite.config.mts'
-            // // );
-            // const frontendIndex = path.resolve(
-            //     frontendSourcePath,
-            //     'index.html'
-            // );
-            // const backendSourcePath = path.resolve(
-            //     __dirname,
-            //     '../../../aux-web/aux-auth'
-            // );
-            // const backendConfig = await (await import("../../aux-web/aux-auth/vite.config.mts"))({
-            //     command: 'serve',
-            //     mode: 'development'
-            // });
-            // const backendIndex = path.resolve(backendSourcePath, 'index.html');
-            // const backendIframe = path.resolve(
-            //     backendSourcePath,
-            //     'iframe.html'
-            // );
-            // const playerVmIframe = path.resolve(
-            //     frontendSourcePath,
-            //     'aux-vm-iframe.html'
-            // );
-            // const playerVmIframeDom = path.resolve(
-            //     frontendSourcePath,
-            //     'aux-vm-iframe-dom.html'
-            // );
+            const map = [
+                ['playerIndex', 'http://localhost:5173/'],
+                ['playerVmIframe', 'http://localhost:5173/aux-vm-iframe.html'],
+                [
+                    'playerVmIframeDom',
+                    'http://localhost:5173/aux-vm-iframe-dom.html',
+                ],
+                ['authIndex', 'http://localhost:5174/'],
+                ['authIframe', 'http://localhost:5174/iframe.html'],
+            ];
 
-            // const { createServer, mergeConfig } = await import('vite');
-            // const playerVite = await createServer(mergeConfig(frontendConfig,
-            //     {
-            //     server: { middlewareMode: true },
-            //     appType: 'custom',
-            //     root: frontendSourcePath,
-            // }));
-            // process.on('exit', () => {
-            //     playerVite.close();
-            // });
-            // const authVite = await createServer(mergeConfig(backendConfig, {
-            //     server: { middlewareMode: true },
-            //     appType: 'custom',
-            //     root: backendSourcePath,
-            // }));
-            // process.on('exit', () => {
-            //     authVite.close();
-            // });
-
-            // frontend.use(playerVite.middlewares);
-            // backend.use(authVite.middlewares);
-
-            // viewMap.set('playerIndex', () =>
-            //     fs.readFile(frontendIndex, 'utf-8')
-            // );
-            // viewMap.set('playerVmIframe', () =>
-            //     fs.readFile(playerVmIframe, 'utf-8')
-            // );
-            // viewMap.set('playerVmIframeDom', () =>
-            //     fs.readFile(playerVmIframeDom, 'utf-8')
-            // );
-            // viewMap.set('authIndex', () => fs.readFile(backendIndex, 'utf-8'));
-            // viewMap.set('authIframe', () =>
-            //     fs.readFile(backendIframe, 'utf-8')
-            // );
+            for (let [view, url] of map) {
+                viewMap.set(view, async () => await getTemplateFromVite(url));
+            }
         } else {
             console.log('[Server] Using production view rendering.');
             const dist = path.resolve(
