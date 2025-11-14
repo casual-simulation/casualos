@@ -45,7 +45,10 @@ import type {
     GetSubscriptionStatusRequest,
 } from '@casual-simulation/aux-records/SubscriptionController';
 import type { PrivoSignUpInfo } from '@casual-simulation/aux-vm';
-import type { RemoteCausalRepoProtocol, WebConfig } from '@casual-simulation/aux-common';
+import type {
+    RemoteCausalRepoProtocol,
+    WebConfig,
+} from '@casual-simulation/aux-common';
 
 import {
     startAuthentication,
@@ -93,6 +96,10 @@ declare let ENABLE_SMS_AUTHENTICATION: boolean;
 
 declare let SUPPORT_URL: string;
 
+if (typeof (globalThis as any).SUPPORT_URL === 'undefined') {
+    (globalThis as any).SUPPORT_URL = null;
+}
+
 export class AuthManager {
     private _userId: string;
     private _sessionId: string;
@@ -112,10 +119,7 @@ export class AuthManager {
     private _temporarySessionKey: string;
     private _temporaryConnectionKey: string;
 
-    constructor(
-        config: WebConfig,
-        gitTag: string
-    ) {
+    constructor(config: WebConfig, gitTag: string) {
         this._apiEndpoint = config.recordsOrigin;
         this._websocketEndpoint = config.causalRepoConnectionUrl;
         this._websocketProtocol = config.causalRepoConnectionProtocol;

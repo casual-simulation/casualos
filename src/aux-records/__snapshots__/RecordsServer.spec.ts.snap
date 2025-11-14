@@ -4,6 +4,26 @@ exports[`RecordsServer GET /api/v2/procedures should return the list of procedur
 Object {
   "procedures": Array [
     Object {
+      "name": "playerIndex",
+      "origins": true,
+    },
+    Object {
+      "name": "playerVmIframe",
+      "origins": true,
+    },
+    Object {
+      "name": "playerVmIframeDom",
+      "origins": true,
+    },
+    Object {
+      "name": "authIndex",
+      "origins": true,
+    },
+    Object {
+      "name": "authIframe",
+      "origins": true,
+    },
+    Object {
       "inputs": Object {
         "schema": Object {
           "userId": Object {
@@ -5330,6 +5350,18 @@ Object {
       },
       "name": "removeStudioMember",
       "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/config",
+      },
+      "inputs": Object {
+        "schema": Object {},
+        "type": "object",
+      },
+      "name": "getWebConfig",
+      "origins": "api",
     },
     Object {
       "http": Object {
@@ -5627,6 +5659,26 @@ exports[`RecordsServer GET /api/v2/procedures should support procedures 1`] = `
 Object {
   "procedures": Array [
     Object {
+      "name": "playerIndex",
+      "origins": true,
+    },
+    Object {
+      "name": "playerVmIframe",
+      "origins": true,
+    },
+    Object {
+      "name": "playerVmIframeDom",
+      "origins": true,
+    },
+    Object {
+      "name": "authIndex",
+      "origins": true,
+    },
+    Object {
+      "name": "authIframe",
+      "origins": true,
+    },
+    Object {
       "inputs": Object {
         "schema": Object {
           "userId": Object {
@@ -10953,6 +11005,18 @@ Object {
       },
       "name": "removeStudioMember",
       "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/config",
+      },
+      "inputs": Object {
+        "schema": Object {},
+        "type": "object",
+      },
+      "name": "getWebConfig",
+      "origins": "api",
     },
     Object {
       "http": Object {

@@ -25662,7 +25662,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                     'An operation could not be found for the given request.',
             }),
             headers: {
-                'Access-Control-Allow-Origin': 'test.com',
+                'Access-Control-Allow-Origin': 'https://example.com',
                 'Access-Control-Allow-Headers': 'Content-Type, Authorization',
             },
         });

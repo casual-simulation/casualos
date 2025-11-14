@@ -588,7 +588,7 @@ export class ServerBuilder implements SubscriptionLike {
     useMongoDB(
         options: Pick<
             ServerConfig,
-            'mongodb' | 'subscriptions' | 'moderation' | 'server'
+            'mongodb' | 'subscriptions' | 'moderation' | 'server' | 'privo'
         > = this._options
     ): this {
         console.log('[ServerBuilder] Using MongoDB.');
@@ -638,6 +638,7 @@ export class ServerBuilder implements SubscriptionLike {
                         moderation:
                             options.moderation as ModerationConfiguration,
                         webConfig: options.server?.webConfig as WebConfig,
+                        privo: options.privo as PrivoConfiguration,
                     },
                     configuration
                 );

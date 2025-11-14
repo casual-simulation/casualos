@@ -939,7 +939,7 @@ describe('RecordsServer', () => {
 
                     expect(result).toEqual({
                         statusCode: 200,
-                        body: `<postApp><div>AUX Auth SSR</div></postApp>`,
+                        body: `<postApp></postApp>`,
                         headers: {
                             ...corsHeaders(defaultHeaders.origin),
                             'Content-Type': 'text/html; charset=utf-8',
