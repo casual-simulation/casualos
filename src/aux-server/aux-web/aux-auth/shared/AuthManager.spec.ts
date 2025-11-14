@@ -52,6 +52,8 @@ describe('AuthManager', () => {
                 causalRepoConnectionProtocol: 'websocket',
                 causalRepoConnectionUrl: 'http://myendpoint.localhost',
                 recordsOrigin: 'http://myendpoint.localhost',
+                studiosSupported: true,
+                subscriptionsSupported: true,
             },
             'v9.9.9-dev'
         );

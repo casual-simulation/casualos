@@ -214,6 +214,32 @@ export interface WebConfig {
      * This is used to set the background color of the splash screen.
      */
     logoBackgroundColor?: string | null;
+
+    /**
+     * The URL that users can visit for support.
+     */
+    supportUrl?: string | null;
+
+    /**
+     * Whether to enable SMS authentication.
+     * Defaults to false.
+     */
+    enableSmsAuthentication?: boolean;
+}
+
+/**
+ * The configuration interface that extends the web config with computed options.
+ */
+export interface CasualOSConfig extends WebConfig {
+    /**
+     * Whether subscriptions are supported in this configuration.
+     */
+    subscriptionsSupported: boolean;
+
+    /**
+     * Whether studios are supported in this configuration.
+     */
+    studiosSupported: boolean;
 }
 
 export const WEB_CONFIG_SCHEMA = z.object({
@@ -240,9 +266,13 @@ export const WEB_CONFIG_SCHEMA = z.object({
     enableDom: z.boolean().default(false),
     debug: z.boolean().default(false),
 
+    enableSmsAuthentication: z.boolean().nullable().optional(),
+
     logoUrl: z.string().min(1).max(512).nullable().optional(),
     logoBackgroundColor: z.string().min(1).max(32).nullable().optional(),
     logoTitle: z.string().min(1).max(128).nullable().optional(),
+
+    supportUrl: z.string().min(1).nullable().optional(),
 });
 
 export function parseWebConfig(

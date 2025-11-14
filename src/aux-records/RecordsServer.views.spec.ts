@@ -172,6 +172,7 @@ verifyAuthenticationResponseMock.mockImplementation(async (opts) => {
 });
 
 console.log = jest.fn();
+console.warn = jest.fn();
 console.error = jest.fn();
 
 describe('RecordsServer', () => {
@@ -863,32 +864,11 @@ describe('RecordsServer', () => {
                             version: 2,
                             logoTitle: 'Test Logo',
                             logoUrl: 'https://example.com/logo.png',
+                            studiosSupported: true,
+                            subscriptionsSupported: true,
+                            requirePrivoLogin: false,
                         },
                     });
-
-                    expect(result.headers).toEqual({
-                        ...corsHeaders(defaultHeaders.origin),
-                        'Content-Type': 'text/html; charset=utf-8',
-                    });
-                });
-
-                it('should return nothing if the config is null', async () => {
-                    store.webConfig = null;
-
-                    const result = await server.handleHttpRequest(
-                        scoped('player', httpGet(path, defaultHeaders))
-                    );
-
-                    expect(result.statusCode).toBe(200);
-
-                    const body = result.body as string;
-                    const dom = new JSDOM(body);
-
-                    const webConfig = dom.window.document.querySelector(
-                        'postApp script#casualos-web-config'
-                    );
-
-                    expect(webConfig).toBeFalsy();
 
                     expect(result.headers).toEqual({
                         ...corsHeaders(defaultHeaders.origin),
@@ -964,13 +944,44 @@ describe('RecordsServer', () => {
                         scoped('auth', httpGet(path, defaultHeaders))
                     );
 
-                    expect(result).toEqual({
-                        statusCode: 200,
-                        body: `<postApp></postApp>`,
-                        headers: {
-                            ...corsHeaders(defaultHeaders.origin),
-                            'Content-Type': 'text/html; charset=utf-8',
+                    expect(result.statusCode).toBe(200);
+
+                    const body = result.body as string;
+                    const dom = new JSDOM(body);
+
+                    const webConfig = dom.window.document.querySelector(
+                        'postApp script#casualos-web-config'
+                    );
+
+                    expect(
+                        webConfig?.attributes.getNamedItem('type')?.value
+                    ).toBe('application/json');
+
+                    const json = tryParseJson(webConfig!.innerHTML!);
+
+                    expect(json).toEqual({
+                        success: true,
+                        value: {
+                            causalRepoConnectionProtocol: 'websocket',
+                            version: 2,
+                            studiosSupported: true,
+                            subscriptionsSupported: true,
+                            requirePrivoLogin: false,
                         },
+                    });
+
+                    // expect(result).toEqual({
+                    //     statusCode: 200,
+                    //     body: `<postApp></postApp>`,
+                    //     headers: {
+                    //         ...corsHeaders(defaultHeaders.origin),
+                    //         'Content-Type': 'text/html; charset=utf-8',
+                    //     },
+                    // });
+
+                    expect(result.headers).toEqual({
+                        ...corsHeaders(defaultHeaders.origin),
+                        'Content-Type': 'text/html; charset=utf-8',
                     });
                 });
             });

@@ -60,9 +60,9 @@ import type { ComIdConfig, ComIdPlayerConfig } from './ComIdConfig';
 import { isActiveSubscription } from './Utils';
 import type { SystemNotificationMessenger } from './SystemNotificationMessenger';
 import type {
+    CasualOSConfig,
     Result,
     SimpleError,
-    WebConfig,
 } from '@casual-simulation/aux-common';
 import { isSuperUserRole, success } from '@casual-simulation/aux-common';
 import { traced } from './tracing/TracingDecorators';
@@ -1348,9 +1348,22 @@ export class RecordsController {
      * Attempts to get the web config.
      */
     @traced(TRACE_NAME)
-    async getWebConfig(): Promise<Result<WebConfig, SimpleError>> {
-        const config = await this._config.getWebConfig();
-        return success(config);
+    async getWebConfig(): Promise<Result<CasualOSConfig, SimpleError>> {
+        const [config, subscriptions, privo] = await Promise.all([
+            this._config.getWebConfig(),
+            this._config.getSubscriptionConfiguration(),
+            this._config.getPrivoConfiguration(),
+        ]);
+
+        return success({
+            ...(config ?? {
+                version: 2,
+                causalRepoConnectionProtocol: 'websocket',
+            }),
+            studiosSupported: !!subscriptions,
+            subscriptionsSupported: !!subscriptions,
+            requirePrivoLogin: !!privo,
+        });
     }
 
     /**

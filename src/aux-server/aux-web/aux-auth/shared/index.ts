@@ -15,13 +15,18 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import type { WebConfig, RemoteCausalRepoProtocol } from '@casual-simulation/aux-common';
+import type {
+    RemoteCausalRepoProtocol,
+    CasualOSConfig,
+} from '@casual-simulation/aux-common';
 import { tryParseJson } from '@casual-simulation/aux-common';
 import { AuthManager } from './AuthManager';
 
 declare const API_ENDPOINT: string;
 declare const WEBSOCKET_ENDPOINT: string;
 declare const WEBSOCKET_PROTOCOL: RemoteCausalRepoProtocol;
+declare const ASSUME_STUDIOS_SUPPORTED: boolean;
+declare const ASSUME_SUBSCRIPTIONS_SUPPORTED: boolean;
 declare const GIT_TAG: string;
 
 const injectedConfig = tryParseJson(
@@ -29,18 +34,18 @@ const injectedConfig = tryParseJson(
 );
 let authManager: AuthManager;
 if (injectedConfig.success) {
-    const config: WebConfig = injectedConfig.value;
-    authManager = new AuthManager(
-        config,
-        GIT_TAG,
-    );
+    const config: CasualOSConfig = injectedConfig.value;
+    authManager = new AuthManager(config, GIT_TAG);
 } else {
-    authManager = new AuthManager({
-        version: 2,
-        recordsOrigin: API_ENDPOINT,
-        causalRepoConnectionUrl: WEBSOCKET_ENDPOINT,
-        causalRepoConnectionProtocol: WEBSOCKET_PROTOCOL,
-    },
+    authManager = new AuthManager(
+        {
+            version: 2,
+            recordsOrigin: API_ENDPOINT,
+            causalRepoConnectionUrl: WEBSOCKET_ENDPOINT,
+            causalRepoConnectionProtocol: WEBSOCKET_PROTOCOL,
+            studiosSupported: ASSUME_STUDIOS_SUPPORTED,
+            subscriptionsSupported: ASSUME_SUBSCRIPTIONS_SUPPORTED,
+        },
         GIT_TAG
     );
 }

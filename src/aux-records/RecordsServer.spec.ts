@@ -251,6 +251,7 @@ verifyAuthenticationResponseMock.mockImplementation(async (opts) => {
 });
 
 console.log = jest.fn();
+console.warn = jest.fn();
 // console.error = jest.fn();
 
 describe('RecordsServer', () => {
@@ -23657,6 +23658,9 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                     version: 2,
                     logoTitle: 'Custom Logo Title',
                     logoUrl: 'http://example.com/logo.png',
+                    studiosSupported: true,
+                    subscriptionsSupported: true,
+                    requirePrivoLogin: false,
                 },
                 headers: apiCorsHeaders,
             });
