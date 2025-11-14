@@ -47,9 +47,12 @@ describe('AuthManager', () => {
         globalThis.fetch = fetch = jest.fn();
         Date.now = nowMock = jest.fn(() => 1);
         manager = new AuthManager(
-            'http://myendpoint.localhost',
-            'http://myendpoint.localhost',
-            'websocket',
+            {
+                version: 2,
+                causalRepoConnectionProtocol: 'websocket',
+                causalRepoConnectionUrl: 'http://myendpoint.localhost',
+                recordsOrigin: 'http://myendpoint.localhost',
+            },
             'v9.9.9-dev'
         );
     });
