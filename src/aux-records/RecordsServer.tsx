@@ -5381,25 +5381,46 @@ export class RecordsServer {
                     httpRequest: request,
                     origin: request.headers.origin ?? null,
                 };
-                const result = await procedure.handler(data, context, query);
+                let result: ProcedureOutput;
+                try {
+                    result = await procedure.handler(data, context, query);
+                } catch (err) {
+                    console.error(
+                        `[RecordsServer] [view: ${name}] Error in view procedure:`,
+                        err
+                    );
+                    result = {
+                        success: false,
+                        errorCode: 'server_error',
+                        errorMessage: 'A server error occurred.',
+                    };
+                }
 
                 if (Symbol.asyncIterator in result) {
                     throw new Error('View procedures cannot return streams.');
                 } else {
+                    let viewParams: ViewParams;
                     if (result.success === false) {
-                        return returnProcedureOutput(result);
+                        console.error(
+                            `[RecordsServer] [view: ${name}] View procedure returned unsuccessful result:`,
+                            result
+                        );
+                        viewParams = {};
+                        result = {
+                            success: true,
+                        };
                     } else {
-                        const { success, ...viewParams } = result;
-                        const rendered =
-                            await this._viewTemplateRenderer.render(
-                                name,
-                                viewParams
-                            );
-
-                        return returnResult(result, rendered, {
-                            'Content-Type': 'text/html; charset=utf-8',
-                        });
+                        const { success, ...rest } = result;
+                        viewParams = rest;
                     }
+                    const rendered = await this._viewTemplateRenderer.render(
+                        name,
+                        viewParams
+                    );
+
+                    return returnResult(result, rendered, {
+                        'Content-Type': 'text/html; charset=utf-8',
+                    });
                 }
             },
             allowedOrigins: procedure.allowedOrigins,

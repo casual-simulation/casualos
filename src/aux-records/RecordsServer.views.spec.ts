@@ -172,6 +172,7 @@ verifyAuthenticationResponseMock.mockImplementation(async (opts) => {
 });
 
 console.log = jest.fn();
+console.error = jest.fn();
 
 describe('RecordsServer', () => {
     let savedMemoryStore: MemoryStore;
@@ -904,6 +905,32 @@ describe('RecordsServer', () => {
                                 errorMessage: 'Failed',
                             })
                         );
+
+                    const result = await server.handleHttpRequest(
+                        scoped('player', httpGet(path, defaultHeaders))
+                    );
+
+                    expect(result.statusCode).toBe(200);
+
+                    const body = result.body as string;
+                    const dom = new JSDOM(body);
+
+                    const webConfig = dom.window.document.querySelector(
+                        'postApp script#casualos-web-config'
+                    );
+
+                    expect(webConfig).toBeFalsy();
+
+                    expect(result.headers).toEqual({
+                        ...corsHeaders(defaultHeaders.origin),
+                        'Content-Type': 'text/html; charset=utf-8',
+                    });
+                });
+
+                it('should return the template with no params if the view procedure throws an error', async () => {
+                    recordsController.getWebConfig = jest
+                        .fn()
+                        .mockRejectedValue(new Error('Something bad happened'));
 
                     const result = await server.handleHttpRequest(
                         scoped('player', httpGet(path, defaultHeaders))
