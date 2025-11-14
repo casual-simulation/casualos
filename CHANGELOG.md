@@ -1,8 +1,13 @@
 # CasualOS Changelog
 
-## V3.8.2
+## V3.9.0
 
 #### Date: TBD
+
+### :rocket: Features
+
+-   Added basic server side rendering.
+    -   Currently, this is used for injecting the web config so that CasualOS doesn't need to make a call to `/api/config` on initialization.
 
 ### :bug: Bug Fixes
 
