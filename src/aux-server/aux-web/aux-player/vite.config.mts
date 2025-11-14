@@ -33,8 +33,6 @@ const webxrProfilesDir = path.posix.resolve(
 );
 
 const publicDir = path.resolve(__dirname, '..', 'shared', 'static');
-const srcDir = path.resolve(__dirname);
-const sw = path.resolve(__dirname, 'sw.ts');
 
 const casualOsPackages = fs
     .readdirSync(
@@ -188,8 +186,8 @@ export default defineConfig(({ command, mode }) => ({
                   }),
                   VitePWA({
                       strategies: 'injectManifest',
-                      srcDir: srcDir,
-                      filename: sw,
+                      srcDir: '.',
+                      filename: 'sw.ts',
                       injectManifest: {
                           maximumFileSizeToCacheInBytes: 15728640, // 5MiB
                           globDirectory: distDir,

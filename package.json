@@ -3,7 +3,7 @@
     "private": true,
     "version": "0.3.0",
     "scripts": {
-        "start": "node ./src/aux-server/aux-backend/server/dist/main.js",
+        "start": "cd ./src/aux-server/ && node ./aux-backend/server/dist/main.js",
         "bootstrap": "pnpm install --frozen-lockfile",
         "bootstrap:aws": "node src/aux-server/script/bootstrap.mjs",
         "cockroach": "cockroach start-single-node --insecure",

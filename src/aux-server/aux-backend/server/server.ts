@@ -21,6 +21,7 @@ import type { Request, Response } from 'express';
 import express from 'express';
 import * as bodyParser from 'body-parser';
 import cors from 'cors';
+import type { Db } from 'mongodb';
 import { Binary } from 'mongodb';
 import { asyncMiddleware } from './utils';
 import path from 'node:path';
@@ -31,7 +32,6 @@ import type {
     RequestScope,
 } from '@casual-simulation/aux-common';
 import { hasValue } from '@casual-simulation/aux-common';
-import type { WebConfig } from '@casual-simulation/aux-common/common/WebConfig';
 import compression from 'compression';
 import { getStatusCode } from '@casual-simulation/aux-common';
 import { WebSocketServer } from 'ws';
@@ -40,11 +40,16 @@ import { concatMap, interval } from 'rxjs';
 import { constructServerBuilder } from '../shared/LoadServer';
 import { RedisWSWebsocketMessenger } from '../redis/RedisWSWebsocketMessenger';
 import type {
+    FileRecordsController,
     RecordsServer,
     ServerConfig,
+    WebsocketController,
+    WebsocketMessenger,
 } from '@casual-simulation/aux-records';
 import type { ViewParams } from '@casual-simulation/aux-records/ViewTemplateRenderer';
 import { renderToStringAsync } from 'preact-render-to-string';
+import type { ServerBuilder } from 'aux-backend/shared/ServerBuilder';
+import { conditional } from './middleware';
 
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -100,9 +105,87 @@ export class Server {
             );
         }
 
-        await this._configureBackend();
+        const builder = constructServerBuilder(this._config);
 
+        const backend = this._backendApp;
         const frontend = this._frontendApp;
+        await this._configureViewTemplateRenderer(frontend, backend, builder);
+
+        const {
+            server,
+            filesController,
+            mongoDatabase,
+            websocketMessenger,
+            websocketController,
+        } = await builder.buildAsync();
+        this._server = server;
+
+        await builder.ensureInitialized();
+
+        const allowedRecordsOrigins = new Set([
+            ...builder.allowedApiOrigins,
+            ...builder.allowedAccountOrigins,
+        ]);
+
+        const backendScope: RequestScope = 'auth';
+        const frontendScope: RequestScope = 'player';
+        this._configureWebsockets(
+            websocketController,
+            websocketMessenger,
+            server
+        );
+
+        backend.get(
+            '/api/v2/records/file/list',
+            express.text({
+                type: 'application/json',
+            }),
+            asyncMiddleware(async (req, res, next) => {
+                await this._handleRequest(req, res, backendScope, next);
+            })
+        );
+
+        if (mongoDatabase) {
+            this._configureMongoFileEndpoints(
+                mongoDatabase,
+                allowedRecordsOrigins,
+                filesController
+            );
+        }
+
+        backend.use(
+            '/api/*',
+            express.text({
+                type: 'application/json',
+                limit: '5mb',
+            })
+        );
+
+        backend.get('/api/:userId/metadata', async (req, res, next) => {
+            await this._handleRequest(req, res, backendScope, next);
+        });
+
+        backend.put('/api/:userId/metadata', async (req, res, next) => {
+            await this._handleRequest(req, res, backendScope, next);
+        });
+
+        backend.get('/api/:userId/subscription', async (req, res, next) => {
+            await this._handleRequest(req, res, backendScope, next);
+        });
+
+        backend.post(
+            '/api/:userId/subscription/manage',
+            async (req, res, next) => {
+                await this._handleRequest(req, res, backendScope, next);
+            }
+        );
+
+        backend.all(
+            '/api/*',
+            asyncMiddleware(async (req, res, next) => {
+                await this._handleRequest(req, res, backendScope, next);
+            })
+        );
 
         // TODO: Enable CSP when we know where it works and does not work
         // this._frontendApplyCSP();
@@ -120,15 +203,11 @@ export class Server {
             next();
         });
 
-        const webConfig = this._config.server.webConfig;
         frontend.get(
             '/api/config',
-            asyncMiddleware(async (req, res) => {
-                const config: WebConfig = {
-                    ...(webConfig as WebConfig),
-                    version: 2,
-                };
-                res.send(config);
+            asyncMiddleware(async (req, res, next) => {
+                // just forward requests to the backend
+                return this._handleRequest(req, res, backendScope, next);
             })
         );
 
@@ -139,13 +218,12 @@ export class Server {
 
             frontend.use(this._config.server.drives.path, driveMiddleware);
         }
-        const scope: RequestScope = 'player';
 
         frontend.get('/api/*', (req, res) => {
             res.sendStatus(404);
         });
 
-        const dist = path.resolve(
+        const playerDist = path.resolve(
             __dirname,
             '..',
             '..',
@@ -153,22 +231,353 @@ export class Server {
             'aux-web',
             'dist'
         );
+        const authDist = path.resolve(
+            __dirname,
+            '..',
+            '..',
+            '..',
+            'aux-web',
+            'aux-auth',
+            'dist'
+        );
 
         frontend.get('/terms', (req, res) => {
-            res.sendFile(path.join(dist, 'terms-of-service.txt'));
+            res.sendFile(path.join(playerDist, 'terms-of-service.txt'));
         });
 
         frontend.get('/privacy-policy', (req, res) => {
-            res.sendFile(path.join(dist, 'privacy-policy.txt'));
+            res.sendFile(path.join(playerDist, 'privacy-policy.txt'));
         });
 
         if (isProduction) {
-            frontend.use(express.static(dist));
+            // Only allow non-html assets from being served by the static middleware
+            const isAsset = (path: string) =>
+                /^[\w/\\\-_+:%.]+\.(?!html)\w+$/gi.test(path);
+            frontend.use(
+                conditional(
+                    (req) => isAsset(req.path),
+                    express.static(playerDist)
+                )
+            );
+            backend.use(
+                conditional(
+                    (req) => isAsset(req.path),
+                    express.static(authDist)
+                )
+            );
         }
 
-        frontend.all('*', async (req, res, next) => {
-            await this._handleRequest(req, res, scope, next);
+        backend.all('*', async (req, res, next) => {
+            await this._handleRequest(req, res, backendScope, next);
         });
+
+        frontend.all('*', async (req, res, next) => {
+            await this._handleRequest(req, res, frontendScope, next);
+        });
+    }
+
+    private _configureWebsockets(
+        websocketController: WebsocketController,
+        websocketMessenger: WebsocketMessenger,
+        server: RecordsServer
+    ) {
+        if (
+            websocketMessenger instanceof WSWebsocketMessenger ||
+            websocketMessenger instanceof RedisWSWebsocketMessenger
+        ) {
+            this._wsServer.on('connection', (socket, req) => {
+                const id = websocketMessenger.registerConnection(socket);
+                const ip = req.socket.remoteAddress;
+                const origin = req.headers.origin;
+                console.log('[Server] Got connection:', id, ip);
+
+                socket.on('close', async () => {
+                    console.log('[Server] Connection closed:', id, ip);
+                    await server.handleWebsocketRequest({
+                        type: 'disconnect',
+                        connectionId: id,
+                        ipAddress: ip,
+                        body: null,
+                        origin: origin,
+                    });
+                    websocketMessenger.removeConnection(id);
+                });
+
+                socket.on('message', async (message, isBinary) => {
+                    await server.handleWebsocketRequest({
+                        type: 'message',
+                        connectionId: id,
+                        ipAddress: ip,
+                        body: isBinary
+                            ? new Uint8Array(message as any)
+                            : message.toString('utf-8'),
+                        origin: origin,
+                    });
+                });
+
+                server.handleWebsocketRequest({
+                    type: 'connect',
+                    connectionId: id,
+                    ipAddress: ip,
+                    body: null,
+                    origin: origin,
+                });
+            });
+        } else {
+            console.log('[Server] Websockets integration disabled.');
+        }
+
+        if (websocketController) {
+            interval(30 * 1000)
+                .pipe(
+                    concatMap(
+                        async () =>
+                            await websocketController.savePermanentBranches()
+                    )
+                )
+                .subscribe();
+        }
+    }
+
+    private async _configureViewTemplateRenderer(
+        frontend: express.Express,
+        backend: express.Express,
+        builder: ServerBuilder
+    ) {
+        const viewMap: Map<string, (() => Promise<string>) | string> =
+            new Map();
+        if (!isProduction) {
+            // TODO: Refactor to work the other way:
+            // grab templates from the vite dev server instead of running in middleware mode
+            console.log('[Server] Using Vite view rendering.');
+            function isViteOrAssetOrIndex(
+                request: Request,
+                response: Response
+            ): boolean {
+                const result =
+                    /@vite/g.test(request.path) ||
+                    /@fs/g.test(request.path) ||
+                    /@id/g.test(request.path) ||
+                    /^[\w/\\\-_+:%.]+\.(?!html)\w+$/gi.test(request.path);
+
+                if (result) {
+                    console.log(`[Proxy] Proxying request for ${request.path}`);
+                }
+                return result;
+            }
+
+            // if the request is for an asset, load from vite
+            const expressHttpProxy = (await import('express-http-proxy'))
+                .default;
+            const frontendProxy = expressHttpProxy('localhost:5173', {});
+            const backendProxy = expressHttpProxy('localhost:5174', {});
+            frontend.use(conditional(isViteOrAssetOrIndex, frontendProxy));
+            backend.use(conditional(isViteOrAssetOrIndex, backendProxy));
+
+            const getTemplateFromVite = async (url: string) => {
+                return await (await fetch(url)).text();
+            };
+
+            const map = [
+                ['playerIndex', 'http://localhost:5173/'],
+                ['playerVmIframe', 'http://localhost:5173/aux-vm-iframe.html'],
+                [
+                    'playerVmIframeDom',
+                    'http://localhost:5173/aux-vm-iframe-dom.html',
+                ],
+                ['authIndex', 'http://localhost:5174/'],
+                ['authIframe', 'http://localhost:5174/iframe.html'],
+            ];
+
+            for (let [view, url] of map) {
+                viewMap.set(view, async () => await getTemplateFromVite(url));
+            }
+        } else {
+            console.log('[Server] Using production view rendering.');
+            const dist = path.resolve(
+                __dirname,
+                '..',
+                '..',
+                '..',
+                'aux-web',
+                'dist'
+            );
+            const authDist = path.resolve(
+                __dirname,
+                '..',
+                '..',
+                '..',
+                'aux-web',
+                'aux-auth',
+                'dist'
+            );
+            const frontendIndex = await fs.readFile(
+                path.resolve(dist, 'index.html'),
+                'utf-8'
+            );
+            const backendIndex = await fs.readFile(
+                path.resolve(authDist, 'index.html'),
+                'utf-8'
+            );
+            const backendIframe = await fs.readFile(
+                path.resolve(authDist, 'iframe.html'),
+                'utf-8'
+            );
+            const playerVmIframe = await fs.readFile(
+                path.resolve(dist, 'aux-vm-iframe.html'),
+                'utf-8'
+            );
+            const playerVmIframeDom = await fs.readFile(
+                path.resolve(dist, 'aux-vm-iframe-dom.html'),
+                'utf-8'
+            );
+            viewMap.set('playerIndex', frontendIndex);
+            viewMap.set('playerVmIframe', playerVmIframe);
+            viewMap.set('playerVmIframeDom', playerVmIframeDom);
+            viewMap.set('authIndex', backendIndex);
+            viewMap.set('authIframe', backendIframe);
+        }
+
+        builder.useViewTemplateRenderer({
+            render: async (name: string, args: ViewParams) => {
+                const fileReader = viewMap.get(name);
+                if (fileReader) {
+                    const template =
+                        typeof fileReader === 'string'
+                            ? fileReader
+                            : await fileReader();
+                    return await this._renderTemplate(template, args);
+                }
+                return null;
+            },
+        });
+    }
+
+    private async _configureMongoFileEndpoints(
+        mongoDatabase: Db,
+        allowedRecordsOrigins: Set<string>,
+        filesController: FileRecordsController
+    ) {
+        const backend = this._backendApp;
+        const filesCollection =
+            mongoDatabase.collection<any>('recordsFilesData');
+
+        backend.use(
+            '/api/v2/records/file/*',
+            express.raw({
+                type: () => true,
+                limit: '1GB',
+            })
+        );
+
+        backend.post(
+            '/api/v2/records/file/*',
+            asyncMiddleware(async (req, res) => {
+                // TODO: Secure this endpoint
+                handleRecordsCorsHeaders(req, res);
+                // const recordName = req.headers['record-name'] as string;
+                const recordNameAndFileName = req.path.slice(
+                    '/api/v2/records/file/'.length
+                );
+                const [recordName, fileName] = recordNameAndFileName.split('/');
+
+                if (!recordName || !fileName) {
+                    res.status(400).send();
+                    return;
+                }
+
+                const mimeType = req.headers['content-type'] as string;
+
+                await filesCollection.insertOne({
+                    recordName,
+                    fileName,
+                    mimeType,
+                    body: req.body,
+                });
+
+                const result = await filesController.markFileAsUploaded(
+                    recordName,
+                    fileName
+                );
+
+                return returnResponse(res, result);
+            })
+        );
+
+        backend.get(
+            '/api/v2/records/file/:recordName/*',
+            asyncMiddleware(async (req, res) => {
+                // TODO: Secure this endpoint
+                handleRecordsCorsHeaders(req, res);
+                const recordNameAndFileName = req.path.slice(
+                    '/api/v2/records/file/'.length
+                );
+                const [recordName, fileName] = recordNameAndFileName.split('/');
+
+                const file = await filesCollection.findOne({
+                    recordName,
+                    fileName,
+                });
+
+                if (!file) {
+                    res.status(404).send();
+                    return;
+                }
+
+                if (file.body instanceof Binary) {
+                    res.status(200)
+                        .contentType(file.mimeType)
+                        .send(file.body.buffer);
+                } else {
+                    res.status(200).contentType(file.mimeType).send(file.body);
+                }
+            })
+        );
+
+        backend.get(
+            '/api/v2/records/file/*',
+            asyncMiddleware(async (req, res) => {
+                // TODO: Secure this endpoint
+                handleRecordsCorsHeaders(req, res);
+                const fileName = req.path.slice('/api/v2/records/file/'.length);
+
+                const file = await filesCollection.findOne({
+                    fileName,
+                });
+
+                if (!file) {
+                    res.status(404).send();
+                    return;
+                }
+
+                if (file.body instanceof Binary) {
+                    res.status(200)
+                        .contentType(file.mimeType)
+                        .send(file.body.buffer);
+                } else {
+                    res.status(200).contentType(file.mimeType).send(file.body);
+                }
+            })
+        );
+
+        function handleRecordsCorsHeaders(req: Request, res: Response) {
+            if (allowedRecordsOrigins.has(req.headers.origin as string)) {
+                res.setHeader(
+                    'Access-Control-Allow-Origin',
+                    req.headers.origin as string
+                );
+                res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+                res.setHeader(
+                    'Access-Control-Allow-Headers',
+                    'Content-Type, Authorization'
+                );
+            }
+        }
+
+        function returnResponse(res: Response, result: any) {
+            const statusCode = getStatusCode(result);
+            return res.status(statusCode).send(result);
+        }
     }
 
     private async _handleRequest(
@@ -267,383 +676,6 @@ export class Server {
             }
         }
         return template;
-    }
-
-    private async _configureBackend() {
-        const backend = this._backendApp;
-        const frontend = this._frontendApp;
-        const builder = constructServerBuilder(this._config);
-
-        let viewMap: Map<string, (() => Promise<string>) | string> = new Map();
-        if (!isProduction) {
-            // TODO: Refactor to work the other way:
-            // grab templates from the vite dev server instead of running in middleware mode
-            console.log('[Server] Using Vite view rendering.');
-
-            function conditional(
-                test: (request: Request, response: Response) => boolean,
-                middleware: express.RequestHandler
-            ): express.RequestHandler {
-                return (req, res, next) => {
-                    if (test(req, res)) {
-                        console.log(`[Proxy] Proxying request for ${req.path}`);
-                        return middleware(req, res, next);
-                    } else {
-                        // else, skip to next middleware
-                        next();
-                    }
-                };
-            }
-
-            function isViteOrAssetOrIndex(
-                request: Request,
-                response: Response
-            ): boolean {
-                return (
-                    /@vite/g.test(request.path) ||
-                    /@fs/g.test(request.path) ||
-                    /@id/g.test(request.path) ||
-                    /^[\w/\\\-_+:%]+\.(?!html)\w+$/gi.test(request.path)
-                );
-            }
-
-            // if the request is for an asset, load from vite
-            const expressHttpProxy = (await import('express-http-proxy'))
-                .default;
-            const frontendProxy = expressHttpProxy('localhost:5173', {});
-            const backendProxy = expressHttpProxy('localhost:5174', {});
-            frontend.use(conditional(isViteOrAssetOrIndex, frontendProxy));
-            backend.use(conditional(isViteOrAssetOrIndex, backendProxy));
-
-            const getTemplateFromVite = async (url: string) => {
-                return await (await fetch(url)).text();
-            };
-
-            const map = [
-                ['playerIndex', 'http://localhost:5173/'],
-                ['playerVmIframe', 'http://localhost:5173/aux-vm-iframe.html'],
-                [
-                    'playerVmIframeDom',
-                    'http://localhost:5173/aux-vm-iframe-dom.html',
-                ],
-                ['authIndex', 'http://localhost:5174/'],
-                ['authIframe', 'http://localhost:5174/iframe.html'],
-            ];
-
-            for (let [view, url] of map) {
-                viewMap.set(view, async () => await getTemplateFromVite(url));
-            }
-        } else {
-            console.log('[Server] Using production view rendering.');
-            const dist = path.resolve(
-                __dirname,
-                '..',
-                '..',
-                '..',
-                'aux-web',
-                'dist'
-            );
-            const authDist = path.resolve(
-                __dirname,
-                '..',
-                '..',
-                '..',
-                'aux-web',
-                'aux-auth',
-                'dist'
-            );
-            const frontendIndex = await fs.readFile(
-                path.resolve(dist, 'index.html'),
-                'utf-8'
-            );
-            const backendIndex = await fs.readFile(
-                path.resolve(authDist, 'index.html'),
-                'utf-8'
-            );
-            const backendIframe = await fs.readFile(
-                path.resolve(authDist, 'iframe.html'),
-                'utf-8'
-            );
-            const playerVmIframe = await fs.readFile(
-                path.resolve(dist, 'aux-vm-iframe.html'),
-                'utf-8'
-            );
-            const playerVmIframeDom = await fs.readFile(
-                path.resolve(dist, 'aux-vm-iframe-dom.html'),
-                'utf-8'
-            );
-            viewMap.set('playerIndex', frontendIndex);
-            viewMap.set('playerVmIframe', playerVmIframe);
-            viewMap.set('playerVmIframeDom', playerVmIframeDom);
-            viewMap.set('authIndex', backendIndex);
-            viewMap.set('authIframe', backendIframe);
-        }
-
-        builder.useViewTemplateRenderer({
-            render: async (name: string, args: ViewParams) => {
-                const fileReader = viewMap.get(name);
-                if (fileReader) {
-                    const template =
-                        typeof fileReader === 'string'
-                            ? fileReader
-                            : await fileReader();
-                    return await this._renderTemplate(template, args);
-                }
-                return null;
-            },
-        });
-
-        const {
-            server,
-            filesController,
-            mongoDatabase,
-            websocketMessenger,
-            websocketController,
-        } = await builder.buildAsync();
-        this._server = server;
-
-        await builder.ensureInitialized();
-
-        const allowedRecordsOrigins = new Set([
-            ...builder.allowedApiOrigins,
-            ...builder.allowedAccountOrigins,
-        ]);
-        const scope: RequestScope = 'auth';
-
-        backend.get(
-            '/api/v2/records/file/list',
-            express.text({
-                type: 'application/json',
-            }),
-            asyncMiddleware(async (req, res, next) => {
-                await this._handleRequest(req, res, scope, next);
-            })
-        );
-
-        if (mongoDatabase) {
-            const filesCollection =
-                mongoDatabase.collection<any>('recordsFilesData');
-
-            backend.use(
-                '/api/v2/records/file/*',
-                express.raw({
-                    type: () => true,
-                    limit: '1GB',
-                })
-            );
-
-            backend.post(
-                '/api/v2/records/file/*',
-                asyncMiddleware(async (req, res) => {
-                    // TODO: Secure this endpoint
-                    handleRecordsCorsHeaders(req, res);
-                    // const recordName = req.headers['record-name'] as string;
-                    const recordNameAndFileName = req.path.slice(
-                        '/api/v2/records/file/'.length
-                    );
-                    const [recordName, fileName] =
-                        recordNameAndFileName.split('/');
-
-                    if (!recordName || !fileName) {
-                        res.status(400).send();
-                        return;
-                    }
-
-                    const mimeType = req.headers['content-type'] as string;
-
-                    await filesCollection.insertOne({
-                        recordName,
-                        fileName,
-                        mimeType,
-                        body: req.body,
-                    });
-
-                    const result = await filesController.markFileAsUploaded(
-                        recordName,
-                        fileName
-                    );
-
-                    return returnResponse(res, result);
-                })
-            );
-
-            backend.get(
-                '/api/v2/records/file/:recordName/*',
-                asyncMiddleware(async (req, res) => {
-                    // TODO: Secure this endpoint
-                    handleRecordsCorsHeaders(req, res);
-                    const recordNameAndFileName = req.path.slice(
-                        '/api/v2/records/file/'.length
-                    );
-                    const [recordName, fileName] =
-                        recordNameAndFileName.split('/');
-
-                    const file = await filesCollection.findOne({
-                        recordName,
-                        fileName,
-                    });
-
-                    if (!file) {
-                        res.status(404).send();
-                        return;
-                    }
-
-                    if (file.body instanceof Binary) {
-                        res.status(200)
-                            .contentType(file.mimeType)
-                            .send(file.body.buffer);
-                    } else {
-                        res.status(200)
-                            .contentType(file.mimeType)
-                            .send(file.body);
-                    }
-                })
-            );
-
-            backend.get(
-                '/api/v2/records/file/*',
-                asyncMiddleware(async (req, res) => {
-                    // TODO: Secure this endpoint
-                    handleRecordsCorsHeaders(req, res);
-                    const fileName = req.path.slice(
-                        '/api/v2/records/file/'.length
-                    );
-
-                    const file = await filesCollection.findOne({
-                        fileName,
-                    });
-
-                    if (!file) {
-                        res.status(404).send();
-                        return;
-                    }
-
-                    if (file.body instanceof Binary) {
-                        res.status(200)
-                            .contentType(file.mimeType)
-                            .send(file.body.buffer);
-                    } else {
-                        res.status(200)
-                            .contentType(file.mimeType)
-                            .send(file.body);
-                    }
-                })
-            );
-        }
-
-        backend.use(
-            '/api/*',
-            express.text({
-                type: 'application/json',
-                limit: '5mb',
-            })
-        );
-
-        backend.get('/api/:userId/metadata', async (req, res, next) => {
-            await this._handleRequest(req, res, scope, next);
-        });
-
-        backend.put('/api/:userId/metadata', async (req, res, next) => {
-            await this._handleRequest(req, res, scope, next);
-        });
-
-        backend.get('/api/:userId/subscription', async (req, res, next) => {
-            await this._handleRequest(req, res, scope, next);
-        });
-
-        backend.post(
-            '/api/:userId/subscription/manage',
-            async (req, res, next) => {
-                await this._handleRequest(req, res, scope, next);
-            }
-        );
-
-        backend.all(
-            '/api/*',
-            asyncMiddleware(async (req, res, next) => {
-                await this._handleRequest(req, res, scope, next);
-            })
-        );
-
-        backend.all('*', async (req, res, next) => {
-            await this._handleRequest(req, res, scope, next);
-        });
-
-        if (
-            websocketMessenger instanceof WSWebsocketMessenger ||
-            websocketMessenger instanceof RedisWSWebsocketMessenger
-        ) {
-            this._wsServer.on('connection', (socket, req) => {
-                const id = websocketMessenger.registerConnection(socket);
-                const ip = req.socket.remoteAddress;
-                const origin = req.headers.origin;
-                console.log('[Server] Got connection:', id, ip);
-
-                socket.on('close', async () => {
-                    console.log('[Server] Connection closed:', id, ip);
-                    await server.handleWebsocketRequest({
-                        type: 'disconnect',
-                        connectionId: id,
-                        ipAddress: ip,
-                        body: null,
-                        origin: origin,
-                    });
-                    websocketMessenger.removeConnection(id);
-                });
-
-                socket.on('message', async (message, isBinary) => {
-                    await server.handleWebsocketRequest({
-                        type: 'message',
-                        connectionId: id,
-                        ipAddress: ip,
-                        body: isBinary
-                            ? new Uint8Array(message as any)
-                            : message.toString('utf-8'),
-                        origin: origin,
-                    });
-                });
-
-                server.handleWebsocketRequest({
-                    type: 'connect',
-                    connectionId: id,
-                    ipAddress: ip,
-                    body: null,
-                    origin: origin,
-                });
-            });
-        } else {
-            console.log('[Server] Websockets integration disabled.');
-        }
-
-        if (websocketController) {
-            interval(30 * 1000)
-                .pipe(
-                    concatMap(
-                        async () =>
-                            await websocketController.savePermanentBranches()
-                    )
-                )
-                .subscribe();
-        }
-
-        function handleRecordsCorsHeaders(req: Request, res: Response) {
-            if (allowedRecordsOrigins.has(req.headers.origin as string)) {
-                res.setHeader(
-                    'Access-Control-Allow-Origin',
-                    req.headers.origin as string
-                );
-                res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-                res.setHeader(
-                    'Access-Control-Allow-Headers',
-                    'Content-Type, Authorization'
-                );
-            }
-        }
-
-        function returnResponse(res: Response, result: any) {
-            const statusCode = getStatusCode(result);
-            return res.status(statusCode).send(result);
-        }
     }
 
     start() {
