@@ -169,7 +169,7 @@ export interface MemoryConfiguration {
     subscriptions: SubscriptionConfiguration;
     privo?: PrivoConfiguration;
     moderation?: ModerationConfiguration;
-    webConfig: WebConfig;
+    webConfig?: WebConfig;
 }
 
 export class MemoryStore

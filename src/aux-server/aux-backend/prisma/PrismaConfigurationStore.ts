@@ -17,7 +17,7 @@
  */
 import type {
     ConfigurationStore,
-    MemoryConfiguration,
+    DefaultConfiguration,
     SubscriptionConfiguration,
 } from '@casual-simulation/aux-records';
 import {
@@ -38,9 +38,9 @@ const TRACE_NAME = 'PrismaConfigurationStore';
 
 export class PrismaConfigurationStore implements ConfigurationStore {
     private _client: PrismaClient;
-    private _defaultConfiguration: MemoryConfiguration;
+    private _defaultConfiguration: DefaultConfiguration;
 
-    constructor(client: PrismaClient, defaultConfig: MemoryConfiguration) {
+    constructor(client: PrismaClient, defaultConfig: DefaultConfiguration) {
         this._client = client;
         this._defaultConfiguration = defaultConfig;
     }

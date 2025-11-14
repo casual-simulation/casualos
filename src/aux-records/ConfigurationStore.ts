@@ -29,6 +29,31 @@ export const MODERATION_CONFIG_KEY = 'moderation';
 export const WEB_CONFIG_KEY = 'web';
 
 /**
+ * The default configuration values used when no configuration is found in the store.
+ */
+export interface DefaultConfiguration {
+    /**
+     * The default subscriptions configuration.
+     */
+    subscriptions: SubscriptionConfiguration;
+
+    /**
+     * The default privo configuration.
+     */
+    privo: PrivoConfiguration;
+
+    /**
+     * The default moderation configuration.
+     */
+    moderation: ModerationConfiguration;
+
+    /**
+     * The default web configuration.
+     */
+    webConfig: WebConfig;
+}
+
+/**
  * Defines an interface that is used for storing configuration data.
  */
 export interface ConfigurationStore {

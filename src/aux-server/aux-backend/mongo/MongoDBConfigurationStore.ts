@@ -17,7 +17,7 @@
  */
 import type {
     ConfigurationStore,
-    MemoryConfiguration,
+    DefaultConfiguration,
 } from '@casual-simulation/aux-records';
 import {
     MODERATION_CONFIG_KEY,
@@ -36,11 +36,11 @@ import type { WebConfig } from '@casual-simulation/aux-common';
 import { parseWebConfig } from '@casual-simulation/aux-common';
 
 export class MongoDBConfigurationStore implements ConfigurationStore {
-    private _defaultConfiguration: MemoryConfiguration;
+    private _defaultConfiguration: DefaultConfiguration;
     private _collection: Collection<MongoDBConfigItem>;
 
     constructor(
-        defaultConfig: MemoryConfiguration,
+        defaultConfig: DefaultConfiguration,
         collection: Collection<MongoDBConfigItem>
     ) {
         this._defaultConfiguration = defaultConfig;
