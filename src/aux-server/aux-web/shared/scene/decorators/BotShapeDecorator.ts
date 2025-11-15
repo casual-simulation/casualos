@@ -25,6 +25,8 @@ import type {
     StartFormAnimationAction,
 } from '@casual-simulation/aux-common';
 import {
+    asyncError,
+    asyncResult,
     calculateBooleanTagValue,
     calculateBotIds,
     calculateBotValue,
@@ -211,6 +213,12 @@ export class BotShapeDecorator
         this._finder = finder;
     }
 
+    private _asyncResult(...args: Parameters<typeof asyncResult>) {
+        return this.bot3D.dimensionGroup.simulation3D.simulation.helper.transaction(
+            asyncResult(...args)
+        );
+    }
+
     frameUpdate() {
         if (this._game && this._animationMixer && this._animationEnabled) {
             this._animationMixer.update(this._game.getTime().deltaTime);
@@ -326,10 +334,51 @@ export class BotShapeDecorator
         }
     }
 
-    localEvent(event: LocalActions, calc: BotCalculationContext) {
+    async localEvent(event: LocalActions, calc: BotCalculationContext) {
         if (event.type === 'local_form_animation') {
             this._playLocalAnimation(event.animation);
         }
+        // Handle bot map overlay
+        if (
+            event.type === 'add_bot_map_layer' ||
+            event.type === 'remove_bot_map_layer'
+        ) {
+            if (!this._mapView) {
+                console.warn('[BotShapeDecorator] No map view available');
+                this._asyncError(
+                    event.taskId,
+                    new Error('Bot must have form: "map"')
+                );
+                return;
+            }
+
+            try {
+                const result = await this._mapView.localEvent(event, calc);
+
+                if (result.success) {
+                    this._asyncResult(
+                        event.taskId,
+                        result.data?.overlayId || result.data
+                    );
+                } else {
+                    this._asyncError(event.taskId, new Error(result.message));
+                }
+            } catch (error) {
+                console.error(
+                    '[BotShapeDecorator] Error handling map layer action:',
+                    error
+                );
+                this._asyncError(
+                    event.taskId,
+                    error instanceof Error ? error : new Error('Unknown error')
+                );
+            }
+        }
+    }
+    private _asyncError(taskId: any, error: Error) {
+        return this.bot3D.dimensionGroup.simulation3D.simulation.helper.transaction(
+            asyncError(taskId, error)
+        );
     }
 
     async startAnimation(event: StartFormAnimationAction): Promise<void> {
@@ -428,6 +477,7 @@ export class BotShapeDecorator
         }
 
         if (this._mapView) {
+            address = String(address); // The address could be coerced to a number, ensure it's a string.
             // Check if the address is a URL
             if (
                 address &&
@@ -1152,6 +1202,7 @@ export class BotShapeDecorator
 
         // Container
         this.container = new Group();
+        this.container.name = `BotShape_Container`;
         this.bot3D.display.add(this.container);
 
         if (this._shape === 'cube') {

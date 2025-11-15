@@ -22,7 +22,10 @@ import {
 } from '../crud/CrudRecordsControllerTests';
 import { MemorySearchRecordsStore } from './MemorySearchRecordsStore';
 import type { SearchRecord, SearchRecordsStore } from './SearchRecordsStore';
-import type { SearchRecordInput } from './SearchRecordsController';
+import type {
+    SearchRecordInput,
+    SearchRecordOutput,
+} from './SearchRecordsController';
 import { SearchRecordsController } from './SearchRecordsController';
 import {
     buildSubscriptionConfig,
@@ -53,7 +56,8 @@ describe('SearchRecordsController', () => {
         SearchRecordInput,
         SearchRecord,
         SearchRecordsStore,
-        SearchRecordsController
+        SearchRecordsController,
+        SearchRecordOutput
     >(
         false,
         'search',

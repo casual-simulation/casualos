@@ -123,6 +123,29 @@ export interface AIChatStreamAction extends AsyncAction {
 }
 
 /**
+ * Defines an interface that represents a listed chat model.
+ *
+ * @dochash types/ai
+ * @docname ListedChatModel
+ */
+export interface ListedChatModel {
+    /**
+     * The name of the model.
+     */
+    name: string;
+
+    /**
+     * The provider of the model.
+     */
+    provider: string;
+
+    /**
+     * Whether this is the default model.
+     */
+    isDefault?: boolean;
+}
+
+/**
  * Defines an interface that represents options for {@link ai.chat-string}.
  *
  * @dochash types/ai
@@ -1516,6 +1539,27 @@ export function aiChatStream(
         options: options ?? {},
         taskId,
     };
+}
+
+/**
+ * Creates a new AIListChatModelsAction.
+ *
+ * @param options The options for listing chat models.
+ * @param taskId The ID of the async task.
+ */
+export function aiListChatModels(
+    options?: RecordActionOptions,
+    taskId?: number | string
+): RecordsCallProcedureAction {
+    return recordsCallProcedure(
+        {
+            aiListChatModels: {
+                input: {},
+            },
+        },
+        options ?? {},
+        taskId
+    );
 }
 
 /**
@@ -2985,6 +3029,63 @@ export function setRoomTrackOptions(
         options,
         taskId,
     };
+}
+
+/**
+ * Creates an action that is able to list the insts in a record.
+ * @param recordName The name of the record.
+ * @param startingInst The inst that the list should start with.
+ * @param options The options.
+ * @param taskId The ID of the async task.
+ */
+export function listInsts(
+    recordName: string,
+    startingInst?: string | null,
+    options: RecordActionOptions = {},
+    taskId?: number | string
+): RecordsCallProcedureAction {
+    return recordsCallProcedure(
+        {
+            listInsts: {
+                input: {
+                    recordName,
+                    inst: startingInst,
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+/**
+ * Creates an action that is able to list the insts in a record with the given marker.
+ * @param recordName The name of the record.
+ * @param marker The marker.
+ * @param startingInst The inst that the list should start with.
+ * @param options The options.
+ * @param taskId The ID of the async task.
+ */
+export function listInstsByMarker(
+    recordName: string,
+    marker: string,
+    startingInst?: string | null,
+    options: RecordActionOptions = {},
+    taskId?: number | string
+): RecordsCallProcedureAction {
+    return recordsCallProcedure(
+        {
+            listInsts: {
+                input: {
+                    recordName,
+                    inst: startingInst,
+                    marker,
+                },
+            },
+        },
+        options,
+        taskId
+    );
 }
 
 /**

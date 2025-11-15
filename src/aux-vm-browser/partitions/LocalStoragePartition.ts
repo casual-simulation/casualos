@@ -265,6 +265,10 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
                     ...ensureBotIsSerializable(event.bot),
                     space: this.space as BotSpace,
                 };
+                const existingBot = this.state[event.bot.id];
+                if (existingBot && existingBot.masks) {
+                    bot.masks = existingBot.masks;
+                }
                 if (createdNewState) {
                     this._state[event.bot.id] = bot;
                 } else {

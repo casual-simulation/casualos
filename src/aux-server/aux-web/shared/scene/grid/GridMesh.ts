@@ -35,6 +35,8 @@ export const Y_OFFSET = 0.01;
  * Defines a mesh that can draw a grid.
  */
 export class GridMesh extends Object3D {
+    name = 'GridMesh';
+    
     tiles: {
         localPosition: Vector3;
         gridPosition: Vector2;

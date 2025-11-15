@@ -1,19 +1,138 @@
 # CasualOS Changelog
 
-## V3.7.1
+## V3.8.2
 
 #### Date: TBD
+
+### :rocket: Features
+
+-   Added the `os.signOut()` function to sign out the current user
+    -   Returns a promise that resolves when the sign out request has been processed
+    -   Uses the auth helper's logout method to properly sign out the user
+
+### :bug: Bug Fixes
+
+-   Various fixes to bot labels:
+    -   Fixed z-fighting that was common on floating labels in the map portal.
+    -   Fixed bug that would cause bots with empty floating labels to prevent the page from loading properly.
+    -   Fixed floating label positioning in the map portal.
+    -   Fixed floating label billboarding on bots with non-identity rotations.
+    -   Fixed floating label bot spacing to stay consistent between grid's of different scales.
+    -   Fixed floating label shape generation to be compatible with the map portal.
+    -   Fixed label transforms not being updated properly when switching between `labelPosition` types.
+    -   Fixed child bot decorators not being updated when a transformer bot changes scale.
+-   Fixed internal `DebugObjectManager` not rendering properly when in the map portal.
+-   Disabled double-click to zoom in the map portal.
+
+## V3.8.1
+
+#### Date: 11/5/2025
+
+### :rocket: Features
+
+-   Added `os.showAlert()` function to display informational alert dialogs with a single dismiss button
+    -   Accepts `title`, `content`, and optional `dismissText` parameters
+    -   Returns a promise that resolves when the dialog is dismissed
+    -   Useful for displaying important information that requires user acknowledgment
+-   Increased the number of segments on `skybox` form spheres.
+-   Changed the "Connection lost" and "Connection regained" toast messages to be simpler.
+-   Added the following importable libraries:
+    -   [`rxjs` and `rxjs/operators`](https://rxjs.dev/)
+    -   [`es-toolkit`](https://es-toolkit.dev/)
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `ai.listChatModels()` wouldn't work unless an options object was provided.
+-   Fixed an issue where empty JSX expressions with comments weren't supported.
+-   Fixed an issue where `portalPannableMin` and `portalPannableMax` constraints did not properly restrict camera movement when the camera was rotated. The fix includes:
+    -   Removed camera-relative constraint checking that failed at different rotation angles
+    -   Added world-space clamping after camera target updates
+-   Fixed an issue where CasualOS wasn't able to properly reload shared documents with nested maps or arrays.
+-   Reduced the amount of code that gets cached on first load.
+-   Changed the QR and Barcode components to load lazily to reduce the size of the initial load.
+-   Fixed several issues where `export` statements wouldn't be compiled properly.
+
+## V3.8.0
+
+#### Date: 10/14/2025
+
+### :rocket: Features
+
+-   Added the `os.eraseInst(recordKeyOrName, instName, options?)` function to delete insts programmatically.
+-   Added the `ai.listChatModels()` function to list the available chat models that the user can use based on their subscription.
+-   Changed webhooks to record logs to the same record that the webhook is stored in.
+-   Add the `os.syncConfigBotTagsToURL(tags, fullHistory?)` function.
+    -   Tells CasualOS to sync the given list of config bot tags in the URL query.
+    -   `tags` - The tags that should be synced to the URL.
+    -   `fullHistory` - Whether the a history entry should be created for every change to these tags. If false, then the URL will be updated but no additional history entries will be created. If true, then each change to the parameters will create a new history entry. Defaults to true.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where rapidly refreshing browser tabs could create duplicate remote connections that would persist in the `os.remotes()` list. The system now properly cleans up all remote device registrations when a connection is lost and prevents registering the current connection as a remote.
+-   Fixed an issue where tag masks in the shared space might be ignored after the server runs some cleanup.
+-   Fixed an issue where the `from` position values in `onDrag`, `onDrop`, `onAnyBotDrag`, and `onAnyBotDrop` events were being incorrectly rounded to integers, causing non-integer bot positions (e.g., 0.5, 0.4) to be rounded before being passed to event handlers.
+-   Fixed an issue where clicking the sheetPortal button in the systemPortal would only infer the dimension from gridPortal. Now it checks mapPortal first, then gridPortal, before requesting user input.
+-   Fixed an issue where it was not possible to publish packages to studios.
+-   Changed to ensure that the "Sign In" dialog is shown to unauthenticated users who are trying to access a public inst on Privo-enabled deployments.
+-   Static inst deletion now properly removes all associated data from browser storage. Previously, deleting a local inst would only remove it from the list while leaving bot data behind, causing old data to reappear when creating a new inst with the same name.
+
+## V3.7.1
+
+#### Date: 9/23/2025
 
 ### :rocket: Features
 
 -   Added the `os.createRecord(name)` function ([#668](https://github.com/casual-simulation/casualos/pull/668)).
 -   Added the `os.listSudioRecords(studioId)` function ([#666](https://github.com/casual-simulation/casualos/pull/666)).
 -   Added the the ability to specify markers when loading a shared document. ([#663](https://github.com/casual-simulation/casualos/pull/663))
+-   Added the ability to view your notification subscriptions on the auth site. ([#680](https://github.com/casual-simulation/casualos/pull/680))
+-   Added support for database records.
+    -   Database records add the ability to run arbitrary SQL queries on SQLite database instances.
+    -   Database records can be accessed via the following functions:
+        -   `os.recordDatabase(request, options?)` - Creates or updates a database record.
+        -   `os.eraseDatabase(recordName, address, options?)` - Deletes a database record and associated data.
+        -   `os.listDatabases(recordName, startingAddress?, options?)` - Lists the databases that are stored in a record.
+        -   `os.listDatabasesByMarker(recordName, marker, startingAddress?, options?)` - Lists the databases which have the given marker.
+        -   `os.getDatabase(recordName, address)` - Gets a database instance that can be used to run queries against a database. Returns an object which has the following functions:
+            -   `query` - A [tagged template literal function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#tagged_templates) that can query the database. Only allows read-only queries.
+            -   `execute` - A tagged template literal function that can execute SQL code on the database. Allows read-write.
+            -   `batch(statements, readonly?)` - Accepts an array of statements which are all executed in a [transaction](https://sqlite.org/lang_transaction.html). If any one fails, then none of the statements will have any effect.
+            -   `sql` - A tagged template literal function that constructs a statement from the given SQL and parameters.
+            -   `run(statement, readonly?)` - Accepts a statement and executes it.
+            -   `raw` - Gets an object that is able to interface with the database without any special mapping of rows.
+    -   By default, database features are not enabled. To configure database features, specify the `databases` key in your `SERVER_CONFIG`:
+        -   To configure SQLite:
+            ```json
+            {
+                "databases": {
+                    "provider": {
+                        "type": "sqlite",
+                        "folderPath": "/path/to/sqlite/databases/folder"
+                    }
+                }
+            }
+            ```
+        -   To configure Turso:
+            ```json
+            {
+                "databases": {
+                    "provider": {
+                        "type": "turso",
+                        "organization": "YOUR_ORGANIZATION",
+                        "token": "YOUR_API_TOKEN",
+                        "group": "YOUR_DATABASE_GROUP"
+                    }
+                }
+            }
+            ```
 
 ### :bug: Bug Fixes
 
 -   Fixed an issue where the `Sec-Websocket-Protocol` header wasn't supported on API Gateway.
 -   Fixed an issue where the background color for comID logos would not be displayed at the same time as the comID logo.
+-   Fixed an issue where input events would not be handled correctly on newly updated Meta Quest devices.
+-   Reworked OpenID Connect sign-in to use redirects instead of popups, eliminating issues with browser popup blockers ([#652](https://github.com/casual-simulation/casualos/issues/652)).
+-   Fixed an issue where listing data by marker would force login.
 
 ## V3.7.0
 

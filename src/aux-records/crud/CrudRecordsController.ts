@@ -232,27 +232,28 @@ export abstract class CrudRecordsController<
                 };
             }
 
+            const subscriptionResult = await this._checkSubscriptionMetrics(
+                action,
+                contextResult.context,
+                authorization,
+                request.item
+            );
+
+            if (subscriptionResult.success === false) {
+                return subscriptionResult;
+            }
+
             const item = await this._transformInputItem(
                 request.item,
                 existingItem,
                 action,
                 contextResult.context,
-                authorization
+                authorization,
+                subscriptionResult
             );
 
             if (isFailure(item)) {
                 return genericResult(item);
-            }
-
-            const subscriptionResult = await this._checkSubscriptionMetrics(
-                action,
-                contextResult.context,
-                authorization,
-                item.value
-            );
-
-            if (subscriptionResult.success === false) {
-                return subscriptionResult;
             }
 
             await this._putItem(recordName, item.value);
@@ -592,6 +593,16 @@ export abstract class CrudRecordsController<
 
     /**
      * Checks that the given metrics are valid for the subscription.
+     *
+     * When recording an item, this function checks that the user is allowed to perform the action based on their subscription.
+     *
+     *
+     * ### Order of operations:
+     * 1. Check authorization
+     * 2. call _checkSubscriptionMetrics()
+     * 3. call _transformInputItem()
+     * 4. Store item
+     *
      * @param metrics The metrics that were fetched from the database.
      * @param action The action that is being performed.
      * @param authorization The authorization for the user and instances.
@@ -603,12 +614,19 @@ export abstract class CrudRecordsController<
         authorization:
             | AuthorizeUserAndInstancesSuccess
             | AuthorizeUserAndInstancesForResourcesSuccess,
-        item?: TStoreType
+        item?: TInput
     ): Promise<CheckSubscriptionMetricsResult>;
 
     /**
      * Converts the given item to a version that is able to be returned to clients.
      * Can be overriden to ensure that some fields are not returned.
+     *
+     * ### Order of operations:
+     * 1. Check authorization
+     * 2. call _checkSubscriptionMetrics()
+     * 3. call _transformInputItem()
+     * 4. Store item
+     *
      * @param item The item that should be converted.
      * @param context The authorization context.
      * @param action The action that is being performed.
@@ -642,7 +660,8 @@ export abstract class CrudRecordsController<
         context: AuthorizationContext,
         authorization:
             | AuthorizeUserAndInstancesSuccess
-            | AuthorizeUserAndInstancesForResourcesSuccess
+            | AuthorizeUserAndInstancesForResourcesSuccess,
+        metrics: CheckSubscriptionMetricsSuccess
     ): Promise<Result<TStoreType, SimpleError>> {
         return success(item as unknown as TStoreType);
     }

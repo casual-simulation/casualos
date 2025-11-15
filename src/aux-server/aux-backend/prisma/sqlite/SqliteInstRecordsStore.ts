@@ -30,7 +30,10 @@ import type {
     SaveInstResult,
     StoredUpdates,
 } from '@casual-simulation/aux-records';
-import type { PrismaClient } from '../generated-sqlite';
+import type {
+    PrismaClient,
+    InstRecord as PrismaInstRecord,
+} from '../generated-sqlite';
 import { Prisma } from '../generated-sqlite';
 import { v7 as uuid } from 'uuid';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
@@ -169,6 +172,40 @@ export class SqliteInstRecordsStore implements InstRecordsStore {
                 markers: i.markers as string[],
             })),
             totalCount,
+        };
+    }
+
+    @traced(TRACE_NAME)
+    async listInstsByRecordAndMarker(
+        recordName: string,
+        marker: string,
+        startingInst?: string | null
+    ): Promise<ListInstsStoreResult> {
+        const countPromise = this._prisma.$queryRaw<
+            { count: number }[]
+        >`SELECT COUNT(*) as count FROM "InstRecord" WHERE "recordName" = ${recordName} AND ${marker} IN json_each("markers")`;
+
+        const limit = 10;
+        const instsPromise: Prisma.PrismaPromise<PrismaInstRecord[]> =
+            !!startingInst
+                ? this._prisma
+                      .$queryRaw`SELECT "name", "markers" FROM "InstRecord" WHERE "recordName" = ${recordName} AND ${marker} IN json_each("markers") AND "address" > ${startingInst} ORDER BY "address" ASC LIMIT ${limit}`
+                : this._prisma
+                      .$queryRaw`SELECT "name", "markers" FROM "InstRecord" WHERE "recordName" = ${recordName} AND ${marker} IN json_each("markers") ORDER BY "address" ASC LIMIT ${limit}`;
+
+        const [totalCount, insts] = await Promise.all([
+            countPromise,
+            instsPromise,
+        ]);
+
+        return {
+            success: true,
+            insts: insts.map((i) => ({
+                recordName: recordName,
+                inst: i.name,
+                markers: i.markers as string[],
+            })),
+            totalCount: totalCount[0].count,
         };
     }
 

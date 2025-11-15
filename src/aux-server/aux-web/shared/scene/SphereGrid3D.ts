@@ -45,6 +45,8 @@ export const EARTH_RADIUS = 6378137;
  * Defines a class that implements a 3D grid for the map portal.
  */
 export class SphereGrid3D extends Object3D implements Grid3D {
+    name = 'SphereGrid3D';
+    
     private _enabled: boolean = true;
     private _tileScale: number = 1;
     private _showGrid: boolean;

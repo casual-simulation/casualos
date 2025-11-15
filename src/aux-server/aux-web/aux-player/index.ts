@@ -48,7 +48,6 @@ import './themes/default.scss';
 import './themes/dark.scss';
 import 'virtual:svg-icons-register';
 import MdImmediateInput from '../shared/public/MdImmediateInput';
-import VueClipboard from 'vue-clipboard2';
 import VueShortkey from '@casual-simulation/vue-shortkey';
 
 import '@casual-simulation/aux-components/fonts/MaterialIcons/MaterialIcons.css';
@@ -89,7 +88,6 @@ Vue.use(MdRadio);
 Vue.use(VueShortkey, {
     ignore: ['input.no-shortcuts', 'textarea.no-shortcuts'],
 });
-Vue.use(VueClipboard);
 Vue.use(MdImmediateInput);
 
 const url = new URL(document.location.href);

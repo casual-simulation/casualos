@@ -47,6 +47,7 @@ export const NOTIFICATION_RESOURCE_KIND = 'notification';
 export const PACKAGE_RESOURCE_KIND = 'package';
 export const PACKAGE_VERSION_RESOURCE_KIND = 'package.version';
 export const SEARCH_RESOURCE_KIND = 'search';
+export const DATABASE_RESOURCE_KIND = 'database';
 
 /**
  * The possible types of resources that can be affected by permissions.
@@ -69,7 +70,8 @@ export type ResourceKinds =
     | 'loom'
     | 'ai.sloyd'
     | 'ai.hume'
-    | 'ai.openai.realtime';
+    | 'ai.openai.realtime'
+    | 'database';
 
 export const READ_ACTION = 'read';
 export const CREATE_ACTION = 'create';
@@ -285,6 +287,19 @@ export type SearchActionKinds =
     | 'list';
 
 /**
+ * The possible types of actions that can be performed on database resources.
+ *
+ * @dochash types/permissions
+ * @docname DatabaseActionKinds
+ */
+export type DatabaseActionKinds =
+    | 'create'
+    | 'read'
+    | 'update'
+    | 'delete'
+    | 'list';
+
+/**
  * The possible types of permissions that can be added to policies.
  *
  * @dochash types/permissions
@@ -308,7 +323,8 @@ export type AvailablePermissions =
     | NotificationPermission
     | PackagePermission
     | PackageVersionPermission
-    | SearchPermission;
+    | SearchPermission
+    | DatabasePermission;
 
 export const SUBJECT_TYPE_VALIDATION = z.enum(['user', 'inst', 'role']);
 
@@ -416,6 +432,14 @@ export const SEARCH_ACTION_KINDS_VALIDATION = z.enum([
     LIST_ACTION,
 ]);
 
+export const DATABASE_ACTION_KINDS_VALIDATION = z.enum([
+    CREATE_ACTION,
+    READ_ACTION,
+    UPDATE_ACTION,
+    DELETE_ACTION,
+    LIST_ACTION,
+]);
+
 export const RESOURCE_KIND_VALIDATION = z.enum([
     DATA_RESOURCE_KIND,
     FILE_RESOURCE_KIND,
@@ -432,6 +456,7 @@ export const RESOURCE_KIND_VALIDATION = z.enum([
     PACKAGE_RESOURCE_KIND,
     PACKAGE_VERSION_RESOURCE_KIND,
     SEARCH_RESOURCE_KIND,
+    DATABASE_RESOURCE_KIND,
 ]);
 
 export const ACTION_KINDS_VALIDATION = z.enum([
@@ -506,7 +531,8 @@ export type EntitlementFeature =
     | 'permissions'
     | 'webhook'
     | 'ai'
-    | 'search';
+    | 'search'
+    | 'database';
 
 /**
  * Defines an interface that represents an entitlement.
@@ -552,6 +578,7 @@ export const ENTITLEMENT_FEATURE_VALIDATION = z.enum([
     'webhook',
     'ai',
     'search',
+    'database',
 ]);
 
 export const ENTITLEMENT_VALIDATION = z.object({
@@ -1112,6 +1139,34 @@ type ZodSearchPermissionAssertion = HasType<
     SearchPermission
 >;
 
+/**
+ * Defines an interface that describes common options for all permissions that affect search resources.
+ *
+ * @dochash types/permissions
+ * @docname DatabasePermission
+ */
+export interface DatabasePermission extends Permission {
+    /**
+     * The kind of the permission.
+     */
+    resourceKind: 'database';
+
+    /**
+     * The action that is allowed.
+     * If null, then all actions are allowed.
+     */
+    action: DatabaseActionKinds | null;
+}
+export const DATABASE_PERMISSION_VALIDATION = PERMISSION_VALIDATION.extend({
+    resourceKind: z.literal(DATABASE_RESOURCE_KIND),
+    action: DATABASE_ACTION_KINDS_VALIDATION.nullable(),
+});
+type ZodDatabasePermission = z.infer<typeof DATABASE_PERMISSION_VALIDATION>;
+type ZodDatabasePermissionAssertion = HasType<
+    ZodDatabasePermission,
+    DatabasePermission
+>;
+
 export const AVAILABLE_PERMISSIONS_VALIDATION = z.discriminatedUnion(
     'resourceKind',
     [
@@ -1130,6 +1185,7 @@ export const AVAILABLE_PERMISSIONS_VALIDATION = z.discriminatedUnion(
         PACKAGE_PERMISSION_VALIDATION,
         PACKAGE_VERSION_PERMISSION_VALIDATION,
         SEARCH_PERMISSION_VALIDATION,
+        DATABASE_PERMISSION_VALIDATION,
     ]
 );
 

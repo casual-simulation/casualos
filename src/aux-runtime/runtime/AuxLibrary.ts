@@ -97,6 +97,7 @@ import type {
     WakeLockConfiguration,
     EnableXROptions,
     ShowConfirmOptions,
+    ShowAlertOptions,
     StoredAux,
     StoredAuxVersion2,
     StoredAuxVersion1,
@@ -115,6 +116,9 @@ import type {
     MapLayer,
     DynamicListener,
     HideLoadingScreenAction,
+    AddBotMapLayerAction,
+    RemoveBotMapLayerAction,
+    TrackConfigBotTagsAction,
 } from '@casual-simulation/aux-common/bots';
 import {
     hasValue,
@@ -152,6 +156,7 @@ import {
     showInputForTag as calcShowInputForTag,
     showInput as calcShowInput,
     showConfirm as calcShowConfirm,
+    showAlert as calcShowAlert,
     replaceDragBot as calcReplaceDragBot,
     goToDimension as calcGoToDimension,
     goToURL as calcGoToURL,
@@ -220,6 +225,7 @@ import {
     setAppOutput,
     unregisterCustomApp,
     requestAuthData as calcRequestAuthData,
+    signOut as calcSignOut,
     createBot,
     defineGlobalBot as calcDefineGlobalBot,
     TEMPORARY_BOT_PARTITION_ID,
@@ -278,6 +284,7 @@ import {
     GET_DYNAMIC_LISTENERS_SYMBOL,
     ADD_BOT_LISTENER_SYMBOL,
     REMOVE_BOT_LISTENER_SYMBOL,
+    trackConfigBotTags as calcTrackConfigBotTags,
 } from '@casual-simulation/aux-common/bots';
 import type {
     AIChatOptions,
@@ -302,10 +309,12 @@ import type {
     GrantEntitlementsResult,
     InstallPackageResult,
     ListPermissionsRequest,
+    ListedChatModel,
 } from './RecordsEvents';
 import {
     aiChat,
     aiChatStream,
+    aiListChatModels,
     aiGenerateSkybox,
     aiGenerateImage,
     grantRecordPermission as calcGrantRecordPermission,
@@ -367,6 +376,8 @@ import {
     getPackageContainer as calcGetPackageContainer,
     installPackage as calcInstallPackage,
     listInstalledPackages as calcListInstalledPackages,
+    listInsts as calcListInsts,
+    listInstsByMarker as calcListInstsByMarker,
     recordsCallProcedure,
 } from './RecordsEvents';
 import { sortBy, cloneDeep, union, isEqual } from 'es-toolkit/compat';
@@ -376,6 +387,9 @@ import type {
     AvailablePermissions,
     Entitlement,
     VersionNumber,
+    GenericResult,
+    SimpleError,
+    GenericSuccess,
 } from '@casual-simulation/aux-common';
 import {
     remote as calcRemote,
@@ -473,6 +487,8 @@ import type {
     RevokeRoleResult,
     PackageRecord,
     ListInstalledPackagesResult,
+    ListInstsResult,
+    EraseInstResult,
 } from '@casual-simulation/aux-records';
 import SeedRandom from 'seedrandom';
 import { DateTime } from 'luxon';
@@ -532,6 +548,12 @@ import type {
     SearchRecordOutput,
     StoreDocumentResult,
 } from '@casual-simulation/aux-records/search';
+import type {
+    DatabaseRecordOutput,
+    DatabaseStatement,
+    QueryResult,
+} from '@casual-simulation/aux-records/database';
+import { query as q } from './database/DatabaseUtils';
 
 const _html: HtmlFunction = htm.bind(h) as any;
 
@@ -862,12 +884,12 @@ export interface RecordPackageVersionApiRequest {
  */
 export interface RecordSearchCollectionApiRequest {
     /**
-     * The name of the record that the package version should be recorded to.
+     * The name of the record that the collection should be recorded to.
      */
     recordName: string;
 
     /**
-     * The address that the package version should be recorded to.
+     * The address that the collection should be recorded to.
      */
     address: string;
 
@@ -877,7 +899,7 @@ export interface RecordSearchCollectionApiRequest {
     schema: SearchCollectionSchema;
 
     /**
-     * The markers that should be applied to the package version.
+     * The markers that should be applied to the collection.
      */
     markers?: string[];
 }
@@ -892,6 +914,29 @@ export interface RecordSearchDocumentApiRequest {
     recordName: string;
     address: string;
     document: SearchDocument;
+}
+
+/**
+ * Defines an interface that represents a request for {@link recordDatabase}.
+ *
+ * @dochash types/records/database
+ * @docname RecordDatabaseRequest
+ */
+export interface RecordDatabaseApiRequest {
+    /**
+     * The name of the record that the database should be recorded to.
+     */
+    recordName: string;
+
+    /**
+     * The address that the database should be recorded to.
+     */
+    address: string;
+
+    /**
+     * The markers that should be applied to the database.
+     */
+    markers?: string[];
 }
 
 /**
@@ -2964,6 +3009,283 @@ const DEG_TO_RAD = Math.PI / 180;
 const RAD_TO_DEG = 180 / Math.PI;
 
 /**
+ * Defines the result of an API query.
+ *
+ * @dochash types/records/database
+ * @docname QueryResult
+ */
+export interface ApiQueryResult {
+    /**
+     * The rows that were returned from the query.
+     */
+    rows: Record<string, any>[];
+
+    /**
+     * The number of rows that were modified by the query.
+     */
+    affectedRowCount: number;
+
+    /**
+     * The ID of the last row that was inserted by the query.
+     */
+    lastInsertId?: number | string;
+}
+
+/**
+ * Defines the result of a batch query.
+ *
+ * @dochash types/records/database
+ * @docname BatchResult
+ */
+export interface BatchResult {
+    /**
+     * The results of the individual statements.
+     */
+    results: ApiQueryResult[];
+}
+
+/**
+ * Represents a connection to a database record.
+ *
+ * @dochash types/records/database
+ * @docname Database
+ *
+ * @example Get a database connection.
+ * const database = os.getDatabase('myRecord', 'myDatabase');
+ */
+export class ApiDatabase {
+    private _recordName: string;
+    private _address: string;
+    private _options: RecordActionOptions;
+    private _context: AuxGlobalContext;
+
+    constructor(
+        recordName: string,
+        address: string,
+        options: RecordActionOptions,
+        context: AuxGlobalContext
+    ) {
+        this._recordName = recordName;
+        this._address = address;
+        this._options = options;
+        this._context = context;
+    }
+
+    /**
+     * Constructs a database statement from the given [template string literal](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals).
+     *
+     * Once constructed, the returned statement can be used with `run()` or `batch()`.
+     *
+     * @param templates The string templates.
+     * @param params The parameters to interpolate into the templates.
+     * @returns A database statement.
+     *
+     * @example Create a database statement from a SQL query
+     * const statement = database.sql`SELECT * FROM items`;
+     *
+     * @example Use a parameter in a database statement
+     * const itemId = 'abc';
+     * const statement = database.sql`SELECT * FROM items WHERE id = ${itemId}`;
+     */
+    sql(
+        templates: TemplateStringsArray,
+        ...params: unknown[]
+    ): DatabaseStatement {
+        return q(templates, ...params);
+    }
+
+    /**
+     * Creates a new database statement from the given SQL and parameters.
+     * @param sql The SQL query string.
+     * @param params The parameters to include in the query.
+     * @returns A new database statement.
+     */
+    statement(sql: string, ...params: unknown[]): DatabaseStatement {
+        return {
+            query: sql,
+            params,
+        };
+    }
+
+    /**
+     * Runs the given readonly query against the database.
+     * This method requires queries to be read-only. This means that queries can only select data, they cannot insert, update, or delete data.
+     *
+     * Supports [template string literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) for parameterized queries.
+     *
+     * **Warning:** To avoid [SQL Injection attacks](https://en.wikipedia.org/wiki/SQL_injection), always use template literals with expressions. Never use the `+` operator to concatenate strings containing SQL code.
+     *
+     * @param templates The string templates.
+     * @param params The parameters that should be used.
+     * @returns A promise that resolves when the query has completed.
+     *
+     * @example Select all items from a table
+     * const result = await database.query`SELECT * FROM items`;
+     *
+     * @example Use a parameter in a query
+     * const itemId = 'abc';
+     * const result = await database.query`SELECT * FROM items WHERE id = ${itemId}`;
+     */
+    async query(
+        templates: TemplateStringsArray,
+        ...params: unknown[]
+    ): Promise<GenericResult<ApiQueryResult, SimpleError>> {
+        return this.run(q(templates, ...params), true);
+    }
+
+    /**
+     * Runs the given SQL on the database and returns the result.
+     * This method supports read-write queries. This means that queries can be used to select, insert, update, and delete data.
+     *
+     * Supports [template string literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) for parameterized queries.
+     *
+     * **Warning:** To avoid [SQL Injection attacks](https://en.wikipedia.org/wiki/SQL_injection), always use template literals with expressions. Never use the `+` operator to concatenate strings containing SQL code.
+     *
+     * @param templates The string templates.
+     * @param params The parameters that should be used.
+     * @returns A promise that resolves when the SQL has completed.
+     *
+     * @example Insert a new item into a table
+     * const name = "New Item";
+     * const value = 100;
+     * const result = await database.execute`INSERT INTO items (name, value) VALUES (${name}, ${value})`;
+     *
+     */
+    async execute(
+        templates: TemplateStringsArray,
+        ...params: unknown[]
+    ): Promise<GenericResult<ApiQueryResult, SimpleError>> {
+        return this.run(q(templates, ...params), false);
+    }
+
+    /**
+     * Runs the given statements in a single transaction. Transactions can be used to group multiple statements together.
+     * If one statement fails, then none of the statements will have any effect.
+     *
+     * @param func The function that should be used to build the statements.
+     * @param readonly Whether the statements are read-only. If true, then the statements cannot modify data.
+     *
+     * @example Run multiple select queries at once
+     * const results = await database.batch([
+     *      database.sql`SELECT * FROM items WHERE id = 'abc'`,
+     *      database.sql`SELECT * FROM items WHERE id = 'def'`,
+     *      database.sql`SELECT * FROM items WHERE id = 'ghi'`,
+     * ]);
+     *
+     * @example Insert multiple items at once
+     * const results = await database.batch([
+     *      database.sql`INSERT INTO items (name, value) VALUES ('Item 1', 100)`,
+     *      database.sql`INSERT INTO items (name, value) VALUES ('Item 2', 200)`,
+     *      database.sql`INSERT INTO items (name, value) VALUES ('Item 3', 300)`,
+     * ], false);
+     */
+    async batch(
+        statements: DatabaseStatement[],
+        readonly: boolean = true
+    ): Promise<GenericResult<BatchResult, SimpleError>> {
+        const result = await this._run(statements, readonly);
+        if (result.success === false) {
+            return result;
+        } else {
+            return {
+                success: true,
+                results: result.items.map((r) => this._mapResult(r)),
+            };
+        }
+    }
+
+    /**
+     * Runs the given database statement.
+     *
+     * @param statement The statement to run.
+     * @param readonly Whether the statement is read-only. If true, then the statement cannot modify data.
+     */
+    async run(
+        statement: DatabaseStatement,
+        readonly: boolean = true
+    ): Promise<GenericResult<ApiQueryResult, SimpleError>> {
+        const batch = await this.batch([statement], readonly);
+        if (batch.success === false) {
+            return batch;
+        } else {
+            const firstResult = batch.results[0];
+            return {
+                success: true,
+                ...firstResult,
+            };
+        }
+    }
+
+    /**
+     * Gets an interface to the database that returns unmodified query results.
+     */
+    get raw() {
+        return {
+            sql: this.sql.bind(this),
+            query: (templates: TemplateStringsArray, ...params: unknown[]) => {
+                return this._run([q(templates, ...params)], true);
+            },
+            execute: (
+                templates: TemplateStringsArray,
+                ...params: unknown[]
+            ) => {
+                return this._run([q(templates, ...params)], false);
+            },
+            batch: (
+                statements: DatabaseStatement[],
+                readonly: boolean = true
+            ) => {
+                return this._run(statements, readonly);
+            },
+            run: (statement: DatabaseStatement, readonly: boolean = true) => {
+                return this._run([statement], readonly);
+            },
+        };
+    }
+
+    private _mapResult(result: QueryResult): ApiQueryResult {
+        const rows: ApiQueryResult['rows'] = [];
+        for (let row of result.rows) {
+            const value: Record<string, any> = {};
+            for (let i = 0; i < result.columns.length; i++) {
+                value[result.columns[i]] = row[i];
+            }
+            rows.push(value);
+        }
+        return {
+            rows,
+            lastInsertId: result.lastInsertId,
+            affectedRowCount: result.affectedRowCount,
+        };
+    }
+
+    private _run(
+        statements: DatabaseStatement[],
+        readonly: boolean
+    ): Promise<GenericResult<QueryResult[], SimpleError>> {
+        const task = this._context.createTask();
+        const action = recordsCallProcedure(
+            {
+                queryDatabase: {
+                    input: {
+                        recordName: this._recordName,
+                        address: this._address,
+                        statements,
+                        readonly,
+                    },
+                },
+            },
+            this._options,
+            task.taskId
+        );
+        this._context.enqueueAction(action);
+        let promise = task.promise;
+        (<any>promise)[ORIGINAL_OBJECT] = action;
+        return promise;
+    }
+}
+
+/**
  * Creates a library that includes the default functions and APIs.
  * @param context The global context that should be used.
  */
@@ -3175,6 +3497,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
             ai: {
                 chat,
+                listChatModels,
                 generateSkybox,
                 generateImage,
                 hume: {
@@ -3384,9 +3707,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 _showInput: showInput,
                 showInput: makeMockableFunction(showInput, 'os.showInput'),
                 showConfirm,
+                showAlert,
                 goToDimension,
                 goToURL,
                 openURL,
+                syncConfigBotTagsToURL,
                 openDevConsole,
                 playSound,
                 bufferSound,
@@ -3434,6 +3759,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 reportInst,
                 requestAuthBot,
                 requestAuthBotInBackground,
+                signOut,
 
                 createRecord,
                 getPublicRecordKey,
@@ -3455,6 +3781,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 listDataByMarker,
                 eraseData,
                 eraseManualApprovalData,
+
+                listInsts,
+                listInstsByMarker,
+                eraseInst,
 
                 recordWebhook,
                 runWebhook,
@@ -3508,6 +3838,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 recordSearchDocument,
                 eraseSearchDocument,
 
+                recordDatabase,
+                getDatabase,
+                eraseDatabase,
+                listDatabases,
+                listDatabasesByMarker,
+
                 listUserStudios,
                 listStudioRecords,
 
@@ -3533,6 +3869,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
                 addMapLayer,
                 removeMapLayer,
+                addBotMapLayer,
+                removeBotMapLayer,
 
                 remotes,
                 listInstUpdates,
@@ -5393,6 +5731,30 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
         (promise as any)[ORIGINAL_OBJECT] = action;
         return promise;
+    }
+
+    /**
+     * Lists the available chat models that the user can use.
+     * Returns a promise that resolves with an array of available chat models.
+     * Throws a {@link CasualOSError} if an error occurs.
+     *
+     * @example List available chat models
+     * const models = await ai.listChatModels();
+     * console.log(models);
+     *
+     * @dochash actions/ai
+     * @docname ai.listChatModels
+     */
+    function listChatModels(
+        options?: RecordActionOptions
+    ): Promise<ListedChatModel[]> {
+        const task = context.createTask();
+        const action = aiListChatModels(options, task.taskId);
+        const final = addAsyncResultAction(task, action).then(
+            (result: GenericSuccess<ListedChatModel[]>) => result.items
+        );
+        (final as any)[ORIGINAL_OBJECT] = action;
+        return final;
     }
 
     /**
@@ -8134,6 +8496,43 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Shows an alert dialog using the given options. Alert dialogs are useful for displaying information that needs to be manually dismissed by the user.
+     *
+     * Returns a promise that resolves when the user dismisses the alert.
+     *
+     * @param options the options that should be used for the alert dialog.
+     *
+     * @example Show a basic alert
+     * await os.showAlert({
+     *     title: 'Alert',
+     *     content: 'This is an important message.'
+     * });
+     *
+     * os.toast('Alert dismissed');
+     *
+     * @example Show an alert with custom button text
+     * await os.showAlert({
+     *     title: 'Warning',
+     *     content: 'Please read this carefully.',
+     *     dismissText: 'Got it'
+     * });
+     *
+     * @dochash actions/os/portals
+     * @docname os.showAlert
+     * @docgroup 10-showInput
+     */
+    function showAlert(options: ShowAlertOptions): Promise<void> {
+        if (!options) {
+            throw new Error(
+                'You must provide an options object for os.showAlert()'
+            );
+        }
+        const task = context.createTask();
+        const event = calcShowAlert(options, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
      * Loads the given dimension into the {@tag gridPortal} portal. Triggers the {@tag @onPortalChanged} shout for the gridPortal.
      * @param dimension the dimension that should be loaded.
      *
@@ -8180,6 +8579,30 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function openURL(url: string): OpenURLAction {
         const event = calcOpenURL(url);
+        return addAction(event);
+    }
+
+    /**
+     * Tells CasualOS to sync the given list of config bot tags in the URL query.
+     *
+     * @param tags The tags that should be synced to the URL.
+     * @param fullHistory Whether the a history entry should be created for every change to these tags. If false, then the URL will be updated but no additional history entries will be created. If true, then each change to the parameters will create a new history entry. Defaults to true.
+     *
+     * @example Sync the "page" config bot tag to the URL
+     * os.syncConfigBotTagsToURL(['page']);
+     *
+     * @example Sync the "scrollPosition" config bot tag to the URL, but don't create a history entry for every change
+     * os.syncConfigBotTagsToURL(['scrollPosition'], false);
+     *
+     * @dochash actions/os/portals
+     * @docname os.syncConfigBotTagsToURL
+     * @docgroup 10-go-to
+     */
+    function syncConfigBotTagsToURL(
+        tags: string[],
+        fullHistory: boolean = true
+    ): TrackConfigBotTagsAction {
+        const event = calcTrackConfigBotTags(tags, fullHistory);
         return addAction(event);
     }
 
@@ -9018,6 +9441,24 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Signs out the current user by revoking their session.
+     * Returns a promise that resolves when the sign out request has been processed.
+     *
+     * @example Sign out the current user
+     * await os.signOut();
+     * os.toast("Signed out!");
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-records
+     * @docname os.signOut
+     */
+    function signOut(): Promise<void> {
+        const task = context.createTask();
+        const event = calcSignOut(task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
      * Creates a record with the given name. If a studio is specified, then the record will be created in the given studio.
      * If not specified, then the record will be owned by the current user.
      *
@@ -9832,6 +10273,146 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             options,
             task.taskId
         );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the list of insts that are in the record with the given name.
+     * Returns a promise that resolves with an object that contains the list of insts (if successful) or information about the error that occurred.
+     * @param recordName the name of the record that the insts should be listed from.
+     * @param startingInst the inst that the list should start at. This can be used to paginate through the list of insts. If omitted, then the list will start from the beginning.
+     * @param endpoint the HTTP Endpoint of the records website that the insts should be listed from.
+     * If omitted, then the preconfigured records endpoint will be used.
+     *
+     * @example List insts in a record
+     * const result = await os.listInsts('myRecord');
+     *
+     * if (result.success) {
+     *     os.toast(`Found ${result.insts.length} insts!`);
+     * } else {
+     *     os.toast("Failed " + result.errorMessage);
+     * }
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-records
+     * @docname os.listInsts
+     * @docid os.listInsts
+     */
+    function listInsts(
+        recordName: string,
+        startingInst: string | null = null,
+        endpoint: string | null = null
+    ): Promise<ListInstsResult> {
+        let options: RecordActionOptions = {};
+        if (hasValue(endpoint)) {
+            options.endpoint = endpoint;
+        }
+        const task = context.createTask();
+        const event = calcListInsts(
+            recordName,
+            startingInst,
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the list of insts that are in the record with the given name and given marker.
+     * Returns a promise that resolves with an object that contains the list of insts (if successful) or information about the error that occurred.
+     * @param recordName the name of the record that the insts should be listed from.
+     * @param marker the marker that the insts should have.
+     * @param startingInst the inst that the list should start at. This can be used to paginate through the list of insts. If omitted, then the list will start from the beginning.
+     * @param options the options that should be used for the action.
+     *
+     * @example List insts by marker in a record
+     * const result = await os.listInstsByMarker('myRecord', 'public');
+     *
+     * if (result.success) {
+     *     os.toast(`Found ${result.insts.length} insts!`);
+     * } else {
+     *     os.toast("Failed " + result.errorMessage);
+     * }
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-records
+     * @docname os.listInstsByMarker
+     * @docid os.listInstsByMarker
+     */
+    function listInstsByMarker(
+        recordName: string,
+        marker: string,
+        startingInst: string | null = null,
+        options: RecordActionOptions = {}
+    ): Promise<ListInstsResult> {
+        const task = context.createTask();
+        const event = calcListInstsByMarker(
+            recordName,
+            marker,
+            startingInst,
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Erases the inst with the given name from the given record.
+     * Returns a promise that resolves with an object that indicates if the operation was successful or not.
+     * @param recordKeyOrName the record key or record name that should be used to access the record. You can request a record key by using {@link os.getPublicRecordKey}.
+     * @param instName the name of the inst that should be deleted.
+     * @param options the options for the request.
+     *
+     * @example Erase an inst from a record
+     * const result = await os.eraseInst('myRecord', 'myInst');
+     *
+     * if (result.success) {
+     *     os.toast("Inst deleted!");
+     * } else {
+     *     os.toast("Failed: " + result.errorMessage);
+     * }
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-records
+     * @docname os.eraseInst
+     * @docid eraseInst
+     */
+    function eraseInst(
+        recordKeyOrName: string,
+        instName: string,
+        options: RecordActionOptions = {}
+    ): Promise<EraseInstResult> {
+        if (!hasValue(recordKeyOrName)) {
+            throw new Error('recordKeyOrName must be provided.');
+        } else if (typeof recordKeyOrName !== 'string') {
+            throw new Error('recordKeyOrName must be a string.');
+        }
+
+        if (!hasValue(instName)) {
+            throw new Error('instName must be provided.');
+        } else if (typeof instName !== 'string') {
+            throw new Error('instName must be a string.');
+        }
+
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                deleteInst: {
+                    input: {
+                        recordKey: isRecordKey(recordKeyOrName)
+                            ? recordKeyOrName
+                            : undefined,
+                        recordName: !isRecordKey(recordKeyOrName)
+                            ? recordKeyOrName
+                            : undefined,
+                        inst: instName,
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+
         return addAsyncAction(task, event);
     }
 
@@ -11675,7 +12256,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         recordName: string,
         address: string,
         options: RecordActionOptions = {}
-    ): Promise<CrudRecordItemResult> {
+    ): Promise<CrudEraseItemResult> {
         const task = context.createTask();
         const event = recordsCallProcedure(
             {
@@ -11714,7 +12295,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         recordName: string,
         startingAddress?: string,
         options: ListDataOptions = {}
-    ): Promise<CrudRecordItemResult> {
+    ): Promise<CrudListItemsResult<SearchRecord>> {
         const task = context.createTask();
         const event = recordsCallProcedure(
             {
@@ -11913,6 +12494,228 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         );
 
         return addAsyncAction(task, event);
+    }
+
+    /**
+     * Creates or updates a database in the given record.
+     *
+     * Databases are used to store and manage structured data within a record.
+     * They use the [SQL programming language](https://www.sqlite.org/lang.html), which is a powerful programming language designed to manage relational databases.
+     *
+     * Returns a promise that resolves with the result of the operation.
+     *
+     * @param request The request to create or update the database.
+     * @param options the options for the request.
+     * @returns A promise that resolves with the result of the operation.
+     *
+     * @example Record a database.
+     * const result = await os.recordDatabase({
+     *      recordName: 'myRecord',
+     *      address: 'myDatabase',
+     * });
+     *
+     * @example Record a private database
+     * const result = await os.recordDatabase({
+     *      recordName: 'myRecord',
+     *      address: 'myDatabase',
+     *      markers: ['private']
+     * });
+     *
+     *
+     * @doctitle Database Actions
+     * @docsidebar Database
+     * @docdescription Database actions allow you to create and manage databases in your records. Databases enable efficient storage and retrieval of structured data within your records, making it easier to manage and query information.
+     * @dochash actions/os/records/database
+     * @docgroup 02-database
+     * @docname os.recordDatabase
+     * @docid recordDatabase
+     */
+    function recordDatabase(
+        request: RecordSearchCollectionApiRequest,
+        options: RecordActionOptions = {}
+    ): Promise<CrudRecordItemResult> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                recordDatabase: {
+                    input: {
+                        recordName: request.recordName,
+                        item: {
+                            address: request.address,
+                            markers: request.markers as [string, ...string[]],
+                        },
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Deletes a database along with all the data in it.
+     *
+     * Returns a promise that resolves with the result of the operation.
+     *
+     * @param recordName The name of the record to delete the database from.
+     * @param address The address of the database to delete.
+     * @param options the options for the request.
+     * @returns A promise that resolves with the result of the operation.
+     *
+     * @example Erase a database
+     * const result = await os.eraseDatabase('recordName', 'myDatabase');
+     *
+     * @dochash actions/os/records/database
+     * @docgroup 02-database
+     * @docname os.eraseDatabase
+     * @docid eraseDatabase
+     */
+    function eraseDatabase(
+        recordName: string,
+        address: string,
+        options: RecordActionOptions = {}
+    ): Promise<CrudRecordItemResult> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                eraseDatabase: {
+                    input: {
+                        recordName,
+                        address,
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Lists the databases in a record.
+     *
+     * Returns a promise that resolves with the result of the operation.
+     *
+     * @param recordName The name of the record to delete the search collection from.
+     * @param startingAddress the address that the listing should start after.
+     * @param options the options for the request.
+     * @returns A promise that resolves with the result of the operation.
+     *
+     * @example List databases
+     * const result = await os.listDatabases('recordName', 'myDatabase');
+     *
+     * @dochash actions/os/records/database
+     * @docgroup 02-database
+     * @docname os.listDatabases
+     * @docid listDatabases
+     */
+    function listDatabases(
+        recordName: string,
+        startingAddress?: string,
+        options: ListDataOptions = {}
+    ): Promise<CrudListItemsResult<DatabaseRecordOutput>> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                listDatabases: {
+                    input: {
+                        recordName,
+                        address: startingAddress,
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Lists the databases in a record by a specific marker.
+     * @param recordName The name of the record to list the databases from.
+     * @param marker The marker to filter the list by.
+     * @param startingAddress The address that the listing should start after.
+     * @param options The options for the request.
+     * @returns A promise that resolves with the result of the operation.
+     *
+     * @example List public read databases
+     * const result = await os.listDatabasesByMarker('recordName', 'publicRead');
+     *
+     * @example List private databases
+     * const result = await os.listDatabasesByMarker('recordName', 'private');
+     *
+     * @dochash actions/os/records/database
+     * @docgroup 02-database
+     * @docname os.listDatabasesByMarker
+     */
+    function listDatabasesByMarker(
+        recordName: string,
+        marker: string,
+        startingAddress?: string,
+        options: ListDataOptions = {}
+    ): Promise<CrudListItemsResult<DatabaseRecordOutput>> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                listDatabases: {
+                    input: {
+                        recordName,
+                        marker,
+                        address: startingAddress,
+                        sort: options?.sort,
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets basic info about a database from the specified record.
+     *
+     * @param recordName The name of the record to retrieve the database from.
+     * @param address The address of the database to retrieve.
+     * @param options The options for the request.
+     *
+     * @returns A promise that resolves with the result of the operation.
+     *
+     * @example Get a database and query a table
+     * const db = os.getDatabase('myRecord', 'myDatabase');
+     * const result = await db.query`SELECT * FROM myTable`;
+     *
+     * @example Insert a new row
+     * const value1 = 'abc';
+     * const value2 = 123;
+     * const result = await db.execute`INSERT INTO myTable (column1, column2) VALUES (${value1}, ${value2})`;
+     *
+     * @example Run multiple queries in a transaction
+     * const values = [
+     *   ['apple', 10],
+     *   ['car', 25000],
+     *   ['strawberry', 1],
+     *   ['lego', 5]
+     * ];
+     *
+     * const result = await db.batch(
+     *   values.map(([name, value]) => db.sql`INSERT INTO data (name, value) VALUES (${name}, ${value})`)
+     * );
+     *
+     * @dochash actions/os/records/database
+     * @docgroup 02-database
+     * @docname os.getDatabase
+     */
+    function getDatabase(
+        recordName: string,
+        address: string,
+        options: RecordActionOptions = {}
+    ): ApiDatabase {
+        return new ApiDatabase(recordName, address, options, context);
     }
 
     /**
@@ -12667,6 +13470,74 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask();
         const event = calcRemoveMapLayer(layerId, task.taskId);
         return addAsyncAction(task, event);
+    }
+
+    /**
+     * Adds a map layer to a bot with form: "map".
+     *
+     * Returns a promise that resolves with the ID of the layer that was added.
+     *
+     * @param bot The bot that should have the layer added.
+     * @param overlay The overlay configuration.
+     *
+     * @example Add a GeoJSON layer to a map bot
+     * const layerId = await os.addBotMapLayer(bot, {
+     *     type: 'geojson',
+     *     data: {
+     *         type: "FeatureCollection",
+     *         features: [...]
+     *     }
+     * });
+     */
+    function addBotMapLayer(
+        bot: Bot | string,
+        overlay: {
+            overlayType?: 'geojson';
+            type?: 'geojson';
+            data: any;
+            overlayId?: string;
+        }
+    ): Promise<string> {
+        const task = context.createTask();
+        const botId = typeof bot === 'string' ? bot : bot.id;
+
+        const normalizedOverlay = {
+            ...overlay,
+            overlayType: overlay.overlayType || overlay.type || 'geojson',
+        };
+
+        const action: AddBotMapLayerAction = {
+            type: 'add_bot_map_layer',
+            botId: botId,
+            overlay: normalizedOverlay,
+            taskId: task.taskId,
+        };
+        return addAsyncAction(task, action);
+    }
+
+    /**
+     * Removes a layer from a bot with form: "map".
+     *
+     * @param bot The bot that has the layer.
+     * @param overlayId The ID of the overlay to remove.
+     *
+     * @example Remove a layer from a map bot
+     * await os.removeBotMapLayer(bot, 'my-layer-id');
+     */
+    function removeBotMapLayer(
+        bot: Bot | string,
+        overlayId: string
+    ): Promise<void> {
+        const task = context.createTask();
+        const botId = typeof bot === 'string' ? bot : bot.id;
+
+        const action: RemoveBotMapLayerAction = {
+            type: 'remove_bot_map_layer',
+            botId: botId,
+            overlayId: overlayId,
+            taskId: task.taskId,
+        };
+        return addAsyncAction(task, action);
     }
 
     /**
@@ -16612,6 +17483,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param keypair the keypair that was used to create the signature.
      * @param signature the signature that was returned from {@link crypto.sign}.
      * @param data the data that was used in the call to {@link crypto.sign}.
+     *
+     * @dochash actions/crypto
+     * @docname crypto.verify
      */
     function verify(keypair: string, signature: string, data: string): boolean {
         if (typeof data === 'string') {
@@ -16625,6 +17499,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Gets performance stats from the runtime.
+     *
+     * @dochash actions/debuggers
+     * @docname perf.getStats
      */
     function getStats(): PerformanceStats {
         return {

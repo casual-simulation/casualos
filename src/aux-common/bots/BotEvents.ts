@@ -89,6 +89,7 @@ export type ExtraActions =
     | GoToDimensionAction
     | GoToURLAction
     | OpenURLAction
+    | TrackConfigBotTagsAction
     | ShowInputForTagAction
     | SetForcedOfflineAction
     | ShellAction
@@ -130,6 +131,7 @@ export type AsyncActions =
     | IterableCompleteAction
     | IterableThrowAction
     | ShowInputAction
+    | ShowAlertAction
     | ShowConfirmAction
     | ShareAction
     | ImportAUXAction
@@ -160,6 +162,8 @@ export type AsyncActions =
     | BeginRecordingAction
     | EndRecordingAction
     | SpeakTextAction
+    | AddBotMapLayerAction
+    | RemoveBotMapLayerAction
     | GetVoicesAction
     | GetGeolocationAction
     | RegisterCustomAppAction
@@ -167,6 +171,7 @@ export type AsyncActions =
     | RegisterHtmlAppAction
     | ReportInstAction
     | RequestAuthDataAction
+    | SignOutAction
     | DefineGlobalBotAction
     | ConvertGeolocationToWhat3WordsAction
     | ARSupportedAction
@@ -1489,6 +1494,44 @@ export interface ShowConfirmOptions {
 }
 
 /**
+ * Defines an event that is used to show an alert/info dialog.
+ * @dochash types/os/input
+ * @docname ShowAlertAction
+ */
+export interface ShowAlertAction extends AsyncAction {
+    type: 'show_alert';
+
+    /**
+     * The options for the alert dialog.
+     */
+    options: ShowAlertOptions;
+}
+
+/**
+ * Defines an interface that represents the options that can be used for an alert dialog.
+ *
+ * @dochash types/os/input
+ * @docname ShowAlertOptions
+ */
+export interface ShowAlertOptions {
+    /**
+     * The title that should be shown for the dialog.
+     */
+    title: string;
+
+    /**
+     * The content of the dialog.
+     */
+    content: string;
+
+    /**
+     * The text that should be shown on the "Dismiss" button.
+     * Defaults to "OK".
+     */
+    dismissText?: string;
+}
+
+/**
  * Defines an event that is used to set whether the connection is forced to be offline.
  * @docname SetForcedOfflineAction
  */
@@ -1532,6 +1575,42 @@ export interface OpenURLAction extends Action {
      * The URL to open.
      */
     url: string;
+}
+
+/**
+ * Defines an event that notifies the system that a config bot tag should be tracked in the URL.
+ *
+ * @dochash types/os/portals
+ * @docname TrackConfigBotTagsAction
+ */
+export interface TrackConfigBotTagsAction extends Action {
+    type: 'track_config_bot_tags';
+
+    /**
+     * The tag names that should be tracked.
+     */
+    tags: string[];
+
+    /**
+     * Whether the a history entry should be created for every change to these tags.
+     * If false, then the URL will be updated but no additional history entries will be created.
+     * If true, then each change to the parameters will create a new history entry.
+     */
+    fullHistory: boolean;
+}
+
+/**
+ * Creates a TrackConfigBotTagsAction that notifies the system that a config bot tag should be tracked in the URL.
+ */
+export function trackConfigBotTags(
+    tags: string[],
+    fullHistory: boolean
+): TrackConfigBotTagsAction {
+    return {
+        type: 'track_config_bot_tags',
+        tags,
+        fullHistory,
+    };
 }
 
 /**
@@ -2978,6 +3057,47 @@ export interface SpeakTextAction extends AsyncAction, SpeakTextOptions {
     text: string;
 }
 
+/** Extensible overlay type — bot map form */
+type OverlayType = 'geojson_canvas';
+
+export interface AddBotMapLayerAction extends AsyncAction {
+    type: 'add_bot_map_layer';
+    /**
+     * The ID of the bot that should be drawn on.
+     */
+    botId: string;
+    /**
+     * Layer configuration
+     */
+    overlay: {
+        /**
+         * The type of overlay to add to the bot map form
+         */
+        overlayType: 'geojson';
+        type?: 'geojson';
+        /**
+         * Data specific to the overlay type for layer creation
+         */
+        data: any;
+        /**
+         * An optional user defined ID of the overlay that should be added.
+         * Will be generated and returned if ommited.
+         */
+        overlayId?: string;
+    };
+}
+export interface RemoveBotMapLayerAction extends AsyncAction {
+    type: 'remove_bot_map_layer';
+    /**
+     * The ID of the bot that the overlay is on.
+     */
+    botId: string;
+    /**
+     * The ID of the overlay that should be removed.
+     */
+    overlayId: string;
+}
+
 /**
  * An event that is used to retrieve the synthetic voices that are supported by the current system.
  *
@@ -3213,6 +3333,16 @@ export interface RequestAuthDataAction extends AsyncAction {
      * Defaults to false.
      */
     requestInBackground?: boolean;
+}
+
+/**
+ * Defines an event that requests the user be signed out.
+ *
+ * @dochash types/os/records
+ * @docname SignOutAction
+ */
+export interface SignOutAction extends AsyncAction {
+    type: 'sign_out';
 }
 
 /**
@@ -4673,6 +4803,22 @@ export function showConfirm(
 }
 
 /**
+ * Creates a new ShowAlertAction.
+ * @param options The options for the action.
+ * @param taskId The ID of the async task.
+ */
+export function showAlert(
+    options: ShowAlertOptions,
+    taskId?: number | string
+): ShowAlertAction {
+    return {
+        type: 'show_alert',
+        options,
+        taskId,
+    };
+}
+
+/**
  * Creates a new SetForcedOfflineAction event.
  * @param offline Whether the connection should be offline.
  */
@@ -5651,6 +5797,39 @@ export function getVoices(taskId?: string | number): GetVoicesAction {
 }
 
 /**
+ * Creates an action that adds a map overlay to the given bot.
+ * @param bot
+ * @param overlayId
+ * @param options
+ * @param taskId
+ */
+export function addBotMapLayer(
+    bot: Bot,
+    overlayConfig: AddBotMapLayerAction['overlay'],
+    taskId?: string | number
+): AddBotMapLayerAction {
+    return {
+        type: 'add_bot_map_layer',
+        botId: bot?.id,
+        overlay: overlayConfig,
+        taskId,
+    };
+}
+
+export function removeBotMapLayer(
+    bot: Bot,
+    overlayId: string,
+    taskId?: string | number
+): RemoveBotMapLayerAction {
+    return {
+        type: 'remove_bot_map_layer',
+        botId: bot?.id,
+        overlayId,
+        taskId,
+    };
+}
+
+/**
  * Creates a GetGeolocationAction.
  * @param taskId The ID of the task.
  */
@@ -5838,6 +6017,17 @@ export function requestAuthData(
     return {
         type: 'request_auth_data',
         requestInBackground,
+        taskId,
+    };
+}
+
+/**
+ * Creates a SignOutAction.
+ * @param taskId The ID of the async task.
+ */
+export function signOut(taskId?: string | number): SignOutAction {
+    return {
+        type: 'sign_out',
         taskId,
     };
 }

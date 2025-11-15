@@ -27,6 +27,9 @@ Object {
   "data": Object {
     "allowed": true,
   },
+  "databases": Object {
+    "allowed": true,
+  },
   "events": Object {
     "allowed": true,
   },

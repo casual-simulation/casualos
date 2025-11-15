@@ -47,14 +47,16 @@ export interface Text3DFont {
 }
 
 export class Text3D extends Object3D {
+    name = 'Text3D';
+    
     // Map of loaded font textures.
     public static FontTextures: {
         [texturePath: string]: Texture;
     } = {};
 
-    public static readonly extraSpace: number = 0.001;
-    public static readonly floatingExtraSpace: number = 0.4;
-    public static readonly floatingBillboardExtraSpace: number = 0.2;
+    public static readonly extraSpace: number = 0.01;
+    public static readonly floatingExtraSpace: number = 0.6;
+    public static readonly floatingBillboardExtraSpace: number = 0.4;
 
     /**
      * Number chosen by expirementation to place 5-6 characters on a bot.
@@ -152,13 +154,7 @@ export class Text3D extends Object3D {
         this.updateBoundingBox();
     }
 
-    /**
-     * Sets the position of the text based on the size of the given bounding box.
-     * Returns whether a call to sync() is required.
-     * @param obj The object that this text's position should be set for.
-     * @param offset An arbitrary offset to apply to the text.
-     */
-    public setPositionForObject(obj: Object3D, objCenter: Vector3 = null) {
+    public setPositionForObject(obj: Object3D, gridScale: number, objCenter: Vector3 = null) {
         this.updateBoundingBox();
 
         const tempPos = new Vector3();
@@ -173,6 +169,7 @@ export class Text3D extends Object3D {
 
         const [pos, rotation, anchor] = this._calculateAnchorPosition(
             worldScale,
+            gridScale,
             center
         );
 
@@ -182,9 +179,6 @@ export class Text3D extends Object3D {
         // bot's scale container.
         this.parent.matrixWorld.decompose(tempPos, tempRot, worldScale);
         pos.divide(worldScale);
-
-        const worldPos = pos.clone();
-        this.parent.localToWorld(worldPos);
 
         this.position.copy(pos);
         let changed = this._mesh.anchorX !== anchor;
@@ -572,10 +566,12 @@ export class Text3D extends Object3D {
 
     private _calculateAnchorPosition(
         scale: Vector3,
+        gridScale: number,
         objCenter: Vector3
     ): [Vector3, Euler, 'left' | 'right' | 'center'] {
         return Text3D._calculateAnchorPosition(
             scale,
+            gridScale,
             objCenter,
             this._anchor,
             this._mesh.textAlign
@@ -584,6 +580,7 @@ export class Text3D extends Object3D {
 
     private static _calculateAnchorPosition(
         scale: Vector3,
+        gridScale: number,
         objCenter: Vector3,
         anchor: BotLabelAnchor,
         textAlign: TextMesh['textAlign']
@@ -609,8 +606,9 @@ export class Text3D extends Object3D {
                     targetCenter.z +
                         targetSize.z * positionMultiplier +
                         (anchor === 'floatingBillboard'
-                            ? Text3D.floatingBillboardExtraSpace
-                            : Text3D.floatingExtraSpace)
+                            ? (Text3D.floatingBillboardExtraSpace * gridScale)
+                            : (Text3D.floatingExtraSpace * gridScale)
+                        )
                 )
             );
 

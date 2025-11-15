@@ -25,6 +25,8 @@ import { disposeMesh } from '../SceneUtils';
  * Defines a mesh that represents a HexGrid containing a bunch of HexMesh meshes.
  */
 export class HexGridMesh extends Object3D {
+    name = 'HexGridMesh';
+
     private _grid: HexGrid<HexMesh>;
     private _radius: number;
     private _defaultHeight: number;

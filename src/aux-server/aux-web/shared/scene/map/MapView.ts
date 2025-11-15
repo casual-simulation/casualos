@@ -17,12 +17,20 @@
  */
 import type { MapProvider } from 'geo-three';
 import { MapTile } from './MapTile';
-import { Object3D, Vector3 } from '@casual-simulation/three';
+import { Box2, Object3D, Vector3 } from '@casual-simulation/three';
 import { Box3 } from '@casual-simulation/three';
+import type { MapOverlay } from './MapOverlay';
+import {
+    type BotCalculationContext,
+    type LocalActions,
+} from '@casual-simulation/aux-common';
+import { Vector2 } from 'three';
 
 const TILE_SIZE = 256;
 
 export class MapView extends Object3D {
+    name = 'MapView'; 
+    
     private _tileSize: number;
     private _gridSize: number;
     private _zoom: number;
@@ -35,10 +43,14 @@ export class MapView extends Object3D {
     private _heightProvider: MapProvider | null = null;
 
     private _tiles: MapTile[][] = [];
+    //* We can change this to a more complex clipping box to suit custom aspect ratios
     private _clippingBox: Box3 = new Box3(
         new Vector3(-0.5, -0.5, -0.5),
         new Vector3(0.5, 0.5, 0.5)
     );
+
+    private _overlays: Map<string, MapOverlay> = new Map();
+    private _layerIdCounter: number = 0;
 
     get heightProvider() {
         return this._heightProvider;
@@ -47,6 +59,118 @@ export class MapView extends Object3D {
     setZoom(zoom: number) {
         this._zoom = zoom;
         this.setCenter(zoom, this._longitude, this._latitude);
+    }
+
+    addOverlay(id: string, overlay: MapOverlay): void {
+        this.removeOverlay(id);
+
+        this._overlays.set(id, overlay);
+        overlay.position.setY(0.001 + this._overlays.size * 0.0001);
+        this.add(overlay);
+
+        overlay.updateCenter(this._zoom, this._longitude, this._latitude);
+        overlay.render();
+    }
+
+    removeOverlay(id: string): boolean {
+        const overlay = this._overlays.get(id);
+        if (overlay) {
+            this.remove(overlay);
+            overlay.dispose();
+            this._overlays.delete(id);
+
+            return true;
+        }
+        return false;
+    }
+
+    async localEvent(
+        event: LocalActions,
+        calc: BotCalculationContext
+    ): Promise<{ success: boolean; data?: any; message?: string }> {
+        if (event.type === 'add_bot_map_layer') {
+            try {
+                const overlay = await this._createOverlayFromEvent(
+                    event.overlay
+                );
+                const overlayId =
+                    event.overlay.overlayId || this._generateLayerId();
+                this.addOverlay(overlayId, overlay);
+                return {
+                    success: true,
+                    data: { overlayId },
+                };
+            } catch (e) {
+                return {
+                    success: false,
+                    message: `Failed to add overlay: ${e}`,
+                };
+            }
+        } else if (event.type === 'remove_bot_map_layer') {
+            const result = this.removeOverlay(event.overlayId);
+            return result
+                ? { success: true, data: { overlayId: event.overlayId } }
+                : {
+                      success: false,
+                      message: `No overlay with id: ${event.overlayId}`,
+                  };
+        }
+
+        return { success: false, message: 'Unknown event type' };
+    }
+
+    private async _createOverlayFromEvent(
+        overlayData: any
+    ): Promise<MapOverlay> {
+        const dimensions = new Box2(
+            new Vector2(-0.5, -0.5),
+            new Vector2(0.5, 0.5)
+        );
+
+        if (
+            overlayData.overlayType === 'geojson' ||
+            overlayData.type === 'geojson'
+        ) {
+            const { GeoJSONRenderer } = await import('./GeoJSONRenderer');
+
+            // Use GeoJSONRenderer utilities
+            const style = GeoJSONRenderer.extractStyleFromGeoJSON(
+                overlayData.data
+            );
+
+            // TEMPORARY: Disable 3D overlays for this build
+            // TODO: Re-enable 3D support in future release
+            const USE_3D_OVERLAYS = false; // Feature flag for 3D overlays
+
+            if (
+                USE_3D_OVERLAYS &&
+                GeoJSONRenderer.shouldUse3D(overlayData.data)
+            ) {
+                // 3D overlay path - disabled in current build
+                const { GeoJSON3DOverlay } = await import('./GeoJSON3DOverlay');
+                return new GeoJSON3DOverlay(
+                    dimensions,
+                    this._longitude,
+                    this._latitude,
+                    this._zoom,
+                    overlayData.data,
+                    style
+                );
+            } else {
+                // Always use 2D overlay in current build
+                const canvasSize = 512;
+                const { GeoJSONMapOverlay } = await import('./MapOverlay');
+                return new GeoJSONMapOverlay(
+                    dimensions,
+                    canvasSize,
+                    this._longitude,
+                    this._latitude,
+                    this._zoom,
+                    overlayData.data
+                );
+            }
+        }
+        throw new Error(`Unknown overlay type: ${overlayData.overlayType}`);
     }
 
     setProvider(provider: MapProvider) {
@@ -144,6 +268,11 @@ export class MapView extends Object3D {
         this._zoom = zoom;
         this._longitude = longitude;
         this._latitude = latitude;
+        if (this._overlays.size) {
+            this._overlays.forEach((overlay) =>
+                overlay.updateCenter(zoom, longitude, latitude)
+            );
+        }
         const [pixelX, pixelY] = MapView.calculatePixel(
             zoom,
             longitude,
@@ -281,7 +410,6 @@ export class MapView extends Object3D {
         this._heightProvider = heightProvider;
         this._tileSize = tileSize;
         this._gridSize = gridSize;
-
         this._createGrid();
     }
 
@@ -325,7 +453,12 @@ export class MapView extends Object3D {
                 this.remove(tile);
             }
         }
-        this._tiles = [];
+        this._tiles.length = 0;
+        for (let [_, overlay] of this._overlays) {
+            overlay.dispose();
+            this.remove(overlay);
+        }
+        this._overlays.clear();
     }
 
     private _createGrid() {
@@ -349,5 +482,10 @@ export class MapView extends Object3D {
         tile.scale.setScalar(this._tileSize);
         this.add(tile);
         return tile;
+    }
+
+    private _generateLayerId(): string {
+        this._layerIdCounter++;
+        return `geojson_layer_${this._layerIdCounter}_${Date.now()}`;
     }
 }

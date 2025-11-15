@@ -624,7 +624,7 @@ export class SearchRecordsController extends CrudRecordsController<
         authorization:
             | AuthorizeUserAndInstancesSuccess
             | AuthorizeUserAndInstancesForResourcesSuccess,
-        item?: SearchRecord
+        item?: SearchRecordInput
     ): Promise<SearchRecordsSubscriptionMetricsResult> {
         const config = await this.config.getSubscriptionConfiguration();
         const metrics = await this.store.getSubscriptionMetrics({

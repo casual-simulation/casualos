@@ -118,6 +118,7 @@ describe('RecordsManager', () => {
         createPublicRecordKey: jest.fn(),
         provideSmsNumber: jest.fn(),
         getRecordKeyPolicy: jest.fn(),
+        logout: jest.fn(),
     };
     let customAuth: AuthHelperInterface;
     let customAuthMock = {
@@ -1611,6 +1612,7 @@ describe('RecordsManager', () => {
                         },
                     }),
                 ]);
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should not include the Authorization header if the user is not logged in', async () => {
@@ -1654,6 +1656,8 @@ describe('RecordsManager', () => {
                         },
                     }),
                 ]);
+                expect(authMock.getAuthToken).toHaveBeenCalled();
+                expect(authMock.authenticate).toHaveBeenCalled();
             });
 
             it('should include the inst', async () => {
@@ -2025,6 +2029,8 @@ describe('RecordsManager', () => {
                         marker: 'myMarker',
                     }),
                 ]);
+                expect(authMock.getAuthToken).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
             });
 
             it('should include the inst', async () => {
@@ -7650,6 +7656,21 @@ describe('RecordsManager', () => {
                         1
                     ),
                 ] as const,
+                [
+                    'deleteInst',
+                    recordsCallProcedure(
+                        {
+                            deleteInst: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    inst: 'testInst',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
             ];
 
             describe.each(allowedProcedures)('%s', (name, event) => {
@@ -7692,9 +7713,6 @@ describe('RecordsManager', () => {
                             address: 'myAddress',
                         }),
                     ]);
-                    expect(authMock.isAuthenticated).toBeCalled();
-                    expect(authMock.authenticate).not.toBeCalled();
-                    expect(authMock.getAuthToken).toBeCalled();
                 });
 
                 it('should include the inst', async () => {
@@ -7763,9 +7781,6 @@ describe('RecordsManager', () => {
                             address: 'myAddress',
                         }),
                     ]);
-                    expect(authMock.isAuthenticated).toBeCalled();
-                    expect(authMock.authenticate).not.toBeCalled();
-                    expect(authMock.getAuthToken).toBeCalled();
                 });
 
                 it('should not include the inst if the inst is static', async () => {
@@ -7833,9 +7848,6 @@ describe('RecordsManager', () => {
                             address: 'myAddress',
                         }),
                     ]);
-                    expect(authMock.isAuthenticated).toBeCalled();
-                    expect(authMock.authenticate).not.toBeCalled();
-                    expect(authMock.getAuthToken).toBeCalled();
                 });
 
                 it('should fail if no recordsOrigin is set', async () => {
@@ -7934,9 +7946,6 @@ describe('RecordsManager', () => {
                             address: 'myAddress',
                         }),
                     ]);
-                    expect(customAuthMock.isAuthenticated).toBeCalled();
-                    expect(customAuthMock.authenticate).not.toBeCalled();
-                    expect(customAuthMock.getAuthToken).toBeCalled();
                 });
             });
         });

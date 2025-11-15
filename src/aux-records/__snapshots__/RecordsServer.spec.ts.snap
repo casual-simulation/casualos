@@ -2200,6 +2200,7 @@ Object {
                         "webhook",
                         "ai",
                         "search",
+                        "database",
                       ],
                     },
                     "scope": Object {
@@ -2811,6 +2812,7 @@ Object {
                   "package",
                   "package.version",
                   "search",
+                  "database",
                 ],
               },
             },
@@ -3001,6 +3003,204 @@ Object {
         "type": "object",
       },
       "name": "search",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/database",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "item": Object {
+            "schema": Object {
+              "address": Object {
+                "type": "string",
+              },
+              "markers": Object {
+                "maxLength": 10,
+                "minLength": 1,
+                "schema": Object {
+                  "type": "string",
+                },
+                "type": "array",
+              },
+            },
+            "type": "object",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "recordDatabase",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/database",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getDatabase",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "DELETE",
+        "path": "/api/v2/records/database",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "eraseDatabase",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/database/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "marker": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "sort": Object {
+            "optional": true,
+            "type": "enum",
+            "values": Array [
+              "ascending",
+              "descending",
+            ],
+          },
+        },
+        "type": "object",
+      },
+      "name": "listDatabases",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/database/query",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "automaticTransaction": Object {
+            "defaultValue": true,
+            "hasDefault": true,
+            "optional": true,
+            "type": "boolean",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "readonly": Object {
+            "defaultValue": true,
+            "hasDefault": true,
+            "type": "boolean",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "statements": Object {
+            "schema": Object {
+              "schema": Object {
+                "params": Object {
+                  "defaultValue": Array [],
+                  "hasDefault": true,
+                  "optional": true,
+                  "schema": Object {
+                    "type": "any",
+                  },
+                  "type": "array",
+                },
+                "query": Object {
+                  "type": "string",
+                },
+              },
+              "type": "object",
+            },
+            "type": "array",
+          },
+        },
+        "type": "object",
+      },
+      "name": "queryDatabase",
       "origins": "api",
     },
     Object {
@@ -3747,6 +3947,50 @@ Object {
                 },
                 "type": "object",
               },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "delete",
+                      "list",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "database",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
+                    ],
+                  },
+                },
+                "type": "object",
+              },
             ],
             "type": "union",
           },
@@ -3821,6 +4065,7 @@ Object {
               "package",
               "package.version",
               "search",
+              "database",
             ],
           },
         },
@@ -4017,6 +4262,7 @@ Object {
               "webhook",
               "ai",
               "search",
+              "database",
             ],
           },
           "packageId": Object {
@@ -4326,6 +4572,18 @@ Object {
         "type": "object",
       },
       "name": "aiChatStream",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/ai/chat/models",
+      },
+      "inputs": Object {
+        "schema": Object {},
+        "type": "object",
+      },
+      "name": "aiListChatModels",
       "origins": "api",
     },
     Object {
@@ -5215,6 +5473,10 @@ Object {
       "inputs": Object {
         "schema": Object {
           "inst": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "marker": Object {
             "optional": true,
             "type": "string",
           },
@@ -7561,6 +7823,7 @@ Object {
                         "webhook",
                         "ai",
                         "search",
+                        "database",
                       ],
                     },
                     "scope": Object {
@@ -8172,6 +8435,7 @@ Object {
                   "package",
                   "package.version",
                   "search",
+                  "database",
                 ],
               },
             },
@@ -8362,6 +8626,204 @@ Object {
         "type": "object",
       },
       "name": "search",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/database",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "item": Object {
+            "schema": Object {
+              "address": Object {
+                "type": "string",
+              },
+              "markers": Object {
+                "maxLength": 10,
+                "minLength": 1,
+                "schema": Object {
+                  "type": "string",
+                },
+                "type": "array",
+              },
+            },
+            "type": "object",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "recordDatabase",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/database",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getDatabase",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "DELETE",
+        "path": "/api/v2/records/database",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "eraseDatabase",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/database/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "marker": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "sort": Object {
+            "optional": true,
+            "type": "enum",
+            "values": Array [
+              "ascending",
+              "descending",
+            ],
+          },
+        },
+        "type": "object",
+      },
+      "name": "listDatabases",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/database/query",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "automaticTransaction": Object {
+            "defaultValue": true,
+            "hasDefault": true,
+            "optional": true,
+            "type": "boolean",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "readonly": Object {
+            "defaultValue": true,
+            "hasDefault": true,
+            "type": "boolean",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "statements": Object {
+            "schema": Object {
+              "schema": Object {
+                "params": Object {
+                  "defaultValue": Array [],
+                  "hasDefault": true,
+                  "optional": true,
+                  "schema": Object {
+                    "type": "any",
+                  },
+                  "type": "array",
+                },
+                "query": Object {
+                  "type": "string",
+                },
+              },
+              "type": "object",
+            },
+            "type": "array",
+          },
+        },
+        "type": "object",
+      },
+      "name": "queryDatabase",
       "origins": "api",
     },
     Object {
@@ -9108,6 +9570,50 @@ Object {
                 },
                 "type": "object",
               },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "delete",
+                      "list",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "database",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
+                    ],
+                  },
+                },
+                "type": "object",
+              },
             ],
             "type": "union",
           },
@@ -9182,6 +9688,7 @@ Object {
               "package",
               "package.version",
               "search",
+              "database",
             ],
           },
         },
@@ -9378,6 +9885,7 @@ Object {
               "webhook",
               "ai",
               "search",
+              "database",
             ],
           },
           "packageId": Object {
@@ -9687,6 +10195,18 @@ Object {
         "type": "object",
       },
       "name": "aiChatStream",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/ai/chat/models",
+      },
+      "inputs": Object {
+        "schema": Object {},
+        "type": "object",
+      },
+      "name": "aiListChatModels",
       "origins": "api",
     },
     Object {
@@ -10576,6 +11096,10 @@ Object {
       "inputs": Object {
         "schema": Object {
           "inst": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "marker": Object {
             "optional": true,
             "type": "string",
           },

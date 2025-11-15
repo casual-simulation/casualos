@@ -69,6 +69,7 @@ export class GridChecker {
     constructor(heightSpacing: number) {
         this._heightSpacing = 1 / heightSpacing;
         this._scene = new Scene();
+        this._scene.name = 'GridChecker_Scene';
         this._camera = new OrthographicCamera(-1, 1, 1, -1, 1, 1);
         this._renderer = new WebGLRenderer({
             alpha: true,

@@ -142,6 +142,15 @@ describe('Result', () => {
         });
     });
 
+    it('should be able to get a generic result from an array', () => {
+        const result = success(['abc', 'def']);
+        const gResult = genericResult(result);
+        expect(gResult).toEqual({
+            success: true,
+            items: ['abc', 'def'],
+        });
+    });
+
     it('should be able to get a failure from a generic result', () => {
         const generic = {
             success: false as const,
