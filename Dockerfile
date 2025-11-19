@@ -26,7 +26,7 @@ COPY ./src/aux-server/aux-backend/schemas/migrations ./aux-backend/schemas/migra
 COPY ./src/aux-server/aux-backend/schemas/sqlite/auth.sqlite.prisma ./aux-backend/schemas/sqlite/auth.sqlite.prisma
 COPY ./src/aux-server/aux-backend/schemas/sqlite/migrations ./aux-backend/schemas/sqlite/migrations
 COPY ./src/aux-server/aux-backend/prisma/generated/libquery_engine-debian-openssl-3.0.x.so.node ./aux-backend/prisma/generated/libquery_engine-debian-openssl-3.0.x.so.node
-COPY ./src/aux-server/aux-backend/prisma-sqlite/generated/libquery_engine-debian-openssl-3.0.x.so.node ./aux-backend/prisma-sqlite/generated/libquery_engine-debian-openssl-3.0.x.so.node
+COPY ./src/aux-server/aux-backend/prisma/generated-sqlite/libquery_engine-debian-openssl-3.0.x.so.node ./aux-backend/prisma/generated-sqlite/libquery_engine-debian-openssl-3.0.x.so.node
 COPY ./docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x ./docker-entrypoint.sh
 

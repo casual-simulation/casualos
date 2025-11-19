@@ -55,6 +55,8 @@ const _axis = /*@__PURE__*/ new Vector3();
 let _coneGeometry: CylinderGeometry;
 
 export class ArrowHelper extends Object3D {
+    name = 'ArrowHelper';
+    
     line: Line2;
     lineMaterial: LineMaterial;
     cone: Mesh;

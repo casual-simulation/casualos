@@ -33,20 +33,19 @@ import {
     calculateLabelFontSize,
     calculateLabelWordWrapMode,
     getBotLabelPadding,
-    getBotOrientationMode,
 } from '@casual-simulation/aux-common';
 import { Text3D } from '../Text3D';
-import type { Object3D } from '@casual-simulation/three';
 import {
     Color,
     Vector3,
     Vector2,
+    Quaternion,
     PerspectiveCamera,
 } from '@casual-simulation/three';
 import type { WordBubbleElement } from '../WordBubbleElement';
 import type { Game } from '../Game';
 import { Orthographic_FrustrumSize } from '../CameraRigFactory';
-import { buildSRGBColor } from '../SceneUtils';
+import { buildSRGBColor, getRootAuxBot3D } from '../SceneUtils';
 import NotoSansKR from '@casual-simulation/aux-components/fonts/NotoSansKR/NotoSansKR-Regular.otf';
 import Roboto from '@casual-simulation/aux-components/fonts/Roboto/roboto-v18-latin-regular.woff';
 import { WordBubbleDecorator } from './WordBubbleDecorator';
@@ -85,7 +84,7 @@ export class LabelDecorator
     }
 
     botUpdated(calc: BotCalculationContext): void {
-        let label = calculateFormattedBotValue(
+        const label = calculateFormattedBotValue(
             calc,
             this.bot3D.bot,
             'auxLabel'
@@ -108,7 +107,15 @@ export class LabelDecorator
             botLength = botSize.z;
         }
 
+        const prevBillboard = this._billboard;
         this._billboard = anchor === 'floatingBillboard';
+
+        if (prevBillboard !== this._billboard) {
+            if (this.text3D && !this._billboard) {
+                // Reset the text3D rotation, it was previously being set while billboarding.
+                this.text3D.quaternion.identity();
+            }
+        }
 
         if (label) {
             if (!this.text3D) {
@@ -116,27 +123,9 @@ export class LabelDecorator
                 this._initialSetup = true;
             }
 
-            // Parent the labels directly to the bot.
-            // Labels do all kinds of weird stuff with their transforms, so this makes it easier to let them do that
-            // without worrying about what the AuxBot3D scale is etc.
-            // For billboarded bots and floating labels, we need to parent the label directly to the bot so that it does not rotate with the bot.
-            const orientationMode = getBotOrientationMode(calc, this.bot3D.bot);
-            let targetContainer: Object3D;
-            if (
-                anchor === 'floating' &&
-                (orientationMode === 'billboard' ||
-                    orientationMode === 'billboardTop' ||
-                    orientationMode === 'billboardFront')
-            ) {
-                targetContainer = this.bot3D;
-            } else if (anchor === 'floatingBillboard') {
-                targetContainer = this.bot3D;
-            } else {
-                targetContainer = this.bot3D.container;
-            }
-            if (this.text3D.parent !== targetContainer) {
-                this.text3D.parent?.remove(this.text3D);
-                targetContainer.add(this.text3D);
+            if (this.text3D.parent !== this.bot3D.container) {
+                this.text3D.removeFromParent();
+                this.bot3D.container.add(this.text3D);
             }
 
             const labelPadding = getBotLabelPadding(calc, this.bot3D.bot);
@@ -286,12 +275,19 @@ export class LabelDecorator
                     errorHandling: 'nudge',
                 });
 
-                this.text3D.quaternion.set(
+                const desiredWorldRotation = new Quaternion(
                     lookRotation.quaternion.x,
                     lookRotation.quaternion.y,
                     lookRotation.quaternion.z,
                     lookRotation.quaternion.w
-                );
+                )
+
+                const parentWorldRotation = new Quaternion();
+                this.text3D.parent?.getWorldQuaternion(parentWorldRotation);
+
+                const localRotation = parentWorldRotation.invert().multiply(desiredWorldRotation);
+                
+                this.text3D.quaternion.copy(localRotation);
                 this.text3D.updateMatrixWorld();
             }
         }
@@ -304,7 +300,7 @@ export class LabelDecorator
     disposeText3D(): void {
         if (this.text3D) {
             this.text3D.dispose();
-            this.bot3D.container.remove(this.text3D);
+            this.text3D.removeFromParent();
             this.text3D = null;
         }
     }
@@ -319,23 +315,32 @@ export class LabelDecorator
         }
     }
 
-    shouldUpdateWorldBubbleThisFrame(): boolean {
+    shouldUpdateWordBubbleThisFrame(): boolean {
         // Should update word bubble every frame if the label is in auto size mode.
         let rendered = this.text3D ? this.text3D.renderedThisFrame() : false;
         return this._autoSizeMode || rendered;
     }
 
     private _updateTextPosition() {
-        let botBoundingBox = this.bot3D.boundingBox;
+        let boundingSphere = this.bot3D.boundingSphere;
         let objCenter: Vector3 = null;
 
-        if (botBoundingBox) {
-            objCenter = new Vector3();
-            botBoundingBox.getCenter(objCenter);
+        if (boundingSphere) {
+            objCenter = boundingSphere.center.clone();
+        }
+        
+        let gridScale = this.bot3D.gridScale;
+        if (!this.bot3D.isOnGrid) {
+            const rootAuxBot3D = getRootAuxBot3D(this.bot3D);
+
+            if (rootAuxBot3D) {
+                gridScale = rootAuxBot3D.gridScale;
+            }
         }
 
         return this.text3D.setPositionForObject(
             this.bot3D.scaleContainer,
+            gridScale,
             objCenter
         );
     }

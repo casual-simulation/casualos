@@ -29,6 +29,8 @@ import { Vector2 } from 'three';
 const TILE_SIZE = 256;
 
 export class MapView extends Object3D {
+    name = 'MapView'; 
+    
     private _tileSize: number;
     private _gridSize: number;
     private _zoom: number;

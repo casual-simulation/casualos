@@ -225,6 +225,7 @@ import {
     setAppOutput,
     unregisterCustomApp,
     requestAuthData as calcRequestAuthData,
+    signOut as calcSignOut,
     createBot,
     defineGlobalBot as calcDefineGlobalBot,
     TEMPORARY_BOT_PARTITION_ID,
@@ -3758,6 +3759,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 reportInst,
                 requestAuthBot,
                 requestAuthBotInBackground,
+                signOut,
 
                 createRecord,
                 getPublicRecordKey,
@@ -9435,6 +9437,24 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function defineGlobalBot(name: string, botId: string): Promise<void> {
         const task = context.createTask();
         const event = calcDefineGlobalBot(name, botId, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Signs out the current user by revoking their session.
+     * Returns a promise that resolves when the sign out request has been processed.
+     *
+     * @example Sign out the current user
+     * await os.signOut();
+     * os.toast("Signed out!");
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-records
+     * @docname os.signOut
+     */
+    function signOut(): Promise<void> {
+        const task = context.createTask();
+        const event = calcSignOut(task.taskId);
         return addAsyncAction(task, event);
     }
 

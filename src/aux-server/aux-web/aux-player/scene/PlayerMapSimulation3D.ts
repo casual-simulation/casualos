@@ -22,6 +22,8 @@ import type { Game } from '../../shared/scene/Game';
 import { MapSimulation3D } from './MapSimulation3D';
 
 export class PlayerMapSimulation3D extends MapSimulation3D {
+    name = 'PlayerMapSimulation3D';
+    
     constructor(game: Game, simulation: BrowserSimulation) {
         super(MAP_PORTAL, game, simulation);
     }
