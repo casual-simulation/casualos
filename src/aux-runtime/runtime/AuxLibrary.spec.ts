@@ -118,6 +118,7 @@ import {
     setAppOutput,
     unregisterCustomApp,
     requestAuthData,
+    signOut,
     defineGlobalBot,
     TEMPORARY_BOT_PARTITION_ID,
     TEMPORARY_SHARED_PARTITION_ID,
@@ -3301,10 +3302,7 @@ describe('AuxLibrary', () => {
             it('should emit a RecordsCallProcedureAction', () => {
                 const promise: any = library.api.ai.listChatModels();
 
-                const expected = aiListChatModels(
-                    undefined,
-                    context.tasks.size
-                );
+                const expected = aiListChatModels({}, context.tasks.size);
 
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
@@ -7081,6 +7079,15 @@ describe('AuxLibrary', () => {
                 await waitAsync();
 
                 expect(resultBot).toBe(null);
+            });
+        });
+
+        describe('os.signOut()', () => {
+            it('should emit a sign_out action', () => {
+                const action: any = library.api.os.signOut();
+                const expected = signOut(context.tasks.size);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 

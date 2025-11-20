@@ -1202,6 +1202,7 @@ export class BotShapeDecorator
 
         // Container
         this.container = new Group();
+        this.container.name = `BotShape_Container`;
         this.bot3D.display.add(this.container);
 
         if (this._shape === 'cube') {

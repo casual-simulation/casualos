@@ -97,6 +97,7 @@ import type {
     WakeLockConfiguration,
     EnableXROptions,
     ShowConfirmOptions,
+    ShowAlertOptions,
     StoredAux,
     StoredAuxVersion2,
     StoredAuxVersion1,
@@ -117,6 +118,7 @@ import type {
     HideLoadingScreenAction,
     AddBotMapLayerAction,
     RemoveBotMapLayerAction,
+    TrackConfigBotTagsAction,
     GenerateQRCodeOptions,
 } from '@casual-simulation/aux-common/bots';
 import {
@@ -156,6 +158,7 @@ import {
     showInputForTag as calcShowInputForTag,
     showInput as calcShowInput,
     showConfirm as calcShowConfirm,
+    showAlert as calcShowAlert,
     replaceDragBot as calcReplaceDragBot,
     goToDimension as calcGoToDimension,
     goToURL as calcGoToURL,
@@ -224,6 +227,7 @@ import {
     setAppOutput,
     unregisterCustomApp,
     requestAuthData as calcRequestAuthData,
+    signOut as calcSignOut,
     createBot,
     defineGlobalBot as calcDefineGlobalBot,
     TEMPORARY_BOT_PARTITION_ID,
@@ -282,6 +286,7 @@ import {
     GET_DYNAMIC_LISTENERS_SYMBOL,
     ADD_BOT_LISTENER_SYMBOL,
     REMOVE_BOT_LISTENER_SYMBOL,
+    trackConfigBotTags as calcTrackConfigBotTags,
 } from '@casual-simulation/aux-common/bots';
 import type {
     AIChatOptions,
@@ -3705,9 +3710,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 _showInput: showInput,
                 showInput: makeMockableFunction(showInput, 'os.showInput'),
                 showConfirm,
+                showAlert,
                 goToDimension,
                 goToURL,
                 openURL,
+                syncConfigBotTagsToURL,
                 openDevConsole,
                 playSound,
                 bufferSound,
@@ -3755,6 +3762,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 reportInst,
                 requestAuthBot,
                 requestAuthBotInBackground,
+                signOut,
 
                 createRecord,
                 getPublicRecordKey,
@@ -8529,6 +8537,43 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Shows an alert dialog using the given options. Alert dialogs are useful for displaying information that needs to be manually dismissed by the user.
+     *
+     * Returns a promise that resolves when the user dismisses the alert.
+     *
+     * @param options the options that should be used for the alert dialog.
+     *
+     * @example Show a basic alert
+     * await os.showAlert({
+     *     title: 'Alert',
+     *     content: 'This is an important message.'
+     * });
+     *
+     * os.toast('Alert dismissed');
+     *
+     * @example Show an alert with custom button text
+     * await os.showAlert({
+     *     title: 'Warning',
+     *     content: 'Please read this carefully.',
+     *     dismissText: 'Got it'
+     * });
+     *
+     * @dochash actions/os/portals
+     * @docname os.showAlert
+     * @docgroup 10-showInput
+     */
+    function showAlert(options: ShowAlertOptions): Promise<void> {
+        if (!options) {
+            throw new Error(
+                'You must provide an options object for os.showAlert()'
+            );
+        }
+        const task = context.createTask();
+        const event = calcShowAlert(options, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
      * Loads the given dimension into the {@tag gridPortal} portal. Triggers the {@tag @onPortalChanged} shout for the gridPortal.
      * @param dimension the dimension that should be loaded.
      *
@@ -8575,6 +8620,30 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function openURL(url: string): OpenURLAction {
         const event = calcOpenURL(url);
+        return addAction(event);
+    }
+
+    /**
+     * Tells CasualOS to sync the given list of config bot tags in the URL query.
+     *
+     * @param tags The tags that should be synced to the URL.
+     * @param fullHistory Whether the a history entry should be created for every change to these tags. If false, then the URL will be updated but no additional history entries will be created. If true, then each change to the parameters will create a new history entry. Defaults to true.
+     *
+     * @example Sync the "page" config bot tag to the URL
+     * os.syncConfigBotTagsToURL(['page']);
+     *
+     * @example Sync the "scrollPosition" config bot tag to the URL, but don't create a history entry for every change
+     * os.syncConfigBotTagsToURL(['scrollPosition'], false);
+     *
+     * @dochash actions/os/portals
+     * @docname os.syncConfigBotTagsToURL
+     * @docgroup 10-go-to
+     */
+    function syncConfigBotTagsToURL(
+        tags: string[],
+        fullHistory: boolean = true
+    ): TrackConfigBotTagsAction {
+        const event = calcTrackConfigBotTags(tags, fullHistory);
         return addAction(event);
     }
 
@@ -9409,6 +9478,24 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function defineGlobalBot(name: string, botId: string): Promise<void> {
         const task = context.createTask();
         const event = calcDefineGlobalBot(name, botId, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Signs out the current user by revoking their session.
+     * Returns a promise that resolves when the sign out request has been processed.
+     *
+     * @example Sign out the current user
+     * await os.signOut();
+     * os.toast("Signed out!");
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-records
+     * @docname os.signOut
+     */
+    function signOut(): Promise<void> {
+        const task = context.createTask();
+        const event = calcSignOut(task.taskId);
         return addAsyncAction(task, event);
     }
 
@@ -17437,6 +17524,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param keypair the keypair that was used to create the signature.
      * @param signature the signature that was returned from {@link crypto.sign}.
      * @param data the data that was used in the call to {@link crypto.sign}.
+     *
+     * @dochash actions/crypto
+     * @docname crypto.verify
      */
     function verify(keypair: string, signature: string, data: string): boolean {
         if (typeof data === 'string') {
@@ -17450,6 +17540,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Gets performance stats from the runtime.
+     *
+     * @dochash actions/debuggers
+     * @docname perf.getStats
      */
     function getStats(): PerformanceStats {
         return {

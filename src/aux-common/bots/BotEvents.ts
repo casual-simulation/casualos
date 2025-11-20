@@ -89,6 +89,7 @@ export type ExtraActions =
     | GoToDimensionAction
     | GoToURLAction
     | OpenURLAction
+    | TrackConfigBotTagsAction
     | ShowInputForTagAction
     | SetForcedOfflineAction
     | ShellAction
@@ -130,6 +131,7 @@ export type AsyncActions =
     | IterableCompleteAction
     | IterableThrowAction
     | ShowInputAction
+    | ShowAlertAction
     | ShowConfirmAction
     | ShareAction
     | ImportAUXAction
@@ -169,6 +171,7 @@ export type AsyncActions =
     | RegisterHtmlAppAction
     | ReportInstAction
     | RequestAuthDataAction
+    | SignOutAction
     | DefineGlobalBotAction
     | ConvertGeolocationToWhat3WordsAction
     | ARSupportedAction
@@ -1617,6 +1620,44 @@ export interface ShowConfirmOptions {
 }
 
 /**
+ * Defines an event that is used to show an alert/info dialog.
+ * @dochash types/os/input
+ * @docname ShowAlertAction
+ */
+export interface ShowAlertAction extends AsyncAction {
+    type: 'show_alert';
+
+    /**
+     * The options for the alert dialog.
+     */
+    options: ShowAlertOptions;
+}
+
+/**
+ * Defines an interface that represents the options that can be used for an alert dialog.
+ *
+ * @dochash types/os/input
+ * @docname ShowAlertOptions
+ */
+export interface ShowAlertOptions {
+    /**
+     * The title that should be shown for the dialog.
+     */
+    title: string;
+
+    /**
+     * The content of the dialog.
+     */
+    content: string;
+
+    /**
+     * The text that should be shown on the "Dismiss" button.
+     * Defaults to "OK".
+     */
+    dismissText?: string;
+}
+
+/**
  * Defines an event that is used to set whether the connection is forced to be offline.
  * @docname SetForcedOfflineAction
  */
@@ -1660,6 +1701,42 @@ export interface OpenURLAction extends Action {
      * The URL to open.
      */
     url: string;
+}
+
+/**
+ * Defines an event that notifies the system that a config bot tag should be tracked in the URL.
+ *
+ * @dochash types/os/portals
+ * @docname TrackConfigBotTagsAction
+ */
+export interface TrackConfigBotTagsAction extends Action {
+    type: 'track_config_bot_tags';
+
+    /**
+     * The tag names that should be tracked.
+     */
+    tags: string[];
+
+    /**
+     * Whether the a history entry should be created for every change to these tags.
+     * If false, then the URL will be updated but no additional history entries will be created.
+     * If true, then each change to the parameters will create a new history entry.
+     */
+    fullHistory: boolean;
+}
+
+/**
+ * Creates a TrackConfigBotTagsAction that notifies the system that a config bot tag should be tracked in the URL.
+ */
+export function trackConfigBotTags(
+    tags: string[],
+    fullHistory: boolean
+): TrackConfigBotTagsAction {
+    return {
+        type: 'track_config_bot_tags',
+        tags,
+        fullHistory,
+    };
 }
 
 /**
@@ -3385,6 +3462,16 @@ export interface RequestAuthDataAction extends AsyncAction {
 }
 
 /**
+ * Defines an event that requests the user be signed out.
+ *
+ * @dochash types/os/records
+ * @docname SignOutAction
+ */
+export interface SignOutAction extends AsyncAction {
+    type: 'sign_out';
+}
+
+/**
  * Defines an interface that represents a authenticated user.
  *
  * @dochash types/os/records
@@ -4859,6 +4946,22 @@ export function showConfirm(
 }
 
 /**
+ * Creates a new ShowAlertAction.
+ * @param options The options for the action.
+ * @param taskId The ID of the async task.
+ */
+export function showAlert(
+    options: ShowAlertOptions,
+    taskId?: number | string
+): ShowAlertAction {
+    return {
+        type: 'show_alert',
+        options,
+        taskId,
+    };
+}
+
+/**
  * Creates a new SetForcedOfflineAction event.
  * @param offline Whether the connection should be offline.
  */
@@ -6057,6 +6160,17 @@ export function requestAuthData(
     return {
         type: 'request_auth_data',
         requestInBackground,
+        taskId,
+    };
+}
+
+/**
+ * Creates a SignOutAction.
+ * @param taskId The ID of the async task.
+ */
+export function signOut(taskId?: string | number): SignOutAction {
+    return {
+        type: 'sign_out',
         taskId,
     };
 }

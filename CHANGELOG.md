@@ -1,8 +1,61 @@
 # CasualOS Changelog
 
-## V3.8.0
+## V3.8.2
 
 #### Date: TBD
+
+### :rocket: Features
+
+-   Added the `os.signOut()` function to sign out the current user
+    -   Returns a promise that resolves when the sign out request has been processed
+    -   Uses the auth helper's logout method to properly sign out the user
+
+### :bug: Bug Fixes
+
+-   Various fixes to bot labels:
+    -   Fixed z-fighting that was common on floating labels in the map portal.
+    -   Fixed bug that would cause bots with empty floating labels to prevent the page from loading properly.
+    -   Fixed floating label positioning in the map portal.
+    -   Fixed floating label billboarding on bots with non-identity rotations.
+    -   Fixed floating label bot spacing to stay consistent between grid's of different scales.
+    -   Fixed floating label shape generation to be compatible with the map portal.
+    -   Fixed label transforms not being updated properly when switching between `labelPosition` types.
+    -   Fixed child bot decorators not being updated when a transformer bot changes scale.
+-   Fixed internal `DebugObjectManager` not rendering properly when in the map portal.
+-   Disabled double-click to zoom in the map portal.
+-   Fixed camera rotation in mapPortal continuing after releasing the right mouse button outside the browser window.
+
+## V3.8.1
+
+#### Date: 11/5/2025
+
+### :rocket: Features
+
+-   Added `os.showAlert()` function to display informational alert dialogs with a single dismiss button
+    -   Accepts `title`, `content`, and optional `dismissText` parameters
+    -   Returns a promise that resolves when the dialog is dismissed
+    -   Useful for displaying important information that requires user acknowledgment
+-   Increased the number of segments on `skybox` form spheres.
+-   Changed the "Connection lost" and "Connection regained" toast messages to be simpler.
+-   Added the following importable libraries:
+    -   [`rxjs` and `rxjs/operators`](https://rxjs.dev/)
+    -   [`es-toolkit`](https://es-toolkit.dev/)
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `ai.listChatModels()` wouldn't work unless an options object was provided.
+-   Fixed an issue where empty JSX expressions with comments weren't supported.
+-   Fixed an issue where `portalPannableMin` and `portalPannableMax` constraints did not properly restrict camera movement when the camera was rotated. The fix includes:
+    -   Removed camera-relative constraint checking that failed at different rotation angles
+    -   Added world-space clamping after camera target updates
+-   Fixed an issue where CasualOS wasn't able to properly reload shared documents with nested maps or arrays.
+-   Reduced the amount of code that gets cached on first load.
+-   Changed the QR and Barcode components to load lazily to reduce the size of the initial load.
+-   Fixed several issues where `export` statements wouldn't be compiled properly.
+
+## V3.8.0
+
+#### Date: 10/14/2025
 
 ### :rocket: Features
 
@@ -10,6 +63,10 @@
 -   Added the `os.eraseInst(recordKeyOrName, instName, options?)` function to delete insts programmatically.
 -   Added the `ai.listChatModels()` function to list the available chat models that the user can use based on their subscription.
 -   Changed webhooks to record logs to the same record that the webhook is stored in.
+-   Add the `os.syncConfigBotTagsToURL(tags, fullHistory?)` function.
+    -   Tells CasualOS to sync the given list of config bot tags in the URL query.
+    -   `tags` - The tags that should be synced to the URL.
+    -   `fullHistory` - Whether the a history entry should be created for every change to these tags. If false, then the URL will be updated but no additional history entries will be created. If true, then each change to the parameters will create a new history entry. Defaults to true.
 
 ### :bug: Bug Fixes
 
@@ -19,6 +76,7 @@
 -   Fixed an issue where clicking the sheetPortal button in the systemPortal would only infer the dimension from gridPortal. Now it checks mapPortal first, then gridPortal, before requesting user input.
 -   Fixed an issue where it was not possible to publish packages to studios.
 -   Changed to ensure that the "Sign In" dialog is shown to unauthenticated users who are trying to access a public inst on Privo-enabled deployments.
+-   Static inst deletion now properly removes all associated data from browser storage. Previously, deleting a local inst would only remove it from the list while leaving bot data behind, causing old data to reappear when creating a new inst with the same name.
 
 ## V3.7.1
 

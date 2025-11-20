@@ -90,6 +90,7 @@ import {
 } from 'geo-three';
 import { MapView } from './map/MapView';
 import { CustomMapProvider } from './map/CustomMapProvider';
+import { AuxBot3D } from './AuxBot3D';
 
 /**
  * The available map providers that can be used for map forms.
@@ -238,7 +239,7 @@ export function createSkybox(
     color: number,
     size: number = 0.1
 ) {
-    const geometry = new SphereBufferGeometry(size, 20, 18);
+    const geometry = new SphereBufferGeometry(size, 128, 64);
     let material = baseAuxSkyboxMeshMaterial();
     material.color = new Color(color);
 
@@ -440,6 +441,61 @@ export function findParentScene(object3d: Object3D): Scene {
     } else {
         return findParentScene(object3d.parent);
     }
+}
+/**
+ * Finds the nearest parent in the hierarchy that is an instance of `AuxBot3D`.
+ *
+ * Traverses upward through the `.parent` chain of the given `bot3D` object
+ * until it finds the first parent that is an `AuxBot3D`. If no such parent exists,
+ * the function returns `null`.
+ * @param {AuxBot3D} bot3D The starting `AuxBot3D` object whose parent hierarchy to search.
+ * @returns {AuxBot3D | null} The closest parent that is an `AuxBot3D`, or `null` if none is found.
+ */
+export function getParentAuxBot3D(bot3D: AuxBot3D): AuxBot3D | null {
+    if (!bot3D) {
+        return null;
+    }
+
+    let parent = bot3D.parent;
+
+    while (parent) {
+        if (parent instanceof AuxBot3D) {
+            return parent;
+        }
+        parent = parent.parent;
+    }
+
+    return null;
+}
+
+/**
+ * Retrieves the topmost (root) `AuxBot3D` in the parent hierarchy.
+ *
+ * This function walks up the `.parent` chain starting from the provided `bot3D`,
+ * remembering each object that is an `AuxBot3D`. Once the top of the hierarchy
+ * is reached (where `.parent` is `null` or `undefined`), the function returns
+ * the highest-level `AuxBot3D` found.
+ * @param {AuxBot3D} bot3D The starting `AuxBot3D` object whose hierarchy to search.
+ * @returns {AuxBot3D | null} The highest-level `AuxBot3D` ancestor, or `null` if none exists.
+ */
+export function getRootAuxBot3D(bot3D: AuxBot3D): AuxBot3D | null {
+    if (!bot3D) {
+        return null;
+    }
+
+    let current: Object3D = bot3D;
+    let lastAuxBot: AuxBot3D | null = null;
+
+    while (current) {
+        if (current instanceof AuxBot3D) {
+            lastAuxBot = current;
+        }
+
+        // Move up the parent chain
+        current = current.parent;
+    }
+
+    return lastAuxBot;
 }
 
 /**

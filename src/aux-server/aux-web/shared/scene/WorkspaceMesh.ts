@@ -56,6 +56,8 @@ import { buildSRGBColor } from './SceneUtils';
  * Defines a mesh that represents a workspace.
  */
 export class WorkspaceMesh extends GameObject {
+    name = 'WorkspaceMesh';
+
     private _debugMesh: Object3D;
     private _debug: boolean;
     private _debugInfo: WorkspaceMeshDebugInfo;
