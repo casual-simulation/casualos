@@ -30,7 +30,7 @@ import type { AllGeoJSON } from '@turf/turf';
 // Abstract base class remains mostly unchanged
 export abstract class MapOverlay extends Object3D {
     name = 'MapOverlay';
-    
+
     /* The height of the overlay in world units. */
     protected _overlayHeight: number;
     /* The width of the overlay in world units. */

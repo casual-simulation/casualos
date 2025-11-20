@@ -76,7 +76,7 @@ export abstract class Simulation3D
     implements SubscriptionLike, AuxBotVisualizerFinder
 {
     name = 'Simulation3D';
-    
+
     protected _subs: SubscriptionLike[];
 
     /**

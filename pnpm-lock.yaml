@@ -131,6 +131,9 @@ importers:
       '@types/offscreencanvas':
         specifier: ^2019.6.4
         version: 2019.7.3
+      '@types/qrcode':
+        specifier: 1.5.6
+        version: 1.5.6
       '@types/redis':
         specifier: ^2.8.32
         version: 2.8.32
@@ -1267,6 +1270,9 @@ importers:
       prisma:
         specifier: ^6.14.0
         version: 6.14.0(typescript@5.8.3)
+      qrcode:
+        specifier: ^1.5.4
+        version: 1.5.4
       redis:
         specifier: 4.6.10
         version: 4.6.10
@@ -3776,7 +3782,6 @@ packages:
 
   '@libsql/linux-arm64-gnu@0.5.22':
     resolution: {integrity: sha512-KSdnOMy88c9mpOFKUEzPskSaF3VLflfSUCBwas/pn1/sV3pEhtMF6H8VUCd2rsedwoukeeCSEONqX7LLnQwRMA==}
-    cpu: [arm64]
     os: [linux]
 
   '@libsql/linux-arm64-musl@0.5.20':
@@ -3791,7 +3796,6 @@ packages:
 
   '@libsql/linux-x64-gnu@0.5.22':
     resolution: {integrity: sha512-kNBHaIkSg78Y4BqAdgjcR2mBilZXs4HYkAmi58J+4GRwDQZh5fIUWbnQvB9f95DkWUIGVeenqLRFY2pcTmlsew==}
-    cpu: [x64]
     os: [linux]
 
   '@libsql/linux-x64-musl@0.5.20':
@@ -3806,7 +3810,6 @@ packages:
 
   '@libsql/win32-x64-msvc@0.5.22':
     resolution: {integrity: sha512-Fj0j8RnBpo43tVZUVoNK6BV/9AtDUM5S7DF3LB4qTYg1LMSZqi3yeCneUTLJD6XomQJlZzbI4mst89yspVSAnA==}
-    cpu: [x64]
     os: [win32]
 
   '@livekit/protocol@1.15.0':
@@ -6374,6 +6377,9 @@ packages:
 
   '@types/prop-types@15.7.14':
     resolution: {integrity: sha512-gNMvNH49DJ7OJYv+KAKn0Xp45p8PLl6zo2YnvDIbTd4J6MER2BmWN49TG7n9LvkyihINxeKW8+3bfS2yDC9dzQ==}
+
+  '@types/qrcode@1.5.6':
+    resolution: {integrity: sha512-te7NQcV2BOvdj2b1hCAHzAoMNuj65kNBMz0KBaxM6c3VGBOhU0dURQKOtH8CFNI/dsKkwlv32p26qYQTWoB5bw==}
 
   '@types/qs@6.9.18':
     resolution: {integrity: sha512-kK7dgTYDyGqS+e2Q4aK9X3D7q234CIZ1Bv0q/7Z5IwRDoADNU81xXJK/YVyLbLTZCoIwUoDoffFeF+p/eIklAA==}
@@ -10784,7 +10790,6 @@ packages:
 
   libsql@0.5.20:
     resolution: {integrity: sha512-hkWCsiwTbNsrKeWqPh91ZZEcLDo0+WUnFv2QzITD33F7Er9KOlr7N2SGfNjAbnkciN+iPJ7g108Jkno1JFmzTw==}
-    cpu: [x64, arm64, wasm32, arm]
     os: [darwin, linux, win32]
 
   lie@3.3.0:
@@ -23276,6 +23281,10 @@ snapshots:
       kleur: 3.0.3
 
   '@types/prop-types@15.7.14': {}
+
+  '@types/qrcode@1.5.6':
+    dependencies:
+      '@types/node': 18.19.98
 
   '@types/qs@6.9.18': {}
 

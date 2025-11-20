@@ -17,7 +17,10 @@
  */
 import { AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import type { AuxBot3D } from '../AuxBot3D';
-import type { BotCalculationContext, BotLabelAnchor } from '@casual-simulation/aux-common';
+import type {
+    BotCalculationContext,
+    BotLabelAnchor,
+} from '@casual-simulation/aux-common';
 import {
     calculateBotValue,
     calculateFormattedBotValue,
@@ -73,9 +76,10 @@ export class WordBubbleDecorator extends AuxBot3DDecoratorBase {
 
         const prevAnchor = this._anchor;
         this._anchor = getBotLabelAnchor(calc, this.bot3D.bot);
-        
+
         // Update word bubble parenting.
-        if (prevAnchor !== this._anchor || // Case 1: Label anchor changed
+        if (
+            prevAnchor !== this._anchor || // Case 1: Label anchor changed
             (prevLabelText && !this._labelText) || // Case 2: Label has become empty
             (!prevLabelText && this._labelText) // Case 3: Label has become filled
         ) {
@@ -85,7 +89,7 @@ export class WordBubbleDecorator extends AuxBot3DDecoratorBase {
 
             if (isFloatingAnchor(this._anchor) && this._labelText) {
                 this.wordBubble.visible = true;
-                
+
                 if (this._anchor === 'floatingBillboard') {
                     this._label.text3D.add(this.wordBubble);
                 } else {

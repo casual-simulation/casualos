@@ -40,7 +40,7 @@ import type { CoordinateTransformer } from './CoordinateSystem';
  */
 export class DimensionGroup3D extends GameObject implements DimensionGroup {
     name = 'DimensionGroup3D';
-    
+
     private _helper: DimensionGroupHelper<AuxBot3D>;
     /**
      * The coordinate transformer that should be used by the group.

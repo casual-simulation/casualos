@@ -280,13 +280,15 @@ export class LabelDecorator
                     lookRotation.quaternion.y,
                     lookRotation.quaternion.z,
                     lookRotation.quaternion.w
-                )
+                );
 
                 const parentWorldRotation = new Quaternion();
                 this.text3D.parent?.getWorldQuaternion(parentWorldRotation);
 
-                const localRotation = parentWorldRotation.invert().multiply(desiredWorldRotation);
-                
+                const localRotation = parentWorldRotation
+                    .invert()
+                    .multiply(desiredWorldRotation);
+
                 this.text3D.quaternion.copy(localRotation);
                 this.text3D.updateMatrixWorld();
             }
@@ -328,7 +330,7 @@ export class LabelDecorator
         if (boundingSphere) {
             objCenter = boundingSphere.center.clone();
         }
-        
+
         let gridScale = this.bot3D.gridScale;
         if (!this.bot3D.isOnGrid) {
             const rootAuxBot3D = getRootAuxBot3D(this.bot3D);

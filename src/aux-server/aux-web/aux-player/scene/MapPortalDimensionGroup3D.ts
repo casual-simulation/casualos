@@ -22,7 +22,7 @@ import type { MapSimulation3D } from './MapSimulation3D';
 
 export class MapPortalDimensionGroup3D extends DimensionGroup3D {
     name = 'MapPortalDimensionGroup3D';
-    
+
     simulation3D: MapSimulation3D; // Override base class type.
 
     constructor(

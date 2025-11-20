@@ -88,6 +88,7 @@
         "@casual-simulation/vue-shortkey": "^3.2.7",
         "@casual-simulation/websocket": "^3.5.3",
         "@chenfengyuan/vue-qrcode": "^1.0.0",
+        "qrcode": "^1.5.4",
         "@ericblade/quagga2": "1.4.2",
         "@juggle/resize-observer": "2.3.0",
         "@libsql/linux-arm64-gnu": "^0.5.22",
