@@ -42,7 +42,7 @@ import { Object3D } from '@casual-simulation/three';
 
 export abstract class PlayerSimulation3D extends Simulation3D {
     name = 'PlayerSimulation3D';
-    
+
     /**
      * The map of portal tags to their related groups.
      */

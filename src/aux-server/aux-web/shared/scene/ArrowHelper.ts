@@ -56,7 +56,7 @@ let _coneGeometry: CylinderGeometry;
 
 export class ArrowHelper extends Object3D {
     name = 'ArrowHelper';
-    
+
     line: Line2;
     lineMaterial: LineMaterial;
     cone: Mesh;

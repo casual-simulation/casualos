@@ -175,6 +175,7 @@ import {
     removeMapLayer,
     ADD_BOT_LISTENER_SYMBOL,
     GET_DYNAMIC_LISTENERS_SYMBOL,
+    generateQRCode,
 } from '@casual-simulation/aux-common/bots';
 import { types } from 'util';
 import { attachRuntime, detachRuntime } from './RuntimeEvents';
@@ -5129,6 +5130,20 @@ describe('AuxLibrary', () => {
                 const action = library.api.os.hideQRCode();
                 expect(action).toEqual(showQRCode(false));
                 expect(context.actions).toEqual([showQRCode(false)]);
+            });
+        });
+
+        describe('os.generateQRCode()', () => {
+            it('should emit a GenerateQRCode action', async () => {
+                const promise: any = library.api.os.generateQRCode('hello');
+                const expected = generateQRCode(
+                    'hello',
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 

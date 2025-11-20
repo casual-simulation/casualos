@@ -9,6 +9,7 @@
 -   Added the `os.signOut()` function to sign out the current user
     -   Returns a promise that resolves when the sign out request has been processed
     -   Uses the auth helper's logout method to properly sign out the user
+-   Added the `os.generateQRCode(code)` function to generate a QR code as a data URL that can be used in an img tag or as a bot's formAddress.
 -   Added basic server side rendering.
     -   Currently, this is used for injecting the web config so that CasualOS doesn't need to make a call to `/api/config` on initialization.
 

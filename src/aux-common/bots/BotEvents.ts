@@ -213,7 +213,8 @@ export type AsyncActions =
     | CalculateScreenCoordinatesFromPositionAction
     | AddMapLayerAction
     | RemoveMapLayerAction
-    | HideLoadingScreenAction;
+    | HideLoadingScreenAction
+    | GenerateQRCodeAction;
 
 export type RemoteBotActions =
     | GetRemoteCountAction
@@ -849,6 +850,8 @@ export interface OpenConsoleAction extends Action {
 
 /**
  * An event that is used to show or hide a QR Code on screen.
+ *
+ * @dochash types/os/barcodes
  * @docname ShowQRCodeAction
  */
 export interface ShowQRCodeAction extends Action {
@@ -863,6 +866,129 @@ export interface ShowQRCodeAction extends Action {
      * The code to display.
      */
     code: string;
+}
+
+/**
+ * An event that is used to generate a QR Code as a [data URL image](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URIs).
+ *
+ * @dochash types/os/barcodes
+ * @docname GenerateQRCodeAction
+ */
+export interface GenerateQRCodeAction extends AsyncAction {
+    type: 'generate_qr_code';
+
+    /**
+     * The code to generate.
+     */
+    code: string;
+
+    /**
+     * The options for generating the QR code.
+     */
+    options?: GenerateQRCodeOptions;
+}
+
+/**
+ * The options that can be used when generating a QR code.
+ *
+ * @dochash types/os/barcodes
+ * @docname GenerateQRCodeOptions
+ */
+export interface GenerateQRCodeOptions {
+    /**
+     * The error correction level to use for the QR code.
+     *
+     * Defaults to 'medium'.
+     *
+     * 'low' - 7% of codewords can be restored.
+     * 'medium' - 15% of codewords can be restored.
+     * 'quartile' - 25% of codewords can be restored.
+     * 'high' - 30% of codewords can be restored.
+     */
+    errorCorrectionLevel?: 'low' | 'medium' | 'quartile' | 'high';
+
+    /**
+     * The image format that should be used for the generated QR code.
+     *
+     * @see https://www.the-qrcode-generator.com/blog/qr-code-quiet-zone
+     */
+    imageFormat?: 'image/jpeg' | 'image/webp' | 'image/png';
+
+    /**
+     * The QR Code version to use.
+     * Must be between 1 and 40.
+     *
+     * Higher values store more data, lower values store less data.
+     *
+     * Defaults to automatic selection based on the length of the code.
+     *
+     * @see https://www.qrcode.com/en/about/version.html
+     */
+    version?: number;
+
+    /**
+     * The mask pattern to use for the QR Code.
+     *
+     * Must be between 0 and 7.
+     *
+     * If not specified, then the best mask pattern will be chosen automatically.
+     *
+     * @see https://stackoverflow.com/a/68280826/1832856
+     */
+    maskPattern?: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+
+    /**
+     * The scale factor that the QR code should have.
+     * That is, how many pixels each module (black or white dot) should be.
+     * A value of `1` means `1px` per modules (black dots).
+     *
+     * Defaults to 4
+     */
+    scale?: number;
+
+    /**
+     * Defines how wide the quiet zone should be around the QR code.
+     *
+     * Defaults to `4`.
+     */
+    margin?: number;
+
+    /**
+     * The width of the generated QR code in pixels. Defaults to generating the smallest code that can fit the data.
+     *
+     * If both width and scale are specified, then width takes precedence.
+     * If the code is too small to fit the code with the given width, then the width will be increased to fit.
+     *
+     * Defaults to `256`.
+     */
+    width?: number;
+
+    /**
+     * The color options for the QR Code.
+     */
+    color?: QRCodeColorOptions;
+}
+
+/**
+ * The color options for a QR Code.
+ *
+ * @dochash types/os/barcodes
+ * @docname QRCodeColorOptions
+ */
+export interface QRCodeColorOptions {
+    /**
+     * The color of dark modules. Must be in hex RGBA format.
+     *
+     * Defaults to `#000000ff` (black).
+     */
+    dark?: string;
+
+    /**
+     * The color of light modules. Must be in hex RGBA format.
+     *
+     * Defaults to `#ffffffff` (white).
+     */
+    light?: string;
 }
 
 /**
@@ -4545,6 +4671,23 @@ export function showQRCode(open: boolean, code?: string): ShowQRCodeAction {
         type: 'show_qr_code',
         open: open,
         code: code,
+    };
+}
+
+/**
+ * Creates a new GenerateQRCodeAction.
+ * @param code The code that should be generated.
+ */
+export function generateQRCode(
+    code?: string,
+    options?: GenerateQRCodeOptions,
+    taskId?: number | string
+): GenerateQRCodeAction {
+    return {
+        type: 'generate_qr_code',
+        code,
+        options,
+        taskId,
     };
 }
 

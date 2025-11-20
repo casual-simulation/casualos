@@ -4029,6 +4029,131 @@ export interface SearchDocument {
     [key: string]: any;
 }
 
+
+/**
+ * An event that is used to generate a QR Code as a [data URL image](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URIs).
+ * 
+ * @dochash types/os/barcodes
+ * @docname GenerateQRCodeAction
+ */
+export interface GenerateQRCodeAction extends AsyncAction {
+    type: 'generate_qr_code';
+
+    /**
+     * The code to generate.
+     */
+    code: string;
+
+    /**
+     * The options for generating the QR code.
+     */
+    options?: GenerateQRCodeOptions;
+}
+
+/**
+ * The options that can be used when generating a QR code.
+ * 
+ * @dochash types/os/barcodes
+ * @docname GenerateQRCodeOptions
+ */
+export interface GenerateQRCodeOptions {
+
+    /**
+     * The error correction level to use for the QR code.
+     * 
+     * Defaults to 'medium'.
+     * 
+     * 'low' - 7% of codewords can be restored.
+     * 'medium' - 15% of codewords can be restored.
+     * 'quartile' - 25% of codewords can be restored.
+     * 'high' - 30% of codewords can be restored.
+     */
+    errorCorrectionLevel?: 'low' | 'medium' | 'quartile' | 'high';
+
+    /**
+     * The image format that should be used for the generated QR code.
+     * 
+     * @see https://www.the-qrcode-generator.com/blog/qr-code-quiet-zone
+     */
+    imageFormat?: 'image/jpeg' | 'image/webp' | 'image/png';
+
+    /**
+     * The QR Code version to use.
+     * Must be between 1 and 40.
+     * 
+     * Higher values store more data, lower values store less data.
+     * 
+     * Defaults to automatic selection based on the length of the code.
+     * 
+     * @see https://www.qrcode.com/en/about/version.html
+     */
+    version?: number;
+
+    /**
+     * The mask pattern to use for the QR Code.
+     * 
+     * Must be between 0 and 7.
+     * 
+     * If not specified, then the best mask pattern will be chosen automatically.
+     * 
+     * @see https://stackoverflow.com/a/68280826/1832856
+     */
+    maskPattern?: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+
+    /**
+     * The scale factor that the QR code should have.
+     * That is, how many pixels each module (black or white dot) should be.
+     * A value of `1` means `1px` per modules (black dots).
+     * 
+     * Defaults to 4
+     */
+    scale?: number;
+
+    /**
+     * Defines how wide the quiet zone should be around the QR code.
+     * 
+     * Defaults to `4`.
+     */
+    margin?: number;
+
+    /**
+     * The width of the generated QR code in pixels. Defaults to generating the smallest code that can fit the data.
+     * 
+     * If both width and scale are specified, then width takes precedence.
+     * If the code is too small to fit the code with the given width, then the width will be increased to fit.
+     * 
+     * Defaults to `256`.
+     */
+    width?: number;
+
+    /**
+     * The color options for the QR Code.
+     */
+    color?: QRCodeColorOptions;
+}
+
+/**
+ * The color options for a QR Code.
+ * 
+ * @dochash types/os/barcodes
+ * @docname QRCodeColorOptions
+ */
+export interface QRCodeColorOptions {
+    /**
+     * The color of dark modules. Must be in hex RGBA format.
+     * 
+     * Defaults to `#000000ff` (black).
+     */
+    dark?: string;
+
+    /**
+     * The color of light modules. Must be in hex RGBA format.
+     * 
+     * Defaults to `#ffffffff` (white).
+     */
+    light?: string;
+}
+
 export type RecordSearchDocumentResult = RecordSearchDocumentSuccess | RecordSearchDocumentFailure;
 
 export interface RecordSearchDocumentSuccess extends SearchDocument {
@@ -13966,6 +14091,37 @@ interface Os {
      * Hides the QR Code.
      */
     hideQRCode(): ShowQRCodeAction;
+
+    /**
+     * Generates a [QR Code](https://en.wikipedia.org/wiki/QR_code) for the given data and returns a [Data URL](https://developer.mozilla.org/en-US/docs/web/http/basics_of_http/data_urls) that can be used in an img tag or as a {@tag formAddress}.
+     *
+     * Returns a promise that resolves with the data URL string.
+     *
+     * @param code the text or data that the generated QR Code should represent.
+     * @param options the options that should be used when generating the QR Code.
+     *
+     * @example Generate a QR Code that contains the data "hello".
+     * const qrCodeUrl = await os.generateQRCode("hello");
+     * masks.formAddress = qrCodeUrl;
+     *
+     * @example Generate a QR Code that links to https://example.com
+     * const qrCodeUrl = await os.generateQRCode("https://example.com");
+     * masks.formAddress = qrCodeUrl;
+     * 
+     * @example Generate a QR Code with custom colors.
+     * const qrCodeUrl = await os.generateQRCode("Custom QR Code", {
+     *   color: {
+     *    dark: "#0000FFFF",
+     *    light: "#FFFF00FF"
+     *   }
+     * });
+     * masks.formAddress = qrCodeUrl;
+     *
+     * @dochash actions/os/barcodes
+     * @docname os.generateQRCode
+     * @docgroup 10-qr-code
+     */
+    generateQRCode(code: string, options?: GenerateQRCodeOptions): Promise<string>;
 
     /**
      * Opens the barcode scanner.
