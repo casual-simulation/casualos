@@ -912,6 +912,45 @@ export default class PlayerApp extends Vue {
                     } else {
                         this._hideQRCode();
                     }
+                } else if (e.type === 'generate_qr_code') {
+                    try {
+                        const QRCode = await import('qrcode');
+                        const errorCorrectionLevel =
+                            e.options?.errorCorrectionLevel;
+                        const code = await QRCode.toDataURL(e.code, {
+                            errorCorrectionLevel:
+                                errorCorrectionLevel === 'high'
+                                    ? 'H'
+                                    : errorCorrectionLevel === 'medium'
+                                    ? 'M'
+                                    : errorCorrectionLevel === 'low'
+                                    ? 'L'
+                                    : errorCorrectionLevel === 'quartile'
+                                    ? 'Q'
+                                    : 'M',
+                            type: e.options?.imageFormat || 'image/png',
+                            width: e.options?.width,
+                            margin: e.options?.margin,
+                            scale: e.options?.scale,
+                            color: e.options?.color
+                                ? {
+                                      dark: e.options.color.dark,
+                                      light: e.options.color.light,
+                                  }
+                                : undefined,
+                            maskPattern: e.options?.maskPattern,
+                            version: e.options?.version,
+                        });
+
+                        simulation.helper.transaction(
+                            asyncResult(e.taskId, code)
+                        );
+                    } catch (ex) {
+                        console.error('Error generating QR code:', ex);
+                        simulation.helper.transaction(
+                            asyncError(e.taskId, ex.toString())
+                        );
+                    }
                 } else if (e.type === 'show_barcode') {
                     if (e.open) {
                         this._showBarcode(e.code, e.format);
@@ -1289,6 +1328,17 @@ export default class PlayerApp extends Vue {
 
                         simulation.helper.transaction(
                             asyncResult(e.taskId, id, false)
+                        );
+                    } catch (ex) {
+                        simulation.helper.transaction(
+                            asyncError(e.taskId, ex.toString())
+                        );
+                    }
+                } else if (e.type === 'sign_out') {
+                    try {
+                        await simulation.auth.primary.logout();
+                        simulation.helper.transaction(
+                            asyncResult(e.taskId, null, false)
                         );
                     } catch (ex) {
                         simulation.helper.transaction(

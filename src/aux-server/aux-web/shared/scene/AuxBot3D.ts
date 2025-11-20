@@ -39,6 +39,8 @@ import { buildSRGBColor, safeSetParent } from './SceneUtils';
  * Defines a class that is able to display Aux bots.
  */
 export class AuxBot3D extends GameObject implements AuxBotVisualizer {
+    name = 'AuxBot3D';
+
     /**
      * The dimension this bot visualization was created for.
      */
@@ -196,10 +198,15 @@ export class AuxBot3D extends GameObject implements AuxBotVisualizer {
         this.dimensionGroup = dimensionGroup;
         this.colliders = colliders;
         this.dimension = dimension;
+        this.name = this.bot ? `AuxBot3D_${String(this.bot.id)}` : this.name;
         this.container = new Group();
+        this.container.name = 'AuxBot3D_Container';
         this.display = new Group();
+        this.display.name = 'AuxBot3D_Display';
         this.scaleContainer = new Group();
+        this.scaleContainer.name = 'AuxBot3D_ScaleContainer';
         this.transformContainer = new Group();
+        this.transformContainer.name = 'AuxBot3D_TransformContainer';
         this.transformContainer.userData.isBotTransformContainer = true;
         this.add(this.container);
         this.container.add(this.scaleContainer);

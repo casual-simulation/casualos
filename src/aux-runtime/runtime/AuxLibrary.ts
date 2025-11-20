@@ -119,6 +119,7 @@ import type {
     AddBotMapLayerAction,
     RemoveBotMapLayerAction,
     TrackConfigBotTagsAction,
+    GenerateQRCodeOptions,
 } from '@casual-simulation/aux-common/bots';
 import {
     hasValue,
@@ -150,6 +151,7 @@ import {
     showUploadAuxFile as calcShowUploadAuxFile,
     openQRCodeScanner as calcOpenQRCodeScanner,
     showQRCode as calcShowQRCode,
+    generateQRCode as calcGenerateQRCode,
     openBarcodeScanner as calcOpenBarcodeScanner,
     showBarcode as calcShowBarcode,
     importAUX as calcImportAUX,
@@ -225,6 +227,7 @@ import {
     setAppOutput,
     unregisterCustomApp,
     requestAuthData as calcRequestAuthData,
+    signOut as calcSignOut,
     createBot,
     defineGlobalBot as calcDefineGlobalBot,
     TEMPORARY_BOT_PARTITION_ID,
@@ -3579,6 +3582,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 closeQRCodeScanner,
                 showQRCode,
                 hideQRCode,
+                generateQRCode,
                 openBarcodeScanner,
                 closeBarcodeScanner,
                 showBarcode,
@@ -3758,6 +3762,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 reportInst,
                 requestAuthBot,
                 requestAuthBotInBackground,
+                signOut,
 
                 createRecord,
                 getPublicRecordKey,
@@ -7447,6 +7452,44 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Generates a [QR Code](https://en.wikipedia.org/wiki/QR_code) for the given data and returns a [Data URL](https://developer.mozilla.org/en-US/docs/web/http/basics_of_http/data_urls) that can be used in an img tag or as a {@tag formAddress}.
+     *
+     * Returns a promise that resolves with the data URL string.
+     *
+     * @param code the text or data that the generated QR Code should represent.
+     * @param options the options that should be used when generating the QR Code.
+     *
+     * @example Generate a QR Code that contains the data "hello".
+     * const qrCodeUrl = await os.generateQRCode("hello");
+     * masks.formAddress = qrCodeUrl;
+     *
+     * @example Generate a QR Code that links to https://example.com
+     * const qrCodeUrl = await os.generateQRCode("https://example.com");
+     * masks.formAddress = qrCodeUrl;
+     *
+     * @example Generate a QR Code with custom colors.
+     * const qrCodeUrl = await os.generateQRCode("Custom QR Code", {
+     *   color: {
+     *    dark: "#0000FFFF",
+     *    light: "#FFFF00FF"
+     *   }
+     * });
+     * masks.formAddress = qrCodeUrl;
+     *
+     * @dochash actions/os/barcodes
+     * @docname os.generateQRCode
+     * @docgroup 10-qr-code
+     */
+    function generateQRCode(
+        code: string,
+        options?: GenerateQRCodeOptions
+    ): Promise<string> {
+        const task = context.createTask();
+        const event = calcGenerateQRCode(code, options, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
      * Opens the [Barcode](https://en.wikipedia.org/wiki/Barcode) scanner.
      * While open, each scanned Barcode will send a {@tag @onBarcodeScanned} shout. Optionally accepts which camera to use for scanning. (front/back)
      *
@@ -9435,6 +9478,24 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function defineGlobalBot(name: string, botId: string): Promise<void> {
         const task = context.createTask();
         const event = calcDefineGlobalBot(name, botId, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Signs out the current user by revoking their session.
+     * Returns a promise that resolves when the sign out request has been processed.
+     *
+     * @example Sign out the current user
+     * await os.signOut();
+     * os.toast("Signed out!");
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-records
+     * @docname os.signOut
+     */
+    function signOut(): Promise<void> {
+        const task = context.createTask();
+        const event = calcSignOut(task.taskId);
         return addAsyncAction(task, event);
     }
 

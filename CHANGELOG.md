@@ -1,8 +1,34 @@
 # CasualOS Changelog
 
-## V3.8.1
+## V3.8.2
 
 #### Date: TBD
+
+### :rocket: Features
+
+-   Added the `os.signOut()` function to sign out the current user
+    -   Returns a promise that resolves when the sign out request has been processed
+    -   Uses the auth helper's logout method to properly sign out the user
+-   Added the `os.generateQRCode(code)` function to generate a QR code as a data URL that can be used in an img tag or as a bot's formAddress.
+
+### :bug: Bug Fixes
+
+-   Various fixes to bot labels:
+    -   Fixed z-fighting that was common on floating labels in the map portal.
+    -   Fixed bug that would cause bots with empty floating labels to prevent the page from loading properly.
+    -   Fixed floating label positioning in the map portal.
+    -   Fixed floating label billboarding on bots with non-identity rotations.
+    -   Fixed floating label bot spacing to stay consistent between grid's of different scales.
+    -   Fixed floating label shape generation to be compatible with the map portal.
+    -   Fixed label transforms not being updated properly when switching between `labelPosition` types.
+    -   Fixed child bot decorators not being updated when a transformer bot changes scale.
+-   Fixed internal `DebugObjectManager` not rendering properly when in the map portal.
+-   Disabled double-click to zoom in the map portal.
+-   Fixed camera rotation in mapPortal continuing after releasing the right mouse button outside the browser window.
+
+## V3.8.1
+
+#### Date: 11/5/2025
 
 ### :rocket: Features
 
