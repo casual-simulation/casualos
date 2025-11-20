@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`AuxRuntime interpreted resolveModule() should be able to resolve tag-specific API functions when given import metadata 1`] = `
 Array [
@@ -86,6 +86,7 @@ Array [
   "_configBot",
   "ai",
   "os",
+  "xp",
   "portal",
   "server",
   "action",
@@ -192,6 +193,7 @@ Array [
   "_configBot",
   "ai",
   "os",
+  "xp",
   "portal",
   "server",
   "action",
@@ -375,6 +377,7 @@ Array [
   "_configBot",
   "ai",
   "os",
+  "xp",
   "portal",
   "server",
   "action",
@@ -479,6 +482,7 @@ Array [
   "_configBot",
   "ai",
   "os",
+  "xp",
   "portal",
   "server",
   "action",
@@ -585,6 +589,7 @@ Array [
   "_configBot",
   "ai",
   "os",
+  "xp",
   "portal",
   "server",
   "action",

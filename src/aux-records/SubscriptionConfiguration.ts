@@ -115,6 +115,66 @@ export const webhookFeaturesSchema = z
         allowed: false,
     });
 
+const currencyLimitsSchema = z
+    .object({})
+    .catchall(
+        z.object({
+            maxCost: z
+                .number()
+                .describe(
+                    'The maximum cost that items can have in this currency.'
+                )
+                .positive()
+                .int(),
+            minCost: z
+                .number()
+                .describe(
+                    "The minimum cost that items can have in this currency. Note that this doesn't prevent free items, it only sets the minimum cost for a non-free item."
+                )
+                .positive()
+                .int(),
+            fee: z
+                .discriminatedUnion('type', [
+                    z.object({
+                        type: z.literal('percent'),
+                        percent: z
+                            .number()
+                            .describe(
+                                'The integer percentage of the cost that should be charged as a fee. Must be between 0 and 100'
+                            )
+                            .int()
+                            .min(0)
+                            .max(100),
+                    }),
+                    z.object({
+                        type: z.literal('fixed'),
+                        amount: z
+                            .number()
+                            .describe(
+                                'The fixed amount in cents that should be charged as a fee. Must be a positive integer.'
+                            )
+                            .int()
+                            .positive(),
+                    }),
+                ])
+                .describe(
+                    'The fee that should be charged for purchases in this currency. If omitted, then there is no fee.'
+                )
+                .optional()
+                .nullable(),
+        })
+    )
+    .describe(
+        'The limits for each currency that can be used for purchasable items. If a currency is not specified, then it is not allowed'
+    )
+    .optional()
+    .default({
+        usd: {
+            maxCost: 100 * 1000, /// $1,000 US Dollars (USD)
+            minCost: 50, // $0.50 US Dollars (USD)
+        },
+    });
+
 export const subscriptionFeaturesSchema = z.object({
     records: z
         .object({
@@ -174,6 +234,22 @@ export const subscriptionFeaturesSchema = z.object({
             .nullable()
             .optional()
             .default(500000),
+
+        creditFeePerRead: z
+            .number()
+            .describe(
+                'The number of credits that are charged for each read operation. If not specified, then there is no fee.'
+            )
+            .int()
+            .optional(),
+
+        creditFeePerWrite: z
+            .number()
+            .describe(
+                'The number of credits that are charged for each write operation. If not specified, then there is no fee.'
+            )
+            .int()
+            .optional(),
     }),
     files: z.object({
         allowed: z
@@ -204,6 +280,22 @@ export const subscriptionFeaturesSchema = z.object({
             )
             .int()
             .positive()
+            .optional(),
+
+        creditFeePerBytePerPeriod: z
+            .number()
+            .describe(
+                'The number of credits that are charged for each byte stored in files per subscription period. If not specified, then there is no fee.'
+            )
+            .int()
+            .optional(),
+
+        creditFeePerFilePerPeriod: z
+            .number()
+            .describe(
+                'The number of credits that are charged for each file per subscription period. If not specified, then there is no fee.'
+            )
+            .int()
             .optional(),
     }),
     events: z.object({
@@ -261,6 +353,14 @@ export const subscriptionFeaturesSchema = z.object({
                     'The list of model IDs that are allowed for the subscription. If omitted, then all models are allowed.'
                 )
                 .optional(),
+
+            creditFeePerToken: z
+                .number()
+                .describe(
+                    'The number of credits that are charged for each token that is generated. If not specified, then there is no fee.'
+                )
+                .int()
+                .optional(),
         }),
         images: z.object({
             allowed: z
@@ -276,6 +376,14 @@ export const subscriptionFeaturesSchema = z.object({
                 .int()
                 .positive()
                 .optional(),
+
+            creditFeePerSquarePixel: z
+                .number()
+                .describe(
+                    'The number of credits that are charged for each square pixel that is generated. If not specified, then there is no fee.'
+                )
+                .int()
+                .optional(),
         }),
         skyboxes: z.object({
             allowed: z
@@ -290,6 +398,14 @@ export const subscriptionFeaturesSchema = z.object({
                 )
                 .int()
                 .positive()
+                .optional(),
+
+            creditFeePerSkybox: z
+                .number()
+                .describe(
+                    'The number of credits that are charged for each skybox that is generated. If not specified, then there is no fee.'
+                )
+                .int()
                 .optional(),
         }),
         hume: z
@@ -361,6 +477,14 @@ export const subscriptionFeaturesSchema = z.object({
                                 'The list of models that are allowed to be used with the realtime API. If ommited, then all models are allowed.'
                             )
                             .optional(),
+
+                        creditFeePerRealtimeSession: z
+                            .number()
+                            .describe(
+                                'The number of credits that are charged for each realtime session that is initiated. If not specified, then there is no fee.'
+                            )
+                            .int()
+                            .optional(),
                     })
                     .describe(
                         'The configuration for OpenAI realtime API features.'
@@ -406,17 +530,28 @@ export const subscriptionFeaturesSchema = z.object({
             .int()
             .positive()
             .optional(),
+
+        creditFeePerInstPerPeriod: z
+            .number()
+            .describe(
+                'The number of credits that are charged for each inst per subscription period. If not specified, then there is no fee.'
+            )
+            .int()
+            .optional(),
+
+        creditFeePerBytePerPeriod: z
+            .number()
+            .describe(
+                'The number of credits that are charged for each byte stored in an inst per subscription period. If not specified, then there is no fee.'
+            )
+            .int()
+            .optional(),
     }),
     comId: z
         .object({
             allowed: z
                 .boolean()
                 .describe('Whether comId features are granted to the studio.'),
-            // allowCustomComId: z
-            //     .boolean()
-            //     .describe(
-            //         'Whether the studio is allowed to set their own comId. If false, then the user will be able to request changes to their comId, but they will not automatically apply.'
-            //     ),
             maxStudios: z
                 .number()
                 .describe(
@@ -432,8 +567,8 @@ export const subscriptionFeaturesSchema = z.object({
         .optional()
         .default({
             allowed: false,
-            // allowCustomComId: false,
         }),
+
     loom: z
         .object({
             allowed: z
@@ -492,6 +627,28 @@ export const subscriptionFeaturesSchema = z.object({
                 )
                 .int()
                 .positive()
+                .optional(),
+
+            creditFeePerNotificationSent: z
+                .number()
+                .describe(
+                    'The number of credits that it costs to send a notification. If not specified, then sending notifications is free.'
+                )
+                .int()
+                .optional(),
+            creditFeePerPushNotificationSent: z
+                .number()
+                .describe(
+                    'The number of credits that it costs to send a push notification. If not specified, then sending push notifications is free.'
+                )
+                .int()
+                .optional(),
+            creditFeePerSubscriberPerPeriod: z
+                .number()
+                .describe(
+                    'The number of credits that are charged for each subscriber per subscription period. If not specified, then there is no fee.'
+                )
+                .int()
                 .optional(),
         })
         .describe(
@@ -607,6 +764,60 @@ export const subscriptionFeaturesSchema = z.object({
         .optional()
         .default({
             allowed: true,
+        }),
+
+    store: z
+        .object({
+            allowed: z
+                .boolean()
+                .describe(
+                    'Whether purchasable items features are granted to the studio.'
+                ),
+
+            maxItems: z
+                .number()
+                .describe(
+                    'The maximum number of purchasable items that can be created. If omitted, then there is no limit.'
+                )
+                .positive()
+                .int()
+                .optional(),
+
+            currencyLimits: currencyLimitsSchema,
+        })
+        .describe(
+            'The configuration for purchasable items features for studios. Defaults to not allowed.'
+        )
+        .optional()
+        .default({
+            allowed: false,
+        }),
+
+    contracts: z
+        .object({
+            allowed: z
+                .boolean()
+                .describe(
+                    'Whether contract features are granted to the user/studio.'
+                ),
+
+            maxItems: z
+                .number()
+                .describe(
+                    'The maximum number of contracts that can be created. If omitted, then there is no limit.'
+                )
+                .positive()
+                .int()
+                .optional(),
+
+            currencyLimits: currencyLimitsSchema,
+        })
+        .describe(
+            'The configuration for contract features. Defaults to not allowed'
+        )
+        .optional()
+        .default({
+            allowed: false,
         }),
 });
 
@@ -725,6 +936,25 @@ export const subscriptionConfigSchema = z.object({
                         'Whether this subscription can only be purchased by studios. Defaults to false.'
                     )
                     .optional(),
+
+                creditGrant: z
+                    .union([
+                        z
+                            .number()
+                            .describe(
+                                'The number of credits that should be granted to the user/studio upon purchasing (and renewal) of this subscription.'
+                            )
+                            .int()
+                            .positive(),
+                        z.enum([
+                            'match-invoice', // Grants credits equal to the total of the invoice that pays for the subscription.
+                        ]),
+                    ])
+                    .describe(
+                        'The number of credits that should be granted to the user/studio upon purchasing (and renewal) of this subscription. Defaults to matching the price that the user paid for the subscription.'
+                    )
+                    .optional()
+                    .default('match-invoice'),
             })
         )
         .describe('The list of subscriptions that are in use.'),
@@ -931,6 +1161,12 @@ export interface APISubscription {
      * Defaults to "beta".
      */
     tier?: string;
+
+    /**
+     * The number of credits that should be granted to the user/studio upon purchasing (and renewal) of this subscription.
+     * Defaults to matching the invoice total that the user paid for the subscription.
+     */
+    creditGrant?: number | 'match-invoice';
 }
 
 export interface TiersConfiguration {
@@ -1064,6 +1300,16 @@ export interface FeaturesConfiguration {
      * The configuration for database features.
      */
     databases?: DatabasesFeaturesConfiguration;
+
+    /**
+     * The configuration for purchasable items features.
+     */
+    store?: PurchasableItemFeaturesConfiguration;
+
+    /**
+     * The configuration for contract features.
+     */
+    contracts?: ContractFeaturesConfiguration;
 }
 
 export interface RecordFeaturesConfiguration {
@@ -1326,7 +1572,72 @@ export type DatabasesFeaturesConfiguration = z.infer<
     typeof subscriptionFeaturesSchema
 >['databases'];
 
+export type PurchasableItemFeaturesConfiguration = z.infer<
+    typeof subscriptionFeaturesSchema
+>['store'];
+
+export type ContractFeaturesConfiguration = z.infer<
+    typeof subscriptionFeaturesSchema
+>['contracts'];
+
 export function allowAllFeatures(): FeaturesConfiguration {
+    return {
+        records: {
+            allowed: true,
+        },
+        ai: {
+            chat: {
+                allowed: true,
+            },
+            images: {
+                allowed: true,
+            },
+            skyboxes: {
+                allowed: true,
+            },
+            hume: {
+                allowed: true,
+            },
+            sloyd: {
+                allowed: true,
+            },
+            openai: {
+                realtime: {
+                    allowed: true,
+                },
+            },
+        },
+        data: {
+            allowed: true,
+        },
+        events: {
+            allowed: true,
+        },
+        files: {
+            allowed: true,
+        },
+        insts: {
+            allowed: true,
+        },
+        notifications: {
+            allowed: true,
+        },
+        packages: {
+            allowed: true,
+        },
+        search: {
+            allowed: true,
+        },
+        databases: {
+            allowed: true,
+        },
+        contracts: {
+            allowed: true,
+        },
+    };
+}
+
+export function allowAllDefaultFeatures(): FeaturesConfiguration {
     return {
         records: {
             allowed: true,
@@ -1431,7 +1742,38 @@ export function denyAllFeatures(): FeaturesConfiguration {
         databases: {
             allowed: false,
         },
+        contracts: {
+            allowed: false,
+        },
     };
+}
+
+/**
+ * Gets the contract features that are available for the given subscription.
+ * @param config The configuration. If null, then all default features are allowed.
+ * @param subscriptionStatus The status of the subscription.
+ * @param subscriptionId The ID of the subscription.
+ * @param type The type of the user.
+ */
+export function getContractFeatures(
+    config: SubscriptionConfiguration | null,
+    subscriptionStatus: string,
+    subscriptionId: string,
+    type: 'user' | 'studio',
+    periodStartMs?: number | null,
+    periodEndMs?: number | null,
+    nowMs: number = Date.now()
+): ContractFeaturesConfiguration {
+    const features = getSubscriptionFeatures(
+        config,
+        subscriptionStatus,
+        subscriptionId,
+        type,
+        periodStartMs,
+        periodEndMs,
+        nowMs
+    );
+    return features.contracts ?? { allowed: false };
 }
 
 /**
@@ -1601,6 +1943,38 @@ export function getComIdFeatures(
         features.comId ?? {
             allowed: false,
             // allowCustomComId: false,
+        }
+    );
+}
+
+/**
+ * Gets the purchasableItems features that are available for the given subscription.
+ * Gets the comId features that are available for the given subscription.
+ * @param config The configuration. If null, then all default features are allowed.
+ * @param subscriptionStatus The status of the subscription.
+ * @param subscriptionId The ID of the subscription.
+ */
+export function getPurchasableItemsFeatures(
+    config: SubscriptionConfiguration | null,
+    subscriptionStatus: string,
+    subscriptionId: string,
+    type: 'user' | 'studio',
+    periodStartMs?: number,
+    periodEndMs?: number,
+    nowMs: number = Date.now()
+): PurchasableItemFeaturesConfiguration {
+    const features = getSubscriptionFeatures(
+        config,
+        subscriptionStatus,
+        subscriptionId,
+        type,
+        periodStartMs,
+        periodEndMs,
+        nowMs
+    );
+    return (
+        features.store ?? {
+            allowed: false,
         }
     );
 }

@@ -46,7 +46,7 @@ export const GRIDLINES_Y_END = 5;
  */
 export class BoundedGrid3D extends Object3D implements Grid3D {
     name = 'BoundedGrid3D';
-    
+
     get tileScale() {
         return this._tileScale;
     }

@@ -30,7 +30,9 @@ import {
     validateSessionKey,
 } from './AuthController';
 import {
+    genericResult,
     isSuperUserRole,
+    mapResult,
     parseSessionKey,
 } from '@casual-simulation/aux-common';
 import type { LivekitController } from './LivekitController';
@@ -155,8 +157,10 @@ import { getPackageVersionSpecifier } from './packages/version/PackageVersionRec
 import type { PublicRecordKeyPolicy } from '@casual-simulation/aux-common/records/RecordKeys';
 import type { SearchQuery, SearchRecordsController } from './search';
 import { SEARCH_COLLECTION_SCHEMA, SEARCH_DOCUMENT_SCHEMA } from './search';
-import { genericResult } from '@casual-simulation/aux-common';
 import type { DatabaseRecordsController, DatabaseStatement } from './database';
+import type { PurchasableItemRecordsController } from './purchasable-items/PurchasableItemRecordsController';
+import type { PurchasableItem } from './purchasable-items/PurchasableItemRecordsStore';
+import type { ContractRecordsController } from './contracts/ContractRecordsController';
 
 declare const GIT_TAG: string;
 declare const GIT_HASH: string;
@@ -219,6 +223,12 @@ export const LOOM_NOT_SUPPORTED_RESULT = {
     errorMessage: 'Loom features are not supported by this server.',
 };
 
+export const STORE_NOT_SUPPORTED_RESULT = {
+    success: false as const,
+    errorCode: 'not_supported' as const,
+    errorMessage: 'Store features are not supported by this server.',
+};
+
 export const INSTS_NOT_SUPPORTED_RESULT = {
     success: false as const,
     errorCode: 'not_supported' as const,
@@ -229,6 +239,12 @@ export const MODERATION_NOT_SUPPORTED_RESULT = {
     success: false as const,
     errorCode: 'not_supported' as const,
     errorMessage: 'Moderation features are not supported by this server.',
+};
+
+export const XP_API_NOT_SUPPORTED_RESULT = {
+    success: false as const,
+    errorCode: 'not_supported' as const,
+    errorMessage: 'xpAPI features are not supported by this server.',
 };
 
 /**
@@ -417,6 +433,18 @@ export interface RecordsServerOptions {
      * If null, then database records are not supported.
      */
     databaseRecordsController?: DatabaseRecordsController | null;
+
+    /**
+     * The controller that should be used for handling contracts..
+     * If null, then contracts are not supported.
+     */
+    contractRecordsController?: ContractRecordsController | null;
+
+    /**
+     * The controller that should be used for handling purchasable items.
+     * If null, then purchasable items are not supported.
+     */
+    purchasableItemsController?: PurchasableItemRecordsController | null;
 }
 
 /**
@@ -441,6 +469,7 @@ export class RecordsServer {
     private _packageVersionController: PackageVersionRecordsController | null;
     private _searchRecordsController: SearchRecordsController | null;
     private _databaseRecordsController: DatabaseRecordsController | null;
+    private _contractRecordsController: ContractRecordsController | null;
 
     /**
      * The set of origins that are allowed for API requests.
@@ -454,6 +483,7 @@ export class RecordsServer {
     private _rateLimit: RateLimitController;
     private _websocketRateLimit: RateLimitController;
     private _policyController: PolicyController;
+    private _purchasableItems: PurchasableItemRecordsController;
 
     /**
      * The map of paths to routes that they match.
@@ -512,6 +542,8 @@ export class RecordsServer {
         packageVersionController,
         searchRecordsController,
         databaseRecordsController,
+        contractRecordsController,
+        purchasableItemsController,
     }: RecordsServerOptions) {
         this._allowedAccountOrigins = allowedAccountOrigins;
         this._allowedApiOrigins = allowedApiOrigins;
@@ -537,10 +569,12 @@ export class RecordsServer {
         this._packageVersionController = packageVersionController;
         this._searchRecordsController = searchRecordsController;
         this._databaseRecordsController = databaseRecordsController;
+        this._contractRecordsController = contractRecordsController;
         this._tracer = trace.getTracer(
             'RecordsServer',
             typeof GIT_TAG === 'undefined' ? undefined : GIT_TAG
         );
+        this._purchasableItems = purchasableItemsController;
         this._procedures = this._createProcedures();
         this._setupRoutes();
     }
@@ -555,15 +589,21 @@ export class RecordsServer {
                     })
                 )
                 .handler(async ({ userId }, context) => {
-                    const authorization = context.sessionKey;
+                    const validation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
 
-                    if (!authorization) {
-                        return NOT_LOGGED_IN_RESULT;
+                    if (validation.success === false) {
+                        if (validation.errorCode === 'no_session_key') {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return validation;
                     }
 
                     const result = await this._auth.getUserInfo({
-                        userId,
-                        sessionKey: authorization,
+                        userId: validation.userId,
+                        userRole: validation.role,
+                        requestedUserId: userId,
                     });
 
                     if (result.success === false) {
@@ -582,6 +622,11 @@ export class RecordsServer {
                         privacyFeatures: result.privacyFeatures,
                         displayName: result.displayName,
                         role: result.role,
+                        contractFeatures: result.contractFeatures,
+                        stripeAccountId: result.stripeAccountId,
+                        stripeAccountStatus: result.stripeAccountStatus,
+                        stripeAccountRequirementsStatus:
+                            result.stripeAccountRequirementsStatus,
                     } as const;
                 }),
 
@@ -3013,6 +3058,166 @@ export class RecordsServer {
                     }
                 ),
 
+            // getXpUserInfo: procedure()
+            //     .origins('api')
+            //     .http('GET', '/api/v2/xp/user')
+            //     .inputs(
+            //         z.object({
+            //             userId: z.string().min(1).optional().nullable(),
+            //         })
+            //     )
+            //     .handler(async ({ userId }, context) => {
+            //         if (!this._xpController) {
+            //             return XP_API_NOT_SUPPORTED_RESULT;
+            //         }
+
+            //         const authUser = await this._validateSessionKey(
+            //             context.sessionKey
+            //         );
+            //         if (authUser.success === false) {
+            //             return authUser;
+            //         }
+
+            //         //* An empty string for any of the query types will be treated as the current logged in user
+            //         const result = await this._xpController.getXpUser({
+            //             userId: authUser.userId,
+            //             userRole: authUser.role,
+            //             requestedUserId: userId,
+            //         });
+            //         return genericResult(result);
+            //     }),
+
+            // TODO:
+            // createXpContract: procedure()
+            //     .origins('api')
+            //     .http('POST', '/api/v2/xp/contract')
+            //     .inputs(
+            //         z.object({
+            //             contract: z
+            //                 .object({
+            //                     description: z.string().optional(),
+            //                     accountCurrency: z.string().optional(),
+            //                     gigRate: z.number().int().positive(),
+            //                     gigs: z.number().int().positive(),
+            //                     status: z.union([
+            //                         z.literal('open'),
+            //                         z.literal('draft'),
+            //                     ]),
+            //                     contractedUserId: z.string().min(1),
+            //                 })
+            //                 .refine(
+            //                     (contract) => {
+            //                         if (contract.status === 'open') {
+            //                             //* Open contracts must have a contracted user
+            //                             return (
+            //                                 (contract.contractedUserId ??
+            //                                     undefined) !== undefined
+            //                             );
+            //                         } else if (contract.status === 'draft') {
+            //                             /**
+            //                              * * Draft contracts from the database's perspective should not be expecting a contracted user yet.
+            //                              * * This is because the contracted user is only set when the contract is opened.
+            //                              */
+            //                             return (
+            //                                 (contract.contractedUserId ??
+            //                                     undefined) === undefined
+            //                             );
+            //                         }
+            //                     },
+            //                     {
+            //                         message:
+            //                             'Contract must contain contractedUserId (only when status is "open").',
+            //                         path: ['contractedUserId'],
+            //                     }
+            //                 )
+            //                 .refine(
+            //                     (contract) => {
+            //                         if (contract.status === 'open') {
+            //                             return !contract.accountCurrency;
+            //                         } else if (contract.status === 'draft') {
+            //                             return (
+            //                                 (contract.accountCurrency ??
+            //                                     undefined) === undefined
+            //                             );
+            //                         }
+            //                     },
+            //                     {
+            //                         message:
+            //                             'Contract must contain accountCurrency (only when status is "open").',
+            //                         path: ['accountCurrency'],
+            //                     }
+            //                 ),
+            //         })
+            //     )
+            //     .handler(async ({ contract }, context) => {
+            //         const authUser = await this._validateSessionKey(
+            //             context.sessionKey
+            //         );
+            //         if (!authUser.success) {
+            //             return authUser;
+            //         }
+            //         // const result = await this._xpController.createContract({
+            //         //     description: contract.description ?? null,
+            //         //     accountCurrency: contract.accountCurrency,
+            //         //     rate: contract.gigRate,
+            //         //     offeredWorth: contract.gigs
+            //         //         ? (contract.gigRate ?? 0) * contract.gigs
+            //         //         : 0,
+            //         //     status: contract.status,
+            //         //     issuerUserId: { userId: authUser.userId },
+            //         //     holdingUserId: contract.contractedUserId,
+            //         //     creationRequestReceivedAt: Date.now(),
+            //         // });
+            //         // return result;
+            //         return {
+            //             success: true,
+            //             message: 'Not implemented',
+            //         };
+            //     }),
+
+            // updateXpContract: procedure()
+            //     .origins('api')
+            //     .http('PUT', '/api/v2/xp/contract')
+            //     .inputs(
+            //         z.object({
+            //             contractId: z.string().min(1),
+            //             newStatus: z.union([
+            //                 z.literal('open'),
+            //                 z.literal('draft'),
+            //                 z.literal('closed'),
+            //             ]),
+            //             //* Note this is the change of the description which can only be done when the contract is in draft status
+            //             newDescription: z.string().optional(),
+            //             receivingUserId: GetXpUserById,
+            //         })
+            //     )
+            //     .handler(
+            //         async (
+            //             { contractId, newStatus, newDescription },
+            //             context
+            //         ) => {
+            //             const authUser = await this._validateSessionKey(
+            //                 context.sessionKey
+            //             );
+            //             if (!authUser.success) {
+            //                 return authUser;
+            //             }
+            //             // const result = await this._xpController.updateContract({
+            //             //     contractId,
+            //             //     newStatus,
+            //             //     newDescription,
+            //             //     userId: authUser.userId,
+            //             // });
+            //             // throw new Error('Not implemented');
+            //             //return result;
+            //             // TODO: Implement.
+            //             return {
+            //                 success: true,
+            //                 message: 'Not implemented',
+            //             };
+            //         }
+            //     ),
+
             listRecords: procedure()
                 .origins('api')
                 .http('GET', '/api/v2/records/list')
@@ -4587,6 +4792,49 @@ export class RecordsServer {
                     return result;
                 }),
 
+            getManageStudioStoreLink: procedure()
+                .origins('account')
+                .http('POST', '/api/v2/studios/store/manage')
+                .inputs(
+                    z.object({
+                        studioId: z
+                            .string({
+                                invalid_type_error:
+                                    'studioId must be a string.',
+                                required_error: 'studioId is required.',
+                            })
+                            .min(1),
+                    })
+                )
+                .handler(async ({ studioId }, context) => {
+                    if (!this._purchasableItems) {
+                        return STORE_NOT_SUPPORTED_RESULT;
+                    }
+                    if (!this._subscriptions) {
+                        return SUBSCRIPTIONS_NOT_SUPPORTED_RESULT;
+                    }
+
+                    const sessionKeyValidation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (sessionKeyValidation.success === false) {
+                        if (
+                            sessionKeyValidation.errorCode === 'no_session_key'
+                        ) {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return sessionKeyValidation;
+                    }
+
+                    const result =
+                        await this._subscriptions.createManageStoreAccountLink({
+                            studioId,
+                            userId: sessionKeyValidation.userId,
+                        });
+
+                    return genericResult(result);
+                }),
+
             getPlayerConfig: procedure()
                 .origins('api')
                 .http('GET', '/api/v2/player/config')
@@ -4598,6 +4846,65 @@ export class RecordsServer {
                 .handler(async ({ comId }, context) => {
                     const result = await this._records.getPlayerConfig(comId);
                     return result;
+                }),
+
+            getBalances: procedure()
+                .origins('account')
+                .http('GET', '/api/v2/balances')
+                .inputs(
+                    z.object({
+                        studioId: z.string().min(1).max(255).optional(),
+                        contractId: z.string().min(1).max(255).optional(),
+                        userId: z.string().min(1).max(255).optional(),
+                    })
+                )
+                .handler(async (input, context) => {
+                    if (!this._subscriptions) {
+                        return SUBSCRIPTIONS_NOT_SUPPORTED_RESULT;
+                    }
+
+                    const validation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (validation.success === false) {
+                        return validation;
+                    }
+
+                    if (
+                        (input.userId && input.studioId) ||
+                        (input.contractId && input.studioId) ||
+                        (input.contractId && input.userId)
+                    ) {
+                        return {
+                            success: false,
+                            errorCode: 'unacceptable_request',
+                            errorMessage:
+                                'You must only specify one of userId, studioId, or contractId.',
+                        };
+                    }
+
+                    if (!input.userId && !input.studioId && !input.contractId) {
+                        input = {
+                            userId: validation.userId,
+                        };
+                    }
+
+                    const result = await this._subscriptions.getBalances({
+                        userId: validation.userId,
+                        userRole: validation.role,
+                        filter: input,
+                    });
+
+                    return genericResult(
+                        mapResult(result, (balance) =>
+                            balance
+                                ? {
+                                      usd: balance.usd?.toJSON(),
+                                      credits: balance.credits?.toJSON(),
+                                  }
+                                : undefined
+                        )
+                    );
                 }),
 
             getSubscriptions: procedure()
@@ -4672,6 +4979,13 @@ export class RecordsServer {
                                 prices: s.prices,
                                 defaultSubscription: s.defaultSubscription,
                             })),
+                        accountBalances: result.accountBalances
+                            ? {
+                                  usd: result.accountBalances?.usd?.toJSON(),
+                                  credits:
+                                      result.accountBalances?.credits?.toJSON(),
+                              }
+                            : undefined,
                     } as const;
                 }),
 
@@ -4827,6 +5141,176 @@ export class RecordsServer {
                     }
                 ),
 
+            getManageXpAccountLink: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/xp/account/manage')
+                .inputs(z.object({}))
+                .handler(async (input, context) => {
+                    if (!this._subscriptions) {
+                        return SUBSCRIPTIONS_NOT_SUPPORTED_RESULT;
+                    }
+
+                    const sessionKey = context.sessionKey;
+
+                    if (!sessionKey) {
+                        return NOT_LOGGED_IN_RESULT;
+                    }
+
+                    const validation = await this._validateSessionKey(
+                        sessionKey
+                    );
+
+                    if (validation.success === false) {
+                        return validation;
+                    }
+
+                    const result =
+                        await this._subscriptions.createManageXpAccountLink({
+                            userId: validation.userId,
+                        });
+
+                    return genericResult(result);
+                }),
+
+            getStripeLoginLink: procedure()
+                .origins('account')
+                .http('POST', '/api/v2/stripe/login')
+                .inputs(
+                    z.object({
+                        studioId: z.string().min(1).optional(),
+                    })
+                )
+                .handler(async ({ studioId }, context) => {
+                    if (!this._subscriptions) {
+                        return SUBSCRIPTIONS_NOT_SUPPORTED_RESULT;
+                    }
+
+                    const sessionKey = context.sessionKey;
+
+                    if (!sessionKey) {
+                        return NOT_LOGGED_IN_RESULT;
+                    }
+
+                    const validation = await this._validateSessionKey(
+                        sessionKey
+                    );
+
+                    if (validation.success === false) {
+                        return validation;
+                    }
+
+                    const result =
+                        await this._subscriptions.createStripeLoginLink({
+                            userId: validation.userId,
+                            studioId: studioId,
+                        });
+
+                    return genericResult(result);
+                }),
+
+            recordContract: recordItemProcedure(
+                this._auth,
+                this._contractRecordsController,
+                z.object({
+                    address: ADDRESS_VALIDATION,
+                    holdingUser: z
+                        .string({
+                            invalid_type_error: 'holdingUser must be a string.',
+                            required_error: 'holdingUser is required.',
+                        })
+                        .min(1, 'holdingUser must not be empty.'),
+                    rate: z
+                        .number({
+                            invalid_type_error: 'rate must be a number.',
+                            required_error: 'rate is required.',
+                        })
+                        .int('rate must be an integer.')
+                        .positive('rate must be positive.'),
+                    initialValue: z
+                        .number({
+                            invalid_type_error:
+                                'initialValue must be a number.',
+                            required_error: 'initialValue is required.',
+                        })
+                        .int('initialValue must be an integer.')
+                        .nonnegative('initialValue must be non-negative.'),
+                    description: z.string().optional().nullable(),
+                    markers: MARKERS_VALIDATION.optional().default([
+                        PRIVATE_MARKER,
+                    ]),
+                }),
+                procedure()
+                    .origins('api')
+                    .http('POST', '/api/v2/records/contract')
+            ),
+
+            getContract: getItemProcedure(
+                this._auth,
+                this._contractRecordsController,
+                procedure()
+                    .origins('api')
+                    .http('GET', '/api/v2/records/contract')
+            ),
+
+            listContracts: listItemsProcedure(
+                this._auth,
+                this._contractRecordsController,
+                procedure()
+                    .origins('api')
+                    .http('GET', '/api/v2/records/contract/list')
+            ),
+
+            eraseContract: eraseItemProcedure(
+                this._auth,
+                this._contractRecordsController,
+                procedure()
+                    .origins('api')
+                    .http('DELETE', '/api/v2/records/contract')
+            ),
+
+            cancelContract: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/records/contract/cancel')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        address: ADDRESS_VALIDATION,
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                    })
+                )
+                .handler(
+                    async ({ recordName, address, instances }, context) => {
+                        if (!this._websocketController) {
+                            return INSTS_NOT_SUPPORTED_RESULT;
+                        }
+
+                        const sessionKey = context.sessionKey;
+
+                        if (!sessionKey) {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+
+                        const validation = await this._validateSessionKey(
+                            sessionKey
+                        );
+
+                        if (validation.success === false) {
+                            return validation;
+                        }
+
+                        const result = await this._subscriptions.cancelContract(
+                            {
+                                userId: validation.userId,
+                                recordName,
+                                address,
+                                instances,
+                            }
+                        );
+
+                        return genericResult(result);
+                    }
+                ),
+
             listInsts: procedure()
                 .origins('api')
                 .http('GET', '/api/v2/records/insts/list')
@@ -4865,6 +5349,217 @@ export class RecordsServer {
                         marker
                     );
                     return result;
+                }),
+
+            invoiceContract: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/records/contract/invoice')
+                .inputs(
+                    z.object({
+                        contractId: z.string().min(1),
+                        amount: z.number().int().positive(),
+                        note: z.string().min(1).optional(),
+                        payoutDestination: z.enum(['account', 'stripe']),
+                    })
+                )
+                .handler(
+                    async (
+                        { contractId, amount, note, payoutDestination },
+                        context
+                    ) => {
+                        if (!this._subscriptions) {
+                            return SUBSCRIPTIONS_NOT_SUPPORTED_RESULT;
+                        }
+
+                        const sessionKey = context.sessionKey;
+
+                        if (!sessionKey) {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+
+                        const validation = await this._validateSessionKey(
+                            sessionKey
+                        );
+
+                        if (validation.success === false) {
+                            return validation;
+                        }
+
+                        const result =
+                            await this._subscriptions.invoiceContract({
+                                userId: validation.userId,
+                                userRole: validation.role,
+                                contractId,
+                                amount,
+                                note,
+                                payoutDestination,
+                            });
+
+                        return genericResult(result);
+                    }
+                ),
+
+            payContractInvoice: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/records/contract/invoice/pay')
+                .inputs(
+                    z.object({
+                        invoiceId: z.string().min(1),
+                    })
+                )
+                .handler(async ({ invoiceId }, context) => {
+                    if (!this._subscriptions) {
+                        return SUBSCRIPTIONS_NOT_SUPPORTED_RESULT;
+                    }
+
+                    if (!context.sessionKey) {
+                        return NOT_LOGGED_IN_RESULT;
+                    }
+
+                    const validation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+
+                    if (validation.success === false) {
+                        return validation;
+                    }
+
+                    const result = await this._subscriptions.payContractInvoice(
+                        {
+                            userId: validation.userId,
+                            userRole: validation.role,
+                            invoiceId,
+                        }
+                    );
+
+                    return genericResult(result);
+                }),
+
+            payoutAccount: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/financial/payouts')
+                .inputs(
+                    z.object({
+                        userId: z.string().min(1).optional(),
+                        studioId: z.string().min(1).optional(),
+                        amount: z.number().int().positive().optional(),
+                        destination: z.enum(['stripe', 'cash']),
+                    })
+                )
+                .handler(
+                    async (
+                        { userId, studioId, amount, destination },
+                        context
+                    ) => {
+                        if (!this._subscriptions) {
+                            return SUBSCRIPTIONS_NOT_SUPPORTED_RESULT;
+                        }
+
+                        if (userId && studioId) {
+                            return {
+                                success: false,
+                                errorCode: 'unacceptable_request',
+                                errorMessage:
+                                    'You must only specify one of userId or studioId.',
+                            };
+                        }
+
+                        if (!context.sessionKey) {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+
+                        const validation = await this._validateSessionKey(
+                            context.sessionKey
+                        );
+
+                        if (validation.success === false) {
+                            return validation;
+                        }
+
+                        if (!userId && !studioId) {
+                            userId = validation.userId;
+                        }
+
+                        const result = await this._subscriptions.payoutAccount({
+                            userId: validation.userId,
+                            userRole: validation.role,
+                            payoutUserId: userId,
+                            payoutStudioId: studioId,
+                            payoutAmount: amount,
+                            payoutDestination: destination,
+                        });
+
+                        return genericResult(result);
+                    }
+                ),
+
+            listContractInvoices: procedure()
+                .origins('api')
+                .http('GET', '/api/v2/records/contract/invoices')
+                .inputs(
+                    z.object({
+                        contractId: z.string().min(1),
+                    })
+                )
+                .handler(async ({ contractId }, context) => {
+                    if (!this._subscriptions) {
+                        return SUBSCRIPTIONS_NOT_SUPPORTED_RESULT;
+                    }
+
+                    if (!context.sessionKey) {
+                        return NOT_LOGGED_IN_RESULT;
+                    }
+
+                    const validation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+
+                    if (validation.success === false) {
+                        return validation;
+                    }
+
+                    const result =
+                        await this._subscriptions.listContractInvoices({
+                            userId: validation.userId,
+                            userRole: validation.role,
+                            contractId,
+                        });
+
+                    return genericResult(result);
+                }),
+
+            cancelInvoice: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/records/contract/invoice/cancel')
+                .inputs(
+                    z.object({
+                        invoiceId: z.string().min(1),
+                    })
+                )
+                .handler(async ({ invoiceId }, context) => {
+                    if (!this._subscriptions) {
+                        return SUBSCRIPTIONS_NOT_SUPPORTED_RESULT;
+                    }
+
+                    if (!context.sessionKey) {
+                        return NOT_LOGGED_IN_RESULT;
+                    }
+
+                    const validation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+
+                    if (validation.success === false) {
+                        return validation;
+                    }
+
+                    const result = await this._subscriptions.cancelInvoice({
+                        userId: validation.userId,
+                        userRole: validation.role,
+                        invoiceId,
+                    });
+
+                    return genericResult(result);
                 }),
 
             deleteInst: procedure()
@@ -5027,6 +5722,402 @@ export class RecordsServer {
                         versionHash:
                             typeof GIT_HASH === 'string' ? GIT_HASH : undefined,
                     };
+                }),
+
+            getPurchasableItem: procedure()
+                .origins(true)
+                .http('GET', '/api/v2/records/purchasableItems')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        address: ADDRESS_VALIDATION,
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                    })
+                )
+                .handler(
+                    async ({ recordName, address, instances }, context) => {
+                        if (!this._purchasableItems) {
+                            return STORE_NOT_SUPPORTED_RESULT;
+                        }
+
+                        const validation = await this._validateSessionKey(
+                            context.sessionKey
+                        );
+                        if (
+                            validation.success === false &&
+                            validation.errorCode !== 'no_session_key'
+                        ) {
+                            return validation;
+                        }
+
+                        const result = await this._purchasableItems.getItem({
+                            recordName: recordName,
+                            address: address,
+                            userId: validation.userId,
+                            instances: instances ?? [],
+                        });
+                        return result;
+                    }
+                ),
+
+            listPurchasableItems: procedure()
+                .origins(true)
+                .http('GET', '/api/v2/records/purchasableItems/list')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        address: ADDRESS_VALIDATION.nullable().optional(),
+                        marker: MARKER_VALIDATION.optional(),
+                        sort: z.enum(['ascending', 'descending']).optional(),
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                    })
+                )
+                .handler(
+                    async (
+                        { recordName, address, instances, marker, sort },
+                        context
+                    ) => {
+                        if (!this._purchasableItems) {
+                            return STORE_NOT_SUPPORTED_RESULT;
+                        }
+
+                        const sessionKeyValidation =
+                            await this._validateSessionKey(context.sessionKey);
+                        if (
+                            sessionKeyValidation.success === false &&
+                            sessionKeyValidation.errorCode !== 'no_session_key'
+                        ) {
+                            return sessionKeyValidation;
+                        }
+
+                        if (!marker) {
+                            const result =
+                                await this._purchasableItems.listItems({
+                                    recordName,
+                                    startingAddress: address || null,
+                                    userId: sessionKeyValidation.userId,
+                                    instances,
+                                });
+                            return result;
+                        } else {
+                            const result =
+                                await this._purchasableItems.listItemsByMarker({
+                                    recordName: recordName,
+                                    marker: marker,
+                                    startingAddress: address || null,
+                                    sort: sort,
+                                    userId: sessionKeyValidation.userId,
+                                    instances,
+                                });
+
+                            return result;
+                        }
+                    }
+                ),
+
+            recordPurchasableItem: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/records/purchasableItems')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        item: z.object({
+                            address: ADDRESS_VALIDATION,
+                            name: z.string().min(1).max(128),
+                            description: z.string().min(1).max(1024),
+                            imageUrls: z
+                                .array(z.string().min(1).max(512))
+                                .max(8),
+                            currency: z.string().min(1).max(15).toLowerCase(),
+                            cost: z.number().gte(0).int(),
+                            taxCode: z
+                                .string()
+                                .min(1)
+                                .max(64)
+                                .nullable()
+                                .optional(),
+                            roleName: z.string().min(1),
+                            roleGrantTimeMs: z
+                                .number()
+                                .positive()
+                                .int()
+                                .nullable()
+                                .optional(),
+                            redirectUrl: z.string().url().nullable().optional(),
+                            markers: MARKERS_VALIDATION,
+                        }),
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                    })
+                )
+                .handler(async ({ recordName, item, instances }, context) => {
+                    if (!this._purchasableItems) {
+                        return STORE_NOT_SUPPORTED_RESULT;
+                    }
+
+                    const sessionKeyValidation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (sessionKeyValidation.success === false) {
+                        if (
+                            sessionKeyValidation.errorCode === 'no_session_key'
+                        ) {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return sessionKeyValidation;
+                    }
+
+                    const result = await this._purchasableItems.recordItem({
+                        recordKeyOrRecordName: recordName,
+                        item: item as PurchasableItem,
+                        userId: sessionKeyValidation.userId,
+                        instances: instances,
+                    });
+
+                    return result;
+                }),
+
+            erasePurchasableItem: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/records/purchasableItems/erase')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        address: ADDRESS_VALIDATION,
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                    })
+                )
+                .handler(
+                    async ({ recordName, address, instances }, context) => {
+                        if (!this._purchasableItems) {
+                            return STORE_NOT_SUPPORTED_RESULT;
+                        }
+
+                        const sessionKeyValidation =
+                            await this._validateSessionKey(context.sessionKey);
+                        if (sessionKeyValidation.success === false) {
+                            if (
+                                sessionKeyValidation.errorCode ===
+                                'no_session_key'
+                            ) {
+                                return NOT_LOGGED_IN_RESULT;
+                            }
+                            return sessionKeyValidation;
+                        }
+
+                        const result = await this._purchasableItems.eraseItem({
+                            recordName: recordName,
+                            address: address,
+                            userId: sessionKeyValidation.userId,
+                            instances: instances,
+                        });
+                        return result;
+                    }
+                ),
+
+            purchaseItem: procedure()
+                .origins('account')
+                .http('POST', '/api/v2/records/purchasableItems/purchase')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        item: z.object({
+                            address: ADDRESS_VALIDATION,
+                            expectedCost: z.number().gte(0).int(),
+                            currency: z.string().min(1).max(15).toLowerCase(),
+                        }),
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        returnUrl: z.string().url(),
+                        successUrl: z.string().url(),
+                    })
+                )
+                .handler(
+                    async (
+                        { recordName, item, instances, returnUrl, successUrl },
+                        context
+                    ) => {
+                        const sessionKeyValidation =
+                            await this._validateSessionKey(context.sessionKey);
+                        if (
+                            sessionKeyValidation.success === false &&
+                            sessionKeyValidation.errorCode !== 'no_session_key'
+                        ) {
+                            return sessionKeyValidation;
+                        }
+
+                        const result =
+                            await this._subscriptions.createPurchaseItemLink({
+                                userId: sessionKeyValidation.userId,
+                                item: {
+                                    recordName: recordName,
+                                    address: item.address,
+                                    currency: item.currency,
+                                    expectedCost: item.expectedCost,
+                                },
+                                returnUrl,
+                                successUrl,
+                                instances,
+                            });
+
+                        return result;
+                    }
+                ),
+
+            purchaseContract: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/records/contract/purchase')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        contract: z.object({
+                            address: ADDRESS_VALIDATION,
+                            expectedCost: z.number().gte(0).int(),
+                            currency: z
+                                .string()
+                                .min(1)
+                                .max(15)
+                                .toLowerCase()
+                                .default('usd'),
+                        }),
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        returnUrl: z.string().url(),
+                        successUrl: z.string().url(),
+                    })
+                )
+                .handler(
+                    async (
+                        {
+                            recordName,
+                            contract,
+                            instances,
+                            returnUrl,
+                            successUrl,
+                        },
+                        context
+                    ) => {
+                        const sessionKeyValidation =
+                            await this._validateSessionKey(context.sessionKey);
+                        if (
+                            sessionKeyValidation.success === false &&
+                            sessionKeyValidation.errorCode !== 'no_session_key'
+                        ) {
+                            return sessionKeyValidation;
+                        }
+
+                        const result =
+                            await this._subscriptions.purchaseContract({
+                                userId: sessionKeyValidation.userId,
+
+                                contract: {
+                                    recordName,
+                                    address: contract.address,
+                                    currency: contract.currency,
+                                    expectedCost: contract.expectedCost,
+                                },
+                                returnUrl,
+                                successUrl,
+                                instances,
+                            });
+
+                        return genericResult(result);
+                    }
+                ),
+
+            getContractPricing: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/records/contract/pricing')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        address: ADDRESS_VALIDATION,
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                    })
+                )
+                .handler(
+                    async ({ recordName, address, instances }, context) => {
+                        const sessionKeyValidation =
+                            await this._validateSessionKey(context.sessionKey);
+                        if (
+                            sessionKeyValidation.success === false &&
+                            sessionKeyValidation.errorCode !== 'no_session_key'
+                        ) {
+                            return sessionKeyValidation;
+                        }
+
+                        const result =
+                            await this._subscriptions.getContractPricing({
+                                userId: sessionKeyValidation.userId,
+
+                                contract: {
+                                    recordName,
+                                    address,
+                                },
+                                instances,
+                            });
+
+                        return genericResult(result);
+                    }
+                ),
+
+            fulfillCheckoutSession: procedure()
+                .origins('account')
+                .http('POST', '/api/v2/records/checkoutSession/fulfill')
+                .inputs(
+                    z.object({
+                        sessionId: z.string().nonempty(),
+                        activation: z.enum(['now', 'later']),
+                    })
+                )
+                .handler(async ({ sessionId, activation }, context) => {
+                    const sessionKeyValidation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (
+                        sessionKeyValidation.success === false &&
+                        sessionKeyValidation.errorCode !== 'no_session_key'
+                    ) {
+                        return sessionKeyValidation;
+                    }
+
+                    const result =
+                        await this._subscriptions.fulfillCheckoutSession({
+                            userId: sessionKeyValidation.userId,
+                            sessionId,
+                            activation,
+                        });
+
+                    return result;
+                }),
+
+            claimActivationKey: procedure()
+                .origins('account')
+                .http('POST', '/api/v2/records/activationKey/claim')
+                .inputs(
+                    z.object({
+                        activationKey: z.string().min(1),
+                        target: z.enum(['self', 'guest']),
+                    })
+                )
+                .handler(async ({ activationKey, target }, context) => {
+                    const sessionKeyValidation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (
+                        sessionKeyValidation.success === false &&
+                        sessionKeyValidation.errorCode !== 'no_session_key'
+                    ) {
+                        return sessionKeyValidation;
+                    }
+
+                    const result = await this._subscriptions.claimActivationKey(
+                        {
+                            userId: sessionKeyValidation.userId,
+                            activationKey,
+                            target,
+                            ipAddress: context.ipAddress,
+                        }
+                    );
+
+                    return result;
                 }),
         };
     }
@@ -8547,6 +9638,12 @@ export class RecordsServer {
                     defaultSubscription: s.defaultSubscription,
                 })
             ),
+            accountBalances: result.accountBalances
+                ? {
+                      usd: result.accountBalances?.usd?.toJSON(),
+                      credits: result.accountBalances?.credits?.toJSON(),
+                  }
+                : undefined,
         });
     }
 
@@ -8647,6 +9744,15 @@ export class RecordsServer {
             return returnResult(NOT_LOGGED_IN_RESULT);
         }
 
+        const validation = await this._validateSessionKey(sessionKey);
+
+        if (validation.success === false) {
+            if (validation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(validation);
+        }
+
         const userId = tryDecodeUriComponent(request.pathParams.userId);
 
         if (!userId) {
@@ -8654,8 +9760,9 @@ export class RecordsServer {
         }
 
         const result = await this._auth.getUserInfo({
-            sessionKey,
-            userId,
+            userId: validation.userId,
+            userRole: validation.role,
+            requestedUserId: userId,
         });
 
         if (!result.success) {
@@ -8674,6 +9781,11 @@ export class RecordsServer {
             privacyFeatures: result.privacyFeatures,
             displayName: result.displayName,
             role: result.role,
+            contractFeatures: result.contractFeatures,
+            stripeAccountId: result.stripeAccountId,
+            stripeAccountStatus: result.stripeAccountStatus,
+            stripeAccountRequirementsStatus:
+                result.stripeAccountRequirementsStatus,
         });
     }
 

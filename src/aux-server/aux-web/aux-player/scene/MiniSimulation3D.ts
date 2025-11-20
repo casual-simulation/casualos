@@ -29,7 +29,7 @@ import { MiniPortalConfig } from './MiniPortalConfig';
 
 export class MiniSimulation3D extends PlayerSimulation3D {
     name = 'MiniSimulation3D';
-    
+
     /**
      * The miniGridPortal dimension that this simulation is for.
      */

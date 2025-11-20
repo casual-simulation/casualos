@@ -37,7 +37,7 @@ export interface IGameObject {
  */
 export class GameObject extends Object3D implements IGameObject {
     name = 'GameObject';
-    
+
     private _colliders: Object3D[];
 
     /**

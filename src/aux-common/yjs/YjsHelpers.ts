@@ -18,6 +18,7 @@
 import type { VersionVector } from '../common';
 import type { Doc, ID, Text } from 'yjs';
 import {
+    ContentString,
     createAbsolutePositionFromRelativePosition,
     createID,
     findRootTypeKey,
@@ -144,4 +145,35 @@ function createRelativePosition(type: Text, item: ID, assoc: number) {
         typeid = createID(type._item.id.client, type._item.id.clock);
     }
     return new RelativePosition(typeid, tname, item, assoc);
+}
+
+/**
+ * Gets the character at the given index in the Yjs Text type.
+ *
+ * Returns null if the index is out of bounds.
+ *
+ * @param type The Yjs Text type.
+ * @param index The index.
+ */
+export function getTextChar(type: Text, index: number): string {
+    if (index < 0) {
+        return null;
+    }
+    let i = 0;
+    let n = type._start;
+    while (n !== null) {
+        if (
+            !n.deleted &&
+            n.countable &&
+            n.content.constructor === ContentString
+        ) {
+            if (i + n.length > index) {
+                return (n.content as ContentString).str[index - i];
+            }
+            i += n.length;
+        }
+        n = n.right;
+    }
+
+    return null;
 }

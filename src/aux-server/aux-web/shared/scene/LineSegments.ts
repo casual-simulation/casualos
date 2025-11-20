@@ -26,7 +26,7 @@ import { Arrow3D } from './Arrow3D';
 
 export class LineSegments extends Object3D {
     name = 'LineSegments';
-    
+
     private _meshes: Line2[] = [];
     private _meshLines: LineGeometry[] = [];
     private _lineMaterial: LineMaterial;

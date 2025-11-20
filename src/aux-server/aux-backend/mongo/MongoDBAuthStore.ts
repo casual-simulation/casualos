@@ -34,7 +34,9 @@ import type {
     HumeConfig,
 } from '@casual-simulation/aux-records';
 import type {
+    ActivationKey,
     AddressType,
+    AuthCheckoutSession,
     AuthInvoice,
     AuthLoginRequest,
     AuthOpenIDLoginRequest,
@@ -47,7 +49,9 @@ import type {
     AuthUserAuthenticatorWithUser,
     AuthWebAuthnLoginRequest,
     ListSessionsDataResult,
+    PurchasedItem,
     SaveNewUserResult,
+    UpdateCheckoutSessionRequest,
     UpdateSubscriptionInfoRequest,
     UpdateSubscriptionPeriodRequest,
     UserLoginMetadata,
@@ -130,6 +134,40 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
             db.collection<MongoDBWebAuthnLoginRequest>(
                 WEB_AUTHN_LOGIN_REQUESTS_COLLECTION_NAME
             );
+    }
+    findUserByStripeAccountId(accountId: string): Promise<AuthUser | null> {
+        throw new Error('Method not implemented.');
+    }
+    getInvoiceByStripeId(id: string): Promise<AuthInvoice | null> {
+        throw new Error('Method not implemented.');
+    }
+    updateCheckoutSessionInfo(
+        request: UpdateCheckoutSessionRequest
+    ): Promise<void> {
+        throw new Error('Method not implemented.');
+    }
+    markCheckoutSessionFulfilled(
+        sessionId: string,
+        fulfilledAtMs: number
+    ): Promise<void> {
+        throw new Error('Method not implemented.');
+    }
+    getCheckoutSessionById(id: string): Promise<AuthCheckoutSession | null> {
+        throw new Error('Method not implemented.');
+    }
+    savePurchasedItem(item: PurchasedItem): Promise<void> {
+        throw new Error('Method not implemented.');
+    }
+    listPurchasedItemsByActivationKeyId(
+        keyId: string
+    ): Promise<PurchasedItem[]> {
+        throw new Error('Method not implemented.');
+    }
+    createActivationKey(key: ActivationKey): Promise<void> {
+        throw new Error('Method not implemented.');
+    }
+    getActivationKeyById(keyId: string): Promise<ActivationKey | null> {
+        throw new Error('Method not implemented.');
     }
 
     async findUserLoginMetadata(
@@ -325,6 +363,12 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
     async getStudioByComId(comId: string): Promise<Studio> {
         return await this._studios.findOne({
             comId: comId,
+        });
+    }
+
+    async getStudioByStripeAccountId(accountId: string): Promise<Studio> {
+        return await this._studios.findOne({
+            stripeAccountId: accountId,
         });
     }
 
@@ -1002,6 +1046,7 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
                 id: invoiceId,
                 periodId: periodId,
                 subscriptionId: subscription.id,
+                checkoutSessionId: null,
                 ...request.invoice,
             });
 
@@ -1052,6 +1097,7 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
                 id: invoiceId,
                 periodId: periodId,
                 subscriptionId: subscription.id,
+                checkoutSessionId: null,
                 ...request.invoice,
             });
 
@@ -1181,6 +1227,18 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
                     stripeCustomerId: studio.stripeCustomerId,
                     subscriptionId: studio.subscriptionId,
                     subscriptionStatus: studio.subscriptionStatus,
+                    subscriptionInfoId: studio.subscriptionInfoId,
+                    subscriptionPeriodStartMs: studio.subscriptionPeriodStartMs,
+                    subscriptionPeriodEndMs: studio.subscriptionPeriodEndMs,
+                    playerConfig: studio.playerConfig,
+                    stripeAccountId: studio.stripeAccountId,
+                    stripeAccountStatus: studio.stripeAccountStatus,
+                    stripeAccountRequirementsStatus:
+                        studio.stripeAccountRequirementsStatus,
+                    comId: studio.comId,
+                    comIdConfig: studio.comIdConfig,
+                    logoUrl: studio.logoUrl,
+                    ownerStudioComId: studio.ownerStudioComId,
                 },
             },
             { upsert: true }
@@ -1202,6 +1260,18 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
             stripeCustomerId: studio.stripeCustomerId,
             subscriptionId: studio.subscriptionId,
             subscriptionStatus: studio.subscriptionStatus,
+            subscriptionInfoId: studio.subscriptionInfoId,
+            subscriptionPeriodStartMs: studio.subscriptionPeriodStartMs,
+            subscriptionPeriodEndMs: studio.subscriptionPeriodEndMs,
+            playerConfig: studio.playerConfig,
+            stripeAccountId: studio.stripeAccountId,
+            stripeAccountStatus: studio.stripeAccountStatus,
+            stripeAccountRequirementsStatus:
+                studio.stripeAccountRequirementsStatus,
+            comId: studio.comId,
+            comIdConfig: studio.comIdConfig,
+            ownerStudioComId: studio.ownerStudioComId,
+            logoUrl: studio.logoUrl,
         };
     }
 
@@ -1220,6 +1290,18 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
             stripeCustomerId: studio.stripeCustomerId,
             subscriptionId: studio.subscriptionId,
             subscriptionStatus: studio.subscriptionStatus,
+            subscriptionInfoId: studio.subscriptionInfoId,
+            subscriptionPeriodStartMs: studio.subscriptionPeriodStartMs,
+            subscriptionPeriodEndMs: studio.subscriptionPeriodEndMs,
+            playerConfig: studio.playerConfig,
+            stripeAccountId: studio.stripeAccountId,
+            stripeAccountStatus: studio.stripeAccountStatus,
+            stripeAccountRequirementsStatus:
+                studio.stripeAccountRequirementsStatus,
+            comId: studio.comId,
+            comIdConfig: studio.comIdConfig,
+            ownerStudioComId: studio.ownerStudioComId,
+            logoUrl: studio.logoUrl,
         };
     }
 

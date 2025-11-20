@@ -31,7 +31,7 @@ import { merge } from '@casual-simulation/aux-common/utils';
 import { setLayerMask, buildSRGBColor } from './SceneUtils';
 
 export class WordBubble3D extends Object3D {
-    name = 'WordBubble3D'; 
+    name = 'WordBubble3D';
 
     private _shapeGeometry: ShapeBufferGeometry;
     private _shapeMeshMaterial: MeshBasicMaterial;

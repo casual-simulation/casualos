@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`HtmlAppBackend set_app_output should not replace input elements when setting the value attribute 1`] = `
 Object {

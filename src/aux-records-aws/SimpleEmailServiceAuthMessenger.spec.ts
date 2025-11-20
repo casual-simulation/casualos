@@ -83,7 +83,7 @@ describe('SimpleEmailServiceAuthMessenger', () => {
             expect(result).toEqual({
                 success: true,
             });
-            expect(ses.sendEmail).toBeCalledWith({
+            expect(ses.sendEmail).toHaveBeenCalledWith({
                 Destination: {
                     ToAddresses: ['target@example.com'],
                 },
@@ -129,7 +129,7 @@ describe('SimpleEmailServiceAuthMessenger', () => {
             expect(result).toEqual({
                 success: true,
             });
-            expect(ses.sendEmail).toBeCalledWith({
+            expect(ses.sendEmail).toHaveBeenCalledWith({
                 Destination: {
                     ToAddresses: ['target@example.com'],
                 },
