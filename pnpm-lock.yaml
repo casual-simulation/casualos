@@ -131,6 +131,9 @@ importers:
       '@types/offscreencanvas':
         specifier: ^2019.6.4
         version: 2019.7.3
+      '@types/qrcode':
+        specifier: 1.5.6
+        version: 1.5.6
       '@types/redis':
         specifier: ^2.8.32
         version: 2.8.32
@@ -864,9 +867,6 @@ importers:
       '@types/estraverse':
         specifier: 5.1.7
         version: 5.1.7
-      '@types/qrcode':
-        specifier: ^1.5.5
-        version: 1.5.5
       '@types/seedrandom':
         specifier: 3.0.8
         version: 3.0.8
@@ -921,9 +921,6 @@ importers:
       preact:
         specifier: 10.19.6
         version: 10.19.6
-      qrcode:
-        specifier: ^1.5.4
-        version: 1.5.4
       rxjs:
         specifier: 8.0.0-alpha.14
         version: 8.0.0-alpha.14
@@ -1279,6 +1276,9 @@ importers:
       prisma:
         specifier: ^6.14.0
         version: 6.14.0(typescript@5.8.3)
+      qrcode:
+        specifier: ^1.5.4
+        version: 1.5.4
       redis:
         specifier: 4.6.10
         version: 4.6.10
@@ -6387,8 +6387,8 @@ packages:
   '@types/prop-types@15.7.14':
     resolution: {integrity: sha512-gNMvNH49DJ7OJYv+KAKn0Xp45p8PLl6zo2YnvDIbTd4J6MER2BmWN49TG7n9LvkyihINxeKW8+3bfS2yDC9dzQ==}
 
-  '@types/qrcode@1.5.5':
-    resolution: {integrity: sha512-CdfBi/e3Qk+3Z/fXYShipBT13OJ2fDO2Q2w5CIP5anLTLIndQG9z6P1cnm+8zCWSpm5dnxMFd/uREtb0EXuQzg==}
+  '@types/qrcode@1.5.6':
+    resolution: {integrity: sha512-te7NQcV2BOvdj2b1hCAHzAoMNuj65kNBMz0KBaxM6c3VGBOhU0dURQKOtH8CFNI/dsKkwlv32p26qYQTWoB5bw==}
 
   '@types/qs@6.9.18':
     resolution: {integrity: sha512-kK7dgTYDyGqS+e2Q4aK9X3D7q234CIZ1Bv0q/7Z5IwRDoADNU81xXJK/YVyLbLTZCoIwUoDoffFeF+p/eIklAA==}
@@ -23312,7 +23312,7 @@ snapshots:
 
   '@types/prop-types@15.7.14': {}
 
-  '@types/qrcode@1.5.5':
+  '@types/qrcode@1.5.6':
     dependencies:
       '@types/node': 18.19.98
 

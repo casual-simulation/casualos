@@ -117,6 +117,7 @@ import type {
     HideLoadingScreenAction,
     AddBotMapLayerAction,
     RemoveBotMapLayerAction,
+    GenerateQRCodeOptions,
 } from '@casual-simulation/aux-common/bots';
 import {
     hasValue,
@@ -148,6 +149,7 @@ import {
     showUploadAuxFile as calcShowUploadAuxFile,
     openQRCodeScanner as calcOpenQRCodeScanner,
     showQRCode as calcShowQRCode,
+    generateQRCode as calcGenerateQRCode,
     openBarcodeScanner as calcOpenBarcodeScanner,
     showBarcode as calcShowBarcode,
     importAUX as calcImportAUX,
@@ -433,7 +435,6 @@ import {
 import { Vector3 as ThreeVector3, Plane, Ray } from '@casual-simulation/three';
 import mime from 'mime';
 import TWEEN from '@tweenjs/tween.js';
-import QRCode from 'qrcode';
 import './PerformanceNowPolyfill';
 import '@casual-simulation/aux-common/BlobPolyfill';
 import type { AuxDevice } from './AuxDevice';
@@ -7448,6 +7449,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Returns a promise that resolves with the data URL string.
      *
      * @param code the text or data that the generated QR Code should represent.
+     * @param options the options that should be used when generating the QR Code.
      *
      * @example Generate a QR Code that contains the data "hello".
      * const qrCodeUrl = await os.generateQRCode("hello");
@@ -7457,12 +7459,26 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * const qrCodeUrl = await os.generateQRCode("https://example.com");
      * masks.formAddress = qrCodeUrl;
      *
+     * @example Generate a QR Code with custom colors.
+     * const qrCodeUrl = await os.generateQRCode("Custom QR Code", {
+     *   color: {
+     *    dark: "#0000FFFF",
+     *    light: "#FFFF00FF"
+     *   }
+     * });
+     * masks.formAddress = qrCodeUrl;
+     *
      * @dochash actions/os/barcodes
      * @docname os.generateQRCode
      * @docgroup 10-qr-code
      */
-    function generateQRCode(code: string): Promise<string> {
-        return QRCode.toDataURL(code);
+    function generateQRCode(
+        code: string,
+        options?: GenerateQRCodeOptions
+    ): Promise<string> {
+        const task = context.createTask();
+        const event = calcGenerateQRCode(code, options, task.taskId);
+        return addAsyncAction(task, event);
     }
 
     /**
