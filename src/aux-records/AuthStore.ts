@@ -22,6 +22,10 @@ import type {
     AuthenticatorTransportFuture,
     CredentialDeviceType,
 } from '@simplewebauthn/types';
+import type {
+    StripeAccountStatus,
+    StripeRequirementsStatus,
+} from './StripeInterface';
 
 /**
  * Defines an interface that represents an auth store.
@@ -60,6 +64,12 @@ export interface AuthStore {
      * @param customerId The ID of the customer.
      */
     findUserByStripeCustomerId(customerId: string): Promise<AuthUser | null>;
+
+    /**
+     * Finds the user that is associated with the given Stripe Account ID.
+     * @param accountId The ID of the account.
+     */
+    findUserByStripeAccountId(accountId: string): Promise<AuthUser | null>;
 
     /**
      * Finds the user that is associated with the given Privo Service ID.
@@ -309,6 +319,12 @@ export interface AuthStore {
     getInvoiceById(id: string): Promise<AuthInvoice | null>;
 
     /**
+     * Gets the invoice with the given stripe ID.
+     * @param id The ID of the invoice.
+     */
+    getInvoiceByStripeId(id: string): Promise<AuthInvoice | null>;
+
+    /**
      * Updates the subscription info for a user/studio.
      *
      * This will create/update a subscription object, update the info on the user/studio and subscription, and optionally update the period of the subscription.
@@ -327,6 +343,31 @@ export interface AuthStore {
     updateSubscriptionPeriod(
         request: UpdateSubscriptionPeriodRequest
     ): Promise<void>;
+
+    /**
+     * Updates the info for a checkout session.
+     * @param request The
+     */
+    updateCheckoutSessionInfo(
+        request: UpdateCheckoutSessionRequest
+    ): Promise<void>;
+
+    /**
+     * Marks the checkout session with the given ID as fulfilled.
+     * @param sessionId The ID of the checkout session.
+     * @param fulfilledAtMs The unix time in miliseconds that the session was fulfilled at.
+     */
+    markCheckoutSessionFulfilled(
+        sessionId: string,
+        fulfilledAtMs: number
+    ): Promise<void>;
+
+    /**
+     * Gets the checkout session with the given ID.
+     * Returns null if the session could not be found.
+     * @param id The ID of the checkout session.
+     */
+    getCheckoutSessionById(id: string): Promise<AuthCheckoutSession | null>;
 
     /**
      * Gets the list of authenticators for the given user.
@@ -375,6 +416,33 @@ export interface AuthStore {
         userId: string,
         authenticatorId: string
     ): Promise<number>;
+
+    /**
+     * Creates or updates the given purchased item.
+     * @param item The item.
+     */
+    savePurchasedItem(item: PurchasedItem): Promise<void>;
+
+    /**
+     * Gets the list of purchased items that are associated with the given activation key.
+     * @param keyId The ID of the key.
+     */
+    listPurchasedItemsByActivationKeyId(
+        keyId: string
+    ): Promise<PurchasedItem[]>;
+
+    /**
+     * Creates the given activation key.
+     * @param key The key.
+     */
+    createActivationKey(key: ActivationKey): Promise<void>;
+
+    /**
+     * Gets the activation key with the given ID.
+     * Returns null if the key could not be found.
+     * @param keyId The ID of the key.
+     */
+    getActivationKeyById(keyId: string): Promise<ActivationKey | null>;
 }
 
 export type AddressType = 'email' | 'phone';
@@ -490,6 +558,26 @@ export interface AuthUser {
      * The role that the user has been assigned in the system.
      */
     role?: UserRole;
+
+    /**
+     * The rate at which the user is requesting payment (null if not yet specified)
+     */
+    requestedRate?: number | null;
+
+    /**
+     * The user's connected stripe account ID.
+     */
+    stripeAccountId?: string | null;
+
+    /**
+     * The user's connected stripe account requirements status.
+     */
+    stripeAccountRequirementsStatus?: StripeRequirementsStatus | null;
+
+    /**
+     * The user's connected stripe account status.
+     */
+    stripeAccountStatus?: StripeAccountStatus | null;
 }
 
 export interface AuthUserAuthenticator {
@@ -987,13 +1075,21 @@ export interface AuthInvoice {
 
     /**
      * The ID of the subscription that this invoice is for.
+     * Null if no subscription is associated with this invoice.
      */
-    subscriptionId: string;
+    subscriptionId: string | null;
+
+    /**
+     * The ID of the checkout session that this invoice is for.
+     * Null if no checkout session is associated with this invoice.
+     */
+    checkoutSessionId: string | null;
 
     /**
      * The ID of the subscription period that this invoice is for.
+     * Null if no subscription period is associated with this invoice.
      */
-    periodId: string;
+    periodId: string | null;
 
     /**
      * The description of the invoice.
@@ -1158,7 +1254,10 @@ export interface UpdateSubscriptionPeriodRequest {
     /**
      * The invoice that should be created.
      */
-    invoice: Omit<AuthInvoice, 'id' | 'subscriptionId' | 'periodId'>;
+    invoice: Omit<
+        AuthInvoice,
+        'id' | 'subscriptionId' | 'periodId' | 'checkoutSessionId'
+    >;
 }
 
 /**
@@ -1194,4 +1293,294 @@ export interface UserLoginMetadata {
      * If empty, then the user does not have any push subscriptions.
      */
     pushSubscriptionIds: string[];
+}
+
+/**
+ * Defines an interface that represents a checkout session for a purchasable item.
+ */
+export interface AuthCheckoutSession {
+    /**
+     * The ID of the session.
+     */
+    id: string;
+
+    /**
+     * Whether the checkout session has been paid for or not.
+     */
+    paid: boolean;
+
+    /**
+     * The items that are in the checkout session.
+     */
+    items: AuthCheckoutSessionItem[];
+
+    /**
+     * The unix time in miliseconds that the checkout session has been fulfilled at by
+     * granting the user access to their items.
+     *
+     * For contracts, this means opening the contract.
+     */
+    fulfilledAtMs: number | null;
+
+    /**
+     * The status of the checkout session.
+     */
+    stripeStatus: CheckoutSessionStatus;
+
+    /**
+     * The payment status of the checkout session.
+     */
+    stripePaymentStatus: CheckoutSessionPaymentStatus;
+
+    /**
+     * The ID of the stripe checkout session that is associated with this session.
+     * If null, then the session is not associated with a stripe checkout session.
+     */
+    stripeCheckoutSessionId: string | null;
+
+    /**
+     * The ID of the user that the checkout session is for.
+     */
+    userId: string | null;
+
+    /**
+     * The ID of the invoice that the session has.
+     * Null if no invoice was created for the checkout session.
+     */
+    invoiceId: string | null;
+
+    /**
+     * The transaction ID that should be associated with the checkout session.
+     */
+    transactionId?: string | null;
+
+    /**
+     * The transfers that have been posted for the checkout session.
+     */
+    transferIds?: string[] | null;
+
+    /**
+     * Wether the transfers are currently pending.
+     */
+    transfersPending?: boolean;
+
+    /**
+     * Whether the checkout session should be automatically fulfilled once payment completes.
+     */
+    shouldBeAutomaticallyFulfilled?: boolean;
+}
+
+export type AuthCheckoutSessionItem =
+    | AuthCheckoutSessionRoleItem
+    | AuthCheckoutSessionContractItem;
+
+export interface AuthCheckoutSessionRoleItem {
+    /**
+     * The type of the item.
+     */
+    type: 'role';
+
+    /**
+     * The name of the record that the role is being purchased in.
+     */
+    recordName: string;
+
+    /**
+     * The address of the purchasable item.
+     */
+    purchasableItemAddress: string;
+
+    /**
+     * The role that is being purchased.
+     */
+    role: string;
+
+    /**
+     * The number of miliseconds that the role is being purchased for.
+     */
+    roleGrantTimeMs: number | null;
+}
+
+export interface AuthCheckoutSessionContractItem {
+    type: 'contract';
+
+    /**
+     * The name of the record that the contract is being purchased in.
+     */
+    recordName: string;
+
+    /**
+     * The address of the contract.
+     */
+    contractAddress: string;
+
+    /**
+     * The ID of the contract that is being purchased.
+     */
+    contractId: string;
+
+    /**
+     * The value of the contract being purchased.
+     */
+    value: number;
+}
+
+/**
+ * The status of the stripe checkout session.
+ */
+export type CheckoutSessionStatus = 'open' | 'expired' | 'complete';
+
+/**
+ * The payment status of the checkout session.
+ *
+ * - "no_payment_required" - The checkout session does not require payment via Stripe.
+ * - "paid" - The checkout session has been paid for.
+ * - "unpaid" - The checkout session has not been paid for.
+ */
+export type CheckoutSessionPaymentStatus =
+    | 'no_payment_required'
+    | 'paid'
+    | 'unpaid';
+
+/**
+ * Defines an interface that represents an item that has been purchased.
+ */
+export interface PurchasedItem {
+    /**
+     * The ID of the item.
+     */
+    id: string;
+
+    /**
+     * The name of the record that the item was purchased from.
+     */
+    recordName: string;
+
+    /**
+     * The address of the purchasable item.
+     */
+    purchasableItemAddress: string;
+
+    /**
+     * The ID of the user that purchased the item.
+     * Null if the purchase wasn't associated with a user (purchased by a guest or purchased as an access key).
+     */
+    userId: string | null;
+
+    /**
+     * The ID of the checkout session that the item was purchased through.
+     * Null if the purchase wasn't associated with a checkout session.
+     */
+    checkoutSessionId: string | null;
+
+    /**
+     * The name of the role that is granted by the purchasable item.
+     */
+    roleName: string;
+
+    /**
+     * The number of miliseconds that the role is granted for.
+     * If null, then the role is granted indefinitely.
+     */
+    roleGrantTimeMs: number | null;
+
+    /**
+     * The unix timestamp in miliseconds when the item was activated.
+     * Null if the item has not been activated.
+     */
+    activatedTimeMs: number | null;
+
+    /**
+     * The ID of the activation key that was used to activate the item.
+     * Null if the item is associated with a user.
+     */
+    activationKeyId: string | null;
+}
+
+/**
+ * Defines an interface for a key that can be used to activate a purchased item.
+ */
+export interface ActivationKey {
+    /**
+     * The ID of the activation key.
+     */
+    id: string;
+
+    /**
+     * The hash of the secret for the key.
+     */
+    secretHash: string;
+}
+
+export interface UpdateCheckoutSessionRequest {
+    /**
+     * The ID of the session.
+     */
+    id: string;
+
+    /**
+     * The status of the checkout session.
+     */
+    status: CheckoutSessionStatus;
+
+    /**
+     * The payment status of the checkout session.
+     */
+    paymentStatus: CheckoutSessionPaymentStatus;
+
+    /**
+     * Whether the checkout session has been paid for or not.
+     */
+    paid: boolean;
+
+    /**
+     * The items in the session.
+     */
+    items: AuthCheckoutSessionItem[];
+
+    /**
+     * The ID of the stripe checkout session that is associated with this session.
+     * If null, then the session is not associated with a stripe checkout session.
+     */
+    stripeCheckoutSessionId: string | null;
+
+    /**
+     * The ID of the user that the checkout session is for.
+     */
+    userId: string | null;
+
+    /**
+     * The unix time in miliseconds that the checkout session was fulfilled at.
+     */
+    fulfilledAtMs: number | null;
+
+    /**
+     * The invoice that should be created/updated.
+     * If null, then the invoice will not be created/updated.
+     */
+    invoice: Omit<
+        AuthInvoice,
+        'id' | 'subscriptionId' | 'periodId' | 'checkoutSessionId'
+    > | null;
+
+    /**
+     * The transaction ID that should be associated with the checkout session.
+     */
+    transactionId?: string | null;
+
+    /**
+     * The transfers that have been posted for the checkout session.
+     */
+    transferIds?: string[] | null;
+
+    /**
+     * Wether the transfers are currently pending.
+     * Defaults to false.
+     */
+    transfersPending?: boolean;
+
+    /**
+     * Whether the checkout session should be automatically fulfilled once payment completes.
+     */
+    shouldBeAutomaticallyFulfilled?: boolean;
 }

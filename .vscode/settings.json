@@ -58,6 +58,7 @@
     "editor.insertSpaces": true,
     "editor.tabSize": 4,
     "editor.detectIndentation": false,
+    "javascript.preferences.importModuleSpecifier": "relative",
     "javascript.preferences.quoteStyle": "single",
     "typescript.preferences.quoteStyle": "single",
     "workbench.colorCustomizations": {},
@@ -65,5 +66,6 @@
     "jest.autoEnable": false,
     "typescript.tsdk": "node_modules\\typescript\\lib",
     "typescript.tsserver.maxTsServerMemory": 8192,
-    "jest.autoRun": "off"
+    "jest.autoRun": "off",
+    "cSpell.words": ["KASP"]
 }
