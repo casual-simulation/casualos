@@ -30,6 +30,7 @@ import {
     createAbsolutePositionFromStateVector,
     createRelativePositionFromStateVector,
     getClock,
+    getTextChar,
 } from '@casual-simulation/aux-common/yjs/YjsHelpers';
 import type { VersionVector } from '@casual-simulation/aux-common';
 import type { CodeLocation } from './TranspilerUtils';
@@ -1589,7 +1590,7 @@ export class Transpiler {
         doc.clientID += 1;
         const version = { '0': getClock(doc, 0) };
 
-        const openingFunctionCall = `${this._jsxFactory}(`;
+        let openingFunctionCall = `${this._jsxFactory}(`;
         const absoluteStart = createAbsolutePositionFromStateVector(
             doc,
             text,
@@ -1628,6 +1629,13 @@ export class Transpiler {
 
         let currentIndex = absoluteStart.index;
 
+        if (node.start > 0) {
+            const prevChar = getTextChar(text, currentIndex - 1);
+            // Add space if previous character is not a whitespace or an opening bracket
+            if (/[^\s()[\]<>\n\r=\\/,]/g.test(prevChar)) {
+                openingFunctionCall = ` ${openingFunctionCall}`;
+            }
+        }
         text.insert(currentIndex, openingFunctionCall);
         currentIndex += openingFunctionCall.length;
 
