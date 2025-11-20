@@ -1,17 +1,11 @@
 # CasualOS Changelog
 
-## V3.8.1
+## V3.8.2
 
 #### Date: TBD
 
 ### :rocket: Features
 
--   Added `os.showAlert()` function to display informational alert dialogs with a single dismiss button
-    -   Accepts `title`, `content`, and optional `dismissText` parameters
-    -   Returns a promise that resolves when the dialog is dismissed
-    -   Useful for displaying important information that requires user acknowledgment
--   Increased the number of segments on `skybox` form spheres.
--   Changed the "Connection lost" and "Connection regained" toast messages to be simpler.
 -   Added support for basic xpExchange features
     -   In order to access these features, users need to have the `contracts` features on their subscription.
     -   Contracting & Invoicing
@@ -52,11 +46,52 @@
             -   Additionally, Stripe always has a fee for payments, which means that a $1000 contract will actually net around $950 in the xpExchange account balance.
             -   For this reason, it is always recommended to ensure that contract fees are set high enough to cover Stripe processing fees and that the Stripe account is configured to automatically top up its balance.
             -   Finally, CasualOS will not allow payouts larger than what has been taken in via Stripe. For example, if $1000 dollars of contracts were purchased via Stripe, then CasualOS will track that Stripe has $1000 dollars available. If users withdraw $500, then CasualOS will know that only $500 can be withdrawn from Stripe. This calculation however doesn't take into account Stripe fees.
+-   Added the `os.signOut()` function to sign out the current user
+    -   Returns a promise that resolves when the sign out request has been processed
+    -   Uses the auth helper's logout method to properly sign out the user
+
+### :bug: Bug Fixes
+
+-   Various fixes to bot labels:
+    -   Fixed z-fighting that was common on floating labels in the map portal.
+    -   Fixed bug that would cause bots with empty floating labels to prevent the page from loading properly.
+    -   Fixed floating label positioning in the map portal.
+    -   Fixed floating label billboarding on bots with non-identity rotations.
+    -   Fixed floating label bot spacing to stay consistent between grid's of different scales.
+    -   Fixed floating label shape generation to be compatible with the map portal.
+    -   Fixed label transforms not being updated properly when switching between `labelPosition` types.
+    -   Fixed child bot decorators not being updated when a transformer bot changes scale.
+-   Fixed internal `DebugObjectManager` not rendering properly when in the map portal.
+-   Disabled double-click to zoom in the map portal.
+-   Fixed camera rotation in mapPortal continuing after releasing the right mouse button outside the browser window.
+
+## V3.8.1
+
+#### Date: 11/5/2025
+
+### :rocket: Features
+
+-   Added `os.showAlert()` function to display informational alert dialogs with a single dismiss button
+    -   Accepts `title`, `content`, and optional `dismissText` parameters
+    -   Returns a promise that resolves when the dialog is dismissed
+    -   Useful for displaying important information that requires user acknowledgment
+-   Increased the number of segments on `skybox` form spheres.
+-   Changed the "Connection lost" and "Connection regained" toast messages to be simpler.
+-   Added the following importable libraries:
+    -   [`rxjs` and `rxjs/operators`](https://rxjs.dev/)
+    -   [`es-toolkit`](https://es-toolkit.dev/)
 
 ### :bug: Bug Fixes
 
 -   Fixed an issue where `ai.listChatModels()` wouldn't work unless an options object was provided.
 -   Fixed an issue where empty JSX expressions with comments weren't supported.
+-   Fixed an issue where `portalPannableMin` and `portalPannableMax` constraints did not properly restrict camera movement when the camera was rotated. The fix includes:
+    -   Removed camera-relative constraint checking that failed at different rotation angles
+    -   Added world-space clamping after camera target updates
+-   Fixed an issue where CasualOS wasn't able to properly reload shared documents with nested maps or arrays.
+-   Reduced the amount of code that gets cached on first load.
+-   Changed the QR and Barcode components to load lazily to reduce the size of the initial load.
+-   Fixed several issues where `export` statements wouldn't be compiled properly.
 
 ## V3.8.0
 
@@ -64,6 +99,7 @@
 
 ### :rocket: Features
 
+-   Added the `os.generateQRCode(code)` function to generate a QR code as a data URL that can be used in an img tag or as a bot's formAddress.
 -   Added the `os.eraseInst(recordKeyOrName, instName, options?)` function to delete insts programmatically.
 -   Added the `ai.listChatModels()` function to list the available chat models that the user can use based on their subscription.
 -   Changed webhooks to record logs to the same record that the webhook is stored in.

@@ -70,6 +70,7 @@ export namespace HtmlMixer {
             this.rendererWebgl = rendererWebgl;
 
             this.cssScene = new Scene();
+            this.cssScene.name = 'CSS_Scene';
         }
 
         update(): void {

@@ -71,16 +71,12 @@ import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
 import LoadApp from '../../shared/vue-components/LoadApp/LoadApp';
 import { tap } from 'rxjs/operators';
 import { merge } from 'es-toolkit/compat';
-import QRCode from '@chenfengyuan/vue-qrcode';
-import QrcodeStream from 'vue-qrcode-reader/src/components/QrcodeStream';
 import type { Simulation, LoginState } from '@casual-simulation/aux-vm';
 import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import type { SidebarItem } from '../../shared/vue-components/BaseGameView';
 import type { ConnectionInfo } from '@casual-simulation/aux-common';
 import Console from '../../shared/vue-components/Console/Console';
 import { recordMessage } from '../../shared/Console';
-import VueBarcode from '../../shared/public/VueBarcode';
-import BarcodeScanner from '../../shared/vue-components/BarcodeScanner/BarcodeScanner';
 import { createStaticHtml, sendWebhook } from '../../../shared/WebhookUtils';
 import HtmlModal from '../../shared/vue-components/HtmlModal/HtmlModal';
 import ClipboardModal from '../../shared/vue-components/ClipboardModal/ClipboardModal';
@@ -125,6 +121,7 @@ import { isSupported as isLoomSupported } from '@loomhq/record-sdk/is-supported'
 import type { SubscribeToNotificationAction } from '@casual-simulation/aux-runtime';
 import { recordsCallProcedure } from '@casual-simulation/aux-runtime';
 import { getSimulationId } from '../../../shared/SimulationHelpers';
+import LoadingWidget from '../../shared/vue-components/LoadingWidget/LoadingWidget';
 
 let syntheticVoices = [] as SyntheticVoice[];
 
@@ -148,15 +145,49 @@ declare function sa_event(
 ): void;
 declare function sa_event(name: string, callback: () => void): void;
 
+const QRCodeAsync = () => ({
+    component: import('@chenfengyuan/vue-qrcode'),
+    loading: LoadingWidget,
+
+    delay: 10,
+    timeout: 1000 * 60 * 5, // 5 minutes
+});
+
+const QRCodeStream = () => ({
+    component: import('vue-qrcode-reader/src/components/QrcodeStream'),
+    loading: LoadingWidget,
+
+    delay: 10,
+    timeout: 1000 * 60 * 5, // 5 minutes
+});
+
+const BarcodeAsync = () => ({
+    component: import('../../shared/public/VueBarcode'),
+    loading: LoadingWidget,
+
+    delay: 10,
+    timeout: 1000 * 60 * 5, // 5 minutes
+});
+
+const BarcodeScannerAsync = () => ({
+    component: import(
+        '../../shared/vue-components/BarcodeScanner/BarcodeScanner'
+    ),
+    loading: LoadingWidget,
+
+    delay: 10,
+    timeout: 1000 * 60 * 5, // 5 minutes
+});
+
 @Component({
     components: {
         'auth-ui': AuthUI,
         'login-ui': LoginUI,
         'load-app': LoadApp,
-        'qr-code': QRCode,
-        'qrcode-stream': QrcodeStream,
-        barcode: VueBarcode,
-        'barcode-stream': BarcodeScanner,
+        'qr-code': QRCodeAsync,
+        'qrcode-stream': QRCodeStream,
+        barcode: BarcodeAsync,
+        'barcode-stream': BarcodeScannerAsync,
         'html-modal': HtmlModal,
         'upload-server-modal': UploadServerModal,
         'clipboard-modal': ClipboardModal,
@@ -881,6 +912,45 @@ export default class PlayerApp extends Vue {
                     } else {
                         this._hideQRCode();
                     }
+                } else if (e.type === 'generate_qr_code') {
+                    try {
+                        const QRCode = await import('qrcode');
+                        const errorCorrectionLevel =
+                            e.options?.errorCorrectionLevel;
+                        const code = await QRCode.toDataURL(e.code, {
+                            errorCorrectionLevel:
+                                errorCorrectionLevel === 'high'
+                                    ? 'H'
+                                    : errorCorrectionLevel === 'medium'
+                                    ? 'M'
+                                    : errorCorrectionLevel === 'low'
+                                    ? 'L'
+                                    : errorCorrectionLevel === 'quartile'
+                                    ? 'Q'
+                                    : 'M',
+                            type: e.options?.imageFormat || 'image/png',
+                            width: e.options?.width,
+                            margin: e.options?.margin,
+                            scale: e.options?.scale,
+                            color: e.options?.color
+                                ? {
+                                      dark: e.options.color.dark,
+                                      light: e.options.color.light,
+                                  }
+                                : undefined,
+                            maskPattern: e.options?.maskPattern,
+                            version: e.options?.version,
+                        });
+
+                        simulation.helper.transaction(
+                            asyncResult(e.taskId, code)
+                        );
+                    } catch (ex) {
+                        console.error('Error generating QR code:', ex);
+                        simulation.helper.transaction(
+                            asyncError(e.taskId, ex.toString())
+                        );
+                    }
                 } else if (e.type === 'show_barcode') {
                     if (e.open) {
                         this._showBarcode(e.code, e.format);
@@ -1258,6 +1328,17 @@ export default class PlayerApp extends Vue {
 
                         simulation.helper.transaction(
                             asyncResult(e.taskId, id, false)
+                        );
+                    } catch (ex) {
+                        simulation.helper.transaction(
+                            asyncError(e.taskId, ex.toString())
+                        );
+                    }
+                } else if (e.type === 'sign_out') {
+                    try {
+                        await simulation.auth.primary.logout();
+                        simulation.helper.transaction(
+                            asyncResult(e.taskId, null, false)
                         );
                     } catch (ex) {
                         simulation.helper.transaction(

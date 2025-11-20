@@ -225,6 +225,10 @@ export class YjsSharedDocument implements SharedDocument {
         return new YjsSharedArray(new YArray<T>());
     }
 
+    createText(): SharedText {
+        return new YjsSharedText(new YText());
+    }
+
     async init(): Promise<void> {}
 
     connect(): void {
@@ -473,7 +477,7 @@ export class YjsSharedMap<T>
     }
 
     set(key: string, value: T): void {
-        if (value instanceof YjsSharedType) {
+        if (value instanceof YjsSharedType || value instanceof YjsSharedText) {
             if (value.doc) {
                 throw new Error(
                     'Cannot set a top-level map inside another map.'
@@ -685,7 +689,7 @@ export class YjsSharedArray<T>
     private _mapItems(items: T[]): T[] {
         let containsSharedType = false;
         for (let i of items) {
-            if (i instanceof YjsSharedType) {
+            if (i instanceof YjsSharedType || i instanceof YjsSharedText) {
                 if (i.doc) {
                     throw new Error(
                         'Cannot push a top-level array inside another array.'
@@ -697,7 +701,11 @@ export class YjsSharedArray<T>
         }
 
         if (containsSharedType) {
-            items = items.map((i) => (i instanceof YjsSharedType ? i.type : i));
+            items = items.map((i) =>
+                i instanceof YjsSharedType || i instanceof YjsSharedText
+                    ? i.type
+                    : i
+            );
         }
         return items;
     }
@@ -730,6 +738,10 @@ export class YjsSharedText implements SharedText {
 
     get deepChanges(): Observable<SharedTextChanges[]> {
         return this._deepChanges;
+    }
+
+    get type(): YText {
+        return this._text;
     }
 
     constructor(text: YText);
@@ -810,7 +822,16 @@ export class YjsSharedText implements SharedText {
 
 function valueOrSharedType(val: any) {
     if (val instanceof YType) {
-        return (val as any).__sharedType;
+        const sharedType = (val as any).__sharedType;
+        if (sharedType) {
+            return sharedType;
+        } else if (val instanceof YMap) {
+            return new YjsSharedMap(val);
+        } else if (val instanceof YArray) {
+            return new YjsSharedArray(val);
+        } else if (val instanceof YText) {
+            return new YjsSharedText(val);
+        }
     }
     return val;
 }

@@ -64,6 +64,7 @@ module.exports = {
             },
         ],
         '^.+\\.(js|jsx)$': 'babel-jest',
+        '.*\\.txt$': './jest/raw-transformer.js',
     },
     snapshotFormat: {
         escapeString: true,

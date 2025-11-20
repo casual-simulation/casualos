@@ -88,6 +88,7 @@ export namespace DebugObjectManager {
         _initialized = true;
         _time = new Time();
         _scene = new Scene();
+        _scene.name = 'DebugObject_Scene';
         _debugObjects = [];
         _updateFuncs = [];
         _objectPools = new Map<string, ObjectPool<unknown>>();

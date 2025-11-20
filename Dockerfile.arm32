@@ -8,7 +8,6 @@ ENV PATH "/root/.deno/bin:/home/node/.npm-global/bin:${PATH}"
 
 ENV NODE_ENV production
 ENV PRODUCTION 1
-
 # Specify no sandbox since Deno doesn't support Arm32
 ENV SANDBOX_TYPE "none"
 
@@ -18,7 +17,11 @@ COPY ./src/aux-server/aux-web/dist ./aux-web/dist/
 COPY ./src/aux-server/aux-web/aux-auth/dist ./aux-web/aux-auth/dist/
 COPY ./src/aux-server/aux-backend/schemas/auth.prisma ./aux-backend/schemas/auth.prisma
 COPY ./src/aux-server/aux-backend/schemas/migrations ./aux-backend/schemas/migrations
+COPY ./src/aux-server/aux-backend/schemas/sqlite/auth.sqlite.prisma ./aux-backend/schemas/sqlite/auth.sqlite.prisma
+COPY ./src/aux-server/aux-backend/schemas/sqlite/migrations ./aux-backend/schemas/sqlite/migrations
 COPY ./src/aux-server/node_modules/@libsql ./aux-backend/node_modules/@libsql
+COPY ./docker-entrypoint.sh ./docker-entrypoint.sh
+RUN chmod +x ./docker-entrypoint.sh
 
 # HTTP
 EXPOSE 3000
@@ -27,4 +30,5 @@ EXPOSE 3002
 # WebSocket
 EXPOSE 4567
 
-CMD [ "npm", "start" ]
+ENTRYPOINT [ "./docker-entrypoint.sh" ]
+CMD [ "npm", "run", "docker:start" ]

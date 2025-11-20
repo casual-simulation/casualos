@@ -49,6 +49,10 @@ import {
     unwindAndCapture,
 } from '@casual-simulation/js-interpreter';
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import BrokenScript from './test/scripts/broken-script.txt';
+
 describe('AuxCompiler', () => {
     let compiler: AuxCompiler;
 
@@ -1505,6 +1509,14 @@ describe('AuxCompiler', () => {
                     expect(stack).toBe(null);
                 });
             });
+        });
+
+        it('should be able to compile this script', async () => {
+            const func = compiler.compile(BrokenScript, {
+                arguments: [EXPORT_FACTORY],
+            });
+
+            expect(func).toBeTruthy();
         });
     });
 
