@@ -1695,9 +1695,6 @@ importers:
       axios:
         specifier: 1.7.7
         version: 1.7.7
-      browserslist:
-        specifier: ^4.27.0
-        version: 4.27.0
       commander:
         specifier: 12.0.0
         version: 12.0.0
@@ -3806,6 +3803,7 @@ packages:
 
   '@libsql/linux-arm64-gnu@0.5.22':
     resolution: {integrity: sha512-KSdnOMy88c9mpOFKUEzPskSaF3VLflfSUCBwas/pn1/sV3pEhtMF6H8VUCd2rsedwoukeeCSEONqX7LLnQwRMA==}
+    cpu: [arm64]
     os: [linux]
 
   '@libsql/linux-arm64-musl@0.5.20':
@@ -3820,6 +3818,7 @@ packages:
 
   '@libsql/linux-x64-gnu@0.5.22':
     resolution: {integrity: sha512-kNBHaIkSg78Y4BqAdgjcR2mBilZXs4HYkAmi58J+4GRwDQZh5fIUWbnQvB9f95DkWUIGVeenqLRFY2pcTmlsew==}
+    cpu: [x64]
     os: [linux]
 
   '@libsql/linux-x64-musl@0.5.20':
@@ -3834,6 +3833,7 @@ packages:
 
   '@libsql/win32-x64-msvc@0.5.22':
     resolution: {integrity: sha512-Fj0j8RnBpo43tVZUVoNK6BV/9AtDUM5S7DF3LB4qTYg1LMSZqi3yeCneUTLJD6XomQJlZzbI4mst89yspVSAnA==}
+    cpu: [x64]
     os: [win32]
 
   '@livekit/protocol@1.15.0':
@@ -10829,6 +10829,7 @@ packages:
 
   libsql@0.5.20:
     resolution: {integrity: sha512-hkWCsiwTbNsrKeWqPh91ZZEcLDo0+WUnFv2QzITD33F7Er9KOlr7N2SGfNjAbnkciN+iPJ7g108Jkno1JFmzTw==}
+    cpu: [x64, arm64, wasm32, arm]
     os: [darwin, linux, win32]
 
   lie@3.3.0:
