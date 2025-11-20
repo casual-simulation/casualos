@@ -21,6 +21,8 @@ import type { AuxBot3DDecoratorFactory } from '../../shared/scene/decorators/Aux
 import type { MiniSimulation3D } from './MiniSimulation3D';
 
 export class MiniPortalContextGroup3D extends DimensionGroup3D {
+    name = 'MiniPortalContextGroup3D';
+
     simulation3D: MiniSimulation3D; // Override base class type.
 
     constructor(

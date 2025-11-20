@@ -31,6 +31,16 @@ export class ScaleDecorator extends AuxBot3DDecoratorBase {
 
         const scale = calculateScale(calc, this.bot3D.bot, gridScale);
         this.bot3D.scaleContainer.scale.set(scale.x, scale.y, scale.z);
+
+        // Update all the bots that have this set as their transformer.
+        const matches = calc.lookup.query(
+            calc,
+            ['transformer'],
+            [this.bot3D.bot.id]
+        );
+        this.bot3D.dimensionGroup.simulation3D.ensureUpdate(
+            matches.map((b) => b.id)
+        );
     }
 
     dispose(): void {}

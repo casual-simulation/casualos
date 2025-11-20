@@ -118,6 +118,7 @@ import {
     setAppOutput,
     unregisterCustomApp,
     requestAuthData,
+    signOut,
     defineGlobalBot,
     TEMPORARY_BOT_PARTITION_ID,
     TEMPORARY_SHARED_PARTITION_ID,
@@ -174,6 +175,7 @@ import {
     removeMapLayer,
     ADD_BOT_LISTENER_SYMBOL,
     GET_DYNAMIC_LISTENERS_SYMBOL,
+    generateQRCode,
 } from '@casual-simulation/aux-common/bots';
 import { types } from 'util';
 import { attachRuntime, detachRuntime } from './RuntimeEvents';
@@ -5131,6 +5133,20 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.generateQRCode()', () => {
+            it('should emit a GenerateQRCode action', async () => {
+                const promise: any = library.api.os.generateQRCode('hello');
+                const expected = generateQRCode(
+                    'hello',
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
         describe('os.openBarcodeScanner()', () => {
             it('should emit a OpenBarcodeScannerAction', () => {
                 const action = library.api.os.openBarcodeScanner();
@@ -7063,6 +7079,15 @@ describe('AuxLibrary', () => {
                 await waitAsync();
 
                 expect(resultBot).toBe(null);
+            });
+        });
+
+        describe('os.signOut()', () => {
+            it('should emit a sign_out action', () => {
+                const action: any = library.api.os.signOut();
+                const expected = signOut(context.tasks.size);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 
