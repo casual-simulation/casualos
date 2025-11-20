@@ -1,6 +1,6 @@
 {
     "name": "casualos",
-    "version": "3.8.2-alpha.19511653187",
+    "version": "3.8.2-alpha.19551992560",
     "description": "Command line interface for CasualOS.",
     "main": "./dist/index.js",
     "types": "index.d.ts",
