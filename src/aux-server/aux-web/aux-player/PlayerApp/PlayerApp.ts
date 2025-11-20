@@ -1295,6 +1295,17 @@ export default class PlayerApp extends Vue {
                             asyncError(e.taskId, ex.toString())
                         );
                     }
+                } else if (e.type === 'sign_out') {
+                    try {
+                        await simulation.auth.primary.logout();
+                        simulation.helper.transaction(
+                            asyncResult(e.taskId, null, false)
+                        );
+                    } catch (ex) {
+                        simulation.helper.transaction(
+                            asyncError(e.taskId, ex.toString())
+                        );
+                    }
                 } else if (e.type === 'enable_pov') {
                     this.streamImu = e.enabled && e.imu;
                 } else if (e.type === 'convert_geolocation_to_w3w') {

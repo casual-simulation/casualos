@@ -14818,6 +14818,11 @@ interface Os {
     requestAuthBotInBackground(): Promise<Bot>;
 
     /**
+     * Signs out the current user by revoking their session.
+     */
+    signOut(): Promise<void>;
+
+    /**
      * Gets an access key for the given public record.
      * @param name The name of the record.
      */

@@ -118,6 +118,7 @@ describe('RecordsManager', () => {
         createPublicRecordKey: jest.fn(),
         provideSmsNumber: jest.fn(),
         getRecordKeyPolicy: jest.fn(),
+        logout: jest.fn(),
     };
     let customAuth: AuthHelperInterface;
     let customAuthMock = {

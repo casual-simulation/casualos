@@ -6,6 +6,9 @@
 
 ### :rocket: Features
 
+-   Added the `os.signOut()` function to sign out the current user
+    -   Returns a promise that resolves when the sign out request has been processed
+    -   Uses the auth helper's logout method to properly sign out the user
 -   Added basic server side rendering.
     -   Currently, this is used for injecting the web config so that CasualOS doesn't need to make a call to `/api/config` on initialization.
 
@@ -21,6 +24,7 @@
     -   Fixed label transforms not being updated properly when switching between `labelPosition` types.
     -   Fixed child bot decorators not being updated when a transformer bot changes scale.
 -   Fixed internal `DebugObjectManager` not rendering properly when in the map portal.
+-   Disabled double-click to zoom in the map portal.
 
 ## V3.8.1
 
