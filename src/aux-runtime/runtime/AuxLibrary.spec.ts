@@ -174,6 +174,7 @@ import {
     removeMapLayer,
     ADD_BOT_LISTENER_SYMBOL,
     GET_DYNAMIC_LISTENERS_SYMBOL,
+    generateQRCode,
 } from '@casual-simulation/aux-common/bots';
 import { types } from 'util';
 import { attachRuntime, detachRuntime } from './RuntimeEvents';
@@ -5135,21 +5136,16 @@ describe('AuxLibrary', () => {
         });
 
         describe('os.generateQRCode()', () => {
-            it('should return a promise that resolves to a data URL', async () => {
-                const result = await library.api.os.generateQRCode('hello');
-                expect(result).toMatch(/^data:image\/png;base64,/);
-            });
-
-            it('should generate a QR code for URLs', async () => {
-                const result = await library.api.os.generateQRCode(
-                    'https://example.com'
+            it('should emit a GenerateQRCode action', async () => {
+                const promise: any = library.api.os.generateQRCode('hello');
+                const expected = generateQRCode(
+                    'hello',
+                    undefined,
+                    context.tasks.size
                 );
-                expect(result).toMatch(/^data:image\/png;base64,/);
-            });
 
-            it('should not emit any actions', async () => {
-                await library.api.os.generateQRCode('test');
-                expect(context.actions).toEqual([]);
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 
