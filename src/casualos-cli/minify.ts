@@ -91,8 +91,11 @@ export async function transformAux(
                             : result.code;
                     })
                     .catch((err) => {
+                        const system = bot.tags['system'];
                         console.error(
-                            `Failed to transform tag ${tag} on bot ${botId}:`,
+                            `Failed to transform tag ${tag} on bot ${botId}${
+                                system ? ` (system: ${system})` : ''
+                            }:`,
                             err
                         );
                     });
