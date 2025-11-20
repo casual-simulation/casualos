@@ -9,6 +9,7 @@
 -   Added the `os.signOut()` function to sign out the current user
     -   Returns a promise that resolves when the sign out request has been processed
     -   Uses the auth helper's logout method to properly sign out the user
+-   Added the `os.generateQRCode(code)` function to generate a QR code as a data URL that can be used in an img tag or as a bot's formAddress.
 
 ### :bug: Bug Fixes
 
@@ -59,7 +60,6 @@
 
 ### :rocket: Features
 
--   Added the `os.generateQRCode(code)` function to generate a QR code as a data URL that can be used in an img tag or as a bot's formAddress.
 -   Added the `os.eraseInst(recordKeyOrName, instName, options?)` function to delete insts programmatically.
 -   Added the `ai.listChatModels()` function to list the available chat models that the user can use based on their subscription.
 -   Changed webhooks to record logs to the same record that the webhook is stored in.
