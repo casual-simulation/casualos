@@ -41,12 +41,11 @@ import { z } from 'zod';
 import type { ResourceKinds } from '@casual-simulation/aux-common';
 
 const ERROR_RESULT_SCHEMA = z
-    .object({
+    .looseObject({
         success: z.literal(false),
         errorCode: z.string(),
         errorMessage: z.string(),
     })
-    .passthrough()
     .optional()
     .nullable();
 
