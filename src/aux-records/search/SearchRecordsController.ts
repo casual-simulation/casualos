@@ -771,10 +771,10 @@ export const SEARCH_COLLECTION_SCHEMA = z
     .object({})
     .catchall(SEARCH_COLLECTION_FIELD)
     .refine((val) => Object.keys(val).length < 100, {
-        message: 'Search collections cannot have more than 100 fields.',
+        error: 'Search collections cannot have more than 100 fields.',
     })
     .refine((val) => Object.keys(val).length >= 1, {
-        message: 'Search collections must have at least 1 field.',
+        error: 'Search collections must have at least 1 field.',
     });
 
 /**
@@ -834,12 +834,12 @@ export const SEARCH_DOCUMENT_SCHEMA = z
                     ])
                 )
                 .refine((val) => Object.keys(val).length < 15, {
-                    message: 'Nested objects cannot have more than 15 keys.',
+                    error: 'Nested objects cannot have more than 15 keys.',
                 }),
         ])
     )
     .refine((val) => Object.keys(val).length < 100, {
-        message: 'Search documents cannot have more than 100 keys.',
+        error: 'Search documents cannot have more than 100 keys.',
     });
 
 export interface SearchRecordInput

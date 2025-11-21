@@ -102,11 +102,10 @@ const minioSchema = z.object({
         .min(1),
 
     port: z
-        .number()
+        .int()
         .describe(
             'The port that the Minio server is running on. Defaults to 80 for non-SSL, and 443 for SSL.'
         )
-        .int()
         .positive()
         .optional(),
 
@@ -116,7 +115,7 @@ const minioSchema = z.object({
             'Whether to use SSL when connecting to the Minio server. Defaults to true.'
         )
         .optional()
-        .default(true),
+        .prefault(true),
 
     accessKey: z
         .string()
@@ -139,7 +138,7 @@ const minioSchema = z.object({
         )
         .min(1)
         .optional()
-        .default('us-east-1'),
+        .prefault('us-east-1'),
 
     filesBucket: z
         .string()
@@ -183,7 +182,7 @@ const typesenseSchema = z.object({
                     .string()
                     .describe('The host of the Typesense node.')
                     .min(1),
-                port: z.number().int().min(1).optional(),
+                port: z.int().min(1).optional(),
                 protocol: z.enum(['http', 'https']).optional(),
             })
         )
@@ -372,7 +371,7 @@ const redisSchema = z.object({
         .describe(
             'The Redis servers that should be used for specific categories of data. If omitted, then the default server will be used.'
         )
-        .default({}),
+        .prefault({}),
 
     rateLimitPrefix: z
         .string()
@@ -410,13 +409,13 @@ const redisSchema = z.object({
         .positive()
         .nullable()
         .optional()
-        .default(60 * 60 * 24),
+        .prefault(60 * 60 * 24),
     publicInstRecordsLifetimeExpireMode: expireModeSchema
         .describe(
             'The Redis expire mode that should be used for public inst records. Defaults to NX. If null, then the expiration will update every time the inst data is updated. Only supported on Redis 7+. If set to something not null on Redis 6, then errors will occur.'
         )
         .optional()
-        .default('NX'),
+        .prefault('NX'),
 
     tempInstRecordsStoreNamespace: z
         .string()
@@ -432,13 +431,13 @@ const redisSchema = z.object({
         .positive()
         .nullable()
         .optional()
-        .default(60 * 60 * 24),
+        .prefault(60 * 60 * 24),
     tempInstRecordsLifetimeExpireMode: expireModeSchema
         .describe(
             'The Redis expire mode that should be used for temporary inst branches (e.g. tempShared space). Defaults to null. If null, then the expiration will not have a mode. Only supported on Redis 7+. If set to something not null on Redis 6, then errors will occur.'
         )
         .optional()
-        .default(null),
+        .prefault(null),
 
     // The number of seconds that authorizations for repo/add_updates permissions (inst.read and inst.updateData) are cached for.
     // Because repo/add_updates is a very common permission, we periodically cache permissions to avoid hitting the database too often.
@@ -450,7 +449,7 @@ const redisSchema = z.object({
 Because repo/add_updates is a very common permission, we periodically cache permissions to avoid hitting the database too often. Defaults to 5 minutes.`
         )
         .positive()
-        .default(300),
+        .prefault(300),
 
     cacheNamespace: z
         .string()
@@ -460,7 +459,7 @@ Because repo/add_updates is a very common permission, we periodically cache perm
         .nonempty()
         .nullable()
         .optional()
-        .default('/cache'),
+        .prefault('/cache'),
 
     connectionExpireSeconds: z
         .number()
@@ -470,13 +469,13 @@ Because repo/add_updates is a very common permission, we periodically cache perm
         .positive()
         .optional()
         .nullable()
-        .default(60 * 60 * 3),
+        .prefault(60 * 60 * 3),
     connectionExpireMode: expireModeSchema
         .describe(
             'The Redis expire mode that should be used for connections. Defaults to null. If null, then the expiration will not have a mode. Only supported on Redis 7+. If set to something not null on Redis 6, then errors will occur.'
         )
         .optional()
-        .default(null),
+        .prefault(null),
 
     pubSubNamespace: z
         .string()
@@ -485,7 +484,7 @@ Because repo/add_updates is a very common permission, we periodically cache perm
         )
         .nullable()
         .optional()
-        .default('pubsub'),
+        .prefault('pubsub'),
 });
 
 const rateLimitSchema = z.object({
@@ -526,7 +525,7 @@ const mongodbSchema = z.object({
         .boolean()
         .describe('Whether to use the new URL parser. Defaults to false.')
         .optional()
-        .default(false),
+        .prefault(false),
     database: z
         .string()
         .describe('The database that should be used.')
@@ -540,11 +539,10 @@ const mongodbSchema = z.object({
 
 const prismaSchema = z.object({
     options: z
-        .object({})
+        .looseObject({})
         .describe(
             'Generic options that should be passed to the Prisma client constructor.'
         )
-        .passthrough()
         .optional(),
 
     db: z
@@ -552,7 +550,7 @@ const prismaSchema = z.object({
         .describe(
             'The database type to use with Prisma. Defaults to "cockroachdb".'
         )
-        .default('cockroachdb'),
+        .prefault('cockroachdb'),
 
     policiesCacheSeconds: z
         .number()
@@ -562,7 +560,7 @@ const prismaSchema = z.object({
         .positive()
         .nullable()
         .optional()
-        .default(60),
+        .prefault(60),
     configurationCacheSeconds: z
         .number()
         .describe(
@@ -571,7 +569,7 @@ const prismaSchema = z.object({
         .positive()
         .nullable()
         .optional()
-        .default(60 * 60 * 24), // 24 hours in seconds,
+        .prefault(60 * 60 * 24), // 24 hours in seconds,
 });
 
 const openAiSchema = z.object({
@@ -644,14 +642,59 @@ const aiSchema = z.object({
                 )
                 .nonempty(),
             allowedModels: z
-                .array(
+                .tuple(
+                    [
+                        z.union([
+                            z.string(),
+                            z.object({
+                                provider: z
+                                    .enum(['openai', 'google', 'anthropic'])
+                                    .optional(),
+                                model: z.string(),
+                            }),
+                            z.object({
+                                provider: z
+                                    .literal('custom-openai-completions')
+                                    .describe(
+                                        'Defines that the provider points to a custom implementation of the OpenAI Completions API'
+                                    ),
+                                name: z
+                                    .string()
+                                    .describe(
+                                        'The name that should be used for this provider'
+                                    )
+                                    .prefault('custom-openai-completions'),
+                                apiKey: z
+                                    .string()
+                                    .describe(
+                                        'The API key that should be used to communicate with the custom API.'
+                                    ),
+                                baseUrl: z
+                                    .string()
+                                    .describe(
+                                        'The endpoint that should be used to communicate with the custom API. (e.g. "https://api.openai.com/v1/" for OpenAIs API)'
+                                    ),
+                                models: z
+                                    .array(z.string())
+                                    .describe(
+                                        'The list of models that should be mapped to this provider'
+                                    ),
+                                additionalProperties: z
+                                    .looseObject({})
+                                    .describe(
+                                        'The additional properties that should be included in requests.'
+                                    )
+                                    .optional(),
+                            }),
+                        ]),
+                    ],
                     z.union([
-                        z.string().nonempty(),
+                        z.string(),
                         z.object({
                             provider: z
                                 .enum(['openai', 'google', 'anthropic'])
                                 .optional(),
-                            model: z.string().nonempty(),
+                            model: z.string(),
                         }),
                         z.object({
                             provider: z
@@ -664,28 +707,24 @@ const aiSchema = z.object({
                                 .describe(
                                     'The name that should be used for this provider'
                                 )
-                                .nonempty()
-                                .default('custom-openai-completions'),
+                                .prefault('custom-openai-completions'),
                             apiKey: z
                                 .string()
                                 .describe(
                                     'The API key that should be used to communicate with the custom API.'
-                                )
-                                .nonempty(),
+                                ),
                             baseUrl: z
                                 .string()
                                 .describe(
                                     'The endpoint that should be used to communicate with the custom API. (e.g. "https://api.openai.com/v1/" for OpenAIs API)'
-                                )
-                                .nonempty(),
+                                ),
                             models: z
-                                .array(z.string().nonempty())
+                                .array(z.string())
                                 .describe(
                                     'The list of models that should be mapped to this provider'
                                 ),
                             additionalProperties: z
-                                .object({})
-                                .passthrough()
+                                .looseObject({})
                                 .describe(
                                     'The additional properties that should be included in requests.'
                                 )
@@ -697,7 +736,7 @@ const aiSchema = z.object({
                     'The list of models that are allowed to be used for Chat AI requets.'
                 ),
             allowedSubscriptionTiers: z
-                .union([z.literal(true), z.array(z.string().nonempty())])
+                .union([z.literal(true), z.tuple([z.string()], z.string())])
                 .describe(
                     'The subscription tiers that are allowed to use Chat AI. If true, then all tiers are allowed.'
                 ),
@@ -707,7 +746,7 @@ const aiSchema = z.object({
                     'Custom token modifier ratio per model. The key is the model name and the value is the cost multiplier.'
                 )
                 .optional()
-                .default({}),
+                .prefault({}),
         })
         .describe('Options for Chat AI. If omitted, then chat AI is disabled.')
         .optional(),
@@ -719,7 +758,7 @@ const aiSchema = z.object({
                     'The provider that should be used for Skybox Generation AI requests.'
                 ),
             allowedSubscriptionTiers: z
-                .union([z.literal(true), z.array(z.string().nonempty())])
+                .union([z.literal(true), z.tuple([z.string()], z.string())])
                 .describe(
                     'The subscription tiers that are allowed to use Skybox AI. If true, then all tiers are allowed.'
                 ),
@@ -737,57 +776,51 @@ const aiSchema = z.object({
                 )
                 .nonempty(),
             defaultWidth: z
-                .number()
-                .describe('The default width of generated images.')
                 .int()
+                .describe('The default width of generated images.')
                 .positive(),
             defaultHeight: z
-                .number()
-                .describe('The default height of generated images.')
                 .int()
+                .describe('The default height of generated images.')
                 .positive(),
             maxWidth: z
-                .number()
+                .int()
                 .describe(
                     'The maximum width of generated images. If omitted, then the max width is controlled by the model.'
                 )
-                .int()
                 .positive()
                 .optional(),
             maxHeight: z
-                .number()
+                .int()
                 .describe(
                     'The maximum height of generated images. If omitted, then the max height is controlled by the model.'
                 )
-                .int()
                 .positive()
                 .optional(),
             maxSteps: z
-                .number()
+                .int()
                 .describe(
                     'The maximum number of steps that can be used to generate an image. If omitted, then the max steps is controlled by the model.'
                 )
-                .int()
                 .positive()
                 .optional(),
             maxImages: z
-                .number()
+                .int()
                 .describe(
                     'The maximum number of images that can be generated in a single request. If omitted, then the max images is controlled by the model.'
                 )
-                .int()
                 .positive()
                 .optional(),
             allowedModels: z
                 .object({
                     openai: z
-                        .array(z.string().nonempty())
+                        .tuple([z.string()], z.string())
                         .describe(
                             'The list of OpenAI DALL-E models that are allowed to be used. If omitted, then no OpenAI models are allowed.'
                         )
                         .optional(),
                     stabilityai: z
-                        .array(z.string().nonempty())
+                        .tuple([z.string()], z.string())
                         .describe(
                             'The list of StabilityAI models that are allowed to be used. If omitted, then no StabilityAI models are allowed.'
                         )
@@ -797,7 +830,7 @@ const aiSchema = z.object({
                     'The models that are allowed to be used from each provider.'
                 ),
             allowedSubscriptionTiers: z
-                .union([z.literal(true), z.array(z.string().nonempty())])
+                .union([z.literal(true), z.tuple([z.string()], z.string())])
                 .describe(
                     'The subscription tiers that are allowed to use Image AI. If true, then all tiers are allowed.'
                 ),
@@ -826,22 +859,36 @@ const wsSchema = z.object({});
 
 const webauthnSchema = z.object({
     relyingParties: z
-        .array(
+        .tuple(
+            [
+                z.object({
+                    name: z
+                        .string()
+                        .describe(
+                            'The human-readable name of the relying party.'
+                        ),
+                    id: z
+                        .string()
+                        .describe(
+                            'The ID of the relying party. Should be the domain of the relying party. Note that this does not mean that it has to be unique. Instead, it just needs to match the domain that the passkeys can be used on.'
+                        ),
+                    origin: z
+                        .string()
+                        .describe('The HTTP origin of the relying party.'),
+                }),
+            ],
             z.object({
                 name: z
                     .string()
-                    .describe('The human-readable name of the relying party.')
-                    .nonempty(),
+                    .describe('The human-readable name of the relying party.'),
                 id: z
                     .string()
                     .describe(
                         'The ID of the relying party. Should be the domain of the relying party. Note that this does not mean that it has to be unique. Instead, it just needs to match the domain that the passkeys can be used on.'
-                    )
-                    .nonempty(),
+                    ),
                 origin: z
                     .string()
-                    .describe('The HTTP origin of the relying party.')
-                    .nonempty(),
+                    .describe('The HTTP origin of the relying party.'),
             })
         )
         .describe('The relying parties that should be supported.'),
@@ -862,7 +909,7 @@ const telemetrySchema = z.object({
                 )
                 .optional(),
             headers: z
-                .record(z.string())
+                .record(z.string(), z.string())
                 .describe(
                     'The headers that should be sent with the traces. Only required for otlp exporters.'
                 )
@@ -884,7 +931,7 @@ const telemetrySchema = z.object({
                 )
                 .optional(),
             headers: z
-                .record(z.string())
+                .record(z.string(), z.string())
                 .describe(
                     'The headers that should be sent with the metrics. Only required for otlp exporters.'
                 )
@@ -895,7 +942,7 @@ const telemetrySchema = z.object({
     instrumentation: z
         .object({
             auto: z
-                .record(z.object({}).passthrough())
+                .record(z.string(), z.looseObject({}))
                 .describe(
                     'Options for auto-instrumentation. If omitted, then auto-instrumentation will be enabled with default settings. If set to null, then auto-instrumentation will be disabled.'
                 )
@@ -903,40 +950,38 @@ const telemetrySchema = z.object({
                 .nullable(),
 
             prisma: z
-                .object({})
+                .looseObject({})
                 .describe(
                     'Options for Prisma instrumentation. If omitted, then Prisma instrumentation will be enabled with default settings. If set to null, then prisma instrumentation will be disabled.'
                 )
-                .passthrough()
                 .optional()
                 .nullable(),
 
             redis: z
-                .object({})
+                .looseObject({})
                 .describe(
                     'Options for Redis instrumentation. If omitted, then Redis instrumentation will be enabled with default settings. If set to null, then redis instrumentation will be disabled.'
                 )
-                .passthrough()
                 .optional()
                 .nullable(),
         })
         .describe('Options for instrumentation')
         .optional()
-        .default({}),
+        .prefault({}),
 
     resource: z
-        .record(z.string())
+        .record(z.string(), z.string())
         .describe(
             'The resource that should be used. See https://opentelemetry.io/docs/specs/semconv/resource/ for more information.'
         )
         .optional()
-        .default({}),
+        .prefault({}),
 });
 
 const tigerBeetleSchema = z
     .object({
-        clusterId: z
-            .bigint({ coerce: true })
+        clusterId: z.coerce
+            .bigint()
             .min(0n, 'The cluster ID must be a non-negative integer.')
             .describe('The cluster ID.'),
         replicaAddresses: z
@@ -982,13 +1027,12 @@ const rekognitionSchema = z.object({
                         .min(1),
 
                     priority: z
-                        .number()
+                        .int()
                         .describe(
                             'The priority of jobs that are created. Higher numbers are higher priority. Defaults to 10.'
                         )
-                        .int()
                         .optional()
-                        .default(10),
+                        .prefault(10),
 
                     roleArn: z
                         .string()
@@ -1054,7 +1098,7 @@ const webhooksSchema = z.object({
                 .describe(
                     'Whether to enable debug logs for the Deno environment. This will log all Deno output to the console.'
                 )
-                .default(false),
+                .prefault(false),
         }),
         z.object({
             type: z.literal('node'),
@@ -1089,14 +1133,14 @@ const bullmqSchema = z.object({
         .describe(
             'Whether to process jobs from BullMQ on this node. Defaults to true.'
         )
-        .default(true),
+        .prefault(true),
 
     queue: z
         .boolean()
         .describe(
             'Whether to allow this node to enqueue jobs in BullMQ. Defaults to true.'
         )
-        .default(true),
+        .prefault(true),
 
     queueName: z
         .string()
@@ -1393,7 +1437,7 @@ export const serverConfigSchema = z.object({
             enabled: z
                 .boolean()
                 .describe('Whether serving CasualOS should be enabled.')
-                .default(true),
+                .prefault(true),
 
             tls: z
                 .object({
@@ -1426,25 +1470,25 @@ export const serverConfigSchema = z.object({
                 .describe(
                     'Whether to enable debug logging for the CasualOS app.'
                 )
-                .default(false),
+                .prefault(false),
 
             frontendPort: z
                 .number()
                 .describe(
                     'The port that the CasualOS app frontend should listen on.'
                 )
-                .default(3000),
+                .prefault(3000),
 
             backendPort: z
                 .number()
                 .describe(
                     'The port that the CasualOS app backend API should listen on.'
                 )
-                .default(3002),
+                .prefault(3002),
 
             webConfig: WEB_CONFIG_SCHEMA.describe(
                 'The web configuration for the CasualOS frontend.'
-            ).default({
+            ).prefault({
                 causalRepoConnectionProtocol: 'websocket',
                 collaborativeRepoLocalPersistence: true,
                 staticRepoLocalPersistence: true,
@@ -1478,14 +1522,14 @@ export const serverConfigSchema = z.object({
                         .describe(
                             'The base path that drives should be served from.'
                         )
-                        .default('/drives'),
+                        .prefault('/drives'),
                 })
                 .optional(),
         })
         .describe(
             'The configuration for the CasualOS server. Defaults to disabled.'
         )
-        .default({
+        .prefault({
             enabled: false,
         }),
 });

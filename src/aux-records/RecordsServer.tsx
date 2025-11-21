@@ -808,7 +808,7 @@ export class RecordsServer {
                             expireTimeMs: z.coerce.number().int().optional(),
                             userId: z.string().optional(),
                         })
-                        .default({})
+                        .prefault({})
                 )
                 .handler(async ({ expireTimeMs, userId }, context) => {
                     const sessionKey = context.sessionKey;
@@ -1008,8 +1008,8 @@ export class RecordsServer {
                 .http('POST', '/api/v2/register/privo')
                 .inputs(
                     z.object({
-                        email: z.string().min(1).email().optional(),
-                        parentEmail: z.string().min(1).email().optional(),
+                        email: z.email().min(1).optional(),
+                        parentEmail: z.email().min(1).optional(),
                         name: NAME_VALIDATION,
                         dateOfBirth: z.coerce.date(),
                         displayName: DISPLAY_NAME_VALIDATION,
@@ -1302,16 +1302,19 @@ export class RecordsServer {
                         recordName: RECORD_NAME_VALIDATION,
                         ownerId: z
                             .string({
-                                invalid_type_error: 'ownerId must be a string.',
-                                required_error: 'ownerId is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'ownerId is required.'
+                                        : 'ownerId must be a string.',
                             })
                             .nonempty('ownerId must not be empty.')
                             .optional(),
                         studioId: z
                             .string({
-                                invalid_type_error:
-                                    'studioId must be a string.',
-                                required_error: 'studioId is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'studioId is required.'
+                                        : 'studioId must be a string.',
                             })
                             .nonempty('studioId must not be empty.')
                             .optional(),
@@ -1355,8 +1358,10 @@ export class RecordsServer {
                         recordKey: RECORD_KEY_VALIDATION,
                         eventName: EVENT_NAME_VALIDATION,
                         count: z.number({
-                            invalid_type_error: 'count must be a number.',
-                            required_error: 'count is required.',
+                            error: (issue) =>
+                                issue.input === undefined
+                                    ? 'count is required.'
+                                    : 'count must be a number.',
                         }),
                         instances: INSTANCES_ARRAY_VALIDATION.optional(),
                     })
@@ -1399,9 +1404,10 @@ export class RecordsServer {
                         recordName: RECORD_NAME_VALIDATION,
                         eventName: z
                             .string({
-                                required_error: 'eventName is required.',
-                                invalid_type_error:
-                                    'eventName must be a string.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'eventName is required.'
+                                        : 'eventName must be a string.',
                             })
                             .nonempty('eventName must not be empty'),
                         instances: INSTANCES_ARRAY_VALIDATION.optional(),
@@ -1439,9 +1445,10 @@ export class RecordsServer {
                         recordName: RECORD_NAME_VALIDATION,
                         eventName: z
                             .string({
-                                invalid_type_error:
-                                    'eventName must be a string.',
-                                required_error: 'eventName is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'eventName is required.'
+                                        : 'eventName must be a string.',
                             })
                             .nonempty('eventName must be non-empty.')
                             .optional(),
@@ -1751,7 +1758,7 @@ export class RecordsServer {
                         targetResourceKind: z.enum(['data', 'file']),
                         targetRecordName: RECORD_NAME_VALIDATION,
                         targetAddress: ADDRESS_VALIDATION,
-                        markers: MARKERS_VALIDATION.optional().default([
+                        markers: MARKERS_VALIDATION.optional().prefault([
                             PRIVATE_MARKER,
                         ]),
                     }),
@@ -1761,7 +1768,7 @@ export class RecordsServer {
                         targetRecordName:
                             RECORD_NAME_VALIDATION.optional().nullable(),
                         targetAddress: ADDRESS_VALIDATION,
-                        markers: MARKERS_VALIDATION.optional().default([
+                        markers: MARKERS_VALIDATION.optional().prefault([
                             PRIVATE_MARKER,
                         ]),
                     }),
@@ -1917,7 +1924,7 @@ export class RecordsServer {
                     z.object({
                         recordName: RECORD_NAME_VALIDATION,
                         address: ADDRESS_VALIDATION,
-                        requestTimeMs: z.number().int().optional(),
+                        requestTimeMs: z.int().optional(),
                         instances: INSTANCES_ARRAY_VALIDATION.optional(),
                     })
                 )
@@ -2002,7 +2009,7 @@ export class RecordsServer {
                 z.object({
                     address: ADDRESS_VALIDATION,
                     description: z.string().min(1),
-                    markers: MARKERS_VALIDATION.optional().default([
+                    markers: MARKERS_VALIDATION.optional().prefault([
                         PRIVATE_MARKER,
                     ]),
                 }),
@@ -2441,19 +2448,19 @@ export class RecordsServer {
                         item: z.object({
                             address: ADDRESS_VALIDATION,
                             key: z.object({
-                                major: z.number().int(),
-                                minor: z.number().int(),
-                                patch: z.number().int(),
+                                major: z.int(),
+                                minor: z.int(),
+                                patch: z.int(),
                                 tag: z
                                     .string()
                                     .max(16)
                                     .nullable()
                                     .optional()
-                                    .default(''),
+                                    .prefault(''),
                             }),
                             auxFileRequest: z.object({
                                 fileSha256Hex: z.string().min(1).max(123),
-                                fileByteLength: z.number().positive().int(),
+                                fileByteLength: z.int().positive(),
                                 fileMimeType: z.string().min(1).max(128),
                                 fileDescription: z
                                     .string()
@@ -2562,10 +2569,10 @@ export class RecordsServer {
                         recordName: RECORD_NAME_VALIDATION,
                         address: ADDRESS_VALIDATION,
                         key: z.object({
-                            major: z.number().int(),
-                            minor: z.number().int(),
-                            patch: z.number().int(),
-                            tag: z.string().max(16).default(''),
+                            major: z.int(),
+                            minor: z.int(),
+                            patch: z.int(),
+                            tag: z.string().max(16).prefault(''),
                         }),
                         instances: INSTANCES_ARRAY_VALIDATION.optional(),
                     })
@@ -2679,17 +2686,14 @@ export class RecordsServer {
                                     z
                                         .object({
                                             major: z
-                                                .number()
                                                 .int()
                                                 .optional()
                                                 .nullable(),
                                             minor: z
-                                                .number()
                                                 .int()
                                                 .optional()
                                                 .nullable(),
                                             patch: z
-                                                .number()
                                                 .int()
                                                 .optional()
                                                 .nullable(),
@@ -3123,14 +3127,17 @@ export class RecordsServer {
                         statements: z.array(
                             z.object({
                                 query: z.string().min(1).max(250_000),
-                                params: z.array(z.any()).optional().default([]),
+                                params: z
+                                    .array(z.any())
+                                    .optional()
+                                    .prefault([]),
                             })
                         ),
-                        readonly: z.boolean().default(true),
+                        readonly: z.boolean().prefault(true),
                         automaticTransaction: z
                             .boolean()
                             .optional()
-                            .default(true),
+                            .prefault(true),
                         instances: INSTANCES_ARRAY_VALIDATION.optional(),
                     })
                 )
@@ -3394,8 +3401,10 @@ export class RecordsServer {
                     z.object({
                         recordName: RECORD_NAME_VALIDATION,
                         policy: z.string({
-                            invalid_type_error: 'policy must be a string.',
-                            required_error: 'policy is required.',
+                            error: (issue) =>
+                                issue.input === undefined
+                                    ? 'policy is required.'
+                                    : 'policy must be a string.',
                         }),
                     })
                 )
@@ -3498,9 +3507,10 @@ export class RecordsServer {
                     z.object({
                         permissionId: z
                             .string({
-                                invalid_type_error:
-                                    'permissionId must be a string.',
-                                required_error: 'permissionId is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'permissionId is required.'
+                                        : 'permissionId must be a string.',
                             })
                             .nonempty('permissionId must not be empty'),
                         instances: INSTANCES_ARRAY_VALIDATION.optional(),
@@ -3539,9 +3549,10 @@ export class RecordsServer {
                         resourceKind: RESOURCE_KIND_VALIDATION.optional(),
                         resourceId: z
                             .string({
-                                invalid_type_error:
-                                    'resourceId must be a string.',
-                                required_error: 'resourceId is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'resourceId is required.'
+                                        : 'resourceId must be a string.',
                             })
                             .optional(),
                     })
@@ -3599,8 +3610,10 @@ export class RecordsServer {
                         recordName: RECORD_NAME_VALIDATION,
                         userId: z
                             .string({
-                                invalid_type_error: 'userId must be a string.',
-                                required_error: 'userId is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'userId is required.'
+                                        : 'userId must be a string.',
                             })
                             .nonempty('userId must not be empty'),
                         instances: INSTANCES_ARRAY_VALIDATION.optional(),
@@ -3637,8 +3650,10 @@ export class RecordsServer {
                         recordName: RECORD_NAME_VALIDATION,
                         inst: z
                             .string({
-                                invalid_type_error: 'inst must be a string.',
-                                required_error: 'inst is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'inst is required.'
+                                        : 'inst must be a string.',
                             })
                             .nonempty('inst must not be empty'),
                         instances: INSTANCES_ARRAY_VALIDATION.optional(),
@@ -3675,16 +3690,19 @@ export class RecordsServer {
                         recordName: RECORD_NAME_VALIDATION,
                         startingRole: z
                             .string({
-                                invalid_type_error:
-                                    'startingRole must be a string.',
-                                required_error: 'startingRole is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'startingRole is required.'
+                                        : 'startingRole must be a string.',
                             })
                             .nonempty('startingRole must not be empty')
                             .optional(),
                         role: z
                             .string({
-                                invalid_type_error: 'role must be a string.',
-                                required_error: 'role is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'role is required.'
+                                        : 'role must be a string.',
                             })
                             .nonempty('role must not be empty')
                             .optional(),
@@ -3740,29 +3758,36 @@ export class RecordsServer {
                         recordName: RECORD_NAME_VALIDATION,
                         userId: z
                             .string({
-                                invalid_type_error: 'userId must be a string.',
-                                required_error: 'userId is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'userId is required.'
+                                        : 'userId must be a string.',
                             })
                             .nonempty('userId must not be empty')
                             .optional(),
                         inst: z
                             .string({
-                                invalid_type_error: 'inst must be a string.',
-                                required_error: 'inst is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'inst is required.'
+                                        : 'inst must be a string.',
                             })
                             .nonempty('inst must not be empty')
                             .optional(),
                         role: z
                             .string({
-                                invalid_type_error: 'role must be a string.',
-                                required_error: 'role is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'role is required.'
+                                        : 'role must be a string.',
                             })
                             .nonempty('role must not be empty'),
                         expireTimeMs: z
                             .number({
-                                invalid_type_error:
-                                    'expireTimeMs must be a number.',
-                                required_error: 'expireTimeMs is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'expireTimeMs is required.'
+                                        : 'expireTimeMs must be a number.',
                             })
                             .positive('expireTimeMs must be positive')
                             .optional(),
@@ -3817,22 +3842,28 @@ export class RecordsServer {
                         recordName: RECORD_NAME_VALIDATION,
                         userId: z
                             .string({
-                                invalid_type_error: 'userId must be a string.',
-                                required_error: 'userId is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'userId is required.'
+                                        : 'userId must be a string.',
                             })
                             .nonempty('userId must not be empty')
                             .optional(),
                         inst: z
                             .string({
-                                invalid_type_error: 'inst must be a string.',
-                                required_error: 'inst is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'inst is required.'
+                                        : 'inst must be a string.',
                             })
                             .nonempty('inst must not be empty')
                             .optional(),
                         role: z
                             .string({
-                                invalid_type_error: 'role must be a string.',
-                                required_error: 'role is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'role is required.'
+                                        : 'role must be a string.',
                             })
                             .nonempty('role must not be empty'),
                         instances: INSTANCES_ARRAY_VALIDATION.optional(),
@@ -3996,7 +4027,10 @@ export class RecordsServer {
                 .inputs(
                     z.object({
                         model: z.string().nonempty().optional(),
-                        messages: z.array(AI_CHAT_MESSAGE_SCHEMA).nonempty(),
+                        messages: z.tuple(
+                            [AI_CHAT_MESSAGE_SCHEMA],
+                            AI_CHAT_MESSAGE_SCHEMA
+                        ),
                         instances: INSTANCES_ARRAY_VALIDATION.optional(),
                         temperature: z.number().min(0).max(2).optional(),
                         topP: z.number().optional(),
@@ -4045,7 +4079,10 @@ export class RecordsServer {
                 .inputs(
                     z.object({
                         model: z.string().nonempty().optional(),
-                        messages: z.array(AI_CHAT_MESSAGE_SCHEMA).nonempty(),
+                        messages: z.tuple(
+                            [AI_CHAT_MESSAGE_SCHEMA],
+                            AI_CHAT_MESSAGE_SCHEMA
+                        ),
                         instances: INSTANCES_ARRAY_VALIDATION.optional(),
                         temperature: z.number().min(0).max(2).optional(),
                         topP: z.number().optional(),
@@ -4176,9 +4213,10 @@ export class RecordsServer {
                     z.object({
                         skyboxId: z
                             .string({
-                                invalid_type_error:
-                                    'skyboxId must be a string.',
-                                required_error: 'skyboxId is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'skyboxId is required.'
+                                        : 'skyboxId must be a string.',
                             })
                             .nonempty('skyboxId must not be empty'),
                         instances: INSTANCES_ARRAY_VALIDATION.optional(),
@@ -4218,25 +4256,29 @@ export class RecordsServer {
                     z.object({
                         prompt: z
                             .string({
-                                invalid_type_error: 'prompt must be a string.',
-                                required_error: 'prompt is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'prompt is required.'
+                                        : 'prompt must be a string.',
                             })
                             .nonempty('prompt must not be empty'),
                         model: z
                             .string({
-                                invalid_type_error: 'model must be a string.',
-                                required_error: 'model is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'model is required.'
+                                        : 'model must be a string.',
                             })
                             .nonempty('model must not be empty')
                             .optional(),
                         negativePrompt: z.string().nonempty().optional(),
-                        width: z.number().positive().int().optional(),
-                        height: z.number().positive().int().optional(),
-                        seed: z.number().positive().int().optional(),
-                        numberOfImages: z.number().positive().int().optional(),
-                        steps: z.number().positive().int().optional(),
+                        width: z.int().positive().optional(),
+                        height: z.int().positive().optional(),
+                        seed: z.int().positive().optional(),
+                        numberOfImages: z.int().positive().optional(),
+                        steps: z.int().positive().optional(),
                         sampler: z.string().nonempty().optional(),
-                        cfgScale: z.number().min(0).int().optional(),
+                        cfgScale: z.int().min(0).optional(),
                         clipGuidancePreset: z.string().nonempty().optional(),
                         stylePreset: z.string().nonempty().optional(),
                         instances: INSTANCES_ARRAY_VALIDATION.optional(),
@@ -4340,15 +4382,15 @@ export class RecordsServer {
                         recordName: RECORD_NAME_VALIDATION.optional(),
                         outputMimeType: z
                             .enum(['model/gltf+json', 'model/gltf-binary'])
-                            .default('model/gltf+json'),
+                            .prefault('model/gltf+json'),
                         prompt: z.string().min(1),
                         levelOfDetail: z.number().min(0.01).max(1).optional(),
                         baseModelId: z.string().optional(),
                         thumbnail: z
                             .object({
                                 type: z.literal('image/png'),
-                                width: z.number().int().min(1),
-                                height: z.number().int().min(1),
+                                width: z.int().min(1),
+                                height: z.int().min(1),
                             })
                             .optional(),
                     })
@@ -4443,11 +4485,7 @@ export class RecordsServer {
                                 .array(z.enum(['audio', 'text']))
                                 .max(2)
                                 .optional(),
-                            maxResponseOutputTokens: z
-                                .number()
-                                .int()
-                                .min(1)
-                                .optional(),
+                            maxResponseOutputTokens: z.int().min(1).optional(),
                             inputAudioFormat: z
                                 .enum(['pcm16', 'g711_ulaw', 'g711_alaw'])
                                 .optional(),
@@ -4576,9 +4614,10 @@ export class RecordsServer {
                         displayName: STUDIO_DISPLAY_NAME_VALIDATION,
                         ownerStudioComId: z
                             .string({
-                                invalid_type_error:
-                                    'ownerStudioComId must be a string.',
-                                required_error: 'ownerStudioComId is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'ownerStudioComId is required.'
+                                        : 'ownerStudioComId must be a string.',
                             })
                             .nonempty('ownerStudioComId must not be empty')
                             .nullable()
@@ -4621,22 +4660,13 @@ export class RecordsServer {
                     z.object({
                         id: STUDIO_ID_VALIDATION,
                         displayName: STUDIO_DISPLAY_NAME_VALIDATION.optional(),
-                        logoUrl: z
-                            .string({
-                                invalid_type_error: 'logoUrl must be a string.',
-                                required_error: 'logoUrl is required.',
-                            })
-                            .url()
-                            .min(1)
-                            .max(512)
-                            .nullable()
-                            .optional(),
+                        logoUrl: z.url().min(1).max(512).nullable().optional(),
                         logoBackgroundColor: z
                             .string({
-                                invalid_type_error:
-                                    'logoBackgroundColor must be a string.',
-                                required_error:
-                                    'logoBackgroundColor is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'logoBackgroundColor is required.'
+                                        : 'logoBackgroundColor must be a string.',
                             })
                             .min(1)
                             .max(32)
@@ -4804,33 +4834,37 @@ export class RecordsServer {
                         studioId: STUDIO_ID_VALIDATION,
                         addedUserId: z
                             .string({
-                                invalid_type_error:
-                                    'addedUserId must be a string.',
-                                required_error: 'addedUserId is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'addedUserId is required.'
+                                        : 'addedUserId must be a string.',
                             })
                             .nonempty('addedUserId must not be empty')
                             .optional(),
                         addedEmail: z
                             .string({
-                                invalid_type_error:
-                                    'addedEmail must be a string.',
-                                required_error: 'addedEmail is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'addedEmail is required.'
+                                        : 'addedEmail must be a string.',
                             })
                             .nonempty('addedEmail must not be empty')
                             .optional(),
                         addedPhoneNumber: z
                             .string({
-                                invalid_type_error:
-                                    'addedPhoneNumber must be a string.',
-                                required_error: 'addedPhoneNumber is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'addedPhoneNumber is required.'
+                                        : 'addedPhoneNumber must be a string.',
                             })
                             .nonempty('addedPhoneNumber must not be empty')
                             .optional(),
                         addedDisplayName: z
                             .string({
-                                invalid_type_error:
-                                    'addedDisplayName must be a string.',
-                                required_error: 'addedDisplayName is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'addedDisplayName is required.'
+                                        : 'addedDisplayName must be a string.',
                             })
                             .nonempty('addedDisplayName must not be empty')
                             .optional(),
@@ -4885,9 +4919,10 @@ export class RecordsServer {
                         studioId: STUDIO_ID_VALIDATION,
                         removedUserId: z
                             .string({
-                                invalid_type_error:
-                                    'removedUserId must be a string.',
-                                required_error: 'removedUserId is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'removedUserId is required.'
+                                        : 'removedUserId must be a string.',
                             })
                             .nonempty('removedUserId must not be empty')
                             .optional(),
@@ -4921,9 +4956,10 @@ export class RecordsServer {
                     z.object({
                         studioId: z
                             .string({
-                                invalid_type_error:
-                                    'studioId must be a string.',
-                                required_error: 'studioId is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'studioId is required.'
+                                        : 'studioId must be a string.',
                             })
                             .min(1),
                     })
@@ -5045,16 +5081,19 @@ export class RecordsServer {
                     z.object({
                         studioId: z
                             .string({
-                                invalid_type_error:
-                                    'studioId must be a string.',
-                                required_error: 'studioId is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'studioId is required.'
+                                        : 'studioId must be a string.',
                             })
                             .nonempty('studioId must be non-empty.')
                             .optional(),
                         userId: z
                             .string({
-                                invalid_type_error: 'userId must be a string.',
-                                required_error: 'userId is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'userId is required.'
+                                        : 'userId must be a string.',
                             })
                             .nonempty('userId must be non-empty.')
                             .optional(),
@@ -5127,16 +5166,19 @@ export class RecordsServer {
                     z.object({
                         userId: z
                             .string({
-                                invalid_type_error: 'userId must be a string.',
-                                required_error: 'userId is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'userId is required.'
+                                        : 'userId must be a string.',
                             })
                             .nonempty('userId must not be empty.')
                             .optional(),
                         studioId: z
                             .string({
-                                invalid_type_error:
-                                    'studioId must be a string.',
-                                required_error: 'studioId is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'studioId is required.'
+                                        : 'studioId must be a string.',
                             })
                             .nonempty('studioId must not be empty.')
                             .optional(),
@@ -5216,15 +5258,10 @@ export class RecordsServer {
                             ])
                             .nullable(),
                         subscriptionPeriodStartMs: z
-                            .number()
-                            .positive()
                             .int()
-                            .nullable(),
-                        subscriptionPeriodEndMs: z
-                            .number()
                             .positive()
-                            .int()
                             .nullable(),
+                        subscriptionPeriodEndMs: z.int().positive().nullable(),
                     })
                 )
                 .handler(
@@ -5346,27 +5383,20 @@ export class RecordsServer {
                     address: ADDRESS_VALIDATION,
                     holdingUser: z
                         .string({
-                            invalid_type_error: 'holdingUser must be a string.',
-                            required_error: 'holdingUser is required.',
+                            error: (issue) =>
+                                issue.input === undefined
+                                    ? 'holdingUser is required.'
+                                    : 'holdingUser must be a string.',
                         })
                         .min(1, 'holdingUser must not be empty.'),
                     rate: z
-                        .number({
-                            invalid_type_error: 'rate must be a number.',
-                            required_error: 'rate is required.',
-                        })
                         .int('rate must be an integer.')
                         .positive('rate must be positive.'),
                     initialValue: z
-                        .number({
-                            invalid_type_error:
-                                'initialValue must be a number.',
-                            required_error: 'initialValue is required.',
-                        })
                         .int('initialValue must be an integer.')
                         .nonnegative('initialValue must be non-negative.'),
                     description: z.string().optional().nullable(),
-                    markers: MARKERS_VALIDATION.optional().default([
+                    markers: MARKERS_VALIDATION.optional().prefault([
                         PRIVATE_MARKER,
                     ]),
                 }),
@@ -5488,7 +5518,7 @@ export class RecordsServer {
                 .inputs(
                     z.object({
                         contractId: z.string().min(1),
-                        amount: z.number().int().positive(),
+                        amount: z.int().positive(),
                         note: z.string().min(1).optional(),
                         payoutDestination: z.enum(['account', 'stripe']),
                     })
@@ -5573,7 +5603,7 @@ export class RecordsServer {
                     z.object({
                         userId: z.string().min(1).optional(),
                         studioId: z.string().min(1).optional(),
-                        amount: z.number().int().positive().optional(),
+                        amount: z.int().positive().optional(),
                         destination: z.enum(['stripe', 'cash']),
                     })
                 )
@@ -5748,8 +5778,8 @@ export class RecordsServer {
                             z.literal('other'),
                         ]),
                         reportReasonText: z.string().nonempty().trim(),
-                        reportedUrl: z.string().url(),
-                        reportedPermalink: z.string().url(),
+                        reportedUrl: z.url(),
+                        reportedPermalink: z.url(),
                     })
                 )
                 .handler(
@@ -5807,7 +5837,7 @@ export class RecordsServer {
                         branch: z
                             .string()
                             .nonempty()
-                            .default(DEFAULT_BRANCH_NAME),
+                            .prefault(DEFAULT_BRANCH_NAME),
                     })
                 )
                 .handler(async ({ recordName, inst, branch }, context) => {
@@ -5960,7 +5990,7 @@ export class RecordsServer {
                                 .array(z.string().min(1).max(512))
                                 .max(8),
                             currency: z.string().min(1).max(15).toLowerCase(),
-                            cost: z.number().gte(0).int(),
+                            cost: z.int().gte(0),
                             taxCode: z
                                 .string()
                                 .min(1)
@@ -5969,12 +5999,11 @@ export class RecordsServer {
                                 .optional(),
                             roleName: z.string().min(1),
                             roleGrantTimeMs: z
-                                .number()
-                                .positive()
                                 .int()
+                                .positive()
                                 .nullable()
                                 .optional(),
-                            redirectUrl: z.string().url().nullable().optional(),
+                            redirectUrl: z.url().nullable().optional(),
                             markers: MARKERS_VALIDATION,
                         }),
                         instances: INSTANCES_ARRAY_VALIDATION.optional(),
@@ -6053,12 +6082,12 @@ export class RecordsServer {
                         recordName: RECORD_NAME_VALIDATION,
                         item: z.object({
                             address: ADDRESS_VALIDATION,
-                            expectedCost: z.number().gte(0).int(),
+                            expectedCost: z.int().gte(0),
                             currency: z.string().min(1).max(15).toLowerCase(),
                         }),
                         instances: INSTANCES_ARRAY_VALIDATION.optional(),
-                        returnUrl: z.string().url(),
-                        successUrl: z.string().url(),
+                        returnUrl: z.url(),
+                        successUrl: z.url(),
                     })
                 )
                 .handler(
@@ -6101,17 +6130,17 @@ export class RecordsServer {
                         recordName: RECORD_NAME_VALIDATION,
                         contract: z.object({
                             address: ADDRESS_VALIDATION,
-                            expectedCost: z.number().gte(0).int(),
+                            expectedCost: z.int().gte(0),
                             currency: z
                                 .string()
                                 .min(1)
                                 .max(15)
                                 .toLowerCase()
-                                .default('usd'),
+                                .prefault('usd'),
                         }),
                         instances: INSTANCES_ARRAY_VALIDATION.optional(),
-                        returnUrl: z.string().url(),
-                        successUrl: z.string().url(),
+                        returnUrl: z.url(),
+                        successUrl: z.url(),
                     })
                 )
                 .handler(
@@ -7953,7 +7982,6 @@ export class RecordsServer {
         const schema = z.object({
             name: z.string().min(1).optional().nullable(),
             email: z
-                .string()
                 .email()
                 .max(MAX_EMAIL_ADDRESS_LENGTH)
                 .optional()
@@ -7963,8 +7991,8 @@ export class RecordsServer {
                 .max(MAX_SMS_ADDRESS_LENGTH)
                 .optional()
                 .nullable(),
-            avatarUrl: z.string().url().optional().nullable(),
-            avatarPortraitUrl: z.string().url().optional().nullable(),
+            avatarUrl: z.url().optional().nullable(),
+            avatarPortraitUrl: z.url().optional().nullable(),
         });
 
         const parseResult = schema.safeParse(jsonResult.value);

@@ -245,11 +245,11 @@ export interface CasualOSConfig extends WebConfig {
 export const WEB_CONFIG_SCHEMA = z.object({
     causalRepoConnectionProtocol: z
         .enum(['websocket', 'apiary-aws'])
-        .default('websocket'),
+        .prefault('websocket'),
     causalRepoConnectionUrl: z.string().min(1).max(512).optional(),
-    collaborativeRepoLocalPersistence: z.boolean().default(false),
-    staticRepoLocalPersistence: z.boolean().default(true),
-    sharedPartitionsVersion: z.enum(['v2']).default('v2'),
+    collaborativeRepoLocalPersistence: z.boolean().prefault(false),
+    staticRepoLocalPersistence: z.boolean().prefault(true),
+    sharedPartitionsVersion: z.enum(['v2']).prefault('v2'),
     vmOrigin: z.string().min(1).max(128).nullable().optional(),
     authOrigin: z.string().min(1).max(128).nullable().optional(),
     recordsOrigin: z.string().min(1).max(128).nullable().optional(),
@@ -259,12 +259,12 @@ export const WEB_CONFIG_SCHEMA = z.object({
     jitsiAppName: z.string().min(1).max(128).nullable().optional(),
     what3WordsApiKey: z.string().min(1).max(128).nullable().optional(),
     playerMode: z.enum(['player', 'builder']).nullable().optional(),
-    requirePrivoLogin: z.boolean().default(false),
+    requirePrivoLogin: z.boolean().prefault(false),
     allowedBiosOptions: z.array(BIOS_OPTION_SCHEMA).nullable().optional(),
     defaultBiosOption: BIOS_OPTION_SCHEMA.nullable().optional(),
     automaticBiosOption: BIOS_OPTION_SCHEMA.nullable().optional(),
-    enableDom: z.boolean().default(false),
-    debug: z.boolean().default(false),
+    enableDom: z.boolean().prefault(false),
+    debug: z.boolean().prefault(false),
 
     enableSmsAuthentication: z.boolean().nullable().optional(),
 

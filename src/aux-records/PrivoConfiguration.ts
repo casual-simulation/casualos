@@ -93,7 +93,7 @@ export const privoSchema = z.object({
         .describe('The scopes that should be requested for client tokens.')
         .nonempty()
         .optional()
-        .default(
+        .prefault(
             'openid profile email user_profile offline_access address additional_info TRUST delete_account service_profile connected_profiles manage_consent consent_url update_password_link'
         ),
 
@@ -102,18 +102,17 @@ export const privoSchema = z.object({
         .describe('The scopes that should be requested for user tokens.')
         .nonempty()
         .optional()
-        .default(
+        .prefault(
             'TRUST openid profile user_profile address service_profile connected_profiles manage_consent email additional_info offline_access delete_account consent_url update_password_link'
         ),
 
     ageOfConsent: z
-        .number()
+        .int()
         .describe(
             'The age of consent for users. Users who are under this age must have consent given for them via a parent account.'
         )
-        .int()
         .positive()
-        .default(18),
+        .prefault(18),
 });
 
 export type PrivoConfiguration = z.infer<typeof privoSchema>;

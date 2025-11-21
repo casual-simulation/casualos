@@ -208,11 +208,10 @@ export type NotificationResourceActions =
 
 export const slackSchema = z.object({
     webhookUrl: z
-        .string()
+        .url()
         .describe(
             'The Slack webhook URL that should be used to send records notification messages.'
-        )
-        .url(),
+        ),
 });
 
 export type SlackOptions = z.infer<typeof slackSchema>;
@@ -263,7 +262,7 @@ export const notificationsSchema = z.object({
             'The filter that should be used to determine which notifications should be sent. If omitted, then all are sent'
         )
         .optional()
-        .default({}),
+        .prefault({}),
 });
 
 export type NotificationOptions = z.infer<typeof notificationsSchema>;

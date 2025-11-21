@@ -23,7 +23,7 @@ export const moderationSchema = z.object({
         .describe(
             'Whether to allow unauthenticated users to report insts. Defaults to true.'
         )
-        .default(true),
+        .prefault(true),
 
     jobs: z
         .object({
@@ -39,7 +39,7 @@ export const moderationSchema = z.object({
                             'The file extensions to scan. Defaults to common image formats.'
                         )
                         .optional()
-                        .default(['.png', '.webp', '.jpg', '.jpeg', '.gif']),
+                        .prefault(['.png', '.webp', '.jpg', '.jpeg', '.gif']),
 
                     minConfidence: z
                         .number()
@@ -67,7 +67,7 @@ export const moderationSchema = z.object({
                                     )
                                     .min(0)
                                     .max(1)
-                                    .default(0.7),
+                                    .prefault(0.7),
 
                                 actions: z
                                     .array(z.enum(['notify']))
@@ -75,14 +75,14 @@ export const moderationSchema = z.object({
                                         'The actions that should be taken when a file is detected with the label. Defaults to [notify].'
                                     )
                                     .optional()
-                                    .default(['notify']),
+                                    .prefault(['notify']),
                             })
                         )
                         .describe(
                             'The labels that should be banned. If a file contains any of these labels, it will be marked as banned. Additionally, a notification will be sent '
                         )
                         .optional()
-                        .default([
+                        .prefault([
                             {
                                 label: 'Explicit',
                                 threshold: 0.5,

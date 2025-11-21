@@ -80,7 +80,7 @@ export const WEBHOOK_URL_STATE_SCHEMA = z.object({
     type: z.literal('url'),
     requestUrl: z.string(),
     requestMethod: z.string(),
-    requestHeaders: z.record(z.string()),
+    requestHeaders: z.record(z.string(), z.string()),
 });
 
 /**
