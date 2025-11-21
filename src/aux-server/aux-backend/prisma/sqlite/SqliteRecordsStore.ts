@@ -47,6 +47,7 @@ import type {
     Studio as PrismaStudio,
 } from '../generated-sqlite';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
+import type z from 'zod';
 
 const TRACE_NAME = 'SqliteRecordsStore';
 
@@ -709,10 +710,10 @@ export class SqliteRecordsStore implements RecordsStore {
     }
 }
 
-function zodParseConfig<T extends Zod.Schema>(
+function zodParseConfig<T extends z.ZodType>(
     value: Prisma.JsonValue,
     schema: T
-): ReturnType<T['parse']> {
+): z.infer<T> | undefined {
     if (!value) {
         return undefined;
     }

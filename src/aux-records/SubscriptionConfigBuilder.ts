@@ -47,8 +47,11 @@ import type {
 import {
     allowAllDefaultFeatures,
     allowAllFeatures,
+    dataFeaturesSchema,
     denyAllFeatures,
+    webhookFeaturesSchema,
 } from './SubscriptionConfiguration';
+import type z from 'zod';
 
 export class FeaturesBuilder {
     private _features: FeaturesConfiguration = denyAllFeatures();
@@ -68,9 +71,11 @@ export class FeaturesBuilder {
     }
 
     withData(features?: DataFeaturesConfiguration): this {
-        this._features.data = features ?? {
-            allowed: true,
-        };
+        this._features.data =
+            features ??
+            dataFeaturesSchema.parse({
+                allowed: true,
+            } satisfies z.input<typeof dataFeaturesSchema>);
         return this;
     }
 
@@ -226,9 +231,11 @@ export class FeaturesBuilder {
     }
 
     withWebhooks(features?: WebhooksFeaturesConfiguration): this {
-        this._features.webhooks = features ?? {
-            allowed: true,
-        };
+        this._features.webhooks =
+            features ??
+            webhookFeaturesSchema.parse({
+                allowed: true,
+            } satisfies z.input<typeof webhookFeaturesSchema>);
         return this;
     }
 

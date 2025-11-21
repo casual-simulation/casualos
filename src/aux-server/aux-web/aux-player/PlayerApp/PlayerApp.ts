@@ -122,6 +122,7 @@ import type { SubscribeToNotificationAction } from '@casual-simulation/aux-runti
 import { recordsCallProcedure } from '@casual-simulation/aux-runtime';
 import { getSimulationId } from '../../../shared/SimulationHelpers';
 import LoadingWidget from '../../shared/vue-components/LoadingWidget/LoadingWidget';
+import type { PushSubscriptionType } from '@casual-simulation/aux-records';
 
 let syntheticVoices = [] as SyntheticVoice[];
 
@@ -1699,7 +1700,8 @@ export default class PlayerApp extends Vue {
                             input: {
                                 recordName: event.recordName,
                                 address: event.address,
-                                pushSubscription: sub.toJSON(),
+                                pushSubscription:
+                                    sub.toJSON() as PushSubscriptionType,
                             },
                         },
                     },

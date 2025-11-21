@@ -49,7 +49,7 @@ export const SNS_TOPIC_ARN = process.env.SNS_TOPIC_ARN;
  * @returns
  */
 export function constructServerlessAwsServerBuilder() {
-    const dynamicConfig: ServerConfig = {
+    const dynamicConfig: Partial<ServerConfig> = {
         s3: {
             region: REGION,
             filesBucket: FILES_BUCKET,
@@ -121,7 +121,9 @@ export function constructServerlessAwsServerBuilder() {
 /**
  * Loads the server and configures it.
  */
-export function constructServerBuilder(dynamicConfig: ServerConfig = {}) {
+export function constructServerBuilder(
+    dynamicConfig: Partial<ServerConfig> = {}
+) {
     const config = loadConfig(true, dynamicConfig);
 
     const allowedApiOrigins = new Set([

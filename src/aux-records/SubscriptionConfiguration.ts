@@ -163,6 +163,110 @@ const currencyLimitsSchema = z
         },
     });
 
+export const storeFeaturesSchema = z
+    .object({
+        allowed: z
+            .boolean()
+            .describe(
+                'Whether purchasable items features are granted to the studio.'
+            ),
+
+        maxItems: z
+            .int()
+            .describe(
+                'The maximum number of purchasable items that can be created. If omitted, then there is no limit.'
+            )
+            .positive()
+            .optional(),
+
+        currencyLimits: currencyLimitsSchema,
+    })
+    .describe(
+        'The configuration for purchasable items features for studios. Defaults to not allowed.'
+    )
+    .optional()
+    .prefault({
+        allowed: false,
+    });
+
+export const contractFeaturesSchema = z
+    .object({
+        allowed: z
+            .boolean()
+            .describe(
+                'Whether contract features are granted to the user/studio.'
+            ),
+
+        maxItems: z
+            .int()
+            .describe(
+                'The maximum number of contracts that can be created. If omitted, then there is no limit.'
+            )
+            .positive()
+            .optional(),
+
+        currencyLimits: currencyLimitsSchema,
+    })
+    .describe(
+        'The configuration for contract features. Defaults to not allowed'
+    )
+    .optional()
+    .prefault({
+        allowed: false,
+    });
+
+export const dataFeaturesSchema = z.object({
+    allowed: z
+        .boolean()
+        .describe(
+            'Whether data resources are allowed for the subscription. If false, then every request to create or update a data resource will be rejected.'
+        ),
+    maxItems: z
+        .int()
+        .describe(
+            'The maximum number of data resource items allowed for the subscription. If omitted, then there is no limit.'
+        )
+        .positive()
+        .optional(),
+    maxReadsPerPeriod: z
+        .int()
+        .describe(
+            'The maximum number of data item reads allowed per subscription period. If omitted, then there is no limit.'
+        )
+        .positive()
+        .optional(),
+    maxWritesPerPeriod: z
+        .int()
+        .describe(
+            'The maximum number of data item writes allowed per subscription period. If omitted, then there is no limit.'
+        )
+        .positive()
+        .optional(),
+    maxItemSizeInBytes: z
+        .int()
+        .describe(
+            'The maximum number of bytes that can be stored in a single data item. If set to null, then there is no limit. If omitted, then the limit is 500,000 bytes (500KB)'
+        )
+        .positive()
+        .nullable()
+        .optional()
+        .prefault(500000),
+
+    creditFeePerRead: z
+        .int()
+        .describe(
+            'The number of credits that are charged for each read operation. If not specified, then there is no fee.'
+        )
+        .optional(),
+
+    creditFeePerWrite: z
+        .int()
+        .describe(
+            'The number of credits that are charged for each write operation. If not specified, then there is no fee.'
+        )
+        .optional(),
+});
+
 export const subscriptionFeaturesSchema = z.object({
     records: z
         .object({
@@ -181,57 +285,7 @@ export const subscriptionFeaturesSchema = z.object({
         })
         .describe('The configuration for record features.')
         .optional(),
-    data: z.object({
-        allowed: z
-            .boolean()
-            .describe(
-                'Whether data resources are allowed for the subscription. If false, then every request to create or update a data resource will be rejected.'
-            ),
-        maxItems: z
-            .int()
-            .describe(
-                'The maximum number of data resource items allowed for the subscription. If omitted, then there is no limit.'
-            )
-            .positive()
-            .optional(),
-        maxReadsPerPeriod: z
-            .int()
-            .describe(
-                'The maximum number of data item reads allowed per subscription period. If omitted, then there is no limit.'
-            )
-            .positive()
-            .optional(),
-        maxWritesPerPeriod: z
-            .int()
-            .describe(
-                'The maximum number of data item writes allowed per subscription period. If omitted, then there is no limit.'
-            )
-            .positive()
-            .optional(),
-        maxItemSizeInBytes: z
-            .int()
-            .describe(
-                'The maximum number of bytes that can be stored in a single data item. If set to null, then there is no limit. If omitted, then the limit is 500,000 bytes (500KB)'
-            )
-            .positive()
-            .nullable()
-            .optional()
-            .prefault(500000),
-
-        creditFeePerRead: z
-            .int()
-            .describe(
-                'The number of credits that are charged for each read operation. If not specified, then there is no fee.'
-            )
-            .optional(),
-
-        creditFeePerWrite: z
-            .int()
-            .describe(
-                'The number of credits that are charged for each write operation. If not specified, then there is no fee.'
-            )
-            .optional(),
-    }),
+    data: dataFeaturesSchema,
     files: z.object({
         allowed: z
             .boolean()
@@ -709,57 +763,9 @@ export const subscriptionFeaturesSchema = z.object({
             allowed: true,
         }),
 
-    store: z
-        .object({
-            allowed: z
-                .boolean()
-                .describe(
-                    'Whether purchasable items features are granted to the studio.'
-                ),
+    store: storeFeaturesSchema,
 
-            maxItems: z
-                .int()
-                .describe(
-                    'The maximum number of purchasable items that can be created. If omitted, then there is no limit.'
-                )
-                .positive()
-                .optional(),
-
-            currencyLimits: currencyLimitsSchema,
-        })
-        .describe(
-            'The configuration for purchasable items features for studios. Defaults to not allowed.'
-        )
-        .optional()
-        .prefault({
-            allowed: false,
-        }),
-
-    contracts: z
-        .object({
-            allowed: z
-                .boolean()
-                .describe(
-                    'Whether contract features are granted to the user/studio.'
-                ),
-
-            maxItems: z
-                .int()
-                .describe(
-                    'The maximum number of contracts that can be created. If omitted, then there is no limit.'
-                )
-                .positive()
-                .optional(),
-
-            currencyLimits: currencyLimitsSchema,
-        })
-        .describe(
-            'The configuration for contract features. Defaults to not allowed'
-        )
-        .optional()
-        .prefault({
-            allowed: false,
-        }),
+    contracts: contractFeaturesSchema,
 });
 
 export const subscriptionConfigSchema = z.object({
@@ -804,93 +810,7 @@ export const subscriptionConfigSchema = z.object({
         .nullable(),
 
     subscriptions: z
-        .tuple(
-            [
-                z.object({
-                    id: z
-                        .string()
-                        .describe(
-                            'The ID of the subscription. Can be anything, but it must be unique to each subscription and never change.'
-                        ),
-                    product: z
-                        .string()
-                        .describe(
-                            'The ID of the Stripe product that is being offered by this subscription. If omitted, then this subscription will be shown but not able to be purchased.'
-                        )
-                        .optional(),
-                    featureList: z
-                        .array(z.string())
-                        .describe(
-                            'The list of features that should be shown for this subscription tier.'
-                        ),
-                    eligibleProducts: z
-                        .array(z.string())
-                        .describe(
-                            'The list of Stripe product IDs that count as eligible for this subscription. Useful if you want to change the product of this subscription, but grandfather in existing users.'
-                        )
-                        .optional(),
-                    defaultSubscription: z
-                        .boolean()
-                        .describe(
-                            "Whether this subscription should be granted to users if they don't already have a subscription. The first in the list of subscriptions that is marked as the default will be used. Defaults to false"
-                        )
-                        .optional(),
-                    purchasable: z
-                        .boolean()
-                        .describe(
-                            'Whether this subscription is purchasable and should be offered to users who do not already have a subscription. If false, then this subscription will not be shown to users unless they already have an active subscription for it. Defaults to true.'
-                        )
-                        .optional(),
-                    name: z
-                        .string()
-                        .describe(
-                            'The name of the subscription. Ignored if a Stripe product is specified.'
-                        )
-                        .optional(),
-                    description: z
-                        .string()
-                        .describe(
-                            'The description of the subscription. Ignored if a Stripe product is specified.'
-                        )
-                        .optional(),
-                    tier: z
-                        .string()
-                        .describe(
-                            'The tier of this subscription. Useful for grouping multiple subscriptions into the same set of features. Defaults to "beta"'
-                        )
-                        .optional(),
-                    userOnly: z
-                        .boolean()
-                        .describe(
-                            'Whether this subscription can only be purchased by individual users. Defaults to false.'
-                        )
-                        .optional(),
-                    studioOnly: z
-                        .boolean()
-                        .describe(
-                            'Whether this subscription can only be purchased by studios. Defaults to false.'
-                        )
-                        .optional(),
-
-                    creditGrant: z
-                        .union([
-                            z
-                                .int()
-                                .describe(
-                                    'The number of credits that should be granted to the user/studio upon purchasing (and renewal) of this subscription.'
-                                )
-                                .positive(),
-                            z.enum([
-                                'match-invoice', // Grants credits equal to the total of the invoice that pays for the subscription.
-                            ]),
-                        ])
-                        .describe(
-                            'The number of credits that should be granted to the user/studio upon purchasing (and renewal) of this subscription. Defaults to matching the price that the user paid for the subscription.'
-                        )
-                        .optional()
-                        .prefault('match-invoice'),
-                }),
-            ],
+        .array(
             z.object({
                 id: z
                     .string()
@@ -973,9 +893,10 @@ export const subscriptionConfigSchema = z.object({
                         'The number of credits that should be granted to the user/studio upon purchasing (and renewal) of this subscription. Defaults to matching the price that the user paid for the subscription.'
                     )
                     .optional()
-                    .prefault('match-invoice'),
+                    .nullable(),
             })
         )
+        .min(1)
         .describe('The list of subscriptions that are in use.'),
 
     tiers: z
@@ -1046,7 +967,7 @@ export const subscriptionConfigSchema = z.object({
         })
         .optional(),
 });
-type ZodConfigSchema = z.infer<typeof subscriptionConfigSchema>;
+type ZodConfigSchema = z.input<typeof subscriptionConfigSchema>;
 type ZodConfigSchemaAssertion = HasType<
     ZodConfigSchema,
     SubscriptionConfiguration
@@ -1284,6 +1205,11 @@ export interface FeaturesConfiguration {
     insts: InstsFeaturesConfiguration;
 
     /**
+     * The configuration for policy features.
+     */
+    policies: z.infer<typeof subscriptionFeaturesSchema>['policies'];
+
+    /**
      * The configuration for comId features.
      */
     comId?: StudioComIdFeaturesConfiguration;
@@ -1371,7 +1297,7 @@ export interface DataFeaturesConfiguration {
      * If not specified, then the limit is 500,000 bytes (500KB).
      * If set to null, then there is no limit.
      */
-    maxItemSizeInBytes?: number;
+    maxItemSizeInBytes: number;
 }
 
 export interface FileFeaturesConfiguration {
@@ -1598,7 +1524,7 @@ export type ContractFeaturesConfiguration = z.infer<
 >['contracts'];
 
 export function allowAllFeatures(): FeaturesConfiguration {
-    return {
+    return subscriptionFeaturesSchema.parse({
         records: {
             allowed: true,
         },
@@ -1631,6 +1557,9 @@ export function allowAllFeatures(): FeaturesConfiguration {
             allowed: true,
         },
         files: {
+            allowed: true,
+        },
+        policies: {
             allowed: true,
         },
         insts: {
@@ -1651,11 +1580,11 @@ export function allowAllFeatures(): FeaturesConfiguration {
         contracts: {
             allowed: true,
         },
-    };
+    } satisfies z.input<typeof subscriptionFeaturesSchema>);
 }
 
 export function allowAllDefaultFeatures(): FeaturesConfiguration {
-    return {
+    return subscriptionFeaturesSchema.parse({
         records: {
             allowed: true,
         },
@@ -1690,6 +1619,9 @@ export function allowAllDefaultFeatures(): FeaturesConfiguration {
         files: {
             allowed: true,
         },
+        policies: {
+            allowed: true,
+        },
         insts: {
             allowed: true,
         },
@@ -1705,11 +1637,11 @@ export function allowAllDefaultFeatures(): FeaturesConfiguration {
         databases: {
             allowed: true,
         },
-    };
+    } satisfies z.input<typeof subscriptionFeaturesSchema>);
 }
 
 export function denyAllFeatures(): FeaturesConfiguration {
-    return {
+    return subscriptionFeaturesSchema.parse({
         records: {
             allowed: false,
         },
@@ -1744,6 +1676,9 @@ export function denyAllFeatures(): FeaturesConfiguration {
         files: {
             allowed: false,
         },
+        policies: {
+            allowed: false,
+        },
         insts: {
             allowed: false,
         },
@@ -1762,7 +1697,7 @@ export function denyAllFeatures(): FeaturesConfiguration {
         contracts: {
             allowed: false,
         },
-    };
+    } satisfies z.input<typeof subscriptionFeaturesSchema>);
 }
 
 /**
@@ -1790,7 +1725,12 @@ export function getContractFeatures(
         periodEndMs,
         nowMs
     );
-    return features.contracts ?? { allowed: false };
+    return (
+        features.contracts ??
+        contractFeaturesSchema.parse({ allowed: false } satisfies z.input<
+            typeof subscriptionFeaturesSchema
+        >['contracts'])
+    );
 }
 
 /**
@@ -1990,9 +1930,10 @@ export function getPurchasableItemsFeatures(
         nowMs
     );
     return (
-        features.store ?? {
+        features.store ??
+        storeFeaturesSchema.parse({
             allowed: false,
-        }
+        } satisfies z.input<typeof subscriptionFeaturesSchema>['store'])
     );
 }
 

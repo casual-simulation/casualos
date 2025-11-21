@@ -18,6 +18,7 @@
 import type {
     ConfigurationStore,
     DefaultConfiguration,
+    ModerationConfiguration,
     SubscriptionConfiguration,
 } from '@casual-simulation/aux-records';
 import {
@@ -89,9 +90,7 @@ export class SqliteConfigurationStore implements ConfigurationStore {
     }
 
     @traced(TRACE_NAME)
-    async getModerationConfig(): Promise<{
-        allowUnauthenticatedReports?: boolean;
-    }> {
+    async getModerationConfig(): Promise<ModerationConfiguration> {
         const result = await this._client.configuration.findUnique({
             where: {
                 key: MODERATION_CONFIG_KEY,

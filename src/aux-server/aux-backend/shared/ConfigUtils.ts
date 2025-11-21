@@ -24,11 +24,11 @@ import { merge, tryParseJson } from '@casual-simulation/aux-common';
 declare const DEVELOPMENT: boolean;
 declare const SERVER_CONFIG: string;
 
-export const DEV_CONFIG: ServerConfig = {};
+export const DEV_CONFIG: Partial<ServerConfig> = {};
 
 export function loadConfig(
     required: boolean = true,
-    dynamicConfig: ServerConfig = {}
+    dynamicConfig: Partial<ServerConfig> = {}
 ): ServerConfig {
     const injectedConfig = parseObject(SERVER_CONFIG);
     const envConfig = parseObject(process.env.SERVER_CONFIG);

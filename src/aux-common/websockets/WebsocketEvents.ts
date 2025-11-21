@@ -34,7 +34,6 @@ import {
     remoteActionsSchema,
     deviceActionsSchema,
 } from '../common/RemoteActions';
-import type { ZodIssue } from 'zod';
 import { z } from 'zod';
 import type {
     GenericHttpRequest,
@@ -176,7 +175,7 @@ export interface WebsocketErrorInfo {
     /**
      * The list of parsing issues that occurred.
      */
-    issues?: ZodIssue[];
+    issues?: z.core.$ZodIssue[];
 
     /**
      * The authorization denial reason.

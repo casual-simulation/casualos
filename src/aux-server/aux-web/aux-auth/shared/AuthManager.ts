@@ -596,7 +596,7 @@ export class AuthManager {
     ): Promise<ProcessOpenIDAuthorizationCodeResult> {
         return this.client.processOAuthCode({
             ...params,
-        });
+        } as any);
     }
 
     async completeOAuthLogin(

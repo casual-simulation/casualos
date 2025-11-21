@@ -95,6 +95,7 @@ import type {
     Procedures,
     RPCContext,
     SimpleError,
+    GenericQueryStringParameters,
 } from '@casual-simulation/aux-common';
 import { getStatusCode } from '@casual-simulation/aux-common';
 import type { ModerationController } from './ModerationController';
@@ -166,6 +167,7 @@ import type { PurchasableItem } from './purchasable-items/PurchasableItemRecords
 import type { ContractRecordsController } from './contracts/ContractRecordsController';
 import type { ViewParams, ViewTemplateRenderer } from './ViewTemplateRenderer';
 import type { JSX } from 'preact';
+import { omitBy } from 'es-toolkit';
 
 declare const GIT_TAG: string;
 declare const GIT_HASH: string;
@@ -255,7 +257,10 @@ export const XP_API_NOT_SUPPORTED_RESULT = {
 /**
  * Defines a basic interface for an HTTP route.
  */
-export interface Route<T, TQuery = any> {
+export interface Route<
+    TSchema extends z.ZodType | void,
+    TQuery extends z.ZodType | void = void
+> {
     /**
      * The path that the route must match.
      *
@@ -268,7 +273,7 @@ export interface Route<T, TQuery = any> {
      * If the method can contain a request body, then the schema applies to the body.
      * Otherwise, it will apply to the query parameters.
      */
-    schema?: z.ZodType<T, z.ZodTypeDef, any>;
+    schema?: TSchema;
 
     /**
      * The schema that should be used for the query parameters.
@@ -276,7 +281,7 @@ export interface Route<T, TQuery = any> {
      *
      * Additionally, this only works if a schema is provided.
      */
-    querySchema?: z.ZodType<TQuery, z.ZodTypeDef, any>;
+    querySchema?: TQuery;
 
     /**
      * The method for the route.
@@ -303,8 +308,8 @@ export interface Route<T, TQuery = any> {
      */
     handler: (
         request: GenericHttpRequest,
-        data?: T,
-        query?: TQuery
+        data?: z.output<TSchema>,
+        query?: z.output<TQuery>
     ) => Promise<GenericHttpResponse>;
 
     /**
@@ -507,7 +512,7 @@ export class RecordsServer {
     /**
      * The map of paths to routes that they match.
      */
-    private _routes: Map<string, Route<any>> = new Map();
+    private _routes: Map<string, Route<any, any>> = new Map();
 
     private _procedures: ReturnType<RecordsServer['_createProcedures']>;
 
@@ -1805,7 +1810,7 @@ export class RecordsServer {
                             address: z.string().min(1),
                             instances: INSTANCES_ARRAY_VALIDATION.optional(),
                         })
-                        .catchall(z.string())
+                        .catchall(z.union([z.string(), z.array(z.string())]))
                 )
                 .handler(
                     async (
@@ -1869,7 +1874,10 @@ export class RecordsServer {
                                         context.httpRequest.headers,
                                         ...bannedHeaders
                                     ),
-                                    query: rest,
+                                    query: omitBy(
+                                        rest,
+                                        (value) => typeof value !== 'string'
+                                    ) as GenericQueryStringParameters,
                                     pathParams: {},
                                 },
                             });
@@ -6397,10 +6405,11 @@ export class RecordsServer {
      * @param name The name of the procedure.
      * @param procedure The procedure that should be added.
      */
-    addProcedure<TInput, TOutput extends ProcedureOutput, TQuery>(
-        name: string,
-        procedure: Procedure<TInput, TOutput, TQuery>
-    ) {
+    addProcedure<
+        TInput extends z.ZodType | void,
+        TOutput extends ProcedureOutput,
+        TQuery extends z.ZodType | void
+    >(name: string, procedure: Procedure<TInput, TOutput, TQuery>) {
         if (name in this._procedures) {
             throw new Error(
                 `A procedure already exists with the name: ${name}`
@@ -6426,8 +6435,11 @@ export class RecordsServer {
      * Adds the given procedural route to the server.
      * @param route The route that should be added.
      */
-    private _addProcedureApiRoute<T, TQuery>(
-        procedure: Procedure<T, ProcedureOutput, TQuery>,
+    private _addProcedureApiRoute<
+        TSchema extends z.ZodType | void,
+        TQuery extends z.ZodType | void
+    >(
+        procedure: Procedure<TSchema, ProcedureOutput, TQuery>,
         name: string
     ): void {
         if (!procedure.http) {
@@ -6435,7 +6447,7 @@ export class RecordsServer {
         }
 
         const route = procedure.http;
-        const r: Route<T> = {
+        const r: Route<TSchema, TQuery> = {
             method: route.method,
             path: route.path,
             schema: procedure.schema,
@@ -6471,8 +6483,11 @@ export class RecordsServer {
      * Adds the given procedural route to the server.
      * @param route The route that should be added.
      */
-    private _addProcedureViewRoute<T, TQuery>(
-        procedure: Procedure<T, ProcedureOutput, TQuery>,
+    private _addProcedureViewRoute<
+        TSchema extends z.ZodType | void,
+        TQuery extends z.ZodType | void
+    >(
+        procedure: Procedure<TSchema, ProcedureOutput, TQuery>,
         name: string
     ): void {
         if (!procedure.view) {
@@ -6487,7 +6502,7 @@ export class RecordsServer {
         }
 
         const route = procedure.view;
-        const r: Route<T> = {
+        const r: Route<TSchema, TQuery> = {
             method: 'GET',
             path: route.path,
             schema: procedure.schema,
@@ -6552,7 +6567,9 @@ export class RecordsServer {
     /**
      * Adds the given route to the server.
      */
-    addRoute<T>(route: Route<T>) {
+    addRoute<TSchema extends z.ZodType | void, TQuery extends z.ZodType | void>(
+        route: Route<TSchema, TQuery>
+    ) {
         const routeKey = this._getRouteKey(route);
         if (this._routes.has(routeKey)) {
             throw new Error(
@@ -6562,7 +6579,7 @@ export class RecordsServer {
         this._routes.set(routeKey, route);
     }
 
-    private _getRouteKey<T>(route: Route<T>) {
+    private _getRouteKey(route: Route<any, any>) {
         if (typeof route.path === 'boolean' && route.path === true) {
             return `${route.scope ?? 'auth'}:${route.method}:**default**`;
         } else {
@@ -6574,7 +6591,10 @@ export class RecordsServer {
      * Forcefully adds the given route to the server, overwriting any routes that already exist.
      * @param route The route that should be added.
      */
-    overrideRoute<T>(route: Route<T>) {
+    overrideRoute<
+        TSchema extends z.ZodType | void,
+        TQuery extends z.ZodType | void
+    >(route: Route<TSchema, TQuery>) {
         const routeKey = this._getRouteKey(route);
         this._routes.set(routeKey, route);
     }

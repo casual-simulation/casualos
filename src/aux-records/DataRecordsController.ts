@@ -290,9 +290,7 @@ export class DataRecordsController {
                     typeof data === 'string' ? data : stringify(data);
                 const size = byteLengthOfString(dataString);
                 const schema = z.number().max(features.data.maxItemSizeInBytes);
-                const result = schema.safeParse(size, {
-                    path: ['data', 'sizeInBytes'],
-                });
+                const result = schema.safeParse(size);
 
                 if (result.success === false) {
                     return {
@@ -301,7 +299,10 @@ export class DataRecordsController {
                         errorMessage:
                             'The size of the item is larger than the subscription allows.',
                         errorReason: 'data_too_large',
-                        issues: result.error.issues,
+                        issues: result.error.issues.map((i) => ({
+                            ...i,
+                            path: ['data', 'sizeInBytes'],
+                        })),
                     };
                 }
             }

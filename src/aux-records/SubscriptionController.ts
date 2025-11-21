@@ -1978,7 +1978,7 @@ export class SubscriptionController {
                 item: ContractRecord;
                 features: ContractFeaturesConfiguration;
                 metrics: ContractSubscriptionMetrics;
-                limits: ContractFeaturesConfiguration['currencyLimits'];
+                limits: ContractFeaturesConfiguration['currencyLimits']['key'];
                 currency: string;
                 context: AuthorizationContext;
                 authorization: AuthorizeUserAndInstancesSuccess;

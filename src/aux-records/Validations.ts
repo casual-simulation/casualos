@@ -100,16 +100,12 @@ export const MARKER_VALIDATION = z
  * The Zod validation for markers.
  */
 export const MARKERS_VALIDATION = z
-    .tuple(
-        {
-            error: (issue) =>
-                issue.input === undefined
-                    ? 'markers is required.'
-                    : 'markers must be an array of strings.',
-        },
-        [MARKER_VALIDATION],
-        MARKER_VALIDATION
-    )
+    .array(MARKER_VALIDATION, {
+        error: (issue) =>
+            issue.input === undefined
+                ? 'markers is required.'
+                : 'markers must be an array of strings.',
+    })
     .max(10, 'markers lists must not contain more than 10 markers.');
 
 export const NO_WHITESPACE_MESSAGE = 'The value cannot not contain spaces.';
@@ -148,12 +144,12 @@ export const RECORD_NAME_VALIDATION = z
 
 export const INSTANCE_VALIDATION = z.string().min(1).max(128);
 
-export const INSTANCES_ARRAY_VALIDATION = z.preprocess((value) => {
-    if (typeof value === 'string') {
-        return parseInstancesList(value);
-    }
-    return value;
-}, z.array(INSTANCE_VALIDATION).min(1).max(3));
+export const INSTANCES_ARRAY_VALIDATION = z
+    .union([
+        z.array(z.string()),
+        z.string().transform((value) => parseInstancesList(value)),
+    ])
+    .check(z.minLength(1), z.maxLength(3));
 
 export const RECORD_FILE_SCHEMA = z.object({
     recordKey: RECORD_KEY_VALIDATION,

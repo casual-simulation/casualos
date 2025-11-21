@@ -60,6 +60,7 @@ import {
     getPurchasableItemsFeatures,
     getSubscriptionFeatures,
     getSubscriptionTier,
+    storeFeaturesSchema,
 } from './SubscriptionConfiguration';
 import type { ComIdConfig, ComIdPlayerConfig } from './ComIdConfig';
 import { isActiveSubscription } from './Utils';
@@ -79,6 +80,7 @@ import {
     formatV2RecordKey,
     parseRecordKey,
 } from '@casual-simulation/aux-common/records/RecordKeys';
+import type z from 'zod';
 
 const TRACE_NAME = 'RecordsController';
 
@@ -1220,9 +1222,7 @@ export class RecordsController {
             let comIdFeatures: StudioComIdFeaturesConfiguration = {
                 allowed: false,
             };
-            let storeFeatures: PurchasableItemFeaturesConfiguration = {
-                allowed: false,
-            };
+            let storeFeatures: PurchasableItemFeaturesConfiguration;
             let loomFeatures: StudioLoomFeaturesConfiguration = {
                 allowed: false,
             };
@@ -1282,6 +1282,10 @@ export class RecordsController {
                     studio.subscriptionPeriodStartMs,
                     studio.subscriptionPeriodEndMs
                 );
+            } else {
+                storeFeatures = storeFeaturesSchema.parse({
+                    allowed: false,
+                } satisfies z.input<typeof storeFeaturesSchema>);
             }
 
             return {

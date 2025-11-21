@@ -45,7 +45,10 @@ import type {
     FinancialInterface,
     PurchasableItemRecordsStore,
 } from '@casual-simulation/aux-records';
-import { PurchasableItemRecordsController } from '@casual-simulation/aux-records';
+import {
+    PurchasableItemRecordsController,
+    serverConfigSchema,
+} from '@casual-simulation/aux-records';
 import {
     AuthController,
     DataRecordsController,
@@ -249,6 +252,7 @@ import { SqliteContractsRecordsStore } from '../prisma/sqlite/SqliteContractsRec
 import { PrismaContractsRecordsStore } from '../prisma/PrismaContractsRecordsStore';
 import type { ContractRecordsStore } from '@casual-simulation/aux-records/contracts';
 import { ContractRecordsController } from '@casual-simulation/aux-records/contracts';
+import type z from 'zod';
 
 const automaticPlugins: ServerPlugin[] = [
     ...xpApiPlugins.map((p: any) => p.default),
@@ -449,7 +453,11 @@ export class ServerBuilder implements SubscriptionLike {
     private _databasesController: DatabaseRecordsController | null = null;
 
     constructor(options?: ServerConfig) {
-        this._options = options ?? {};
+        this._options =
+            options ??
+            serverConfigSchema.parse(
+                {} satisfies z.input<typeof serverConfigSchema>
+            );
         this._subscription = new Subscription();
     }
 
@@ -709,7 +717,7 @@ export class ServerBuilder implements SubscriptionLike {
     usePrismaWithS3(
         options: Pick<
             ServerConfig,
-            'prisma' | 's3' | 'subscriptions' | 'moderation'
+            'prisma' | 's3' | 'subscriptions' | 'moderation' | 'server'
         > = this._options
     ): this {
         console.log('[ServerBuilder] Using Prisma with S3.');
@@ -861,7 +869,7 @@ export class ServerBuilder implements SubscriptionLike {
     usePrismaWithMinio(
         options: Pick<
             ServerConfig,
-            'prisma' | 'minio' | 'subscriptions' | 'moderation'
+            'prisma' | 'minio' | 'subscriptions' | 'moderation' | 'server'
         > = this._options
     ): this {
         console.log('[ServerBuilder] Using Prisma with Minio.');
@@ -898,7 +906,7 @@ export class ServerBuilder implements SubscriptionLike {
     usePrismaWithMongoDBFileStore(
         options: Pick<
             ServerConfig,
-            'prisma' | 'mongodb' | 'subscriptions'
+            'prisma' | 'mongodb' | 'subscriptions' | 'server'
         > = this._options
     ): this {
         console.log('[ServerBuilder] Using Prisma with MongoDB File Store.');
