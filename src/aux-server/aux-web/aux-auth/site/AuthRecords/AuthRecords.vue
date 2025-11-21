@@ -17,6 +17,12 @@
             <md-tab md-label="Packages" :to="{ name: 'records-packages', params: { recordName } }">
                 <records-packages :recordName="recordName"></records-packages>
             </md-tab>
+            <md-tab
+                md-label="Contracts"
+                :to="{ name: 'records-contracts', params: { recordName } }"
+            >
+                <records-contracts :recordName="recordName"></records-contracts>
+            </md-tab>
             <md-tab md-label="Roles" :to="{ name: 'records-roles', params: { recordName } }">
                 <records-roles :recordName="recordName"></records-roles>
             </md-tab>

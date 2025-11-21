@@ -24,7 +24,6 @@
         "./aux-backend/**/*",
         "./shared/**/*",
         "./typings/**/*"
-        // "./node_modules/@casual-simulation/aux-common/**/*"
     ],
     "exclude": [
         "**/node_modules/**",

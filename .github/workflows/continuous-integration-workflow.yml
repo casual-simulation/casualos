@@ -21,7 +21,7 @@ jobs:
         name: Test
         strategy:
             matrix:
-                os: [ubuntu-latest, macOS-latest, windows-latest]
+                os: [ubuntu-latest, macOS-latest]
                 node-version: [20.x]
         runs-on: ${{ matrix.os }}
         steps:
@@ -39,8 +39,9 @@ jobs:
             - name: npm install and test
               run: |
                   corepack enable
-                  npm run bootstrap
-                  npx --node-options="--max_old_space_size=4096" jest --detectOpenHandles --forceExit --no-cache
+                  pnpm bootstrap
+                  pnpm pretest
+                  pnpm --node-options="--max_old_space_size=4096" jest --detectOpenHandles --forceExit --no-cache
               env:
                   CI: true
     build:

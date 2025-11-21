@@ -27,7 +27,7 @@ module.exports = {
     setupFiles: ['fake-indexeddb/auto'],
     setupFilesAfterEnv: ['<rootDir>/jest/jest-setup.ts'],
     transformIgnorePatterns: [
-        '/node_modules/\\.pnpm/(?!livekit-server-sdk|@livekit\\+protocol|camelcase-keys|map-obj|camelcase|quick-lru).+\\.js$',
+        '/node_modules/\\.pnpm/(?!livekit-server-sdk|@livekit\\+protocol|camelcase-keys|map-obj|camelcase|quick-lru|@zip\\.js\\+zip\\.js).+\\.js$',
     ],
     moduleNameMapper: {
         '^aux-common/(.*)$': '<rootDir>/src/aux-common/$1',

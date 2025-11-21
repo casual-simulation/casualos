@@ -124,6 +124,7 @@ const ALLOWED_MODERATOR_ACTIONS = new Set<string>([
     'list',
     'listSubscriptions',
     'count',
+    'purchase',
 ] as ActionKinds[]);
 
 function constructAllowedResourcesLookup(

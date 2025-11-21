@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`serverConfigSchema should be able to parse a BrandPlayer-style config 1`] = `
 Object {
@@ -196,6 +196,15 @@ Object {
           "comId": Object {
             "allowed": false,
           },
+          "contracts": Object {
+            "allowed": false,
+            "currencyLimits": Object {
+              "usd": Object {
+                "maxCost": 100000,
+                "minCost": 50,
+              },
+            },
+          },
           "data": Object {
             "allowed": false,
             "maxItemSizeInBytes": 500000,
@@ -229,6 +238,15 @@ Object {
           },
           "search": Object {
             "allowed": true,
+          },
+          "store": Object {
+            "allowed": false,
+            "currencyLimits": Object {
+              "usd": Object {
+                "maxCost": 100000,
+                "minCost": 50,
+              },
+            },
           },
           "webhooks": Object {
             "addStateTimeoutMs": 1000,
@@ -265,6 +283,15 @@ Object {
           "comId": Object {
             "allowed": false,
           },
+          "contracts": Object {
+            "allowed": false,
+            "currencyLimits": Object {
+              "usd": Object {
+                "maxCost": 100000,
+                "minCost": 50,
+              },
+            },
+          },
           "data": Object {
             "allowed": false,
             "maxItemSizeInBytes": 500000,
@@ -299,6 +326,15 @@ Object {
           "search": Object {
             "allowed": true,
           },
+          "store": Object {
+            "allowed": false,
+            "currencyLimits": Object {
+              "usd": Object {
+                "maxCost": 100000,
+                "minCost": 50,
+              },
+            },
+          },
           "webhooks": Object {
             "addStateTimeoutMs": 1000,
             "allowed": false,
@@ -312,6 +348,7 @@ Object {
       "returnUrl": "https://example.com/",
       "subscriptions": Array [
         Object {
+          "creditGrant": "match-invoice",
           "defaultSubscription": true,
           "description": "Play Personalized 3D Experiences from your Favorite Brands for FREE",
           "featureList": Array [
@@ -324,6 +361,7 @@ Object {
           "userOnly": true,
         },
         Object {
+          "creditGrant": "match-invoice",
           "defaultSubscription": false,
           "description": "Play Personalized 3D Experiences from your Favorite Brands for FREE",
           "featureList": Array [
@@ -337,6 +375,7 @@ Object {
           "userOnly": true,
         },
         Object {
+          "creditGrant": "match-invoice",
           "defaultSubscription": false,
           "description": "Play Personalized 3D Experiences from your Favorite Brands for FREE",
           "featureList": Array [
@@ -350,6 +389,7 @@ Object {
           "userOnly": true,
         },
         Object {
+          "creditGrant": "match-invoice",
           "defaultSubscription": false,
           "eligibleProducts": Array [
             "prod_OrbyQz0UFHLQQO",
@@ -366,6 +406,7 @@ Object {
           "userOnly": true,
         },
         Object {
+          "creditGrant": "match-invoice",
           "defaultSubscription": false,
           "eligibleProducts": Array [
             "prod_OrXGgxeKpv94BF",
@@ -384,6 +425,7 @@ Object {
           "userOnly": true,
         },
         Object {
+          "creditGrant": "match-invoice",
           "defaultSubscription": false,
           "eligibleProducts": Array [
             "prod_Orrnj0pqlTj02P",
@@ -402,6 +444,7 @@ Object {
           "userOnly": false,
         },
         Object {
+          "creditGrant": "match-invoice",
           "defaultSubscription": false,
           "eligibleProducts": Array [
             "prod_Orro9s8Gqqey9Y",
@@ -420,6 +463,7 @@ Object {
           "userOnly": false,
         },
         Object {
+          "creditGrant": "match-invoice",
           "defaultSubscription": false,
           "eligibleProducts": Array [
             "prod_Orrqb0wFsDfUwg",
@@ -438,6 +482,7 @@ Object {
           "userOnly": false,
         },
         Object {
+          "creditGrant": "match-invoice",
           "defaultSubscription": false,
           "eligibleProducts": Array [
             "prod_OrrsITJLnxo7Po",
@@ -456,6 +501,7 @@ Object {
           "userOnly": false,
         },
         Object {
+          "creditGrant": "match-invoice",
           "defaultSubscription": false,
           "eligibleProducts": Array [
             "prod_prod_pubrecnotinstripe",
@@ -505,6 +551,15 @@ Object {
             "comId": Object {
               "allowed": false,
             },
+            "contracts": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "data": Object {
               "allowed": true,
               "maxItemSizeInBytes": 500000,
@@ -549,6 +604,15 @@ Object {
             "search": Object {
               "allowed": true,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": false,
@@ -589,6 +653,15 @@ Object {
             },
             "comId": Object {
               "allowed": false,
+            },
+            "contracts": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "data": Object {
               "allowed": true,
@@ -637,6 +710,15 @@ Object {
             "search": Object {
               "allowed": true,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": false,
@@ -673,6 +755,15 @@ Object {
             },
             "comId": Object {
               "allowed": true,
+            },
+            "contracts": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "data": Object {
               "allowed": true,
@@ -725,6 +816,15 @@ Object {
             "search": Object {
               "allowed": true,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": true,
@@ -767,6 +867,15 @@ Object {
             },
             "comId": Object {
               "allowed": false,
+            },
+            "contracts": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "data": Object {
               "allowed": true,
@@ -815,6 +924,15 @@ Object {
             "search": Object {
               "allowed": true,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": false,
@@ -851,6 +969,15 @@ Object {
             },
             "comId": Object {
               "allowed": false,
+            },
+            "contracts": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "data": Object {
               "allowed": true,
@@ -903,6 +1030,15 @@ Object {
             "search": Object {
               "allowed": true,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": true,
@@ -945,6 +1081,15 @@ Object {
             },
             "comId": Object {
               "allowed": false,
+            },
+            "contracts": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "data": Object {
               "allowed": true,
@@ -993,6 +1138,15 @@ Object {
             "search": Object {
               "allowed": true,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": true,
@@ -1034,6 +1188,15 @@ Object {
             },
             "comId": Object {
               "allowed": false,
+            },
+            "contracts": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "data": Object {
               "allowed": true,
@@ -1079,6 +1242,15 @@ Object {
             "search": Object {
               "allowed": true,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": false,
@@ -1118,6 +1290,15 @@ Object {
             },
             "comId": Object {
               "allowed": false,
+            },
+            "contracts": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "data": Object {
               "allowed": true,
@@ -1163,6 +1344,15 @@ Object {
             "search": Object {
               "allowed": true,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": false,
@@ -1199,6 +1389,15 @@ Object {
             },
             "comId": Object {
               "allowed": false,
+            },
+            "contracts": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "data": Object {
               "allowed": true,
@@ -1251,6 +1450,15 @@ Object {
             "search": Object {
               "allowed": true,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": true,
@@ -1289,6 +1497,15 @@ Object {
             },
             "comId": Object {
               "allowed": false,
+            },
+            "contracts": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "data": Object {
               "allowed": true,
@@ -1336,6 +1553,15 @@ Object {
             },
             "search": Object {
               "allowed": true,
+            },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
@@ -1565,6 +1791,15 @@ Object {
           "comId": Object {
             "allowed": false,
           },
+          "contracts": Object {
+            "allowed": false,
+            "currencyLimits": Object {
+              "usd": Object {
+                "maxCost": 100000,
+                "minCost": 50,
+              },
+            },
+          },
           "data": Object {
             "allowed": false,
             "maxItemSizeInBytes": 500000,
@@ -1598,6 +1833,15 @@ Object {
           },
           "search": Object {
             "allowed": true,
+          },
+          "store": Object {
+            "allowed": false,
+            "currencyLimits": Object {
+              "usd": Object {
+                "maxCost": 100000,
+                "minCost": 50,
+              },
+            },
           },
           "webhooks": Object {
             "addStateTimeoutMs": 1000,
@@ -1636,6 +1880,15 @@ Object {
           },
           "comId": Object {
             "allowed": false,
+          },
+          "contracts": Object {
+            "allowed": false,
+            "currencyLimits": Object {
+              "usd": Object {
+                "maxCost": 100000,
+                "minCost": 50,
+              },
+            },
           },
           "data": Object {
             "allowed": true,
@@ -1683,6 +1936,15 @@ Object {
           },
           "search": Object {
             "allowed": true,
+          },
+          "store": Object {
+            "allowed": false,
+            "currencyLimits": Object {
+              "usd": Object {
+                "maxCost": 100000,
+                "minCost": 50,
+              },
+            },
           },
           "webhooks": Object {
             "addStateTimeoutMs": 1000,
@@ -1930,6 +2192,15 @@ Object {
           "comId": Object {
             "allowed": false,
           },
+          "contracts": Object {
+            "allowed": false,
+            "currencyLimits": Object {
+              "usd": Object {
+                "maxCost": 100000,
+                "minCost": 50,
+              },
+            },
+          },
           "data": Object {
             "allowed": false,
             "maxItemSizeInBytes": 500000,
@@ -1963,6 +2234,15 @@ Object {
           },
           "search": Object {
             "allowed": true,
+          },
+          "store": Object {
+            "allowed": false,
+            "currencyLimits": Object {
+              "usd": Object {
+                "maxCost": 100000,
+                "minCost": 50,
+              },
+            },
           },
           "webhooks": Object {
             "addStateTimeoutMs": 1000,
@@ -1999,6 +2279,15 @@ Object {
           "comId": Object {
             "allowed": false,
           },
+          "contracts": Object {
+            "allowed": false,
+            "currencyLimits": Object {
+              "usd": Object {
+                "maxCost": 100000,
+                "minCost": 50,
+              },
+            },
+          },
           "data": Object {
             "allowed": false,
             "maxItemSizeInBytes": 500000,
@@ -2033,6 +2322,15 @@ Object {
           "search": Object {
             "allowed": true,
           },
+          "store": Object {
+            "allowed": false,
+            "currencyLimits": Object {
+              "usd": Object {
+                "maxCost": 100000,
+                "minCost": 50,
+              },
+            },
+          },
           "webhooks": Object {
             "addStateTimeoutMs": 1000,
             "allowed": false,
@@ -2046,6 +2344,7 @@ Object {
       "returnUrl": "https://example.com/",
       "subscriptions": Array [
         Object {
+          "creditGrant": "match-invoice",
           "defaultSubscription": true,
           "description": "Play Personalized 3D Experiences from your Favorite Brands for FREE",
           "featureList": Array [
@@ -2058,6 +2357,7 @@ Object {
           "userOnly": true,
         },
         Object {
+          "creditGrant": "match-invoice",
           "defaultSubscription": false,
           "description": "Play Personalized 3D Experiences from your Favorite Brands for FREE",
           "featureList": Array [
@@ -2071,6 +2371,7 @@ Object {
           "userOnly": true,
         },
         Object {
+          "creditGrant": "match-invoice",
           "defaultSubscription": false,
           "description": "Play Personalized 3D Experiences from your Favorite Brands for FREE",
           "featureList": Array [
@@ -2084,6 +2385,7 @@ Object {
           "userOnly": true,
         },
         Object {
+          "creditGrant": "match-invoice",
           "defaultSubscription": false,
           "eligibleProducts": Array [
             "prod_OrbyQz0UFHLQQO",
@@ -2100,6 +2402,7 @@ Object {
           "userOnly": true,
         },
         Object {
+          "creditGrant": "match-invoice",
           "defaultSubscription": false,
           "eligibleProducts": Array [
             "prod_OrXGgxeKpv94BF",
@@ -2118,6 +2421,7 @@ Object {
           "userOnly": true,
         },
         Object {
+          "creditGrant": "match-invoice",
           "defaultSubscription": false,
           "eligibleProducts": Array [
             "prod_Orrnj0pqlTj02P",
@@ -2136,6 +2440,7 @@ Object {
           "userOnly": false,
         },
         Object {
+          "creditGrant": "match-invoice",
           "defaultSubscription": false,
           "eligibleProducts": Array [
             "prod_Orro9s8Gqqey9Y",
@@ -2154,6 +2459,7 @@ Object {
           "userOnly": false,
         },
         Object {
+          "creditGrant": "match-invoice",
           "defaultSubscription": false,
           "eligibleProducts": Array [
             "prod_Orrqb0wFsDfUwg",
@@ -2172,6 +2478,7 @@ Object {
           "userOnly": false,
         },
         Object {
+          "creditGrant": "match-invoice",
           "defaultSubscription": false,
           "eligibleProducts": Array [
             "prod_OrrsITJLnxo7Po",
@@ -2190,6 +2497,7 @@ Object {
           "userOnly": false,
         },
         Object {
+          "creditGrant": "match-invoice",
           "defaultSubscription": false,
           "eligibleProducts": Array [
             "prod_prod_pubrecnotinstripe",
@@ -2239,6 +2547,15 @@ Object {
             "comId": Object {
               "allowed": false,
             },
+            "contracts": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "data": Object {
               "allowed": true,
               "maxItemSizeInBytes": 500000,
@@ -2283,6 +2600,15 @@ Object {
             "search": Object {
               "allowed": true,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": false,
@@ -2323,6 +2649,15 @@ Object {
             },
             "comId": Object {
               "allowed": false,
+            },
+            "contracts": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "data": Object {
               "allowed": true,
@@ -2371,6 +2706,15 @@ Object {
             "search": Object {
               "allowed": true,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": false,
@@ -2407,6 +2751,15 @@ Object {
             },
             "comId": Object {
               "allowed": true,
+            },
+            "contracts": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "data": Object {
               "allowed": true,
@@ -2459,6 +2812,15 @@ Object {
             "search": Object {
               "allowed": true,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": true,
@@ -2501,6 +2863,15 @@ Object {
             },
             "comId": Object {
               "allowed": false,
+            },
+            "contracts": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "data": Object {
               "allowed": true,
@@ -2549,6 +2920,15 @@ Object {
             "search": Object {
               "allowed": true,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": false,
@@ -2585,6 +2965,15 @@ Object {
             },
             "comId": Object {
               "allowed": false,
+            },
+            "contracts": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "data": Object {
               "allowed": true,
@@ -2637,6 +3026,15 @@ Object {
             "search": Object {
               "allowed": true,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": true,
@@ -2679,6 +3077,15 @@ Object {
             },
             "comId": Object {
               "allowed": false,
+            },
+            "contracts": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "data": Object {
               "allowed": true,
@@ -2727,6 +3134,15 @@ Object {
             "search": Object {
               "allowed": true,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": true,
@@ -2768,6 +3184,15 @@ Object {
             },
             "comId": Object {
               "allowed": false,
+            },
+            "contracts": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "data": Object {
               "allowed": true,
@@ -2813,6 +3238,15 @@ Object {
             "search": Object {
               "allowed": true,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": false,
@@ -2852,6 +3286,15 @@ Object {
             },
             "comId": Object {
               "allowed": false,
+            },
+            "contracts": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "data": Object {
               "allowed": true,
@@ -2897,6 +3340,15 @@ Object {
             "search": Object {
               "allowed": true,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": false,
@@ -2933,6 +3385,15 @@ Object {
             },
             "comId": Object {
               "allowed": false,
+            },
+            "contracts": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "data": Object {
               "allowed": true,
@@ -2985,6 +3446,15 @@ Object {
             "search": Object {
               "allowed": true,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": true,
@@ -3023,6 +3493,15 @@ Object {
             },
             "comId": Object {
               "allowed": false,
+            },
+            "contracts": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "data": Object {
               "allowed": true,
@@ -3070,6 +3549,15 @@ Object {
             },
             "search": Object {
               "allowed": true,
+            },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,

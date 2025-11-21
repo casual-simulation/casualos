@@ -87,7 +87,7 @@ export class PrismaDatabaseRecordsStore implements DatabaseRecordsStore {
         recordName: string,
         item: Partial<DatabaseRecord>
     ): Promise<void> {
-        await this._client.searchRecord.update({
+        await this._client.databaseRecord.update({
             where: {
                 recordName_address: {
                     recordName: recordName,
@@ -197,8 +197,16 @@ export class PrismaDatabaseRecordsStore implements DatabaseRecordsStore {
             recordName: request.recordName,
             markers: { has: request.marker },
         };
-        if (!!request.startingAddress) {
-            query.address = { gt: request.startingAddress };
+        if (request.startingAddress) {
+            if (request.sort === 'descending') {
+                query.address = {
+                    lt: request.startingAddress,
+                };
+            } else {
+                query.address = {
+                    gt: request.startingAddress,
+                };
+            }
         }
 
         const [count, records] = await Promise.all([
@@ -228,7 +236,7 @@ export class PrismaDatabaseRecordsStore implements DatabaseRecordsStore {
             success: true,
             items: records.map((r) => this._convertRecord(r)),
             totalCount: count,
-            marker: null,
+            marker: request.marker,
         };
     }
 

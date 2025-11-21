@@ -14,7 +14,7 @@ describe('fast-json-stable-stringify', () => {
             let two: any = { a: 2, one: one };
             one.two = two;
             stringify(one);
-        }).toThrowError(new TypeError('Converting circular structure to JSON'));
+        }).toThrow(new TypeError('Converting circular structure to JSON'));
     });
 
     it('should support cyclic objects when specified', () => {

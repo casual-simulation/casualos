@@ -22,6 +22,12 @@ import { z } from 'zod';
  */
 export interface StripeInterface {
     /**
+     * Gets the stripe interface that can be used for testing.
+     * Null if testing is not supported.
+     */
+    test?: StripeInterface | null;
+
+    /**
      * Gets the publishable key.
      */
     publishableKey: string;
@@ -45,6 +51,12 @@ export interface StripeInterface {
     createCheckoutSession(
         request: StripeCheckoutRequest
     ): Promise<StripeCheckoutResponse>;
+
+    /**
+     * Gets the checkout session with the given ID.
+     * @param id The ID of the checkout session.
+     */
+    getCheckoutSessionById(id: string): Promise<StripeCheckoutResponse>;
 
     /**
      * Creates a new portal session for a user.
@@ -88,6 +100,56 @@ export interface StripeInterface {
      * @param id The ID of the subscription.
      */
     getSubscriptionById(id: string): Promise<Omit<StripeSubscription, 'items'>>;
+
+    /**
+     * Gets the payment intent with the given ID.
+     * @param id The ID of the payment intent.
+     */
+    getPaymentIntentById(id: string): Promise<StripePaymentIntent>;
+
+    /**
+     * Creates a new account link for the given account ID.
+     * @param accountId The account ID.
+     */
+    createAccountLink(
+        request: StripeCreateAccountLinkRequest
+    ): Promise<StripeAccountLink>;
+
+    /**
+     * Creates a new login link for the given account ID.
+     * @param accountId The account ID.
+     */
+    createLoginLink(
+        request: StripeCreateLoginLinkRequest
+    ): Promise<StripeAccountLink>;
+
+    /**
+     * Creates a new account session for the given account ID.
+     * @param accountId The account ID.
+     */
+    createAccountSession(
+        request: CreateStripeAccountSessionRequest
+    ): Promise<StripeAccountSession>;
+
+    /**
+     * Creates a new stripe account.
+     * @param request The request.
+     */
+    createAccount(request: StripeCreateAccountRequest): Promise<StripeAccount>;
+
+    /**
+     * Gets the stripe account with the given ID.
+     * @param id The ID of the account.
+     */
+    getAccountById(id: string): Promise<StripeAccount | null>;
+
+    /**
+     * Creates a new transfer.
+     * @param request The request.
+     */
+    createTransfer(
+        request: StripeCreateTransferRequest
+    ): Promise<StripeTransfer>;
 }
 
 export interface StripePrice {
@@ -133,7 +195,54 @@ export interface StripeCheckoutRequest {
         /**
          * The ID of the price for the line item.
          */
-        price: string;
+        price?: string;
+
+        /**
+         * The data for the price.
+         */
+        price_data?: {
+            /**
+             * The currency of the price.
+             */
+            currency: string;
+
+            /**
+             * The cost in cents of the price.
+             */
+            unit_amount: number;
+
+            /**
+             * The ID of the product.
+             */
+            product?: string;
+
+            product_data?: {
+                /**
+                 * The name of the product.
+                 */
+                name: string;
+
+                /**
+                 * The description for the product.
+                 */
+                description: string;
+
+                /**
+                 * The list of image URLs for the product.
+                 */
+                images: string[];
+
+                /**
+                 * The metadata for the product.
+                 */
+                metadata: any;
+
+                /**
+                 * The tax code for the product.
+                 */
+                tax_code?: string | null;
+            };
+        };
 
         /**
          * The quantity to purchase.
@@ -144,12 +253,12 @@ export interface StripeCheckoutRequest {
     /**
      * The mode that the checkout should use.
      */
-    mode: 'subscription';
+    mode: 'subscription' | 'payment';
 
     /**
      * The ID of the customer that the checkout request should be used.
      */
-    customer: string;
+    customer?: string;
 
     /**
      * The email address that should be used for the customer.
@@ -175,6 +284,36 @@ export interface StripeCheckoutRequest {
      * The metadata to use.
      */
     metadata?: any;
+
+    /**
+     * The unix time (in seconds) that the checkout session should expire at.
+     */
+    expires_at?: number;
+
+    /**
+     * Data about the payment intent.
+     */
+    payment_intent_data?: {
+        /**
+         * The fee that should be charged for the application.
+         */
+        application_fee_amount?: number;
+
+        /**
+         * The transfer group that should be used for the payment.
+         */
+        transfer_group?: string;
+    };
+
+    /**
+     * Stripe connect information.
+     */
+    connect?: {
+        /**
+         * The ID of the stripe account that the checkout session should be connected to.
+         */
+        stripeAccount: string;
+    };
 }
 
 export interface StripeCheckoutResponse {
@@ -182,7 +321,34 @@ export interface StripeCheckoutResponse {
      * The URL that the user should be redirected to.
      */
     url: string;
+
+    /**
+     * The ID of the checkout session.
+     */
+    id: string;
+
+    /**
+     * The invoice that was created for the checkout session.
+     */
+    invoice?: StripeInvoice | null;
+
+    /**
+     * The payment status of the checkout session.
+     */
+    payment_status: StripePaymentStatus;
+
+    /**
+     * The status of the checkout session.
+     */
+    status: StripeCheckoutStatus;
 }
+
+/**
+ * The payment status of a stripe payment.
+ */
+export type StripePaymentStatus = 'no_payment_required' | 'paid' | 'unpaid';
+
+export type StripeCheckoutStatus = 'open' | 'complete' | 'expired';
 
 export interface StripePortalRequest {
     /**
@@ -481,12 +647,247 @@ export interface StripeProduct {
     default_price: StripePrice;
 }
 
+export interface StripeCreateAccountLinkRequest {
+    /**
+     * The ID of the account.
+     */
+    account: string;
+
+    /**
+     * The type of account link the user is requesting.
+     */
+    type: 'account_onboarding' | 'account_update';
+
+    /**
+     * The URL the user will be redirected to if the account link is expired, has been previously-visited, or is otherwise invalid.
+     * The URL you specify should attempt to generate a new account link with the same parameters used to create the original account link, then redirect the user to the new account link’s URL so they can continue with Connect Onboarding. If a new account link cannot be generated or the redirect fails you should display a useful error to the user.
+     */
+    refresh_url: string;
+
+    /**
+     * The URL that the user will be redirected to upon leaving or completing the linked flow.
+     */
+    return_url: string;
+}
+
+export interface StripeCreateLoginLinkRequest {
+    /**
+     * The ID of the account.
+     */
+    account: string;
+}
+
+export interface StripeCreateAccountRequest {
+    /**
+     * The type of stripe account to create.
+     */
+    type?: 'custom' | 'express' | 'standard';
+
+    /**
+     * Information about how the account is controlled.
+     */
+    controller: {
+        /**
+         * A value indicating the responsible payer of Stripe fees on this account. Defaults to account. Learn more about [fee behavior on connected accounts](https://docs.stripe.com/connect/direct-charges-fee-payer-behavior).
+         */
+        fees: {
+            /**
+             * Who pays Stripe fees?
+             *
+             * - `account`: The account pays the fees.
+             * - `application`: Our application pays the fees.
+             */
+            payer: 'account' | 'application';
+        };
+
+        /**
+         * A hash of configuration for products that have negative balance liability, and whether Stripe or a Connect application is responsible for them.
+         */
+        losses?: {
+            /**
+             * A value indicating who is liable when this account can’t pay back negative balances resulting from payments. Defaults to `stripe`.
+             *
+             * - `application`: The Connect application is liable when this account can’t pay back negative balances resulting from payments.
+             * - `stripe`: Stripe is liable when this account can’t pay back negative balances resulting from payments.
+             */
+            payments?: 'application' | 'stripe';
+        };
+
+        /**
+         * A value indicating responsibility for collecting updated information when requirements on the account are due or change. Defaults to `stripe`.
+         *
+         * - `application`: The Connect application is responsible for collecting updated information when requirements on the account are due or change.
+         * - `none`: No one is responsible for collecting updated information when requirements on the account are due or change.
+         */
+        requirement_collection?: 'stripe' | 'application';
+
+        /**
+         * A hash of configuration for Stripe-hosted dashboards.
+         */
+        stripe_dashboard?: {
+            /**
+             * Whether this account should have access to the full Stripe Dashboard (`full`), to the Express Dashboard (`express`), or to no Stripe-hosted dashboard (`none`). Defaults to `full`.
+             */
+            type?: 'express' | 'full' | 'none';
+        };
+    };
+
+    /**
+     * Metadata about the account.
+     */
+    metadata?: {
+        [key: string]: string;
+    };
+}
+
+export interface StripeAccount {
+    /**
+     * The ID of the account.
+     */
+    id: string;
+
+    /**
+     * The requirements that stripe needs for the account.
+     */
+    requirements: StripeAccountRequirements | null;
+
+    /**
+     * Whether the account can create live charges.
+     */
+    charges_enabled: boolean;
+
+    /**
+     * Metadata about the account.
+     */
+    metadata?: {
+        [key: string]: string;
+    };
+}
+
+export interface StripeAccountRequirements {
+    /**
+     * The requirements that are currently due.
+     */
+    currently_due: string[] | null;
+
+    /**
+     * The requirements that are eventually due.
+     */
+    eventually_due: string[] | null;
+
+    /**
+     * The requirements that are past due.
+     */
+    past_due: string[] | null;
+
+    /**
+     * The requirements that are pending verification.
+     */
+    pending_verification: string[] | null;
+
+    /**
+     * The reason why the account is disabled.
+     */
+    disabled_reason: string | null;
+
+    /**
+     * The timestamp of the deadline for the requirements.
+     */
+    current_deadline: number | null;
+
+    /**
+     * Fields that are currently_due and need to be collected again because validation or verification failed.
+     */
+    errors:
+        | {
+              /**
+               * The code of the error.
+               */
+              code: string;
+
+              /**
+               * The informative message about the error.
+               */
+              reason: string;
+
+              /**
+               * The field that the error is related to.
+               */
+              requirement: string;
+          }[]
+        | null;
+}
+
+export interface StripeAccountLink {
+    /**
+     * The URL that the user can visit to open their account.
+     */
+    url: string;
+}
+
+export interface CreateStripeAccountSessionRequest {
+    account: string;
+    components: StripeAccountComponents;
+}
+
+export interface StripeAccountComponents {
+    account_onboarding?: StripeAccountComponent;
+    balances?: StripeAccountComponent;
+    disputes_list?: StripeAccountComponent;
+    documents?: StripeAccountComponent;
+    financial_account?: StripeAccountComponent;
+    financial_account_transactions?: StripeAccountComponent;
+    instant_payouts_promotion?: StripeAccountComponent;
+    issuing_card?: StripeAccountComponent;
+    issuing_cards_list?: StripeAccountComponent;
+    notification_banner?: StripeAccountComponent;
+    payments?: StripeAccountComponent;
+    payment_disputes?: StripeAccountComponent;
+    payment_details?: StripeAccountComponent;
+    payout_details?: StripeAccountComponent;
+    payouts?: StripePayoutsComponent;
+    payouts_list?: StripeAccountComponent;
+    tax_registrations?: StripeAccountComponent;
+    tax_settings?: StripeAccountComponent;
+}
+
+export interface StripePayoutsComponent extends StripeAccountComponent {
+    features: {
+        disable_stripe_user_authentication?: boolean;
+        edit_payout_schedule?: boolean;
+        external_account_collection?: boolean;
+        instant_payouts?: boolean;
+        standard_payouts?: boolean;
+    };
+}
+
+export interface StripeAccountComponent {
+    enabled: boolean;
+}
+
+export interface StripeAccountSession {
+    /**
+     * The ID of the account.
+     */
+    account: string;
+
+    /**
+     * The client secret that can be used to access the session.
+     */
+    client_secret: string;
+
+    /**
+     * The Unix time in seconds when the session expires.
+     */
+    expires_at: number;
+}
+
 export const STRIPE_INVOICE_SCHEMA = z.object({
     id: z.string(),
     currency: z.string(),
     customer: z.string(),
     description: z.string().nullable(),
-    subscription: z.string(),
+    subscription: z.string().nullable().optional(),
     hosted_invoice_url: z.string(),
     invoice_pdf: z.string(),
     total: z.number(),
@@ -523,3 +924,102 @@ export const STRIPE_EVENT_INVOICE_PAID_SCHEMA = z.object({
 });
 
 export type StripeInvoice = z.infer<typeof STRIPE_INVOICE_SCHEMA>;
+
+export const STRIPE_EVENT_ACCOUNT_UPDATED_SCHEMA = z.object({
+    type: z.literal('account.updated'),
+    data: z.object({
+        object: z.object({
+            id: z.string(),
+            object: z.literal('account'),
+        }),
+    }),
+});
+
+export type StripeEventAccountUpdated = z.infer<
+    typeof STRIPE_EVENT_ACCOUNT_UPDATED_SCHEMA
+>;
+
+export const STRIPE_EVENT_CHECKOUT_SESSION_SCHEMA = z.object({
+    data: z.object({
+        object: z.object({
+            id: z.string(),
+            client_reference_id: z.string().nullable(),
+            object: z.literal('checkout.session'),
+            status: z.enum(['complete', 'expired', 'open']),
+            payment_status: z.enum(['no_payment_required', 'paid', 'unpaid']),
+        }),
+    }),
+});
+
+export type StripeEventCheckoutSession = z.infer<
+    typeof STRIPE_EVENT_CHECKOUT_SESSION_SCHEMA
+>;
+
+/**
+ * The status of the stripe account that is associated with a studio.
+ *
+ * If null, then the studio does not have a stripe account.
+ * If 'active', then the stripe account has been approved and is active.
+ * If 'pending', then the stripe account is waiting approval.
+ * If 'rejected', then the stripe account was rejected.
+ * If 'disabled', then the stripe account was disabled but not because it was rejected.
+ */
+export type StripeAccountStatus =
+    | 'active'
+    | 'pending'
+    | 'rejected'
+    | 'disabled'
+    | null;
+
+/**
+ * The status of the stripe account requirements for a studio.
+ *
+ * If null, then the studio does not have a stripe account.
+ * If 'incomplete', then the studio has a stripe account but it is not fully set up.
+ * If 'complete', then the studio has a stripe account that is fully set up.
+ */
+export type StripeRequirementsStatus = 'incomplete' | 'complete' | null;
+
+export interface StripeCreateTransferRequest {
+    /**
+     * The three-letter ISO currency code representing the currency to transfer.
+     */
+    currency: string;
+
+    /**
+     * The stripe account ID that is the destination of the transfer.
+     */
+    destination: string;
+
+    /**
+     * The amount to transfer in cents.
+     */
+    amount: number;
+
+    /**
+     * The description of the transfer.
+     */
+    description?: string;
+
+    /**
+     * The metadata to include with the transfer.
+     */
+    metadata?: Record<string, string>;
+
+    /**
+     * The group for the transfer.
+     */
+    transferGroup?: string;
+
+    /**
+     * The ID of the charge that should be used as the source for the transfer.
+     */
+    sourceTransaction?: string;
+}
+
+export interface StripeTransfer {
+    id: string;
+}
+
+// TODO:
+export type StripePaymentIntent = any;

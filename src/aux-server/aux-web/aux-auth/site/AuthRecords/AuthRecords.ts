@@ -27,6 +27,7 @@ import AuthRecordsInsts from '../AuthRecordsInsts/AuthRecordsInsts';
 import AuthRecordsWebhooks from '../AuthRecordsWebhooks/AuthRecordsWebhooks';
 import AuthRecordsNotifications from '../AuthRecordsNotifications/AuthRecordsNotifications';
 import AuthRecordsPackages from '../AuthRecordsPackages/AuthRecordsPackages';
+import AuthRecordsContracts from '../AuthRecordsContracts/AuthRecordsContracts';
 
 @Component({
     components: {
@@ -39,6 +40,7 @@ import AuthRecordsPackages from '../AuthRecordsPackages/AuthRecordsPackages';
         'records-webhooks': AuthRecordsWebhooks,
         'records-notifications': AuthRecordsNotifications,
         'records-packages': AuthRecordsPackages,
+        'records-contracts': AuthRecordsContracts,
     },
 })
 export default class AuthRecords extends Vue {
