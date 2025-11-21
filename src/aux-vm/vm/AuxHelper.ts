@@ -127,8 +127,11 @@ export class AuxHelper extends BaseHelper<Bot> {
                             console.error(error);
                         } else {
                             if (error.bot) {
+                                const system = error.bot.tags['system'];
                                 console.error(
-                                    `An error occurred in ${error.bot.id}.${error.tag}:`,
+                                    `An error occurred in ${
+                                        system ?? error.bot.id
+                                    }.${error.tag} (id: ${error.bot.id}):`,
                                     error.error
                                 );
                             } else {
