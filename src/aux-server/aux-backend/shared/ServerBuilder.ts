@@ -2440,7 +2440,9 @@ export class ServerBuilder implements SubscriptionLike {
                 return Math.min(retries * 100, 3000);
             };
             if (options.url) {
-                redis = createRedisClient({
+                // The typecast is because TypeScript
+                // takes a while to typecheck all the generics in createRedisClient.
+                redis = <any>createRedisClient({
                     url: options.url,
                     socket: {
                         reconnectStrategy: retryStrategy,
@@ -2452,7 +2454,10 @@ export class ServerBuilder implements SubscriptionLike {
                         'Redis host must be provided if a URL is not specified.'
                     );
                 }
-                redis = createRedisClient({
+
+                // The typecast is because TypeScript
+                // takes a while to typecheck all the generics in createRedisClient.
+                redis = <any>createRedisClient({
                     socket: {
                         host: options.host,
                         port: options.port,

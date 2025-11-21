@@ -50,6 +50,18 @@ import type {
     RemoteCausalRepoProtocol,
 } from '@casual-simulation/aux-common';
 
+// Import all types to speed up typescript declaration generation
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type * as _AuxCommon from '@casual-simulation/aux-common';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type * as _AuxRecords from '@casual-simulation/aux-records';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type * as _AuthController from '@casual-simulation/aux-records/AuthController';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type * as _AuxRecordsCrud from '@casual-simulation/aux-records/crud';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type * as _Zod from 'zod';
+
 import {
     startAuthentication,
     startRegistration,
