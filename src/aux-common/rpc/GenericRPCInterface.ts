@@ -216,6 +216,17 @@ export type ProcedureActions<T extends Procedures> = {
     };
 };
 
+export type ProcedureOutputs<T extends Procedures> = {
+    [K in keyof T]: T[K] extends Procedure<any, infer U, any> ? U : never;
+};
+export type SuccessfulOutputs<T extends Procedures> = {
+    [K in keyof T]: T[K] extends Procedure<any, infer U, any>
+        ? U extends { success: true }
+            ? U
+            : never
+        : never;
+};
+
 export interface ProcedureBuilder {
     /**
      * Configures the origins that are allowed for the route.

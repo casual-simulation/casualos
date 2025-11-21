@@ -84,8 +84,11 @@ import AuthCodeOfConduct from './AuthCodeOfConduct/AuthCodeOfConduct';
 import AuthRecordsWebhooks from './AuthRecordsWebhooks/AuthRecordsWebhooks';
 import AuthRecordsNotifications from './AuthRecordsNotifications/AuthRecordsNotifications';
 import AuthRecordsPackages from './AuthRecordsPackages/AuthRecordsPackages';
+import AuthRecordsContracts from './AuthRecordsContracts/AuthRecordsContracts';
 import AuthGrantedEntitlements from './AuthGrantedEntitlements/AuthGrantedEntitlements';
 import AuthUserNotifications from './AuthUserNotifications/AuthUserNotifications';
+import AuthStoreFulfillment from './AuthStoreFulfillment/AuthStoreFulfillment';
+import AuthStoreActivation from './AuthStoreActivation/AuthStoreActivation.vue';
 
 Vue.use(VueRouter);
 Vue.use(MdButton);
@@ -238,6 +241,11 @@ const routes: RouteConfig[] = [
                 name: 'records-packages',
                 component: AuthRecordsPackages,
             },
+            {
+                path: 'contracts',
+                name: 'records-contracts',
+                component: AuthRecordsContracts,
+            },
         ],
     },
     {
@@ -265,6 +273,22 @@ const routes: RouteConfig[] = [
         component: AuthRegisterWebAuthn,
         props: (route) => ({
             after: route.query['after'],
+        }),
+    },
+    {
+        path: '/store/fulfillment/:sessionId',
+        name: 'store-fulfillment',
+        component: AuthStoreFulfillment,
+        props: (route) => ({
+            sessionId: route.params.sessionId,
+        }),
+    },
+    {
+        path: '/store/activate',
+        name: 'store-activation',
+        component: AuthStoreActivation,
+        props: (route) => ({
+            activationKey: route.query.key,
         }),
     },
 ];
@@ -353,6 +377,7 @@ const publicPages = new Set([
     'olx-terms-of-service',
     'oauth-redirect',
     'code-of-conduct',
+    'store-fulfillment',
 ]);
 
 router.beforeEach(async (to, from, next) => {

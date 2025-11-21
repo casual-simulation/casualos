@@ -32,7 +32,7 @@ class CustomError extends Error {
 }
 
 // `as const` needs newer babel which explodes on node 6
-const matchers: ['toThrowError', 'toThrow'] = ['toThrowError', 'toThrow'];
+const matchers: ['toThrow'] = ['toThrow'];
 
 matchers.forEach((toThrow) => {
     describe(toThrow, () => {

@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`HashHelpers hashHighEntropyPasswordWithSalt() should return a consistent hash 1`] = `"vH2.rMXQq0dvdN9MYiSAudx1jbtNHlw4wrK5ATK1Bdg0alM="`;
 

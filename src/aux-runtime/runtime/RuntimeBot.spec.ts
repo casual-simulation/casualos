@@ -575,7 +575,11 @@ describe('RuntimeBot', () => {
                 expect(script.tags.arr).toEqual(expected);
                 expect(script.raw.arr).toEqual(expected);
                 expect(script.changes.arr).toEqual(expected);
-                expect(updateTagMock).toBeCalledWith(precalc, 'arr', expected);
+                expect(updateTagMock).toHaveBeenCalledWith(
+                    precalc,
+                    'arr',
+                    expected
+                );
             });
 
             it('should support pushing an item to an array', () => {
@@ -586,7 +590,11 @@ describe('RuntimeBot', () => {
                 expect(script.tags.arr).toEqual(expected);
                 expect(script.raw.arr).toEqual(expected);
                 expect(script.changes.arr).toEqual(expected);
-                expect(updateTagMock).toBeCalledWith(precalc, 'arr', expected);
+                expect(updateTagMock).toHaveBeenCalledWith(
+                    precalc,
+                    'arr',
+                    expected
+                );
             });
 
             it('should support popping an item from an array', () => {
@@ -597,7 +605,11 @@ describe('RuntimeBot', () => {
                 expect(script.tags.arr).toEqual(expected);
                 expect(script.raw.arr).toEqual(expected);
                 expect(script.changes.arr).toEqual(expected);
-                expect(updateTagMock).toBeCalledWith(precalc, 'arr', expected);
+                expect(updateTagMock).toHaveBeenCalledWith(
+                    precalc,
+                    'arr',
+                    expected
+                );
             });
 
             it('should support unshifting an item to an array', () => {
@@ -608,7 +620,11 @@ describe('RuntimeBot', () => {
                 expect(script.tags.arr).toEqual(expected);
                 expect(script.raw.arr).toEqual(expected);
                 expect(script.changes.arr).toEqual(expected);
-                expect(updateTagMock).toBeCalledWith(precalc, 'arr', expected);
+                expect(updateTagMock).toHaveBeenCalledWith(
+                    precalc,
+                    'arr',
+                    expected
+                );
             });
 
             it('should support shifting an item from an array', () => {
@@ -619,7 +635,11 @@ describe('RuntimeBot', () => {
                 expect(script.tags.arr).toEqual(expected);
                 expect(script.raw.arr).toEqual(expected);
                 expect(script.changes.arr).toEqual(expected);
-                expect(updateTagMock).toBeCalledWith(precalc, 'arr', expected);
+                expect(updateTagMock).toHaveBeenCalledWith(
+                    precalc,
+                    'arr',
+                    expected
+                );
             });
 
             it('should support filling an array', () => {
@@ -635,7 +655,11 @@ describe('RuntimeBot', () => {
                 expect(script.tags.arr).toEqual(expected);
                 expect(script.raw.arr).toEqual(expected);
                 expect(script.changes.arr).toEqual(expected);
-                expect(updateTagMock).toBeCalledWith(precalc, 'arr', expected);
+                expect(updateTagMock).toHaveBeenCalledWith(
+                    precalc,
+                    'arr',
+                    expected
+                );
             });
 
             it('should support sorting the array', () => {
@@ -647,7 +671,11 @@ describe('RuntimeBot', () => {
                 expect(script.tags.arr).toEqual(expected);
                 expect(script.raw.arr).toEqual(expected);
                 expect(script.changes.arr).toEqual(expected);
-                expect(updateTagMock).toBeCalledWith(precalc, 'arr', expected);
+                expect(updateTagMock).toHaveBeenCalledWith(
+                    precalc,
+                    'arr',
+                    expected
+                );
             });
 
             it('should support splicing the array', () => {
@@ -659,7 +687,11 @@ describe('RuntimeBot', () => {
                 expect(script.tags.arr).toEqual(expected);
                 expect(script.raw.arr).toEqual(expected);
                 expect(script.changes.arr).toEqual(expected);
-                expect(updateTagMock).toBeCalledWith(precalc, 'arr', expected);
+                expect(updateTagMock).toHaveBeenCalledWith(
+                    precalc,
+                    'arr',
+                    expected
+                );
             });
 
             it('should support expanding an array by setting the length', () => {
@@ -676,7 +708,11 @@ describe('RuntimeBot', () => {
                 expect(script.tags.arr).toEqual(expected);
                 expect(script.raw.arr).toEqual(expected);
                 expect(script.changes.arr).toEqual(expected);
-                expect(updateTagMock).toBeCalledWith(precalc, 'arr', expected);
+                expect(updateTagMock).toHaveBeenCalledWith(
+                    precalc,
+                    'arr',
+                    expected
+                );
             });
 
             it('should unwrap the array proxy when saving to another tag', () => {
@@ -689,7 +725,11 @@ describe('RuntimeBot', () => {
                 expect(script.raw.other).toEqual(expected);
 
                 expect(script.changes.other).toBe(abc);
-                expect(updateTagMock).toBeCalledWith(precalc, 'arr', expected);
+                expect(updateTagMock).toHaveBeenCalledWith(
+                    precalc,
+                    'arr',
+                    expected
+                );
             });
         });
     });
@@ -882,7 +922,7 @@ describe('RuntimeBot', () => {
                 expect(script.tags.arr).toEqual(expected);
                 expect(script.raw.arr).toEqual(expected);
                 expect(script.changes.arr).toBeUndefined();
-                expect(updateTagMock).not.toBeCalledWith(
+                expect(updateTagMock).not.toHaveBeenCalledWith(
                     precalc,
                     'arr',
                     expected
@@ -897,7 +937,7 @@ describe('RuntimeBot', () => {
                 expect(script.tags.arr).toEqual(expected);
                 expect(script.raw.arr).toEqual(expected);
                 expect(script.changes.arr).toBeUndefined();
-                expect(updateTagMock).not.toBeCalledWith(
+                expect(updateTagMock).not.toHaveBeenCalledWith(
                     precalc,
                     'arr',
                     expected
@@ -912,7 +952,7 @@ describe('RuntimeBot', () => {
                 expect(script.tags.arr).toEqual(expected);
                 expect(script.raw.arr).toEqual(expected);
                 expect(script.changes.arr).toBeUndefined();
-                expect(updateTagMock).not.toBeCalledWith(
+                expect(updateTagMock).not.toHaveBeenCalledWith(
                     precalc,
                     'arr',
                     expected
@@ -927,7 +967,7 @@ describe('RuntimeBot', () => {
                 expect(script.tags.arr).toEqual(expected);
                 expect(script.raw.arr).toEqual(expected);
                 expect(script.changes.arr).toBeUndefined();
-                expect(updateTagMock).not.toBeCalledWith(
+                expect(updateTagMock).not.toHaveBeenCalledWith(
                     precalc,
                     'arr',
                     expected
@@ -942,7 +982,7 @@ describe('RuntimeBot', () => {
                 expect(script.tags.arr).toEqual(expected);
                 expect(script.raw.arr).toEqual(expected);
                 expect(script.changes.arr).toBeUndefined();
-                expect(updateTagMock).not.toBeCalledWith(
+                expect(updateTagMock).not.toHaveBeenCalledWith(
                     precalc,
                     'arr',
                     expected
@@ -962,7 +1002,7 @@ describe('RuntimeBot', () => {
                 expect(script.tags.arr).toEqual(expected);
                 expect(script.raw.arr).toEqual(expected);
                 expect(script.changes.arr).toBeUndefined();
-                expect(updateTagMock).not.toBeCalledWith(
+                expect(updateTagMock).not.toHaveBeenCalledWith(
                     precalc,
                     'arr',
                     expected
@@ -978,7 +1018,7 @@ describe('RuntimeBot', () => {
                 expect(script.tags.arr).toEqual(expected);
                 expect(script.raw.arr).toEqual(expected);
                 expect(script.changes.arr).toBeUndefined();
-                expect(updateTagMock).not.toBeCalledWith(
+                expect(updateTagMock).not.toHaveBeenCalledWith(
                     precalc,
                     'arr',
                     expected
@@ -994,7 +1034,7 @@ describe('RuntimeBot', () => {
                 expect(script.tags.arr).toEqual(expected);
                 expect(script.raw.arr).toEqual(expected);
                 expect(script.changes.arr).toBeUndefined();
-                expect(updateTagMock).not.toBeCalledWith(
+                expect(updateTagMock).not.toHaveBeenCalledWith(
                     precalc,
                     'arr',
                     expected
@@ -1015,7 +1055,7 @@ describe('RuntimeBot', () => {
                 expect(script.tags.arr).toEqual(expected);
                 expect(script.raw.arr).toEqual(expected);
                 expect(script.changes.arr).toBeUndefined();
-                expect(updateTagMock).not.toBeCalledWith(
+                expect(updateTagMock).not.toHaveBeenCalledWith(
                     precalc,
                     'arr',
                     expected
@@ -1032,7 +1072,11 @@ describe('RuntimeBot', () => {
                 expect(script.raw.other).toEqual(expected);
 
                 expect(script.changes.other).toBe(abc);
-                expect(updateTagMock).toBeCalledWith(precalc, 'arr', expected);
+                expect(updateTagMock).toHaveBeenCalledWith(
+                    precalc,
+                    'arr',
+                    expected
+                );
             });
         });
     });
@@ -1355,13 +1399,13 @@ describe('RuntimeBot', () => {
                         arr: expected,
                     },
                 });
-                expect(updateTagMaskMock).toBeCalledWith(
+                expect(updateTagMaskMock).toHaveBeenCalledWith(
                     precalc,
                     'arr',
                     ['tempLocal'],
                     expected
                 );
-                expect(updateTagMock).not.toBeCalled();
+                expect(updateTagMock).not.toHaveBeenCalled();
             });
 
             it('should support pushing an item to an array', () => {
@@ -1375,13 +1419,13 @@ describe('RuntimeBot', () => {
                         arr: expected,
                     },
                 });
-                expect(updateTagMaskMock).toBeCalledWith(
+                expect(updateTagMaskMock).toHaveBeenCalledWith(
                     precalc,
                     'arr',
                     ['tempLocal'],
                     expected
                 );
-                expect(updateTagMock).not.toBeCalled();
+                expect(updateTagMock).not.toHaveBeenCalled();
             });
 
             it('should support popping an item from an array', () => {
@@ -1395,13 +1439,13 @@ describe('RuntimeBot', () => {
                         arr: expected,
                     },
                 });
-                expect(updateTagMaskMock).toBeCalledWith(
+                expect(updateTagMaskMock).toHaveBeenCalledWith(
                     precalc,
                     'arr',
                     ['tempLocal'],
                     expected
                 );
-                expect(updateTagMock).not.toBeCalled();
+                expect(updateTagMock).not.toHaveBeenCalled();
             });
 
             it('should support unshifting an item to an array', () => {
@@ -1415,13 +1459,13 @@ describe('RuntimeBot', () => {
                         arr: expected,
                     },
                 });
-                expect(updateTagMaskMock).toBeCalledWith(
+                expect(updateTagMaskMock).toHaveBeenCalledWith(
                     precalc,
                     'arr',
                     ['tempLocal'],
                     expected
                 );
-                expect(updateTagMock).not.toBeCalled();
+                expect(updateTagMock).not.toHaveBeenCalled();
             });
 
             it('should support shifting an item from an array', () => {
@@ -1435,13 +1479,13 @@ describe('RuntimeBot', () => {
                         arr: expected,
                     },
                 });
-                expect(updateTagMaskMock).toBeCalledWith(
+                expect(updateTagMaskMock).toHaveBeenCalledWith(
                     precalc,
                     'arr',
                     ['tempLocal'],
                     expected
                 );
-                expect(updateTagMock).not.toBeCalled();
+                expect(updateTagMock).not.toHaveBeenCalled();
             });
 
             it('should support filling an array', () => {
@@ -1460,13 +1504,13 @@ describe('RuntimeBot', () => {
                         arr: expected,
                     },
                 });
-                expect(updateTagMaskMock).toBeCalledWith(
+                expect(updateTagMaskMock).toHaveBeenCalledWith(
                     precalc,
                     'arr',
                     ['tempLocal'],
                     expected
                 );
-                expect(updateTagMock).not.toBeCalled();
+                expect(updateTagMock).not.toHaveBeenCalled();
             });
 
             it('should support sorting the array', () => {
@@ -1485,13 +1529,13 @@ describe('RuntimeBot', () => {
                         arr: expected,
                     },
                 });
-                expect(updateTagMaskMock).toBeCalledWith(
+                expect(updateTagMaskMock).toHaveBeenCalledWith(
                     precalc,
                     'arr',
                     ['tempLocal'],
                     expected
                 );
-                expect(updateTagMock).not.toBeCalled();
+                expect(updateTagMock).not.toHaveBeenCalled();
             });
 
             it('should support splicing the array', () => {
@@ -1510,13 +1554,13 @@ describe('RuntimeBot', () => {
                         arr: expected,
                     },
                 });
-                expect(updateTagMaskMock).toBeCalledWith(
+                expect(updateTagMaskMock).toHaveBeenCalledWith(
                     precalc,
                     'arr',
                     ['tempLocal'],
                     expected
                 );
-                expect(updateTagMock).not.toBeCalled();
+                expect(updateTagMock).not.toHaveBeenCalled();
             });
 
             it('should support expanding an array by setting the length', () => {
@@ -1536,13 +1580,13 @@ describe('RuntimeBot', () => {
                         arr: expected,
                     },
                 });
-                expect(updateTagMaskMock).toBeCalledWith(
+                expect(updateTagMaskMock).toHaveBeenCalledWith(
                     precalc,
                     'arr',
                     ['tempLocal'],
                     expected
                 );
-                expect(updateTagMock).not.toBeCalled();
+                expect(updateTagMock).not.toHaveBeenCalled();
             });
 
             it('should support editing an array that is shared between masks and tags', () => {
@@ -1569,13 +1613,17 @@ describe('RuntimeBot', () => {
                         arr: expected,
                     },
                 });
-                expect(updateTagMaskMock).toBeCalledWith(
+                expect(updateTagMaskMock).toHaveBeenCalledWith(
                     precalc,
                     'arr',
                     ['tempLocal'],
                     expected
                 );
-                expect(updateTagMock).toBeCalledWith(precalc, 'arr', expected);
+                expect(updateTagMock).toHaveBeenCalledWith(
+                    precalc,
+                    'arr',
+                    expected
+                );
             });
 
             it('should not edit an array that is only in masks but surfaced through tags', () => {
@@ -1602,13 +1650,13 @@ describe('RuntimeBot', () => {
                         arr: expected,
                     },
                 });
-                expect(updateTagMaskMock).toBeCalledWith(
+                expect(updateTagMaskMock).toHaveBeenCalledWith(
                     precalc,
                     'arr',
                     ['tempLocal'],
                     expected
                 );
-                expect(updateTagMock).not.toBeCalled();
+                expect(updateTagMock).not.toHaveBeenCalled();
             });
 
             it('should unwrap the array proxy when saving to another tag', () => {
@@ -1620,7 +1668,7 @@ describe('RuntimeBot', () => {
                 expect(script.masks.other).toEqual(expected);
 
                 expect(script.maskChanges?.tempLocal?.other).toBe(abc);
-                expect(updateTagMaskMock).toBeCalledWith(
+                expect(updateTagMaskMock).toHaveBeenCalledWith(
                     precalc,
                     'other',
                     ['tempLocal'],
@@ -1905,7 +1953,7 @@ describe('RuntimeBot', () => {
             const expected = [123];
             expect(script.masks.other).toEqual(expected);
             expect(script.maskChanges?.tempLocal?.other).toBe(abc);
-            expect(updateTagMaskMock).toBeCalledWith(
+            expect(updateTagMaskMock).toHaveBeenCalledWith(
                 precalc,
                 'other',
                 ['tempLocal'],

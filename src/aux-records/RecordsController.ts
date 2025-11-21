@@ -25,7 +25,10 @@ import type {
     LoomConfig,
     HumeConfig,
 } from './RecordsStore';
-
+import type {
+    StripeAccountStatus,
+    StripeRequirementsStatus,
+} from './StripeInterface';
 import {
     hashHighEntropyPasswordWithSalt,
     hashLowEntropyPasswordWithSalt,
@@ -46,6 +49,7 @@ import type { MetricsStore, SubscriptionFilter } from './MetricsStore';
 import type { ConfigurationStore } from './ConfigurationStore';
 import type {
     AIHumeFeaturesConfiguration,
+    PurchasableItemFeaturesConfiguration,
     StudioComIdFeaturesConfiguration,
     StudioLoomFeaturesConfiguration,
 } from './SubscriptionConfiguration';
@@ -53,6 +57,7 @@ import {
     getComIdFeatures,
     getHumeAiFeatures,
     getLoomFeatures,
+    getPurchasableItemsFeatures,
     getSubscriptionFeatures,
     getSubscriptionTier,
 } from './SubscriptionConfiguration';
@@ -1212,7 +1217,10 @@ export class RecordsController {
                 };
             }
 
-            let features: StudioComIdFeaturesConfiguration = {
+            let comIdFeatures: StudioComIdFeaturesConfiguration = {
+                allowed: false,
+            };
+            let storeFeatures: PurchasableItemFeaturesConfiguration = {
                 allowed: false,
             };
             let loomFeatures: StudioLoomFeaturesConfiguration = {
@@ -1230,15 +1238,19 @@ export class RecordsController {
             ) {
                 const config =
                     await this._config.getSubscriptionConfiguration();
-                features = getComIdFeatures(
+                comIdFeatures = getComIdFeatures(
                     config,
                     studio.subscriptionStatus,
-                    studio.subscriptionId
+                    studio.subscriptionId,
+                    studio.subscriptionPeriodStartMs,
+                    studio.subscriptionPeriodEndMs
                 );
                 loomFeatures = getLoomFeatures(
                     config,
                     studio.subscriptionStatus,
-                    studio.subscriptionId
+                    studio.subscriptionId,
+                    studio.subscriptionPeriodStartMs,
+                    studio.subscriptionPeriodEndMs
                 );
 
                 if (loomFeatures.allowed) {
@@ -1251,7 +1263,9 @@ export class RecordsController {
                     config,
                     studio.subscriptionStatus,
                     studio.subscriptionId,
-                    'studio'
+                    'studio',
+                    studio.subscriptionPeriodStartMs,
+                    studio.subscriptionPeriodEndMs
                 );
 
                 if (humeFeatures.allowed) {
@@ -1259,6 +1273,15 @@ export class RecordsController {
                         studio.id
                     );
                 }
+
+                storeFeatures = getPurchasableItemsFeatures(
+                    config,
+                    studio.subscriptionStatus,
+                    studio.subscriptionId,
+                    'studio',
+                    studio.subscriptionPeriodStartMs,
+                    studio.subscriptionPeriodEndMs
+                );
             }
 
             return {
@@ -1281,7 +1304,11 @@ export class RecordsController {
                               apiKey: humeConfig.apiKey,
                           }
                         : undefined,
-                    comIdFeatures: features,
+                    comIdFeatures: comIdFeatures,
+                    storeFeatures: storeFeatures,
+                    stripeAccountStatus: studio.stripeAccountStatus ?? null,
+                    stripeRequirementsStatus:
+                        studio.stripeAccountRequirementsStatus ?? null,
                     loomFeatures,
                     humeFeatures,
                 },
@@ -2496,6 +2523,21 @@ export interface StudioData {
      * The hume features that this studio has access to.
      */
     humeFeatures: AIHumeFeaturesConfiguration;
+
+    /**
+     * The store features that this studio has access to.
+     */
+    storeFeatures: PurchasableItemFeaturesConfiguration;
+
+    /**
+     * The status of the studio's stripe requirements.
+     */
+    stripeRequirementsStatus: StripeRequirementsStatus;
+
+    /**
+     * The status of the studio's stripe account.
+     */
+    stripeAccountStatus: StripeAccountStatus;
 }
 
 export interface GetStudioFailure {

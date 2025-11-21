@@ -122,7 +122,7 @@ export function createConfigs(dev, version) {
                     ...developmentVariables,
                     ...configVariables,
                 },
-                external: ['deno-vm', 'express-http-proxy'],
+                external: ['deno-vm', 'tigerbeetle-node', 'express-http-proxy'],
                 minify: !dev,
                 plugins: [
                     replaceThreePlugin(),

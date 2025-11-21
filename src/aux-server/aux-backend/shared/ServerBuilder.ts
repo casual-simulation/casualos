@@ -42,7 +42,10 @@ import type {
     PrivoStore,
     PackageRecordsStore,
     PackageVersionRecordsStore,
+    FinancialInterface,
+    PurchasableItemRecordsStore,
 } from '@casual-simulation/aux-records';
+import { PurchasableItemRecordsController } from '@casual-simulation/aux-records';
 import {
     AuthController,
     DataRecordsController,
@@ -146,13 +149,6 @@ import { PrismaModerationStore } from '../prisma/PrismaModerationStore';
 import type { ModerationConfiguration } from '@casual-simulation/aux-records/ModerationConfiguration';
 import { Rekognition } from '@aws-sdk/client-rekognition';
 import { Client as TypesenseClient } from 'typesense';
-
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import xpApiPlugins from '../../../../xpexchange/xp-api/*.server.plugin.ts';
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import casualWareApiPlugins from '../../../../extensions/casualos-casualware/casualware-api/*.server.plugin.ts';
 import { HumeInterface } from '@casual-simulation/aux-records/AIHumeInterface';
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { ConsoleSpanExporter } from '@opentelemetry/sdk-trace-node';
@@ -184,6 +180,7 @@ import { RemoteSimulationImpl } from '@casual-simulation/aux-vm-client';
 import type { AuxConfigParameters } from '@casual-simulation/aux-vm';
 import { WebPushImpl } from '../notifications/WebPushImpl';
 import { PrismaNotificationRecordsStore } from '../prisma/PrismaNotificationRecordsStore';
+import { createClient, id } from 'tigerbeetle-node';
 import { RemoteAuxChannel } from '@casual-simulation/aux-vm-client/vm/RemoteAuxChannel';
 import { OpenAIRealtimeInterface } from '@casual-simulation/aux-records/AIOpenAIRealtimeInterface';
 import { PrismaPackageRecordsStore } from '../prisma/PrismaPackageRecordsStore';
@@ -232,14 +229,29 @@ import {
     SqliteDatabaseInterface,
     TursoDatabaseInterface,
 } from '@casual-simulation/aux-records/database';
-import { SqliteDatabaseRecordsStore } from '../prisma/sqlite/SqliteDatabaseRecordsStore';
-import { PrismaDatabaseRecordsStore } from '../prisma/PrismaDatabaseRecordsStore';
 import path from 'node:path';
 import type { ViewTemplateRenderer } from '@casual-simulation/aux-records/ViewTemplateRenderer';
+import { SqliteDatabaseRecordsStore } from '../prisma/sqlite/SqliteDatabaseRecordsStore';
+import { PrismaDatabaseRecordsStore } from '../prisma/PrismaDatabaseRecordsStore';
+import type { FinancialStore } from '@casual-simulation/aux-records/financial';
+import {
+    FinancialController,
+    TigerBeetleFinancialInterface,
+} from '@casual-simulation/aux-records/financial';
+
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import xpApiPlugins from '../../../../xpexchange/xp-api/*.server.plugin.ts';
+import { PrismaPurchasableItemRecordsStore } from '../prisma/PrismaPurchasableItemsStore';
+import { SqliteFinancialStore } from '../prisma/sqlite/SqliteFinancialStore';
+import { PrismaFinancialStore } from '../prisma/PrismaFinancialStore';
+import { SqliteContractsRecordsStore } from '../prisma/sqlite/SqliteContractsRecordsStore';
+import { PrismaContractsRecordsStore } from '../prisma/PrismaContractsRecordsStore';
+import type { ContractRecordsStore } from '@casual-simulation/aux-records/contracts';
+import { ContractRecordsController } from '@casual-simulation/aux-records/contracts';
 
 const automaticPlugins: ServerPlugin[] = [
     ...xpApiPlugins.map((p: any) => p.default),
-    ...casualWareApiPlugins.map((p: any) => p.default),
 ];
 
 export interface BuildReturn {
@@ -340,6 +352,13 @@ export class ServerBuilder implements SubscriptionLike {
     private _pushInterface: WebPushInterface;
     private _notificationsController: NotificationRecordsController;
 
+    private _financialInterface: FinancialInterface;
+    private _financialController: FinancialController;
+    private _financialStore: FinancialStore;
+
+    private _contractsStore: ContractRecordsStore;
+    private _contractsController: ContractRecordsController;
+
     private _subscriptionConfig: SubscriptionConfiguration | null = null;
     private _subscriptionController: SubscriptionController;
     private _stripe: StripeIntegration;
@@ -354,6 +373,10 @@ export class ServerBuilder implements SubscriptionLike {
     private _moderationStore: ModerationStore = null;
     private _moderationController: ModerationController;
     private _loomController: LoomController;
+
+    private _purchasableItemsStore: PurchasableItemRecordsStore | null = null;
+    private _purchasableItemsController: PurchasableItemRecordsController | null =
+        null;
 
     private _notificationMessenger: MultiNotificationMessenger;
 
@@ -769,6 +792,11 @@ export class ServerBuilder implements SubscriptionLike {
                 client,
                 metricsStore
             );
+            this._financialStore = new SqliteFinancialStore(client);
+            this._contractsStore = new SqliteContractsRecordsStore(
+                client,
+                metricsStore
+            );
         } else {
             const metricsStore = (this._metricsStore = new PrismaMetricsStore(
                 prismaClient,
@@ -805,6 +833,15 @@ export class ServerBuilder implements SubscriptionLike {
                 metricsStore
             );
             this._databasesStore = new PrismaDatabaseRecordsStore(
+                prismaClient,
+                metricsStore
+            );
+            this._purchasableItemsStore = new PrismaPurchasableItemRecordsStore(
+                prismaClient,
+                metricsStore
+            );
+            this._financialStore = new PrismaFinancialStore(prismaClient);
+            this._contractsStore = new PrismaContractsRecordsStore(
                 prismaClient,
                 metricsStore
             );
@@ -1363,7 +1400,7 @@ export class ServerBuilder implements SubscriptionLike {
         }
         this._stripe = new StripeIntegration(
             new Stripe(options.stripe.secretKey, {
-                apiVersion: '2022-11-15',
+                apiVersion: '2025-09-30.clover',
             }),
             options.stripe.publishableKey,
             options.stripe.testClock
@@ -1442,6 +1479,88 @@ export class ServerBuilder implements SubscriptionLike {
             priority: 20,
             action: async () => {
                 await this._privoClient.init();
+            },
+        });
+
+        return this;
+    }
+
+    /**
+     * Configures the server to use tigerbeetle for financial transactions.
+     * @param options The options to use.
+     */
+    useTigerBeetle(
+        options: Pick<ServerConfig, 'tigerBeetle'> = this._options
+    ): this {
+        if (!options.tigerBeetle) {
+            console.warn(
+                '[ServerBuilder] TigerBeetle is explicitly disabled or lacks necessary config.'
+            );
+            return this;
+        }
+
+        console.log('[ServerBuilder] Using TigerBeetle Financial Interface.');
+
+        /**
+         * !!! TigerBeetle does not provide a way to check the status of server connections:
+         * * Because of this, misconfiguration can lead to an everlasting retry loop, which can be problematic and use resources unnecessarily.
+         * * To mitigate this, a timeout is set to race a method invocation which proves an established connection during server build.
+         * * If the connection is not proven established within the duration the timeout permits, the server will throw an error (and exit).
+         * * Disconnects (or any network errors) after the server is built will not be detected / handled by this mechanism;
+         *   it serves only to deter building the server with invalid connection parameters.
+         */
+        this._actions.push({
+            priority: 0,
+            action: async () => {
+                const client = createClient({
+                    cluster_id: options.tigerBeetle.clusterId,
+                    replica_addresses: options.tigerBeetle.replicaAddresses,
+                });
+
+                this._subscription.add(() => client.destroy());
+                // console.log(
+                //     '[ServerBuilder] Connecting to tigerbeetle server.'
+                // );
+                // try {
+                // await Promise.race([
+                //     client.lookupAccounts([0n]),
+                //     new Promise((_, rej) => {
+                //         setTimeout(() => {
+                //             rej(
+                //                 new Error(
+                //                     'Failed to connect to tigerbeetle server in time.'
+                //                 )
+                //             );
+                //         }, 3000);
+                //     }),
+                // ]);
+                console.log('[ServerBuilder] Connected to tigerbeetle server.');
+                this._financialInterface = new TigerBeetleFinancialInterface({
+                    client,
+                    id,
+                });
+                // } catch (e) {
+                //     this._financialInterface = null;
+                //     this._financialController = null;
+                //     this._financialStore = null;
+                //     client.destroy();
+                //     console.error(
+                //         '[ServerBuilder] Failed to connect to tigerbeetle server during server build, disabling financial interface.'
+                //     );
+                // }
+            },
+        });
+
+        this._initActions.push({
+            priority: 0,
+            action: async () => {
+                if (!this._financialController) {
+                    throw new Error(
+                        'Financial controller is not available when it should be.'
+                    );
+                }
+
+                await this._financialController.init();
             },
         });
 
@@ -1941,6 +2060,10 @@ export class ServerBuilder implements SubscriptionLike {
             throw new Error('A config store must be configured!');
         }
 
+        if (!this._financialInterface || !this._financialController) {
+            console.warn(`[ServerBuilder] Not using XP API.`);
+        }
+
         if (!this._rateLimitController) {
             console.log('[ServerBuilder] Not using rate limiting.');
         }
@@ -2001,13 +2124,45 @@ export class ServerBuilder implements SubscriptionLike {
             policies: this._policyController,
         });
 
+        if (this._purchasableItemsStore) {
+            this._purchasableItemsController =
+                new PurchasableItemRecordsController({
+                    store: this._purchasableItemsStore,
+                    config: this._configStore,
+                    policies: this._policyController,
+                });
+        }
+
+        if (this._contractsStore) {
+            this._contractsController = new ContractRecordsController({
+                authStore: this._authStore,
+                config: this._configStore,
+                policies: this._policyController,
+                privo: this._privoClient,
+                store: this._contractsStore,
+            });
+        }
+
+        if (this._financialStore && this._financialInterface) {
+            this._financialController = new FinancialController(
+                this._financialInterface,
+                this._financialStore
+            );
+        }
+
         if (this._subscriptionConfig) {
             this._subscriptionController = new SubscriptionController(
                 this._stripe,
                 this._authController,
                 this._authStore,
                 this._recordsStore,
-                this._configStore
+                this._configStore,
+                this._policyController,
+                this._policyStore,
+                this._purchasableItemsStore,
+                this._financialController,
+                this._financialStore,
+                this._contractsStore
             );
         }
 
@@ -2133,6 +2288,8 @@ export class ServerBuilder implements SubscriptionLike {
             packageVersionController: this._packageVersionController,
             searchRecordsController: this._searchController,
             databaseRecordsController: this._databasesController,
+            contractRecordsController: this._contractsController,
+            purchasableItemsController: this._purchasableItemsController,
             viewTemplateRenderer: this._viewTemplateRenderer,
         });
 

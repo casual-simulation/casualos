@@ -67,7 +67,7 @@ module.exports = {
         '.*\\.txt$': './jest/raw-transformer.js',
     },
     transformIgnorePatterns: [
-        '/node_modules/\\.pnpm/(?!livekit-server-sdk|@livekit\\+protocol|camelcase-keys|map-obj|camelcase|quick-lru|parse5).+\\.js$',
+        '/node_modules/\\.pnpm/(?!livekit-server-sdk|@livekit\\+protocol|camelcase-keys|map-obj|camelcase|quick-lru|parse5|@zip\\.js\\+zip\\.js).+\\.js$',
     ],
     snapshotFormat: {
         escapeString: true,

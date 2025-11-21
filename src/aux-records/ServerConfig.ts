@@ -933,6 +933,28 @@ const telemetrySchema = z.object({
         .default({}),
 });
 
+const tigerBeetleSchema = z
+    .object({
+        clusterId: z
+            .bigint({ coerce: true })
+            .min(0n, 'The cluster ID must be a non-negative integer.')
+            .describe('The cluster ID.'),
+        replicaAddresses: z
+            .array(
+                z
+                    .string()
+                    .min(1)
+                    .describe(
+                        'An address (or port if local) to a replica of a cluster.'
+                    )
+            )
+            .min(1, 'At least one replica address is required.')
+            .describe("The addresses of the provided cluster's replicas."),
+    })
+    .describe(
+        'The financial interface that should be used. If omitted, then financial features provided by said interface will be disabled.'
+    );
+
 const rekognitionSchema = z.object({
     moderation: z.object({
         files: z.object({
@@ -1255,6 +1277,12 @@ export const serverConfigSchema = z.object({
     telemetry: telemetrySchema
         .describe(
             'Options for configuring telemetry. If omitted, then telemetry will not be enabled.'
+        )
+        .optional(),
+
+    tigerBeetle: tigerBeetleSchema
+        .describe(
+            'Financial Interface configuration options for tigerbeetle. If omitted, then tigerbeetle will be disabled.'
         )
         .optional(),
 

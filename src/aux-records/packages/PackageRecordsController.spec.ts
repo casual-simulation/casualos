@@ -68,7 +68,12 @@ describe('PackageRecordsController', () => {
             );
 
             context.store.subscriptionConfiguration = builder.config;
-        }
+        },
+        (item) =>
+            ({
+                address: item.address,
+                markers: item.markers,
+            } as any)
     );
 
     let store: MemoryStore;

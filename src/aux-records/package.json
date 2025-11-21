@@ -66,6 +66,7 @@
         "uuid": "10.0.0",
         "yjs": "13.6.8",
         "zod": "3.22.4",
+        "tigerbeetle-node": "0.16.44",
         "preact": "10.19.6",
         "preact-render-to-string": "6.6.3"
     }

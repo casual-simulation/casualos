@@ -80,7 +80,7 @@ describe('CachingPolicyStore', () => {
                     ],
                 ])
             );
-            expect(inner.getSubscriptionConfiguration).toBeCalledTimes(1);
+            expect(inner.getSubscriptionConfiguration).toHaveBeenCalledTimes(1);
         });
 
         it('should retrieve the value from the cache', async () => {
@@ -90,7 +90,7 @@ describe('CachingPolicyStore', () => {
             const result = await store.getSubscriptionConfiguration();
 
             expect(result).toEqual(createTestSubConfiguration());
-            expect(inner.getSubscriptionConfiguration).toBeCalledTimes(0);
+            expect(inner.getSubscriptionConfiguration).toHaveBeenCalledTimes(0);
         });
     });
 
@@ -114,7 +114,7 @@ describe('CachingPolicyStore', () => {
                     ],
                 ])
             );
-            expect(inner.getPrivoConfiguration).toBeCalledTimes(1);
+            expect(inner.getPrivoConfiguration).toHaveBeenCalledTimes(1);
         });
 
         it('should retrieve the value from the cache', async () => {
@@ -124,7 +124,7 @@ describe('CachingPolicyStore', () => {
             const result = await store.getPrivoConfiguration();
 
             expect(result).toEqual(createTestPrivoConfiguration());
-            expect(inner.getPrivoConfiguration).toBeCalledTimes(0);
+            expect(inner.getPrivoConfiguration).toHaveBeenCalledTimes(0);
         });
     });
 
@@ -154,7 +154,7 @@ describe('CachingPolicyStore', () => {
                     ],
                 ])
             );
-            expect(inner.getModerationConfig).toBeCalledTimes(1);
+            expect(inner.getModerationConfig).toHaveBeenCalledTimes(1);
         });
 
         it('should retrieve the value from the cache', async () => {
@@ -172,7 +172,7 @@ describe('CachingPolicyStore', () => {
             expect(result).toEqual({
                 allowUnauthenticatedReports: true,
             });
-            expect(inner.getModerationConfig).toBeCalledTimes(0);
+            expect(inner.getModerationConfig).toHaveBeenCalledTimes(0);
         });
     });
 });

@@ -6,6 +6,46 @@
 
 ### :rocket: Features
 
+-   Added support for basic xpExchange features
+    -   In order to access these features, users need to have the `contracts` features on their subscription.
+    -   Contracting & Invoicing
+        -   Contracts can be created (`xp.recordContract()`) and purchased (`xp.purchaseContract()`).
+        -   The user who creates the contract is the issuer, and has to specify (either by ID, email, or phone number) the holding user when creating the contract.
+        -   Anyone who has the `purchase` permission for the contract can purchase it.
+        -   Contracts can be purchased with credits, USD, or via a Stripe payment.
+        -   Once purchased, the contract is funded and can be invoiced by the holding user.
+        -   Invoices can be created for any amount less than or equal to the balance of the contract.
+        -   Once created, the issuing user can pay invoices.
+        -   Once an invoice is paid, the invoice amount will be transferred from the contract to the holding user.
+        -   Contracts can be cancelled, in which case they are refunded to an account owned the issuing user (not the purchasing user).
+    -   Credit grants
+        -   Subscriptions can be configured to grant a user a number of credits when purchased and renewed.
+        -   They can be configured to grant a flat rate or to match the invoice for the subscription.
+    -   Fees
+        -   Fees can be configured on a per-tier basis and are applied on top of the contract value.
+        -   As a result, a contract worth $1000 with a $5 fee would require $1005 to purchase.
+        -   Flat rate and percentage fees are supported.
+        -   Additionally, limits can be set to control the minimum and maximum contract values.
+        -   For example, users who have the `pro` tier could be charged a 5% premium of the total contract value.
+        -   The fee is determined by the owner of the record, which generally will map to the issuer (but not always).
+        -   As another example:
+            -   A studio could have the `lab` tier which charges a flat rate of $1 per contract.
+            -   Individual users could have the `innovator` tier, which gives them access to contracting features, but does not allow them to store contracts in their record(s) (max contracts = 0).
+            -   Users in the studio can issue and hold contracts in the studio record, which would apply the $1 fee per contract.
+    -   Payouts
+        -   Users who have USD in their account can "payout" this money.
+        -   This requires setting up their Stripe account and going through the Stripe onboarding procees.
+        -   Once setup, users can request a payout to stripe (`xp.payout()`).
+        -   Additionally, users can configure invoices to payout to stripe automatically.
+        -   Once in their stripe account, they can request a payout from Stripe or wait for the automatic payout to their bank account.
+        -   Users who haven't setup their Stripe account can invoice and accept invoice payments, and they will be able to perform xpExchange-related transactions, like purchasing additional contracts.
+            -   Currently, the only way to payout is via stripe or a manual cash payment initiated by an administrator.
+        -   Stripe payouts require that the xpExchange Stripe account has a balance that can cover the transfers.
+            -   If the balance is too low, then payouts will fail.
+            -   It is worth noting that Stripe payments aren't available in your account balance until they settle, which can take up to several days for credit/debit transactions.
+            -   Additionally, Stripe always has a fee for payments, which means that a $1000 contract will actually net around $950 in the xpExchange account balance.
+            -   For this reason, it is always recommended to ensure that contract fees are set high enough to cover Stripe processing fees and that the Stripe account is configured to automatically top up its balance.
+            -   Finally, CasualOS will not allow payouts larger than what has been taken in via Stripe. For example, if $1000 dollars of contracts were purchased via Stripe, then CasualOS will track that Stripe has $1000 dollars available. If users withdraw $500, then CasualOS will know that only $500 can be withdrawn from Stripe. This calculation however doesn't take into account Stripe fees.
 -   Added the `os.signOut()` function to sign out the current user
     -   Returns a promise that resolves when the sign out request has been processed
     -   Uses the auth helper's logout method to properly sign out the user
@@ -27,6 +67,7 @@
 -   Fixed internal `DebugObjectManager` not rendering properly when in the map portal.
 -   Disabled double-click to zoom in the map portal.
 -   Fixed camera rotation in mapPortal continuing after releasing the right mouse button outside the browser window.
+-   Fixed an issue where CasualOS would produce incorrect code when JSX elements were directly after return statements.
 
 ## V3.8.1
 

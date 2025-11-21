@@ -1238,15 +1238,12 @@ export class CameraControls {
         // Pan/Dolly/Rotate [Start]
         //
 
-        if (
-            input.getMouseButtonDown(MouseButtonId.Right) &&
-            this.enableRotate
-        ) {
+        if (input.getMouseButtonDown(MouseButtonId.Left) && this.enablePan) {
             this.zooming = false;
             this._setRot = false;
-            // Rotate start.
-            this.mouseRotateStart.copy(input.getMouseClientPos());
-            this.state = STATE.ROTATE;
+            // Pan start.
+            this.panStart.copy(input.getMouseClientPos());
+            this.state = STATE.PAN;
         } else if (
             input.getMouseButtonDown(MouseButtonId.Middle) &&
             this.enableZoom
@@ -1266,6 +1263,15 @@ export class CameraControls {
             this._setRot = false;
             // Pinch dolly start.
             this.state = STATE.PINCH_DOLLY;
+        } else if (
+            input.getMouseButtonDown(MouseButtonId.Right) &&
+            this.enableRotate
+        ) {
+            this.zooming = false;
+            this._setRot = false;
+            // Rotate start.
+            this.mouseRotateStart.copy(input.getMouseClientPos());
+            this.state = STATE.ROTATE;
         }
 
         //

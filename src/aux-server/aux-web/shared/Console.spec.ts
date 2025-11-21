@@ -63,7 +63,7 @@ describe('Console', () => {
                     },
                 ]);
                 expect(func).not.toBe(mock);
-                expect(mock).toBeCalledWith('abc');
+                expect(mock).toHaveBeenCalledWith('abc');
             }
         );
     });

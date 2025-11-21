@@ -223,7 +223,7 @@ export class SqliteDatabaseRecordsStore implements DatabaseRecordsStore {
             success: true,
             items: records.map((r) => this._convertRecord(r)),
             totalCount: count[0].count,
-            marker: null,
+            marker: request.marker,
         };
     }
 
