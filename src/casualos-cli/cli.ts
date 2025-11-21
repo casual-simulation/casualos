@@ -298,10 +298,16 @@ program
 
 program
     .command('minify-aux')
-    .argument('[input]', 'The aux file to minify.')
+    .description('Minify an AUX file in place.')
+    .argument('[input]', 'The AUX file to minify.')
     .option('-t, --target <...targets>', 'The targets to minify for.')
     .action(async (input, options) => {
-        const targets = options.target || ['chrome100'];
+        const defaultTargets = ['chrome100'];
+        const targets = options.target
+            ? Array.isArray(options.target)
+                ? options.target
+                : [options.target]
+            : defaultTargets;
         const inputPath = path.resolve(input);
         const auxJson = tryParseJson(await readFile(inputPath, 'utf-8'));
 
@@ -326,6 +332,7 @@ program
             console.log(`Minified aux file: ${inputPath}`);
             console.log(`Original Size: ${originalStat.size} bytes`);
             console.log(`New Size: ${newStat.size} bytes`);
+            console.log(`Targets: ${targets.join(', ')}`);
         }
     });
 
