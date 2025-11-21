@@ -10,6 +10,9 @@
     -   Returns a promise that resolves when the sign out request has been processed
     -   Uses the auth helper's logout method to properly sign out the user
 -   Added the `os.generateQRCode(code)` function to generate a QR code as a data URL that can be used in an img tag or as a bot's formAddress.
+-   Added the `minify-aux` command to the CLI.
+    -   This command takes a `.aux` file as input, and rewrites it to be [minified](<https://en.wikipedia.org/wiki/Minification_(programming)>).
+    -   This saves space and can help your `.aux` files load quicker, at the expense of readability.
 
 ### :bug: Bug Fixes
 
