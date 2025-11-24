@@ -138,6 +138,26 @@ describe('getSchemaMetadata()', () => {
         ['number', z.number(), { type: 'number' }] as const,
         ['any', z.any(), { type: 'any' }] as const,
         ['null', z.null(), { type: 'null' }] as const,
+        [
+            'nullable',
+            z.string().nullable(),
+            { type: 'string', nullable: true },
+        ] as const,
+        [
+            'optional',
+            z.string().optional(),
+            { type: 'string', optional: true },
+        ] as const,
+        [
+            'nonoptional',
+            z.string().optional().nonoptional(),
+            { type: 'string', optional: false },
+        ] as const,
+        [
+            'prefault',
+            z.string().prefault('abc'),
+            { type: 'string', hasDefault: true, defaultValue: 'abc' },
+        ] as const,
         ['object', z.object({}), { type: 'object', schema: {} }] as const,
         [
             'object with properties',

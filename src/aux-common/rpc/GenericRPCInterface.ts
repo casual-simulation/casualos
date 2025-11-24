@@ -653,16 +653,19 @@ export function getSchemaMetadata(schema: _z.$ZodType): SchemaMetadata {
         return {
             ...getSchemaMetadata(schema._zod.def.innerType),
             optional: true,
+            description: getDescription(schema),
         };
     } else if (schema instanceof _z.$ZodNonOptional) {
         return {
             ...getSchemaMetadata(schema._zod.def.innerType),
             optional: false,
+            description: getDescription(schema),
         };
     } else if (schema instanceof _z.$ZodNullable) {
         return {
             ...getSchemaMetadata(schema._zod.def.innerType),
             nullable: true,
+            description: getDescription(schema),
         };
     } else if (
         schema instanceof _z.$ZodPrefault ||
@@ -672,6 +675,7 @@ export function getSchemaMetadata(schema: _z.$ZodType): SchemaMetadata {
             ...getSchemaMetadata(schema._zod.def.innerType),
             hasDefault: true,
             defaultValue: schema._zod.def.defaultValue,
+            description: getDescription(schema),
         };
     } else if (schema instanceof _z.$ZodNever) {
         return undefined;
@@ -696,11 +700,13 @@ export function getSchemaMetadata(schema: _z.$ZodType): SchemaMetadata {
         return {
             type: 'record',
             valueSchema: getSchemaMetadata(schema._zod.def.valueType),
+            description: getDescription(schema),
         };
     } else if (schema instanceof _z.$ZodTuple) {
         return {
             type: 'tuple',
             items: schema._zod.def.items.map((o: any) => getSchemaMetadata(o)),
+            description: getDescription(schema),
         };
     } else {
         console.error('Unsupported schema type', schema);
