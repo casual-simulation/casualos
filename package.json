@@ -23,7 +23,7 @@
         "build:docker": "npm run build && npm run package:docker",
         "build:docker:arm32": "npm run build:tar:docker && npm run package:docker:arm32",
         "build:docker:arm64": "npm run build:tar:docker && npm run package:docker:arm64",
-        "build:libs": "tsc --build",
+        "build:libs": "cross-env NODE_OPTIONS=--max-old-space-size=4096 tsc --build",
         "build:server": "pnpm --filter @casual-simulation/aux-server build",
         "build:web": "pnpm --filter @casual-simulation/aux-server build:web",
         "build:web:player:static": "pnpm --filter @casual-simulation/aux-server build:web:player:static",
@@ -191,7 +191,8 @@
         "typescript-eslint": "^8.26.1",
         "unified": "11.0.4",
         "vue-template-compiler": "^2.6.14",
-        "wait-on": "7"
+        "wait-on": "7",
+        "cross-env": "7.0.3"
     },
     "engines": {
         "node": ">=v20.18",
