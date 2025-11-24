@@ -202,7 +202,7 @@ describe('getSchemaMetadata()', () => {
         ] as const,
         ['date', z.date(), { type: 'date' }] as const,
         [
-            'effects',
+            'preprocess',
             z.preprocess((value) => value, z.string()),
             { type: 'string' },
         ] as const,
@@ -295,7 +295,7 @@ describe('getSchemaMetadata()', () => {
     it.each(cases)(
         'should support descriptions for %s',
         (name, schema, expected) => {
-            if (!(schema instanceof z.ZodEffects)) {
+            if (!(schema instanceof z.core.$ZodPipe)) {
                 expect(
                     getSchemaMetadata(schema.describe('this is a description'))
                 ).toEqual({

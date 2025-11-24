@@ -595,7 +595,9 @@ export type SchemaMetadata =
  * @param schema The schema to get metadata for.
  */
 export function getSchemaMetadata(schema: _z.$ZodType): SchemaMetadata {
-    if (schema instanceof _z.$ZodString) {
+    if (schema instanceof _z.$ZodPipe) {
+        return getSchemaMetadata(schema._zod.def.out);
+    } else if (schema instanceof _z.$ZodString) {
         return { type: 'string', description: getDescription(schema) };
     } else if (schema instanceof _z.$ZodBoolean) {
         return { type: 'boolean', description: getDescription(schema) };
@@ -622,13 +624,13 @@ export function getSchemaMetadata(schema: _z.$ZodType): SchemaMetadata {
         return {
             type: 'array',
             schema: getSchemaMetadata(schema._zod.def.element),
-            maxLength: schema._zod.def.checks.find(
+            maxLength: schema._zod.def.checks?.find(
                 (c) => c instanceof _z.$ZodCheckMaxLength
             )?._zod.def.maximum,
-            minLength: schema._zod.def.checks.find(
+            minLength: schema._zod.def.checks?.find(
                 (c) => c instanceof _z.$ZodCheckMinLength
             )?._zod.def.minimum,
-            exactLength: schema._zod.def.checks.find(
+            exactLength: schema._zod.def.checks?.find(
                 (c) => c instanceof _z.$ZodCheckLengthEquals
             )?._zod.def.length,
             description: getDescription(schema),
@@ -652,6 +654,11 @@ export function getSchemaMetadata(schema: _z.$ZodType): SchemaMetadata {
             ...getSchemaMetadata(schema._zod.def.innerType),
             optional: true,
         };
+    } else if (schema instanceof _z.$ZodNonOptional) {
+        return {
+            ...getSchemaMetadata(schema._zod.def.innerType),
+            optional: false,
+        };
     } else if (schema instanceof _z.$ZodNullable) {
         return {
             ...getSchemaMetadata(schema._zod.def.innerType),
@@ -668,14 +675,6 @@ export function getSchemaMetadata(schema: _z.$ZodType): SchemaMetadata {
         };
     } else if (schema instanceof _z.$ZodNever) {
         return undefined;
-    } else if (schema instanceof _z.$ZodUnion) {
-        return {
-            type: 'union',
-            options: schema._zod.def.options.map((o: any) =>
-                getSchemaMetadata(o)
-            ),
-            description: getDescription(schema),
-        };
     } else if (schema instanceof _z.$ZodDiscriminatedUnion) {
         return {
             type: 'union',
@@ -683,6 +682,14 @@ export function getSchemaMetadata(schema: _z.$ZodType): SchemaMetadata {
                 getSchemaMetadata(o)
             ),
             discriminator: schema._zod.def.discriminator,
+            description: getDescription(schema),
+        };
+    } else if (schema instanceof _z.$ZodUnion) {
+        return {
+            type: 'union',
+            options: schema._zod.def.options.map((o: any) =>
+                getSchemaMetadata(o)
+            ),
             description: getDescription(schema),
         };
     } else if (schema instanceof _z.$ZodRecord) {
