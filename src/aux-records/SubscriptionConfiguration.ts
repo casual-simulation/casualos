@@ -1297,7 +1297,7 @@ export interface DataFeaturesConfiguration {
      * If not specified, then the limit is 500,000 bytes (500KB).
      * If set to null, then there is no limit.
      */
-    maxItemSizeInBytes: number;
+    maxItemSizeInBytes?: number;
 }
 
 export interface FileFeaturesConfiguration {
@@ -1578,6 +1578,15 @@ export function allowAllFeatures(): FeaturesConfiguration {
             allowed: true,
         },
         contracts: {
+            allowed: true,
+        },
+        loom: {
+            allowed: true,
+        },
+        webhooks: {
+            allowed: true,
+        },
+        store: {
             allowed: true,
         },
     } satisfies z.input<typeof subscriptionFeaturesSchema>);
