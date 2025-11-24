@@ -305,4 +305,50 @@ describe('getSchemaMetadata()', () => {
             }
         }
     );
+
+    it('should be able to get the description from a chained schema', () => {
+        const schema = z.string().min(2).max(5).describe('a short string');
+
+        expect(getSchemaMetadata(schema)).toEqual({
+            type: 'string',
+            description: 'a short string',
+        });
+    });
+
+    it('should be able to get descriptions from catch all properties', () => {
+        const schema = z
+            .object({
+                abc: z.string().describe('the abc property'),
+            })
+            .catchall(
+                z.object({
+                    def: z.number().describe('the def property'),
+                })
+            )
+            .refine((abc) => Object.keys(abc).length >= 1, {
+                error: 'At least one property is required.',
+            })
+            .refine((abc) => Object.keys(abc).length <= 5, {
+                error: 'At most five properties are allowed.',
+            });
+
+        expect(getSchemaMetadata(schema)).toEqual({
+            type: 'object',
+            schema: {
+                abc: {
+                    type: 'string',
+                    description: 'the abc property',
+                },
+            },
+            catchall: {
+                type: 'object',
+                schema: {
+                    def: {
+                        type: 'number',
+                        description: 'the def property',
+                    },
+                },
+            },
+        });
+    });
 });
