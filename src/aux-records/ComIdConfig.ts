@@ -45,10 +45,10 @@ export const COM_ID_PLAYER_CONFIG = WEB_CONFIG_SCHEMA.pick({
     what3WordsApiKey: true,
     logoBackgroundColor: true,
 })
+    .partial()
     .describe(
         'The configuration that the comId provides which overrides the default player configuration.'
-    )
-    .partial();
+    );
 
 export type ComIdPlayerConfig = z.infer<typeof COM_ID_PLAYER_CONFIG>;
 
@@ -59,8 +59,8 @@ export const COM_ID_WEB_CONFIG_SCHEMA = z.object({
         .describe('The name of the studio that this comId represents.'),
     logoUrl: z
         .string()
+        .nullable()
         .describe(
             'The URL of the logo that represents this comId. If null, then the comId does not have a logo.'
-        )
-        .nullable(),
+        ),
 });
