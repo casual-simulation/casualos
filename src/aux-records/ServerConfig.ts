@@ -643,52 +643,7 @@ const aiSchema = z.object({
                     'The model that should be used for Chat AI requests when one is not specified.'
                 ),
             allowedModels: z
-                .tuple(
-                    [
-                        z.union([
-                            z.string(),
-                            z.object({
-                                provider: z
-                                    .enum(['openai', 'google', 'anthropic'])
-                                    .optional(),
-                                model: z.string(),
-                            }),
-                            z.object({
-                                provider: z
-                                    .literal('custom-openai-completions')
-                                    .describe(
-                                        'Defines that the provider points to a custom implementation of the OpenAI Completions API'
-                                    ),
-                                name: z
-                                    .string()
-                                    .prefault('custom-openai-completions')
-                                    .describe(
-                                        'The name that should be used for this provider'
-                                    ),
-                                apiKey: z
-                                    .string()
-                                    .describe(
-                                        'The API key that should be used to communicate with the custom API.'
-                                    ),
-                                baseUrl: z
-                                    .string()
-                                    .describe(
-                                        'The endpoint that should be used to communicate with the custom API. (e.g. "https://api.openai.com/v1/" for OpenAIs API)'
-                                    ),
-                                models: z
-                                    .array(z.string())
-                                    .describe(
-                                        'The list of models that should be mapped to this provider'
-                                    ),
-                                additionalProperties: z
-                                    .looseObject({})
-                                    .optional()
-                                    .describe(
-                                        'The additional properties that should be included in requests.'
-                                    ),
-                            }),
-                        ]),
-                    ],
+                .array(
                     z.union([
                         z.string(),
                         z.object({
@@ -733,11 +688,12 @@ const aiSchema = z.object({
                         }),
                     ])
                 )
+                .min(1)
                 .describe(
                     'The list of models that are allowed to be used for Chat AI requets.'
                 ),
             allowedSubscriptionTiers: z
-                .union([z.literal(true), z.tuple([z.string()], z.string())])
+                .union([z.literal(true), z.array(z.string())])
                 .describe(
                     'The subscription tiers that are allowed to use Chat AI. If true, then all tiers are allowed.'
                 ),
@@ -759,7 +715,7 @@ const aiSchema = z.object({
                     'The provider that should be used for Skybox Generation AI requests.'
                 ),
             allowedSubscriptionTiers: z
-                .union([z.literal(true), z.tuple([z.string()], z.string())])
+                .union([z.literal(true), z.array(z.string())])
                 .describe(
                     'The subscription tiers that are allowed to use Skybox AI. If true, then all tiers are allowed.'
                 ),
@@ -815,13 +771,13 @@ const aiSchema = z.object({
             allowedModels: z
                 .object({
                     openai: z
-                        .tuple([z.string()], z.string())
+                        .array(z.string())
                         .optional()
                         .describe(
                             'The list of OpenAI DALL-E models that are allowed to be used. If omitted, then no OpenAI models are allowed.'
                         ),
                     stabilityai: z
-                        .tuple([z.string()], z.string())
+                        .array(z.string())
                         .optional()
                         .describe(
                             'The list of StabilityAI models that are allowed to be used. If omitted, then no StabilityAI models are allowed.'
@@ -831,7 +787,7 @@ const aiSchema = z.object({
                     'The models that are allowed to be used from each provider.'
                 ),
             allowedSubscriptionTiers: z
-                .union([z.literal(true), z.tuple([z.string()], z.string())])
+                .union([z.literal(true), z.array(z.string())])
                 .describe(
                     'The subscription tiers that are allowed to use Image AI. If true, then all tiers are allowed.'
                 ),
@@ -860,24 +816,7 @@ const wsSchema = z.object({});
 
 const webauthnSchema = z.object({
     relyingParties: z
-        .tuple(
-            [
-                z.object({
-                    name: z
-                        .string()
-                        .describe(
-                            'The human-readable name of the relying party.'
-                        ),
-                    id: z
-                        .string()
-                        .describe(
-                            'The ID of the relying party. Should be the domain of the relying party. Note that this does not mean that it has to be unique. Instead, it just needs to match the domain that the passkeys can be used on.'
-                        ),
-                    origin: z
-                        .string()
-                        .describe('The HTTP origin of the relying party.'),
-                }),
-            ],
+        .array(
             z.object({
                 name: z
                     .string()
@@ -892,6 +831,7 @@ const webauthnSchema = z.object({
                     .describe('The HTTP origin of the relying party.'),
             })
         )
+        .min(1)
         .describe('The relying parties that should be supported.'),
 });
 

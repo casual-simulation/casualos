@@ -658,7 +658,6 @@ Object {
           },
           "markers": Object {
             "maxLength": 10,
-            "minLength": 1,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -770,7 +769,6 @@ Object {
           },
           "markers": Object {
             "maxLength": 10,
-            "minLength": 1,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -924,7 +922,6 @@ Object {
           },
           "markers": Object {
             "maxLength": 10,
-            "minLength": 1,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -961,7 +958,6 @@ Object {
           },
           "markers": Object {
             "maxLength": 10,
-            "minLength": 1,
             "schema": Object {
               "type": "string",
             },
@@ -1145,7 +1141,6 @@ Object {
           },
           "markers": Object {
             "maxLength": 10,
-            "minLength": 1,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -1195,6 +1190,7 @@ Object {
           },
           "item": Object {
             "discriminator": "targetResourceKind",
+            "optional": false,
             "options": Array [
               Object {
                 "schema": Object {
@@ -1207,7 +1203,6 @@ Object {
                     ],
                     "hasDefault": true,
                     "maxLength": 10,
-                    "minLength": 1,
                     "optional": true,
                     "schema": Object {
                       "type": "string",
@@ -1241,7 +1236,6 @@ Object {
                     ],
                     "hasDefault": true,
                     "maxLength": 10,
-                    "minLength": 1,
                     "optional": true,
                     "schema": Object {
                       "type": "string",
@@ -1357,7 +1351,18 @@ Object {
       "origins": "api",
       "query": Object {
         "catchall": Object {
-          "type": "string",
+          "options": Array [
+            Object {
+              "type": "string",
+            },
+            Object {
+              "schema": Object {
+                "type": "string",
+              },
+              "type": "array",
+            },
+          ],
+          "type": "union",
         },
         "schema": Object {
           "address": Object {
@@ -1481,6 +1486,7 @@ Object {
             "type": "array",
           },
           "item": Object {
+            "optional": false,
             "schema": Object {
               "address": Object {
                 "type": "string",
@@ -1494,7 +1500,6 @@ Object {
                 ],
                 "hasDefault": true,
                 "maxLength": 10,
-                "minLength": 1,
                 "optional": true,
                 "schema": Object {
                   "type": "string",
@@ -2005,13 +2010,13 @@ Object {
             "type": "array",
           },
           "item": Object {
+            "optional": false,
             "schema": Object {
               "address": Object {
                 "type": "string",
               },
               "markers": Object {
                 "maxLength": 10,
-                "minLength": 1,
                 "schema": Object {
                   "type": "string",
                 },
@@ -2261,7 +2266,6 @@ Object {
               },
               "markers": Object {
                 "maxLength": 10,
-                "minLength": 1,
                 "optional": true,
                 "schema": Object {
                   "type": "string",
@@ -2537,13 +2541,13 @@ Object {
             "type": "array",
           },
           "item": Object {
+            "optional": false,
             "schema": Object {
               "address": Object {
                 "type": "string",
               },
               "markers": Object {
                 "maxLength": 10,
-                "minLength": 1,
                 "schema": Object {
                   "type": "string",
                 },
@@ -3045,13 +3049,13 @@ Object {
             "type": "array",
           },
           "item": Object {
+            "optional": false,
             "schema": Object {
               "address": Object {
                 "type": "string",
               },
               "markers": Object {
                 "maxLength": 10,
-                "minLength": 1,
                 "schema": Object {
                   "type": "string",
                 },
@@ -4517,6 +4521,7 @@ Object {
                       "type": "string",
                     },
                     Object {
+                      "minLength": 1,
                       "schema": Object {
                         "options": Array [
                           Object {
@@ -4644,6 +4649,7 @@ Object {
                       "type": "string",
                     },
                     Object {
+                      "minLength": 1,
                       "schema": Object {
                         "options": Array [
                           Object {
@@ -5727,6 +5733,7 @@ Object {
             "type": "array",
           },
           "item": Object {
+            "optional": false,
             "schema": Object {
               "address": Object {
                 "type": "string",
@@ -5748,7 +5755,6 @@ Object {
                 ],
                 "hasDefault": true,
                 "maxLength": 10,
-                "minLength": 1,
                 "optional": true,
                 "schema": Object {
                   "type": "string",
@@ -6268,7 +6274,6 @@ Object {
               },
               "markers": Object {
                 "maxLength": 10,
-                "minLength": 1,
                 "schema": Object {
                   "type": "string",
                 },
@@ -7164,7 +7169,6 @@ Object {
           },
           "markers": Object {
             "maxLength": 10,
-            "minLength": 1,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -7276,7 +7280,6 @@ Object {
           },
           "markers": Object {
             "maxLength": 10,
-            "minLength": 1,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -7430,7 +7433,6 @@ Object {
           },
           "markers": Object {
             "maxLength": 10,
-            "minLength": 1,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -7467,7 +7469,6 @@ Object {
           },
           "markers": Object {
             "maxLength": 10,
-            "minLength": 1,
             "schema": Object {
               "type": "string",
             },
@@ -7651,7 +7652,6 @@ Object {
           },
           "markers": Object {
             "maxLength": 10,
-            "minLength": 1,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -7701,6 +7701,7 @@ Object {
           },
           "item": Object {
             "discriminator": "targetResourceKind",
+            "optional": false,
             "options": Array [
               Object {
                 "schema": Object {
@@ -7713,7 +7714,6 @@ Object {
                     ],
                     "hasDefault": true,
                     "maxLength": 10,
-                    "minLength": 1,
                     "optional": true,
                     "schema": Object {
                       "type": "string",
@@ -7747,7 +7747,6 @@ Object {
                     ],
                     "hasDefault": true,
                     "maxLength": 10,
-                    "minLength": 1,
                     "optional": true,
                     "schema": Object {
                       "type": "string",
@@ -7863,7 +7862,18 @@ Object {
       "origins": "api",
       "query": Object {
         "catchall": Object {
-          "type": "string",
+          "options": Array [
+            Object {
+              "type": "string",
+            },
+            Object {
+              "schema": Object {
+                "type": "string",
+              },
+              "type": "array",
+            },
+          ],
+          "type": "union",
         },
         "schema": Object {
           "address": Object {
@@ -7987,6 +7997,7 @@ Object {
             "type": "array",
           },
           "item": Object {
+            "optional": false,
             "schema": Object {
               "address": Object {
                 "type": "string",
@@ -8000,7 +8011,6 @@ Object {
                 ],
                 "hasDefault": true,
                 "maxLength": 10,
-                "minLength": 1,
                 "optional": true,
                 "schema": Object {
                   "type": "string",
@@ -8511,13 +8521,13 @@ Object {
             "type": "array",
           },
           "item": Object {
+            "optional": false,
             "schema": Object {
               "address": Object {
                 "type": "string",
               },
               "markers": Object {
                 "maxLength": 10,
-                "minLength": 1,
                 "schema": Object {
                   "type": "string",
                 },
@@ -8767,7 +8777,6 @@ Object {
               },
               "markers": Object {
                 "maxLength": 10,
-                "minLength": 1,
                 "optional": true,
                 "schema": Object {
                   "type": "string",
@@ -9043,13 +9052,13 @@ Object {
             "type": "array",
           },
           "item": Object {
+            "optional": false,
             "schema": Object {
               "address": Object {
                 "type": "string",
               },
               "markers": Object {
                 "maxLength": 10,
-                "minLength": 1,
                 "schema": Object {
                   "type": "string",
                 },
@@ -9551,13 +9560,13 @@ Object {
             "type": "array",
           },
           "item": Object {
+            "optional": false,
             "schema": Object {
               "address": Object {
                 "type": "string",
               },
               "markers": Object {
                 "maxLength": 10,
-                "minLength": 1,
                 "schema": Object {
                   "type": "string",
                 },
@@ -11023,6 +11032,7 @@ Object {
                       "type": "string",
                     },
                     Object {
+                      "minLength": 1,
                       "schema": Object {
                         "options": Array [
                           Object {
@@ -11150,6 +11160,7 @@ Object {
                       "type": "string",
                     },
                     Object {
+                      "minLength": 1,
                       "schema": Object {
                         "options": Array [
                           Object {
@@ -12233,6 +12244,7 @@ Object {
             "type": "array",
           },
           "item": Object {
+            "optional": false,
             "schema": Object {
               "address": Object {
                 "type": "string",
@@ -12254,7 +12266,6 @@ Object {
                 ],
                 "hasDefault": true,
                 "maxLength": 10,
-                "minLength": 1,
                 "optional": true,
                 "schema": Object {
                   "type": "string",
@@ -12774,7 +12785,6 @@ Object {
               },
               "markers": Object {
                 "maxLength": 10,
-                "minLength": 1,
                 "schema": Object {
                   "type": "string",
                 },

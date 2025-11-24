@@ -4035,10 +4035,7 @@ export class RecordsServer {
                 .inputs(
                     z.object({
                         model: z.string().nonempty().optional(),
-                        messages: z.tuple(
-                            [AI_CHAT_MESSAGE_SCHEMA],
-                            AI_CHAT_MESSAGE_SCHEMA
-                        ),
+                        messages: z.array(AI_CHAT_MESSAGE_SCHEMA).min(1),
                         instances: INSTANCES_ARRAY_VALIDATION.optional(),
                         temperature: z.number().min(0).max(2).optional(),
                         topP: z.number().optional(),
@@ -4087,10 +4084,7 @@ export class RecordsServer {
                 .inputs(
                     z.object({
                         model: z.string().nonempty().optional(),
-                        messages: z.tuple(
-                            [AI_CHAT_MESSAGE_SCHEMA],
-                            AI_CHAT_MESSAGE_SCHEMA
-                        ),
+                        messages: z.array(AI_CHAT_MESSAGE_SCHEMA).min(1),
                         instances: INSTANCES_ARRAY_VALIDATION.optional(),
                         temperature: z.number().min(0).max(2).optional(),
                         topP: z.number().optional(),
@@ -4681,8 +4675,12 @@ export class RecordsServer {
                             .nullable()
                             .optional(),
                         comIdConfig: COM_ID_CONFIG_SCHEMA.optional(),
-                        playerConfig: COM_ID_PLAYER_CONFIG.optional(),
-                        loomConfig: LOOM_CONFIG.optional(),
+                        playerConfig: COM_ID_PLAYER_CONFIG.optional().describe(
+                            'The configuration that the comId provides which overrides the default player configuration.'
+                        ),
+                        loomConfig: LOOM_CONFIG.optional().describe(
+                            'The configuration that can be used by studios to setup loom.'
+                        ),
                         humeConfig: HUME_CONFIG.optional(),
                     })
                 )

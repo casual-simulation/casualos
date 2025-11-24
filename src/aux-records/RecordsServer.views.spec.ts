@@ -33,8 +33,7 @@ import { DataRecordsController } from './DataRecordsController';
 import type { DataRecordsStore } from './DataRecordsStore';
 import { FileRecordsController } from './FileRecordsController';
 import { SubscriptionController } from './SubscriptionController';
-import type { StripeInterface, StripeProduct } from './StripeInterface';
-
+import type { StripeInterface } from './StripeInterface';
 import { MemoryNotificationRecordsStore } from './notifications/MemoryNotificationRecordsStore';
 import { MemoryPackageRecordsStore } from './packages/MemoryPackageRecordsStore';
 import { MemoryPackageVersionRecordsStore } from './packages/version/MemoryPackageVersionRecordsStore';
@@ -48,6 +47,7 @@ import {
     createTestControllers,
     createTestSubConfiguration,
     createTestUser,
+    createStripeMock,
 } from './TestUtils';
 import { AIController } from './AIController';
 import type {
@@ -123,6 +123,11 @@ import type { ViewParams, ViewTemplateRenderer } from './ViewTemplateRenderer';
 import { corsHeaders, httpGet, scoped } from './HttpTestUtils';
 import { JSDOM } from 'jsdom';
 import { render } from 'preact-render-to-string';
+import { MemoryPurchasableItemRecordsStore } from './purchasable-items/MemoryPurchasableItemRecordsStore';
+import { PurchasableItemRecordsController } from './purchasable-items/PurchasableItemRecordsController';
+import type { PurchasableItemRecordsStore } from './purchasable-items/PurchasableItemRecordsStore';
+import { MemoryContractRecordsStore } from './contracts/MemoryContractRecordsStore';
+import { ContractRecordsController } from './contracts/ContractRecordsController';
 
 jest.mock('@simplewebauthn/server');
 let verifyRegistrationResponseMock: jest.Mock<
@@ -280,6 +285,8 @@ describe('RecordsServer', () => {
     let websocketController: WebsocketController;
     let moderationController: ModerationController;
     let loomController: LoomController;
+    let purchasableItemsStore: PurchasableItemRecordsStore;
+    let purchasableItemsController: PurchasableItemRecordsController;
 
     let policyController: PolicyController;
     let webhookController: WebhookRecordsController;
@@ -314,17 +321,10 @@ describe('RecordsServer', () => {
 
     let filesController: FileRecordsController;
 
-    let stripeMock: {
-        publishableKey: string;
-        getProductAndPriceInfo: jest.Mock<Promise<StripeProduct | null>>;
-        listPricesForProduct: jest.Mock<any>;
-        createCheckoutSession: jest.Mock<any>;
-        createPortalSession: jest.Mock<any>;
-        createCustomer: jest.Mock<any>;
-        listActiveSubscriptionsForCustomer: jest.Mock<any>;
-        constructWebhookEvent: jest.Mock<any>;
-        getSubscriptionById: jest.Mock<any>;
-    };
+    let stripeMock: jest.Mocked<StripeInterface>;
+
+    let contractRecordsStore: MemoryContractRecordsStore;
+    let contractsController: ContractRecordsController;
 
     let aiController: AIController;
     let chatInterface: {
@@ -615,17 +615,14 @@ describe('RecordsServer', () => {
             pushInterface: webPushInterface,
         });
 
-        stripe = stripeMock = {
-            publishableKey: 'publishable_key',
-            getProductAndPriceInfo: jest.fn(),
-            listPricesForProduct: jest.fn(),
-            createCheckoutSession: jest.fn(),
-            createPortalSession: jest.fn(),
-            createCustomer: jest.fn(),
-            listActiveSubscriptionsForCustomer: jest.fn(),
-            constructWebhookEvent: jest.fn(),
-            getSubscriptionById: jest.fn(),
-        };
+        purchasableItemsStore = new MemoryPurchasableItemRecordsStore(store);
+        purchasableItemsController = new PurchasableItemRecordsController({
+            config: store,
+            policies: policyController,
+            store: purchasableItemsStore,
+        });
+
+        stripe = stripeMock = createStripeMock();
 
         stripeMock.getProductAndPriceInfo.mockImplementation(async (id) => {
             if (id === 'product_id') {
@@ -647,12 +644,27 @@ describe('RecordsServer', () => {
             return null;
         });
 
+        contractRecordsStore = new MemoryContractRecordsStore(store);
+        contractsController = new ContractRecordsController({
+            authStore: store,
+            config: store,
+            policies: policyController,
+            store: contractRecordsStore,
+            privo: privoClient,
+        });
+
         subscriptionController = new SubscriptionController(
             stripe,
             authController,
             store,
             store,
-            store
+            store,
+            policyController,
+            store,
+            purchasableItemsStore,
+            null,
+            store,
+            contractRecordsStore
         );
 
         chatInterface = {

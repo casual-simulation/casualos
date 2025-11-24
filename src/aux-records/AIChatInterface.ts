@@ -268,8 +268,8 @@ export const AI_CHAT_MESSAGE_SCHEMA = z.object({
     ]),
     content: z.union([
         z.string().nonempty(),
-        z.tuple(
-            [
+        z
+            .array(
                 z.union([
                     z.object({
                         text: z.string(),
@@ -281,21 +281,9 @@ export const AI_CHAT_MESSAGE_SCHEMA = z.object({
                     z.object({
                         url: z.url(),
                     }),
-                ]),
-            ],
-            z.union([
-                z.object({
-                    text: z.string(),
-                }),
-                z.object({
-                    base64: z.string(),
-                    mimeType: z.string(),
-                }),
-                z.object({
-                    url: z.url(),
-                }),
-            ])
-        ),
+                ])
+            )
+            .min(1),
     ]),
     author: z.string().nonempty().optional(),
 });
