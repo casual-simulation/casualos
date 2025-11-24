@@ -144,12 +144,12 @@ export const RECORD_NAME_VALIDATION = z
 
 export const INSTANCE_VALIDATION = z.string().min(1).max(128);
 
-export const INSTANCES_ARRAY_VALIDATION = z
-    .union([
-        z.array(z.string()),
-        z.string().transform((value) => parseInstancesList(value)),
-    ])
-    .check(z.minLength(1), z.maxLength(3));
+export const INSTANCES_ARRAY_VALIDATION = z.preprocess((value) => {
+    if (typeof value === 'string') {
+        return parseInstancesList(value);
+    }
+    return value;
+}, z.array(INSTANCE_VALIDATION).min(1).max(3));
 
 export const RECORD_FILE_SCHEMA = z.object({
     recordKey: RECORD_KEY_VALIDATION,
