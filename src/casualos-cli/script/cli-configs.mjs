@@ -55,7 +55,7 @@ export function createConfigs(dev, version) {
                     ...developmentVariables,
                 },
                 minify: false,
-                external: ['open'],
+                external: ['open', 'esbuild'],
                 plugins: [addNodeShebang()],
             },
         ],
