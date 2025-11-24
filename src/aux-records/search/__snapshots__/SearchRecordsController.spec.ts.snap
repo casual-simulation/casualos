@@ -1,0 +1,88 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`SEARCH_COLLECTION_SCHEMA should produce a consistent schema 1`] = `
+Object {
+  "catchall": Object {
+    "catchall": undefined,
+    "description": undefined,
+    "schema": Object {
+      "drop": Object {
+        "description": undefined,
+        "nullable": true,
+        "optional": true,
+        "type": "boolean",
+      },
+      "index": Object {
+        "description": undefined,
+        "nullable": true,
+        "optional": true,
+        "type": "boolean",
+      },
+      "infix": Object {
+        "description": undefined,
+        "nullable": true,
+        "optional": true,
+        "type": "boolean",
+      },
+      "locale": Object {
+        "description": undefined,
+        "nullable": true,
+        "optional": true,
+        "type": "string",
+      },
+      "optional": Object {
+        "description": undefined,
+        "nullable": true,
+        "optional": true,
+        "type": "boolean",
+      },
+      "sort": Object {
+        "description": undefined,
+        "nullable": true,
+        "optional": true,
+        "type": "boolean",
+      },
+      "stem": Object {
+        "description": undefined,
+        "nullable": true,
+        "optional": true,
+        "type": "boolean",
+      },
+      "store": Object {
+        "description": undefined,
+        "nullable": true,
+        "optional": true,
+        "type": "boolean",
+      },
+      "type": Object {
+        "description": undefined,
+        "type": "enum",
+        "values": Array [
+          "string",
+          "string[]",
+          "int32",
+          "int32[]",
+          "int64",
+          "int64[]",
+          "float",
+          "float[]",
+          "bool",
+          "bool[]",
+          "geopoint",
+          "geopoint[]",
+          "geopolygon",
+          "object",
+          "object[]",
+          "string*",
+          "image",
+          "auto",
+        ],
+      },
+    },
+    "type": "object",
+  },
+  "description": undefined,
+  "schema": Object {},
+  "type": "object",
+}
+`;
