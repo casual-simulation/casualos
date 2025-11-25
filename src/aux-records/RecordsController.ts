@@ -1576,6 +1576,8 @@ export class RecordsController {
             return result;
         }
 
+        await this._store.markCustomDomainAsVerified(customDomain.id);
+
         return success();
     }
 

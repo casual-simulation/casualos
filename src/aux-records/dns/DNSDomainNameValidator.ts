@@ -37,12 +37,16 @@ export class DNSDomainNameValidator implements DomainNameValidator {
         domainName: string,
         verificationKey: string
     ): Promise<Result<void, SimpleError>> {
+        console.log(
+            `[DNSDomainNameValidator] Validating domain name: ${domainName}`
+        );
         const records = await dns.resolveTxt(domainName);
 
         const expectedHash = this._generateVerificationHash(
             domainName,
             verificationKey
         );
+        console.log(`[DNSDomainNameValidator] Retrieved TXT records:`, records);
         for (let r of records) {
             for (let txt of r) {
                 if (txt.startsWith(`casualos-verification=`)) {
