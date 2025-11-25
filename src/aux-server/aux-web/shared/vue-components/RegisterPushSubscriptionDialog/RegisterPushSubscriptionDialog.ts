@@ -35,6 +35,7 @@ import { createRecordsClient } from '@casual-simulation/aux-records/RecordsClien
 import { getPushManager } from '../../PushHelpers';
 import { v5 as uuidv5 } from 'uuid';
 import FieldErrors from '../FieldErrors/FieldErrors';
+import type { PushSubscriptionType } from '@casual-simulation/aux-records';
 
 @Component({
     components: {
@@ -108,7 +109,7 @@ export default class RegisterPushSubscriptionDialog extends Vue {
             console.log('Re-registering push subscription');
             const result = await this._client.registerPushSubscription(
                 {
-                    pushSubscription: sub.toJSON(),
+                    pushSubscription: sub.toJSON() as PushSubscriptionType,
                 },
                 {
                     endpoint: this.status.apiEndpoint,
@@ -195,7 +196,7 @@ export default class RegisterPushSubscriptionDialog extends Vue {
             if (sub) {
                 const result = await this._client.registerPushSubscription(
                     {
-                        pushSubscription: sub.toJSON(),
+                        pushSubscription: sub.toJSON() as PushSubscriptionType,
                     },
                     {
                         endpoint: this.status.apiEndpoint,

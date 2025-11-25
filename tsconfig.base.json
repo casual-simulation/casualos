@@ -11,6 +11,7 @@
         "sourceMap": true,
         "lib": ["es2022", "es5", "dom"],
         "experimentalDecorators": true,
-        "typeRoots": ["node_modules/@types", "./typings"]
+        "typeRoots": ["node_modules/@types", "./typings"],
+        "jsx": "preserve"
     }
 }

@@ -32,6 +32,7 @@ import type {
     StoreListedStudio,
     StudioComIdRequest,
     HumeConfig,
+    LoomConfig,
 } from '@casual-simulation/aux-records';
 import type {
     ActivationKey,
@@ -187,9 +188,7 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
         throw new Error('Method not implemented.');
     }
 
-    getStudioLoomConfig(
-        studioId: string
-    ): Promise<{ appId?: string; privateKey?: string }> {
+    getStudioLoomConfig(studioId: string): Promise<LoomConfig | null> {
         throw new Error('Method not implemented.');
     }
 

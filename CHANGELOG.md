@@ -1,6 +1,6 @@
 # CasualOS Changelog
 
-## V3.8.2
+## V3.9.0
 
 #### Date: TBD
 
@@ -54,6 +54,8 @@
 -   Added the `minify-aux` command to the CLI.
     -   This command takes a `.aux` file as input, and rewrites it to be [minified](<https://en.wikipedia.org/wiki/Minification_(programming)>).
     -   This saves space and can help your `.aux` files load quicker, at the expense of readability.
+-   Added basic server side rendering.
+    -   Currently, this is used for injecting the web config so that CasualOS doesn't need to make a call to `/api/config` on initialization.
 
 ### :bug: Bug Fixes
 

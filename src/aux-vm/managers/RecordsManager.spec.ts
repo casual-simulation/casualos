@@ -7405,6 +7405,7 @@ describe('RecordsManager', () => {
                                     address: 'test',
                                     payload: {
                                         title: 'title',
+                                        body: 'body',
                                     },
                                     topic: 'topic',
                                 },
@@ -7954,7 +7955,8 @@ describe('RecordsManager', () => {
                                 body: JSON.stringify({
                                     procedure: name,
                                     input: {
-                                        ...event.procedure[name]?.input,
+                                        ...(event.procedure[name]
+                                            ?.input as any),
                                         instances: ['/myInst'],
                                     },
                                 }),
@@ -7972,7 +7974,8 @@ describe('RecordsManager', () => {
                                     procedure: name,
                                     input: event.procedure[name]?.input,
                                     query: {
-                                        ...event.procedure[name]?.query,
+                                        ...(event.procedure[name]
+                                            ?.query as any),
                                         instances: ['/myInst'],
                                     },
                                 }),
@@ -8040,7 +8043,8 @@ describe('RecordsManager', () => {
                                     procedure: name,
                                     input: event.procedure[name]?.input,
                                     query: {
-                                        ...event.procedure[name]?.query,
+                                        ...(event.procedure[name]
+                                            ?.query as any),
                                     },
                                 }),
                                 headers: expect.objectContaining({
@@ -8136,7 +8140,8 @@ describe('RecordsManager', () => {
                                     procedure: name,
                                     input: event.procedure[name]?.input,
                                     query: {
-                                        ...event.procedure[name]?.query,
+                                        ...(event.procedure[name]
+                                            ?.query as any),
                                     },
                                 }),
                                 headers: expect.objectContaining({

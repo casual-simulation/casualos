@@ -56,6 +56,9 @@ describe('getSubscription()', () => {
                     records: {
                         allowed: true,
                     },
+                    policies: {
+                        allowed: true,
+                    },
                     ai: {
                         chat: {
                             allowed: false,
@@ -87,6 +90,9 @@ describe('getSubscription()', () => {
                 records: {
                     allowed: true,
                 },
+                policies: {
+                    allowed: true,
+                },
                 ai: {
                     chat: {
                         allowed: false,
@@ -113,6 +119,9 @@ describe('getSubscription()', () => {
                     allowed: true,
                 },
                 records: {
+                    allowed: true,
+                },
+                policies: {
                     allowed: true,
                 },
                 ai: {
@@ -163,6 +172,9 @@ describe('getSubscription()', () => {
                         records: {
                             allowed: true,
                         },
+                        policies: {
+                            allowed: true,
+                        },
                         ai: {
                             chat: {
                                 allowed: false,
@@ -194,6 +206,9 @@ describe('getSubscription()', () => {
                     records: {
                         allowed: true,
                     },
+                    policies: {
+                        allowed: true,
+                    },
                     ai: {
                         chat: {
                             allowed: false,
@@ -220,6 +235,9 @@ describe('getSubscription()', () => {
                         allowed: true,
                     },
                     records: {
+                        allowed: true,
+                    },
+                    policies: {
                         allowed: true,
                     },
                     ai: {
@@ -421,6 +439,9 @@ describe('getSubscriptionFeatures()', () => {
                     records: {
                         allowed: true,
                     },
+                    policies: {
+                        allowed: true,
+                    },
                     ai: {
                         chat: {
                             allowed: false,
@@ -452,6 +473,9 @@ describe('getSubscriptionFeatures()', () => {
                 records: {
                     allowed: true,
                 },
+                policies: {
+                    allowed: true,
+                },
                 ai: {
                     chat: {
                         allowed: false,
@@ -478,6 +502,9 @@ describe('getSubscriptionFeatures()', () => {
                     allowed: true,
                 },
                 records: {
+                    allowed: true,
+                },
+                policies: {
                     allowed: true,
                 },
                 ai: {
@@ -528,6 +555,9 @@ describe('getSubscriptionFeatures()', () => {
                         records: {
                             allowed: true,
                         },
+                        policies: {
+                            allowed: true,
+                        },
                         ai: {
                             chat: {
                                 allowed: false,
@@ -559,6 +589,9 @@ describe('getSubscriptionFeatures()', () => {
                     records: {
                         allowed: true,
                     },
+                    policies: {
+                        allowed: true,
+                    },
                     ai: {
                         chat: {
                             allowed: false,
@@ -585,6 +618,9 @@ describe('getSubscriptionFeatures()', () => {
                         allowed: true,
                     },
                     records: {
+                        allowed: true,
+                    },
+                    policies: {
                         allowed: true,
                     },
                     ai: {
@@ -919,6 +955,9 @@ describe('getSubscriptionTier()', () => {
                 records: {
                     allowed: true,
                 },
+                policies: {
+                    allowed: true,
+                },
                 ai: {
                     chat: {
                         allowed: false,
@@ -945,6 +984,9 @@ describe('getSubscriptionTier()', () => {
                     allowed: true,
                 },
                 records: {
+                    allowed: true,
+                },
+                policies: {
                     allowed: true,
                 },
                 ai: {
@@ -1002,6 +1044,9 @@ describe('getSubscriptionTier()', () => {
                     records: {
                         allowed: true,
                     },
+                    policies: {
+                        allowed: true,
+                    },
                     ai: {
                         chat: {
                             allowed: false,
@@ -1028,6 +1073,9 @@ describe('getSubscriptionTier()', () => {
                         allowed: true,
                     },
                     records: {
+                        allowed: true,
+                    },
+                    policies: {
                         allowed: true,
                     },
                     ai: {

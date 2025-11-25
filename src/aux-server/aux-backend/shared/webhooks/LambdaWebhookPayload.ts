@@ -24,9 +24,9 @@ export const HANDLE_WEBHOOK_PAYLOAD_SCHEMA = z.object({
     request: z.object({
         method: z.enum(['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS']),
         path: z.string(),
-        query: z.record(z.string()),
-        pathParams: z.record(z.string()),
-        headers: z.record(z.string()),
+        query: z.record(z.string(), z.string()),
+        pathParams: z.record(z.string(), z.string()),
+        headers: z.record(z.string(), z.string()),
         body: z.string().nullable(),
         ipAddress: z.string(),
     }),
@@ -76,7 +76,7 @@ export const HANDLE_WEBHOOK_RESULT_SCHEMA = z.discriminatedUnion('success', [
         success: z.literal(true),
         response: z.object({
             statusCode: z.number(),
-            headers: z.record(z.string()),
+            headers: z.record(z.string(), z.string()),
             body: z.string(),
         }),
         logs: z.array(z.string()),

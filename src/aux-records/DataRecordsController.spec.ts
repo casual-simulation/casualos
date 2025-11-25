@@ -812,12 +812,11 @@ describe('DataRecordsController', () => {
                 issues: [
                     {
                         code: 'too_big',
-                        exact: false,
                         inclusive: true,
                         maximum: 5,
-                        message: 'Number must be less than or equal to 5',
+                        message: 'Too big: expected number to be <=5',
                         path: ['data', 'sizeInBytes'],
-                        type: 'number',
+                        origin: 'number',
                     },
                 ],
             });

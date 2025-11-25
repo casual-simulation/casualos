@@ -59,7 +59,7 @@ export interface AuthorizeActionMissingPermission {
     /**
      * The ID of the resource that was being accessed.
      */
-    resourceId?: string;
+    resourceId: string;
 }
 
 export interface AuthorizeActionDisabledPrivacyFeature {

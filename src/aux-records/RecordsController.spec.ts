@@ -29,7 +29,10 @@ import {
 import { randomBytes } from 'tweetnacl';
 import { fromByteArray } from 'base64-js';
 import { v4 as uuid } from 'uuid';
-import { createTestSubConfiguration } from './TestUtils';
+import {
+    createTestSubConfiguration,
+    createTestPrivoConfiguration,
+} from './TestUtils';
 import { MemoryStore } from './MemoryStore';
 import { buildSubscriptionConfig } from './SubscriptionConfigBuilder';
 import type { PrivoClientInterface } from './PrivoClient';
@@ -38,6 +41,7 @@ import {
     formatV2RecordKey,
     isRecordKey,
 } from '@casual-simulation/aux-common/records/RecordKeys';
+import { success } from '@casual-simulation/aux-common';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -2694,6 +2698,7 @@ describe('RecordsController', () => {
                     },
                     storeFeatures: {
                         allowed: false,
+                        currencyLimits: expect.any(Object),
                     },
                     stripeAccountStatus: null,
                     stripeRequirementsStatus: null,
@@ -2742,6 +2747,7 @@ describe('RecordsController', () => {
                     },
                     storeFeatures: {
                         allowed: false,
+                        currencyLimits: expect.any(Object),
                     },
                     stripeAccountStatus: null,
                     stripeRequirementsStatus: null,
@@ -2844,6 +2850,7 @@ describe('RecordsController', () => {
                     },
                     storeFeatures: {
                         allowed: false,
+                        currencyLimits: expect.any(Object),
                     },
                     stripeAccountStatus: null,
                     stripeRequirementsStatus: null,
@@ -2895,6 +2902,7 @@ describe('RecordsController', () => {
                     },
                     storeFeatures: {
                         allowed: false,
+                        currencyLimits: expect.any(Object),
                     },
                     stripeAccountStatus: null,
                     stripeRequirementsStatus: null,
@@ -2947,6 +2955,7 @@ describe('RecordsController', () => {
                     },
                     storeFeatures: {
                         allowed: false,
+                        currencyLimits: expect.any(Object),
                     },
                     stripeAccountStatus: 'pending',
                     stripeRequirementsStatus: 'incomplete',
@@ -2991,6 +3000,7 @@ describe('RecordsController', () => {
                     },
                     storeFeatures: {
                         allowed: false,
+                        currencyLimits: expect.any(Object),
                     },
                     stripeAccountStatus: null,
                     stripeRequirementsStatus: null,
@@ -3043,6 +3053,7 @@ describe('RecordsController', () => {
                     },
                     storeFeatures: {
                         allowed: false,
+                        currencyLimits: expect.any(Object),
                     },
                     stripeAccountStatus: null,
                     stripeRequirementsStatus: null,
@@ -5033,6 +5044,163 @@ describe('RecordsController', () => {
                     studioId: 'studioId',
                 },
             ]);
+        });
+    });
+
+    describe('getWebConfig()', () => {
+        it('should return the web config with subscriptionsSupported and studiosSupported set to true when subscription configuration exists', async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration();
+
+            const result = await manager.getWebConfig();
+
+            expect(result).toEqual(
+                success({
+                    version: 2,
+                    causalRepoConnectionProtocol: 'websocket',
+                    subscriptionsSupported: true,
+                    studiosSupported: true,
+                    requirePrivoLogin: false,
+                })
+            );
+        });
+
+        it('should return the web config with subscriptionsSupported and studiosSupported set to false when subscription configuration is null', async () => {
+            store.subscriptionConfiguration = null;
+
+            const result = await manager.getWebConfig();
+
+            expect(result).toEqual(
+                success({
+                    version: 2,
+                    causalRepoConnectionProtocol: 'websocket',
+                    subscriptionsSupported: false,
+                    studiosSupported: false,
+                    requirePrivoLogin: false,
+                })
+            );
+        });
+
+        it('should return the web config with requirePrivoLogin set to true when privo configuration exists', async () => {
+            store.privoConfiguration = createTestPrivoConfiguration();
+
+            const result = await manager.getWebConfig();
+
+            expect(result).toEqual(
+                success({
+                    version: 2,
+                    causalRepoConnectionProtocol: 'websocket',
+                    subscriptionsSupported: true,
+                    studiosSupported: true,
+                    requirePrivoLogin: true,
+                })
+            );
+        });
+
+        it('should return the web config with requirePrivoLogin set to false when privo configuration is null', async () => {
+            store.privoConfiguration = null;
+
+            const result = await manager.getWebConfig();
+
+            expect(result).toEqual(
+                success({
+                    version: 2,
+                    causalRepoConnectionProtocol: 'websocket',
+                    subscriptionsSupported: true,
+                    studiosSupported: true,
+                    requirePrivoLogin: false,
+                })
+            );
+        });
+
+        it('should merge the web config properties from the configuration store', async () => {
+            store.webConfig = {
+                version: 2,
+                causalRepoConnectionProtocol: 'apiary-aws',
+                vmOrigin: 'https://vm.example.com',
+                authOrigin: 'https://auth.example.com',
+            };
+
+            const result = await manager.getWebConfig();
+
+            expect(result).toEqual(
+                success({
+                    version: 2,
+                    causalRepoConnectionProtocol: 'apiary-aws',
+                    vmOrigin: 'https://vm.example.com',
+                    authOrigin: 'https://auth.example.com',
+                    subscriptionsSupported: true,
+                    studiosSupported: true,
+                    requirePrivoLogin: false,
+                })
+            );
+        });
+
+        it('should handle all configuration states correctly', async () => {
+            store.subscriptionConfiguration = null;
+            store.privoConfiguration = createTestPrivoConfiguration();
+            store.webConfig = {
+                version: 1,
+                causalRepoConnectionProtocol: 'websocket',
+                disableCollaboration: true,
+                jitsiAppName: 'my-jitsi-app',
+            };
+
+            const result = await manager.getWebConfig();
+
+            expect(result).toEqual(
+                success({
+                    version: 1,
+                    causalRepoConnectionProtocol: 'websocket',
+                    disableCollaboration: true,
+                    jitsiAppName: 'my-jitsi-app',
+                    subscriptionsSupported: false,
+                    studiosSupported: false,
+                    requirePrivoLogin: true,
+                })
+            );
+        });
+
+        it('should return default config when webConfig is null', async () => {
+            store.webConfig = null;
+            store.subscriptionConfiguration = null;
+            store.privoConfiguration = null;
+
+            const result = await manager.getWebConfig();
+
+            expect(result).toEqual(
+                success({
+                    version: 2,
+                    causalRepoConnectionProtocol: 'websocket',
+                    subscriptionsSupported: false,
+                    studiosSupported: false,
+                    requirePrivoLogin: false,
+                })
+            );
+        });
+
+        it('should handle partial web config properties', async () => {
+            store.webConfig = {
+                version: 2,
+                causalRepoConnectionProtocol: 'websocket',
+                playerMode: 'builder',
+                logoUrl: 'https://example.com/logo.png',
+                logoTitle: 'My App',
+            };
+
+            const result = await manager.getWebConfig();
+
+            expect(result).toEqual(
+                success({
+                    version: 2,
+                    causalRepoConnectionProtocol: 'websocket',
+                    playerMode: 'builder',
+                    logoUrl: 'https://example.com/logo.png',
+                    logoTitle: 'My App',
+                    subscriptionsSupported: true,
+                    studiosSupported: true,
+                    requirePrivoLogin: false,
+                })
+            );
         });
     });
 });

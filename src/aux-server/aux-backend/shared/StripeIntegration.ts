@@ -358,6 +358,7 @@ export class StripeIntegration implements StripeInterface {
                           total: session.invoice.total,
                           tax: session.invoice.total_taxes[0].amount,
                           lines: {
+                              object: 'list',
                               data: session.invoice.lines.data.map((l) => ({
                                   id: l.id,
                                   price: {

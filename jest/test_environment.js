@@ -6,7 +6,7 @@
 const NodeEnvironment = require('jest-environment-node').TestEnvironment;
 
 class TestEnvironment extends NodeEnvironment {
-    constructor(config) {
+    constructor(config, context) {
         super(
             Object.assign({}, config, {
                 globals: Object.assign({}, config.globals, {
@@ -15,7 +15,8 @@ class TestEnvironment extends NodeEnvironment {
                     ArrayBuffer: ArrayBuffer,
                     MessagePort: class MessagePort {},
                 }),
-            })
+            }),
+            context
         );
     }
 }

@@ -196,7 +196,7 @@ export default defineConfig(({ command, mode }) => {
         },
         server: {
             host: '::',
-            port: 3002,
+            port: 5174,
             watch: {
                 ignored: [
                     ...casualOsPackages.map((p) => `!**/node_modules/${p}/**`),
@@ -208,31 +208,31 @@ export default defineConfig(({ command, mode }) => {
                     path.resolve(__dirname, '..', '..', '..'), // src folder
                 ],
             },
-            proxy: {
-                '/api': {
-                    target: 'http://localhost:2998',
-                    configure: (proxy) => {
-                        proxy.on(
-                            'proxyReq',
-                            function (proxyReq, req, res, options) {
-                                proxyReq.setHeader(
-                                    'X-Dev-Proxy-Host',
-                                    req.headers.host as any
-                                );
-                            }
-                        );
-                    },
-                },
-                '/s3': {
-                    target: 'http://localhost:4566',
-                    changeOrigin: true,
-                    rewrite: (path) => path.replace(/^\/s3/, ''),
-                },
-                '/websocket': {
-                    target: 'http://localhost:2998',
-                    ws: true,
-                },
-            },
+            // proxy: {
+            //     '/api': {
+            //         target: 'http://localhost:2998',
+            //         configure: (proxy) => {
+            //             proxy.on(
+            //                 'proxyReq',
+            //                 function (proxyReq, req, res, options) {
+            //                     proxyReq.setHeader(
+            //                         'X-Dev-Proxy-Host',
+            //                         req.headers.host as any
+            //                     );
+            //                 }
+            //             );
+            //         },
+            //     },
+            //     '/s3': {
+            //         target: 'http://localhost:4566',
+            //         changeOrigin: true,
+            //         rewrite: (path) => path.replace(/^\/s3/, ''),
+            //     },
+            //     '/websocket': {
+            //         target: 'http://localhost:2998',
+            //         ws: true,
+            //     },
+            // },
         },
         optimizeDeps: {
             exclude: [...casualOsPackages],

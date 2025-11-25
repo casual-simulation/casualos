@@ -115,6 +115,7 @@ import type {
     PrivacyFeatures,
     Entitlement,
     GrantedEntitlementScope,
+    WebConfig,
 } from '@casual-simulation/aux-common';
 import type {
     AIChatMetrics,
@@ -180,6 +181,7 @@ export interface MemoryConfiguration {
     subscriptions: SubscriptionConfiguration;
     privo?: PrivoConfiguration;
     moderation?: ModerationConfiguration;
+    webConfig?: WebConfig;
 }
 
 export class MemoryStore
@@ -234,6 +236,7 @@ export class MemoryStore
     private _subscriptionConfiguration: SubscriptionConfiguration | null;
     private _privoConfiguration: PrivoConfiguration | null = null;
     private _moderationConfiguration: ModerationConfiguration | null = null;
+    private _webConfig: WebConfig | null = null;
     private _recordNotifications: RecordsNotification[] = [];
     private _comIdRequests: StudioComIdRequest[] = [];
 
@@ -363,6 +366,14 @@ export class MemoryStore
 
     set moderationConfiguration(value: ModerationConfiguration | null) {
         this._moderationConfiguration = value;
+    }
+
+    get webConfig() {
+        return this._webConfig;
+    }
+
+    set webConfig(value: WebConfig | null) {
+        this._webConfig = value;
     }
 
     get userInstReports() {
@@ -536,6 +547,7 @@ export class MemoryStore
             subscriptions: cloneDeep(this._subscriptionConfiguration),
             privo: cloneDeep(this._privoConfiguration),
             moderation: cloneDeep(this._moderationConfiguration),
+            webConfig: cloneDeep(this._webConfig),
         });
 
         newStore._users = cloneDeep(this._users);
@@ -688,6 +700,10 @@ export class MemoryStore
 
     async getModerationConfig(): Promise<ModerationConfiguration | null> {
         return this._moderationConfiguration;
+    }
+
+    async getWebConfig(): Promise<WebConfig | null> {
+        return this._webConfig;
     }
 
     async getRecordByName(name: string): Promise<Record> {

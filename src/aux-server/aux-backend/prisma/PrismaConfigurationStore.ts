@@ -17,13 +17,15 @@
  */
 import type {
     ConfigurationStore,
-    MemoryConfiguration,
+    DefaultConfiguration,
+    ModerationConfiguration,
     SubscriptionConfiguration,
 } from '@casual-simulation/aux-records';
 import {
     MODERATION_CONFIG_KEY,
     PRIVO_CONFIG_KEY,
     SUBSCRIPTIONS_CONFIG_KEY,
+    WEB_CONFIG_KEY,
     parseSubscriptionConfig,
 } from '@casual-simulation/aux-records';
 import type { PrivoConfiguration } from '@casual-simulation/aux-records/PrivoConfiguration';
@@ -31,16 +33,31 @@ import { parsePrivoConfiguration } from '@casual-simulation/aux-records/PrivoCon
 import type { PrismaClient } from './generated';
 import { parseModerationConfiguration } from '@casual-simulation/aux-records/ModerationConfiguration';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
+import { parseWebConfig, type WebConfig } from '@casual-simulation/aux-common';
 
 const TRACE_NAME = 'PrismaConfigurationStore';
 
 export class PrismaConfigurationStore implements ConfigurationStore {
     private _client: PrismaClient;
-    private _defaultConfiguration: MemoryConfiguration;
+    private _defaultConfiguration: DefaultConfiguration;
 
-    constructor(client: PrismaClient, defaultConfig: MemoryConfiguration) {
+    constructor(client: PrismaClient, defaultConfig: DefaultConfiguration) {
         this._client = client;
         this._defaultConfiguration = defaultConfig;
+    }
+
+    @traced(TRACE_NAME)
+    async getWebConfig(): Promise<WebConfig | null> {
+        const result = await this._client.configuration.findUnique({
+            where: {
+                key: WEB_CONFIG_KEY,
+            },
+        });
+
+        return parseWebConfig(
+            result?.data,
+            this._defaultConfiguration.webConfig
+        );
     }
 
     @traced(TRACE_NAME)
@@ -72,9 +89,7 @@ export class PrismaConfigurationStore implements ConfigurationStore {
     }
 
     @traced(TRACE_NAME)
-    async getModerationConfig(): Promise<{
-        allowUnauthenticatedReports?: boolean;
-    }> {
+    async getModerationConfig(): Promise<ModerationConfiguration> {
         const result = await this._client.configuration.findUnique({
             where: {
                 key: MODERATION_CONFIG_KEY,
