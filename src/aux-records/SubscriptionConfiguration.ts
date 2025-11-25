@@ -892,11 +892,10 @@ export const subscriptionConfigSchema = z.object({
                     .optional()
                     .nullable()
                     .describe(
-                        'The number of credits that should be granted to the user/studio upon purchasing (and renewal) of this subscription. Defaults to matching the price that the user paid for the subscription.'
+                        'The number of credits that should be granted to the user/studio upon purchasing (and renewal) of this subscription. Defaults to 0.'
                     ),
             })
         )
-        .min(1)
         .describe('The list of subscriptions that are in use.'),
 
     tiers: z
@@ -1102,7 +1101,7 @@ export interface APISubscription {
 
     /**
      * The number of credits that should be granted to the user/studio upon purchasing (and renewal) of this subscription.
-     * Defaults to matching the invoice total that the user paid for the subscription.
+     * Defaults to 0.
      */
     creditGrant?: number | 'match-invoice';
 }

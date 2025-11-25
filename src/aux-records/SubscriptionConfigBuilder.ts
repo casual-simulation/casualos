@@ -45,6 +45,10 @@ import type {
     WebhooksFeaturesConfiguration,
 } from './SubscriptionConfiguration';
 import {
+    storeFeaturesSchema,
+    contractFeaturesSchema,
+} from './SubscriptionConfiguration';
+import {
     allowAllDefaultFeatures,
     allowAllFeatures,
     dataFeaturesSchema,
@@ -337,16 +341,12 @@ export class FeaturesBuilder {
         return this;
     }
 
-    withStore(features?: PurchasableItemFeaturesConfiguration): this {
-        this._features.store = features ?? {
-            allowed: true,
-            currencyLimits: {
-                usd: {
-                    maxCost: 100 * 1000, /// $1,000 US Dollars (USD)
-                    minCost: 50, // $0.50 US Dollars (USD)
-                },
-            },
-        };
+    withStore(features?: z.input<typeof storeFeaturesSchema>): this {
+        this._features.store = storeFeaturesSchema.parse(
+            features ?? {
+                allowed: true,
+            }
+        );
         return this;
     }
 
@@ -366,16 +366,12 @@ export class FeaturesBuilder {
         return this;
     }
 
-    withContracts(features?: ContractFeaturesConfiguration): this {
-        this._features.contracts = features ?? {
-            allowed: true,
-            currencyLimits: {
-                usd: {
-                    maxCost: 100 * 1000, /// $1,000 US Dollars (USD)
-                    minCost: 50, // $0.50 US Dollars (USD)
-                },
-            },
-        };
+    withContracts(features?: z.input<typeof contractFeaturesSchema>): this {
+        this._features.contracts = contractFeaturesSchema.parse(
+            features ?? {
+                allowed: true,
+            }
+        );
         return this;
     }
 

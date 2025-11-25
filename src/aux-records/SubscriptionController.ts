@@ -4601,7 +4601,7 @@ export class SubscriptionController {
             }
         >
     > {
-        const creditGrant = sub.creditGrant ?? 'match-invoice';
+        const creditGrant = sub.creditGrant ?? 0;
         if (creditGrant === 0 || !this._financialController) {
             return success();
         }

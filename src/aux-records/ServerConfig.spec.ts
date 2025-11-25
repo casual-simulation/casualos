@@ -250,7 +250,10 @@ describe('serverConfigSchema', () => {
 
         const result = serverConfigSchema.safeParse(config);
 
-        expect(result.success).toBe(true);
+        expect(result).toEqual({
+            success: true,
+            data: expect.any(Object),
+        });
         expect(result).toMatchSnapshot();
     });
 
