@@ -85,6 +85,7 @@
         "lint:undom": "eslint src/undom",
         "lint:shortkey": "eslint src/vue-shortkey",
         "prisma:migrate:dev": "pnpm --filter @casual-simulation/aux-server exec prisma migrate dev",
+        "prisma:migrate:sqlite:dev": "pnpm --filter @casual-simulation/aux-server exec prisma --config ./prisma.sqlite.config.ts migrate dev",
         "prepare": "husky",
         "pretest": "tsx ./script/pretest.mts"
     },
