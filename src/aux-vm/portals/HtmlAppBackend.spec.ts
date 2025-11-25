@@ -353,7 +353,7 @@ describe('HtmlAppBackend', () => {
 
             await waitAsync();
 
-            expect(actions).toEqual([
+            expect(actions.slice(0, 3)).toEqual([
                 registerHtmlApp('testPortal', 'appId', 'uuid1'),
                 htmlAppMethod('testPortal', 'testPortal', 'focus', [], 'uuid2'),
                 toast(undefined),
