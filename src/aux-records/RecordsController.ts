@@ -1624,24 +1624,33 @@ export class RecordsController {
 
     /**
      * Attempts to get the web config.
+     *
+     * @param hostname The hostname that the request was made to.
      */
     @traced(TRACE_NAME)
-    async getWebConfig(): Promise<Result<CasualOSConfig, SimpleError>> {
-        const [config, subscriptions, privo] = await Promise.all([
+    async getWebConfig(
+        hostname: string
+    ): Promise<Result<CasualOSConfig, SimpleError>> {
+        // TODO: Merge into a single call to get all the configurations at once efficiently.
+        const [config, subscriptions, privo, customDomain] = await Promise.all([
             this._config.getWebConfig(),
             this._config.getSubscriptionConfiguration(),
             this._config.getPrivoConfiguration(),
+            this._store.getVerifiedCustomDomainByName(hostname),
         ]);
 
-        return success({
+        const webConfig = {
             ...(config ?? {
                 version: 2,
                 causalRepoConnectionProtocol: 'websocket',
             }),
+            ...(customDomain?.studio.playerConfig ?? {}),
             studiosSupported: !!subscriptions,
             subscriptionsSupported: !!subscriptions,
             requirePrivoLogin: !!privo,
-        });
+        };
+
+        return success(webConfig);
     }
 
     /**

@@ -611,7 +611,9 @@ export class RecordsServer {
                 .origins(true)
                 .view('player', true)
                 .handler(async (_, context) => {
-                    const config = await this._records.getWebConfig();
+                    const config = await this._records.getWebConfig(
+                        context.url.hostname
+                    );
 
                     const postApp: JSX.Element[] = [];
 
@@ -660,7 +662,9 @@ export class RecordsServer {
                 .origins(true)
                 .view('auth', true)
                 .handler(async (_, context) => {
-                    const config = await this._records.getWebConfig();
+                    const config = await this._records.getWebConfig(
+                        context.url.hostname
+                    );
                     const postApp: JSX.Element[] = [];
 
                     if (isSuccess(config) && config.value) {
@@ -686,7 +690,9 @@ export class RecordsServer {
                 .origins(true)
                 .view('auth', '/iframe.html')
                 .handler(async (_, context) => {
-                    const config = await this._records.getWebConfig();
+                    const config = await this._records.getWebConfig(
+                        context.url.hostname
+                    );
                     const postApp: JSX.Element[] = [];
 
                     if (isSuccess(config) && config.value) {
@@ -6472,6 +6478,10 @@ export class RecordsServer {
                     sessionKey: getSessionKey(request),
                     httpRequest: request,
                     origin: request.headers.origin ?? null,
+                    url: new URL(
+                        request.path,
+                        `http://${request.headers.host}`
+                    ),
                 };
 
                 let result: ProcedureOutput;
@@ -6579,6 +6589,10 @@ export class RecordsServer {
                     sessionKey: getSessionKey(request),
                     httpRequest: request,
                     origin: request.headers.origin ?? null,
+                    url: new URL(
+                        request.path,
+                        `http://${request.headers.host}`
+                    ),
                 };
                 const result = await procedure.handler(data, context, query);
                 const response = returnProcedureOutput(result);
@@ -6635,6 +6649,10 @@ export class RecordsServer {
                     sessionKey: getSessionKey(request),
                     httpRequest: request,
                     origin: request.headers.origin ?? null,
+                    url: new URL(
+                        request.path,
+                        `http://${request.headers.host}`
+                    ),
                 };
                 let result: ProcedureOutput;
                 try {
