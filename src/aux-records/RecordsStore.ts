@@ -235,6 +235,48 @@ export interface RecordsStore {
      * @param accountId The ID of the stripe account.
      */
     getStudioByStripeAccountId(accountId: string): Promise<Studio | null>;
+
+    /**
+     * Saves the given custom domain to the store.
+     * @param domain The custom domain to save.
+     */
+    saveCustomDomain(domain: CustomDomain): Promise<void>;
+
+    /**
+     * Removes the custom domain with the given ID from the store.
+     * @param domainId The ID of the custom domain to remove.
+     */
+    deleteCustomDomain(domainId: string): Promise<void>;
+
+    /**
+     * Gets the custom domain with the given ID.
+     * @param domainId The ID of the custom domain.
+     */
+    getCustomDomainById(
+        domainId: string
+    ): Promise<CustomDomainWithStudio | null>;
+
+    /**
+     * Gets the list of custom domains for the given studio ID.
+     * @param studioId The ID of the studio.
+     */
+    listCustomDomainsByStudioId(studioId: string): Promise<CustomDomain[]>;
+
+    /**
+     * Gets the verified custom domain with the given domain name.
+     * Returns null if no verified custom domain with the given name exists.
+     *
+     * @param domainName The domain name.
+     */
+    getVerifiedCustomDomainByName(
+        domainName: string
+    ): Promise<CustomDomainWithStudio | null>;
+
+    /**
+     * Marks the custom domain with the given ID as verified.
+     * @param domainId The ID of the custom domain to mark as verified.
+     */
+    markCustomDomainAsVerified(domainId: string): Promise<void>;
 }
 
 export interface CountRecordsFilter {
@@ -667,4 +709,46 @@ export interface StudioComIdRequest {
      * The unix timestamp in miliseconds when the request was last updated.
      */
     updatedAtMs: number;
+}
+
+/**
+ * Represents a custom domain that is associated with a studio.
+ *
+ * These domains may or may not be verified.
+ */
+export interface CustomDomain {
+    /**
+     * The ID of the custom domain.
+     */
+    id: string;
+
+    /**
+     * The domain name.
+     */
+    domainName: string;
+
+    /**
+     * The ID of the studio that the custom domain is associated with.
+     */
+    studioId: string;
+
+    /**
+     * The HMAC-SHA-256 verification key.
+     */
+    verificationKey: string;
+
+    /**
+     * Whether the custom domain has been verified.
+     * Null if not verified.
+     */
+    verified: true | null;
+}
+
+export type ListedCustomDomain = Pick<
+    CustomDomain,
+    'id' | 'domainName' | 'verified'
+>;
+
+export interface CustomDomainWithStudio extends CustomDomain {
+    studio: Studio;
 }

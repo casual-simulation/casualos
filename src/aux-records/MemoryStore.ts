@@ -55,6 +55,8 @@ import type {
     StudioComIdRequest,
     LoomConfig,
     HumeConfig,
+    CustomDomain,
+    VerifiedCustomDomain,
 } from './RecordsStore';
 import { v4 as uuid } from 'uuid';
 import type {
@@ -249,6 +251,7 @@ export class MemoryStore
     private _loadedPackages: Map<string, LoadedPackage> = new Map();
 
     private _financialAccounts: FinancialAccount[] = [];
+    private _customDomains: CustomDomain[] = [];
 
     get aiOpenAIRealtimeMetrics(): AIOpenAIRealtimeMetrics[] {
         return this._aiRealtimeMetrics;
@@ -420,6 +423,10 @@ export class MemoryStore
         return this._externalPayouts;
     }
 
+    get customDomains() {
+        return this._customDomains;
+    }
+
     constructor(config: MemoryConfiguration) {
         this._subscriptionConfiguration = config.subscriptions;
         this._privoConfiguration = config.privo ?? null;
@@ -427,6 +434,65 @@ export class MemoryStore
         this.policies = {};
         this.roles = {};
         this.roleAssignments = {};
+    }
+
+    async saveCustomDomain(domain: CustomDomain): Promise<void> {
+        const existingIndex = this._customDomains.findIndex(
+            (d) => d.id === domain.id
+        );
+        if (existingIndex >= 0) {
+            this._customDomains[existingIndex] = domain;
+        } else {
+            this._customDomains.push(domain);
+        }
+    }
+
+    async deleteCustomDomain(domainId: string): Promise<void> {
+        this._customDomains = this._customDomains.filter(
+            (d) => d.id !== domainId
+        );
+    }
+
+    async listCustomDomainsByStudioId(
+        studioId: string
+    ): Promise<CustomDomain[]> {
+        return this._customDomains.filter((d) => d.studioId === studioId);
+    }
+
+    async getVerifiedCustomDomainByName(
+        domainName: string
+    ): Promise<VerifiedCustomDomain | null> {
+        const domain = this._customDomains.find(
+            (d) => d.domainName === domainName && d.verified === true
+        );
+
+        if (!domain) {
+            return null;
+        }
+
+        const studio = await this.getStudioById(domain.studioId);
+        if (!studio) {
+            return null;
+        }
+
+        return {
+            customDomain: {
+                id: domain.id,
+                domainName: domain.domainName,
+                studioId: domain.studioId,
+            },
+            studio,
+        };
+    }
+
+    async markCustomDomainAsVerified(domainId: string): Promise<void> {
+        const index = this._customDomains.findIndex((d) => d.id === domainId);
+        if (index >= 0) {
+            this._customDomains[index] = {
+                ...this._customDomains[index],
+                verified: true,
+            };
+        }
     }
 
     async createExternalPayout(payout: ExternalPayout): Promise<void> {
@@ -587,6 +653,7 @@ export class MemoryStore
         newStore._markerPermissionAssignments = cloneDeep(
             this._markerPermissionAssignments
         );
+        newStore._customDomains = cloneDeep(this._customDomains);
         newStore.maxAllowedInstSize = this.maxAllowedInstSize;
         newStore.roles = cloneDeep(this.roles);
         newStore.roleAssignments = cloneDeep(this.roleAssignments);

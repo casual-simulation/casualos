@@ -2447,6 +2447,41 @@ describe('RecordsController', () => {
                 },
             });
         });
+        //     await store.updateStudio({
+        //         id: 'studioId',
+        //         displayName: 'studio',
+        //         subscriptionId: 'sub1',
+        //         subscriptionStatus: 'active',
+        //         comIdConfig: {
+        //             allowedStudioCreators: 'anyone',
+        //         },
+        //     });
+
+        //     const result = await manager.updateStudio({
+        //         userId: 'userId',
+        //         studio: {
+        //             id: 'studioId',
+        //             comIdConfig: {
+        //                 allowedStudioCreators: 'only-members',
+        //             },
+        //         },
+        //     });
+
+        //     expect(result).toEqual({
+        //         success: true,
+        //     });
+
+        //     const studio = await store.getStudioById('studioId');
+        //     expect(studio).toEqual({
+        //         id: 'studioId',
+        //         displayName: 'studio',
+        //         subscriptionId: 'sub1',
+        //         subscriptionStatus: 'active',
+        //         comIdConfig: {
+        //             allowedStudioCreators: 'only-members',
+        //         },
+        //     });
+        // });
 
         it('should be able to update the comId config', async () => {
             await store.updateStudio({

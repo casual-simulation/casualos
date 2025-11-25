@@ -4725,6 +4725,128 @@ export class RecordsServer {
                     }
                 ),
 
+            addCustomDomain: procedure()
+                .origins('account')
+                .http('POST', '/api/v2/studios/domains')
+                .inputs(
+                    z.object({
+                        studioId: STUDIO_ID_VALIDATION,
+                        domain: z.string().min(1).max(255),
+                    })
+                )
+                .handler(async ({ studioId, domain }, context) => {
+                    const sessionKeyValidation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (sessionKeyValidation.success === false) {
+                        if (
+                            sessionKeyValidation.errorCode === 'no_session_key'
+                        ) {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return sessionKeyValidation;
+                    }
+
+                    const result = await this._records.addCustomDomain({
+                        userId: sessionKeyValidation.userId,
+                        userRole: sessionKeyValidation.role,
+                        studioId,
+                        domain,
+                    });
+
+                    return genericResult(result);
+                }),
+
+            deleteCustomDomain: procedure()
+                .origins('account')
+                .http('DELETE', '/api/v2/studios/domains')
+                .inputs(
+                    z.object({
+                        customDomainId: z.string().nonempty(),
+                    })
+                )
+                .handler(async ({ customDomainId }, context) => {
+                    const sessionKeyValidation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (sessionKeyValidation.success === false) {
+                        if (
+                            sessionKeyValidation.errorCode === 'no_session_key'
+                        ) {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return sessionKeyValidation;
+                    }
+
+                    const result = await this._records.deleteCustomDomain({
+                        userId: sessionKeyValidation.userId,
+                        userRole: sessionKeyValidation.role,
+                        customDomainId,
+                    });
+
+                    return genericResult(result);
+                }),
+
+            listCustomDomains: procedure()
+                .origins('account')
+                .http('GET', '/api/v2/studios/domains/list')
+                .inputs(
+                    z.object({
+                        studioId: STUDIO_ID_VALIDATION,
+                    })
+                )
+                .handler(async ({ studioId }, context) => {
+                    const sessionKeyValidation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (sessionKeyValidation.success === false) {
+                        if (
+                            sessionKeyValidation.errorCode === 'no_session_key'
+                        ) {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return sessionKeyValidation;
+                    }
+
+                    const result = await this._records.listCustomDomains({
+                        userId: sessionKeyValidation.userId,
+                        userRole: sessionKeyValidation.role,
+                        studioId,
+                    });
+
+                    return genericResult(result);
+                }),
+
+            verifyCustomDomain: procedure()
+                .origins('account')
+                .http('POST', '/api/v2/studios/domains/verify')
+                .inputs(
+                    z.object({
+                        customDomainId: z.string().nonempty(),
+                    })
+                )
+                .handler(async ({ customDomainId }, context) => {
+                    const sessionKeyValidation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (sessionKeyValidation.success === false) {
+                        if (
+                            sessionKeyValidation.errorCode === 'no_session_key'
+                        ) {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return sessionKeyValidation;
+                    }
+
+                    const result = await this._records.verifyCustomDomain({
+                        userId: sessionKeyValidation.userId,
+                        userRole: sessionKeyValidation.role,
+                        customDomainId,
+                    });
+
+                    return genericResult(result);
+                }),
+
             requestStudioComId: procedure()
                 .origins('account')
                 .http('POST', '/api/v2/studios/requestComId')
