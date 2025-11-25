@@ -1136,11 +1136,12 @@ describe('WebhookRecordsController', () => {
                             'The data record does not contain valid AUX data.',
                         issues: [
                             {
-                                code: 'invalid_union_discriminator',
-                                options: [1, 2],
-                                message:
-                                    'Invalid discriminator value. Expected 1 | 2',
+                                code: 'invalid_union',
+                                message: 'Invalid input',
+                                note: 'No matching discriminator',
                                 path: ['version'],
+                                discriminator: 'version',
+                                errors: [],
                             },
                         ],
                     },

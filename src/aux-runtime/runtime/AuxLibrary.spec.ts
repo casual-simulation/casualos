@@ -8592,6 +8592,7 @@ describe('AuxLibrary', () => {
                     'notification',
                     {
                         title: 'title',
+                        body: 'test',
                     }
                 );
                 const expected = sendNotification(
@@ -8599,6 +8600,7 @@ describe('AuxLibrary', () => {
                     'notification',
                     {
                         title: 'title',
+                        body: 'test',
                     },
                     {},
                     context.tasks.size
@@ -9895,6 +9897,7 @@ describe('AuxLibrary', () => {
                             type: 'auto',
                         },
                     },
+                    markers: [PUBLIC_READ_MARKER],
                 });
 
                 const expected = recordsCallProcedure(
@@ -9909,6 +9912,7 @@ describe('AuxLibrary', () => {
                                             type: 'auto',
                                         },
                                     },
+                                    markers: [PUBLIC_READ_MARKER],
                                 },
                             },
                         },

@@ -12712,7 +12712,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                         item: {
                             address: request.address,
                             schema: request.schema,
-                            markers: request.markers as [string, ...string[]],
+                            markers: request.markers,
                         },
                     },
                 },

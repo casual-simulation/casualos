@@ -148,10 +148,9 @@ describe('DirectoryService', () => {
                 errors: [
                     {
                         code: 'too_small',
-                        exact: false,
                         inclusive: true,
                         minimum: 1,
-                        type: 'string',
+                        origin: 'string',
                         path: ['key'],
                         message: expect.any(String),
                     },

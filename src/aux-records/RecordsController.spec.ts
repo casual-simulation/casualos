@@ -2698,6 +2698,7 @@ describe('RecordsController', () => {
                     },
                     storeFeatures: {
                         allowed: false,
+                        currencyLimits: expect.any(Object),
                     },
                     stripeAccountStatus: null,
                     stripeRequirementsStatus: null,
@@ -2746,6 +2747,7 @@ describe('RecordsController', () => {
                     },
                     storeFeatures: {
                         allowed: false,
+                        currencyLimits: expect.any(Object),
                     },
                     stripeAccountStatus: null,
                     stripeRequirementsStatus: null,
@@ -2848,6 +2850,7 @@ describe('RecordsController', () => {
                     },
                     storeFeatures: {
                         allowed: false,
+                        currencyLimits: expect.any(Object),
                     },
                     stripeAccountStatus: null,
                     stripeRequirementsStatus: null,
@@ -2899,6 +2902,7 @@ describe('RecordsController', () => {
                     },
                     storeFeatures: {
                         allowed: false,
+                        currencyLimits: expect.any(Object),
                     },
                     stripeAccountStatus: null,
                     stripeRequirementsStatus: null,
@@ -2951,6 +2955,7 @@ describe('RecordsController', () => {
                     },
                     storeFeatures: {
                         allowed: false,
+                        currencyLimits: expect.any(Object),
                     },
                     stripeAccountStatus: 'pending',
                     stripeRequirementsStatus: 'incomplete',
@@ -2995,6 +3000,7 @@ describe('RecordsController', () => {
                     },
                     storeFeatures: {
                         allowed: false,
+                        currencyLimits: expect.any(Object),
                     },
                     stripeAccountStatus: null,
                     stripeRequirementsStatus: null,
@@ -3047,6 +3053,7 @@ describe('RecordsController', () => {
                     },
                     storeFeatures: {
                         allowed: false,
+                        currencyLimits: expect.any(Object),
                     },
                     stripeAccountStatus: null,
                     stripeRequirementsStatus: null,

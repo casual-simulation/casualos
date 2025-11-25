@@ -94,7 +94,7 @@ export interface Procedure<
     /**
      * The schema that should be used for the query parameters into the RPC.
      */
-    querySchema: TQuery | null;
+    querySchema: TQuery;
 
     /**
      * The handler for the RPC.
