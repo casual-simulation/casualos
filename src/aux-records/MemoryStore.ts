@@ -56,7 +56,7 @@ import type {
     LoomConfig,
     HumeConfig,
     CustomDomain,
-    VerifiedCustomDomain,
+    CustomDomainWithStudio,
 } from './RecordsStore';
 import { v4 as uuid } from 'uuid';
 import type {
@@ -461,7 +461,7 @@ export class MemoryStore
 
     async getVerifiedCustomDomainByName(
         domainName: string
-    ): Promise<VerifiedCustomDomain | null> {
+    ): Promise<CustomDomainWithStudio | null> {
         const domain = this._customDomains.find(
             (d) => d.domainName === domainName && d.verified === true
         );
@@ -476,11 +476,34 @@ export class MemoryStore
         }
 
         return {
-            customDomain: {
-                id: domain.id,
-                domainName: domain.domainName,
-                studioId: domain.studioId,
-            },
+            id: domain.id,
+            domainName: domain.domainName,
+            studioId: domain.studioId,
+            verificationKey: domain.verificationKey,
+            verified: domain.verified,
+            studio,
+        };
+    }
+
+    async getCustomDomainById(
+        domainId: string
+    ): Promise<CustomDomainWithStudio | null> {
+        const domain = this._customDomains.find((d) => d.id === domainId);
+        if (!domain) {
+            return null;
+        }
+
+        const studio = await this.getStudioById(domain.studioId);
+        if (!studio) {
+            return null;
+        }
+
+        return {
+            id: domain.id,
+            domainName: domain.domainName,
+            studioId: domain.studioId,
+            verificationKey: domain.verificationKey,
+            verified: domain.verified,
             studio,
         };
     }
