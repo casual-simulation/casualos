@@ -2284,6 +2284,8 @@ export class PlayerGame extends Game {
                     }
 
                     this.mapViewport.layer = 0.5;
+                    this.mapViewport.targetElement =
+                        this.gameView.getMapViewportTarget();
                 },
                 render: (context) => {
                     let contextCam = context.camera;

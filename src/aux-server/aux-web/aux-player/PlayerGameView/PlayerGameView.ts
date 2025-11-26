@@ -136,6 +136,12 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
         return <HTMLElement>this.$refs.miniMapView;
     }
 
+    getMapViewportTarget(): HTMLElement {
+        return this.mapView.querySelector(
+            '.esri-view-root > .esri-view-surface'
+        );
+    }
+
     getMiniMapViewportTarget(): HTMLElement {
         return this.miniMapView.querySelector(
             '.esri-view-root > .esri-view-surface'
