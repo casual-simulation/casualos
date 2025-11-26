@@ -71,6 +71,7 @@
 -   Fixed internal `DebugObjectManager` not rendering properly when in the map portal.
 -   Disabled double-click to zoom in the map portal.
 -   Fixed camera rotation in mapPortal continuing after releasing the right mouse button outside the browser window.
+-   Fixed camera rotation in mapPortal continuing after moving your finger off the screen.
 -   Fixed an issue where CasualOS would produce incorrect code when JSX elements were directly after return statements.
 
 ## V3.8.1
