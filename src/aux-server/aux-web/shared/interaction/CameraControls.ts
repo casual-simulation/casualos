@@ -677,12 +677,34 @@ export class CameraControls {
         const input = this._game.getInput();
 
         if (this.viewport && this.passthroughEvents) {
-            const over = input.isMouseOnViewport(this.viewport);
+            if (input.currentInputType === InputType.Touch) {
+                if (this.state === STATE.NONE) {
+                    if (input.getTouchDown(0)) {
+                        const over = input.isTouchOnViewport(0, this.viewport);
+                        if (over) {
+                            this.state = STATE.PASSTHROUGH;
+                        }
+                    }
+                } else if (this.state === STATE.PASSTHROUGH) {
+                    const firstTouch = input.getTouchData(0);
+                    const time = this._game.getTime();
 
-            if (over) {
-                this.state = STATE.PASSTHROUGH;
+                    // Detect touch up on last frame - exit passthrough mode
+                    if (
+                        !firstTouch ||
+                        firstTouch.state.isUpOnFrame(time.frameCount - 1)
+                    ) {
+                        this.state = STATE.NONE;
+                    }
+                }
             } else {
-                this.state = STATE.NONE;
+                const over = input.isMouseOnViewport(this.viewport);
+
+                if (over) {
+                    this.state = STATE.PASSTHROUGH;
+                } else {
+                    this.state = STATE.NONE;
+                }
             }
             return;
         }
