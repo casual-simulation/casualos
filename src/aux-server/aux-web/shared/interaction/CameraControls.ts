@@ -722,18 +722,8 @@ export class CameraControls {
                 this._previousRightButtonHeld = rightButtonHeld;
 
                 if (over) {
-                    if (this.state !== STATE.PASSTHROUGH) {
-                        console.log(
-                            '===========Entering passthrough state.==========='
-                        );
-                    }
                     this.state = STATE.PASSTHROUGH;
                 } else {
-                    if (this.state !== STATE.NONE) {
-                        console.log(
-                            '===========Exiting passthrough state.==========='
-                        );
-                    }
                     this.state = STATE.NONE;
                 }
             }
