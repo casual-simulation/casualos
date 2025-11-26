@@ -42,6 +42,7 @@ import {
     isRecordKey,
 } from '@casual-simulation/aux-common/records/RecordKeys';
 import { success } from '@casual-simulation/aux-common';
+import type { DomainNameValidator } from './dns';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -53,7 +54,13 @@ describe('RecordsController', () => {
     let manager: RecordsController;
     let store: MemoryStore;
 
+    let domainNameValidator: jest.Mocked<DomainNameValidator>;
+
     beforeEach(() => {
+        domainNameValidator = {
+            getVerificationDNSRecord: jest.fn(),
+            validateDomainName: jest.fn(),
+        };
         store = new MemoryStore({
             subscriptions: createTestSubConfiguration(),
         });
@@ -65,6 +72,7 @@ describe('RecordsController', () => {
             config: store,
             messenger: store,
             privo: null,
+            domainNameValidator,
         });
     });
 
@@ -3751,6 +3759,7 @@ describe('RecordsController', () => {
                     config: store,
                     messenger: store,
                     privo,
+                    domainNameValidator,
                 });
 
                 await store.saveNewUser({
@@ -4140,6 +4149,7 @@ describe('RecordsController', () => {
                     config: store,
                     messenger: store,
                     privo,
+                    domainNameValidator,
                 });
             });
 
@@ -5086,7 +5096,7 @@ describe('RecordsController', () => {
         it('should return the web config with subscriptionsSupported and studiosSupported set to true when subscription configuration exists', async () => {
             store.subscriptionConfiguration = createTestSubConfiguration();
 
-            const result = await manager.getWebConfig();
+            const result = await manager.getWebConfig('example.com');
 
             expect(result).toEqual(
                 success({
@@ -5102,7 +5112,7 @@ describe('RecordsController', () => {
         it('should return the web config with subscriptionsSupported and studiosSupported set to false when subscription configuration is null', async () => {
             store.subscriptionConfiguration = null;
 
-            const result = await manager.getWebConfig();
+            const result = await manager.getWebConfig('example.com');
 
             expect(result).toEqual(
                 success({
@@ -5118,7 +5128,7 @@ describe('RecordsController', () => {
         it('should return the web config with requirePrivoLogin set to true when privo configuration exists', async () => {
             store.privoConfiguration = createTestPrivoConfiguration();
 
-            const result = await manager.getWebConfig();
+            const result = await manager.getWebConfig('example.com');
 
             expect(result).toEqual(
                 success({
@@ -5134,7 +5144,7 @@ describe('RecordsController', () => {
         it('should return the web config with requirePrivoLogin set to false when privo configuration is null', async () => {
             store.privoConfiguration = null;
 
-            const result = await manager.getWebConfig();
+            const result = await manager.getWebConfig('example.com');
 
             expect(result).toEqual(
                 success({
@@ -5155,7 +5165,7 @@ describe('RecordsController', () => {
                 authOrigin: 'https://auth.example.com',
             };
 
-            const result = await manager.getWebConfig();
+            const result = await manager.getWebConfig('example.com');
 
             expect(result).toEqual(
                 success({
@@ -5180,7 +5190,7 @@ describe('RecordsController', () => {
                 jitsiAppName: 'my-jitsi-app',
             };
 
-            const result = await manager.getWebConfig();
+            const result = await manager.getWebConfig('example.com');
 
             expect(result).toEqual(
                 success({
@@ -5200,7 +5210,7 @@ describe('RecordsController', () => {
             store.subscriptionConfiguration = null;
             store.privoConfiguration = null;
 
-            const result = await manager.getWebConfig();
+            const result = await manager.getWebConfig('example.com');
 
             expect(result).toEqual(
                 success({
@@ -5222,7 +5232,7 @@ describe('RecordsController', () => {
                 logoTitle: 'My App',
             };
 
-            const result = await manager.getWebConfig();
+            const result = await manager.getWebConfig('example.com');
 
             expect(result).toEqual(
                 success({
@@ -5234,6 +5244,51 @@ describe('RecordsController', () => {
                     subscriptionsSupported: true,
                     studiosSupported: true,
                     requirePrivoLogin: false,
+                })
+            );
+        });
+
+        it('should return the com ID config for custom domains', async () => {
+            store.webConfig = {
+                version: 2,
+                causalRepoConnectionProtocol: 'websocket',
+                playerMode: 'builder',
+                logoUrl: 'https://example.com/logo.png',
+                logoTitle: 'My App',
+            };
+
+            await store.addStudio({
+                id: 'studioId',
+                comId: 'customComId',
+                displayName: 'Studio',
+                logoUrl: 'https://studio.example.com/logo.png',
+                playerConfig: {
+                    arcGisApiKey: 'customArcGisKey',
+                },
+            });
+
+            await store.saveCustomDomain({
+                id: 'customDomainId',
+                domainName: 'custom.example.com',
+                studioId: 'studioId',
+                verificationKey: 'key',
+                verified: true,
+            });
+
+            const result = await manager.getWebConfig('custom.example.com');
+
+            expect(result).toEqual(
+                success({
+                    version: 2,
+                    causalRepoConnectionProtocol: 'websocket',
+                    playerMode: 'builder',
+                    logoUrl: 'https://studio.example.com/logo.png',
+                    logoTitle: 'Studio',
+                    subscriptionsSupported: true,
+                    studiosSupported: true,
+                    requirePrivoLogin: false,
+                    arcGisApiKey: 'customArcGisKey',
+                    comId: 'customComId',
                 })
             );
         });

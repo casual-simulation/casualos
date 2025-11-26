@@ -1648,7 +1648,17 @@ export class RecordsController {
             studiosSupported: !!subscriptions,
             subscriptionsSupported: !!subscriptions,
             requirePrivoLogin: !!privo,
+            comId: customDomain?.studio.comId,
         };
+
+        if (customDomain) {
+            webConfig.logoUrl =
+                customDomain.studio.logoUrl ?? webConfig.logoUrl;
+            webConfig.logoTitle =
+                customDomain.studio.displayName ??
+                customDomain.studio.comId ??
+                webConfig.logoTitle;
+        }
 
         return success(webConfig);
     }

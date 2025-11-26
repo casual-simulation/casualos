@@ -240,6 +240,11 @@ export interface CasualOSConfig extends WebConfig {
      * Whether studios are supported in this configuration.
      */
     studiosSupported: boolean;
+
+    /**
+     * The comID that was used to load this configuration.
+     */
+    comId?: string | null;
 }
 
 export const WEB_CONFIG_SCHEMA = z.object({
