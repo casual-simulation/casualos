@@ -119,11 +119,7 @@ export class PurchasableItemRecordsController extends CrudRecordsController<
                 const limit = currencyLimits[item.currency];
 
                 const schema = z.object({
-                    cost: z
-                        .number()
-                        .int()
-                        .min(limit.minCost)
-                        .max(limit.maxCost),
+                    cost: z.int().min(limit.minCost).max(limit.maxCost),
                 });
 
                 const result = schema.safeParse(item);

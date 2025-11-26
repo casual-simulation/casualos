@@ -1978,7 +1978,7 @@ export class SubscriptionController {
                 item: ContractRecord;
                 features: ContractFeaturesConfiguration;
                 metrics: ContractSubscriptionMetrics;
-                limits: ContractFeaturesConfiguration['currencyLimits'];
+                limits: ContractFeaturesConfiguration['currencyLimits']['key'];
                 currency: string;
                 context: AuthorizationContext;
                 authorization: AuthorizeUserAndInstancesSuccess;
@@ -4601,7 +4601,7 @@ export class SubscriptionController {
             }
         >
     > {
-        const creditGrant = sub.creditGrant ?? 'match-invoice';
+        const creditGrant = sub.creditGrant ?? 0;
         if (creditGrant === 0 || !this._financialController) {
             return success();
         }

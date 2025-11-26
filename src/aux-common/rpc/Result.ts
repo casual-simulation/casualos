@@ -15,6 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+import type z from 'zod';
 import type { DenialReason } from '../common';
 import type { KnownErrorCodes } from './ErrorCodes';
 
@@ -72,7 +73,7 @@ export type SimpleError = {
     errorMessage: string;
 
     reason?: DenialReason;
-    issues?: Zod.ZodIssue[];
+    issues?: z.core.$ZodIssue[];
 };
 
 export type WrappedError = {

@@ -584,6 +584,16 @@ export class Input {
     }
 
     /**
+     * Determines if the mouse is on the given viewport. Will check children to make sure that they are not instead being detected.
+     * @param viewport The viewport to test on.
+     */
+    public isTouchOnViewport(fingerIndex: number, viewport: Viewport): boolean {
+        const pagePos = this.getTouchPagePos(fingerIndex);
+        const otherViewports = this._game.getViewports();
+        return Input.pagePositionOnViewport(pagePos, viewport, otherViewports);
+    }
+
+    /**
      * Determines if the mouse is currently focusing the given html element.
      * @param element The element to test.
      */

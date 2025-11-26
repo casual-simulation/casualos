@@ -8117,6 +8117,7 @@ describe('AuthController', () => {
                 },
                 contractFeatures: {
                     allowed: true,
+                    currencyLimits: expect.any(Object),
                 },
                 role: 'none',
             });

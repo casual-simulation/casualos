@@ -40,12 +40,11 @@ import { convertToDate, convertToMillis } from './Utils';
 import { z } from 'zod';
 
 const ERROR_RESULT_SCHEMA = z
-    .object({
+    .looseObject({
         success: z.literal(false),
         errorCode: z.string(),
         errorMessage: z.string(),
     })
-    .passthrough()
     .optional()
     .nullable();
 

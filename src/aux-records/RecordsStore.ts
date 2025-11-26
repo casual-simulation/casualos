@@ -401,22 +401,20 @@ export interface Studio {
 
 export type LoomConfig = z.infer<typeof LOOM_CONFIG>;
 
-export const LOOM_CONFIG = z
-    .object({
-        appId: z.string().describe('The ID of the loom app.').max(100),
-        privateKey: z
-            .string()
-            .describe('The private key for the loom app.')
-            .max(100),
-    })
-    .describe('The configuration that can be used by studios to setup loom.');
+export const LOOM_CONFIG = z.object({
+    appId: z.string().max(100).describe('The ID of the loom app.'),
+    privateKey: z
+        .string()
+        .max(100)
+        .describe('The private key for the loom app.'),
+});
 
 export const HUME_CONFIG = z.object({
-    apiKey: z.string().describe('The API key for the Hume service.').max(100),
+    apiKey: z.string().max(100).describe('The API key for the Hume service.'),
     secretKey: z
         .string()
-        .describe('The secret key for the Hume service.')
-        .max(100),
+        .max(100)
+        .describe('The secret key for the Hume service.'),
 });
 
 export type HumeConfig = z.infer<typeof HUME_CONFIG>;

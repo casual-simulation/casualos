@@ -31,9 +31,11 @@ import {
 } from './AuthController';
 import {
     genericResult,
+    isSuccess,
     isSuperUserRole,
     mapResult,
     parseSessionKey,
+    success,
 } from '@casual-simulation/aux-common';
 import type { LivekitController } from './LivekitController';
 import type { RecordsController } from './RecordsController';
@@ -92,6 +94,8 @@ import type {
     ProcedureOutputStream,
     Procedures,
     RPCContext,
+    SimpleError,
+    GenericQueryStringParameters,
 } from '@casual-simulation/aux-common';
 import { getStatusCode } from '@casual-simulation/aux-common';
 import type { ModerationController } from './ModerationController';
@@ -161,6 +165,9 @@ import type { DatabaseRecordsController, DatabaseStatement } from './database';
 import type { PurchasableItemRecordsController } from './purchasable-items/PurchasableItemRecordsController';
 import type { PurchasableItem } from './purchasable-items/PurchasableItemRecordsStore';
 import type { ContractRecordsController } from './contracts/ContractRecordsController';
+import type { ViewParams, ViewTemplateRenderer } from './ViewTemplateRenderer';
+import type { JSX } from 'preact';
+import { omitBy } from 'es-toolkit';
 
 declare const GIT_TAG: string;
 declare const GIT_HASH: string;
@@ -250,18 +257,23 @@ export const XP_API_NOT_SUPPORTED_RESULT = {
 /**
  * Defines a basic interface for an HTTP route.
  */
-export interface Route<T, TQuery = any> {
+export interface Route<
+    TSchema extends z.ZodType | void,
+    TQuery extends z.ZodType | void = void
+> {
     /**
      * The path that the route must match.
+     *
+     * If true, then the route will match all paths as a default route.
      */
-    path: string;
+    path: string | true;
 
     /**
      * The schema that should be used for the route.
      * If the method can contain a request body, then the schema applies to the body.
      * Otherwise, it will apply to the query parameters.
      */
-    schema?: z.ZodType<T, z.ZodTypeDef, any>;
+    schema?: TSchema;
 
     /**
      * The schema that should be used for the query parameters.
@@ -269,7 +281,7 @@ export interface Route<T, TQuery = any> {
      *
      * Additionally, this only works if a schema is provided.
      */
-    querySchema?: z.ZodType<TQuery, z.ZodTypeDef, any>;
+    querySchema?: TQuery;
 
     /**
      * The method for the route.
@@ -283,6 +295,12 @@ export interface Route<T, TQuery = any> {
     name?: string;
 
     /**
+     * The scope for the route.
+     * Used to filter requests based on their context.
+     */
+    scope?: 'player' | 'auth';
+
+    /**
      * The handler that should be called when the route is matched.
      * @param request The request.
      * @param data The data that was parsed from the request.
@@ -290,8 +308,8 @@ export interface Route<T, TQuery = any> {
      */
     handler: (
         request: GenericHttpRequest,
-        data?: T,
-        query?: TQuery
+        data?: z.output<TSchema>,
+        query?: z.output<TQuery>
     ) => Promise<GenericHttpResponse>;
 
     /**
@@ -445,6 +463,11 @@ export interface RecordsServerOptions {
      * If null, then purchasable items are not supported.
      */
     purchasableItemsController?: PurchasableItemRecordsController | null;
+
+    /**
+     * The interface that should be used for rendering view templates.
+     */
+    viewTemplateRenderer?: ViewTemplateRenderer | null;
 }
 
 /**
@@ -470,6 +493,7 @@ export class RecordsServer {
     private _searchRecordsController: SearchRecordsController | null;
     private _databaseRecordsController: DatabaseRecordsController | null;
     private _contractRecordsController: ContractRecordsController | null;
+    private _viewTemplateRenderer: ViewTemplateRenderer | null;
 
     /**
      * The set of origins that are allowed for API requests.
@@ -488,7 +512,7 @@ export class RecordsServer {
     /**
      * The map of paths to routes that they match.
      */
-    private _routes: Map<string, Route<any>> = new Map();
+    private _routes: Map<string, Route<any, any>> = new Map();
 
     private _procedures: ReturnType<RecordsServer['_createProcedures']>;
 
@@ -544,6 +568,7 @@ export class RecordsServer {
         databaseRecordsController,
         contractRecordsController,
         purchasableItemsController,
+        viewTemplateRenderer,
     }: RecordsServerOptions) {
         this._allowedAccountOrigins = allowedAccountOrigins;
         this._allowedApiOrigins = allowedApiOrigins;
@@ -570,6 +595,7 @@ export class RecordsServer {
         this._searchRecordsController = searchRecordsController;
         this._databaseRecordsController = databaseRecordsController;
         this._contractRecordsController = contractRecordsController;
+        this._viewTemplateRenderer = viewTemplateRenderer;
         this._tracer = trace.getTracer(
             'RecordsServer',
             typeof GIT_TAG === 'undefined' ? undefined : GIT_TAG
@@ -581,6 +607,107 @@ export class RecordsServer {
 
     private _createProcedures() {
         return {
+            playerIndex: procedure()
+                .origins(true)
+                .view('player', true)
+                .handler(async (_, context) => {
+                    const config = await this._records.getWebConfig();
+
+                    const postApp: JSX.Element[] = [];
+
+                    if (isSuccess(config) && config.value) {
+                        postApp.push(
+                            <script
+                                type="application/json"
+                                id="casualos-web-config"
+                                dangerouslySetInnerHTML={{
+                                    __html: JSON.stringify(config.value),
+                                }}
+                            />
+                        );
+                    }
+
+                    const result = success<ViewParams>({
+                        postApp: <>{postApp}</>,
+                    });
+
+                    return genericResult<ViewParams, SimpleError>(result);
+                }),
+
+            playerVmIframe: procedure()
+                .origins(true)
+                .view('player', '/aux-vm-iframe.html')
+                .handler(async (_, context) => {
+                    const result = success<ViewParams>({
+                        postApp: <div>Player VM SSR</div>,
+                    });
+
+                    return genericResult<ViewParams, SimpleError>(result);
+                }),
+
+            playerVmIframeDom: procedure()
+                .origins(true)
+                .view('player', '/aux-vm-iframe-dom.html')
+                .handler(async (_, context) => {
+                    const result = success<ViewParams>({
+                        postApp: <div>Player VM SSR</div>,
+                    });
+
+                    return genericResult<ViewParams, SimpleError>(result);
+                }),
+
+            authIndex: procedure()
+                .origins(true)
+                .view('auth', true)
+                .handler(async (_, context) => {
+                    const config = await this._records.getWebConfig();
+                    const postApp: JSX.Element[] = [];
+
+                    if (isSuccess(config) && config.value) {
+                        postApp.push(
+                            <script
+                                type="application/json"
+                                id="casualos-web-config"
+                                dangerouslySetInnerHTML={{
+                                    __html: JSON.stringify(config.value),
+                                }}
+                            />
+                        );
+                    }
+
+                    const result = success<ViewParams>({
+                        postApp: <>{postApp}</>,
+                    });
+
+                    return genericResult<ViewParams, SimpleError>(result);
+                }),
+
+            authIframe: procedure()
+                .origins(true)
+                .view('auth', '/iframe.html')
+                .handler(async (_, context) => {
+                    const config = await this._records.getWebConfig();
+                    const postApp: JSX.Element[] = [];
+
+                    if (isSuccess(config) && config.value) {
+                        postApp.push(
+                            <script
+                                type="application/json"
+                                id="casualos-web-config"
+                                dangerouslySetInnerHTML={{
+                                    __html: JSON.stringify(config.value),
+                                }}
+                            />
+                        );
+                    }
+
+                    const result = success<ViewParams>({
+                        postApp: <>{postApp}</>,
+                    });
+
+                    return genericResult<ViewParams, SimpleError>(result);
+                }),
+
             getUserInfo: procedure()
                 .origins('account')
                 .inputs(
@@ -686,7 +813,7 @@ export class RecordsServer {
                             expireTimeMs: z.coerce.number().int().optional(),
                             userId: z.string().optional(),
                         })
-                        .default({})
+                        .prefault({})
                 )
                 .handler(async ({ expireTimeMs, userId }, context) => {
                     const sessionKey = context.sessionKey;
@@ -886,8 +1013,8 @@ export class RecordsServer {
                 .http('POST', '/api/v2/register/privo')
                 .inputs(
                     z.object({
-                        email: z.string().min(1).email().optional(),
-                        parentEmail: z.string().min(1).email().optional(),
+                        email: z.email().min(1).optional(),
+                        parentEmail: z.email().min(1).optional(),
                         name: NAME_VALIDATION,
                         dateOfBirth: z.coerce.date(),
                         displayName: DISPLAY_NAME_VALIDATION,
@@ -1180,16 +1307,19 @@ export class RecordsServer {
                         recordName: RECORD_NAME_VALIDATION,
                         ownerId: z
                             .string({
-                                invalid_type_error: 'ownerId must be a string.',
-                                required_error: 'ownerId is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'ownerId is required.'
+                                        : 'ownerId must be a string.',
                             })
                             .nonempty('ownerId must not be empty.')
                             .optional(),
                         studioId: z
                             .string({
-                                invalid_type_error:
-                                    'studioId must be a string.',
-                                required_error: 'studioId is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'studioId is required.'
+                                        : 'studioId must be a string.',
                             })
                             .nonempty('studioId must not be empty.')
                             .optional(),
@@ -1233,8 +1363,10 @@ export class RecordsServer {
                         recordKey: RECORD_KEY_VALIDATION,
                         eventName: EVENT_NAME_VALIDATION,
                         count: z.number({
-                            invalid_type_error: 'count must be a number.',
-                            required_error: 'count is required.',
+                            error: (issue) =>
+                                issue.input === undefined
+                                    ? 'count is required.'
+                                    : 'count must be a number.',
                         }),
                         instances: INSTANCES_ARRAY_VALIDATION.optional(),
                     })
@@ -1277,9 +1409,10 @@ export class RecordsServer {
                         recordName: RECORD_NAME_VALIDATION,
                         eventName: z
                             .string({
-                                required_error: 'eventName is required.',
-                                invalid_type_error:
-                                    'eventName must be a string.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'eventName is required.'
+                                        : 'eventName must be a string.',
                             })
                             .nonempty('eventName must not be empty'),
                         instances: INSTANCES_ARRAY_VALIDATION.optional(),
@@ -1317,9 +1450,10 @@ export class RecordsServer {
                         recordName: RECORD_NAME_VALIDATION,
                         eventName: z
                             .string({
-                                invalid_type_error:
-                                    'eventName must be a string.',
-                                required_error: 'eventName is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'eventName is required.'
+                                        : 'eventName must be a string.',
                             })
                             .nonempty('eventName must be non-empty.')
                             .optional(),
@@ -1629,7 +1763,7 @@ export class RecordsServer {
                         targetResourceKind: z.enum(['data', 'file']),
                         targetRecordName: RECORD_NAME_VALIDATION,
                         targetAddress: ADDRESS_VALIDATION,
-                        markers: MARKERS_VALIDATION.optional().default([
+                        markers: MARKERS_VALIDATION.optional().prefault([
                             PRIVATE_MARKER,
                         ]),
                     }),
@@ -1639,7 +1773,7 @@ export class RecordsServer {
                         targetRecordName:
                             RECORD_NAME_VALIDATION.optional().nullable(),
                         targetAddress: ADDRESS_VALIDATION,
-                        markers: MARKERS_VALIDATION.optional().default([
+                        markers: MARKERS_VALIDATION.optional().prefault([
                             PRIVATE_MARKER,
                         ]),
                     }),
@@ -1676,7 +1810,7 @@ export class RecordsServer {
                             address: z.string().min(1),
                             instances: INSTANCES_ARRAY_VALIDATION.optional(),
                         })
-                        .catchall(z.string())
+                        .catchall(z.union([z.string(), z.array(z.string())]))
                 )
                 .handler(
                     async (
@@ -1740,7 +1874,10 @@ export class RecordsServer {
                                         context.httpRequest.headers,
                                         ...bannedHeaders
                                     ),
-                                    query: rest,
+                                    query: omitBy(
+                                        rest,
+                                        (value) => typeof value !== 'string'
+                                    ) as GenericQueryStringParameters,
                                     pathParams: {},
                                 },
                             });
@@ -1795,7 +1932,7 @@ export class RecordsServer {
                     z.object({
                         recordName: RECORD_NAME_VALIDATION,
                         address: ADDRESS_VALIDATION,
-                        requestTimeMs: z.number().int().optional(),
+                        requestTimeMs: z.int().optional(),
                         instances: INSTANCES_ARRAY_VALIDATION.optional(),
                     })
                 )
@@ -1880,7 +2017,7 @@ export class RecordsServer {
                 z.object({
                     address: ADDRESS_VALIDATION,
                     description: z.string().min(1),
-                    markers: MARKERS_VALIDATION.optional().default([
+                    markers: MARKERS_VALIDATION.optional().prefault([
                         PRIVATE_MARKER,
                     ]),
                 }),
@@ -2319,19 +2456,19 @@ export class RecordsServer {
                         item: z.object({
                             address: ADDRESS_VALIDATION,
                             key: z.object({
-                                major: z.number().int(),
-                                minor: z.number().int(),
-                                patch: z.number().int(),
+                                major: z.int(),
+                                minor: z.int(),
+                                patch: z.int(),
                                 tag: z
                                     .string()
                                     .max(16)
                                     .nullable()
                                     .optional()
-                                    .default(''),
+                                    .prefault(''),
                             }),
                             auxFileRequest: z.object({
                                 fileSha256Hex: z.string().min(1).max(123),
-                                fileByteLength: z.number().positive().int(),
+                                fileByteLength: z.int().positive(),
                                 fileMimeType: z.string().min(1).max(128),
                                 fileDescription: z
                                     .string()
@@ -2440,10 +2577,10 @@ export class RecordsServer {
                         recordName: RECORD_NAME_VALIDATION,
                         address: ADDRESS_VALIDATION,
                         key: z.object({
-                            major: z.number().int(),
-                            minor: z.number().int(),
-                            patch: z.number().int(),
-                            tag: z.string().max(16).default(''),
+                            major: z.int(),
+                            minor: z.int(),
+                            patch: z.int(),
+                            tag: z.string().max(16).prefault(''),
                         }),
                         instances: INSTANCES_ARRAY_VALIDATION.optional(),
                     })
@@ -2557,17 +2694,14 @@ export class RecordsServer {
                                     z
                                         .object({
                                             major: z
-                                                .number()
                                                 .int()
                                                 .optional()
                                                 .nullable(),
                                             minor: z
-                                                .number()
                                                 .int()
                                                 .optional()
                                                 .nullable(),
                                             patch: z
-                                                .number()
                                                 .int()
                                                 .optional()
                                                 .nullable(),
@@ -3001,14 +3135,17 @@ export class RecordsServer {
                         statements: z.array(
                             z.object({
                                 query: z.string().min(1).max(250_000),
-                                params: z.array(z.any()).optional().default([]),
+                                params: z
+                                    .array(z.any())
+                                    .optional()
+                                    .prefault([]),
                             })
                         ),
-                        readonly: z.boolean().default(true),
+                        readonly: z.boolean().prefault(true),
                         automaticTransaction: z
                             .boolean()
                             .optional()
-                            .default(true),
+                            .prefault(true),
                         instances: INSTANCES_ARRAY_VALIDATION.optional(),
                     })
                 )
@@ -3272,8 +3409,10 @@ export class RecordsServer {
                     z.object({
                         recordName: RECORD_NAME_VALIDATION,
                         policy: z.string({
-                            invalid_type_error: 'policy must be a string.',
-                            required_error: 'policy is required.',
+                            error: (issue) =>
+                                issue.input === undefined
+                                    ? 'policy is required.'
+                                    : 'policy must be a string.',
                         }),
                     })
                 )
@@ -3376,9 +3515,10 @@ export class RecordsServer {
                     z.object({
                         permissionId: z
                             .string({
-                                invalid_type_error:
-                                    'permissionId must be a string.',
-                                required_error: 'permissionId is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'permissionId is required.'
+                                        : 'permissionId must be a string.',
                             })
                             .nonempty('permissionId must not be empty'),
                         instances: INSTANCES_ARRAY_VALIDATION.optional(),
@@ -3417,9 +3557,10 @@ export class RecordsServer {
                         resourceKind: RESOURCE_KIND_VALIDATION.optional(),
                         resourceId: z
                             .string({
-                                invalid_type_error:
-                                    'resourceId must be a string.',
-                                required_error: 'resourceId is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'resourceId is required.'
+                                        : 'resourceId must be a string.',
                             })
                             .optional(),
                     })
@@ -3477,8 +3618,10 @@ export class RecordsServer {
                         recordName: RECORD_NAME_VALIDATION,
                         userId: z
                             .string({
-                                invalid_type_error: 'userId must be a string.',
-                                required_error: 'userId is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'userId is required.'
+                                        : 'userId must be a string.',
                             })
                             .nonempty('userId must not be empty'),
                         instances: INSTANCES_ARRAY_VALIDATION.optional(),
@@ -3515,8 +3658,10 @@ export class RecordsServer {
                         recordName: RECORD_NAME_VALIDATION,
                         inst: z
                             .string({
-                                invalid_type_error: 'inst must be a string.',
-                                required_error: 'inst is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'inst is required.'
+                                        : 'inst must be a string.',
                             })
                             .nonempty('inst must not be empty'),
                         instances: INSTANCES_ARRAY_VALIDATION.optional(),
@@ -3553,16 +3698,19 @@ export class RecordsServer {
                         recordName: RECORD_NAME_VALIDATION,
                         startingRole: z
                             .string({
-                                invalid_type_error:
-                                    'startingRole must be a string.',
-                                required_error: 'startingRole is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'startingRole is required.'
+                                        : 'startingRole must be a string.',
                             })
                             .nonempty('startingRole must not be empty')
                             .optional(),
                         role: z
                             .string({
-                                invalid_type_error: 'role must be a string.',
-                                required_error: 'role is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'role is required.'
+                                        : 'role must be a string.',
                             })
                             .nonempty('role must not be empty')
                             .optional(),
@@ -3618,29 +3766,36 @@ export class RecordsServer {
                         recordName: RECORD_NAME_VALIDATION,
                         userId: z
                             .string({
-                                invalid_type_error: 'userId must be a string.',
-                                required_error: 'userId is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'userId is required.'
+                                        : 'userId must be a string.',
                             })
                             .nonempty('userId must not be empty')
                             .optional(),
                         inst: z
                             .string({
-                                invalid_type_error: 'inst must be a string.',
-                                required_error: 'inst is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'inst is required.'
+                                        : 'inst must be a string.',
                             })
                             .nonempty('inst must not be empty')
                             .optional(),
                         role: z
                             .string({
-                                invalid_type_error: 'role must be a string.',
-                                required_error: 'role is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'role is required.'
+                                        : 'role must be a string.',
                             })
                             .nonempty('role must not be empty'),
                         expireTimeMs: z
                             .number({
-                                invalid_type_error:
-                                    'expireTimeMs must be a number.',
-                                required_error: 'expireTimeMs is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'expireTimeMs is required.'
+                                        : 'expireTimeMs must be a number.',
                             })
                             .positive('expireTimeMs must be positive')
                             .optional(),
@@ -3695,22 +3850,28 @@ export class RecordsServer {
                         recordName: RECORD_NAME_VALIDATION,
                         userId: z
                             .string({
-                                invalid_type_error: 'userId must be a string.',
-                                required_error: 'userId is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'userId is required.'
+                                        : 'userId must be a string.',
                             })
                             .nonempty('userId must not be empty')
                             .optional(),
                         inst: z
                             .string({
-                                invalid_type_error: 'inst must be a string.',
-                                required_error: 'inst is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'inst is required.'
+                                        : 'inst must be a string.',
                             })
                             .nonempty('inst must not be empty')
                             .optional(),
                         role: z
                             .string({
-                                invalid_type_error: 'role must be a string.',
-                                required_error: 'role is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'role is required.'
+                                        : 'role must be a string.',
                             })
                             .nonempty('role must not be empty'),
                         instances: INSTANCES_ARRAY_VALIDATION.optional(),
@@ -3874,7 +4035,7 @@ export class RecordsServer {
                 .inputs(
                     z.object({
                         model: z.string().nonempty().optional(),
-                        messages: z.array(AI_CHAT_MESSAGE_SCHEMA).nonempty(),
+                        messages: z.array(AI_CHAT_MESSAGE_SCHEMA).min(1),
                         instances: INSTANCES_ARRAY_VALIDATION.optional(),
                         temperature: z.number().min(0).max(2).optional(),
                         topP: z.number().optional(),
@@ -3923,7 +4084,7 @@ export class RecordsServer {
                 .inputs(
                     z.object({
                         model: z.string().nonempty().optional(),
-                        messages: z.array(AI_CHAT_MESSAGE_SCHEMA).nonempty(),
+                        messages: z.array(AI_CHAT_MESSAGE_SCHEMA).min(1),
                         instances: INSTANCES_ARRAY_VALIDATION.optional(),
                         temperature: z.number().min(0).max(2).optional(),
                         topP: z.number().optional(),
@@ -4054,9 +4215,10 @@ export class RecordsServer {
                     z.object({
                         skyboxId: z
                             .string({
-                                invalid_type_error:
-                                    'skyboxId must be a string.',
-                                required_error: 'skyboxId is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'skyboxId is required.'
+                                        : 'skyboxId must be a string.',
                             })
                             .nonempty('skyboxId must not be empty'),
                         instances: INSTANCES_ARRAY_VALIDATION.optional(),
@@ -4096,25 +4258,29 @@ export class RecordsServer {
                     z.object({
                         prompt: z
                             .string({
-                                invalid_type_error: 'prompt must be a string.',
-                                required_error: 'prompt is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'prompt is required.'
+                                        : 'prompt must be a string.',
                             })
                             .nonempty('prompt must not be empty'),
                         model: z
                             .string({
-                                invalid_type_error: 'model must be a string.',
-                                required_error: 'model is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'model is required.'
+                                        : 'model must be a string.',
                             })
                             .nonempty('model must not be empty')
                             .optional(),
                         negativePrompt: z.string().nonempty().optional(),
-                        width: z.number().positive().int().optional(),
-                        height: z.number().positive().int().optional(),
-                        seed: z.number().positive().int().optional(),
-                        numberOfImages: z.number().positive().int().optional(),
-                        steps: z.number().positive().int().optional(),
+                        width: z.int().positive().optional(),
+                        height: z.int().positive().optional(),
+                        seed: z.int().positive().optional(),
+                        numberOfImages: z.int().positive().optional(),
+                        steps: z.int().positive().optional(),
                         sampler: z.string().nonempty().optional(),
-                        cfgScale: z.number().min(0).int().optional(),
+                        cfgScale: z.int().min(0).optional(),
                         clipGuidancePreset: z.string().nonempty().optional(),
                         stylePreset: z.string().nonempty().optional(),
                         instances: INSTANCES_ARRAY_VALIDATION.optional(),
@@ -4218,15 +4384,15 @@ export class RecordsServer {
                         recordName: RECORD_NAME_VALIDATION.optional(),
                         outputMimeType: z
                             .enum(['model/gltf+json', 'model/gltf-binary'])
-                            .default('model/gltf+json'),
+                            .prefault('model/gltf+json'),
                         prompt: z.string().min(1),
                         levelOfDetail: z.number().min(0.01).max(1).optional(),
                         baseModelId: z.string().optional(),
                         thumbnail: z
                             .object({
                                 type: z.literal('image/png'),
-                                width: z.number().int().min(1),
-                                height: z.number().int().min(1),
+                                width: z.int().min(1),
+                                height: z.int().min(1),
                             })
                             .optional(),
                     })
@@ -4321,11 +4487,7 @@ export class RecordsServer {
                                 .array(z.enum(['audio', 'text']))
                                 .max(2)
                                 .optional(),
-                            maxResponseOutputTokens: z
-                                .number()
-                                .int()
-                                .min(1)
-                                .optional(),
+                            maxResponseOutputTokens: z.int().min(1).optional(),
                             inputAudioFormat: z
                                 .enum(['pcm16', 'g711_ulaw', 'g711_alaw'])
                                 .optional(),
@@ -4454,9 +4616,10 @@ export class RecordsServer {
                         displayName: STUDIO_DISPLAY_NAME_VALIDATION,
                         ownerStudioComId: z
                             .string({
-                                invalid_type_error:
-                                    'ownerStudioComId must be a string.',
-                                required_error: 'ownerStudioComId is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'ownerStudioComId is required.'
+                                        : 'ownerStudioComId must be a string.',
                             })
                             .nonempty('ownerStudioComId must not be empty')
                             .nullable()
@@ -4499,30 +4662,25 @@ export class RecordsServer {
                     z.object({
                         id: STUDIO_ID_VALIDATION,
                         displayName: STUDIO_DISPLAY_NAME_VALIDATION.optional(),
-                        logoUrl: z
-                            .string({
-                                invalid_type_error: 'logoUrl must be a string.',
-                                required_error: 'logoUrl is required.',
-                            })
-                            .url()
-                            .min(1)
-                            .max(512)
-                            .nullable()
-                            .optional(),
+                        logoUrl: z.url().min(1).max(512).nullable().optional(),
                         logoBackgroundColor: z
                             .string({
-                                invalid_type_error:
-                                    'logoBackgroundColor must be a string.',
-                                required_error:
-                                    'logoBackgroundColor is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'logoBackgroundColor is required.'
+                                        : 'logoBackgroundColor must be a string.',
                             })
                             .min(1)
                             .max(32)
                             .nullable()
                             .optional(),
                         comIdConfig: COM_ID_CONFIG_SCHEMA.optional(),
-                        playerConfig: COM_ID_PLAYER_CONFIG.optional(),
-                        loomConfig: LOOM_CONFIG.optional(),
+                        playerConfig: COM_ID_PLAYER_CONFIG.optional().describe(
+                            'The configuration that the comId provides which overrides the default player configuration.'
+                        ),
+                        loomConfig: LOOM_CONFIG.optional().describe(
+                            'The configuration that can be used by studios to setup loom.'
+                        ),
                         humeConfig: HUME_CONFIG.optional(),
                     })
                 )
@@ -4682,33 +4840,37 @@ export class RecordsServer {
                         studioId: STUDIO_ID_VALIDATION,
                         addedUserId: z
                             .string({
-                                invalid_type_error:
-                                    'addedUserId must be a string.',
-                                required_error: 'addedUserId is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'addedUserId is required.'
+                                        : 'addedUserId must be a string.',
                             })
                             .nonempty('addedUserId must not be empty')
                             .optional(),
                         addedEmail: z
                             .string({
-                                invalid_type_error:
-                                    'addedEmail must be a string.',
-                                required_error: 'addedEmail is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'addedEmail is required.'
+                                        : 'addedEmail must be a string.',
                             })
                             .nonempty('addedEmail must not be empty')
                             .optional(),
                         addedPhoneNumber: z
                             .string({
-                                invalid_type_error:
-                                    'addedPhoneNumber must be a string.',
-                                required_error: 'addedPhoneNumber is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'addedPhoneNumber is required.'
+                                        : 'addedPhoneNumber must be a string.',
                             })
                             .nonempty('addedPhoneNumber must not be empty')
                             .optional(),
                         addedDisplayName: z
                             .string({
-                                invalid_type_error:
-                                    'addedDisplayName must be a string.',
-                                required_error: 'addedDisplayName is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'addedDisplayName is required.'
+                                        : 'addedDisplayName must be a string.',
                             })
                             .nonempty('addedDisplayName must not be empty')
                             .optional(),
@@ -4763,9 +4925,10 @@ export class RecordsServer {
                         studioId: STUDIO_ID_VALIDATION,
                         removedUserId: z
                             .string({
-                                invalid_type_error:
-                                    'removedUserId must be a string.',
-                                required_error: 'removedUserId is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'removedUserId is required.'
+                                        : 'removedUserId must be a string.',
                             })
                             .nonempty('removedUserId must not be empty')
                             .optional(),
@@ -4799,9 +4962,10 @@ export class RecordsServer {
                     z.object({
                         studioId: z
                             .string({
-                                invalid_type_error:
-                                    'studioId must be a string.',
-                                required_error: 'studioId is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'studioId is required.'
+                                        : 'studioId must be a string.',
                             })
                             .min(1),
                     })
@@ -4832,6 +4996,15 @@ export class RecordsServer {
                             userId: sessionKeyValidation.userId,
                         });
 
+                    return genericResult(result);
+                }),
+
+            getWebConfig: procedure()
+                .origins('api')
+                .http('GET', '/api/config')
+                .inputs(z.object({}))
+                .handler(async (inputs, context) => {
+                    const result = await this._records.getWebConfig();
                     return genericResult(result);
                 }),
 
@@ -4914,16 +5087,19 @@ export class RecordsServer {
                     z.object({
                         studioId: z
                             .string({
-                                invalid_type_error:
-                                    'studioId must be a string.',
-                                required_error: 'studioId is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'studioId is required.'
+                                        : 'studioId must be a string.',
                             })
                             .nonempty('studioId must be non-empty.')
                             .optional(),
                         userId: z
                             .string({
-                                invalid_type_error: 'userId must be a string.',
-                                required_error: 'userId is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'userId is required.'
+                                        : 'userId must be a string.',
                             })
                             .nonempty('userId must be non-empty.')
                             .optional(),
@@ -4996,16 +5172,19 @@ export class RecordsServer {
                     z.object({
                         userId: z
                             .string({
-                                invalid_type_error: 'userId must be a string.',
-                                required_error: 'userId is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'userId is required.'
+                                        : 'userId must be a string.',
                             })
                             .nonempty('userId must not be empty.')
                             .optional(),
                         studioId: z
                             .string({
-                                invalid_type_error:
-                                    'studioId must be a string.',
-                                required_error: 'studioId is required.',
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'studioId is required.'
+                                        : 'studioId must be a string.',
                             })
                             .nonempty('studioId must not be empty.')
                             .optional(),
@@ -5085,15 +5264,10 @@ export class RecordsServer {
                             ])
                             .nullable(),
                         subscriptionPeriodStartMs: z
-                            .number()
-                            .positive()
                             .int()
-                            .nullable(),
-                        subscriptionPeriodEndMs: z
-                            .number()
                             .positive()
-                            .int()
                             .nullable(),
+                        subscriptionPeriodEndMs: z.int().positive().nullable(),
                     })
                 )
                 .handler(
@@ -5215,27 +5389,20 @@ export class RecordsServer {
                     address: ADDRESS_VALIDATION,
                     holdingUser: z
                         .string({
-                            invalid_type_error: 'holdingUser must be a string.',
-                            required_error: 'holdingUser is required.',
+                            error: (issue) =>
+                                issue.input === undefined
+                                    ? 'holdingUser is required.'
+                                    : 'holdingUser must be a string.',
                         })
                         .min(1, 'holdingUser must not be empty.'),
                     rate: z
-                        .number({
-                            invalid_type_error: 'rate must be a number.',
-                            required_error: 'rate is required.',
-                        })
                         .int('rate must be an integer.')
                         .positive('rate must be positive.'),
                     initialValue: z
-                        .number({
-                            invalid_type_error:
-                                'initialValue must be a number.',
-                            required_error: 'initialValue is required.',
-                        })
                         .int('initialValue must be an integer.')
                         .nonnegative('initialValue must be non-negative.'),
                     description: z.string().optional().nullable(),
-                    markers: MARKERS_VALIDATION.optional().default([
+                    markers: MARKERS_VALIDATION.optional().prefault([
                         PRIVATE_MARKER,
                     ]),
                 }),
@@ -5357,7 +5524,7 @@ export class RecordsServer {
                 .inputs(
                     z.object({
                         contractId: z.string().min(1),
-                        amount: z.number().int().positive(),
+                        amount: z.int().positive(),
                         note: z.string().min(1).optional(),
                         payoutDestination: z.enum(['account', 'stripe']),
                     })
@@ -5442,7 +5609,7 @@ export class RecordsServer {
                     z.object({
                         userId: z.string().min(1).optional(),
                         studioId: z.string().min(1).optional(),
-                        amount: z.number().int().positive().optional(),
+                        amount: z.int().positive().optional(),
                         destination: z.enum(['stripe', 'cash']),
                     })
                 )
@@ -5617,8 +5784,8 @@ export class RecordsServer {
                             z.literal('other'),
                         ]),
                         reportReasonText: z.string().nonempty().trim(),
-                        reportedUrl: z.string().url(),
-                        reportedPermalink: z.string().url(),
+                        reportedUrl: z.url(),
+                        reportedPermalink: z.url(),
                     })
                 )
                 .handler(
@@ -5676,7 +5843,7 @@ export class RecordsServer {
                         branch: z
                             .string()
                             .nonempty()
-                            .default(DEFAULT_BRANCH_NAME),
+                            .prefault(DEFAULT_BRANCH_NAME),
                     })
                 )
                 .handler(async ({ recordName, inst, branch }, context) => {
@@ -5829,7 +5996,7 @@ export class RecordsServer {
                                 .array(z.string().min(1).max(512))
                                 .max(8),
                             currency: z.string().min(1).max(15).toLowerCase(),
-                            cost: z.number().gte(0).int(),
+                            cost: z.int().gte(0),
                             taxCode: z
                                 .string()
                                 .min(1)
@@ -5838,12 +6005,11 @@ export class RecordsServer {
                                 .optional(),
                             roleName: z.string().min(1),
                             roleGrantTimeMs: z
-                                .number()
-                                .positive()
                                 .int()
+                                .positive()
                                 .nullable()
                                 .optional(),
-                            redirectUrl: z.string().url().nullable().optional(),
+                            redirectUrl: z.url().nullable().optional(),
                             markers: MARKERS_VALIDATION,
                         }),
                         instances: INSTANCES_ARRAY_VALIDATION.optional(),
@@ -5922,12 +6088,12 @@ export class RecordsServer {
                         recordName: RECORD_NAME_VALIDATION,
                         item: z.object({
                             address: ADDRESS_VALIDATION,
-                            expectedCost: z.number().gte(0).int(),
+                            expectedCost: z.int().gte(0),
                             currency: z.string().min(1).max(15).toLowerCase(),
                         }),
                         instances: INSTANCES_ARRAY_VALIDATION.optional(),
-                        returnUrl: z.string().url(),
-                        successUrl: z.string().url(),
+                        returnUrl: z.url(),
+                        successUrl: z.url(),
                     })
                 )
                 .handler(
@@ -5970,17 +6136,17 @@ export class RecordsServer {
                         recordName: RECORD_NAME_VALIDATION,
                         contract: z.object({
                             address: ADDRESS_VALIDATION,
-                            expectedCost: z.number().gte(0).int(),
+                            expectedCost: z.int().gte(0),
                             currency: z
                                 .string()
                                 .min(1)
                                 .max(15)
                                 .toLowerCase()
-                                .default('usd'),
+                                .prefault('usd'),
                         }),
                         instances: INSTANCES_ARRAY_VALIDATION.optional(),
-                        returnUrl: z.string().url(),
-                        successUrl: z.string().url(),
+                        returnUrl: z.url(),
+                        successUrl: z.url(),
                     })
                 )
                 .handler(
@@ -6128,7 +6294,10 @@ export class RecordsServer {
             if (Object.prototype.hasOwnProperty.call(procs, procedureName)) {
                 const procedure = (procs as any)[procedureName];
                 if (procedure.http) {
-                    this._addProcedureRoute(procedure, procedureName);
+                    this._addProcedureApiRoute(procedure, procedureName);
+                }
+                if (procedure.view) {
+                    this._addProcedureViewRoute(procedure, procedureName);
                 }
             }
         }
@@ -6234,10 +6403,11 @@ export class RecordsServer {
      * @param name The name of the procedure.
      * @param procedure The procedure that should be added.
      */
-    addProcedure<TInput, TOutput extends ProcedureOutput, TQuery>(
-        name: string,
-        procedure: Procedure<TInput, TOutput, TQuery>
-    ) {
+    addProcedure<
+        TInput extends z.ZodType | void,
+        TOutput extends ProcedureOutput,
+        TQuery extends z.ZodType | void
+    >(name: string, procedure: Procedure<TInput, TOutput, TQuery>) {
         if (name in this._procedures) {
             throw new Error(
                 `A procedure already exists with the name: ${name}`
@@ -6245,7 +6415,7 @@ export class RecordsServer {
         }
         (this._procedures as any)[name] = procedure;
         if (procedure.http) {
-            this._addProcedureRoute(procedure, name);
+            this._addProcedureApiRoute(procedure, name);
         }
     }
 
@@ -6263,8 +6433,11 @@ export class RecordsServer {
      * Adds the given procedural route to the server.
      * @param route The route that should be added.
      */
-    private _addProcedureRoute<T, TQuery>(
-        procedure: Procedure<T, ProcedureOutput, TQuery>,
+    private _addProcedureApiRoute<
+        TSchema extends z.ZodType | void,
+        TQuery extends z.ZodType | void
+    >(
+        procedure: Procedure<TSchema, ProcedureOutput, TQuery>,
         name: string
     ): void {
         if (!procedure.http) {
@@ -6272,7 +6445,7 @@ export class RecordsServer {
         }
 
         const route = procedure.http;
-        const r: Route<T> = {
+        const r: Route<TSchema, TQuery> = {
             method: route.method,
             path: route.path,
             schema: procedure.schema,
@@ -6305,10 +6478,97 @@ export class RecordsServer {
     }
 
     /**
+     * Adds the given procedural route to the server.
+     * @param route The route that should be added.
+     */
+    private _addProcedureViewRoute<
+        TSchema extends z.ZodType | void,
+        TQuery extends z.ZodType | void
+    >(
+        procedure: Procedure<TSchema, ProcedureOutput, TQuery>,
+        name: string
+    ): void {
+        if (!procedure.view) {
+            throw new Error('Procedure must have an view route defined.');
+        }
+        if (!this._viewTemplateRenderer) {
+            console.warn(
+                '[RecordsServer] No view template renderer defined. Skipping view route for procedure:',
+                name
+            );
+            return;
+        }
+
+        const route = procedure.view;
+        const r: Route<TSchema, TQuery> = {
+            method: 'GET',
+            path: route.path,
+            schema: procedure.schema,
+            querySchema: procedure.querySchema,
+            scope: route.scope,
+            name: name,
+            handler: async (request, data, query) => {
+                const context: RPCContext = {
+                    ipAddress: request.ipAddress,
+                    sessionKey: getSessionKey(request),
+                    httpRequest: request,
+                    origin: request.headers.origin ?? null,
+                };
+                let result: ProcedureOutput;
+                try {
+                    result = await procedure.handler(data, context, query);
+                } catch (err) {
+                    console.error(
+                        `[RecordsServer] [view: ${name}] Error in view procedure:`,
+                        err
+                    );
+                    result = {
+                        success: false,
+                        errorCode: 'server_error',
+                        errorMessage: 'A server error occurred.',
+                    };
+                }
+
+                if (Symbol.asyncIterator in result) {
+                    throw new Error('View procedures cannot return streams.');
+                } else {
+                    let viewParams: ViewParams;
+                    if (result.success === false) {
+                        console.error(
+                            `[RecordsServer] [view: ${name}] View procedure returned unsuccessful result:`,
+                            result
+                        );
+                        viewParams = {};
+                        result = {
+                            success: true,
+                        };
+                    } else {
+                        const { success, ...rest } = result;
+                        viewParams = rest;
+                    }
+                    const rendered = await this._viewTemplateRenderer.render(
+                        name,
+                        viewParams
+                    );
+
+                    return returnResult(result, rendered, {
+                        'Content-Type': 'text/html; charset=utf-8',
+                    });
+                }
+            },
+            allowedOrigins: procedure.allowedOrigins,
+        };
+
+        this.addRoute(r);
+    }
+
+    /**
      * Adds the given route to the server.
      */
-    addRoute<T>(route: Route<T>) {
-        const routeKey = `${route.method}:${route.path}`;
+    addRoute<TSchema extends z.ZodType | void, TQuery extends z.ZodType | void>(
+        route: Route<TSchema, TQuery>
+    ) {
+        const routeKey = this._getRouteKey(route);
         if (this._routes.has(routeKey)) {
             throw new Error(
                 `A route already exists for the given method and path: ${routeKey}`
@@ -6317,12 +6577,23 @@ export class RecordsServer {
         this._routes.set(routeKey, route);
     }
 
+    private _getRouteKey(route: Route<any, any>) {
+        if (typeof route.path === 'boolean' && route.path === true) {
+            return `${route.scope ?? 'auth'}:${route.method}:**default**`;
+        } else {
+            return `${route.scope ?? 'auth'}:${route.method}:${route.path}`;
+        }
+    }
+
     /**
      * Forcefully adds the given route to the server, overwriting any routes that already exist.
      * @param route The route that should be added.
      */
-    overrideRoute<T>(route: Route<T>) {
-        const routeKey = `${route.method}:${route.path}`;
+    overrideRoute<
+        TSchema extends z.ZodType | void,
+        TQuery extends z.ZodType | void
+    >(route: Route<TSchema, TQuery>) {
+        const routeKey = this._getRouteKey(route);
         this._routes.set(routeKey, route);
     }
 
@@ -6476,7 +6747,17 @@ export class RecordsServer {
             );
         }
 
-        const route = this._routes.get(`${request.method}:${request.path}`);
+        let route = this._routes.get(
+            `${request.scope ?? 'auth'}:${request.method}:${request.path}`
+        );
+
+        // Default routes shouldn't work for API routes (for now)
+        if (!route && !request.path.startsWith('/api/')) {
+            route = this._routes.get(
+                `${request.scope ?? 'auth'}:${request.method}:**default**`
+            );
+        }
+
         if (route) {
             if (span && route.name) {
                 span.updateName(`http:${route.name}`);
@@ -6642,6 +6923,8 @@ export class RecordsServer {
         }
     )
     async handleWebsocketRequest(request: GenericWebsocketRequest) {
+        // TODO: Add error handling
+
         if (!this._websocketController) {
             return;
         }
@@ -6976,2116 +7259,6 @@ export class RecordsServer {
         const connectionId = request.connectionId;
         await this._websocketController.uploadRequest(connectionId, requestId);
     }
-
-    // private _setupRoutes() {
-    //     this.addRoute({
-    //         method: 'POST',
-    //         path: '/api/stripeWebhook',
-    //         allowedOrigins: true,
-    //         handler: (request) => this._stripeWebhook(request),
-    //     });
-
-    //     this.addRoute({
-    //         method: 'POST',
-    //         path: '/api/v2/email/valid',
-    //         allowedOrigins: 'account',
-    //         schema: z.object({
-    //             email: z.string(),
-    //         }),
-    //         handler: async (request, { email }) => {
-    //             const result = await this._auth.isValidEmailAddress(email);
-    //             return returnResult(result);
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'POST',
-    //         path: '/api/v2/displayName/valid',
-    //         allowedOrigins: 'account',
-    //         schema: z.object({
-    //             displayName: z.string(),
-    //             name: NAME_VALIDATION.optional(),
-    //         }),
-    //         handler: async (request, { displayName, name }) => {
-    //             const result = await this._auth.isValidDisplayName(
-    //                 displayName,
-    //                 name
-    //             );
-    //             return returnResult(result);
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'GET',
-    //         path: '/api/v2/sessions',
-    //         allowedOrigins: 'account',
-    //         handler: async (request) => this._getSessions(request),
-    //     });
-
-    //     this.addRoute({
-    //         method: 'POST',
-    //         path: '/api/v2/replaceSession',
-    //         allowedOrigins: 'account',
-    //         handler: (request) => this._postReplaceSession(request),
-    //     });
-
-    //     this.addRoute({
-    //         method: 'POST',
-    //         path: '/api/v2/revokeAllSessions',
-    //         allowedOrigins: 'account',
-    //         schema: z.object({
-    //             userId: z.string(),
-    //         }),
-    //         handler: async (request, { userId }) => {
-    //             const authorization = getSessionKey(request);
-
-    //             if (!authorization) {
-    //                 return returnResult(NOT_LOGGED_IN_RESULT);
-    //             }
-
-    //             const result = await this._auth.revokeAllSessions({
-    //                 userId: userId,
-    //                 sessionKey: authorization,
-    //             });
-
-    //             return returnResult(result);
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'POST',
-    //         path: '/api/v2/revokeSession',
-    //         allowedOrigins: 'account',
-    //         schema: z.object({
-    //             userId: z.string().optional(),
-    //             sessionId: z.string().optional(),
-    //             sessionKey: z.string().optional(),
-    //         }),
-    //         handler: async (
-    //             request,
-    //             { userId, sessionId, sessionKey: sessionKeyToRevoke }
-    //         ) => {
-    //             // Parse the User ID and Session ID from the sessionKey that is provided in
-    //             // session key that should be revoked
-    //             if (!!sessionKeyToRevoke) {
-    //                 const parsed = parseSessionKey(sessionKeyToRevoke);
-    //                 if (parsed) {
-    //                     userId = parsed[0];
-    //                     sessionId = parsed[1];
-    //                 }
-    //             }
-
-    //             const authorization = getSessionKey(request);
-
-    //             if (!authorization) {
-    //                 return returnResult(NOT_LOGGED_IN_RESULT);
-    //             }
-
-    //             const result = await this._auth.revokeSession({
-    //                 userId,
-    //                 sessionId,
-    //                 sessionKey: authorization,
-    //             });
-
-    //             return returnResult(result);
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'POST',
-    //         path: '/api/v2/completeLogin',
-    //         allowedOrigins: 'account',
-    //         schema: z.object({
-    //             userId: z.string(),
-    //             requestId: z.string(),
-    //             code: z.string(),
-    //         }),
-    //         handler: async (request, { userId, requestId, code }) => {
-    //             const result = await this._auth.completeLogin({
-    //                 userId,
-    //                 requestId,
-    //                 code,
-    //                 ipAddress: request.ipAddress,
-    //             });
-
-    //             return returnResult(result);
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'POST',
-    //         path: '/api/v2/login',
-    //         allowedOrigins: 'account',
-    //         schema: z.object({
-    //             address: z.string(),
-    //             addressType: z.enum(['email', 'phone']),
-    //         }),
-    //         handler: async (request, { address, addressType }) => {
-    //             const result = await this._auth.requestLogin({
-    //                 address,
-    //                 addressType,
-    //                 ipAddress: request.ipAddress,
-    //             });
-
-    //             return returnResult(result);
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'POST',
-    //         path: '/api/v2/login/privo',
-    //         allowedOrigins: 'account',
-    //         schema: z.object({}),
-    //         handler: async (request) => {
-    //             const result = await this._auth.requestOpenIDLogin({
-    //                 provider: PRIVO_OPEN_ID_PROVIDER,
-    //                 ipAddress: request.ipAddress,
-    //             });
-
-    //             return returnResult(result);
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'POST',
-    //         path: '/api/v2/oauth/code',
-    //         allowedOrigins: 'account',
-    //         schema: z.object({
-    //             code: z.string().nonempty(),
-    //             state: z.string().nonempty(),
-    //         }),
-    //         handler: async (request, { code, state }) => {
-    //             const result = await this._auth.processOpenIDAuthorizationCode({
-    //                 ipAddress: request.ipAddress,
-    //                 authorizationCode: code,
-    //                 state,
-    //             });
-
-    //             return returnResult(result);
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'POST',
-    //         path: '/api/v2/oauth/complete',
-    //         allowedOrigins: 'account',
-    //         schema: z.object({
-    //             requestId: z.string().nonempty(),
-    //         }),
-    //         handler: async (request, { requestId }) => {
-    //             const result = await this._auth.completeOpenIDLogin({
-    //                 ipAddress: request.ipAddress,
-    //                 requestId,
-    //             });
-
-    //             return returnResult(result);
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'POST',
-    //         path: '/api/v2/register/privo',
-    //         allowedOrigins: 'account',
-    //         schema: z.object({
-    //             email: z.string().min(1).email().optional(),
-    //             parentEmail: z.string().min(1).email().optional(),
-    //             name: NAME_VALIDATION,
-    //             dateOfBirth: z.coerce.date(),
-    //             displayName: DISPLAY_NAME_VALIDATION,
-    //         }),
-    //         handler: async (
-    //             request,
-    //             { email, parentEmail, name, dateOfBirth, displayName }
-    //         ) => {
-    //             const result = await this._auth.requestPrivoSignUp({
-    //                 email,
-    //                 parentEmail,
-    //                 name,
-    //                 dateOfBirth,
-    //                 displayName,
-    //                 ipAddress: request.ipAddress,
-    //             });
-
-    //             return returnResult(result);
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'GET',
-    //         path: '/api/v2/webauthn/register/options',
-    //         allowedOrigins: true,
-    //         handler: async (request) => {
-    //             // We don't validate origin because the AuthController will validate it based on the allowed
-    //             // relying parties.
-
-    //             const validation = await this._validateHttpSessionKey(request);
-
-    //             if (validation.success === false) {
-    //                 if (validation.errorCode === 'no_session_key') {
-    //                     return returnResult(NOT_LOGGED_IN_RESULT);
-    //                 }
-    //                 return returnResult(validation);
-    //             }
-
-    //             const result = await this._auth.requestWebAuthnRegistration({
-    //                 userId: validation.userId,
-    //                 originOrHost:
-    //                     request.headers.origin ??
-    //                     request.headers['x-dev-proxy-host'] ??
-    //                     request.headers.host,
-    //             });
-
-    //             return returnResult(result);
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'POST',
-    //         path: '/api/v2/webauthn/register',
-    //         allowedOrigins: true,
-    //         schema: z.object({
-    //             response: z.object({
-    //                 id: z.string().nonempty(),
-    //                 rawId: z.string().nonempty(),
-    //                 response: z.object({
-    //                     clientDataJSON: z.string().nonempty(),
-    //                     attestationObject: z.string().nonempty(),
-    //                     authenticatorData: z.string().nonempty().optional(),
-    //                     transports: z
-    //                         .array(z.string().min(1).max(64))
-    //                         .optional(),
-    //                     publicKeyAlgorithm: z.number().optional(),
-    //                     publicKey: z.string().nonempty().optional(),
-    //                 }),
-    //                 authenticatorAttachment: z
-    //                     .enum(['cross-platform', 'platform'])
-    //                     .optional(),
-    //                 clientExtensionResults: z.object({
-    //                     appid: z.boolean().optional(),
-    //                     credProps: z
-    //                         .object({
-    //                             rk: z.boolean().optional(),
-    //                         })
-    //                         .optional(),
-    //                     hmacCreateSecret: z.boolean().optional(),
-    //                 }),
-    //                 type: z.literal('public-key'),
-    //             }),
-    //         }),
-    //         handler: async (request, { response }) => {
-    //             // We don't validate origin because the AuthController will validate it based on the allowed
-    //             // relying parties.
-    //             const validation = await this._validateHttpSessionKey(request);
-
-    //             if (validation.success === false) {
-    //                 if (validation.errorCode === 'no_session_key') {
-    //                     return returnResult(NOT_LOGGED_IN_RESULT);
-    //                 }
-    //                 return returnResult(validation);
-    //             }
-
-    //             const result = await this._auth.completeWebAuthnRegistration({
-    //                 userId: validation.userId,
-    //                 response: response as any,
-    //                 originOrHost:
-    //                     request.headers.origin ??
-    //                     request.headers['x-dev-proxy-host'] ??
-    //                     request.headers.host,
-    //                 userAgent: request.headers['user-agent'],
-    //             });
-
-    //             return returnResult(result);
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'GET',
-    //         path: '/api/v2/webauthn/login/options',
-    //         allowedOrigins: true,
-    //         handler: async (request) => {
-    //             // We don't validate origin because the AuthController will validate it based on the allowed
-    //             // relying parties.
-
-    //             const result = await this._auth.requestWebAuthnLogin({
-    //                 ipAddress: request.ipAddress,
-    //                 originOrHost:
-    //                     request.headers.origin ??
-    //                     request.headers['x-dev-proxy-host'] ??
-    //                     request.headers.host,
-    //             });
-
-    //             return returnResult(result);
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'POST',
-    //         path: '/api/v2/webauthn/login',
-    //         allowedOrigins: true,
-    //         schema: z.object({
-    //             requestId: z.string().nonempty(),
-    //             response: z.object({
-    //                 id: z.string().nonempty(),
-    //                 rawId: z.string().nonempty(),
-    //                 response: z.object({
-    //                     clientDataJSON: z.string().nonempty(),
-    //                     authenticatorData: z.string().nonempty(),
-    //                     signature: z.string().nonempty(),
-    //                     userHandle: z.string().nonempty().optional(),
-    //                 }),
-    //                 authenticatorAttachment: z
-    //                     .enum(['cross-platform', 'platform'])
-    //                     .optional(),
-    //                 clientExtensionResults: z.object({
-    //                     appid: z.boolean().optional(),
-    //                     credProps: z
-    //                         .object({
-    //                             rk: z.boolean().optional(),
-    //                         })
-    //                         .optional(),
-    //                     hmacCreateSecret: z.boolean().optional(),
-    //                 }),
-    //                 type: z.literal('public-key'),
-    //             }),
-    //         }),
-    //         handler: async (request, { response, requestId }) => {
-    //             // We don't validate origin because the AuthController will validate it based on the allowed
-    //             // relying parties.
-
-    //             const result = await this._auth.completeWebAuthnLogin({
-    //                 requestId: requestId,
-    //                 ipAddress: request.ipAddress,
-    //                 response: response as any,
-    //                 originOrHost:
-    //                     request.headers.origin ??
-    //                     request.headers['x-dev-proxy-host'] ??
-    //                     request.headers.host,
-    //             });
-
-    //             return returnResult(result);
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'GET',
-    //         path: '/api/v2/webauthn/authenticators',
-    //         allowedOrigins: 'account',
-    //         handler: async (request) => {
-    //             const validation = await this._validateHttpSessionKey(request);
-
-    //             if (validation.success === false) {
-    //                 if (validation.errorCode === 'no_session_key') {
-    //                     return returnResult(NOT_LOGGED_IN_RESULT);
-    //                 }
-    //                 return returnResult(validation);
-    //             }
-
-    //             const result = await this._auth.listUserAuthenticators(
-    //                 validation.userId
-    //             );
-
-    //             return returnResult(result);
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'POST',
-    //         path: '/api/v2/webauthn/authenticators/delete',
-    //         allowedOrigins: 'account',
-    //         schema: z.object({
-    //             authenticatorId: z.string().nonempty(),
-    //         }),
-    //         handler: async (request, { authenticatorId }) => {
-    //             const validation = await this._validateHttpSessionKey(request);
-
-    //             if (validation.success === false) {
-    //                 if (validation.errorCode === 'no_session_key') {
-    //                     return returnResult(NOT_LOGGED_IN_RESULT);
-    //                 }
-    //                 return returnResult(validation);
-    //             }
-
-    //             const result = await this._auth.deleteUserAuthenticator(
-    //                 validation.userId,
-    //                 authenticatorId
-    //             );
-
-    //             return returnResult(result);
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'POST',
-    //         path: '/api/v2/meet/token',
-    //         allowedOrigins: 'api',
-    //         schema: z.object({
-    //             roomName: z.string(),
-    //             userName: z.string(),
-    //         }),
-    //         handler: async (request, { roomName, userName }) => {
-    //             const result = await this._livekit.issueToken(
-    //                 roomName,
-    //                 userName
-    //             );
-    //             return returnResult(result);
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'POST',
-    //         path: '/api/v2/records',
-    //         allowedOrigins: 'account',
-    //         schema: z.object({
-    //             recordName: RECORD_NAME_VALIDATION,
-    //             ownerId: z
-    //                 .string({
-    //                     invalid_type_error: 'ownerId must be a string.',
-    //                     required_error: 'ownerId is required.',
-    //                 })
-    //                 .nonempty('ownerId must not be empty.')
-    //                 .optional(),
-    //             studioId: z
-    //                 .string({
-    //                     invalid_type_error: 'studioId must be a string.',
-    //                     required_error: 'studioId is required.',
-    //                 })
-    //                 .nonempty('studioId must not be empty.')
-    //                 .optional(),
-    //         }),
-    //         handler: async (request, { recordName, ownerId, studioId }) => {
-    //             if (!recordName || typeof recordName !== 'string') {
-    //                 return returnResult({
-    //                     success: false,
-    //                     errorCode: 'unacceptable_request',
-    //                     errorMessage:
-    //                         'recordName is required and must be a string.',
-    //                 });
-    //             }
-
-    //             const validation = await this._validateHttpSessionKey(request);
-    //             if (validation.success === false) {
-    //                 if (validation.errorCode === 'no_session_key') {
-    //                     return returnResult(NOT_LOGGED_IN_RESULT);
-    //                 }
-    //                 return returnResult(validation);
-    //             }
-
-    //             const result = await this._records.createRecord({
-    //                 recordName,
-    //                 ownerId,
-    //                 studioId,
-    //                 userId: validation.userId,
-    //             });
-
-    //             return returnResult(result);
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'POST',
-    //         path: '/api/v2/records/events/count',
-    //         allowedOrigins: 'api',
-    //         schema: z.object({
-    //             recordKey: RECORD_KEY_VALIDATION,
-    //             eventName: EVENT_NAME_VALIDATION,
-    //             count: z.number({
-    //                 invalid_type_error: 'count must be a number.',
-    //                 required_error: 'count is required.',
-    //             }),
-    //             instances: INSTANCES_ARRAY_VALIDATION.optional(),
-    //         }),
-    //         handler: async (
-    //             request,
-    //             { recordKey, eventName, count, instances }
-    //         ) => {
-    //             const validation = await this._validateHttpSessionKey(request);
-
-    //             if (
-    //                 validation.success === false &&
-    //                 validation.errorCode !== 'no_session_key'
-    //             ) {
-    //                 return returnResult(validation);
-    //             }
-
-    //             const userId = validation.userId;
-
-    //             const result = await this._events.addCount(
-    //                 recordKey,
-    //                 eventName,
-    //                 count,
-    //                 userId,
-    //                 instances
-    //             );
-
-    //             return returnResult(result);
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'GET',
-    //         path: '/api/v2/records/events/count',
-    //         allowedOrigins: 'api',
-    //         schema: z.object({
-    //             recordName: RECORD_NAME_VALIDATION,
-    //             eventName: z
-    //                 .string({
-    //                     required_error: 'eventName is required.',
-    //                     invalid_type_error: 'eventName must be a string.',
-    //                 })
-    //                 .nonempty('eventName must not be empty'),
-    //             instances: INSTANCES_QUERY_VALIDATION.optional(),
-    //         }),
-    //         handler: async (request, { recordName, eventName, instances }) => {
-    //             const validation = await this._validateHttpSessionKey(request);
-
-    //             if (
-    //                 validation.success === false &&
-    //                 validation.errorCode !== 'no_session_key'
-    //             ) {
-    //                 return returnResult(validation);
-    //             }
-
-    //             const userId = validation.userId;
-    //             const result = await this._events.getCount(
-    //                 recordName,
-    //                 eventName,
-    //                 userId,
-    //                 instances
-    //             );
-    //             return returnResult(result);
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'GET',
-    //         path: '/api/v2/records/events/list',
-    //         allowedOrigins: 'api',
-    //         schema: z.object({
-    //             recordName: RECORD_NAME_VALIDATION,
-    //             eventName: z
-    //                 .string({
-    //                     invalid_type_error: 'eventName must be a string.',
-    //                     required_error: 'eventName is required.',
-    //                 })
-    //                 .nonempty('eventName must be non-empty.')
-    //                 .optional(),
-    //             instances: INSTANCES_QUERY_VALIDATION.optional(),
-    //         }),
-    //         handler: async (request, { recordName, eventName, instances }) => {
-    //             const validation = await this._validateHttpSessionKey(request);
-    //             if (
-    //                 validation.success === false &&
-    //                 validation.errorCode !== 'no_session_key'
-    //             ) {
-    //                 return returnResult(validation);
-    //             }
-    //             const userId = validation.userId;
-
-    //             const result = await this._events.listEvents(
-    //                 recordName,
-    //                 eventName,
-    //                 userId,
-    //                 instances
-    //             );
-    //             return returnResult(result);
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'POST',
-    //         path: '/api/v2/records/events',
-    //         allowedOrigins: 'api',
-    //         schema: z.object({
-    //             recordKey: RECORD_KEY_VALIDATION,
-    //             eventName: EVENT_NAME_VALIDATION,
-    //             count: z.number().optional(),
-    //             markers: MARKERS_VALIDATION.optional(),
-    //             instances: INSTANCES_ARRAY_VALIDATION.optional(),
-    //         }),
-    //         handler: async (
-    //             request,
-    //             { recordKey, eventName, count, markers, instances }
-    //         ) => {
-    //             const validation = await this._validateHttpSessionKey(request);
-
-    //             if (
-    //                 validation.success === false &&
-    //                 validation.errorCode !== 'no_session_key'
-    //             ) {
-    //                 return returnResult(validation);
-    //             }
-
-    //             const userId = validation.userId;
-
-    //             const result = await this._events.updateEvent({
-    //                 recordKeyOrRecordName: recordKey,
-    //                 userId,
-    //                 eventName,
-    //                 count,
-    //                 markers,
-    //                 instances,
-    //             });
-
-    //             return returnResult(result);
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'DELETE',
-    //         path: '/api/v2/records/manual/data',
-    //         allowedOrigins: 'api',
-    //         schema: ERASE_DATA_SCHEMA,
-    //         handler: (request, data) =>
-    //             this._baseEraseRecordData(request, this._manualData, data),
-    //     });
-
-    //     this.addRoute({
-    //         method: 'GET',
-    //         path: '/api/v2/records/manual/data',
-    //         allowedOrigins: true,
-    //         schema: GET_DATA_SCHEMA,
-    //         handler: (request, data) =>
-    //             this._baseGetRecordData(request, this._manualData, data),
-    //     });
-
-    //     this.addRoute({
-    //         method: 'POST',
-    //         path: '/api/v2/records/manual/data',
-    //         allowedOrigins: 'api',
-    //         schema: RECORD_DATA_SCHEMA,
-    //         handler: (request, data) =>
-    //             this._baseRecordData(request, this._manualData, data),
-    //     });
-
-    //     this.addRoute({
-    //         method: 'GET',
-    //         path: '/api/v2/records/file',
-    //         allowedOrigins: 'api',
-    //         schema: READ_FILE_SCHEMA,
-    //         handler: (request, data) => this._readFile(request, data),
-    //     });
-
-    //     this.addRoute({
-    //         method: 'GET',
-    //         path: '/api/v2/records/file/list',
-    //         allowedOrigins: 'api',
-    //         schema: LIST_FILES_SCHEMA,
-    //         handler: (request, data) => this._listFiles(request, data),
-    //     });
-
-    //     this.addRoute({
-    //         method: 'DELETE',
-    //         path: '/api/v2/records/file',
-    //         allowedOrigins: 'api',
-    //         schema: ERASE_FILE_SCHEMA,
-    //         handler: (request, data) => this._eraseFile(request, data),
-    //     });
-
-    //     this.addRoute({
-    //         method: 'POST',
-    //         path: '/api/v2/records/file',
-    //         allowedOrigins: 'api',
-    //         schema: RECORD_FILE_SCHEMA,
-    //         handler: (request, data) => this._recordFile(request, data),
-    //     });
-
-    //     this.addRoute({
-    //         method: 'PUT',
-    //         path: '/api/v2/records/file',
-    //         allowedOrigins: 'api',
-    //         schema: UPDATE_FILE_SCHEMA,
-    //         handler: (request, data) => this._updateFile(request, data),
-    //     });
-
-    //     this.addRoute({
-    //         method: 'DELETE',
-    //         path: '/api/v2/records/data',
-    //         allowedOrigins: 'api',
-    //         schema: ERASE_DATA_SCHEMA,
-    //         handler: (request, data) =>
-    //             this._baseEraseRecordData(request, this._data, data),
-    //     });
-
-    //     this.addRoute({
-    //         method: 'GET',
-    //         path: '/api/v2/records/data',
-    //         allowedOrigins: true,
-    //         schema: GET_DATA_SCHEMA,
-    //         handler: (request, data) =>
-    //             this._baseGetRecordData(request, this._data, data),
-    //     });
-
-    //     this.addRoute({
-    //         method: 'GET',
-    //         path: '/api/v2/records/data/list',
-    //         allowedOrigins: true,
-    //         schema: z.object({
-    //             recordName: RECORD_NAME_VALIDATION,
-    //             address: ADDRESS_VALIDATION.nullable().optional(),
-    //             marker: MARKER_VALIDATION.optional(),
-    //             sort: z
-    //                 .union([z.literal('ascending'), z.literal('descending')])
-    //                 .optional(),
-    //             instances: INSTANCES_QUERY_VALIDATION.optional(),
-    //         }),
-    //         handler: async (
-    //             request,
-    //             { recordName, address, instances, marker, sort }
-    //         ) => {
-    //             if (!recordName || typeof recordName !== 'string') {
-    //                 return returnResult({
-    //                     success: false,
-    //                     errorCode: 'unacceptable_request',
-    //                     errorMessage:
-    //                         'recordName is required and must be a string.',
-    //                 });
-    //             }
-    //             if (
-    //                 address !== null &&
-    //                 typeof address !== 'undefined' &&
-    //                 typeof address !== 'string'
-    //             ) {
-    //                 return returnResult({
-    //                     success: false,
-    //                     errorCode: 'unacceptable_request',
-    //                     errorMessage: 'address must be null or a string.',
-    //                 });
-    //             }
-
-    //             const sessionKeyValidation = await this._validateHttpSessionKey(
-    //                 request
-    //             );
-    //             if (
-    //                 sessionKeyValidation.success === false &&
-    //                 sessionKeyValidation.errorCode !== 'no_session_key'
-    //             ) {
-    //                 return returnResult(sessionKeyValidation);
-    //             }
-
-    //             if (!marker) {
-    //                 const result = await this._data.listData(
-    //                     recordName,
-    //                     address || null,
-    //                     sessionKeyValidation.userId,
-    //                     instances
-    //                 );
-    //                 return returnResult(result);
-    //             } else {
-    //                 const result = await this._data.listDataByMarker({
-    //                     recordKeyOrName: recordName,
-    //                     marker: marker,
-    //                     startingAddress: address,
-    //                     sort: sort,
-    //                     userId: sessionKeyValidation.userId,
-    //                     instances,
-    //                 });
-
-    //                 return returnResult(result);
-    //             }
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'POST',
-    //         path: '/api/v2/records/data',
-    //         allowedOrigins: 'api',
-    //         schema: RECORD_DATA_SCHEMA,
-    //         handler: (request, data) =>
-    //             this._baseRecordData(request, this._data, data),
-    //     });
-
-    //     this.addRoute({
-    //         method: 'GET',
-    //         path: '/api/v2/records/list',
-    //         allowedOrigins: 'api',
-    //         schema: z.object({
-    //             studioId: z.string().nonempty().optional(),
-    //         }),
-    //         handler: async (request, { studioId }) => {
-    //             const validation = await this._validateHttpSessionKey(request);
-    //             if (validation.success === false) {
-    //                 if (validation.errorCode === 'no_session_key') {
-    //                     return returnResult(NOT_LOGGED_IN_RESULT);
-    //                 }
-    //                 return returnResult(validation);
-    //             }
-
-    //             if (studioId) {
-    //                 const result = await this._records.listStudioRecords(
-    //                     studioId,
-    //                     validation.userId
-    //                 );
-    //                 return returnResult(result);
-    //             } else {
-    //                 const result = await this._records.listRecords(
-    //                     validation.userId
-    //                 );
-    //                 return returnResult(result);
-    //             }
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'POST',
-    //         path: '/api/v2/records/key',
-    //         allowedOrigins: 'api',
-    //         schema: z.object({
-    //             recordName: RECORD_NAME_VALIDATION,
-    //             policy: z.string({
-    //                 invalid_type_error: 'policy must be a string.',
-    //                 required_error: 'policy is required.',
-    //             }),
-    //         }),
-    //         handler: async (request, { recordName, policy }) => {
-    //             if (!recordName || typeof recordName !== 'string') {
-    //                 return returnResult({
-    //                     success: false,
-    //                     errorCode: 'unacceptable_request',
-    //                     errorMessage:
-    //                         'recordName is required and must be a string.',
-    //                 });
-    //             }
-
-    //             const validation = await this._validateHttpSessionKey(request);
-    //             if (validation.success === false) {
-    //                 if (validation.errorCode === 'no_session_key') {
-    //                     return returnResult(NOT_LOGGED_IN_RESULT);
-    //                 }
-    //                 return returnResult(validation);
-    //             }
-
-    //             const result = await this._records.createPublicRecordKey(
-    //                 recordName,
-    //                 policy as PublicRecordKeyPolicy,
-    //                 validation.userId
-    //             );
-
-    //             return returnResult(result);
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'POST',
-    //         path: '/api/v2/records/permissions',
-    //         allowedOrigins: 'api',
-    //         schema: z.object({
-    //             recordName: RECORD_NAME_VALIDATION,
-    //             permission: AVAILABLE_PERMISSIONS_VALIDATION,
-    //             instances: INSTANCES_ARRAY_VALIDATION.nonempty().optional(),
-    //         }),
-    //         handler: async (request, { recordName, permission, instances }) => {
-    //             const sessionKeyValidation = await this._validateHttpSessionKey(
-    //                 request
-    //             );
-    //             if (sessionKeyValidation.success === false) {
-    //                 if (sessionKeyValidation.errorCode === 'no_session_key') {
-    //                     return returnResult(NOT_LOGGED_IN_RESULT);
-    //                 }
-    //                 return returnResult(sessionKeyValidation);
-    //             }
-
-    //             if (permission.marker) {
-    //                 const result =
-    //                     await this._policyController.grantMarkerPermission({
-    //                         recordKeyOrRecordName: recordName,
-    //                         marker: permission.marker,
-    //                         userId: sessionKeyValidation.userId,
-    //                         permission: permission as any,
-    //                         instances,
-    //                     });
-
-    //                 return returnResult(result);
-    //             } else if (permission.resourceKind && permission.resourceId) {
-    //                 const result =
-    //                     await this._policyController.grantResourcePermission({
-    //                         recordKeyOrRecordName: recordName,
-    //                         permission: permission as any,
-    //                         userId: sessionKeyValidation.userId,
-    //                         instances,
-    //                     });
-
-    //                 return returnResult(result);
-    //             }
-
-    //             return returnResult({
-    //                 success: false,
-    //                 errorCode: 'unacceptable_request',
-    //                 errorMessage:
-    //                     'The given permission must have either a marker or a resourceId.',
-    //             });
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'POST',
-    //         path: '/api/v2/records/permissions/revoke',
-    //         allowedOrigins: 'api',
-    //         schema: z.object({
-    //             permissionId: z
-    //                 .string({
-    //                     invalid_type_error: 'permissionId must be a string.',
-    //                     required_error: 'permissionId is required.',
-    //                 })
-    //                 .nonempty('permissionId must not be empty'),
-    //             instances: INSTANCES_ARRAY_VALIDATION.optional(),
-    //         }),
-    //         handler: async (request, { permissionId, instances }) => {
-    //             const sessionKeyValidation = await this._validateHttpSessionKey(
-    //                 request
-    //             );
-    //             if (sessionKeyValidation.success === false) {
-    //                 if (sessionKeyValidation.errorCode === 'no_session_key') {
-    //                     return returnResult(NOT_LOGGED_IN_RESULT);
-    //                 }
-    //                 return returnResult(sessionKeyValidation);
-    //             }
-
-    //             const result = await this._policyController.revokePermission({
-    //                 permissionId,
-    //                 userId: sessionKeyValidation.userId,
-    //                 instances,
-    //             });
-
-    //             return returnResult(result);
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'GET',
-    //         path: '/api/v2/records/permissions/list',
-    //         allowedOrigins: 'api',
-    //         schema: z.object({
-    //             recordName: RECORD_NAME_VALIDATION,
-    //             marker: MARKER_VALIDATION.optional(),
-    //             resourceKind: RESOURCE_KIND_VALIDATION.optional(),
-    //             resourceId: z
-    //                 .string({
-    //                     invalid_type_error: 'resourceId must be a string.',
-    //                     required_error: 'resourceId is required.',
-    //                 })
-    //                 .optional(),
-    //         }),
-    //         handler: async (
-    //             request,
-    //             { recordName, marker, resourceKind, resourceId }
-    //         ) => {
-    //             const sessionKeyValidation = await this._validateHttpSessionKey(
-    //                 request
-    //             );
-    //             if (sessionKeyValidation.success === false) {
-    //                 if (sessionKeyValidation.errorCode === 'no_session_key') {
-    //                     return returnResult(NOT_LOGGED_IN_RESULT);
-    //                 }
-    //                 return returnResult(sessionKeyValidation);
-    //             }
-
-    //             if (resourceKind && resourceId) {
-    //                 const result =
-    //                     await this._policyController.listPermissionsForResource(
-    //                         recordName,
-    //                         resourceKind,
-    //                         resourceId,
-    //                         sessionKeyValidation.userId
-    //                     );
-    //                 return returnResult(result);
-    //             } else if (marker) {
-    //                 const result =
-    //                     await this._policyController.listPermissionsForMarker(
-    //                         recordName,
-    //                         marker,
-    //                         sessionKeyValidation.userId
-    //                     );
-    //                 return returnResult(result);
-    //             } else {
-    //                 const result = await this._policyController.listPermissions(
-    //                     recordName,
-    //                     sessionKeyValidation.userId
-    //                 );
-    //                 return returnResult(result);
-    //             }
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'GET',
-    //         path: '/api/v2/records/role/user/list',
-    //         allowedOrigins: 'api',
-    //         schema: z.object({
-    //             recordName: RECORD_NAME_VALIDATION,
-    //             userId: z
-    //                 .string({
-    //                     invalid_type_error: 'userId must be a string.',
-    //                     required_error: 'userId is required.',
-    //                 })
-    //                 .nonempty('userId must not be empty'),
-    //             instances: INSTANCES_QUERY_VALIDATION.optional(),
-    //         }),
-    //         handler: async (request, { recordName, userId, instances }) => {
-    //             const sessionKeyValidation = await this._validateHttpSessionKey(
-    //                 request
-    //             );
-    //             if (sessionKeyValidation.success === false) {
-    //                 if (sessionKeyValidation.errorCode === 'no_session_key') {
-    //                     return returnResult(NOT_LOGGED_IN_RESULT);
-    //                 }
-    //                 return returnResult(sessionKeyValidation);
-    //             }
-
-    //             const result = await this._policyController.listUserRoles(
-    //                 recordName,
-    //                 sessionKeyValidation.userId,
-    //                 userId,
-    //                 instances
-    //             );
-
-    //             return returnResult(result);
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'GET',
-    //         path: '/api/v2/records/role/inst/list',
-    //         allowedOrigins: 'api',
-    //         schema: z.object({
-    //             recordName: RECORD_NAME_VALIDATION,
-    //             inst: z
-    //                 .string({
-    //                     invalid_type_error: 'inst must be a string.',
-    //                     required_error: 'inst is required.',
-    //                 })
-    //                 .nonempty('inst must not be empty'),
-    //             instances: INSTANCES_QUERY_VALIDATION.optional(),
-    //         }),
-    //         handler: async (request, { recordName, inst, instances }) => {
-    //             const sessionKeyValidation = await this._validateHttpSessionKey(
-    //                 request
-    //             );
-    //             if (sessionKeyValidation.success === false) {
-    //                 if (sessionKeyValidation.errorCode === 'no_session_key') {
-    //                     return returnResult(NOT_LOGGED_IN_RESULT);
-    //                 }
-    //                 return returnResult(sessionKeyValidation);
-    //             }
-
-    //             const result = await this._policyController.listInstRoles(
-    //                 recordName,
-    //                 sessionKeyValidation.userId,
-    //                 inst,
-    //                 instances
-    //             );
-
-    //             return returnResult(result);
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'GET',
-    //         path: '/api/v2/records/role/assignments/list',
-    //         allowedOrigins: 'api',
-    //         schema: z.object({
-    //             recordName: RECORD_NAME_VALIDATION,
-    //             startingRole: z
-    //                 .string({
-    //                     invalid_type_error: 'startingRole must be a string.',
-    //                     required_error: 'startingRole is required.',
-    //                 })
-    //                 .nonempty('startingRole must not be empty')
-    //                 .optional(),
-    //             role: z
-    //                 .string({
-    //                     invalid_type_error: 'role must be a string.',
-    //                     required_error: 'role is required.',
-    //                 })
-    //                 .nonempty('role must not be empty')
-    //                 .optional(),
-    //             instances: INSTANCES_QUERY_VALIDATION.optional(),
-    //         }),
-    //         handler: async (
-    //             request,
-    //             { recordName, role, startingRole, instances }
-    //         ) => {
-    //             const sessionKeyValidation = await this._validateHttpSessionKey(
-    //                 request
-    //             );
-    //             if (sessionKeyValidation.success === false) {
-    //                 if (sessionKeyValidation.errorCode === 'no_session_key') {
-    //                     return returnResult(NOT_LOGGED_IN_RESULT);
-    //                 }
-    //                 return returnResult(sessionKeyValidation);
-    //             }
-
-    //             if (role) {
-    //                 const result =
-    //                     await this._policyController.listAssignedRoles(
-    //                         recordName,
-    //                         sessionKeyValidation.userId,
-    //                         role,
-    //                         instances
-    //                     );
-
-    //                 return returnResult(result);
-    //             } else {
-    //                 const result =
-    //                     await this._policyController.listRoleAssignments(
-    //                         recordName,
-    //                         sessionKeyValidation.userId,
-    //                         startingRole,
-    //                         instances
-    //                     );
-
-    //                 return returnResult(result);
-    //             }
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'POST',
-    //         path: '/api/v2/records/role/grant',
-    //         allowedOrigins: 'api',
-    //         schema: z.object({
-    //             recordName: RECORD_NAME_VALIDATION,
-    //             userId: z
-    //                 .string({
-    //                     invalid_type_error: 'userId must be a string.',
-    //                     required_error: 'userId is required.',
-    //                 })
-    //                 .nonempty('userId must not be empty')
-    //                 .optional(),
-    //             inst: z
-    //                 .string({
-    //                     invalid_type_error: 'inst must be a string.',
-    //                     required_error: 'inst is required.',
-    //                 })
-    //                 .nonempty('inst must not be empty')
-    //                 .optional(),
-    //             role: z
-    //                 .string({
-    //                     invalid_type_error: 'role must be a string.',
-    //                     required_error: 'role is required.',
-    //                 })
-    //                 .nonempty('role must not be empty'),
-    //             expireTimeMs: z
-    //                 .number({
-    //                     invalid_type_error: 'expireTimeMs must be a number.',
-    //                     required_error: 'expireTimeMs is required.',
-    //                 })
-    //                 .positive('expireTimeMs must be positive')
-    //                 .optional(),
-    //             instances: INSTANCES_ARRAY_VALIDATION.optional(),
-    //         }),
-    //         handler: async (
-    //             request,
-    //             { recordName, userId, inst, expireTimeMs, role, instances }
-    //         ) => {
-    //             const sessionKeyValidation = await this._validateHttpSessionKey(
-    //                 request
-    //             );
-    //             if (sessionKeyValidation.success === false) {
-    //                 if (sessionKeyValidation.errorCode === 'no_session_key') {
-    //                     return returnResult(NOT_LOGGED_IN_RESULT);
-    //                 }
-    //                 return returnResult(sessionKeyValidation);
-    //             }
-
-    //             const result = await this._policyController.grantRole(
-    //                 recordName,
-    //                 sessionKeyValidation.userId,
-    //                 {
-    //                     instance: inst,
-    //                     userId: userId,
-    //                     role,
-    //                     expireTimeMs,
-    //                 },
-    //                 instances
-    //             );
-
-    //             return returnResult(result);
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'POST',
-    //         path: '/api/v2/records/role/revoke',
-    //         allowedOrigins: 'api',
-    //         schema: z.object({
-    //             recordName: RECORD_NAME_VALIDATION,
-    //             userId: z
-    //                 .string({
-    //                     invalid_type_error: 'userId must be a string.',
-    //                     required_error: 'userId is required.',
-    //                 })
-    //                 .nonempty('userId must not be empty')
-    //                 .optional(),
-    //             inst: z
-    //                 .string({
-    //                     invalid_type_error: 'inst must be a string.',
-    //                     required_error: 'inst is required.',
-    //                 })
-    //                 .nonempty('inst must not be empty')
-    //                 .optional(),
-    //             role: z
-    //                 .string({
-    //                     invalid_type_error: 'role must be a string.',
-    //                     required_error: 'role is required.',
-    //                 })
-    //                 .nonempty('role must not be empty'),
-    //             instances: INSTANCES_ARRAY_VALIDATION.optional(),
-    //         }),
-    //         handler: async (
-    //             request,
-    //             { recordName, userId, inst, role, instances }
-    //         ) => {
-    //             const sessionKeyValidation = await this._validateHttpSessionKey(
-    //                 request
-    //             );
-    //             if (sessionKeyValidation.success === false) {
-    //                 if (sessionKeyValidation.errorCode === 'no_session_key') {
-    //                     return returnResult(NOT_LOGGED_IN_RESULT);
-    //                 }
-    //                 return returnResult(sessionKeyValidation);
-    //             }
-
-    //             const result = await this._policyController.revokeRole(
-    //                 recordName,
-    //                 sessionKeyValidation.userId,
-    //                 {
-    //                     instance: inst,
-    //                     userId: userId,
-    //                     role,
-    //                 },
-    //                 instances
-    //             );
-
-    //             return returnResult(result);
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'POST',
-    //         path: '/api/v2/ai/chat',
-    //         allowedOrigins: 'api',
-    //         schema: z.object({
-    //             model: z.string().nonempty().optional(),
-    //             messages: z.array(AI_CHAT_MESSAGE_SCHEMA).nonempty(),
-    //             instances: INSTANCES_ARRAY_VALIDATION.optional(),
-    //             temperature: z.number().min(0).max(2).optional(),
-    //             topP: z.number().optional(),
-    //             presencePenalty: z.number().min(-2).max(2).optional(),
-    //             frequencyPenalty: z.number().min(-2).max(2).optional(),
-    //             stopWords: z.array(z.string()).max(4).optional(),
-    //         }),
-    //         handler: async (
-    //             request,
-    //             { model, messages, instances, ...options }
-    //         ) => {
-    //             if (!this._aiController) {
-    //                 return returnResult(AI_NOT_SUPPORTED_RESULT);
-    //             }
-
-    //             const sessionKeyValidation = await this._validateHttpSessionKey(
-    //                 request
-    //             );
-    //             if (sessionKeyValidation.success === false) {
-    //                 if (sessionKeyValidation.errorCode === 'no_session_key') {
-    //                     return returnResult(NOT_LOGGED_IN_RESULT);
-    //                 }
-    //                 return returnResult(sessionKeyValidation);
-    //             }
-
-    //             const result = await this._aiController.chat({
-    //                 ...options,
-    //                 model,
-    //                 messages: messages as AIChatMessage[],
-    //                 userId: sessionKeyValidation.userId,
-    //                 userSubscriptionTier: sessionKeyValidation.subscriptionTier,
-    //             });
-
-    //             return returnResult(result);
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'POST',
-    //         path: '/api/v2/ai/skybox',
-    //         allowedOrigins: 'api',
-    //         schema: z.object({
-    //             prompt: z.string().nonempty().max(600),
-    //             negativePrompt: z.string().nonempty().max(600).optional(),
-    //             blockadeLabs: z
-    //                 .object({
-    //                     skyboxStyleId: z.number().optional(),
-    //                     remixImagineId: z.number().optional(),
-    //                     seed: z.number().optional(),
-    //                 })
-    //                 .optional(),
-    //             instances: INSTANCES_ARRAY_VALIDATION.optional(),
-    //         }),
-    //         handler: async (
-    //             request,
-    //             { prompt, negativePrompt, instances, blockadeLabs }
-    //         ) => {
-    //             if (!this._aiController) {
-    //                 return returnResult(AI_NOT_SUPPORTED_RESULT);
-    //             }
-
-    //             const sessionKeyValidation = await this._validateHttpSessionKey(
-    //                 request
-    //             );
-    //             if (sessionKeyValidation.success === false) {
-    //                 if (sessionKeyValidation.errorCode === 'no_session_key') {
-    //                     return returnResult(NOT_LOGGED_IN_RESULT);
-    //                 }
-    //                 return returnResult(sessionKeyValidation);
-    //             }
-
-    //             const result = await this._aiController.generateSkybox({
-    //                 prompt,
-    //                 negativePrompt,
-    //                 blockadeLabs,
-    //                 userId: sessionKeyValidation.userId,
-    //                 userSubscriptionTier: sessionKeyValidation.subscriptionTier,
-    //             });
-
-    //             return returnResult(result);
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'GET',
-    //         path: '/api/v2/ai/skybox',
-    //         allowedOrigins: 'api',
-    //         schema: z.object({
-    //             skyboxId: z
-    //                 .string({
-    //                     invalid_type_error: 'skyboxId must be a string.',
-    //                     required_error: 'skyboxId is required.',
-    //                 })
-    //                 .nonempty('skyboxId must not be empty'),
-    //             instances: INSTANCES_QUERY_VALIDATION.optional(),
-    //         }),
-    //         handler: async (request, { skyboxId, instances }) => {
-    //             if (!this._aiController) {
-    //                 return returnResult(AI_NOT_SUPPORTED_RESULT);
-    //             }
-
-    //             const sessionKeyValidation = await this._validateHttpSessionKey(
-    //                 request
-    //             );
-    //             if (sessionKeyValidation.success === false) {
-    //                 if (sessionKeyValidation.errorCode === 'no_session_key') {
-    //                     return returnResult(NOT_LOGGED_IN_RESULT);
-    //                 }
-    //                 return returnResult(sessionKeyValidation);
-    //             }
-
-    //             const result = await this._aiController.getSkybox({
-    //                 skyboxId,
-    //                 userId: sessionKeyValidation.userId,
-    //                 userSubscriptionTier: sessionKeyValidation.subscriptionTier,
-    //             });
-
-    //             return returnResult(result);
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'POST',
-    //         path: '/api/v2/ai/image',
-    //         allowedOrigins: 'api',
-    //         schema: z.object({
-    //             prompt: z
-    //                 .string({
-    //                     invalid_type_error: 'prompt must be a string.',
-    //                     required_error: 'prompt is required.',
-    //                 })
-    //                 .nonempty('prompt must not be empty'),
-    //             model: z
-    //                 .string({
-    //                     invalid_type_error: 'model must be a string.',
-    //                     required_error: 'model is required.',
-    //                 })
-    //                 .nonempty('model must not be empty')
-    //                 .optional(),
-    //             negativePrompt: z.string().nonempty().optional(),
-    //             width: z.number().positive().int().optional(),
-    //             height: z.number().positive().int().optional(),
-    //             seed: z.number().positive().int().optional(),
-    //             numberOfImages: z.number().positive().int().optional(),
-    //             steps: z.number().positive().int().optional(),
-    //             sampler: z.string().nonempty().optional(),
-    //             cfgScale: z.number().min(0).int().optional(),
-    //             clipGuidancePreset: z.string().nonempty().optional(),
-    //             stylePreset: z.string().nonempty().optional(),
-    //             instances: INSTANCES_ARRAY_VALIDATION.optional(),
-    //         }),
-    //         handler: async (
-    //             request,
-    //             {
-    //                 prompt,
-    //                 model,
-    //                 negativePrompt,
-    //                 width,
-    //                 height,
-    //                 seed,
-    //                 numberOfImages,
-    //                 steps,
-    //                 sampler,
-    //                 cfgScale,
-    //                 clipGuidancePreset,
-    //                 stylePreset,
-    //                 instances,
-    //             }
-    //         ) => {
-    //             if (!this._aiController) {
-    //                 return returnResult(AI_NOT_SUPPORTED_RESULT);
-    //             }
-
-    //             const sessionKeyValidation = await this._validateHttpSessionKey(
-    //                 request
-    //             );
-    //             if (sessionKeyValidation.success === false) {
-    //                 if (sessionKeyValidation.errorCode === 'no_session_key') {
-    //                     return returnResult(NOT_LOGGED_IN_RESULT);
-    //                 }
-    //                 return returnResult(sessionKeyValidation);
-    //             }
-
-    //             const result = await this._aiController.generateImage({
-    //                 model,
-    //                 prompt,
-    //                 negativePrompt,
-    //                 width,
-    //                 height,
-    //                 seed,
-    //                 numberOfImages,
-    //                 steps,
-    //                 sampler,
-    //                 cfgScale,
-    //                 clipGuidancePreset,
-    //                 stylePreset,
-    //                 userId: sessionKeyValidation.userId,
-    //                 userSubscriptionTier: sessionKeyValidation.subscriptionTier,
-    //             });
-
-    //             return returnResult(result);
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'GET',
-    //         path: '/api/v2/studios',
-    //         allowedOrigins: 'account',
-    //         schema: z.object({
-    //             studioId: STUDIO_ID_VALIDATION,
-    //         }),
-    //         handler: async (request, { studioId }) => {
-    //             const sessionKeyValidation = await this._validateHttpSessionKey(
-    //                 request
-    //             );
-    //             if (sessionKeyValidation.success === false) {
-    //                 if (sessionKeyValidation.errorCode === 'no_session_key') {
-    //                     return returnResult(NOT_LOGGED_IN_RESULT);
-    //                 }
-    //                 return returnResult(sessionKeyValidation);
-    //             }
-
-    //             const result = await this._records.getStudio(
-    //                 studioId,
-    //                 sessionKeyValidation.userId
-    //             );
-    //             return returnResult(result);
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'POST',
-    //         path: '/api/v2/studios',
-    //         allowedOrigins: 'account',
-    //         schema: z.object({
-    //             displayName: STUDIO_DISPLAY_NAME_VALIDATION,
-    //             ownerStudioComId: z
-    //                 .string({
-    //                     invalid_type_error:
-    //                         'ownerStudioComId must be a string.',
-    //                     required_error: 'ownerStudioComId is required.',
-    //                 })
-    //                 .nonempty('ownerStudioComId must not be empty')
-    //                 .nullable()
-    //                 .optional(),
-    //         }),
-    //         handler: async (request, { displayName, ownerStudioComId }) => {
-    //             const sessionKeyValidation = await this._validateHttpSessionKey(
-    //                 request
-    //             );
-    //             if (sessionKeyValidation.success === false) {
-    //                 if (sessionKeyValidation.errorCode === 'no_session_key') {
-    //                     return returnResult(NOT_LOGGED_IN_RESULT);
-    //                 }
-    //                 return returnResult(sessionKeyValidation);
-    //             }
-
-    //             if (!ownerStudioComId) {
-    //                 const result = await this._records.createStudio(
-    //                     displayName,
-    //                     sessionKeyValidation.userId
-    //                 );
-    //                 return returnResult(result);
-    //             } else {
-    //                 const result = await this._records.createStudioInComId(
-    //                     displayName,
-    //                     sessionKeyValidation.userId,
-    //                     ownerStudioComId
-    //                 );
-    //                 return returnResult(result);
-    //             }
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'PUT',
-    //         path: '/api/v2/studios',
-    //         allowedOrigins: 'account',
-    //         schema: z.object({
-    //             id: STUDIO_ID_VALIDATION,
-    //             displayName: STUDIO_DISPLAY_NAME_VALIDATION.optional(),
-    //             logoUrl: z
-    //                 .string({
-    //                     invalid_type_error: 'logoUrl must be a string.',
-    //                     required_error: 'logoUrl is required.',
-    //                 })
-    //                 .url()
-    //                 .min(1)
-    //                 .max(512)
-    //                 .nullable()
-    //                 .optional(),
-    //             comIdConfig: COM_ID_CONFIG_SCHEMA.optional(),
-    //             playerConfig: COM_ID_PLAYER_CONFIG.optional(),
-    //         }),
-    //         handler: async (
-    //             request,
-    //             { id, displayName, logoUrl, comIdConfig, playerConfig }
-    //         ) => {
-    //             const sessionKeyValidation = await this._validateHttpSessionKey(
-    //                 request
-    //             );
-    //             if (sessionKeyValidation.success === false) {
-    //                 if (sessionKeyValidation.errorCode === 'no_session_key') {
-    //                     return returnResult(NOT_LOGGED_IN_RESULT);
-    //                 }
-    //                 return returnResult(sessionKeyValidation);
-    //             }
-
-    //             const result = await this._records.updateStudio({
-    //                 userId: sessionKeyValidation.userId,
-    //                 studio: {
-    //                     id,
-    //                     displayName,
-    //                     logoUrl,
-    //                     comIdConfig,
-    //                     playerConfig,
-    //                 },
-    //             });
-    //             return returnResult(result);
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'POST',
-    //         path: '/api/v2/studios/requestComId',
-    //         allowedOrigins: 'account',
-    //         schema: z.object({
-    //             studioId: STUDIO_ID_VALIDATION,
-    //             comId: COM_ID_VALIDATION,
-    //         }),
-    //         handler: async (request, { studioId, comId }) => {
-    //             const sessionKeyValidation = await this._validateHttpSessionKey(
-    //                 request
-    //             );
-    //             if (sessionKeyValidation.success === false) {
-    //                 if (sessionKeyValidation.errorCode === 'no_session_key') {
-    //                     return returnResult(NOT_LOGGED_IN_RESULT);
-    //                 }
-    //                 return returnResult(sessionKeyValidation);
-    //             }
-
-    //             const result = await this._records.requestComId({
-    //                 studioId,
-    //                 userId: sessionKeyValidation.userId,
-    //                 requestedComId: comId,
-    //                 ipAddress: request.ipAddress,
-    //             });
-
-    //             return returnResult(result);
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'GET',
-    //         path: '/api/v2/studios/list',
-    //         allowedOrigins: 'api',
-    //         schema: z.object({
-    //             comId: z.string().nonempty().optional(),
-    //         }),
-    //         handler: async (request, { comId }) => {
-    //             const sessionKeyValidation = await this._validateHttpSessionKey(
-    //                 request
-    //             );
-    //             if (sessionKeyValidation.success === false) {
-    //                 if (sessionKeyValidation.errorCode === 'no_session_key') {
-    //                     return returnResult(NOT_LOGGED_IN_RESULT);
-    //                 }
-    //                 return returnResult(sessionKeyValidation);
-    //             }
-
-    //             if (comId) {
-    //                 const result = await this._records.listStudiosByComId(
-    //                     sessionKeyValidation.userId,
-    //                     comId
-    //                 );
-    //                 return returnResult(result);
-    //             } else {
-    //                 const result = await this._records.listStudios(
-    //                     sessionKeyValidation.userId
-    //                 );
-    //                 return returnResult(result);
-    //             }
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'GET',
-    //         path: '/api/v2/studios/members/list',
-    //         allowedOrigins: 'account',
-    //         schema: z.object({
-    //             studioId: STUDIO_ID_VALIDATION,
-    //         }),
-    //         handler: async (request, { studioId }) => {
-    //             const sessionKeyValidation = await this._validateHttpSessionKey(
-    //                 request
-    //             );
-    //             if (sessionKeyValidation.success === false) {
-    //                 if (sessionKeyValidation.errorCode === 'no_session_key') {
-    //                     return returnResult(NOT_LOGGED_IN_RESULT);
-    //                 }
-    //                 return returnResult(sessionKeyValidation);
-    //             }
-
-    //             const result = await this._records.listStudioMembers(
-    //                 studioId,
-    //                 sessionKeyValidation.userId
-    //             );
-    //             return returnResult(result);
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'POST',
-    //         path: '/api/v2/studios/members',
-    //         allowedOrigins: 'account',
-    //         schema: z.object({
-    //             studioId: STUDIO_ID_VALIDATION,
-    //             addedUserId: z
-    //                 .string({
-    //                     invalid_type_error: 'addedUserId must be a string.',
-    //                     required_error: 'addedUserId is required.',
-    //                 })
-    //                 .nonempty('addedUserId must not be empty')
-    //                 .optional(),
-    //             addedEmail: z
-    //                 .string({
-    //                     invalid_type_error: 'addedEmail must be a string.',
-    //                     required_error: 'addedEmail is required.',
-    //                 })
-    //                 .nonempty('addedEmail must not be empty')
-    //                 .optional(),
-    //             addedPhoneNumber: z
-    //                 .string({
-    //                     invalid_type_error:
-    //                         'addedPhoneNumber must be a string.',
-    //                     required_error: 'addedPhoneNumber is required.',
-    //                 })
-    //                 .nonempty('addedPhoneNumber must not be empty')
-    //                 .optional(),
-    //             role: z.union([z.literal('admin'), z.literal('member')]),
-    //         }),
-    //         handler: async (
-    //             request,
-    //             { studioId, addedUserId, addedEmail, addedPhoneNumber, role }
-    //         ) => {
-    //             const sessionKeyValidation = await this._validateHttpSessionKey(
-    //                 request
-    //             );
-    //             if (sessionKeyValidation.success === false) {
-    //                 if (sessionKeyValidation.errorCode === 'no_session_key') {
-    //                     return returnResult(NOT_LOGGED_IN_RESULT);
-    //                 }
-    //                 return returnResult(sessionKeyValidation);
-    //             }
-
-    //             const result = await this._records.addStudioMember({
-    //                 studioId,
-    //                 userId: sessionKeyValidation.userId,
-    //                 role,
-    //                 addedUserId,
-    //                 addedEmail,
-    //                 addedPhoneNumber,
-    //             });
-    //             return returnResult(result);
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'DELETE',
-    //         path: '/api/v2/studios/members',
-    //         allowedOrigins: 'account',
-    //         schema: z.object({
-    //             studioId: STUDIO_ID_VALIDATION,
-    //             removedUserId: z
-    //                 .string({
-    //                     invalid_type_error: 'removedUserId must be a string.',
-    //                     required_error: 'removedUserId is required.',
-    //                 })
-    //                 .nonempty('removedUserId must not be empty')
-    //                 .optional(),
-    //         }),
-    //         handler: async (request, { studioId, removedUserId }) => {
-    //             const sessionKeyValidation = await this._validateHttpSessionKey(
-    //                 request
-    //             );
-    //             if (sessionKeyValidation.success === false) {
-    //                 if (sessionKeyValidation.errorCode === 'no_session_key') {
-    //                     return returnResult(NOT_LOGGED_IN_RESULT);
-    //                 }
-    //                 return returnResult(sessionKeyValidation);
-    //             }
-
-    //             const result = await this._records.removeStudioMember({
-    //                 studioId,
-    //                 userId: sessionKeyValidation.userId,
-    //                 removedUserId,
-    //             });
-    //             return returnResult(result);
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'GET',
-    //         path: '/api/v2/player/config',
-    //         allowedOrigins: 'api',
-    //         schema: z.object({
-    //             comId: z.string().nonempty(),
-    //         }),
-    //         handler: async (request, { comId }) => {
-    //             const result = await this._records.getPlayerConfig(comId);
-    //             return returnResult(result);
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'GET',
-    //         path: '/api/v2/subscriptions',
-    //         allowedOrigins: 'account',
-    //         schema: z.object({
-    //             studioId: z
-    //                 .string({
-    //                     invalid_type_error: 'studioId must be a string.',
-    //                     required_error: 'studioId is required.',
-    //                 })
-    //                 .nonempty('studioId must be non-empty.')
-    //                 .optional(),
-    //             userId: z
-    //                 .string({
-    //                     invalid_type_error: 'userId must be a string.',
-    //                     required_error: 'userId is required.',
-    //                 })
-    //                 .nonempty('userId must be non-empty.')
-    //                 .optional(),
-    //         }),
-    //         handler: async (request, { studioId, userId }) => {
-    //             if (!this._subscriptions) {
-    //                 return returnResult(SUBSCRIPTIONS_NOT_SUPPORTED_RESULT);
-    //             }
-
-    //             const sessionKey = getSessionKey(request);
-
-    //             if (!sessionKey) {
-    //                 return returnResult(NOT_LOGGED_IN_RESULT);
-    //             }
-
-    //             const result = await this._subscriptions.getSubscriptionStatus({
-    //                 sessionKey,
-    //                 userId,
-    //                 studioId,
-    //             });
-
-    //             if (!result.success) {
-    //                 return returnResult(result);
-    //             }
-
-    //             return returnResult({
-    //                 success: true,
-    //                 publishableKey: result.publishableKey,
-    //                 subscriptions: result.subscriptions.map((s) => ({
-    //                     active: s.active,
-    //                     statusCode: s.statusCode,
-    //                     productName: s.productName,
-    //                     startDate: s.startDate,
-    //                     endedDate: s.endedDate,
-    //                     cancelDate: s.cancelDate,
-    //                     canceledDate: s.canceledDate,
-    //                     currentPeriodStart: s.currentPeriodStart,
-    //                     currentPeriodEnd: s.currentPeriodEnd,
-    //                     renewalInterval: s.renewalInterval,
-    //                     intervalLength: s.intervalLength,
-    //                     intervalCost: s.intervalCost,
-    //                     currency: s.currency,
-    //                     featureList: s.featureList,
-    //                 })),
-    //                 purchasableSubscriptions:
-    //                     result.purchasableSubscriptions.map((s) => ({
-    //                         id: s.id,
-    //                         name: s.name,
-    //                         description: s.description,
-    //                         featureList: s.featureList,
-    //                         prices: s.prices,
-    //                         defaultSubscription: s.defaultSubscription,
-    //                     })),
-    //             });
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'POST',
-    //         path: '/api/v2/subscriptions/manage',
-    //         allowedOrigins: 'account',
-    //         schema: z.object({
-    //             userId: z
-    //                 .string({
-    //                     invalid_type_error: 'userId must be a string.',
-    //                     required_error: 'userId is required.',
-    //                 })
-    //                 .nonempty('userId must not be empty.')
-    //                 .optional(),
-    //             studioId: z
-    //                 .string({
-    //                     invalid_type_error: 'studioId must be a string.',
-    //                     required_error: 'studioId is required.',
-    //                 })
-    //                 .nonempty('studioId must not be empty.')
-    //                 .optional(),
-    //             subscriptionId: z.string().optional(),
-    //             expectedPrice: z
-    //                 .object({
-    //                     currency: z.string(),
-    //                     cost: z.number(),
-    //                     interval: z.enum(['month', 'year', 'week', 'day']),
-    //                     intervalLength: z.number(),
-    //                 })
-    //                 .optional(),
-    //         }),
-    //         handler: async (
-    //             request,
-    //             { userId, studioId, subscriptionId, expectedPrice }
-    //         ) => {
-    //             if (!this._subscriptions) {
-    //                 return returnResult(SUBSCRIPTIONS_NOT_SUPPORTED_RESULT);
-    //             }
-
-    //             const sessionKey = getSessionKey(request);
-
-    //             if (!sessionKey) {
-    //                 return returnResult(NOT_LOGGED_IN_RESULT);
-    //             }
-
-    //             const result =
-    //                 await this._subscriptions.createManageSubscriptionLink({
-    //                     sessionKey,
-    //                     userId,
-    //                     studioId,
-    //                     subscriptionId,
-    //                     expectedPrice:
-    //                         expectedPrice as CreateManageSubscriptionRequest['expectedPrice'],
-    //                 });
-
-    //             if (!result.success) {
-    //                 return returnResult(result);
-    //             }
-
-    //             return returnResult({
-    //                 success: true,
-    //                 url: result.url,
-    //             });
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'GET',
-    //         path: '/api/v2/records/insts/list',
-    //         allowedOrigins: 'api',
-    //         schema: z.object({
-    //             recordName: RECORD_NAME_VALIDATION.optional(),
-    //             inst: z.string().optional(),
-    //         }),
-    //         handler: async (request, { recordName, inst }) => {
-    //             if (!this._websocketController) {
-    //                 return returnResult(INSTS_NOT_SUPPORTED_RESULT);
-    //             }
-
-    //             const sessionKey = getSessionKey(request);
-
-    //             if (!sessionKey) {
-    //                 return returnResult(NOT_LOGGED_IN_RESULT);
-    //             }
-
-    //             const validation = await this._validateHttpSessionKey(request);
-
-    //             if (validation.success === false) {
-    //                 return returnResult(validation);
-    //             }
-
-    //             const userId = validation.userId;
-
-    //             const result = await this._websocketController.listInsts(
-    //                 recordName,
-    //                 userId,
-    //                 inst
-    //             );
-    //             return returnResult(result);
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'DELETE',
-    //         path: '/api/v2/records/insts',
-    //         allowedOrigins: 'account',
-    //         schema: z.object({
-    //             recordKey: RECORD_KEY_VALIDATION.optional(),
-    //             recordName: RECORD_NAME_VALIDATION.optional(),
-    //             inst: z.string().optional(),
-    //         }),
-    //         handler: async (request, { recordKey, recordName, inst }) => {
-    //             if (!this._websocketController) {
-    //                 return returnResult(INSTS_NOT_SUPPORTED_RESULT);
-    //             }
-
-    //             const sessionKey = getSessionKey(request);
-
-    //             if (!sessionKey) {
-    //                 return returnResult(NOT_LOGGED_IN_RESULT);
-    //             }
-
-    //             const validation = await this._validateHttpSessionKey(request);
-
-    //             if (validation.success === false) {
-    //                 return returnResult(validation);
-    //             }
-
-    //             const result = await this._websocketController.eraseInst(
-    //                 recordKey ?? recordName,
-    //                 inst,
-    //                 validation.userId
-    //             );
-    //             return returnResult(result);
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'POST',
-    //         path: '/api/v2/records/insts/report',
-    //         allowedOrigins: 'api',
-    //         schema: z.object({
-    //             recordName: RECORD_NAME_VALIDATION.nullable(),
-    //             inst: z.string().nonempty(),
-    //             automaticReport: z.boolean(),
-    //             reportReason: z.union([
-    //                 z.literal('poor-performance'),
-    //                 z.literal('spam'),
-    //                 z.literal('harassment'),
-    //                 z.literal('copyright-infringement'),
-    //                 z.literal('obscene'),
-    //                 z.literal('illegal'),
-    //                 z.literal('other'),
-    //             ]),
-    //             reportReasonText: z.string().nonempty().trim(),
-    //             reportedUrl: z.string().url(),
-    //             reportedPermalink: z.string().url(),
-    //         }),
-    //         handler: async (
-    //             request,
-    //             {
-    //                 recordName,
-    //                 inst,
-    //                 automaticReport,
-    //                 reportReason,
-    //                 reportReasonText,
-    //                 reportedUrl,
-    //                 reportedPermalink,
-    //             }
-    //         ) => {
-    //             if (!this._moderationController) {
-    //                 return returnResult(MODERATION_NOT_SUPPORTED_RESULT);
-    //             }
-
-    //             const validation = await this._validateHttpSessionKey(request);
-
-    //             if (validation.success === false) {
-    //                 if (validation.errorCode !== 'no_session_key') {
-    //                     return returnResult(validation);
-    //                 }
-    //             }
-
-    //             const result = await this._moderationController.reportInst({
-    //                 recordName,
-    //                 inst,
-    //                 automaticReport,
-    //                 reportReason,
-    //                 reportReasonText,
-    //                 reportedUrl,
-    //                 reportedPermalink,
-    //                 reportingIpAddress: request.ipAddress,
-    //                 reportingUserId: validation.userId,
-    //             });
-
-    //             return returnResult(result);
-    //         },
-    //     });
-
-    //     this.addRoute({
-    //         method: 'GET',
-    //         path: '/instData',
-    //         allowedOrigins: true,
-    //         schema: z.object({
-    //             recordName: RECORD_NAME_VALIDATION.nullable().optional(),
-    //             inst: z.string().nonempty(),
-    //             branch: z.string().nonempty().default(DEFAULT_BRANCH_NAME),
-    //         }),
-    //         handler: async (request, { recordName, inst, branch }) => {
-    //             let userId: string = null;
-    //             const validation = await this._validateHttpSessionKey(request);
-    //             if (validation.success === false) {
-    //                 if (validation.errorCode === 'no_session_key') {
-    //                     userId = null;
-    //                 } else {
-    //                     return returnResult(validation);
-    //                 }
-    //             } else {
-    //                 userId = validation.userId;
-    //             }
-
-    //             const data = await this._websocketController.getBranchData(
-    //                 userId,
-    //                 recordName ?? null,
-    //                 inst,
-    //                 branch
-    //             );
-
-    //             return returnResult({
-    //                 success: true,
-    //                 ...data,
-    //             });
-    //         },
-    //     });
-    // }
 
     private async _stripeWebhook(
         request: GenericHttpRequest
@@ -9827,7 +8000,6 @@ export class RecordsServer {
         const schema = z.object({
             name: z.string().min(1).optional().nullable(),
             email: z
-                .string()
                 .email()
                 .max(MAX_EMAIL_ADDRESS_LENGTH)
                 .optional()
@@ -9837,8 +8009,8 @@ export class RecordsServer {
                 .max(MAX_SMS_ADDRESS_LENGTH)
                 .optional()
                 .nullable(),
-            avatarUrl: z.string().url().optional().nullable(),
-            avatarPortraitUrl: z.string().url().optional().nullable(),
+            avatarUrl: z.url().optional().nullable(),
+            avatarPortraitUrl: z.url().optional().nullable(),
         });
 
         const parseResult = schema.safeParse(jsonResult.value);
@@ -9871,6 +8043,12 @@ export class RecordsServer {
     }
 }
 
+/**
+ * Returns the given result and body as a GenericHttpResponse.
+ * @param result The result.
+ * @param body The body. If undefined, the result will be stringified and used as the body.
+ * @returns
+ */
 export function returnResult<
     T extends
         | {
@@ -9880,7 +8058,11 @@ export function returnResult<
               reason?: DenialReason;
           }
         | { success: true }
->(result: T): GenericHttpResponse {
+>(
+    result: T,
+    body: string = undefined,
+    headers?: GenericHttpHeaders
+): GenericHttpResponse {
     const span = trace.getActiveSpan();
     if (span) {
         if (result.success === false) {
@@ -9902,7 +8084,8 @@ export function returnResult<
 
     return {
         statusCode: getStatusCode(result),
-        body: JSON.stringify(result),
+        body: body ?? JSON.stringify(result),
+        headers,
     };
 }
 

@@ -44,6 +44,7 @@ import {
 import type { PrismaClient, Prisma, Studio as PrismaStudio } from './generated';
 import { convertToDate, convertToMillis } from './Utils';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
+import type z from 'zod';
 
 const TRACE_NAME = 'PrismaRecordsStore';
 
@@ -696,10 +697,10 @@ export class PrismaRecordsStore implements RecordsStore {
     }
 }
 
-function zodParseConfig<T extends Zod.Schema>(
+function zodParseConfig<T extends z.ZodType>(
     value: Prisma.JsonValue,
     schema: T
-): ReturnType<T['parse']> {
+): z.infer<T> | undefined {
     if (!value) {
         return undefined;
     }

@@ -15,6 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 import {
     parseAuthorization,
     RecordsServer,
@@ -25,9 +26,6 @@ import type {
     GenericHttpHeaders,
     GenericHttpRequest,
     GenericHttpResponse,
-    GenericPathParameters,
-    GenericQueryStringParameters,
-    GenericWebsocketRequest,
     UserRole,
 } from '@casual-simulation/aux-common';
 import {
@@ -85,7 +83,6 @@ import {
     createTestSubConfiguration,
     createTestUser,
     randomBigInt,
-    unwindAndCaptureAsync,
 } from './TestUtils';
 import { AIController } from './AIController';
 import type {
@@ -111,15 +108,7 @@ import type { InstRecordsStore } from './websockets/InstRecordsStore';
 import type { TemporaryInstRecordsStore } from './websockets/TemporaryInstRecordsStore';
 import { SplitInstRecordsStore } from './websockets/SplitInstRecordsStore';
 import { MemoryTempInstRecordsStore } from './websockets/MemoryTempInstRecordsStore';
-import type {
-    LoginMessage,
-    WebsocketDownloadRequestEvent,
-    WebsocketHttpPartialResponseMessage,
-    WebsocketHttpResponseMessage,
-    WebsocketMessage,
-    WebsocketMessageEvent,
-    WebsocketUploadRequestEvent,
-} from '@casual-simulation/aux-common/websockets/WebsocketEvents';
+import type { LoginMessage } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
 import { WebsocketEventTypes } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
 import type {
     StoredAuxVersion1,
@@ -135,10 +124,7 @@ import {
     remote,
 } from '@casual-simulation/aux-common/common/RemoteActions';
 import type { ConnectionInfo } from '@casual-simulation/aux-common/common/ConnectionInfo';
-import {
-    constructInitializationUpdate,
-    tryParseJson,
-} from '@casual-simulation/aux-common';
+import { constructInitializationUpdate } from '@casual-simulation/aux-common';
 import type { PrivoClientInterface } from './PrivoClient';
 import { DateTime } from 'luxon';
 import { ModerationController } from './ModerationController';
@@ -221,6 +207,29 @@ import { ContractRecordsController } from './contracts/ContractRecordsController
 import { runTigerBeetle } from './financial/TigerBeetleTestUtils';
 import { createClient, type Client as TBClient } from 'tigerbeetle-node';
 import type { ChildProcess } from 'node:child_process';
+import type { ViewParams, ViewTemplateRenderer } from './ViewTemplateRenderer';
+import { render } from 'preact-render-to-string/jsx';
+import {
+    httpGet,
+    httpPost,
+    httpPut,
+    httpDelete,
+    httpRequest,
+    wsConnect,
+    wsMessage,
+    downloadRequestEvent,
+    messageEvent,
+    uploadRequestEvent,
+    procedureRequest,
+    corsHeaders,
+    expectNoWebSocketErrors,
+    expectResponseBodyToEqual,
+    expectWebsocketHttpPartialResponseBodiesToEqual,
+    expectWebsocketHttpResponseBodyToEqual,
+    getWebSockerErrors,
+    getWebsocketHttpResponse,
+    getWebsocketHttpPartialResponses,
+} from './HttpTestUtils';
 
 jest.setTimeout(10000); // 10 seconds
 
@@ -272,6 +281,7 @@ verifyAuthenticationResponseMock.mockImplementation(async (opts) => {
 });
 
 console.log = jest.fn();
+console.warn = jest.fn();
 // console.error = jest.fn();
 
 describe('RecordsServer', () => {
@@ -528,6 +538,8 @@ describe('RecordsServer', () => {
     let privoClientMock: jest.MockedObject<PrivoClientInterface>;
 
     let currentId: bigint;
+
+    let viewTemplateRenderer: ViewTemplateRenderer;
 
     beforeEach(async () => {
         allowedAccountOrigins = new Set([accountOrigin]);
@@ -921,6 +933,19 @@ describe('RecordsServer', () => {
         //     financialInterface: finanacialInterface,
         // });
 
+        viewTemplateRenderer = {
+            render: async (template: string, args: ViewParams) => {
+                let result = '';
+                for (let key of Object.keys(args)) {
+                    const value = args[key];
+                    result += `<${key}>${render(value, undefined, {
+                        pretty: true,
+                    })}</${key}>`;
+                }
+                return result;
+            },
+        };
+
         server = new RecordsServer({
             allowedAccountOrigins,
             allowedApiOrigins,
@@ -947,6 +972,7 @@ describe('RecordsServer', () => {
             databaseRecordsController: databaseController,
             purchasableItemsController,
             contractRecordsController: contractsController,
+            viewTemplateRenderer: viewTemplateRenderer,
         });
         defaultHeaders = {
             origin: 'test.com',
@@ -3914,10 +3940,12 @@ describe('RecordsServer', () => {
                         'The request was invalid. One or more fields were invalid.',
                     issues: [
                         {
-                            code: 'invalid_string',
+                            code: 'invalid_format',
+                            format: 'regex',
+                            origin: 'string',
                             message: 'The value cannot not contain spaces.',
                             path: ['displayName'],
-                            validation: 'regex',
+                            pattern: '/^\\S*$/g',
                         },
                     ],
                 },
@@ -3961,10 +3989,12 @@ describe('RecordsServer', () => {
                         'The request was invalid. One or more fields were invalid.',
                     issues: [
                         {
-                            code: 'invalid_string',
+                            code: 'invalid_format',
+                            format: 'regex',
+                            origin: 'string',
                             message: 'The value cannot not contain spaces.',
                             path: ['name'],
-                            validation: 'regex',
+                            pattern: '/^\\S*$/g',
                         },
                     ],
                 },
@@ -4009,23 +4039,21 @@ describe('RecordsServer', () => {
                     issues: [
                         {
                             code: 'too_small',
-                            exact: false,
                             inclusive: true,
                             message:
-                                'String must contain at least 1 character(s)',
+                                'Too small: expected string to have >=1 characters',
                             minimum: 1,
                             path: ['name'],
-                            type: 'string',
+                            origin: 'string',
                         },
                         {
                             code: 'too_small',
-                            exact: false,
                             inclusive: true,
                             message:
-                                'String must contain at least 1 character(s)',
+                                'Too small: expected string to have >=1 characters',
                             minimum: 1,
                             path: ['displayName'],
-                            type: 'string',
+                            origin: 'string',
                         },
                     ],
                 },
@@ -5503,7 +5531,6 @@ describe('RecordsServer', () => {
                             expected: 'string',
                             message: 'recordKey must be a string.',
                             path: ['recordKey'],
-                            received: 'number',
                         },
                     ],
                 },
@@ -5537,7 +5564,6 @@ describe('RecordsServer', () => {
                             expected: 'string',
                             message: 'eventName must be a string.',
                             path: ['eventName'],
-                            received: 'number',
                         },
                     ],
                 },
@@ -5571,7 +5597,6 @@ describe('RecordsServer', () => {
                             expected: 'number',
                             message: 'count must be a number.',
                             path: ['count'],
-                            received: 'string',
                         },
                     ],
                 },
@@ -5681,7 +5706,6 @@ describe('RecordsServer', () => {
                             expected: 'string',
                             message: 'recordName is required.',
                             path: ['recordName'],
-                            received: 'undefined',
                         },
                     ],
                 },
@@ -5710,7 +5734,6 @@ describe('RecordsServer', () => {
                             expected: 'string',
                             message: 'eventName is required.',
                             path: ['eventName'],
-                            received: 'undefined',
                         },
                     ],
                 },
@@ -5887,7 +5910,6 @@ describe('RecordsServer', () => {
                             expected: 'string',
                             message: 'recordName is required.',
                             path: ['recordName'],
-                            received: 'undefined',
                         },
                     ],
                 },
@@ -6035,7 +6057,6 @@ describe('RecordsServer', () => {
                             expected: 'string',
                             message: 'recordKey is required.',
                             path: ['recordKey'],
-                            received: 'undefined',
                         },
                     ],
                 },
@@ -6068,7 +6089,6 @@ describe('RecordsServer', () => {
                             expected: 'string',
                             message: 'eventName is required.',
                             path: ['eventName'],
-                            received: 'undefined',
                         },
                     ],
                 },
@@ -6348,7 +6368,6 @@ describe('RecordsServer', () => {
                             expected: 'string',
                             message: 'recordKey must be a string.',
                             path: ['recordKey'],
-                            received: 'number',
                         },
                     ],
                 },
@@ -6381,7 +6400,6 @@ describe('RecordsServer', () => {
                             expected: 'string',
                             message: 'address must be a string.',
                             path: ['address'],
-                            received: 'number',
                         },
                     ],
                 },
@@ -6587,7 +6605,6 @@ describe('RecordsServer', () => {
                             expected: 'string',
                             message: 'recordName is required.',
                             path: ['recordName'],
-                            received: 'undefined',
                         },
                     ],
                 },
@@ -6616,7 +6633,6 @@ describe('RecordsServer', () => {
                             expected: 'string',
                             message: 'address is required.',
                             path: ['address'],
-                            received: 'undefined',
                         },
                     ],
                 },
@@ -6851,7 +6867,6 @@ describe('RecordsServer', () => {
                             expected: 'string',
                             message: 'address must be a string.',
                             path: ['address'],
-                            received: 'number',
                         },
                     ],
                 },
@@ -6885,7 +6900,6 @@ describe('RecordsServer', () => {
                             expected: 'string',
                             message: 'recordKey must be a string.',
                             path: ['recordKey'],
-                            received: 'number',
                         },
                     ],
                 },
@@ -7109,7 +7123,6 @@ describe('RecordsServer', () => {
                             expected: 'string',
                             message: 'recordKey must be a string.',
                             path: ['recordKey'],
-                            received: 'number',
                         },
                     ],
                 },
@@ -7142,7 +7155,6 @@ describe('RecordsServer', () => {
                             expected: 'string',
                             message: 'fileUrl must be a string.',
                             path: ['fileUrl'],
-                            received: 'number',
                         },
                     ],
                 },
@@ -7413,7 +7425,6 @@ describe('RecordsServer', () => {
                             expected: 'string',
                             message: 'recordKey must be a string.',
                             path: ['recordKey'],
-                            received: 'number',
                         },
                     ],
                 },
@@ -7450,7 +7461,6 @@ describe('RecordsServer', () => {
                             expected: 'string',
                             message: 'fileSha256Hex must be a string.',
                             path: ['fileSha256Hex'],
-                            received: 'number',
                         },
                     ],
                 },
@@ -7488,7 +7498,6 @@ describe('RecordsServer', () => {
                             message:
                                 'fileByteLength must be a positive integer number.',
                             path: ['fileByteLength'],
-                            received: 'string',
                         },
                     ],
                 },
@@ -7525,7 +7534,6 @@ describe('RecordsServer', () => {
                             expected: 'string',
                             message: 'fileMimeType must be a string.',
                             path: ['fileMimeType'],
-                            received: 'number',
                         },
                     ],
                 },
@@ -7562,7 +7570,6 @@ describe('RecordsServer', () => {
                             expected: 'string',
                             message: 'fileDescription must be a string.',
                             path: ['fileDescription'],
-                            received: 'number',
                         },
                     ],
                 },
@@ -8107,7 +8114,6 @@ describe('RecordsServer', () => {
                             expected: 'string',
                             message: 'recordName is required.',
                             path: ['recordName'],
-                            received: 'undefined',
                         },
                     ],
                 },
@@ -8300,7 +8306,6 @@ describe('RecordsServer', () => {
                             expected: 'string',
                             message: 'recordKey must be a string.',
                             path: ['recordKey'],
-                            received: 'number',
                         },
                     ],
                 },
@@ -8334,7 +8339,6 @@ describe('RecordsServer', () => {
                             expected: 'string',
                             message: 'fileUrl must be a string.',
                             path: ['fileUrl'],
-                            received: 'number',
                         },
                     ],
                 },
@@ -8368,7 +8372,6 @@ describe('RecordsServer', () => {
                             expected: 'array',
                             message: 'markers must be an array of strings.',
                             path: ['markers'],
-                            received: 'number',
                         },
                     ],
                 },
@@ -8921,7 +8924,6 @@ describe('RecordsServer', () => {
                             expected: 'string',
                             message: 'recordKey must be a string.',
                             path: ['recordKey'],
-                            received: 'number',
                         },
                     ],
                 },
@@ -8954,7 +8956,6 @@ describe('RecordsServer', () => {
                             expected: 'string',
                             message: 'address must be a string.',
                             path: ['address'],
-                            received: 'number',
                         },
                     ],
                 },
@@ -9163,7 +9164,6 @@ describe('RecordsServer', () => {
                             expected: 'string',
                             message: 'recordName is required.',
                             path: ['recordName'],
-                            received: 'undefined',
                         },
                     ],
                 },
@@ -9192,7 +9192,6 @@ describe('RecordsServer', () => {
                             expected: 'string',
                             message: 'address is required.',
                             path: ['address'],
-                            received: 'undefined',
                         },
                     ],
                 },
@@ -9508,7 +9507,6 @@ describe('RecordsServer', () => {
                                 expected: 'string',
                                 message: 'recordName is required.',
                                 path: ['recordName'],
-                                received: 'undefined',
                             },
                         ],
                     },
@@ -9798,7 +9796,6 @@ describe('RecordsServer', () => {
                             expected: 'string',
                             message: 'address must be a string.',
                             path: ['address'],
-                            received: 'number',
                         },
                     ],
                 },
@@ -9832,7 +9829,6 @@ describe('RecordsServer', () => {
                             expected: 'string',
                             message: 'recordKey must be a string.',
                             path: ['recordKey'],
-                            received: 'number',
                         },
                     ],
                 },
@@ -10083,7 +10079,6 @@ describe('RecordsServer', () => {
                             {
                                 code: 'invalid_type',
                                 expected: 'string',
-                                received: 'null',
                                 message: 'recordName must be a string.',
                                 path: ['item', 'targetRecordName'],
                             },
@@ -16306,7 +16301,7 @@ describe('RecordsServer', () => {
                             path: ['targetRecordName'],
                         }),
                         expect.objectContaining({
-                            code: 'invalid_type',
+                            code: 'invalid_value',
                             path: ['targetResourceKind'],
                         }),
                         expect.objectContaining({
@@ -16357,7 +16352,6 @@ describe('RecordsServer', () => {
                         expect.objectContaining({
                             code: 'invalid_type',
                             expected: 'array',
-                            received: 'string',
                             path: ['targetMapping'],
                         }),
                     ]),
@@ -16681,7 +16675,6 @@ describe('RecordsServer', () => {
                         expect.objectContaining({
                             code: 'invalid_type',
                             expected: 'string',
-                            received: 'number',
                             path: ['syncId'],
                         }),
                     ]),
@@ -17028,7 +17021,9 @@ describe('RecordsServer', () => {
                         'The request was invalid. One or more fields were invalid.',
                     issues: expect.arrayContaining([
                         expect.objectContaining({
-                            code: 'invalid_type',
+                            code: expect.stringMatching(
+                                /invalid_type|invalid_value/
+                            ),
                             path: ['query'],
                         }),
                     ]),
@@ -17810,7 +17805,6 @@ describe('RecordsServer', () => {
                             expected: 'string',
                             message: 'recordName must be a string.',
                             path: ['recordName'],
-                            received: 'number',
                         },
                     ],
                 },
@@ -18285,9 +18279,9 @@ describe('RecordsServer', () => {
                             {
                                 code: 'invalid_type',
                                 expected: 'string',
-                                message: 'Expected string, received number',
+                                message:
+                                    'Invalid input: expected string, received number',
                                 path: ['permission', 'marker'],
-                                received: 'number',
                             },
                         ],
                     },
@@ -18475,9 +18469,9 @@ describe('RecordsServer', () => {
                             {
                                 code: 'invalid_type',
                                 expected: 'string',
-                                message: 'Expected string, received number',
+                                message:
+                                    'Invalid input: expected string, received number',
                                 path: ['permission', 'resourceId'],
-                                received: 'number',
                             },
                         ],
                     },
@@ -18519,7 +18513,6 @@ describe('RecordsServer', () => {
                             expected: 'string',
                             message: 'recordName must be a string.',
                             path: ['recordName'],
-                            received: 'number',
                         },
                     ],
                 },
@@ -18550,9 +18543,9 @@ describe('RecordsServer', () => {
                         {
                             code: 'invalid_type',
                             expected: 'object',
-                            message: 'Expected object, received null',
+                            message:
+                                'Invalid input: expected object, received null',
                             path: ['permission'],
-                            received: 'null',
                         },
                     ],
                 },
@@ -19110,7 +19103,6 @@ describe('RecordsServer', () => {
                             expected: 'string',
                             message: 'recordName is required.',
                             path: ['recordName'],
-                            received: 'undefined',
                         },
                     ],
                 },
@@ -19139,7 +19131,6 @@ describe('RecordsServer', () => {
                             expected: 'string',
                             message: 'userId is required.',
                             path: ['userId'],
-                            received: 'undefined',
                         },
                     ],
                 },
@@ -19292,7 +19283,6 @@ describe('RecordsServer', () => {
                             expected: 'string',
                             message: 'recordName is required.',
                             path: ['recordName'],
-                            received: 'undefined',
                         },
                     ],
                 },
@@ -19321,7 +19311,6 @@ describe('RecordsServer', () => {
                             expected: 'string',
                             message: 'inst is required.',
                             path: ['inst'],
-                            received: 'undefined',
                         },
                     ],
                 },
@@ -19540,7 +19529,6 @@ describe('RecordsServer', () => {
                             expected: 'string',
                             message: 'recordName is required.',
                             path: ['recordName'],
-                            received: 'undefined',
                         },
                     ],
                 },
@@ -19682,7 +19670,6 @@ describe('RecordsServer', () => {
                                 expected: 'string',
                                 message: 'recordName is required.',
                                 path: ['recordName'],
-                                received: 'undefined',
                             },
                         ],
                     },
@@ -19917,7 +19904,6 @@ describe('RecordsServer', () => {
                             expected: 'string',
                             message: 'recordName is required.',
                             path: ['recordName'],
-                            received: 'undefined',
                         },
                     ],
                 },
@@ -19950,7 +19936,6 @@ describe('RecordsServer', () => {
                             expected: 'string',
                             message: 'role is required.',
                             path: ['role'],
-                            received: 'undefined',
                         },
                     ],
                 },
@@ -19985,7 +19970,6 @@ describe('RecordsServer', () => {
                             expected: 'number',
                             message: 'expireTimeMs must be a number.',
                             path: ['expireTimeMs'],
-                            received: 'string',
                         },
                     ],
                 },
@@ -20210,7 +20194,6 @@ describe('RecordsServer', () => {
                             expected: 'string',
                             message: 'recordName is required.',
                             path: ['recordName'],
-                            received: 'undefined',
                         },
                     ],
                 },
@@ -20243,7 +20226,6 @@ describe('RecordsServer', () => {
                             expected: 'string',
                             message: 'role is required.',
                             path: ['role'],
-                            received: 'undefined',
                         },
                     ],
                 },
@@ -21550,7 +21532,6 @@ describe('RecordsServer', () => {
                             expected: 'string',
                             message: 'recordName is required.',
                             path: ['recordName'],
-                            received: 'undefined',
                         },
                     ],
                 },
@@ -21579,7 +21560,6 @@ describe('RecordsServer', () => {
                             expected: 'string',
                             message: 'address is required.',
                             path: ['address'],
-                            received: 'undefined',
                         },
                     ],
                 },
@@ -21994,7 +21974,6 @@ describe('RecordsServer', () => {
                                 expected: 'string',
                                 message: 'recordName is required.',
                                 path: ['recordName'],
-                                received: 'undefined',
                             },
                         ],
                     },
@@ -22411,7 +22390,6 @@ describe('RecordsServer', () => {
                             expected: 'string',
                             message: 'recordName must be a string.',
                             path: ['recordName'],
-                            received: 'number',
                         },
                     ],
                 },
@@ -22442,9 +22420,9 @@ describe('RecordsServer', () => {
                         {
                             code: 'invalid_type',
                             expected: 'object',
-                            message: 'Required',
+                            message:
+                                'Invalid input: expected object, received undefined',
                             path: ['item'],
-                            received: 'undefined',
                         },
                     ],
                 },
@@ -23925,13 +23903,12 @@ describe('RecordsServer', () => {
                     issues: [
                         {
                             code: 'too_big',
-                            exact: false,
                             inclusive: true,
                             maximum: 600,
                             message:
-                                'String must contain at most 600 character(s)',
+                                'Too big: expected string to have <=600 characters',
                             path: ['prompt'],
-                            type: 'string',
+                            origin: 'string',
                         },
                     ],
                 },
@@ -24858,6 +24835,12 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         },
                         storeFeatures: {
                             allowed: false,
+                            currencyLimits: {
+                                usd: {
+                                    maxCost: 100000,
+                                    minCost: 50,
+                                },
+                            },
                         },
                         stripeAccountStatus: null,
                         stripeRequirementsStatus: null,
@@ -26265,6 +26248,36 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                 }),
             () => authenticatedHeaders
         );
+    });
+
+    describe('GET /api/config', () => {
+        it('should return the web config', async () => {
+            store.webConfig = {
+                causalRepoConnectionProtocol: 'websocket',
+                version: 2,
+                logoTitle: 'Custom Logo Title',
+                logoUrl: 'http://example.com/logo.png',
+            };
+
+            const result = await server.handleHttpRequest(
+                httpGet('/api/config', apiHeaders)
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    causalRepoConnectionProtocol: 'websocket',
+                    version: 2,
+                    logoTitle: 'Custom Logo Title',
+                    logoUrl: 'http://example.com/logo.png',
+                    studiosSupported: true,
+                    subscriptionsSupported: true,
+                    requirePrivoLogin: false,
+                },
+                headers: apiCorsHeaders,
+            });
+        });
     });
 
     describe('GET /api/v2/player/config', () => {
@@ -30703,7 +30716,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                     'An operation could not be found for the given request.',
             }),
             headers: {
-                'Access-Control-Allow-Origin': 'test.com',
+                'Access-Control-Allow-Origin': 'https://example.com',
                 'Access-Control-Allow-Headers': 'Content-Type, Authorization',
             },
         });
@@ -30744,7 +30757,10 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                             'A connection ID must be specified when logging in without a connection token.',
                     },
                 ]);
-                const errors = getWebSockerErrors(connectionId);
+                const errors = getWebSockerErrors(
+                    websocketMessenger,
+                    connectionId
+                );
 
                 expect(errors).toEqual([]);
             });
@@ -30754,7 +30770,10 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                     wsMessage(connectionId, messageEvent(1, 123 as any))
                 );
 
-                const errors = getWebSockerErrors(connectionId);
+                const errors = getWebSockerErrors(
+                    websocketMessenger,
+                    connectionId
+                );
 
                 expect(errors).toEqual([
                     [
@@ -30769,9 +30788,9 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                                 {
                                     code: 'invalid_type',
                                     expected: 'object',
-                                    message: 'Expected object, received number',
+                                    message:
+                                        'Invalid input: expected object, received number',
                                     path: [],
-                                    received: 'number',
                                 },
                             ],
                         },
@@ -30790,7 +30809,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                     )
                 );
 
-                expectNoWebSocketErrors(connectionId);
+                expectNoWebSocketErrors(websocketMessenger, connectionId);
 
                 const connection = await websocketConnectionStore.getConnection(
                     connectionId
@@ -30833,7 +30852,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                     )
                 );
 
-                expectNoWebSocketErrors(connectionId);
+                expectNoWebSocketErrors(websocketMessenger, connectionId);
 
                 const connection = await websocketConnectionStore.getConnection(
                     connectionId
@@ -30984,7 +31003,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
 
             describe('repo/watch_branch', () => {
                 it('should be able to connect to branches', async () => {
-                    expectNoWebSocketErrors(connectionId);
+                    expectNoWebSocketErrors(websocketMessenger, connectionId);
 
                     await server.handleWebsocketRequest(
                         wsMessage(
@@ -30998,7 +31017,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         )
                     );
 
-                    expectNoWebSocketErrors(connectionId);
+                    expectNoWebSocketErrors(websocketMessenger, connectionId);
                     expect(
                         websocketMessenger.getMessages(connectionId)
                     ).toEqual([
@@ -31021,7 +31040,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                 });
 
                 it('should send the initial updates', async () => {
-                    expectNoWebSocketErrors(connectionId);
+                    expectNoWebSocketErrors(websocketMessenger, connectionId);
 
                     await instStore.addUpdates(
                         recordName,
@@ -31043,7 +31062,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         )
                     );
 
-                    expectNoWebSocketErrors(connectionId);
+                    expectNoWebSocketErrors(websocketMessenger, connectionId);
                     expect(
                         websocketMessenger.getMessages(connectionId)
                     ).toEqual([
@@ -31066,7 +31085,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                 });
 
                 it('should send updates when they are added', async () => {
-                    expectNoWebSocketErrors(connectionId);
+                    expectNoWebSocketErrors(websocketMessenger, connectionId);
 
                     await server.handleWebsocketRequest(
                         wsMessage(
@@ -31080,7 +31099,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         )
                     );
 
-                    expectNoWebSocketErrors(connectionId);
+                    expectNoWebSocketErrors(websocketMessenger, connectionId);
 
                     await websocketController.addUpdates(connection2, {
                         type: 'repo/add_updates',
@@ -31090,7 +31109,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         updates: ['abc'],
                     });
 
-                    expectNoWebSocketErrors(connection2);
+                    expectNoWebSocketErrors(websocketMessenger, connection2);
 
                     expect(
                         websocketMessenger.getMessages(connectionId)
@@ -31123,7 +31142,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
 
             describe('repo/add_updates', () => {
                 it('should add updates to the branch', async () => {
-                    expectNoWebSocketErrors(connectionId);
+                    expectNoWebSocketErrors(websocketMessenger, connectionId);
 
                     await server.handleWebsocketRequest(
                         wsMessage(
@@ -31139,7 +31158,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         )
                     );
 
-                    expectNoWebSocketErrors(connectionId);
+                    expectNoWebSocketErrors(websocketMessenger, connectionId);
                     expect(
                         websocketMessenger.getMessages(connectionId)
                     ).toEqual([
@@ -31168,7 +31187,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
 
             describe('repo/get_updates', () => {
                 it('should get the updates for the branch', async () => {
-                    expectNoWebSocketErrors(connectionId);
+                    expectNoWebSocketErrors(websocketMessenger, connectionId);
 
                     if (recordName) {
                         await instStore.saveInst({
@@ -31198,7 +31217,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         )
                     );
 
-                    expectNoWebSocketErrors(connectionId);
+                    expectNoWebSocketErrors(websocketMessenger, connectionId);
                     expect(
                         websocketMessenger.getMessages(connectionId)
                     ).toEqual([
@@ -31216,7 +31235,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
 
             describe('repo/unwatch_branch', () => {
                 it('should stop sending updates', async () => {
-                    expectNoWebSocketErrors(connectionId);
+                    expectNoWebSocketErrors(websocketMessenger, connectionId);
 
                     await server.handleWebsocketRequest(
                         wsMessage(
@@ -31230,7 +31249,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         )
                     );
 
-                    expectNoWebSocketErrors(connectionId);
+                    expectNoWebSocketErrors(websocketMessenger, connectionId);
 
                     // await websocketController.login(connection2, 1, {
                     //     type: 'login',
@@ -31245,7 +31264,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         updates: ['abc'],
                     });
 
-                    expectNoWebSocketErrors(connection2);
+                    expectNoWebSocketErrors(websocketMessenger, connection2);
 
                     await server.handleWebsocketRequest(
                         wsMessage(
@@ -31259,7 +31278,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         )
                     );
 
-                    expectNoWebSocketErrors(connectionId);
+                    expectNoWebSocketErrors(websocketMessenger, connectionId);
 
                     await websocketController.addUpdates(connection2, {
                         type: 'repo/add_updates',
@@ -31269,7 +31288,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         updates: ['def'],
                     });
 
-                    expectNoWebSocketErrors(connection2);
+                    expectNoWebSocketErrors(websocketMessenger, connection2);
 
                     expect(
                         websocketMessenger.getMessages(connectionId)
@@ -31302,7 +31321,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
 
             describe('repo/send_action', () => {
                 it('should send an action to the specified device', async () => {
-                    expectNoWebSocketErrors(connectionId);
+                    expectNoWebSocketErrors(websocketMessenger, connectionId);
                     await websocketController.watchBranch(connection2, {
                         type: 'repo/watch_branch',
                         recordName,
@@ -31310,7 +31329,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         branch,
                     });
 
-                    expectNoWebSocketErrors(connection2);
+                    expectNoWebSocketErrors(websocketMessenger, connection2);
 
                     await server.handleWebsocketRequest(
                         wsMessage(
@@ -31327,7 +31346,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         )
                     );
 
-                    expectNoWebSocketErrors(connectionId);
+                    expectNoWebSocketErrors(websocketMessenger, connectionId);
 
                     expect(
                         websocketMessenger.getMessages(connection2).slice(2)
@@ -31343,7 +31362,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                 });
 
                 it('should do nothing if no devices are matched by the selector', async () => {
-                    expectNoWebSocketErrors(connectionId);
+                    expectNoWebSocketErrors(websocketMessenger, connectionId);
                     await websocketController.watchBranch(connection2, {
                         type: 'repo/watch_branch',
                         recordName,
@@ -31351,7 +31370,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         branch,
                     });
 
-                    expectNoWebSocketErrors(connection2);
+                    expectNoWebSocketErrors(websocketMessenger, connection2);
 
                     await server.handleWebsocketRequest(
                         wsMessage(
@@ -31368,7 +31387,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         )
                     );
 
-                    expectNoWebSocketErrors(connectionId);
+                    expectNoWebSocketErrors(websocketMessenger, connectionId);
 
                     expect(
                         websocketMessenger.getMessages(connection2).slice(2)
@@ -31378,7 +31397,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
 
             describe('repo/watch_branch_devices', () => {
                 it('should watch for connection events on the given branch', async () => {
-                    expectNoWebSocketErrors(connectionId);
+                    expectNoWebSocketErrors(websocketMessenger, connectionId);
 
                     await server.handleWebsocketRequest(
                         wsMessage(
@@ -31392,7 +31411,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         )
                     );
 
-                    expectNoWebSocketErrors(connectionId);
+                    expectNoWebSocketErrors(websocketMessenger, connectionId);
 
                     await websocketController.watchBranch(connection2, {
                         type: 'repo/watch_branch',
@@ -31401,7 +31420,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         branch,
                     });
 
-                    expectNoWebSocketErrors(connection2);
+                    expectNoWebSocketErrors(websocketMessenger, connection2);
 
                     expect(
                         websocketMessenger.getMessages(connectionId)
@@ -31421,7 +31440,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                 });
 
                 it('should watch for disconnection events on the given branch', async () => {
-                    expectNoWebSocketErrors(connectionId);
+                    expectNoWebSocketErrors(websocketMessenger, connectionId);
 
                     await server.handleWebsocketRequest(
                         wsMessage(
@@ -31435,7 +31454,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         )
                     );
 
-                    expectNoWebSocketErrors(connectionId);
+                    expectNoWebSocketErrors(websocketMessenger, connectionId);
 
                     await websocketController.watchBranch(connection2, {
                         type: 'repo/watch_branch',
@@ -31444,7 +31463,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         branch,
                     });
 
-                    expectNoWebSocketErrors(connection2);
+                    expectNoWebSocketErrors(websocketMessenger, connection2);
 
                     await websocketController.unwatchBranch(
                         connection2,
@@ -31453,7 +31472,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         branch
                     );
 
-                    expectNoWebSocketErrors(connection2);
+                    expectNoWebSocketErrors(websocketMessenger, connection2);
 
                     expect(
                         websocketMessenger.getMessages(connectionId)
@@ -31483,7 +31502,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
 
             describe('repo/unwatch_branch_devices', () => {
                 it('should stop watching for connection events', async () => {
-                    expectNoWebSocketErrors(connectionId);
+                    expectNoWebSocketErrors(websocketMessenger, connectionId);
 
                     await server.handleWebsocketRequest(
                         wsMessage(
@@ -31497,7 +31516,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         )
                     );
 
-                    expectNoWebSocketErrors(connectionId);
+                    expectNoWebSocketErrors(websocketMessenger, connectionId);
 
                     await server.handleWebsocketRequest(
                         wsMessage(
@@ -31511,7 +31530,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         )
                     );
 
-                    expectNoWebSocketErrors(connectionId);
+                    expectNoWebSocketErrors(websocketMessenger, connectionId);
 
                     await websocketController.watchBranch(connection2, {
                         type: 'repo/watch_branch',
@@ -31520,7 +31539,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         branch,
                     });
 
-                    expectNoWebSocketErrors(connection2);
+                    expectNoWebSocketErrors(websocketMessenger, connection2);
 
                     await websocketController.unwatchBranch(
                         connection2,
@@ -31529,7 +31548,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         branch
                     );
 
-                    expectNoWebSocketErrors(connection2);
+                    expectNoWebSocketErrors(websocketMessenger, connection2);
 
                     expect(
                         websocketMessenger.getMessages(connectionId)
@@ -31539,7 +31558,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
 
             describe('repo/connection_count', () => {
                 it('should return the connection count for the given branch', async () => {
-                    expectNoWebSocketErrors(connectionId);
+                    expectNoWebSocketErrors(websocketMessenger, connectionId);
 
                     await websocketController.watchBranch(connection2, {
                         type: 'repo/watch_branch',
@@ -31548,7 +31567,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         branch,
                     });
 
-                    expectNoWebSocketErrors(connection2);
+                    expectNoWebSocketErrors(websocketMessenger, connection2);
 
                     await server.handleWebsocketRequest(
                         wsMessage(
@@ -31562,7 +31581,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         )
                     );
 
-                    expectNoWebSocketErrors(connectionId);
+                    expectNoWebSocketErrors(websocketMessenger, connectionId);
 
                     expect(
                         websocketMessenger.getMessages(connectionId)
@@ -31581,7 +31600,10 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
             if (c !== 'anonymous') {
                 describe('permission/request/missing', () => {
                     it('should emit a permissions request to all the connected devices', async () => {
-                        expectNoWebSocketErrors(connectionId);
+                        expectNoWebSocketErrors(
+                            websocketMessenger,
+                            connectionId
+                        );
 
                         await websocketController.watchBranch(connectionId, {
                             type: 'repo/watch_branch',
@@ -31590,7 +31612,10 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                             branch: DEFAULT_BRANCH_NAME,
                         });
 
-                        expectNoWebSocketErrors(connectionId);
+                        expectNoWebSocketErrors(
+                            websocketMessenger,
+                            connectionId
+                        );
 
                         await server.handleWebsocketRequest(
                             wsMessage(
@@ -31610,7 +31635,10 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                             )
                         );
 
-                        expectNoWebSocketErrors(connection2);
+                        expectNoWebSocketErrors(
+                            websocketMessenger,
+                            connection2
+                        );
 
                         expect(
                             websocketMessenger.getMessages(connection2)
@@ -31644,7 +31672,10 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
 
                 describe('permission/request/missing/response', () => {
                     it('should emit a permissions response to the requesting device', async () => {
-                        expectNoWebSocketErrors(connectionId);
+                        expectNoWebSocketErrors(
+                            websocketMessenger,
+                            connectionId
+                        );
 
                         await websocketController.watchBranch(connectionId, {
                             type: 'repo/watch_branch',
@@ -31653,7 +31684,10 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                             branch: DEFAULT_BRANCH_NAME,
                         });
 
-                        expectNoWebSocketErrors(connectionId);
+                        expectNoWebSocketErrors(
+                            websocketMessenger,
+                            connectionId
+                        );
 
                         await server.handleWebsocketRequest(
                             wsMessage(
@@ -31673,7 +31707,10 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                             )
                         );
 
-                        expectNoWebSocketErrors(connection2);
+                        expectNoWebSocketErrors(
+                            websocketMessenger,
+                            connection2
+                        );
 
                         expect(
                             websocketMessenger.getMessages(connection2)
@@ -31718,7 +31755,10 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                             )
                         );
 
-                        expectNoWebSocketErrors(connectionId);
+                        expectNoWebSocketErrors(
+                            websocketMessenger,
+                            connectionId
+                        );
                         expect(
                             websocketMessenger.getMessages(connection2)
                         ).toEqual([
@@ -31769,7 +31809,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                 const ip = '123.456.789';
                 expect(rateLimiter.getHits(ip)).toBe(0);
 
-                expectNoWebSocketErrors(connectionId);
+                expectNoWebSocketErrors(websocketMessenger, connectionId);
 
                 await server.handleWebsocketRequest(
                     wsMessage(
@@ -31786,7 +31826,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                     )
                 );
 
-                expectNoWebSocketErrors(connectionId);
+                expectNoWebSocketErrors(websocketMessenger, connectionId);
                 expect(websocketMessenger.getMessages(connectionId)).toEqual([
                     {
                         type: 'repo/updates_received',
@@ -31822,7 +31862,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                     )
                 );
 
-                expectNoWebSocketErrors(connectionId);
+                expectNoWebSocketErrors(websocketMessenger, connectionId);
 
                 expect(websocketMessenger.getMessages(connectionId)).toEqual([
                     {
@@ -31855,7 +31895,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                     )
                 );
 
-                expectNoWebSocketErrors(connectionId);
+                expectNoWebSocketErrors(websocketMessenger, connectionId);
 
                 expect(websocketMessenger.getMessages(connectionId)).toEqual([
                     {
@@ -31879,7 +31919,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                     wsMessage(connectionId, uploadRequestEvent(1))
                 );
 
-                expectNoWebSocketErrors(connectionId);
+                expectNoWebSocketErrors(websocketMessenger, connectionId);
 
                 const messages = websocketMessenger.getEvents(connectionId);
                 expect(messages).toEqual([
@@ -31912,9 +31952,13 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                     )
                 );
 
-                expectNoWebSocketErrors(connectionId);
+                expectNoWebSocketErrors(websocketMessenger, connectionId);
 
-                const response = getWebsocketHttpResponse(connectionId, 1);
+                const response = getWebsocketHttpResponse(
+                    websocketMessenger,
+                    connectionId,
+                    1
+                );
                 expectWebsocketHttpResponseBodyToEqual(response, {
                     statusCode: 200,
                     body: {
@@ -31983,9 +32027,10 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                     )
                 );
 
-                expectNoWebSocketErrors(connectionId);
+                expectNoWebSocketErrors(websocketMessenger, connectionId);
 
                 const responses = getWebsocketHttpPartialResponses(
+                    websocketMessenger,
                     connectionId,
                     1
                 );
@@ -32029,9 +32074,13 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                     )
                 );
 
-                expectNoWebSocketErrors(connectionId);
+                expectNoWebSocketErrors(websocketMessenger, connectionId);
 
-                const response = getWebsocketHttpResponse(connectionId, 1);
+                const response = getWebsocketHttpResponse(
+                    websocketMessenger,
+                    connectionId,
+                    1
+                );
                 expectWebsocketHttpResponseBodyToEqual(response, {
                     statusCode: 403,
                     body: {
@@ -32065,9 +32114,13 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                     )
                 );
 
-                expectNoWebSocketErrors(connectionId);
+                expectNoWebSocketErrors(websocketMessenger, connectionId);
 
-                const response = getWebsocketHttpResponse(connectionId, 1);
+                const response = getWebsocketHttpResponse(
+                    websocketMessenger,
+                    connectionId,
+                    1
+                );
                 expectWebsocketHttpResponseBodyToEqual(response, {
                     statusCode: 200,
                     body: {
@@ -32090,128 +32143,6 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
             });
         });
     });
-
-    function expectNoWebSocketErrors(connectionId: string) {
-        const errors = getWebSockerErrors(connectionId);
-        expect(errors).toEqual([]);
-    }
-
-    function getWebSockerErrors(connectionId: string) {
-        const events = websocketMessenger.getEvents(connectionId);
-        const errors = events.filter((e) => e[0] === WebsocketEventTypes.Error);
-        return errors;
-    }
-
-    /**
-     * Tests that the response body of an HTTP request parses to equal the expected value.
-     * Returns the parsed body.
-     * @param response The response to test.
-     * @param expected The expected body.
-     * @returns
-     */
-    async function expectResponseBodyToEqual<T = any>(
-        response: GenericHttpResponse,
-        expected: any
-    ): Promise<T> {
-        let body: any;
-        if (
-            response.body &&
-            typeof response.body === 'object' &&
-            Symbol.asyncIterator in response.body
-        ) {
-            const result = await unwindAndCaptureAsync(
-                response.body[Symbol.asyncIterator]()
-            );
-            body = [
-                ...result.states.map((s) => JSON.parse(s.trim())),
-                JSON.parse(result.result.trim()),
-            ];
-        } else {
-            if (!response.body) {
-                body = undefined;
-            } else {
-                const jsonResult = tryParseJson(response.body as string);
-                if (jsonResult.success) {
-                    body = jsonResult.value;
-                } else {
-                    body = response.body;
-                }
-            }
-        }
-
-        expect({
-            ...response,
-            body,
-        }).toEqual(expected);
-
-        return body;
-    }
-
-    function expectWebsocketHttpResponseBodyToEqual(
-        message: WebsocketHttpResponseMessage,
-        expected: any
-    ) {
-        const response = message.response;
-
-        let json: any;
-        if (response.headers?.['content-type'] === 'application/x-ndjson') {
-            const lines = (response.body as string).split('\n');
-            json = lines
-                .map((l) => l.trim())
-                .filter((l) => !!l)
-                .map((l) => JSON.parse(l.trim()));
-        } else {
-            json = response.body
-                ? JSON.parse(response.body as string)
-                : undefined;
-        }
-
-        expect({
-            ...response,
-            body: json,
-        }).toEqual(expected);
-    }
-
-    function expectWebsocketHttpPartialResponseBodiesToEqual(
-        messages: WebsocketHttpPartialResponseMessage[],
-        expected: any
-    ) {
-        let bodies = [] as any[];
-        for (let m of messages) {
-            if (m.response) {
-                bodies.push(JSON.parse(m.response.body as string));
-            }
-        }
-        const response = messages[0].response;
-
-        expect({
-            ...response,
-            body: bodies,
-        }).toEqual(expected);
-    }
-
-    function getWebsocketHttpResponse(
-        connectionId: string,
-        id: number
-    ): WebsocketHttpResponseMessage {
-        const messages = websocketMessenger.getMessages(connectionId);
-        return messages.find(
-            (m) => m.type === 'http_response' && m.id === id
-        ) as WebsocketHttpResponseMessage;
-    }
-
-    function getWebsocketHttpPartialResponses(
-        connectionId: string,
-        id: number
-    ): WebsocketHttpPartialResponseMessage[] {
-        const messages = websocketMessenger.getMessages(connectionId);
-        return sortBy(
-            messages.filter(
-                (m) => m.type === 'http_partial_response' && m.id === id
-            ) as WebsocketHttpPartialResponseMessage[],
-            (m) => m.index
-        );
-    }
 
     function testUrl(
         method: GenericHttpRequest['method'],
@@ -32343,13 +32274,6 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
         });
     }
 
-    function corsHeaders(origin: string) {
-        return {
-            'Access-Control-Allow-Origin': origin,
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-        };
-    }
-
     function testBodyIsJson(getRequest: (body: string) => GenericHttpRequest) {
         it('should return a 400 status code when the body is not JSON', async () => {
             const request = getRequest('{');
@@ -32475,159 +32399,6 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
 
             expect(result.statusCode).not.toEqual(429);
         });
-    }
-
-    function httpGet(
-        url: string,
-        headers: GenericHttpHeaders = defaultHeaders,
-        ipAddress: string = '123.456.789'
-    ): GenericHttpRequest {
-        return httpRequest('GET', url, null, headers, ipAddress);
-    }
-
-    function httpPut(
-        url: string,
-        body: any,
-        headers: GenericHttpHeaders = defaultHeaders,
-        ipAddress: string = '123.456.789'
-    ): GenericHttpRequest {
-        return httpRequest('PUT', url, body, headers, ipAddress);
-    }
-
-    function httpPost(
-        url: string,
-        body: any,
-        headers: GenericHttpHeaders = defaultHeaders,
-        ipAddress: string = '123.456.789'
-    ): GenericHttpRequest {
-        return httpRequest('POST', url, body, headers, ipAddress);
-    }
-
-    function httpDelete(
-        url: string,
-        body: any,
-        headers: GenericHttpHeaders = defaultHeaders,
-        ipAddress: string = '123.456.789'
-    ): GenericHttpRequest {
-        return httpRequest('DELETE', url, body, headers, ipAddress);
-    }
-
-    function procedureRequest(
-        name: string,
-        input: any,
-        headers: GenericHttpHeaders = defaultHeaders,
-        query?: any,
-        ipAddress: string = '123.456.789'
-    ): GenericHttpRequest {
-        return httpRequest(
-            'POST',
-            '/api/v3/callProcedure',
-            JSON.stringify({
-                procedure: name,
-                input: input,
-                query,
-            }),
-            headers,
-            ipAddress
-        );
-    }
-
-    function httpRequest(
-        method: GenericHttpRequest['method'],
-        url: string,
-        body: GenericHttpRequest['body'] | null | undefined,
-        headers: GenericHttpHeaders = defaultHeaders,
-        ipAddress: string = '123.456.789'
-    ): GenericHttpRequest {
-        const { path, pathParams, query } = parseUrl(url);
-
-        return {
-            path,
-            body: body ?? null,
-            headers,
-            pathParams,
-            method,
-            query,
-            ipAddress,
-        };
-    }
-
-    function wsMessage(
-        connectionId: string,
-        body: string,
-        ipAddress: string = '123.456.789',
-        origin: string = 'https://test.com'
-    ): GenericWebsocketRequest {
-        return {
-            type: 'message',
-            connectionId,
-            body,
-            ipAddress,
-            origin,
-        };
-    }
-
-    function messageEvent(requestId: number, body: WebsocketMessage): string {
-        const e: WebsocketMessageEvent = [
-            WebsocketEventTypes.Message,
-            requestId,
-            body,
-        ];
-        return JSON.stringify(e);
-    }
-
-    function uploadRequestEvent(requestId: number): string {
-        const e: WebsocketUploadRequestEvent = [
-            WebsocketEventTypes.UploadRequest,
-            requestId,
-        ];
-
-        return JSON.stringify(e);
-    }
-
-    function downloadRequestEvent(
-        requestId: number,
-        downloadUrl: string,
-        downloadMethod: string,
-        downloadHeaders: any
-    ): string {
-        const e: WebsocketDownloadRequestEvent = [
-            WebsocketEventTypes.DownloadRequest,
-            requestId,
-            downloadUrl,
-            downloadMethod,
-            downloadHeaders,
-        ];
-
-        return JSON.stringify(e);
-    }
-
-    function wsConnect(
-        connectionId: string,
-        ipAddress: string = '123.456.789',
-        origin: string = 'https://test.com'
-    ): GenericWebsocketRequest {
-        return {
-            type: 'connect',
-            connectionId,
-            body: null,
-            ipAddress,
-            origin,
-        };
-    }
-
-    function wsDisconnect(
-        connectionId: string,
-        ipAddress: string = '123.456.789',
-        origin: string = 'https://test.com'
-    ): GenericWebsocketRequest {
-        return {
-            type: 'disconnect',
-            connectionId,
-            body: null,
-            ipAddress,
-            origin,
-        };
     }
 });
 
@@ -32814,79 +32585,3 @@ describe('parseAuthorization()', () => {
         expect(parseAuthorization('Bearer abc')).toBe('abc');
     });
 });
-
-function validateNoError<T extends { success: boolean }>(result: T): T {
-    expect(result).toMatchObject({
-        success: true,
-    });
-
-    return result;
-}
-
-type Path = (string | PathParam)[];
-
-function parseUrl(url: string): {
-    path: string;
-    query: GenericQueryStringParameters;
-    pathParams: GenericPathParameters;
-} {
-    let uri = new URL(url, 'http://example.com');
-
-    const pathParams = parsePathParams(uri.pathname);
-    const finalPath = pathParams
-        .map((p) => (typeof p === 'string' ? p : p.value))
-        .join('/');
-    const params = getPathParams(pathParams);
-
-    let query = {} as GenericQueryStringParameters;
-
-    uri.searchParams.forEach((value, key) => {
-        query[key] = value;
-    });
-
-    return {
-        path: finalPath,
-        pathParams: params,
-        query,
-    };
-}
-
-function parsePathParams(path: string | string[]): (string | PathParam)[] {
-    if (typeof path === 'string') {
-        return parsePathParams(path.split('/'));
-    }
-    let result = [] as (string | PathParam)[];
-    for (let segment of path) {
-        let p = decodeURI(segment);
-        if (p.startsWith('{') && p.endsWith('}')) {
-            let splitPoint = p.indexOf(':');
-            let name = p.slice(1, splitPoint);
-            let value = p.slice(splitPoint + 1, p.length - 1);
-            result.push({
-                name,
-                value,
-            });
-        } else {
-            result.push(segment);
-        }
-    }
-
-    return result;
-}
-
-function getPathParams(path: (string | PathParam)[]) {
-    let result = {} as GenericPathParameters;
-    for (let p of path) {
-        if (typeof p === 'string') {
-            continue;
-        }
-        result[p.name] = p.value;
-    }
-
-    return result;
-}
-
-interface PathParam {
-    value: string;
-    name: string;
-}

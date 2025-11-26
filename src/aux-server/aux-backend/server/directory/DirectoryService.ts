@@ -23,7 +23,7 @@ import { DirectoryUpdateSchema } from './DirectoryUpdate';
 import type { DirectoryResult } from './DirectoryResult';
 import { compareSync, hashSync, genSaltSync } from 'bcryptjs';
 import { sign } from 'jsonwebtoken';
-import type { DirectoryServerConfig } from '../config';
+import type { DirectoryServerConfig } from './DirectoryConfig';
 import axios from 'axios';
 
 /**

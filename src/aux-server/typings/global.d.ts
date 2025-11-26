@@ -159,3 +159,8 @@ interface ImportMeta {
         SSR: boolean;
     };
 }
+
+declare module '*.config.mts' {
+    const path: string;
+    export default path;
+}

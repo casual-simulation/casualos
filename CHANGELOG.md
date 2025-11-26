@@ -1,8 +1,8 @@
 # CasualOS Changelog
 
-## V3.8.2
+## V3.9.0
 
-#### Date: 11/21/2025
+#### Date: 11/26/2025
 
 ### :rocket: Features
 
@@ -49,7 +49,13 @@
 -   Added the `os.signOut()` function to sign out the current user
     -   Returns a promise that resolves when the sign out request has been processed
     -   Uses the auth helper's logout method to properly sign out the user
+-   Improved error logs to include the system tag of bots that errors occurred on.
 -   Added the `os.generateQRCode(code)` function to generate a QR code as a data URL that can be used in an img tag or as a bot's formAddress.
+-   Added the `minify-aux` command to the CLI.
+    -   This command takes a `.aux` file as input, and rewrites it to be [minified](<https://en.wikipedia.org/wiki/Minification_(programming)>).
+    -   This saves space and can help your `.aux` files load quicker, at the expense of readability.
+-   Added basic server side rendering.
+    -   Currently, this is used for injecting the web config so that CasualOS doesn't need to make a call to `/api/config` on initialization.
 
 ### :bug: Bug Fixes
 
@@ -65,6 +71,7 @@
 -   Fixed internal `DebugObjectManager` not rendering properly when in the map portal.
 -   Disabled double-click to zoom in the map portal.
 -   Fixed camera rotation in mapPortal continuing after releasing the right mouse button outside the browser window.
+-   Fixed camera rotation in mapPortal continuing after moving your finger off the screen.
 -   Fixed an issue where CasualOS would produce incorrect code when JSX elements were directly after return statements.
 
 ## V3.8.1

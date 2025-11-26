@@ -94,6 +94,7 @@ export default class AuthStudio extends Vue {
     };
     storeFeatures: PurchasableItemFeaturesConfiguration = {
         allowed: false,
+        currencyLimits: {},
     };
     stripeAccountStatus: StripeAccountStatus = null;
     stripeRequirementsStatus: StripeRequirementsStatus = null;
@@ -507,6 +508,7 @@ export default class AuthStudio extends Vue {
                 this.humeFeatures = result.studio.humeFeatures;
                 this.storeFeatures = result.studio.storeFeatures ?? {
                     allowed: false,
+                    currencyLimits: {},
                 };
                 this.stripeAccountStatus = result.studio.stripeAccountStatus;
                 this.stripeRequirementsStatus =

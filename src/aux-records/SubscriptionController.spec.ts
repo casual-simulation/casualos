@@ -12390,9 +12390,15 @@ describe('SubscriptionController', () => {
 
             store.subscriptionConfiguration = createTestSubConfiguration(
                 (config) =>
-                    config.addSubscription('sub_id', (sub) =>
-                        sub.withTier('tier1').withAllDefaultFeatures()
-                    )
+                    config
+                        .addSubscription('sub_id', (sub) =>
+                            sub.withTier('tier1').withAllDefaultFeatures()
+                        )
+                        .withStudioDefaultFeatures((features) =>
+                            features.withAllDefaultFeatures().withStore({
+                                allowed: false,
+                            })
+                        )
             );
 
             const result = await controller.createStripeLoginLink({
@@ -13958,7 +13964,11 @@ describe('SubscriptionController', () => {
             });
 
             describe('creditGrant', () => {
-                it('should support match-price', async () => {
+                it('should support match-invoice', async () => {
+                    for (let sub of store.subscriptionConfiguration
+                        .subscriptions) {
+                        sub.creditGrant = 'match-invoice';
+                    }
                     stripeMock.constructWebhookEvent.mockReturnValueOnce({
                         id: 'event_id',
                         type: 'invoice.paid',
@@ -14176,6 +14186,91 @@ describe('SubscriptionController', () => {
                                 credit_account_id: userAccount.account.id,
                             },
                         ]
+                    );
+                });
+
+                it('should do nothing if no grant is set', async () => {
+                    stripeMock.constructWebhookEvent.mockReturnValueOnce({
+                        id: 'event_id',
+                        type: 'invoice.paid',
+                        object: 'event',
+                        account: 'account_id',
+                        api_version: 'api_version',
+                        created: 123,
+                        data: {
+                            object: {
+                                id: 'invoiceId',
+                                customer: 'customer_id',
+                                currency: 'usd',
+                                total: 1000,
+                                subtotal: 1000,
+                                tax: 0,
+                                description: 'description',
+                                status: 'paid',
+                                paid: true,
+                                hosted_invoice_url: 'invoiceUrl',
+                                invoice_pdf: 'pdfUrl',
+                                lines: {
+                                    object: 'list',
+                                    data: [
+                                        {
+                                            id: 'line_item_1_id',
+                                            price: {
+                                                id: 'price_1',
+                                                product: 'product_1_id',
+                                            },
+                                        },
+                                    ],
+                                },
+                                subscription: 'sub',
+                            },
+                        },
+                        livemode: true,
+                        pending_webhooks: 1,
+                        request: {} as any,
+                    });
+                    stripeMock.getSubscriptionById.mockResolvedValueOnce({
+                        id: 'sub',
+                        status: 'active',
+                        current_period_start: 456,
+                        current_period_end: 999,
+                        cancel_at: 7777,
+                        canceled_at: null,
+                        ended_at: null,
+                        start_date: 123,
+                    });
+
+                    const result = await controller.handleStripeWebhook({
+                        requestBody: 'request_body',
+                        signature: 'request_signature',
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                    });
+                    expect(
+                        stripeMock.constructWebhookEvent
+                    ).toHaveBeenCalledTimes(1);
+                    expect(
+                        stripeMock.constructWebhookEvent
+                    ).toHaveBeenCalledWith(
+                        'request_body',
+                        'request_signature',
+                        'webhook_secret'
+                    );
+
+                    const account =
+                        await financialController.getFinancialAccount({
+                            userId: userId,
+                            ledger: LEDGERS.credits,
+                        });
+
+                    expect(account).toEqual(
+                        failure({
+                            errorCode: 'not_found',
+                            errorMessage:
+                                'The financial account does not exist.',
+                        })
                     );
                 });
             });
@@ -14440,7 +14535,11 @@ describe('SubscriptionController', () => {
                 });
 
                 describe('creditGrant', () => {
-                    it('should support match-price', async () => {
+                    it('should support match-invoice', async () => {
+                        for (let sub of store.subscriptionConfiguration
+                            .subscriptions) {
+                            sub.creditGrant = 'match-invoice';
+                        }
                         stripeMock.constructWebhookEvent.mockReturnValueOnce({
                             id: 'event_id',
                             type: 'invoice.paid',
@@ -14662,6 +14761,91 @@ describe('SubscriptionController', () => {
                                     credit_account_id: studioAccount.account.id,
                                 },
                             ]
+                        );
+                    });
+
+                    it('should do nothing if no grant is set', async () => {
+                        stripeMock.constructWebhookEvent.mockReturnValueOnce({
+                            id: 'event_id',
+                            type: 'invoice.paid',
+                            object: 'event',
+                            account: 'account_id',
+                            api_version: 'api_version',
+                            created: 123,
+                            data: {
+                                object: {
+                                    id: 'invoiceId',
+                                    customer: 'customer_id',
+                                    currency: 'usd',
+                                    total: 1000,
+                                    subtotal: 1000,
+                                    tax: 0,
+                                    description: 'description',
+                                    status: 'paid',
+                                    paid: true,
+                                    hosted_invoice_url: 'invoiceUrl',
+                                    invoice_pdf: 'pdfUrl',
+                                    lines: {
+                                        object: 'list',
+                                        data: [
+                                            {
+                                                id: 'line_item_1_id',
+                                                price: {
+                                                    id: 'price_1',
+                                                    product: 'product_1_id',
+                                                },
+                                            },
+                                        ],
+                                    },
+                                    subscription: 'sub',
+                                },
+                            },
+                            livemode: true,
+                            pending_webhooks: 1,
+                            request: {} as any,
+                        });
+                        stripeMock.getSubscriptionById.mockResolvedValueOnce({
+                            id: 'sub',
+                            status: 'active',
+                            current_period_start: 456,
+                            current_period_end: 999,
+                            cancel_at: 7777,
+                            canceled_at: null,
+                            ended_at: null,
+                            start_date: 123,
+                        });
+
+                        const result = await controller.handleStripeWebhook({
+                            requestBody: 'request_body',
+                            signature: 'request_signature',
+                        });
+
+                        expect(result).toEqual({
+                            success: true,
+                        });
+                        expect(
+                            stripeMock.constructWebhookEvent
+                        ).toHaveBeenCalledTimes(1);
+                        expect(
+                            stripeMock.constructWebhookEvent
+                        ).toHaveBeenCalledWith(
+                            'request_body',
+                            'request_signature',
+                            'webhook_secret'
+                        );
+
+                        const account =
+                            await financialController.getFinancialAccount({
+                                studioId: studioId,
+                                ledger: LEDGERS.credits,
+                            });
+
+                        expect(account).toEqual(
+                            failure({
+                                errorCode: 'not_found',
+                                errorMessage:
+                                    'The financial account does not exist.',
+                            })
                         );
                     });
                 });

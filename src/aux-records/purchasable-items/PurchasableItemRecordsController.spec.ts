@@ -338,12 +338,10 @@ describe('PurchasableItemRecordsController', () => {
                     'The currency is not allowed for this subscription. Please choose a different currency.',
                 issues: [
                     {
-                        code: 'invalid_enum_value',
-                        message:
-                            "Invalid enum value. Expected 'usd', received 'WRONG'",
-                        options: ['usd'],
+                        code: 'invalid_value',
+                        message: 'Invalid input: expected "usd"',
                         path: ['currency'],
-                        received: 'WRONG',
+                        values: ['usd'],
                     },
                 ],
             });
@@ -409,12 +407,11 @@ describe('PurchasableItemRecordsController', () => {
                 issues: [
                     {
                         code: 'too_big',
-                        exact: false,
                         inclusive: true,
-                        message: 'Number must be less than or equal to 1000',
+                        message: 'Too big: expected number to be <=1000',
+                        origin: 'number',
                         maximum: 1000,
                         path: ['cost'],
-                        type: 'number',
                     },
                 ],
             });
@@ -491,12 +488,10 @@ describe('PurchasableItemRecordsController', () => {
                     'The currency is not allowed for this subscription. Please choose a different currency.',
                 issues: [
                     {
-                        code: 'invalid_enum_value',
-                        message:
-                            "Invalid enum value. Expected 'usd', received 'WRONG'",
-                        options: ['usd'],
+                        code: 'invalid_value',
+                        message: 'Invalid input: expected "usd"',
                         path: ['currency'],
-                        received: 'WRONG',
+                        values: ['usd'],
                     },
                 ],
             });
@@ -584,12 +579,11 @@ describe('PurchasableItemRecordsController', () => {
                 issues: [
                     {
                         code: 'too_big',
-                        exact: false,
                         inclusive: true,
-                        message: 'Number must be less than or equal to 1000',
+                        message: 'Too big: expected number to be <=1000',
                         maximum: 1000,
                         path: ['cost'],
-                        type: 'number',
+                        origin: 'number',
                     },
                 ],
             });

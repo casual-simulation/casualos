@@ -214,30 +214,78 @@ export interface WebConfig {
      * This is used to set the background color of the splash screen.
      */
     logoBackgroundColor?: string | null;
+
+    /**
+     * The URL that users can visit for support.
+     */
+    supportUrl?: string | null;
+
+    /**
+     * Whether to enable SMS authentication.
+     * Defaults to false.
+     */
+    enableSmsAuthentication?: boolean;
+}
+
+/**
+ * The configuration interface that extends the web config with computed options.
+ */
+export interface CasualOSConfig extends WebConfig {
+    /**
+     * Whether subscriptions are supported in this configuration.
+     */
+    subscriptionsSupported: boolean;
+
+    /**
+     * Whether studios are supported in this configuration.
+     */
+    studiosSupported: boolean;
 }
 
 export const WEB_CONFIG_SCHEMA = z.object({
-    version: null,
-    causalRepoConnectionProtocol: z.enum(['websocket', 'apiary-aws']),
-    causalRepoConnectionUrl: z.string().min(1).max(512),
-    collaborativeRepoLocalPersistence: z.boolean(),
-    staticRepoLocalPersistence: z.boolean(),
-    sharedPartitionsVersion: z.enum(['v2']),
-    vmOrigin: z.string().min(1).max(128).nullable(),
-    authOrigin: z.string().min(1).max(128).nullable(),
-    recordsOrigin: z.string().min(1).max(128).nullable(),
-    disableCollaboration: z.boolean().nullable(),
-    ab1BootstrapURL: z.string().min(1).max(512).nullable(),
-    arcGisApiKey: z.string().min(1).max(128).nullable(),
-    jitsiAppName: z.string().min(1).max(128).nullable(),
-    what3WordsApiKey: z.string().min(1).max(128).nullable(),
-    playerMode: z.enum(['player', 'builder']).nullable(),
-    requirePrivoLogin: z.boolean(),
-    allowedBiosOptions: z.array(BIOS_OPTION_SCHEMA).nullable(),
-    defaultBiosOption: BIOS_OPTION_SCHEMA.nullable(),
-    automaticBiosOption: BIOS_OPTION_SCHEMA.nullable(),
+    causalRepoConnectionProtocol: z
+        .enum(['websocket', 'apiary-aws'])
+        .prefault('websocket'),
+    causalRepoConnectionUrl: z.string().min(1).max(512).optional(),
+    collaborativeRepoLocalPersistence: z.boolean().prefault(false),
+    staticRepoLocalPersistence: z.boolean().prefault(true),
+    sharedPartitionsVersion: z.enum(['v2']).prefault('v2'),
+    vmOrigin: z.string().min(1).max(128).nullable().optional(),
+    authOrigin: z.string().min(1).max(128).nullable().optional(),
+    recordsOrigin: z.string().min(1).max(128).nullable().optional(),
+    disableCollaboration: z.boolean().nullable().optional(),
+    ab1BootstrapURL: z.string().min(1).max(512).nullable().optional(),
+    arcGisApiKey: z.string().min(1).max(128).nullable().optional(),
+    jitsiAppName: z.string().min(1).max(128).nullable().optional(),
+    what3WordsApiKey: z.string().min(1).max(128).nullable().optional(),
+    playerMode: z.enum(['player', 'builder']).nullable().optional(),
+    requirePrivoLogin: z.boolean().prefault(false),
+    allowedBiosOptions: z.array(BIOS_OPTION_SCHEMA).nullable().optional(),
+    defaultBiosOption: BIOS_OPTION_SCHEMA.nullable().optional(),
+    automaticBiosOption: BIOS_OPTION_SCHEMA.nullable().optional(),
+    enableDom: z.boolean().prefault(false),
+    debug: z.boolean().prefault(false),
+
+    enableSmsAuthentication: z.boolean().nullable().optional(),
 
     logoUrl: z.string().min(1).max(512).nullable().optional(),
     logoBackgroundColor: z.string().min(1).max(32).nullable().optional(),
     logoTitle: z.string().min(1).max(128).nullable().optional(),
+
+    supportUrl: z.string().min(1).nullable().optional(),
 });
+
+export function parseWebConfig(
+    config: any,
+    defaultConfig: WebConfig
+): WebConfig {
+    if (config) {
+        const result = WEB_CONFIG_SCHEMA.safeParse(config);
+        if (result.success) {
+            return result.data as WebConfig;
+        } else {
+            console.error('[WebConfig] Invalid web config', result);
+        }
+    }
+    return defaultConfig;
+}

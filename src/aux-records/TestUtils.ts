@@ -55,6 +55,8 @@ export function createTestSubConfiguration(
                 .withReturnUrl('https://return-url/')
                 .withSuccessUrl('https://success-url/')
                 .withWebhookSecret('webhook-secret')
+                .withUserDefaultFeatures((f) => f.withAllDefaultFeatures())
+                .withStudioDefaultFeatures((f) => f.withAllDefaultFeatures())
         )
     );
 }

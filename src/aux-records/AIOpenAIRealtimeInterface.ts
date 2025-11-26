@@ -122,7 +122,7 @@ export interface CreateRealtimeSessionTokenRequest {
         /**
          * The name of the function.
          */
-        name?: string;
+        name: string;
 
         /**
          * Parameters of the function in JSON Schema.

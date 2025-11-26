@@ -34,7 +34,6 @@ import {
     remoteActionsSchema,
     deviceActionsSchema,
 } from '../common/RemoteActions';
-import type { ZodIssue } from 'zod';
 import { z } from 'zod';
 import type {
     GenericHttpRequest,
@@ -76,7 +75,7 @@ export enum WebsocketEventTypes {
 }
 
 export const websocketEventSchema = z
-    .tuple([z.nativeEnum(WebsocketEventTypes), z.number()])
+    .tuple([z.enum(WebsocketEventTypes), z.number()])
     .rest(z.any());
 
 /**
@@ -119,7 +118,7 @@ export const websocketUploadResponseEventSchema = z.tuple([
     z.number(),
     z.string(),
     z.string(),
-    z.record(z.string()),
+    z.record(z.string(), z.string()),
 ]);
 
 export type WebsocketErrorCode =
@@ -176,7 +175,7 @@ export interface WebsocketErrorInfo {
     /**
      * The list of parsing issues that occurred.
      */
-    issues?: ZodIssue[];
+    issues?: z.core.$ZodIssue[];
 
     /**
      * The authorization denial reason.
@@ -219,7 +218,7 @@ export const websocketDownloadRequestEventSchema = z.tuple([
     z.number(),
     z.string(),
     z.string(),
-    z.record(z.string()),
+    z.record(z.string(), z.string()),
 ]);
 
 export type WebsocketResponseMessage =

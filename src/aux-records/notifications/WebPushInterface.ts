@@ -46,7 +46,7 @@ export interface WebPushInterface {
 export const PUSH_SUBSCRIPTION_SCHEMA = z.object({
     endpoint: z.string(),
     expirationTime: z.number().optional().nullable(),
-    keys: z.record(z.string()),
+    keys: z.record(z.string(), z.string()),
 });
 
 export type PushSubscriptionType = z.infer<typeof PUSH_SUBSCRIPTION_SCHEMA>;
@@ -60,7 +60,7 @@ export const PUSH_NOTIFICATION_PAYLOAD_ACTION = z.discriminatedUnion('type', [
         type: z.literal('webhook'),
         method: z.enum(['GET', 'POST']),
         url: z.string(),
-        headers: z.record(z.string()).optional().nullable(),
+        headers: z.record(z.string(), z.string()).optional().nullable(),
     }),
 ]);
 

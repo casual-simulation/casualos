@@ -17,10 +17,11 @@
  */
 import type { PrivoConfiguration } from './PrivoConfiguration';
 import type { Cache } from './Cache';
-import type { ConfigurationStore } from './ConfigurationStore';
+import { WEB_CONFIG_KEY, type ConfigurationStore } from './ConfigurationStore';
 import type { SubscriptionConfiguration } from './SubscriptionConfiguration';
 import type { ModerationConfiguration } from './ModerationConfiguration';
 import { traced } from './tracing/TracingDecorators';
+import type { WebConfig } from '@casual-simulation/aux-common';
 
 const TRACE_NAME = 'CachingConfigStore';
 
@@ -42,6 +43,22 @@ export class CachingConfigStore implements ConfigurationStore {
         this._store = store;
         this._cache = cache;
         this._cacheSeconds = cacheSeconds;
+    }
+
+    @traced(TRACE_NAME)
+    async getWebConfig(): Promise<WebConfig | null> {
+        const cached = await this._cache.retrieve<WebConfig>(WEB_CONFIG_KEY);
+
+        if (cached) {
+            return cached;
+        }
+
+        const result = await this._store.getWebConfig();
+        if (result) {
+            await this._cache.store(WEB_CONFIG_KEY, result, this._cacheSeconds);
+        }
+
+        return result;
     }
 
     @traced(TRACE_NAME)

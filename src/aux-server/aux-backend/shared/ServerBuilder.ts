@@ -45,7 +45,10 @@ import type {
     FinancialInterface,
     PurchasableItemRecordsStore,
 } from '@casual-simulation/aux-records';
-import { PurchasableItemRecordsController } from '@casual-simulation/aux-records';
+import {
+    PurchasableItemRecordsController,
+    serverConfigSchema,
+} from '@casual-simulation/aux-records';
 import {
     AuthController,
     DataRecordsController,
@@ -174,6 +177,7 @@ import { PrismaWebhookRecordsStore } from '../prisma/PrismaWebhookRecordsStore';
 import { AuxVMNode } from '@casual-simulation/aux-vm-node';
 import { MessageChannel, MessagePort } from 'deno-vm';
 import { LambdaWebhookEnvironment } from './webhooks/LambdaWebhookEnvironment';
+import type { WebConfig } from '@casual-simulation/aux-common';
 import { getConnectionId } from '@casual-simulation/aux-common';
 import { RemoteSimulationImpl } from '@casual-simulation/aux-vm-client';
 import type { AuxConfigParameters } from '@casual-simulation/aux-vm';
@@ -228,6 +232,8 @@ import {
     SqliteDatabaseInterface,
     TursoDatabaseInterface,
 } from '@casual-simulation/aux-records/database';
+import path from 'node:path';
+import type { ViewTemplateRenderer } from '@casual-simulation/aux-records/ViewTemplateRenderer';
 import { SqliteDatabaseRecordsStore } from '../prisma/sqlite/SqliteDatabaseRecordsStore';
 import { PrismaDatabaseRecordsStore } from '../prisma/PrismaDatabaseRecordsStore';
 import type { FinancialStore } from '@casual-simulation/aux-records/financial';
@@ -246,6 +252,7 @@ import { SqliteContractsRecordsStore } from '../prisma/sqlite/SqliteContractsRec
 import { PrismaContractsRecordsStore } from '../prisma/PrismaContractsRecordsStore';
 import type { ContractRecordsStore } from '@casual-simulation/aux-records/contracts';
 import { ContractRecordsController } from '@casual-simulation/aux-records/contracts';
+import type z from 'zod';
 
 const automaticPlugins: ServerPlugin[] = [
     ...xpApiPlugins.map((p: any) => p.default),
@@ -392,6 +399,8 @@ export class ServerBuilder implements SubscriptionLike {
     private _rekognition: Rekognition | null = null;
     private _moderationJobProvider: ModerationJobProvider | null = null;
 
+    private _viewTemplateRenderer: ViewTemplateRenderer | null = null;
+
     private _allowedAccountOrigins: Set<string> = new Set([
         'http://localhost:3000',
         'http://localhost:3002',
@@ -444,7 +453,11 @@ export class ServerBuilder implements SubscriptionLike {
     private _databasesController: DatabaseRecordsController | null = null;
 
     constructor(options?: ServerConfig) {
-        this._options = options ?? {};
+        this._options =
+            options ??
+            serverConfigSchema.parse(
+                {} satisfies z.input<typeof serverConfigSchema>
+            );
         this._subscription = new Subscription();
     }
 
@@ -606,7 +619,7 @@ export class ServerBuilder implements SubscriptionLike {
     useMongoDB(
         options: Pick<
             ServerConfig,
-            'mongodb' | 'subscriptions' | 'moderation'
+            'mongodb' | 'subscriptions' | 'moderation' | 'server' | 'privo'
         > = this._options
     ): this {
         console.log('[ServerBuilder] Using MongoDB.');
@@ -655,6 +668,8 @@ export class ServerBuilder implements SubscriptionLike {
                             options.subscriptions as SubscriptionConfiguration,
                         moderation:
                             options.moderation as ModerationConfiguration,
+                        webConfig: options.server?.webConfig as WebConfig,
+                        privo: options.privo as PrivoConfiguration,
                     },
                     configuration
                 );
@@ -702,7 +717,7 @@ export class ServerBuilder implements SubscriptionLike {
     usePrismaWithS3(
         options: Pick<
             ServerConfig,
-            'prisma' | 's3' | 'subscriptions' | 'moderation'
+            'prisma' | 's3' | 'subscriptions' | 'moderation' | 'server'
         > = this._options
     ): this {
         console.log('[ServerBuilder] Using Prisma with S3.');
@@ -736,7 +751,7 @@ export class ServerBuilder implements SubscriptionLike {
     private _usePrismaStores(
         options: Pick<
             ServerConfig,
-            'prisma' | 'subscriptions' | 'moderation'
+            'prisma' | 'subscriptions' | 'moderation' | 'server'
         > = this._options
     ) {
         const prismaClient = this._ensurePrisma(options);
@@ -854,7 +869,7 @@ export class ServerBuilder implements SubscriptionLike {
     usePrismaWithMinio(
         options: Pick<
             ServerConfig,
-            'prisma' | 'minio' | 'subscriptions' | 'moderation'
+            'prisma' | 'minio' | 'subscriptions' | 'moderation' | 'server'
         > = this._options
     ): this {
         console.log('[ServerBuilder] Using Prisma with Minio.');
@@ -891,7 +906,7 @@ export class ServerBuilder implements SubscriptionLike {
     usePrismaWithMongoDBFileStore(
         options: Pick<
             ServerConfig,
-            'prisma' | 'mongodb' | 'subscriptions'
+            'prisma' | 'mongodb' | 'subscriptions' | 'server'
         > = this._options
     ): this {
         console.log('[ServerBuilder] Using Prisma with MongoDB File Store.');
@@ -1998,6 +2013,11 @@ export class ServerBuilder implements SubscriptionLike {
         return this;
     }
 
+    useViewTemplateRenderer(renderer: ViewTemplateRenderer): this {
+        this._viewTemplateRenderer = renderer;
+        return this;
+    }
+
     async buildAsync(): Promise<BuildReturn> {
         const actions = sortBy(this._actions, (a) => a.priority);
 
@@ -2278,6 +2298,7 @@ export class ServerBuilder implements SubscriptionLike {
             databaseRecordsController: this._databasesController,
             contractRecordsController: this._contractsController,
             purchasableItemsController: this._purchasableItemsController,
+            viewTemplateRenderer: this._viewTemplateRenderer,
         });
 
         const buildReturn: BuildReturn = {
@@ -2427,7 +2448,9 @@ export class ServerBuilder implements SubscriptionLike {
                 return Math.min(retries * 100, 3000);
             };
             if (options.url) {
-                redis = createRedisClient({
+                // The typecast is because TypeScript
+                // takes a while to typecheck all the generics in createRedisClient.
+                redis = <any>createRedisClient({
                     url: options.url,
                     socket: {
                         reconnectStrategy: retryStrategy,
@@ -2439,7 +2462,10 @@ export class ServerBuilder implements SubscriptionLike {
                         'Redis host must be provided if a URL is not specified.'
                     );
                 }
-                redis = createRedisClient({
+
+                // The typecast is because TypeScript
+                // takes a while to typecheck all the generics in createRedisClient.
+                redis = <any>createRedisClient({
                     socket: {
                         host: options.host,
                         port: options.port,
@@ -2466,6 +2492,23 @@ export class ServerBuilder implements SubscriptionLike {
     private _ensurePrisma(options: Pick<ServerConfig, 'prisma'>): PrismaClient {
         if (!this._prismaClient) {
             if (options.prisma.db === 'sqlite') {
+                function formatPath(p: string): string {
+                    const filePath = p.replace('file:', '');
+                    console.log(
+                        `[ServerBuilder] Using SQLite database at: ${filePath}`
+                    );
+                    return `file:${path.resolve(filePath)}`;
+                }
+
+                const prismaOptions = options.prisma.options as any;
+                if (prismaOptions?.datasources?.db?.url) {
+                    const dbUrl: string = prismaOptions.datasources.db.url;
+                    prismaOptions.datasources.db.url = formatPath(dbUrl);
+                } else if (prismaOptions?.datasourceUrl) {
+                    const dbUrl: string = prismaOptions.datasourceUrl;
+                    prismaOptions.datasourceUrl = formatPath(dbUrl);
+                }
+
                 this._prismaClient = new SqlitePrismaClient(
                     options.prisma.options as any
                 ) as any;
@@ -2559,7 +2602,7 @@ export class ServerBuilder implements SubscriptionLike {
         prismaClient: PrismaClient,
         options: Pick<
             ServerConfig,
-            'prisma' | 'subscriptions' | 'moderation' | 'privo'
+            'prisma' | 'subscriptions' | 'moderation' | 'privo' | 'server'
         >
     ): ConfigurationStore {
         let configStore: ConfigurationStore;
@@ -2569,6 +2612,7 @@ export class ServerBuilder implements SubscriptionLike {
                     options.subscriptions as SubscriptionConfiguration,
                 privo: options.privo as PrivoConfiguration,
                 moderation: options.moderation as ModerationConfiguration,
+                webConfig: options.server?.webConfig as WebConfig,
             });
         } else {
             configStore = new PrismaConfigurationStore(prismaClient, {
@@ -2576,10 +2620,14 @@ export class ServerBuilder implements SubscriptionLike {
                     options.subscriptions as SubscriptionConfiguration,
                 privo: options.privo as PrivoConfiguration,
                 moderation: options.moderation as ModerationConfiguration,
+                webConfig: options.server?.webConfig as WebConfig,
             });
         }
 
         if (this._multiCache && options.prisma.configurationCacheSeconds) {
+            console.log(
+                `[ServerBuilder] Caching configuration values for ${options.prisma.configurationCacheSeconds} seconds.`
+            );
             const cache = this._multiCache.getCache('config');
             return new CachingConfigStore(
                 configStore,
@@ -2587,6 +2635,7 @@ export class ServerBuilder implements SubscriptionLike {
                 options.prisma.configurationCacheSeconds
             );
         } else {
+            console.log(`[ServerBuilder] Not caching configuration values.`);
             return configStore;
         }
     }

@@ -92,21 +92,18 @@ describe('getFormErrors()', () => {
                     message: 'Email is required',
                     code: 'invalid_type',
                     expected: 'string',
-                    received: 'array',
                 },
                 {
                     path: ['displayName'],
                     message: 'displayName is required',
                     code: 'invalid_type',
                     expected: 'string',
-                    received: 'array',
                 },
                 {
                     path: ['subObject.displayName'],
                     message: 'displayName is required',
                     code: 'invalid_type',
                     expected: 'string',
-                    received: 'array',
                 },
             ],
         });

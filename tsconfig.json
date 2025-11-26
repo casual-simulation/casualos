@@ -14,7 +14,8 @@
                 "src/aux-server/aux-web/shared/public/three-legacy-gltf-loader/index.d.ts"
             ],
             "aux-jest-matchers": ["jest/jest-matchers.ts"]
-        }
+        },
+        "jsx": "preserve"
     },
     "files": [],
     "references": [

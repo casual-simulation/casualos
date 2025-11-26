@@ -4,6 +4,26 @@ exports[`RecordsServer GET /api/v2/procedures should return the list of procedur
 Object {
   "procedures": Array [
     Object {
+      "name": "playerIndex",
+      "origins": true,
+    },
+    Object {
+      "name": "playerVmIframe",
+      "origins": true,
+    },
+    Object {
+      "name": "playerVmIframeDom",
+      "origins": true,
+    },
+    Object {
+      "name": "authIndex",
+      "origins": true,
+    },
+    Object {
+      "name": "authIframe",
+      "origins": true,
+    },
+    Object {
       "inputs": Object {
         "schema": Object {
           "userId": Object {
@@ -638,7 +658,6 @@ Object {
           },
           "markers": Object {
             "maxLength": 10,
-            "minLength": 1,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -750,7 +769,6 @@ Object {
           },
           "markers": Object {
             "maxLength": 10,
-            "minLength": 1,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -904,7 +922,6 @@ Object {
           },
           "markers": Object {
             "maxLength": 10,
-            "minLength": 1,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -941,7 +958,6 @@ Object {
           },
           "markers": Object {
             "maxLength": 10,
-            "minLength": 1,
             "schema": Object {
               "type": "string",
             },
@@ -1125,7 +1141,6 @@ Object {
           },
           "markers": Object {
             "maxLength": 10,
-            "minLength": 1,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -1175,6 +1190,7 @@ Object {
           },
           "item": Object {
             "discriminator": "targetResourceKind",
+            "optional": false,
             "options": Array [
               Object {
                 "schema": Object {
@@ -1187,7 +1203,6 @@ Object {
                     ],
                     "hasDefault": true,
                     "maxLength": 10,
-                    "minLength": 1,
                     "optional": true,
                     "schema": Object {
                       "type": "string",
@@ -1221,7 +1236,6 @@ Object {
                     ],
                     "hasDefault": true,
                     "maxLength": 10,
-                    "minLength": 1,
                     "optional": true,
                     "schema": Object {
                       "type": "string",
@@ -1337,7 +1351,18 @@ Object {
       "origins": "api",
       "query": Object {
         "catchall": Object {
-          "type": "string",
+          "options": Array [
+            Object {
+              "type": "string",
+            },
+            Object {
+              "schema": Object {
+                "type": "string",
+              },
+              "type": "array",
+            },
+          ],
+          "type": "union",
         },
         "schema": Object {
           "address": Object {
@@ -1461,6 +1486,7 @@ Object {
             "type": "array",
           },
           "item": Object {
+            "optional": false,
             "schema": Object {
               "address": Object {
                 "type": "string",
@@ -1474,7 +1500,6 @@ Object {
                 ],
                 "hasDefault": true,
                 "maxLength": 10,
-                "minLength": 1,
                 "optional": true,
                 "schema": Object {
                   "type": "string",
@@ -1985,13 +2010,13 @@ Object {
             "type": "array",
           },
           "item": Object {
+            "optional": false,
             "schema": Object {
               "address": Object {
                 "type": "string",
               },
               "markers": Object {
                 "maxLength": 10,
-                "minLength": 1,
                 "schema": Object {
                   "type": "string",
                 },
@@ -2241,7 +2266,6 @@ Object {
               },
               "markers": Object {
                 "maxLength": 10,
-                "minLength": 1,
                 "optional": true,
                 "schema": Object {
                   "type": "string",
@@ -2517,13 +2541,13 @@ Object {
             "type": "array",
           },
           "item": Object {
+            "optional": false,
             "schema": Object {
               "address": Object {
                 "type": "string",
               },
               "markers": Object {
                 "maxLength": 10,
-                "minLength": 1,
                 "schema": Object {
                   "type": "string",
                 },
@@ -3025,13 +3049,13 @@ Object {
             "type": "array",
           },
           "item": Object {
+            "optional": false,
             "schema": Object {
               "address": Object {
                 "type": "string",
               },
               "markers": Object {
                 "maxLength": 10,
-                "minLength": 1,
                 "schema": Object {
                   "type": "string",
                 },
@@ -4497,6 +4521,7 @@ Object {
                       "type": "string",
                     },
                     Object {
+                      "minLength": 1,
                       "schema": Object {
                         "options": Array [
                           Object {
@@ -4624,6 +4649,7 @@ Object {
                       "type": "string",
                     },
                     Object {
+                      "minLength": 1,
                       "schema": Object {
                         "options": Array [
                           Object {
@@ -5493,6 +5519,18 @@ Object {
     Object {
       "http": Object {
         "method": "GET",
+        "path": "/api/config",
+      },
+      "inputs": Object {
+        "schema": Object {},
+        "type": "object",
+      },
+      "name": "getWebConfig",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
         "path": "/api/v2/player/config",
       },
       "inputs": Object {
@@ -5695,6 +5733,7 @@ Object {
             "type": "array",
           },
           "item": Object {
+            "optional": false,
             "schema": Object {
               "address": Object {
                 "type": "string",
@@ -5716,7 +5755,6 @@ Object {
                 ],
                 "hasDefault": true,
                 "maxLength": 10,
-                "minLength": 1,
                 "optional": true,
                 "schema": Object {
                   "type": "string",
@@ -6236,7 +6274,6 @@ Object {
               },
               "markers": Object {
                 "maxLength": 10,
-                "minLength": 1,
                 "schema": Object {
                   "type": "string",
                 },
@@ -6478,6 +6515,26 @@ exports[`RecordsServer GET /api/v2/procedures should support procedures 1`] = `
 Object {
   "procedures": Array [
     Object {
+      "name": "playerIndex",
+      "origins": true,
+    },
+    Object {
+      "name": "playerVmIframe",
+      "origins": true,
+    },
+    Object {
+      "name": "playerVmIframeDom",
+      "origins": true,
+    },
+    Object {
+      "name": "authIndex",
+      "origins": true,
+    },
+    Object {
+      "name": "authIframe",
+      "origins": true,
+    },
+    Object {
       "inputs": Object {
         "schema": Object {
           "userId": Object {
@@ -7112,7 +7169,6 @@ Object {
           },
           "markers": Object {
             "maxLength": 10,
-            "minLength": 1,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -7224,7 +7280,6 @@ Object {
           },
           "markers": Object {
             "maxLength": 10,
-            "minLength": 1,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -7378,7 +7433,6 @@ Object {
           },
           "markers": Object {
             "maxLength": 10,
-            "minLength": 1,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -7415,7 +7469,6 @@ Object {
           },
           "markers": Object {
             "maxLength": 10,
-            "minLength": 1,
             "schema": Object {
               "type": "string",
             },
@@ -7599,7 +7652,6 @@ Object {
           },
           "markers": Object {
             "maxLength": 10,
-            "minLength": 1,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -7649,6 +7701,7 @@ Object {
           },
           "item": Object {
             "discriminator": "targetResourceKind",
+            "optional": false,
             "options": Array [
               Object {
                 "schema": Object {
@@ -7661,7 +7714,6 @@ Object {
                     ],
                     "hasDefault": true,
                     "maxLength": 10,
-                    "minLength": 1,
                     "optional": true,
                     "schema": Object {
                       "type": "string",
@@ -7695,7 +7747,6 @@ Object {
                     ],
                     "hasDefault": true,
                     "maxLength": 10,
-                    "minLength": 1,
                     "optional": true,
                     "schema": Object {
                       "type": "string",
@@ -7811,7 +7862,18 @@ Object {
       "origins": "api",
       "query": Object {
         "catchall": Object {
-          "type": "string",
+          "options": Array [
+            Object {
+              "type": "string",
+            },
+            Object {
+              "schema": Object {
+                "type": "string",
+              },
+              "type": "array",
+            },
+          ],
+          "type": "union",
         },
         "schema": Object {
           "address": Object {
@@ -7935,6 +7997,7 @@ Object {
             "type": "array",
           },
           "item": Object {
+            "optional": false,
             "schema": Object {
               "address": Object {
                 "type": "string",
@@ -7948,7 +8011,6 @@ Object {
                 ],
                 "hasDefault": true,
                 "maxLength": 10,
-                "minLength": 1,
                 "optional": true,
                 "schema": Object {
                   "type": "string",
@@ -8459,13 +8521,13 @@ Object {
             "type": "array",
           },
           "item": Object {
+            "optional": false,
             "schema": Object {
               "address": Object {
                 "type": "string",
               },
               "markers": Object {
                 "maxLength": 10,
-                "minLength": 1,
                 "schema": Object {
                   "type": "string",
                 },
@@ -8715,7 +8777,6 @@ Object {
               },
               "markers": Object {
                 "maxLength": 10,
-                "minLength": 1,
                 "optional": true,
                 "schema": Object {
                   "type": "string",
@@ -8991,13 +9052,13 @@ Object {
             "type": "array",
           },
           "item": Object {
+            "optional": false,
             "schema": Object {
               "address": Object {
                 "type": "string",
               },
               "markers": Object {
                 "maxLength": 10,
-                "minLength": 1,
                 "schema": Object {
                   "type": "string",
                 },
@@ -9499,13 +9560,13 @@ Object {
             "type": "array",
           },
           "item": Object {
+            "optional": false,
             "schema": Object {
               "address": Object {
                 "type": "string",
               },
               "markers": Object {
                 "maxLength": 10,
-                "minLength": 1,
                 "schema": Object {
                   "type": "string",
                 },
@@ -10971,6 +11032,7 @@ Object {
                       "type": "string",
                     },
                     Object {
+                      "minLength": 1,
                       "schema": Object {
                         "options": Array [
                           Object {
@@ -11098,6 +11160,7 @@ Object {
                       "type": "string",
                     },
                     Object {
+                      "minLength": 1,
                       "schema": Object {
                         "options": Array [
                           Object {
@@ -11967,6 +12030,18 @@ Object {
     Object {
       "http": Object {
         "method": "GET",
+        "path": "/api/config",
+      },
+      "inputs": Object {
+        "schema": Object {},
+        "type": "object",
+      },
+      "name": "getWebConfig",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
         "path": "/api/v2/player/config",
       },
       "inputs": Object {
@@ -12169,6 +12244,7 @@ Object {
             "type": "array",
           },
           "item": Object {
+            "optional": false,
             "schema": Object {
               "address": Object {
                 "type": "string",
@@ -12190,7 +12266,6 @@ Object {
                 ],
                 "hasDefault": true,
                 "maxLength": 10,
-                "minLength": 1,
                 "optional": true,
                 "schema": Object {
                   "type": "string",
@@ -12710,7 +12785,6 @@ Object {
               },
               "markers": Object {
                 "maxLength": 10,
-                "minLength": 1,
                 "schema": Object {
                   "type": "string",
                 },

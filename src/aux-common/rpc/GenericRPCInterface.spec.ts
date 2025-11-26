@@ -138,6 +138,26 @@ describe('getSchemaMetadata()', () => {
         ['number', z.number(), { type: 'number' }] as const,
         ['any', z.any(), { type: 'any' }] as const,
         ['null', z.null(), { type: 'null' }] as const,
+        [
+            'nullable',
+            z.string().nullable(),
+            { type: 'string', nullable: true },
+        ] as const,
+        [
+            'optional',
+            z.string().optional(),
+            { type: 'string', optional: true },
+        ] as const,
+        [
+            'nonoptional',
+            z.string().optional().nonoptional(),
+            { type: 'string', optional: false },
+        ] as const,
+        [
+            'prefault',
+            z.string().prefault('abc'),
+            { type: 'string', hasDefault: true, defaultValue: 'abc' },
+        ] as const,
         ['object', z.object({}), { type: 'object', schema: {} }] as const,
         [
             'object with properties',
@@ -202,7 +222,7 @@ describe('getSchemaMetadata()', () => {
         ] as const,
         ['date', z.date(), { type: 'date' }] as const,
         [
-            'effects',
+            'preprocess',
             z.preprocess((value) => value, z.string()),
             { type: 'string' },
         ] as const,
@@ -295,7 +315,7 @@ describe('getSchemaMetadata()', () => {
     it.each(cases)(
         'should support descriptions for %s',
         (name, schema, expected) => {
-            if (!(schema instanceof z.ZodEffects)) {
+            if (!(schema instanceof z.core.$ZodPipe)) {
                 expect(
                     getSchemaMetadata(schema.describe('this is a description'))
                 ).toEqual({
@@ -305,4 +325,50 @@ describe('getSchemaMetadata()', () => {
             }
         }
     );
+
+    it('should be able to get the description from a chained schema', () => {
+        const schema = z.string().min(2).max(5).describe('a short string');
+
+        expect(getSchemaMetadata(schema)).toEqual({
+            type: 'string',
+            description: 'a short string',
+        });
+    });
+
+    it('should be able to get descriptions from catch all properties', () => {
+        const schema = z
+            .object({
+                abc: z.string().describe('the abc property'),
+            })
+            .catchall(
+                z.object({
+                    def: z.number().describe('the def property'),
+                })
+            )
+            .refine((abc) => Object.keys(abc).length >= 1, {
+                error: 'At least one property is required.',
+            })
+            .refine((abc) => Object.keys(abc).length <= 5, {
+                error: 'At most five properties are allowed.',
+            });
+
+        expect(getSchemaMetadata(schema)).toEqual({
+            type: 'object',
+            schema: {
+                abc: {
+                    type: 'string',
+                    description: 'the abc property',
+                },
+            },
+            catchall: {
+                type: 'object',
+                schema: {
+                    def: {
+                        type: 'number',
+                        description: 'the def property',
+                    },
+                },
+            },
+        });
+    });
 });
