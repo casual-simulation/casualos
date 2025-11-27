@@ -18,6 +18,10 @@
 import { z } from 'zod';
 import type { ComIdConfig, ComIdPlayerConfig } from './ComIdConfig';
 import type { PublicRecordKeyPolicy } from '@casual-simulation/aux-common';
+import type {
+    StripeAccountStatus,
+    StripeRequirementsStatus,
+} from './StripeInterface';
 
 /**
  * Defines an interface for objects that can store records.
@@ -225,6 +229,12 @@ export interface RecordsStore {
      * @param config The config that should be updated for the studio.
      */
     updateStudioHumeConfig(studioId: string, config: HumeConfig): Promise<void>;
+
+    /**
+     * Gets the studio with the given stripe account ID. Returns null if no studio has that stripe account ID.
+     * @param accountId The ID of the stripe account.
+     */
+    getStudioByStripeAccountId(accountId: string): Promise<Studio | null>;
 }
 
 export interface CountRecordsFilter {
@@ -318,6 +328,31 @@ export interface Studio {
     stripeCustomerId?: string;
 
     /**
+     * The ID of the stripe account for this studio.
+     */
+    stripeAccountId?: string | null;
+
+    /**
+     * The status of the stripe account requirements for this studio.
+     *
+     * If null, then the studio does not have a stripe account.
+     * If 'incomplete', then the studio has a stripe account but it is not fully set up.
+     * If 'complete', then the studio has a stripe account that is fully set up.
+     */
+    stripeAccountRequirementsStatus?: StripeRequirementsStatus;
+
+    /**
+     * The status of the stripe account that is associated with this studio.
+     *
+     * If null, then the studio does not have a stripe account.
+     * If 'active', then the stripe account has been approved and is active.
+     * If 'pending', then the stripe account is waiting approval.
+     * If 'rejected', then the stripe account was rejected.
+     * If 'disabled', then the stripe account was disabled but not because it was rejected.
+     */
+    stripeAccountStatus?: StripeAccountStatus;
+
+    /**
      * The current subscription status for this studio.
      */
     subscriptionStatus?: string;
@@ -366,22 +401,20 @@ export interface Studio {
 
 export type LoomConfig = z.infer<typeof LOOM_CONFIG>;
 
-export const LOOM_CONFIG = z
-    .object({
-        appId: z.string().describe('The ID of the loom app.').max(100),
-        privateKey: z
-            .string()
-            .describe('The private key for the loom app.')
-            .max(100),
-    })
-    .describe('The configuration that can be used by studios to setup loom.');
+export const LOOM_CONFIG = z.object({
+    appId: z.string().max(100).describe('The ID of the loom app.'),
+    privateKey: z
+        .string()
+        .max(100)
+        .describe('The private key for the loom app.'),
+});
 
 export const HUME_CONFIG = z.object({
-    apiKey: z.string().describe('The API key for the Hume service.').max(100),
+    apiKey: z.string().max(100).describe('The API key for the Hume service.'),
     secretKey: z
         .string()
-        .describe('The secret key for the Hume service.')
-        .max(100),
+        .max(100)
+        .describe('The secret key for the Hume service.'),
 });
 
 export type HumeConfig = z.infer<typeof HUME_CONFIG>;

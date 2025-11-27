@@ -5,12 +5,13 @@
         "noImplicitAny": true,
         "module": "esNext",
         "esModuleInterop": true,
-        "target": "es2018",
+        "target": "es2020",
         "allowJs": false,
         "moduleResolution": "node",
         "sourceMap": true,
         "lib": ["es2022", "es5", "dom"],
         "experimentalDecorators": true,
-        "typeRoots": ["node_modules/@types", "./typings"]
+        "typeRoots": ["node_modules/@types", "./typings"],
+        "jsx": "preserve"
     }
 }

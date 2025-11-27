@@ -175,6 +175,7 @@ import {
     removeMapLayer,
     ADD_BOT_LISTENER_SYMBOL,
     GET_DYNAMIC_LISTENERS_SYMBOL,
+    generateQRCode,
 } from '@casual-simulation/aux-common/bots';
 import { types } from 'util';
 import { attachRuntime, detachRuntime } from './RuntimeEvents';
@@ -213,6 +214,11 @@ import {
     listDataRecordByMarker,
     listInsts as calcListInsts,
     listInstsByMarker as calcListInstsByMarker,
+    recordStoreItem,
+    getStoreItem,
+    eraseStoreItem,
+    listStoreItems,
+    listStoreItemsByMarker,
     aiChatStream,
     aiHumeGetAccessToken,
     aiSloydGenerateModel,
@@ -239,10 +245,12 @@ import {
     installPackage,
     listInstalledPackages,
     aiListChatModels,
+    purchaseStoreItem,
 } from './RecordsEvents';
 import {
     DEFAULT_BRANCH_NAME,
     PRIVATE_MARKER,
+    PUBLIC_READ_MARKER,
     remote,
     reportInst,
     showAccountInfo,
@@ -316,6 +324,7 @@ import {
     formatV2RecordKey,
 } from '@casual-simulation/aux-common/records/RecordKeys';
 import type { HideLoadingScreenAction } from '@casual-simulation/aux-common/bots/BotEvents';
+import type { ContractRecordInput } from '@casual-simulation/aux-records/contracts/ContractRecordsController';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -4749,7 +4758,7 @@ describe('AuxLibrary', () => {
                 const action = () =>
                     library.api.os.downloadBots([bot1, bot2], undefined);
 
-                expect(action).toThrowError(
+                expect(action).toThrow(
                     new Error('Filename must be provided. Try again.')
                 );
             });
@@ -5129,6 +5138,20 @@ describe('AuxLibrary', () => {
                 const action = library.api.os.hideQRCode();
                 expect(action).toEqual(showQRCode(false));
                 expect(context.actions).toEqual([showQRCode(false)]);
+            });
+        });
+
+        describe('os.generateQRCode()', () => {
+            it('should emit a GenerateQRCode action', async () => {
+                const promise: any = library.api.os.generateQRCode('hello');
+                const expected = generateQRCode(
+                    'hello',
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 
@@ -6114,7 +6137,7 @@ describe('AuxLibrary', () => {
             it('should throw an error if not given an options object', () => {
                 expect(() => {
                     (library.api.os.showConfirm as any)();
-                }).toThrowError();
+                }).toThrow();
             });
         });
 
@@ -6575,7 +6598,7 @@ describe('AuxLibrary', () => {
 
             it('should pipe everything to console.log', () => {
                 library.api.os.log('This', 'is', 'a', 'test');
-                expect(logMock).toBeCalledWith('This', 'is', 'a', 'test');
+                expect(logMock).toHaveBeenCalledWith('This', 'is', 'a', 'test');
             });
         });
 
@@ -8569,6 +8592,7 @@ describe('AuxLibrary', () => {
                     'notification',
                     {
                         title: 'title',
+                        body: 'test',
                     }
                 );
                 const expected = sendNotification(
@@ -8576,6 +8600,7 @@ describe('AuxLibrary', () => {
                     'notification',
                     {
                         title: 'title',
+                        body: 'test',
                     },
                     {},
                     context.tasks.size
@@ -9872,6 +9897,7 @@ describe('AuxLibrary', () => {
                             type: 'auto',
                         },
                     },
+                    markers: [PUBLIC_READ_MARKER],
                 });
 
                 const expected = recordsCallProcedure(
@@ -9886,6 +9912,7 @@ describe('AuxLibrary', () => {
                                             type: 'auto',
                                         },
                                     },
+                                    markers: [PUBLIC_READ_MARKER],
                                 },
                             },
                         },
@@ -10103,6 +10130,166 @@ describe('AuxLibrary', () => {
                 const action = result[ORIGINAL_OBJECT];
                 const expected = getRecordsEndpoint(context.tasks.size);
                 expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.recordStoreItem()', () => {
+            it('should emit a RecordStoreItemAction', async () => {
+                const action: any = library.api.os.recordStoreItem(
+                    'recordKey',
+                    'address',
+                    {
+                        name: 'item',
+                        description: 'description',
+                        cost: 100,
+                        currency: 'usd',
+                        imageUrls: [],
+                        roleName: 'roleName',
+                        roleGrantTimeMs: null,
+                        markers: [PUBLIC_READ_MARKER],
+                    }
+                );
+                const expected = recordStoreItem(
+                    'recordKey',
+                    'address',
+                    {
+                        name: 'item',
+                        description: 'description',
+                        cost: 100,
+                        currency: 'usd',
+                        imageUrls: [],
+                        roleName: 'roleName',
+                        roleGrantTimeMs: null,
+                        markers: [PUBLIC_READ_MARKER],
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.getStoreItem()', () => {
+            it('should emit a GetStoreItemAction', async () => {
+                const action: any = library.api.os.getStoreItem(
+                    'recordKey',
+                    'address'
+                );
+                const expected = getStoreItem(
+                    'recordKey',
+                    'address',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.eraseStoreItem()', () => {
+            it('should emit a EraseStoreItemAction', async () => {
+                const action: any = library.api.os.eraseStoreItem(
+                    'recordKey',
+                    'address'
+                );
+                const expected = eraseStoreItem(
+                    'recordKey',
+                    'address',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listStoreItems()', () => {
+            it('should emit a ListStoreItemsAction', async () => {
+                const action: any = library.api.os.listStoreItems('recordKey');
+                const expected = listStoreItems(
+                    'recordKey',
+                    null,
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should be able to start listing after an address', async () => {
+                const action: any = library.api.os.listStoreItems(
+                    'recordKey',
+                    'address'
+                );
+                const expected = listStoreItems(
+                    'recordKey',
+                    'address',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listStoreItemsByMarker()', () => {
+            it('should emit a ListStoreItemsByMarkerAction', async () => {
+                const action: any = library.api.os.listStoreItemsByMarker(
+                    'recordKey',
+                    'marker'
+                );
+                const expected = listStoreItemsByMarker(
+                    'recordKey',
+                    'marker',
+                    null,
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should be able to start listing after an address', async () => {
+                const action: any = library.api.os.listStoreItemsByMarker(
+                    'recordKey',
+                    'marker',
+                    'address'
+                );
+                const expected = listStoreItemsByMarker(
+                    'recordKey',
+                    'marker',
+                    'address',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.purchaseStoreItem()', () => {
+            it('should emit a PurchaseStoreItemAction', async () => {
+                const action: any = library.api.os.purchaseStoreItem(
+                    'recordName',
+                    {
+                        address: 'address',
+                        cost: 100,
+                        currency: 'usd',
+                    }
+                );
+                const expected = purchaseStoreItem(
+                    'recordName',
+                    {
+                        address: 'address',
+                        cost: 100,
+                        currency: 'usd',
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
         });
@@ -13008,7 +13195,7 @@ describe('AuxLibrary', () => {
                         toValue: 2,
                         duration: 1,
                     })
-                ).rejects.toThrowError();
+                ).rejects.toThrow();
             });
         });
 
@@ -15804,7 +15991,7 @@ describe('AuxLibrary', () => {
                 );
                 handleResult(library.api.shout('abc'));
 
-                expect(abc).toBeCalled();
+                expect(abc).toHaveBeenCalled();
             });
 
             const listeningTagCases = ['auxListening', 'listening'];
@@ -15820,7 +16007,7 @@ describe('AuxLibrary', () => {
                     );
                     handleResult(library.api.shout('abc'));
 
-                    expect(abc).toBeCalled();
+                    expect(abc).toHaveBeenCalled();
                 });
             });
 
@@ -15843,7 +16030,7 @@ describe('AuxLibrary', () => {
                 handleResult(library.api.shout('create'));
                 handleResult(library.api.shout('abc'));
 
-                expect(abc).toBeCalledTimes(1);
+                expect(abc).toHaveBeenCalledTimes(1);
             });
 
             it('should be able to shout multiple times to a bot that was created during another shout', () => {
@@ -15869,8 +16056,8 @@ describe('AuxLibrary', () => {
                 handleResult(library.api.shout('abc'));
                 handleResult(library.api.shout('def'));
 
-                expect(abc).toBeCalledTimes(1);
-                expect(def).toBeCalledTimes(1);
+                expect(abc).toHaveBeenCalledTimes(1);
+                expect(def).toHaveBeenCalledTimes(1);
             });
 
             it('should be able to whisper to a bot that was created during another shout', () => {
@@ -15892,7 +16079,7 @@ describe('AuxLibrary', () => {
                 let [newBot] = handleResult(library.api.shout('create'));
                 handleResult(library.api.whisper(newBot, 'abc'));
 
-                expect(abc).toBeCalledTimes(1);
+                expect(abc).toHaveBeenCalledTimes(1);
             });
 
             it('should be able to whisper to itself after being created', () => {
@@ -15918,8 +16105,8 @@ describe('AuxLibrary', () => {
                 handleResult(library.api.shout('create'));
                 handleResult(library.api.shout('abc'));
 
-                expect(abc).toBeCalledTimes(1);
-                expect(def).toBeCalledTimes(1);
+                expect(abc).toHaveBeenCalledTimes(1);
+                expect(def).toHaveBeenCalledTimes(1);
             });
 
             it('should support complicated setup expressions', () => {
@@ -15959,9 +16146,9 @@ describe('AuxLibrary', () => {
                 handleResult(library.api.shout('ensureCreated'));
                 handleResult(library.api.shout('ensureCreated'));
 
-                expect(ensureCreated).toBeCalledTimes(2);
-                expect(setup).toBeCalledTimes(1);
-                expect(otherPart).toBeCalledTimes(1);
+                expect(ensureCreated).toHaveBeenCalledTimes(2);
+                expect(setup).toHaveBeenCalledTimes(1);
+                expect(otherPart).toHaveBeenCalledTimes(1);
             });
 
             it('should ignore null mods', () => {
@@ -16302,7 +16489,7 @@ describe('AuxLibrary', () => {
 
                 handleResult(destroy(['test1']));
 
-                expect(onDestroy1).toBeCalledTimes(1);
+                expect(onDestroy1).toHaveBeenCalledTimes(1);
             });
 
             it('should not destroy bots that are not destroyable', () => {
@@ -16464,7 +16651,7 @@ describe('AuxLibrary', () => {
                 );
                 handleResult(changeState(bot1, 'Abc'));
 
-                expect(enter).toBeCalledTimes(1);
+                expect(enter).toHaveBeenCalledTimes(1);
             });
 
             it('should send an @onExit whisper to the bot', () => {
@@ -16473,7 +16660,7 @@ describe('AuxLibrary', () => {
                 bot1.tags.state = 'Xyz';
                 handleResult(changeState(bot1, 'Abc'));
 
-                expect(exit).toBeCalledTimes(1);
+                expect(exit).toHaveBeenCalledTimes(1);
             });
 
             it('should use the given group name', () => {
@@ -16485,8 +16672,8 @@ describe('AuxLibrary', () => {
                 bot1.tags.fun = 'Xyz';
                 handleResult(changeState(bot1, 'Abc', 'fun'));
 
-                expect(enter).toBeCalledTimes(1);
-                expect(exit).toBeCalledTimes(1);
+                expect(enter).toHaveBeenCalledTimes(1);
+                expect(exit).toHaveBeenCalledTimes(1);
             });
 
             it('should do nothing if the state does not change', () => {
@@ -16502,8 +16689,8 @@ describe('AuxLibrary', () => {
                 bot1.tags.state = 'Xyz';
                 handleResult(changeState(bot1, 'Xyz'));
 
-                expect(enter).not.toBeCalled();
-                expect(exit).not.toBeCalled();
+                expect(enter).not.toHaveBeenCalled();
+                expect(exit).not.toHaveBeenCalled();
             });
         });
 
@@ -18377,7 +18564,7 @@ describe('AuxLibrary', () => {
 
             jest.advanceTimersByTime(500);
 
-            expect(fn).toBeCalledTimes(1);
+            expect(fn).toHaveBeenCalledTimes(1);
             expect(context.getBotTimers(bot1.id)).toEqual([]);
         });
 
@@ -18403,8 +18590,8 @@ describe('AuxLibrary', () => {
 
             jest.advanceTimersByTime(500);
 
-            expect(fn).toBeCalledTimes(1);
-            expect(context.processBotTimerResult).toBeCalledWith('abc');
+            expect(fn).toHaveBeenCalledTimes(1);
+            expect(context.processBotTimerResult).toHaveBeenCalledWith('abc');
             expect(context.getBotTimers(bot1.id)).toEqual([]);
         });
 
@@ -18428,7 +18615,7 @@ describe('AuxLibrary', () => {
 
             jest.advanceTimersByTime(500);
 
-            expect(fn).toBeCalledTimes(0);
+            expect(fn).toHaveBeenCalledTimes(0);
             expect(context.getBotTimers(bot1.id)).toEqual([]);
         });
 
@@ -18452,7 +18639,7 @@ describe('AuxLibrary', () => {
 
             jest.advanceTimersByTime(500);
 
-            expect(fn).toBeCalledTimes(0);
+            expect(fn).toHaveBeenCalledTimes(0);
             expect(context.getBotTimers(bot1.id)).toEqual([]);
         });
 
@@ -18476,7 +18663,7 @@ describe('AuxLibrary', () => {
 
             jest.advanceTimersByTime(500);
 
-            expect(fn).toBeCalledTimes(0);
+            expect(fn).toHaveBeenCalledTimes(0);
             expect(context.getBotTimers(bot1.id)).toEqual([]);
         });
 
@@ -18487,7 +18674,7 @@ describe('AuxLibrary', () => {
         it('should throw an error if not given a handler', () => {
             expect(() => {
                 (library.tagSpecificApi.setTimeout(tagContext) as any)();
-            }).toThrowError(new Error('A handler function must be provided.'));
+            }).toThrow(new Error('A handler function must be provided.'));
         });
 
         it('should not throw an error if not given a timeout', () => {
@@ -18561,7 +18748,7 @@ describe('AuxLibrary', () => {
 
             jest.advanceTimersByTime(500);
 
-            expect(fn).toBeCalledTimes(1);
+            expect(fn).toHaveBeenCalledTimes(1);
 
             expect(context.getBotTimers(bot1.id)).toEqual([
                 {
@@ -18571,7 +18758,7 @@ describe('AuxLibrary', () => {
             ]);
 
             jest.advanceTimersByTime(500);
-            expect(fn).toBeCalledTimes(2);
+            expect(fn).toHaveBeenCalledTimes(2);
         });
 
         it('should call context.processBotTimerResult() with the result of the function', () => {
@@ -18596,9 +18783,9 @@ describe('AuxLibrary', () => {
 
             jest.advanceTimersByTime(500);
 
-            expect(fn).toBeCalledTimes(1);
-            expect(context.processBotTimerResult).toBeCalledTimes(1);
-            expect(context.processBotTimerResult).toBeCalledWith(1);
+            expect(fn).toHaveBeenCalledTimes(1);
+            expect(context.processBotTimerResult).toHaveBeenCalledTimes(1);
+            expect(context.processBotTimerResult).toHaveBeenCalledWith(1);
 
             expect(context.getBotTimers(bot1.id)).toEqual([
                 {
@@ -18608,9 +18795,9 @@ describe('AuxLibrary', () => {
             ]);
 
             jest.advanceTimersByTime(500);
-            expect(fn).toBeCalledTimes(2);
-            expect(context.processBotTimerResult).toBeCalledTimes(2);
-            expect(context.processBotTimerResult).toBeCalledWith(2);
+            expect(fn).toHaveBeenCalledTimes(2);
+            expect(context.processBotTimerResult).toHaveBeenCalledTimes(2);
+            expect(context.processBotTimerResult).toHaveBeenCalledWith(2);
         });
 
         it('should clear the timer when the bot is destroyed', () => {
@@ -18633,7 +18820,7 @@ describe('AuxLibrary', () => {
 
             jest.advanceTimersByTime(500);
 
-            expect(fn).toBeCalledTimes(0);
+            expect(fn).toHaveBeenCalledTimes(0);
             expect(context.getBotTimers(bot1.id)).toEqual([]);
         });
 
@@ -18657,7 +18844,7 @@ describe('AuxLibrary', () => {
 
             jest.advanceTimersByTime(500);
 
-            expect(fn).toBeCalledTimes(0);
+            expect(fn).toHaveBeenCalledTimes(0);
             expect(context.getBotTimers(bot1.id)).toEqual([]);
         });
 
@@ -18681,7 +18868,7 @@ describe('AuxLibrary', () => {
 
             jest.advanceTimersByTime(500);
 
-            expect(fn).toBeCalledTimes(0);
+            expect(fn).toHaveBeenCalledTimes(0);
             expect(context.getBotTimers(bot1.id)).toEqual([]);
         });
 
@@ -18692,7 +18879,7 @@ describe('AuxLibrary', () => {
         it('should throw an error if not given a handler', () => {
             expect(() => {
                 (library.tagSpecificApi.setInterval(tagContext) as any)();
-            }).toThrowError(new Error('A handler function must be provided.'));
+            }).toThrow(new Error('A handler function must be provided.'));
         });
 
         it('should not throw an error if not given a timeout', () => {
@@ -18708,19 +18895,19 @@ describe('AuxLibrary', () => {
         it('should throw an error if the given condition is false', () => {
             expect(() => {
                 library.api.assert(false);
-            }).toThrowError('Assertion failed.');
+            }).toThrow('Assertion failed.');
         });
 
         it('should not throw an error if the given condition is true', () => {
             expect(() => {
                 library.api.assert(true);
-            }).not.toThrowError('Assertion failed.');
+            }).not.toThrow('Assertion failed.');
         });
 
         it('should throw errors with the given message', () => {
             expect(() => {
                 library.api.assert(false, 'Failed with reason.');
-            }).toThrowError('Assertion failed. Failed with reason.');
+            }).toThrow('Assertion failed. Failed with reason.');
         });
     });
 
@@ -18751,7 +18938,7 @@ describe('AuxLibrary', () => {
             (name, value1, value2) => {
                 expect(() => {
                     library.api.assertEqual(value1, value2);
-                }).not.toThrowError();
+                }).not.toThrow();
             }
         );
 
@@ -20689,9 +20876,7 @@ describe('AuxLibrary', () => {
             const invalidValue: any = 'invalid value';
             expect(() => {
                 library.api.bytes.toBase64String(invalidValue);
-            }).toThrowError(
-                'Invalid input. Expected Uint8Array or ArrayBuffer.'
-            );
+            }).toThrow('Invalid input. Expected Uint8Array or ArrayBuffer.');
         });
     });
 
@@ -20747,9 +20932,7 @@ describe('AuxLibrary', () => {
             const invalidInput: any = new Blob();
             expect(() => {
                 library.api.bytes.toBase64Url(invalidInput);
-            }).toThrowError(
-                'Invalid input. Expected Uint8Array or ArrayBuffer.'
-            );
+            }).toThrow('Invalid input. Expected Uint8Array or ArrayBuffer.');
         });
 
         it('should use the given MIME Type', () => {
@@ -22738,6 +22921,593 @@ describe('AuxLibrary', () => {
                             bot: alsoBot1,
                         });
                 }).not.toThrow();
+            });
+        });
+
+        describe('xp', () => {
+            describe('xp.recordContract()', () => {
+                it('should emit a recordsCallProcedure action with recordContract', async () => {
+                    const contract: ContractRecordInput = {
+                        address: 'contract1',
+                        holdingUser: 'user1',
+                        markers: [PUBLIC_READ_MARKER],
+                        rate: 100,
+                        initialValue: 1000,
+                    };
+
+                    const action: any = library.api.xp.recordContract(
+                        'myRecord',
+                        contract
+                    );
+                    const expected = recordsCallProcedure(
+                        {
+                            recordContract: {
+                                input: {
+                                    recordName: 'myRecord',
+                                    item: contract as any,
+                                },
+                            },
+                        },
+                        {},
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+
+                it('should accept options', async () => {
+                    const contract: ContractRecordInput = {
+                        address: 'contract1',
+                        holdingUser: 'user1',
+                        markers: [PUBLIC_READ_MARKER],
+                        rate: 100,
+                        initialValue: 1000,
+                    };
+                    const action: any = library.api.xp.recordContract(
+                        'myRecord',
+                        contract,
+                        { endpoint: 'aux-test' }
+                    );
+                    const expected = recordsCallProcedure(
+                        {
+                            recordContract: {
+                                input: {
+                                    recordName: 'myRecord',
+                                    item: contract as any,
+                                },
+                            },
+                        },
+                        { endpoint: 'aux-test' },
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+            });
+
+            describe('xp.getContract()', () => {
+                it('should emit a recordsCallProcedure action with getContract', async () => {
+                    const action: any = library.api.xp.getContract(
+                        'myRecord',
+                        'address1'
+                    );
+                    const expected = recordsCallProcedure(
+                        {
+                            getContract: {
+                                input: {
+                                    recordName: 'myRecord',
+                                    address: 'address1',
+                                },
+                            },
+                        },
+                        {},
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+
+                it('should accept options', async () => {
+                    const action: any = library.api.xp.getContract(
+                        'myRecord',
+                        'address1',
+                        { endpoint: 'aux-test' }
+                    );
+                    const expected = recordsCallProcedure(
+                        {
+                            getContract: {
+                                input: {
+                                    recordName: 'myRecord',
+                                    address: 'address1',
+                                },
+                            },
+                        },
+                        { endpoint: 'aux-test' },
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+            });
+
+            describe('xp.listContracts()', () => {
+                it('should emit a recordsCallProcedure action with listContracts', async () => {
+                    const action: any =
+                        library.api.xp.listContracts('myRecord');
+                    const expected = recordsCallProcedure(
+                        {
+                            listContracts: {
+                                input: {
+                                    recordName: 'myRecord',
+                                    address: null,
+                                },
+                            },
+                        },
+                        {},
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+
+                it('should accept address parameter', async () => {
+                    const action: any = library.api.xp.listContracts(
+                        'myRecord',
+                        'address1'
+                    );
+                    const expected = recordsCallProcedure(
+                        {
+                            listContracts: {
+                                input: {
+                                    recordName: 'myRecord',
+                                    address: 'address1',
+                                },
+                            },
+                        },
+                        {},
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+
+                it('should accept options', async () => {
+                    const action: any = library.api.xp.listContracts(
+                        'myRecord',
+                        'address1',
+                        { endpoint: 'aux-test' }
+                    );
+                    const expected = recordsCallProcedure(
+                        {
+                            listContracts: {
+                                input: {
+                                    recordName: 'myRecord',
+                                    address: 'address1',
+                                },
+                            },
+                        },
+                        { endpoint: 'aux-test' },
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+            });
+
+            describe('xp.getContractPricing()', () => {
+                it('should emit a recordsCallProcedure action with getContractPricing', async () => {
+                    const action: any = library.api.xp.getContractPricing(
+                        'myRecord',
+                        'address1'
+                    );
+                    const expected = recordsCallProcedure(
+                        {
+                            getContractPricing: {
+                                input: {
+                                    recordName: 'myRecord',
+                                    address: 'address1',
+                                },
+                            },
+                        },
+                        {},
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+
+                it('should accept options', async () => {
+                    const action: any = library.api.xp.getContractPricing(
+                        'myRecord',
+                        'address1',
+                        { endpoint: 'aux-test' }
+                    );
+                    const expected = recordsCallProcedure(
+                        {
+                            getContractPricing: {
+                                input: {
+                                    recordName: 'myRecord',
+                                    address: 'address1',
+                                },
+                            },
+                        },
+                        { endpoint: 'aux-test' },
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+            });
+
+            describe('xp.purchaseContract()', () => {
+                it('should emit a recordsCallProcedure action with purchaseContract', async () => {
+                    const request = {
+                        recordName: 'myRecord',
+                        address: 'address1',
+                        currency: 'usd' as const,
+                        expectedCost: 1000,
+                        returnUrl: 'abc',
+                        successUrl: 'def',
+                    };
+
+                    const action: any =
+                        library.api.xp.purchaseContract(request);
+                    const expected = recordsCallProcedure(
+                        {
+                            purchaseContract: {
+                                input: {
+                                    recordName: 'myRecord',
+                                    contract: {
+                                        address: 'address1',
+                                        currency: 'usd',
+                                        expectedCost: 1000,
+                                    },
+                                    returnUrl: 'abc',
+                                    successUrl: 'def',
+                                },
+                            },
+                        },
+                        {},
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+
+                it('should accept options', async () => {
+                    const request = {
+                        recordName: 'myRecord',
+                        address: 'address1',
+                        currency: 'usd' as const,
+                        expectedCost: 1000,
+                        returnUrl: 'abc',
+                        successUrl: 'def',
+                    };
+
+                    const action: any = library.api.xp.purchaseContract(
+                        request,
+                        { endpoint: 'aux-test' }
+                    );
+                    const expected = recordsCallProcedure(
+                        {
+                            purchaseContract: {
+                                input: {
+                                    recordName: 'myRecord',
+                                    contract: {
+                                        address: 'address1',
+                                        currency: 'usd',
+                                        expectedCost: 1000,
+                                    },
+                                    returnUrl: 'abc',
+                                    successUrl: 'def',
+                                },
+                            },
+                        },
+                        { endpoint: 'aux-test' },
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+            });
+
+            describe('xp.cancelContract()', () => {
+                it('should emit a recordsCallProcedure action with cancelContract', async () => {
+                    const action: any = library.api.xp.cancelContract(
+                        'myRecord',
+                        'address1'
+                    );
+                    const expected = recordsCallProcedure(
+                        {
+                            cancelContract: {
+                                input: {
+                                    recordName: 'myRecord',
+                                    address: 'address1',
+                                },
+                            },
+                        },
+                        {},
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+
+                it('should accept options', async () => {
+                    const action: any = library.api.xp.cancelContract(
+                        'myRecord',
+                        'address1',
+                        { endpoint: 'aux-test' }
+                    );
+                    const expected = recordsCallProcedure(
+                        {
+                            cancelContract: {
+                                input: {
+                                    recordName: 'myRecord',
+                                    address: 'address1',
+                                },
+                            },
+                        },
+                        { endpoint: 'aux-test' },
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+            });
+
+            describe('xp.invoiceContract()', () => {
+                it('should emit a recordsCallProcedure action with invoiceContract', async () => {
+                    const request = {
+                        contractId: 'contract1',
+                        amount: 500,
+                        note: 'Test invoice',
+                        payoutDestination: 'account' as const,
+                    };
+
+                    const action: any = library.api.xp.invoiceContract(request);
+                    const expected = recordsCallProcedure(
+                        {
+                            invoiceContract: {
+                                input: {
+                                    contractId: 'contract1',
+                                    amount: 500,
+                                    note: 'Test invoice',
+                                    payoutDestination: 'account',
+                                },
+                            },
+                        },
+                        {},
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+
+                it('should accept options', async () => {
+                    const request = {
+                        contractId: 'contract1',
+                        amount: 500,
+                        note: 'Test invoice',
+                        payoutDestination: 'stripe' as const,
+                    };
+                    const action: any = library.api.xp.invoiceContract(
+                        request,
+                        { endpoint: 'aux-test' }
+                    );
+                    const expected = recordsCallProcedure(
+                        {
+                            invoiceContract: {
+                                input: {
+                                    contractId: 'contract1',
+                                    amount: 500,
+                                    note: 'Test invoice',
+                                    payoutDestination: 'stripe',
+                                },
+                            },
+                        },
+                        { endpoint: 'aux-test' },
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+            });
+
+            describe('xp.cancelInvoice()', () => {
+                it('should emit a recordsCallProcedure action with cancelInvoice', async () => {
+                    const action: any =
+                        library.api.xp.cancelInvoice('invoice1');
+                    const expected = recordsCallProcedure(
+                        {
+                            cancelInvoice: {
+                                input: {
+                                    invoiceId: 'invoice1',
+                                },
+                            },
+                        },
+                        {},
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+
+                it('should accept options', async () => {
+                    const action: any = library.api.xp.cancelInvoice(
+                        'invoice1',
+                        { endpoint: 'aux-test' }
+                    );
+                    const expected = recordsCallProcedure(
+                        {
+                            cancelInvoice: {
+                                input: {
+                                    invoiceId: 'invoice1',
+                                },
+                            },
+                        },
+                        { endpoint: 'aux-test' },
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+            });
+
+            describe('xp.listInvoices()', () => {
+                it('should emit a recordsCallProcedure action with listInvoices', async () => {
+                    const action: any =
+                        library.api.xp.listInvoices('contract1');
+                    const expected = recordsCallProcedure(
+                        {
+                            listContractInvoices: {
+                                input: {
+                                    contractId: 'contract1',
+                                },
+                            },
+                        },
+                        {},
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+
+                it('should accept options', async () => {
+                    const action: any = library.api.xp.listInvoices(
+                        'contract1',
+                        { endpoint: 'aux-test' }
+                    );
+                    const expected = recordsCallProcedure(
+                        {
+                            listContractInvoices: {
+                                input: {
+                                    contractId: 'contract1',
+                                },
+                            },
+                        },
+                        { endpoint: 'aux-test' },
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+            });
+
+            describe('xp.payInvoice()', () => {
+                it('should emit a recordsCallProcedure action with payInvoice', async () => {
+                    const action: any = library.api.xp.payInvoice('invoice1');
+                    const expected = recordsCallProcedure(
+                        {
+                            payContractInvoice: {
+                                input: {
+                                    invoiceId: 'invoice1',
+                                },
+                            },
+                        },
+                        {},
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+
+                it('should accept options', async () => {
+                    const action: any = library.api.xp.payInvoice('invoice1', {
+                        endpoint: 'aux-test',
+                    });
+                    const expected = recordsCallProcedure(
+                        {
+                            payContractInvoice: {
+                                input: {
+                                    invoiceId: 'invoice1',
+                                },
+                            },
+                        },
+                        { endpoint: 'aux-test' },
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+            });
+
+            describe('xp.payout()', () => {
+                it('should emit a recordsCallProcedure action with payout', async () => {
+                    const request = {
+                        destination: 'stripe' as const,
+                        amount: 1000,
+                    };
+
+                    const action: any = library.api.xp.payout(request);
+                    const expected = recordsCallProcedure(
+                        {
+                            payoutAccount: {
+                                input: request,
+                            },
+                        },
+                        {},
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+
+                it('should accept options', async () => {
+                    const request = {
+                        destination: 'stripe' as const,
+                        amount: 1000,
+                    };
+
+                    const action: any = library.api.xp.payout(request, {
+                        endpoint: 'aux-test',
+                    });
+                    const expected = recordsCallProcedure(
+                        {
+                            payoutAccount: {
+                                input: request,
+                            },
+                        },
+                        { endpoint: 'aux-test' },
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+            });
+
+            describe('xp.getAccountBalances()', () => {
+                it('should emit a recordsCallProcedure action with getAccountBalances', async () => {
+                    const action: any = library.api.xp.getAccountBalances();
+                    const expected = recordsCallProcedure(
+                        {
+                            getBalances: {
+                                input: {},
+                            },
+                        },
+                        {},
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+
+                it('should accept options', async () => {
+                    const action: any = library.api.xp.getAccountBalances({
+                        endpoint: 'aux-test',
+                    });
+                    const expected = recordsCallProcedure(
+                        {
+                            getBalances: {
+                                input: {},
+                            },
+                        },
+                        { endpoint: 'aux-test' },
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
             });
         });
     });

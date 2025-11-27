@@ -23,8 +23,10 @@ import { z } from 'zod';
  */
 export const RECORD_KEY_VALIDATION = z
     .string({
-        invalid_type_error: 'recordKey must be a string.',
-        required_error: 'recordKey is required.',
+        error: (issue) =>
+            issue.input === undefined
+                ? 'recordKey is required.'
+                : 'recordKey must be a string.',
     })
     .nonempty('recordKey must not be empty.');
 
@@ -33,8 +35,10 @@ export const RECORD_KEY_VALIDATION = z
  */
 export const ADDRESS_VALIDATION = z
     .string({
-        invalid_type_error: 'address must be a string.',
-        required_error: 'address is required.',
+        error: (issue) =>
+            issue.input === undefined
+                ? 'address is required.'
+                : 'address must be a string.',
     })
     .min(1)
     .max(512);
@@ -44,40 +48,50 @@ export const ADDRESS_VALIDATION = z
  */
 export const EVENT_NAME_VALIDATION = z
     .string({
-        invalid_type_error: 'eventName must be a string.',
-        required_error: 'eventName is required.',
+        error: (issue) =>
+            issue.input === undefined
+                ? 'eventName is required.'
+                : 'eventName must be a string.',
     })
     .min(1)
     .max(128);
 
 export const STUDIO_ID_VALIDATION = z
     .string({
-        invalid_type_error: 'studioId must be a string.',
-        required_error: 'studioId is required.',
+        error: (issue) =>
+            issue.input === undefined
+                ? 'studioId is required.'
+                : 'studioId must be a string.',
     })
     .min(1)
     .max(128);
 
 export const COM_ID_VALIDATION = z
     .string({
-        invalid_type_error: 'comId must be a string.',
-        required_error: 'comId is required.',
+        error: (issue) =>
+            issue.input === undefined
+                ? 'comId is required.'
+                : 'comId must be a string.',
     })
     .min(1)
     .max(128);
 
 export const STUDIO_DISPLAY_NAME_VALIDATION = z
     .string({
-        invalid_type_error: 'displayName must be a string.',
-        required_error: 'displayName is required.',
+        error: (issue) =>
+            issue.input === undefined
+                ? 'displayName is required.'
+                : 'displayName must be a string.',
     })
     .min(1)
     .max(128);
 
 export const MARKER_VALIDATION = z
     .string({
-        invalid_type_error: 'individual markers must be strings.',
-        required_error: 'invidiaul markers must not be null or empty.',
+        error: (issue) =>
+            issue.input === undefined
+                ? 'invidiaul markers must not be null or empty.'
+                : 'individual markers must be strings.',
     })
     .nonempty('individual markers must not be null or empty.')
     .max(100, 'individual markers must not be longer than 100 characters.');
@@ -87,10 +101,11 @@ export const MARKER_VALIDATION = z
  */
 export const MARKERS_VALIDATION = z
     .array(MARKER_VALIDATION, {
-        invalid_type_error: 'markers must be an array of strings.',
-        required_error: 'markers is required.',
+        error: (issue) =>
+            issue.input === undefined
+                ? 'markers is required.'
+                : 'markers must be an array of strings.',
     })
-    .nonempty('markers must not be empty.')
     .max(10, 'markers lists must not contain more than 10 markers.');
 
 export const NO_WHITESPACE_MESSAGE = 'The value cannot not contain spaces.';
@@ -118,8 +133,10 @@ export const NAME_VALIDATION = z
 
 export const RECORD_NAME_VALIDATION = z
     .string({
-        required_error: 'recordName is required.',
-        invalid_type_error: 'recordName must be a string.',
+        error: (issue) =>
+            issue.input === undefined
+                ? 'recordName is required.'
+                : 'recordName must be a string.',
     })
     .trim()
     .min(1)
@@ -138,31 +155,32 @@ export const RECORD_FILE_SCHEMA = z.object({
     recordKey: RECORD_KEY_VALIDATION,
     fileSha256Hex: z
         .string({
-            invalid_type_error: 'fileSha256Hex must be a string.',
-            required_error: 'fileSha256Hex is required.',
+            error: (issue) =>
+                issue.input === undefined
+                    ? 'fileSha256Hex is required.'
+                    : 'fileSha256Hex must be a string.',
         })
         .min(1)
         .max(128)
         .nonempty('fileSha256Hex must be non-empty.'),
     fileByteLength: z
-        .number({
-            invalid_type_error:
-                'fileByteLength must be a positive integer number.',
-            required_error: 'fileByteLength is required.',
-        })
-        .positive('fileByteLength must be a positive integer number.')
-        .int('fileByteLength must be a positive integer number.'),
+        .int('fileByteLength must be a positive integer number.')
+        .positive('fileByteLength must be a positive integer number.'),
     fileMimeType: z
         .string({
-            invalid_type_error: 'fileMimeType must be a string.',
-            required_error: 'fileMimeType is required.',
+            error: (issue) =>
+                issue.input === undefined
+                    ? 'fileMimeType is required.'
+                    : 'fileMimeType must be a string.',
         })
         .min(1)
         .max(128),
     fileDescription: z
         .string({
-            invalid_type_error: 'fileDescription must be a string.',
-            required_error: 'fileDescription is required.',
+            error: (issue) =>
+                issue.input === undefined
+                    ? 'fileDescription is required.'
+                    : 'fileDescription must be a string.',
         })
         .min(1)
         .max(128)
@@ -175,8 +193,10 @@ export const UPDATE_FILE_SCHEMA = z.object({
     recordKey: RECORD_KEY_VALIDATION,
     fileUrl: z
         .string({
-            invalid_type_error: 'fileUrl must be a string.',
-            required_error: 'fileUrl is required.',
+            error: (issue) =>
+                issue.input === undefined
+                    ? 'fileUrl is required.'
+                    : 'fileUrl must be a string.',
         })
         .nonempty('fileUrl must be non-empty.'),
     markers: MARKERS_VALIDATION,
@@ -187,15 +207,19 @@ export const READ_FILE_SCHEMA = z.object({
     recordName: RECORD_NAME_VALIDATION.optional(),
     fileName: z
         .string({
-            invalid_type_error: 'fileName must be a string.',
-            required_error: 'fileName is required.',
+            error: (issue) =>
+                issue.input === undefined
+                    ? 'fileName is required.'
+                    : 'fileName must be a string.',
         })
         .nonempty('fileName must be non-empty.')
         .optional(),
     fileUrl: z
         .string({
-            invalid_type_error: 'fileUrl must be a string.',
-            required_error: 'fileUrl is required.',
+            error: (issue) =>
+                issue.input === undefined
+                    ? 'fileUrl is required.'
+                    : 'fileUrl must be a string.',
         })
         .nonempty('fileUrl must be non-empty.')
         .optional(),
@@ -206,8 +230,10 @@ export const LIST_FILES_SCHEMA = z.object({
     recordName: RECORD_NAME_VALIDATION,
     fileName: z
         .string({
-            invalid_type_error: 'fileName must be a string.',
-            required_error: 'fileName is required.',
+            error: (issue) =>
+                issue.input === undefined
+                    ? 'fileName is required.'
+                    : 'fileName must be a string.',
         })
         .nonempty('fileName must be non-empty.')
         .optional(),
@@ -217,8 +243,10 @@ export const LIST_FILES_SCHEMA = z.object({
 export const ERASE_FILE_SCHEMA = z.object({
     recordKey: RECORD_KEY_VALIDATION,
     fileUrl: z.string({
-        invalid_type_error: 'fileUrl must be a string.',
-        required_error: 'fileUrl is required.',
+        error: (issue) =>
+            issue.input === undefined
+                ? 'fileUrl is required.'
+                : 'fileUrl must be a string.',
     }),
     instances: INSTANCES_ARRAY_VALIDATION.optional(),
 });
@@ -229,14 +257,18 @@ export const RECORD_DATA_SCHEMA = z.object({
     data: z.any(),
     updatePolicy: z
         .union([z.literal(true), z.array(z.string())], {
-            invalid_type_error:
-                'updatePolicy must be a boolean or an array of strings.',
+            error: (issue) =>
+                issue.input === undefined
+                    ? undefined
+                    : 'updatePolicy must be a boolean or an array of strings.',
         })
         .optional(),
     deletePolicy: z
         .union([z.literal(true), z.array(z.string())], {
-            invalid_type_error:
-                'deletePolicy must be a boolean or an array of strings.',
+            error: (issue) =>
+                issue.input === undefined
+                    ? undefined
+                    : 'deletePolicy must be a boolean or an array of strings.',
         })
         .optional(),
     markers: MARKERS_VALIDATION.optional(),
@@ -247,8 +279,10 @@ export const GET_DATA_SCHEMA = z.object({
     recordName: RECORD_NAME_VALIDATION,
     address: z
         .string({
-            required_error: 'address is required.',
-            invalid_type_error: 'address must be a string.',
+            error: (issue) =>
+                issue.input === undefined
+                    ? 'address is required.'
+                    : 'address must be a string.',
         })
         .nonempty('address must not be empty'),
     instances: INSTANCES_ARRAY_VALIDATION.optional(),

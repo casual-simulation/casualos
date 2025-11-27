@@ -41,7 +41,7 @@ describe('Quaternion', () => {
             q.y = 2;
             q.z = 3;
             q.w = 4;
-        }).toThrowError();
+        }).toThrow();
         expect(q.x).toBe(0);
         expect(q.y).toBe(0);
         expect(q.z).toBe(0);

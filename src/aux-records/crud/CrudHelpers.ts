@@ -82,7 +82,7 @@ export function getItemProcedure<
  */
 export function recordItemProcedure<
     TController extends CrudRecordsController<any, any, any>,
-    TItemSchema extends z.ZodType<any, any>
+    TItemSchema extends z.ZodType
 >(
     auth: AuthController,
     controller: TController | null,
@@ -93,7 +93,7 @@ export function recordItemProcedure<
         .inputs(
             z.object({
                 recordName: RECORD_NAME_VALIDATION,
-                item: itemSchema,
+                item: itemSchema.nonoptional(),
                 instances: INSTANCES_ARRAY_VALIDATION.optional(),
             })
         )

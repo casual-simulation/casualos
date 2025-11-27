@@ -26,7 +26,10 @@ import type {
     SearchRecordInput,
     SearchRecordOutput,
 } from './SearchRecordsController';
-import { SearchRecordsController } from './SearchRecordsController';
+import {
+    SEARCH_COLLECTION_SCHEMA,
+    SearchRecordsController,
+} from './SearchRecordsController';
 import {
     buildSubscriptionConfig,
     subscriptionConfigBuilder,
@@ -36,6 +39,7 @@ import type { RecordsController } from '../RecordsController';
 import type { PolicyController } from '../PolicyController';
 import {
     failure,
+    getSchemaMetadata,
     PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
     success,
@@ -1362,5 +1366,12 @@ describe('SearchRecordsController', () => {
                 })
             );
         });
+    });
+});
+
+describe('SEARCH_COLLECTION_SCHEMA', () => {
+    it('should produce a consistent schema', () => {
+        const schema = getSchemaMetadata(SEARCH_COLLECTION_SCHEMA);
+        expect(schema).toMatchSnapshot();
     });
 });

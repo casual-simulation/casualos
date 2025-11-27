@@ -17,6 +17,8 @@
  */
 import { z } from 'zod';
 
+export type RequestScope = 'auth' | 'player';
+
 /**
  * Defines an interface for a generic HTTP request.
  */
@@ -60,6 +62,11 @@ export interface GenericHttpRequest {
      * Null if the IP address is not available.
      */
     ipAddress: string | null;
+
+    /**
+     * The scope that the request is for.
+     */
+    scope?: RequestScope;
 }
 
 /**

@@ -45,7 +45,22 @@ import type {
     GetSubscriptionStatusRequest,
 } from '@casual-simulation/aux-records/SubscriptionController';
 import type { PrivoSignUpInfo } from '@casual-simulation/aux-vm';
-import type { RemoteCausalRepoProtocol } from '@casual-simulation/aux-common';
+import type {
+    CasualOSConfig,
+    RemoteCausalRepoProtocol,
+} from '@casual-simulation/aux-common';
+
+// Import all types to speed up typescript declaration generation
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type * as _AuxCommon from '@casual-simulation/aux-common';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type * as _AuxRecords from '@casual-simulation/aux-records';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type * as _AuthController from '@casual-simulation/aux-records/AuthController';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type * as _AuxRecordsCrud from '@casual-simulation/aux-records/crud';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type * as _Zod from 'zod';
 
 import {
     startAuthentication,
@@ -61,38 +76,6 @@ const SESSION_KEY = 'sessionKey';
 const CONNECTION_KEY = 'connectionKey';
 export const OAUTH_LOGIN_CHANNEL_NAME = 'aux-login-oauth';
 
-declare const ASSUME_SUBSCRIPTIONS_SUPPORTED: boolean;
-
-if (typeof (globalThis as any).ASSUME_SUBSCRIPTIONS_SUPPORTED === 'undefined') {
-    (globalThis as any).ASSUME_SUBSCRIPTIONS_SUPPORTED = false;
-}
-
-console.log(
-    `[AuthManager] Assume subscriptions supported: ${ASSUME_SUBSCRIPTIONS_SUPPORTED}`
-);
-
-declare const ASSUME_STUDIOS_SUPPORTED: boolean;
-
-if (typeof (globalThis as any).ASSUME_STUDIOS_SUPPORTED === 'undefined') {
-    (globalThis as any).ASSUME_STUDIOS_SUPPORTED = false;
-}
-
-console.log(
-    `[AuthManager] Assume studios supported: ${ASSUME_STUDIOS_SUPPORTED}`
-);
-
-declare const USE_PRIVO_LOGIN: boolean;
-
-if (typeof (globalThis as any).USE_PRIVO_LOGIN === 'undefined') {
-    (globalThis as any).USE_PRIVO_LOGIN = false;
-}
-
-console.log(`[AuthManager] Use Privo Login: ${USE_PRIVO_LOGIN}`);
-
-declare let ENABLE_SMS_AUTHENTICATION: boolean;
-
-declare let SUPPORT_URL: string;
-
 export class AuthManager {
     private _userId: string;
     private _sessionId: string;
@@ -100,6 +83,8 @@ export class AuthManager {
     private _subscriptionsSupported: boolean;
     private _studiosSupported: boolean;
     private _usePrivoLogin: boolean;
+    private _supportUrl: string;
+    private _enableSmsAuthentication: boolean;
 
     private _loginState: Subject<boolean>;
     private _apiEndpoint: string;
@@ -111,26 +96,23 @@ export class AuthManager {
     private _temporarySessionKey: string;
     private _temporaryConnectionKey: string;
 
-    constructor(
-        apiEndpoint: string,
-        websocketEndpoint: string,
-        websocketProtocol: RemoteCausalRepoProtocol,
-        gitTag: string
-    ) {
-        this._apiEndpoint = apiEndpoint;
-        this._websocketEndpoint = websocketEndpoint;
-        this._websocketProtocol = websocketProtocol;
+    constructor(config: CasualOSConfig, gitTag: string) {
+        this._apiEndpoint = config.recordsOrigin;
+        this._websocketEndpoint = config.causalRepoConnectionUrl;
+        this._websocketProtocol = config.causalRepoConnectionProtocol;
         this._gitTag = gitTag;
         this._loginState = new BehaviorSubject<boolean>(false);
-        this._subscriptionsSupported = ASSUME_SUBSCRIPTIONS_SUPPORTED;
-        this._studiosSupported = ASSUME_STUDIOS_SUPPORTED;
-        this._usePrivoLogin = USE_PRIVO_LOGIN;
+        this._subscriptionsSupported = config.subscriptionsSupported;
+        this._studiosSupported = config.studiosSupported;
+        this._usePrivoLogin = config.requirePrivoLogin;
+        this._supportUrl = config.supportUrl;
+        this._enableSmsAuthentication = config.enableSmsAuthentication;
         this._client = createRecordsClient(this.apiEndpoint);
         this._updateClientSessionKey();
     }
 
     get supportUrl() {
-        return SUPPORT_URL;
+        return this._supportUrl;
     }
 
     get userId() {
@@ -169,6 +151,10 @@ export class AuthManager {
         return this._appMetadata?.privacyFeatures;
     }
 
+    get contractFeatures() {
+        return this._appMetadata?.contractFeatures;
+    }
+
     get subscriptionsSupported() {
         return this._subscriptionsSupported;
     }
@@ -189,8 +175,12 @@ export class AuthManager {
         return this._usePrivoLogin;
     }
 
+    get metadata(): AppMetadata {
+        return this._appMetadata;
+    }
+
     get supportsSms() {
-        return ENABLE_SMS_AUTHENTICATION === true;
+        return this._enableSmsAuthentication;
     }
 
     get userInfoLoaded() {
@@ -606,7 +596,7 @@ export class AuthManager {
     ): Promise<ProcessOpenIDAuthorizationCodeResult> {
         return this.client.processOAuthCode({
             ...params,
-        });
+        } as any);
     }
 
     async completeOAuthLogin(

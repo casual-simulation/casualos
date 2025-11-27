@@ -108,6 +108,8 @@ const SAVE_CONFIG_TIMEOUT_MILISECONDS = 5000;
 
 const INIT_OFFLINE_TIMEOUT_MILISECONDS = 5000;
 
+const FETCH_CONFIG_TIMEOUT_MILISECONDS = 3000;
+
 const STATIC_INSTS_STORE = 'staticInsts';
 const INSTS_STORE = 'publicInsts';
 
@@ -718,6 +720,8 @@ export class AppManager {
             console.warn(
                 '[AppManager] Config not able to be fetched from the server or local storage.'
             );
+        } else {
+            console.log('[AppManager] Config loaded:', this._config);
         }
     }
 
@@ -1165,6 +1169,12 @@ export class AppManager {
                 staticRepoLocalPersistence: true,
             };
         } else {
+            const injectedConfig = tryParseJson(
+                document.querySelector('script#casualos-web-config')?.innerHTML
+            );
+            if (injectedConfig.success) {
+                return injectedConfig.value;
+            }
             const serverConfig = await this._fetchConfigFromServer();
             if (serverConfig) {
                 return serverConfig;
@@ -1176,7 +1186,10 @@ export class AppManager {
 
     private async _fetchConfigFromServer(): Promise<WebConfig> {
         try {
-            const result = await Axios.get<WebConfig>(`/api/config`);
+            const result = await Axios.get<WebConfig>(`/api/config`, {
+                timeout: FETCH_CONFIG_TIMEOUT_MILISECONDS,
+                timeoutErrorMessage: 'Fetch config request timed out',
+            });
             if (result.status === 200) {
                 return result.data;
             } else {

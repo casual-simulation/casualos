@@ -15,15 +15,14 @@ interface MutableRef<T> {
 
 type EffectCallback = () => void | (() => void);
 
-type MaskFunc<Func extends ((...args: any[]) => any)> = {
+type MaskFunc<Func extends (...args: any[]) => any> = {
     (...args: Parameters<Func>): ReturnType<Func>;
 
     /**
      * Masks this function so that it can return a value when called with the specified parameters.
      */
     mask(...args: Parameters<Func>): MaskedFunction;
-}
-
+};
 
 export interface MaskedFunction {
     /**
@@ -69,7 +68,7 @@ export interface AuxVersion {
 
     /**
      * Gets the player mode of this CasualOS version.
-     * 
+     *
      * - "player" indicates that the instance has been configured for experiencing AUXes.
      * - "builder" indicates that the instance has been configured for building AUXes.
      */
@@ -342,7 +341,6 @@ declare interface UpdateBotAction extends Action {
     update: Partial<Bot>;
 }
 
-
 /**
  * Defines the set of options required for creating a certificate.
  */
@@ -368,7 +366,7 @@ export interface CreateCertificateOptions {
  */
 export interface CreateCertificateAction
     extends AsyncAction,
-    CreateCertificateOptions {
+        CreateCertificateOptions {
     type: 'create_certificate';
 }
 
@@ -494,7 +492,6 @@ declare interface ReplaceDragBotAction extends Action {
      */
     bot: Bot | BotTags;
 }
-
 
 /**
  * An event that is used to run a shell script.
@@ -674,10 +671,9 @@ declare interface OpenBarcodeScannerAction extends Action {
     cameraType: CameraType;
 }
 
-
 /**
  * Defines a photo that was taken.
- * 
+ *
  * @dochash types/camera
  * @docname Photo
  */
@@ -700,7 +696,7 @@ export interface Photo {
 
 /**
  * Options for {@link os.openPhotoCamera}.
- * 
+ *
  * @dochash types/camera
  * @doctitle Camera Types
  * @docsidebar Camera
@@ -715,14 +711,14 @@ export interface OpenPhotoCameraOptions {
 
     /**
      * The image format that should be used.
-     * 
+     *
      * Defaults to "png".
      */
     imageFormat?: 'png' | 'jpeg';
 
     /**
      * A number between 0 and 1 indicating the image quality to be used.
-     * 
+     *
      * If not specified, then the browser will use its own default.
      */
     imageQuality?: number;
@@ -745,7 +741,7 @@ export interface OpenPhotoCameraOptions {
 
     /**
      * The ideal resolution for the photo to be taken at.
-     * 
+     *
      * If specified, then the web browser will be told to prefer this resolution, but will use a lower resolution if
      * it is not possible to use the ideal resolution.
      */
@@ -759,11 +755,11 @@ export interface OpenPhotoCameraOptions {
          * The height of the photo in pixels.
          */
         height: number;
-    }
+    };
 
     /**
      * Whether to mirror the photo after it is taken.
-     * 
+     *
      * Defaults to false.
      */
     mirrorPhoto?: boolean;
@@ -877,20 +873,20 @@ export interface ClassifyImagesAction extends AsyncAction {
     modelUrl?: string;
 
     /**
-    * The URL that the model JSON should be loaded from.
-    * Not required. Can be used if you are storing the model JSON in a custom location.
-    */
+     * The URL that the model JSON should be loaded from.
+     * Not required. Can be used if you are storing the model JSON in a custom location.
+     */
     modelJsonUrl?: string;
 
     /**
-    * The URL that the model metadata should be loaded from.
-    * Not required. Can be used if you are storing the model metadata in a custom location.
-    */
+     * The URL that the model metadata should be loaded from.
+     * Not required. Can be used if you are storing the model metadata in a custom location.
+     */
     modelMetadataUrl?: string;
 
     /**
-    * The images that should be classified.
-    */
+     * The images that should be classified.
+     */
     images: Image[];
 }
 
@@ -995,7 +991,7 @@ export type ImageClassifierOptions = Pick<
 export type ClassifyImagesOptions = Pick<
     ClassifyImagesAction,
     'modelUrl' | 'modelJsonUrl' | 'modelMetadataUrl' | 'images'
->
+>;
 
 /**
  * An event that is used to load a simulation.
@@ -1217,7 +1213,7 @@ declare interface AnimateTagFunctionOptions {
     /**
      * The type of easing to use.
      * If not specified then "linear" "inout" will be used.
-     * 
+     *
      * Can also be a custom function that takes a single parameter and returns a number.
      * The paramater will be a number between 0 and 1 indicating the progress through the tween.
      */
@@ -1467,7 +1463,14 @@ declare type ShowInputType = 'text' | 'color' | 'secret' | 'date' | 'list';
 /**
  * Defines the possible input types.
  */
-declare type ShowInputSubtype = 'basic' | 'swatch' | 'advanced' | 'select' | 'multiSelect' | 'radio' | 'checkbox';
+declare type ShowInputSubtype =
+    | 'basic'
+    | 'swatch'
+    | 'advanced'
+    | 'select'
+    | 'multiSelect'
+    | 'radio'
+    | 'checkbox';
 
 /**
  * Defines an event that is used to show a confirmation dialog.
@@ -1658,8 +1661,8 @@ declare interface ShowChatOptions {
     backgroundColor?: string;
 
     /**
-    * The color to use for the foreground (text).
-    */
+     * The color to use for the foreground (text).
+     */
     foregroundColor?: string;
 }
 
@@ -1775,7 +1778,16 @@ declare interface LocalFormAnimationAction {
 
 declare type TweenType = 'position' | 'rotation';
 
-declare type EaseType = 'linear' | 'quadratic' | 'cubic' | 'quartic' | 'quintic' | 'sinusoidal' | 'exponential' | 'circular' | 'elastic';
+declare type EaseType =
+    | 'linear'
+    | 'quadratic'
+    | 'cubic'
+    | 'quartic'
+    | 'quintic'
+    | 'sinusoidal'
+    | 'exponential'
+    | 'circular'
+    | 'elastic';
 
 declare type EaseMode = 'in' | 'out' | 'inout';
 
@@ -1835,7 +1847,7 @@ declare interface LocalPositionTweenAction extends LocalTweenAction {
     /**
      * The target position of the tween.
      */
-    position: { x?: number, y?: number, z?: number };
+    position: { x?: number; y?: number; z?: number };
 }
 
 /**
@@ -1847,7 +1859,7 @@ declare interface LocalRotationTweenAction extends LocalTweenAction {
     /**
      * The target rotation of the tween.
      */
-    rotation: { x?: number, y?: number, z?: number };
+    rotation: { x?: number; y?: number; z?: number };
 }
 
 /**
@@ -1916,7 +1928,7 @@ declare interface EnablePOVAction {
     /**
      * The point that the camera should be placed at for POV.
      */
-    center?: { x: number, y: number, z: number };
+    center?: { x: number; y: number; z: number };
 }
 
 /**
@@ -1933,7 +1945,7 @@ declare interface WakeLockConfiguration {
  * An event that is used to send a command to the Jitsi Meet API.
  */
 declare interface MeetCommandAction extends AsyncAction {
-    type: 'meet_command',
+    type: 'meet_command';
 
     /**
      * The name of the command to execute.
@@ -2105,8 +2117,13 @@ export interface SnapAxis {
  * - "face" means that the dragged bot should snap to other bot faces.
  * - "bots" means that the dragged bot will snap to other bots.
  */
-declare type SnapTarget = 'ground' | 'grid' | 'face' | 'bots' | SnapPoint | SnapAxis;
-
+declare type SnapTarget =
+    | 'ground'
+    | 'grid'
+    | 'face'
+    | 'bots'
+    | SnapPoint
+    | SnapAxis;
 
 /**
  * An event that is used to add grids as possible drop locations for a drag operation.
@@ -2129,13 +2146,13 @@ export interface SnapGrid {
      * The 3D position of the grid.
      * If not specified, then 0,0,0 is used.
      */
-    position?: { x: number, y: number, z: number };
+    position?: { x: number; y: number; z: number };
 
     /**
      * The 3D rotation of the grid.
      * If not specified, then the identity rotation is used.
      */
-    rotation?: { x: number, y: number, z: number, w?: number };
+    rotation?: { x: number; y: number; z: number; w?: number };
 
     /**
      * The ID of the bot that defines the portal that this grid should use.
@@ -2160,7 +2177,7 @@ export interface SnapGrid {
      * The bounds that the snap grid has.
      * If not specified, then default bounds are used.
      */
-    bounds?: { x: number, y: number };
+    bounds?: { x: number; y: number };
 
     /**
      * Whether to visualize the grid when dragging bots around.
@@ -2171,7 +2188,7 @@ export interface SnapGrid {
     /**
      * The type of grid that this snap grid should be.
      * Defaults to the type of grid that the portal bot uses.
-     * 
+     *
      * - "grid" indicates that the snap target should be a flat grid.
      * - "sphere" indicates that the snap target should be a sphere.
      */
@@ -2182,12 +2199,12 @@ export interface SnapGridTarget {
     /**
      * The 3D position that the grid should appear at.
      */
-    position?: { x: number, y: number, z: number };
+    position?: { x: number; y: number; z: number };
 
     /**
      * The 3D rotation that the grid should appear at.
      */
-    rotation?: { x: number, y: number, z: number, w?: number };
+    rotation?: { x: number; y: number; z: number; w?: number };
 
     /**
      * The bot that defines the portal that the grid should exist in.
@@ -2204,7 +2221,7 @@ export interface SnapGridTarget {
      * The bounds of the grid.
      * Defaults to 10 x 10.
      */
-    bounds?: { x: number, y: number };
+    bounds?: { x: number; y: number };
 
     /**
      * The priority that this grid should be evaluated in over other grids.
@@ -2221,7 +2238,7 @@ export interface SnapGridTarget {
     /**
      * The type of grid that this snap grid should be.
      * Defaults to the type of grid that the portal bot uses.
-     * 
+     *
      * - "grid" indicates that the snap target should be a flat grid.
      * - "sphere" indicates that the snap target should be a sphere.
      */
@@ -2262,14 +2279,12 @@ export interface RegisterCustomAppAction extends AsyncAction {
  * The options for a register custom portal action.
  */
 export interface RegisterCustomAppOptions {
-
     /**
      * The kind of the custom portal.
      * Used to make it easy to register multiple custom portals that rely on the same kind of renderers.
      */
     kind?: string;
 }
-
 
 /**
  * Defines an event that notifies that the output of a portal should be updated with the given data.
@@ -2322,7 +2337,6 @@ declare interface RegisterPrefixOptions {
     name?: string;
 }
 
-
 /**
  * An interface that represents the options that can be used for making recordings.
  */
@@ -2362,7 +2376,6 @@ declare interface EndRecordingAction extends AsyncAction {
  * Defines an interface that contains recorded data.
  */
 declare interface Recording {
-
     /**
      * The list of files that were produced when recording.
      */
@@ -2390,7 +2403,6 @@ declare interface RecordedFile {
      */
     data: Blob;
 }
-
 
 declare interface SpeakTextOptions {
     /**
@@ -2447,7 +2459,6 @@ declare interface SyntheticVoice {
      */
     name: string;
 }
-
 
 /**
  * An event that is used to retrieve the current geolocation of the device.
@@ -2511,7 +2522,11 @@ declare interface UnsuccessfulGeolocation {
     /**
      * The code of the error that occurred.
      */
-    errorCode?: 'permission_denied' | 'position_unavailable' | 'timeout' | 'unknown';
+    errorCode?:
+        | 'permission_denied'
+        | 'position_unavailable'
+        | 'timeout'
+        | 'unknown';
 
     /**
      * The message of the error that occurred.
@@ -2808,7 +2823,7 @@ export type BotSpace =
 
 /**
  * The possible spaces that records can be stored in.
- * 
+ *
  * - "tempGlobal" means that the record is temporary and available to anyone.
  * - "tempRestricted" means that the record is temporary and available to a specific user.
  * - "permanentGlobal" means that the record is permanent and available to anyone.
@@ -2884,8 +2899,8 @@ declare interface WebhookResult {
      * The HTTP headers that were returned with the response.
      */
     headers: {
-        [key: string]: string
-    }
+        [key: string]: string;
+    };
 }
 
 /**
@@ -2969,7 +2984,7 @@ declare interface PerformanceStats {
      */
     loadTimes: {
         [key: string]: number;
-    }
+    };
 }
 
 /**
@@ -3007,9 +3022,9 @@ export interface AttachDebuggerOptions {
     tagNameMapper?: TagMapper;
 }
 
-/** 
+/**
  * Defines an interface that contains options for a debugger.
-*/
+ */
 export interface CommonDebuggerOptions {
     /**
      * Whether to use "real" UUIDs instead of predictable ones.
@@ -3024,9 +3039,9 @@ export interface CommonDebuggerOptions {
     allowAsynchronousScripts: boolean;
 
     /**
-    * The data that the configBot should be created from.
-    * Can be a mod or another bot.
-    */
+     * The data that the configBot should be created from.
+     * Can be a mod or another bot.
+     */
     configBot: Bot | BotTags;
 }
 
@@ -3138,8 +3153,8 @@ export type RecordNotFoundError = 'record_not_found';
  */
 export type NotAuthorizedError = 'not_authorized';
 
-
-export type AuthorizeDeniedError = ServerError
+export type AuthorizeDeniedError =
+    | ServerError
     | CreatePublicRecordKeyFailure['errorCode']
     | 'action_not_supported'
     | 'not_logged_in'
@@ -3153,7 +3168,7 @@ export type GetPolicyError = 'policy_not_found';
 
 /**
  * Defines a type that represents a policy that indicates which users are allowed to affect a record.
- * 
+ *
  * True indicates that any user can edit the record.
  * An array of strings indicates the list of users that are allowed to edit the record.
  */
@@ -3243,7 +3258,6 @@ export interface Permission {
     expireTimeMs: number | null;
 }
 
-
 /**
  * Defines an interface that describes the common options for all permissions that affect data records.
  *
@@ -3284,7 +3298,6 @@ export interface FilePermissionOptions {
     allowedMimeTypes?: true | string[];
 }
 
-
 /**
  * Defines an interface that describes the common options for all permissions that affect file records.
  *
@@ -3309,7 +3322,6 @@ export interface FilePermission extends Permission {
     options: FilePermissionOptions;
 }
 
-
 /**
  * Defines an interface that describes the common options for all permissions that affect event records.
  *
@@ -3328,7 +3340,6 @@ export interface EventPermission extends Permission {
      */
     action: EventActionKinds | null;
 }
-
 
 /**
  * Defines an interface that describes the common options for all permissions that affect markers.
@@ -3349,7 +3360,6 @@ export interface MarkerPermission extends Permission {
     action: MarkerActionKinds | null;
 }
 
-
 /**
  * Options for role permissions.
  *
@@ -3363,7 +3373,6 @@ export interface RolePermissionOptions {
      */
     maxDurationMs?: number;
 }
-
 
 /**
  * Defines an interface that describes the common options for all permissions that affect roles.
@@ -3394,7 +3403,6 @@ export interface RolePermission extends Permission {
      */
     options: RolePermissionOptions;
 }
-
 
 /**
  * Defines an interface that describes common options for all permissions that affect insts.
@@ -3481,7 +3489,6 @@ export type InstActionKinds =
     | 'list'
     | 'sendAction';
 
-
 /**
  * Defines the possible results of granting a permission to a marker.
  *
@@ -3532,7 +3539,6 @@ export interface GrantMarkerPermissionFailure {
      */
     errorMessage: string;
 }
-
 
 /**
  * Defines the possible results of granting a permission to a resource.
@@ -3761,10 +3767,52 @@ export interface GrantRoleSuccess {
 
 export interface GrantRoleFailure {
     success: false;
+    errorCode: ServerError | AuthorizeDeniedError | 'roles_too_large';
+    errorMessage: string;
+}
+
+/**
+ * Defines the possible results of erasing an inst.
+ *
+ * @dochash types/records/extra
+ * @docname EraseInstResult
+ */
+export type EraseInstResult = EraseInstSuccess | EraseInstFailure;
+
+/**
+ * Defines an interface that represents a successful request to erase an inst.
+ *
+ * @dochash types/records/extra
+ * @docname EraseInstSuccess
+ */
+export interface EraseInstSuccess {
+    success: true;
+}
+
+/**
+ * Defines an interface that represents a failed request to erase an inst.
+ *
+ * @dochash types/records/extra
+ * @docname EraseInstFailure
+ */
+export interface EraseInstFailure {
+    success: false;
+
+    /**
+     * The error code that indicates why the request failed.
+     */
     errorCode:
-    | ServerError
-    | AuthorizeDeniedError
-    | 'roles_too_large';
+        | ServerError
+        | 'inst_not_found'
+        | NotSupportedError
+        | NotLoggedInError
+        | InvalidRecordKey
+        | RecordNotFoundError
+        | 'not_authorized';
+
+    /**
+     * The error message that indicates why the request failed.
+     */
     errorMessage: string;
 }
 
@@ -3850,7 +3898,6 @@ export interface RecordDataOptions {
  * @docName ListDataOptions
  */
 export interface ListDataOptions extends RecordActionOptions {
-
     /**
      * The order that items should be sorted in.
      * - "ascending" means that the items should be sorted in alphebatically ascending order by address.
@@ -4029,6 +4076,131 @@ export interface SearchDocument {
     [key: string]: any;
 }
 
+
+/**
+ * An event that is used to generate a QR Code as a [data URL image](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URIs).
+ * 
+ * @dochash types/os/barcodes
+ * @docname GenerateQRCodeAction
+ */
+export interface GenerateQRCodeAction extends AsyncAction {
+    type: 'generate_qr_code';
+
+    /**
+     * The code to generate.
+     */
+    code: string;
+
+    /**
+     * The options for generating the QR code.
+     */
+    options?: GenerateQRCodeOptions;
+}
+
+/**
+ * The options that can be used when generating a QR code.
+ * 
+ * @dochash types/os/barcodes
+ * @docname GenerateQRCodeOptions
+ */
+export interface GenerateQRCodeOptions {
+
+    /**
+     * The error correction level to use for the QR code.
+     * 
+     * Defaults to 'medium'.
+     * 
+     * 'low' - 7% of codewords can be restored.
+     * 'medium' - 15% of codewords can be restored.
+     * 'quartile' - 25% of codewords can be restored.
+     * 'high' - 30% of codewords can be restored.
+     */
+    errorCorrectionLevel?: 'low' | 'medium' | 'quartile' | 'high';
+
+    /**
+     * The image format that should be used for the generated QR code.
+     * 
+     * @see https://www.the-qrcode-generator.com/blog/qr-code-quiet-zone
+     */
+    imageFormat?: 'image/jpeg' | 'image/webp' | 'image/png';
+
+    /**
+     * The QR Code version to use.
+     * Must be between 1 and 40.
+     * 
+     * Higher values store more data, lower values store less data.
+     * 
+     * Defaults to automatic selection based on the length of the code.
+     * 
+     * @see https://www.qrcode.com/en/about/version.html
+     */
+    version?: number;
+
+    /**
+     * The mask pattern to use for the QR Code.
+     * 
+     * Must be between 0 and 7.
+     * 
+     * If not specified, then the best mask pattern will be chosen automatically.
+     * 
+     * @see https://stackoverflow.com/a/68280826/1832856
+     */
+    maskPattern?: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+
+    /**
+     * The scale factor that the QR code should have.
+     * That is, how many pixels each module (black or white dot) should be.
+     * A value of `1` means `1px` per modules (black dots).
+     * 
+     * Defaults to 4
+     */
+    scale?: number;
+
+    /**
+     * Defines how wide the quiet zone should be around the QR code.
+     * 
+     * Defaults to `4`.
+     */
+    margin?: number;
+
+    /**
+     * The width of the generated QR code in pixels. Defaults to generating the smallest code that can fit the data.
+     * 
+     * If both width and scale are specified, then width takes precedence.
+     * If the code is too small to fit the code with the given width, then the width will be increased to fit.
+     * 
+     * Defaults to `256`.
+     */
+    width?: number;
+
+    /**
+     * The color options for the QR Code.
+     */
+    color?: QRCodeColorOptions;
+}
+
+/**
+ * The color options for a QR Code.
+ * 
+ * @dochash types/os/barcodes
+ * @docname QRCodeColorOptions
+ */
+export interface QRCodeColorOptions {
+    /**
+     * The color of dark modules. Must be in hex RGBA format.
+     * 
+     * Defaults to `#000000ff` (black).
+     */
+    dark?: string;
+
+    /**
+     * The color of light modules. Must be in hex RGBA format.
+     * 
+     * Defaults to `#ffffffff` (white).
+     */
+    light?: string;
+}
+
 export type RecordSearchDocumentResult = RecordSearchDocumentSuccess | RecordSearchDocumentFailure;
 
 export interface RecordSearchDocumentSuccess extends SearchDocument {
@@ -4070,13 +4242,13 @@ export interface RecordDataSuccess {
 export interface RecordDataFailure {
     success: false;
     errorCode:
-    | ServerError
-    | NotLoggedInError
-    | InvalidRecordKey
-    | RecordNotFoundError
-    | NotSupportedError
-    | 'not_authorized'
-    | 'data_too_large';
+        | ServerError
+        | NotLoggedInError
+        | InvalidRecordKey
+        | RecordNotFoundError
+        | NotSupportedError
+        | 'not_authorized'
+        | 'data_too_large';
     errorMessage: string;
 }
 
@@ -4111,10 +4283,13 @@ export interface GetDataSuccess {
 
 export interface GetDataFailure {
     success: false;
-    errorCode: ServerError | 'data_not_found' | 'not_authorized' | NotSupportedError;
+    errorCode:
+        | ServerError
+        | 'data_not_found'
+        | 'not_authorized'
+        | NotSupportedError;
     errorMessage: string;
 }
-
 
 export type ListDataResult = ListDataSuccess | ListDataFailure;
 
@@ -4129,12 +4304,9 @@ export interface ListDataSuccess {
 
 export interface ListDataFailure {
     success: false;
-    errorCode:
-    | ServerError
-    | NotSupportedError;
+    errorCode: ServerError | NotSupportedError;
     errorMessage: string;
 }
-
 
 export type EraseDataResult = EraseDataSuccess | EraseDataFailure;
 
@@ -4146,16 +4318,16 @@ export interface EraseDataSuccess {
 
 export interface EraseDataFailure {
     success: false;
-    errorCode: ServerError
-    | NotLoggedInError
-    | InvalidRecordKey
-    | RecordNotFoundError
-    | NotSupportedError
-    | 'not_authorized'
-    | 'data_not_found';
+    errorCode:
+        | ServerError
+        | NotLoggedInError
+        | InvalidRecordKey
+        | RecordNotFoundError
+        | NotSupportedError
+        | 'not_authorized'
+        | 'data_not_found';
     errorMessage: string;
 }
-
 
 export type RecordFileResult = RecordFileSuccess | RecordFileFailure;
 
@@ -4177,16 +4349,15 @@ export interface RecordFileSuccess {
 export interface RecordFileFailure {
     success: false;
     errorCode:
-    | ServerError
-    | NotLoggedInError
-    | InvalidRecordKey
-    | RecordNotFoundError
-    | 'file_already_exists'
-    | NotSupportedError
-    | 'invalid_file_data';
+        | ServerError
+        | NotLoggedInError
+        | InvalidRecordKey
+        | RecordNotFoundError
+        | 'file_already_exists'
+        | NotSupportedError
+        | 'invalid_file_data';
     errorMessage: string;
 }
-
 
 export type EraseFileResult = EraseFileSuccess | EraseFileFailure;
 export interface EraseFileSuccess {
@@ -4197,15 +4368,15 @@ export interface EraseFileSuccess {
 
 export interface EraseFileFailure {
     success: false;
-    errorCode: ServerError
-    | InvalidRecordKey
-    | RecordNotFoundError
-    | NotLoggedInError
-    | NotSupportedError
-    | 'file_not_found';
+    errorCode:
+        | ServerError
+        | InvalidRecordKey
+        | RecordNotFoundError
+        | NotLoggedInError
+        | NotSupportedError
+        | 'file_not_found';
     errorMessage: string;
 }
-
 
 export type AddCountResult = AddCountSuccess | AddCountFailure;
 
@@ -4219,11 +4390,11 @@ export interface AddCountSuccess {
 export interface AddCountFailure {
     success: false;
     errorCode:
-    | ServerError
-    | NotLoggedInError
-    | InvalidRecordKey
-    | RecordNotFoundError
-    | NotSupportedError
+        | ServerError
+        | NotLoggedInError
+        | InvalidRecordKey
+        | RecordNotFoundError
+        | NotSupportedError;
     errorMessage: string;
 }
 
@@ -4253,9 +4424,7 @@ export interface GetCountSuccess {
 
 export interface GetCountFailure {
     success: false;
-    errorCode:
-    | ServerError
-    | NotSupportedError;
+    errorCode: ServerError | NotSupportedError;
     errorMessage: string;
 }
 
@@ -4272,7 +4441,7 @@ export type ListStudiosResult = ListStudiosSuccess | ListStudiosFailure;
 
 /**
  * Defines an interface that represents a successful "list studios" result.
- * 
+ *
  * @dochash types/records/studios
  * @docname ListStudiosSuccess
  */
@@ -4287,7 +4456,7 @@ export interface ListStudiosSuccess {
 
 /**
  * Defines an interface that represents a failed "list studios" result.
- * 
+ *
  * @dochash types/records/studios
  * @docname ListStudiosFailure
  */
@@ -4307,7 +4476,7 @@ export interface ListStudiosFailure {
 
 /**
  * Defines an interface that represents a studio that a user has access to.
- * 
+ *
  * @dochash types/records/studios
  * @docname ListedStudio
  */
@@ -4346,7 +4515,6 @@ export interface ListedStudio {
  */
 export type StudioAssignmentRole = 'admin' | 'member';
 
-
 export type JoinRoomResult = JoinRoomSuccess | JoinRoomFailure;
 
 export interface JoinRoomSuccess {
@@ -4375,7 +4543,9 @@ export interface LeaveRoomFailure {
     errorMessage: string;
 }
 
-export type SetRoomOptionsResult = SetRoomOptionsSuccess | SetRoomOptionsFailure;
+export type SetRoomOptionsResult =
+    | SetRoomOptionsSuccess
+    | SetRoomOptionsFailure;
 
 export interface SetRoomOptionsSuccess {
     success: true;
@@ -4389,7 +4559,9 @@ export interface SetRoomOptionsFailure {
     errorMessage: string;
 }
 
-export type GetRoomOptionsResult = GetRoomOptionsSuccess | GetRoomOptionsFailure;
+export type GetRoomOptionsResult =
+    | GetRoomOptionsSuccess
+    | GetRoomOptionsFailure;
 
 export interface GetRoomOptionsSuccess {
     success: true;
@@ -4425,7 +4597,6 @@ export interface RoomOptions {
      */
     screen?: boolean;
 }
-
 
 export type GetRoomTrackOptionsResult =
     | GetRoomTrackOptionsSuccess
@@ -4512,7 +4683,7 @@ export interface RoomTrackOptions {
     /**
      * The dimensions of the video if the track represents a video.
      */
-    dimensions?: { width: number, height: number };
+    dimensions?: { width: number; height: number };
 
     /**
      * The aspect ratio of the video if the track represents a video.
@@ -4528,7 +4699,11 @@ export type TrackKind = 'video' | 'audio';
 /**
  * The possible sources for a room track.
  */
-export type TrackSource = 'camera' | 'microphone' | 'screen_share' | 'screen_share_audio';
+export type TrackSource =
+    | 'camera'
+    | 'microphone'
+    | 'screen_share'
+    | 'screen_share_audio';
 
 /**
  * The possible video qualities for a room track.
@@ -4654,7 +4829,7 @@ export interface InstUpdate {
 export interface AudioRecordingOptions {
     /**
      * Whether to stream the audio recording.
-     * If streaming is enabled, then @onAudioChunk will be triggered whenever a new 
+     * If streaming is enabled, then @onAudioChunk will be triggered whenever a new
      * piece of audio is available.
      */
     stream?: boolean;
@@ -4701,7 +4876,6 @@ export interface PseudoRandomNumberGenerator {
      */
     randomInt(min: number, max: number): number;
 }
-
 
 // Luxon Types Copyright
 // MIT License
@@ -4879,7 +5053,7 @@ declare class FixedOffsetZone extends Zone {
 /**
  * A zone that failed to parse. You should never need to instantiate this.
  */
-declare class InvalidZone extends Zone { }
+declare class InvalidZone extends Zone {}
 
 /**
  * Represents the system zone for this JavaScript environment.
@@ -5183,7 +5357,7 @@ declare class Interval {
         dateFormat: string,
         opts?: {
             separator?: string | undefined;
-        },
+        }
     ): string;
 
     /**
@@ -5204,7 +5378,10 @@ declare class Interval {
      * @example
      * Interval.fromDateTimes(dt1, dt2).toDuration('seconds').toObject() //=> { seconds: 88489.257 }
      */
-    toDuration(unit?: DurationUnit | DurationUnit[], opts?: DiffOptions): Duration;
+    toDuration(
+        unit?: DurationUnit | DurationUnit[],
+        opts?: DiffOptions
+    ): Duration;
 
     /**
      * Run mapFn on the interval start and end, returning a new Interval from the resulting DateTimes
@@ -5318,7 +5495,10 @@ declare namespace Info {
      * @param opts.locObj - an existing locale object to use. Defaults to null.
      * @param opts.outputCalendar - the calendar. Defaults to 'gregory'.
      */
-    function monthsFormat(length?: UnitLength, options?: InfoCalendarOptions): string[];
+    function monthsFormat(
+        length?: UnitLength,
+        options?: InfoCalendarOptions
+    ): string[];
 
     /**
      * Return an array of standalone week names.
@@ -5339,7 +5519,10 @@ declare namespace Info {
      * @example
      * Info.weekdays('short', { locale: 'ar' })[0] //=> 'الاثنين'
      */
-    function weekdays(length?: StringUnitLength, options?: InfoUnitOptions): string[];
+    function weekdays(
+        length?: StringUnitLength,
+        options?: InfoUnitOptions
+    ): string[];
 
     /**
      * Return an array of format week names.
@@ -5353,7 +5536,10 @@ declare namespace Info {
      * @param opts.numberingSystem - the numbering system. Defaults to null.
      * @param opts.locObj - an existing locale object to use. Defaults to null.
      */
-    function weekdaysFormat(length?: StringUnitLength, options?: InfoUnitOptions): string[];
+    function weekdaysFormat(
+        length?: StringUnitLength,
+        options?: InfoUnitOptions
+    ): string[];
 
     /**
      * Return an array of meridiems.
@@ -5518,7 +5704,10 @@ declare class Duration {
      * @param opts.numberingSystem - the numbering system to use
      * @param opts.conversionAccuracy - the conversion system to use. Defaults to 'casual'.
      */
-    static fromObject(obj: DurationLikeObject, opts?: DurationOptions): Duration;
+    static fromObject(
+        obj: DurationLikeObject,
+        opts?: DurationOptions
+    ): Duration;
 
     /**
      * Create a Duration from DurationLike.
@@ -5871,7 +6060,6 @@ declare class Duration {
     equals(other: Duration): boolean;
 }
 
-
 export type DateTimeFormatOptions = Intl.DateTimeFormatOptions;
 
 export interface ZoneOptions {
@@ -5890,49 +6078,53 @@ export interface ZoneOptions {
 /** @deprecated */
 export type EraLength = StringUnitLength;
 
-export type NumberingSystem = Intl.DateTimeFormatOptions extends { numberingSystem?: infer T }
+export type NumberingSystem = Intl.DateTimeFormatOptions extends {
+    numberingSystem?: infer T;
+}
     ? T
     :
-    | 'arab'
-    | 'arabext'
-    | 'bali'
-    | 'beng'
-    | 'deva'
-    | 'fullwide'
-    | 'gujr'
-    | 'guru'
-    | 'hanidec'
-    | 'khmr'
-    | 'knda'
-    | 'laoo'
-    | 'latn'
-    | 'limb'
-    | 'mlym'
-    | 'mong'
-    | 'mymr'
-    | 'orya'
-    | 'tamldec'
-    | 'telu'
-    | 'thai'
-    | 'tibt';
+          | 'arab'
+          | 'arabext'
+          | 'bali'
+          | 'beng'
+          | 'deva'
+          | 'fullwide'
+          | 'gujr'
+          | 'guru'
+          | 'hanidec'
+          | 'khmr'
+          | 'knda'
+          | 'laoo'
+          | 'latn'
+          | 'limb'
+          | 'mlym'
+          | 'mong'
+          | 'mymr'
+          | 'orya'
+          | 'tamldec'
+          | 'telu'
+          | 'thai'
+          | 'tibt';
 
-export type CalendarSystem = Intl.DateTimeFormatOptions extends { calendar?: infer T }
+export type CalendarSystem = Intl.DateTimeFormatOptions extends {
+    calendar?: infer T;
+}
     ? T
     :
-    | 'buddhist'
-    | 'chinese'
-    | 'coptic'
-    | 'ethioaa'
-    | 'ethiopic'
-    | 'gregory'
-    | 'hebrew'
-    | 'indian'
-    | 'islamic'
-    | 'islamicc'
-    | 'iso8601'
-    | 'japanese'
-    | 'persian'
-    | 'roc';
+          | 'buddhist'
+          | 'chinese'
+          | 'coptic'
+          | 'ethioaa'
+          | 'ethiopic'
+          | 'gregory'
+          | 'hebrew'
+          | 'indian'
+          | 'islamic'
+          | 'islamicc'
+          | 'iso8601'
+          | 'japanese'
+          | 'persian'
+          | 'roc';
 
 export type HourCycle = 'h11' | 'h12' | 'h23' | 'h24';
 
@@ -5940,9 +6132,25 @@ export type StringUnitLength = 'narrow' | 'short' | 'long';
 export type NumberUnitLength = 'numeric' | '2-digit';
 export type UnitLength = StringUnitLength | NumberUnitLength;
 
-
-export type DateTimeUnit = 'year' | 'quarter' | 'month' | 'week' | 'day' | 'hour' | 'minute' | 'second' | 'millisecond';
-export type ToRelativeUnit = 'years' | 'quarters' | 'months' | 'weeks' | 'days' | 'hours' | 'minutes' | 'seconds';
+export type DateTimeUnit =
+    | 'year'
+    | 'quarter'
+    | 'month'
+    | 'week'
+    | 'day'
+    | 'hour'
+    | 'minute'
+    | 'second'
+    | 'millisecond';
+export type ToRelativeUnit =
+    | 'years'
+    | 'quarters'
+    | 'months'
+    | 'weeks'
+    | 'days'
+    | 'hours'
+    | 'minutes'
+    | 'seconds';
 
 export type MonthNumbers = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
 export type WeekdayNumbers = 1 | 2 | 3 | 4 | 5 | 6 | 7;
@@ -6141,7 +6349,8 @@ export interface ToObjectOutput extends DateTimeJSOptions {
     millisecond: number;
 }
 
-export interface ToRelativeOptions extends Omit<ToRelativeCalendarOptions, 'unit'> {
+export interface ToRelativeOptions
+    extends Omit<ToRelativeCalendarOptions, 'unit'> {
     /**
      * @default long
      */
@@ -6366,7 +6575,7 @@ declare class DateTime {
         minute: number,
         second: number,
         millisecond: number,
-        opts?: DateTimeJSOptions,
+        opts?: DateTimeJSOptions
     ): DateTime;
     static local(
         year: number,
@@ -6375,7 +6584,7 @@ declare class DateTime {
         hour: number,
         minute: number,
         second: number,
-        opts?: DateTimeJSOptions,
+        opts?: DateTimeJSOptions
     ): DateTime;
     static local(
         year: number,
@@ -6383,11 +6592,26 @@ declare class DateTime {
         day: number,
         hour: number,
         minute: number,
-        opts?: DateTimeJSOptions,
+        opts?: DateTimeJSOptions
     ): DateTime;
-    static local(year: number, month: number, day: number, hour: number, opts?: DateTimeJSOptions): DateTime;
-    static local(year: number, month: number, day: number, opts?: DateTimeJSOptions): DateTime;
-    static local(year: number, month: number, opts?: DateTimeJSOptions): DateTime;
+    static local(
+        year: number,
+        month: number,
+        day: number,
+        hour: number,
+        opts?: DateTimeJSOptions
+    ): DateTime;
+    static local(
+        year: number,
+        month: number,
+        day: number,
+        opts?: DateTimeJSOptions
+    ): DateTime;
+    static local(
+        year: number,
+        month: number,
+        opts?: DateTimeJSOptions
+    ): DateTime;
     static local(year: number, opts?: DateTimeJSOptions): DateTime;
     static local(opts?: DateTimeJSOptions): DateTime;
 
@@ -6433,7 +6657,7 @@ declare class DateTime {
         minute: number,
         second: number,
         millisecond: number,
-        options?: LocaleOptions,
+        options?: LocaleOptions
     ): DateTime;
     static utc(
         year: number,
@@ -6442,7 +6666,7 @@ declare class DateTime {
         hour: number,
         minute: number,
         second: number,
-        options?: LocaleOptions,
+        options?: LocaleOptions
     ): DateTime;
     static utc(
         year: number,
@@ -6450,10 +6674,21 @@ declare class DateTime {
         day: number,
         hour: number,
         minute: number,
-        options?: LocaleOptions,
+        options?: LocaleOptions
     ): DateTime;
-    static utc(year: number, month: number, day: number, hour: number, options?: LocaleOptions): DateTime;
-    static utc(year: number, month: number, day: number, options?: LocaleOptions): DateTime;
+    static utc(
+        year: number,
+        month: number,
+        day: number,
+        hour: number,
+        options?: LocaleOptions
+    ): DateTime;
+    static utc(
+        year: number,
+        month: number,
+        day: number,
+        options?: LocaleOptions
+    ): DateTime;
     static utc(year: number, month: number, options?: LocaleOptions): DateTime;
     static utc(year: number, options?: LocaleOptions): DateTime;
     static utc(options?: LocaleOptions): DateTime;
@@ -6477,7 +6712,10 @@ declare class DateTime {
      * @param options.outputCalendar - the output calendar to set on the resulting DateTime instance
      * @param options.numberingSystem - the numbering system to set on the resulting DateTime instance
      */
-    static fromMillis(milliseconds: number, options?: DateTimeJSOptions): DateTime;
+    static fromMillis(
+        milliseconds: number,
+        options?: DateTimeJSOptions
+    ): DateTime;
 
     /**
      * Create a DateTime from a number of seconds since the epoch (meaning since 1 January 1970 00:00:00 UTC). Uses the default zone.
@@ -6612,12 +6850,20 @@ declare class DateTime {
      * @param opts.numberingSystem - the numbering system to use when parsing. Will also set the resulting DateTime to this numbering system
      * @param opts.outputCalendar - the output calendar to set on the resulting DateTime instance
      */
-    static fromFormat(text: string, fmt: string, opts?: DateTimeOptions): DateTime;
+    static fromFormat(
+        text: string,
+        fmt: string,
+        opts?: DateTimeOptions
+    ): DateTime;
 
     /**
      * @deprecated use fromFormat instead
      */
-    static fromString(text: string, format: string, options?: DateTimeOptions): DateTime;
+    static fromString(
+        text: string,
+        format: string,
+        options?: DateTimeOptions
+    ): DateTime;
 
     /**
      * Create a DateTime from a SQL date, time, or datetime
@@ -6931,7 +7177,9 @@ declare class DateTime {
      *
      * @param opts - the same options as toLocaleString
      */
-    resolvedLocaleOptions(opts?: LocaleOptions | DateTimeFormatOptions): ResolvedLocaleOptions;
+    resolvedLocaleOptions(
+        opts?: LocaleOptions | DateTimeFormatOptions
+    ): ResolvedLocaleOptions;
 
     // TRANSFORM
 
@@ -7115,7 +7363,10 @@ declare class DateTime {
      * @example
      * DateTime.now().toLocaleString({ hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }); //=> '11:32'
      */
-    toLocaleString(formatOpts?: DateTimeFormatOptions, opts?: LocaleOptions): string;
+    toLocaleString(
+        formatOpts?: DateTimeFormatOptions,
+        opts?: LocaleOptions
+    ): string;
 
     /**
      * Returns an array of format "parts", meaning individual tokens along with metadata. This is allows callers to post-process individual sections of the formatted output.
@@ -7333,7 +7584,11 @@ declare class DateTime {
      * i2.diff(i1, ['months', 'days']).toObject() //=> { months: 16, days: 19.03125 }
      * i2.diff(i1, ['months', 'days', 'hours']).toObject() //=> { months: 16, days: 19, hours: 0.75 }
      */
-    diff(otherDateTime: DateTime, unit?: DurationUnits, opts?: DiffOptions): Duration;
+    diff(
+        otherDateTime: DateTime,
+        unit?: DurationUnits,
+        opts?: DiffOptions
+    ): Duration;
 
     /**
      * Return the difference between this DateTime and right now.
@@ -7447,12 +7702,20 @@ declare class DateTime {
      * @param fmt - the format the string is expected to be in (see description)
      * @param options - options taken by fromFormat()
      */
-    static fromFormatExplain(text: string, fmt: string, options?: DateTimeOptions): ExplainedFormat;
+    static fromFormatExplain(
+        text: string,
+        fmt: string,
+        options?: DateTimeOptions
+    ): ExplainedFormat;
 
     /**
      * @deprecated use fromFormatExplain instead
      */
-    static fromStringExplain(text: string, fmt: string, options?: DateTimeOptions): ExplainedFormat;
+    static fromStringExplain(
+        text: string,
+        fmt: string,
+        options?: DateTimeOptions
+    ): ExplainedFormat;
 
     // FORMAT PRESETS
 
@@ -7570,7 +7833,6 @@ declare class DateTime {
 declare type DateTimeClass = typeof DateTime;
 // End Luxon Types
 
-
 // Begin Math Types
 type Vector2Class = typeof Vector2;
 type Vector3Class = typeof Vector3;
@@ -7619,7 +7881,11 @@ declare class Vector2 {
      * @param finish The end position.
      * @param amount The amount that the resulting position should be interpolated between the start and end positions.  Values near 0 indicate rotations close to the first and values near 1 indicate rotations close to the second.
      */
-    static interpolatePosition(start: Vector2, finish: Vector2, amount: number): Vector2;
+    static interpolatePosition(
+        start: Vector2,
+        finish: Vector2,
+        amount: number
+    ): Vector2;
     /**
      * Constructs a new vector that is the directional linear interpolation between the given start and end positions.
      * The degree that the result is interpolated is determined by the given amount parameter.
@@ -7630,7 +7896,11 @@ declare class Vector2 {
      * @param finish The end position.
      * @param amount The amount that the resulting position should be interpolated between the start and end positions.  Values near 0 indicate rotations close to the first and values near 1 indicate rotations close to the second.
      */
-    static interpolateDirection(start: Vector2, finish: Vector2, amount: number): Vector2;
+    static interpolateDirection(
+        start: Vector2,
+        finish: Vector2,
+        amount: number
+    ): Vector2;
     /**
      * Adds this vector with the other vector and returns the result.
      * @param other The other vector to add with this vector.
@@ -7732,7 +8002,11 @@ declare class Vector3 {
      * @param finish The end position.
      * @param amount The amount that the resulting position should be interpolated between the start and end positions.  Values near 0 indicate rotations close to the first and values near 1 indicate rotations close to the second.
      */
-    static interpolatePosition(start: Vector3, finish: Vector3, amount: number): Vector3;
+    static interpolatePosition(
+        start: Vector3,
+        finish: Vector3,
+        amount: number
+    ): Vector3;
     /**
      * Constructs a new vector that is the directional linear interpolation between the given start and end positions.
      * The degree that the result is interpolated is determined by the given amount parameter.
@@ -7743,7 +8017,11 @@ declare class Vector3 {
      * @param finish The end position.
      * @param amount The amount that the resulting position should be interpolated between the start and end positions.  Values near 0 indicate rotations close to the first and values near 1 indicate rotations close to the second.
      */
-    static interpolateDirection(start: Vector3, finish: Vector3, amount: number): Vector3;
+    static interpolateDirection(
+        start: Vector3,
+        finish: Vector3,
+        amount: number
+    ): Vector3;
     /**
      * Adds this vector with the other vector and returns the result.
      * @param other The other vector to add with this vector.
@@ -7902,7 +8180,16 @@ declare class Rotation {
      * Creates a new rotation using the given parameters.
      * @param rotation The information that should be used to construct the rotation.
      */
-    constructor(rotation?: FromToRotation | AxisAndAngle | QuaternionRotation | Quaternion | SequenceRotation | EulerAnglesRotation | LookRotation);
+    constructor(
+        rotation?:
+            | FromToRotation
+            | AxisAndAngle
+            | QuaternionRotation
+            | Quaternion
+            | SequenceRotation
+            | EulerAnglesRotation
+            | LookRotation
+    );
     /**
      * Constructs a new Quaternion from the given axis and angle.
      * @param axisAndAngle The object that contains the axis and angle values.
@@ -7932,7 +8219,11 @@ declare class Rotation {
      * @param second The second rotation.
      * @param amount The amount that the resulting rotation should be interpolated between the first and second rotations. Values near 0 indicate rotations close to the first and values near 1 indicate rotations close to the second.
      */
-    static interpolate(first: Rotation, second: Rotation, amount: number): Rotation;
+    static interpolate(
+        first: Rotation,
+        second: Rotation,
+        amount: number
+    ): Rotation;
     /**
      * Rotates the given Vector3 by this quaternion and returns a new vector containing the result.
      * @param vector The 3D vector that should be rotated.
@@ -8024,7 +8315,7 @@ export interface SequenceRotation {
     sequence: Rotation[];
 }
 export interface QuaternionRotation {
-    quaternion: { x: number, y: number, z: number, w: number };
+    quaternion: { x: number; y: number; z: number; w: number };
 }
 
 /**
@@ -8061,7 +8352,6 @@ export interface LookRotation {
 }
 
 // End Math Types
-
 
 /**
  * Defines an interface that represents the result of a raycast operation.
@@ -8372,9 +8662,236 @@ export interface PreactContext<T> {
 
 export type RefObject<T> = { current: T | null };
 
+interface XpUser {
+    /** The unique id of the model item  */
+    id: string;
+    /** The id of the associated account (null if not yet set up) */
+    accountId: string | null;
+    /** The rate at which the user is requesting payment (null if not yet specified) */
+    requestedRate: number | null;
+    /** The users unique id from the Auth system */
+    userId: string;
+    /** The date at which the entity was created */
+    createdAtMs: number;
+    /** The date at which the entity was last updated */
+    updatedAtMs: number;
+}
+
+interface XpContract {
+    /** The id of the account associated with the contract */
+    accountId: XpAccount['id'];
+    /** A description of the contract, may contain useful query meta */
+    description: string | null;
+    /** The id of the user holding the contract */
+    holdingUserId: XpUser['id'];
+    /** The id of the user issuing the contract */
+    issuerUserId: XpUser['id'];
+    /** The rate at which the entirety of the contract is worth */
+    rate: number;
+    /** The quantity of gigs (6 minute intervals) in the contract */
+    gigs: number;
+    /** The status of the contract */
+    status: 'open' | 'closed';
+    /** The date at which the entity was created */
+    createdAtMs: number;
+    /** The date at which the entity was last updated */
+    updatedAtMs: number;
+}
+
+interface XpAccount {
+    /** The unique id of the model item  */
+    id: string;
+    /** The time at which (if) the account was closed */
+    closedTimeMs: number | null;
+    /** The currency of the account */
+    currency:
+        | 'AED'
+        | 'AFN'
+        | 'ALL'
+        | 'AMD'
+        | 'ANG'
+        | 'AOA'
+        | 'ARS'
+        | 'AUD'
+        | 'AWG'
+        | 'AZN'
+        | 'BAM'
+        | 'BBD'
+        | 'BDT'
+        | 'BGN'
+        | 'BHD'
+        | 'BIF'
+        | 'BMD'
+        | 'BND'
+        | 'BOB'
+        | 'BOV'
+        | 'BRL'
+        | 'BSD'
+        | 'BTN'
+        | 'BWP'
+        | 'BYN'
+        | 'BZD'
+        | 'CAD'
+        | 'CDF'
+        | 'CHE'
+        | 'CHF'
+        | 'CHW'
+        | 'CLF'
+        | 'CLP'
+        | 'CNY'
+        | 'COP'
+        | 'COU'
+        | 'CRC'
+        | 'CUC'
+        | 'CUP'
+        | 'CVE'
+        | 'CZK'
+        | 'DJF'
+        | 'DKK'
+        | 'DOP'
+        | 'DZD'
+        | 'EGP'
+        | 'ERN'
+        | 'ETB'
+        | 'EUR'
+        | 'FJD'
+        | 'FKP'
+        | 'GBP'
+        | 'GEL'
+        | 'GHS'
+        | 'GIP'
+        | 'GMD'
+        | 'GNF'
+        | 'GTQ'
+        | 'GYD'
+        | 'HKD'
+        | 'HNL'
+        | 'HTG'
+        | 'HUF'
+        | 'IDR'
+        | 'ILS'
+        | 'INR'
+        | 'IQD'
+        | 'IRR'
+        | 'ISK'
+        | 'JMD'
+        | 'JOD'
+        | 'JPY'
+        | 'KES'
+        | 'KGS'
+        | 'KHR'
+        | 'KMF'
+        | 'KPW'
+        | 'KRW'
+        | 'KWD'
+        | 'KYD'
+        | 'KZT'
+        | 'LAK'
+        | 'LBP'
+        | 'LKR'
+        | 'LRD'
+        | 'LSL'
+        | 'LYD'
+        | 'MAD'
+        | 'MDL'
+        | 'MGA'
+        | 'MKD'
+        | 'MMK'
+        | 'MNT'
+        | 'MOP'
+        | 'MRU'
+        | 'MUR'
+        | 'MVR'
+        | 'MWK'
+        | 'MXN'
+        | 'MXV'
+        | 'MYR'
+        | 'MZN'
+        | 'NAD'
+        | 'NGN'
+        | 'NIO'
+        | 'NOK'
+        | 'NPR'
+        | 'NZD'
+        | 'OMR'
+        | 'PAB'
+        | 'PEN'
+        | 'PGK'
+        | 'PHP'
+        | 'PKR'
+        | 'PLN'
+        | 'PYG'
+        | 'QAR'
+        | 'RON'
+        | 'RSD'
+        | 'RUB'
+        | 'RWF'
+        | 'SAR'
+        | 'SBD'
+        | 'SCR'
+        | 'SDG'
+        | 'SEK'
+        | 'SGD'
+        | 'SHP'
+        | 'SLE'
+        | 'SOS'
+        | 'SRD'
+        | 'SSP'
+        | 'STN'
+        | 'SVC'
+        | 'SYP'
+        | 'SZL'
+        | 'THB'
+        | 'TJS'
+        | 'TMT'
+        | 'TND'
+        | 'TOP'
+        | 'TRY'
+        | 'TTD'
+        | 'TWD'
+        | 'TZS'
+        | 'UAH'
+        | 'UGX'
+        | 'USD'
+        | 'USN'
+        | 'UYI'
+        | 'UYU'
+        | 'UYW'
+        | 'UZS'
+        | 'VED'
+        | 'VES'
+        | 'VND'
+        | 'VUV'
+        | 'WST'
+        | 'XAF'
+        | 'XAG'
+        | 'XAU'
+        | 'XBA'
+        | 'XBB'
+        | 'XBC'
+        | 'XBD'
+        | 'XCD'
+        | 'XDR'
+        | 'XOF'
+        | 'XPD'
+        | 'XPF'
+        | 'XPT'
+        | 'XSU'
+        | 'XTS'
+        | 'XUA'
+        | 'XXX'
+        | 'YER'
+        | 'ZAR'
+        | 'ZMW'
+        | 'ZWG'
+        | 'ZWL';
+    /** The date at which the entity was created */
+    createdAtMs: number;
+    /** The date at which the entity was last updated */
+    updatedAtMs: number;
+}
 
 declare global {
-
     /**
      * The Bot that this script is running in.
      */
@@ -8536,12 +9053,16 @@ declare global {
      * @param bot The bot or list of bots that the tag should be renamed on.
      * @param originalTag The original tag to rename.
      * @param newTag The new tag name.
-     * 
+     *
      * @example
      * // Rename the "abc" tag to "def"
      * renameTag(this, "abc", "def")
      */
-    function renameTag(bot: Bot | Bot[], originalTag: string, newTag: string): void;
+    function renameTag(
+        bot: Bot | Bot[],
+        originalTag: string,
+        newTag: string
+    ): void;
 
     /**
      * Gets the ID from the given bot.
@@ -8573,7 +9094,10 @@ declare global {
      * @param first The first snapshot.
      * @param second The second snapshot.
      */
-    function diffSnapshots(first: BotsState, second: BotsState): PartialBotsState;
+    function diffSnapshots(
+        first: BotsState,
+        second: BotsState
+    ): PartialBotsState;
 
     /**
      * Applies the given delta to the given snapshot and returns the result.
@@ -8581,7 +9105,10 @@ declare global {
      * @param snapshot The snapshot that the diff should be applied to.
      * @param diff The delta that should be applied to the snapshot.
      */
-    function applyDiffToSnapshot(snapshot: BotsState, diff: PartialBotsState): BotsState;
+    function applyDiffToSnapshot(
+        snapshot: BotsState,
+        diff: PartialBotsState
+    ): BotsState;
 
     /**
      * Shouts the given events in order until a bot returns a result.
@@ -8592,9 +9119,9 @@ declare global {
     function priorityShout(eventNames: string[], arg?: any): any;
 
     /**
-    * Creates a tag value that can be used to link to the given bots.
-    * @param bots The bots that the link should point to.
-    */
+     * Creates a tag value that can be used to link to the given bots.
+     * @param bots The bots that the link should point to.
+     */
     function getLink(...bots: (Bot | string | (Bot | string)[])[]): string;
 
     /**
@@ -8609,7 +9136,10 @@ declare global {
      * @param bot The bot to update.
      * @param idMap The map of old IDs to new IDs that should be used.
      */
-    function updateBotLinks(bot: Bot, idMap: Map<string, string | Bot> | { [id: string]: string | Bot }): void;
+    function updateBotLinks(
+        bot: Bot,
+        idMap: Map<string, string | Bot> | { [id: string]: string | Bot }
+    ): void;
 
     /**
      * Parses the given value into a date time object.
@@ -8659,7 +9189,7 @@ declare global {
          * // Tell every bot say "Hi" to you.
          * shout("sayHi()", "My Name");
          */
-        (name: string, arg?: any): any[],
+        (name: string, arg?: any): any[];
         [name: string]: {
             /**
              * Asks every bot in the inst to run the given action.
@@ -8668,8 +9198,8 @@ declare global {
              * @param arg The optional argument to include in the shout.
              * @returns Returns a list which contains the values returned from each script that was run for the shout.
              */
-            (arg?: any): any[]
-        }
+            (arg?: any): any[];
+        };
     };
 
     /**
@@ -8712,7 +9242,10 @@ declare global {
      * @param bot The bot or list of bots that should be watched for changes.
      * @param callback The function that should be called when the bot is changed or destroyed.
      */
-    function watchBot(bot: (Bot | string)[] | Bot | string, callback: () => void): number;
+    function watchBot(
+        bot: (Bot | string)[] | Bot | string,
+        callback: () => void
+    ): number;
 
     /**
      * Cancels watching a bot using the given ID number that was returned from watchBot().
@@ -8768,8 +9301,8 @@ declare global {
     const web: Web;
 
     /**
-    * Creates a Universally Unique IDentifier (UUID).
-    */
+     * Creates a Universally Unique IDentifier (UUID).
+     */
     function uuid(): string;
 
     /**
@@ -8778,14 +9311,21 @@ declare global {
      * @param tag The tag that should be animated.
      * @param options The options for the animation. If given null, then any running animations for the given tag will be canceled.
      */
-    function animateTag(bot: Bot | (Bot | string)[] | string, tag: string, options: AnimateTagFunctionOptions): Promise<void>;
+    function animateTag(
+        bot: Bot | (Bot | string)[] | string,
+        tag: string,
+        options: AnimateTagFunctionOptions
+    ): Promise<void>;
 
     /**
      * Animates the given tags. Returns a promise when the animation is finished.
      * @param bot The bot or list of bots that should be animated.
      * @param options The options for the animation. fromValue should be an object which contains the starting tag values and toValue should be an object that contains the ending tag values.
      */
-    function animateTag(bot: Bot | (Bot | string)[] | string, options: AnimateTagFunctionOptions): Promise<void>;
+    function animateTag(
+        bot: Bot | (Bot | string)[] | string,
+        options: AnimateTagFunctionOptions
+    ): Promise<void>;
     /**
      * Animates the given tag. Returns a promise when the animation is finished.
      * @param bot The bot or list of bots that should be animated.
@@ -8803,7 +9343,10 @@ declare global {
      * @param bot The bot or list of bots that should cancel their animations.
      * @param tag The tag that the animations should be canceld for. If omitted then all tags will be canceled.
      */
-    function clearAnimations(bot: Bot | (Bot | string)[] | string, tag?: string): void;
+    function clearAnimations(
+        bot: Bot | (Bot | string)[] | string,
+        tag?: string
+    ): void;
 
     /**
      * Sends the given operation to all the devices that matches the given selector.
@@ -8831,14 +9374,18 @@ declare global {
     /**
      * Sends an event to the given remote or list of remotes.
      * The other remotes will recieve an onRemoteData shout for this whisper.
-     * 
+     *
      * In effect, this allows remotes to communicate with each other by sending arbitrary events.
-     * 
+     *
      * @param remoteId The ID of the other remote or remotes to whisper to.
      * @param name The name of the event.
      * @param arg The optional argument to include in the event.
      */
-    function sendRemoteData(remoteId: string | string[], name: string, arg?: any): RemoteAction | RemoteAction[];
+    function sendRemoteData(
+        remoteId: string | string[],
+        name: string,
+        arg?: any
+    ): RemoteAction | RemoteAction[];
 
     /**
      * Gets the first bot which matches all of the given filters.
@@ -8943,7 +9490,7 @@ declare global {
     /**
      * Creates a filter function that checks whether bots have the given ID.
      * @param id The ID to check for.
-     * 
+     *
      * @example
      * // Find all the bots with the ID "bob".
      * let bobs = getBots(byId("bob"));
@@ -9092,12 +9639,17 @@ declare global {
      * @param tag The tag to set.
      * @param value The value to set.
      * @param space The space that the tag mask should be placed in. If not specified, then the tempLocal space will be used.
-     * 
+     *
      * @example
      * // Set a bot's color to "green".
      * setTagMask(this, "color", "green")
      */
-    function setTagMask(bot: Bot | Bot[], tag: string, value: any, space?: BotSpace): any;
+    function setTagMask(
+        bot: Bot | Bot[],
+        tag: string,
+        value: any,
+        space?: BotSpace
+    ): any;
 
     /**
      * Clears the tag masks from the given bot.
@@ -9183,20 +9735,14 @@ declare global {
      * @param bot The bot or bot ID.
      * @param dimension The dimension that the bot's position should be retrieved for.
      */
-    function getBotPosition(
-        bot: Bot | string,
-        dimension: string
-    ): Vector3;
+    function getBotPosition(bot: Bot | string, dimension: string): Vector3;
 
     /**
      * Gets the rotation that the given bot is at in the given dimension.
      * @param bot The bot or bot ID.
      * @param dimension The dimension that the bot's rotation should be retrieved for.
      */
-    function getBotRotation(
-        bot: Bot | string,
-        dimension: string
-    ): Rotation;
+    function getBotRotation(bot: Bot | string, dimension: string): Rotation;
 
     /**
      * Applies the given diff to the given bot.
@@ -9227,6 +9773,11 @@ declare global {
      * Defines a set of functions that relate to AI operations.
      */
     const ai: Ai;
+
+    /**
+     * Defines a set of functions that relate to Xp system operations.
+     */
+    const xp: Xp;
 
     /**
      * Defines a set of functions that relate to common server operations.
@@ -9279,7 +9830,6 @@ declare global {
 }
 
 interface DebuggerBase {
-
     /**
      * Gets the config bot from the debugger.
      * May be null.
@@ -9303,9 +9853,9 @@ interface DebuggerBase {
     getCommonActions(): BotAction[];
 
     /**
-    * Gets the list of bot actions that have been performed by bots in this debugger.
-    * Bot actions are actions that directly create/destroy/update bots or bot tags.
-    */
+     * Gets the list of bot actions that have been performed by bots in this debugger.
+     * Bot actions are actions that directly create/destroy/update bots or bot tags.
+     */
     getBotActions(): BotAction[];
 
     /**
@@ -9343,13 +9893,17 @@ interface DebuggerBase {
      * Registers the given handler to be called after a bot script changes a tag value.
      * @param listener The listener that should be executed.
      */
-    onAfterScriptUpdatedTag(listener: (update: DebuggerTagUpdate) => void): void;
+    onAfterScriptUpdatedTag(
+        listener: (update: DebuggerTagUpdate) => void
+    ): void;
 
     /**
      * Registers the given handler to be called after a bot script changes a tag mask value.
      * @param listener The listener that should be executed.
      */
-    onAfterScriptUpdatedTagMask(listener: (update: DebuggerTagMaskUpdate) => void): void;
+    onAfterScriptUpdatedTagMask(
+        listener: (update: DebuggerTagMaskUpdate) => void
+    ): void;
 
     /**
      * Gets the current call stack for the interpreter.
@@ -9379,7 +9933,11 @@ interface DebuggerBase {
      * @param tag The tag that the trigger should be registered in. Required if a bot or bot ID is specified.
      * @param options The options that go with this pause trigger. Required if a bot or bot ID is specified.
      */
-    setPauseTrigger(botOrIdOrTrigger: Bot | string | PauseTrigger, tag?: string, options?: PauseTriggerOptions): PauseTrigger;
+    setPauseTrigger(
+        botOrIdOrTrigger: Bot | string | PauseTrigger,
+        tag?: string,
+        options?: PauseTriggerOptions
+    ): PauseTrigger;
     /**
      * Registers a new pause trigger with this debugger.
      * Pause triggers can be used to tell the debugger when you want it to stop execution.
@@ -9388,7 +9946,11 @@ interface DebuggerBase {
      * @param tag The tag that the trigger should be placed in.
      * @param options The options that go with this pause trigger.
      */
-    setPauseTrigger(botOrId: Bot | string, tag: string, options: PauseTriggerOptions): PauseTrigger;
+    setPauseTrigger(
+        botOrId: Bot | string,
+        tag: string,
+        options: PauseTriggerOptions
+    ): PauseTrigger;
 
     /**
      * Registers or updates the given pause trigger with this debugger.
@@ -9425,7 +9987,10 @@ interface DebuggerBase {
      * @param botOrId The bot or bot ID.
      * @param tag The name of the tag that the trigger locations should be listed for.
      */
-    listCommonPauseTriggers(botOrId: Bot | string, tag: string): PossiblePauseTriggerLocation[];
+    listCommonPauseTriggers(
+        botOrId: Bot | string,
+        tag: string
+    ): PossiblePauseTriggerLocation[];
 
     /**
      * Resumes the debugger execution from the given pause.
@@ -9455,7 +10020,7 @@ interface DebuggerBase {
      * @param bot The bot or list of bots that the tag should be renamed on.
      * @param originalTag The original tag to rename.
      * @param newTag The new tag name.
-     * 
+     *
      * @example
      * // Rename the "abc" tag to "def"
      * renameTag(this, "abc", "def")
@@ -9475,9 +10040,9 @@ interface DebuggerBase {
     getJSON(data: any): string;
 
     /**
-    * Gets nicely formatted JSON for the given data.
-    * @param data The data.
-    */
+     * Gets nicely formatted JSON for the given data.
+     * @param data The data.
+     */
     getFormattedJSON(data: any): string;
 
     /**
@@ -9515,9 +10080,9 @@ interface DebuggerBase {
     fromBase64String(base64: string): Uint8Array;
 
     /**
-    * Creates a tag value that can be used to link to the given bots.
-    * @param bots The bots that the link should point to.
-    */
+     * Creates a tag value that can be used to link to the given bots.
+     * @param bots The bots that the link should point to.
+     */
     getLink(...bots: (Bot | string | (Bot | string)[])[]): string;
 
     /**
@@ -9527,12 +10092,15 @@ interface DebuggerBase {
     getBotLinks(bot: Bot): ParsedBotLink[];
 
     /**
-    * Updates all the links in the given bot using the given ID map.
-    * Useful if you know that the links in the given bot are outdated and you know which IDs map to the new IDs.
-    * @param bot The bot to update.
-    * @param idMap The map of old IDs to new IDs that should be used.
-    */
-    updateBotLinks(bot: Bot, idMap: Map<string, string | Bot> | { [id: string]: string | Bot }): void
+     * Updates all the links in the given bot using the given ID map.
+     * Useful if you know that the links in the given bot are outdated and you know which IDs map to the new IDs.
+     * @param bot The bot to update.
+     * @param idMap The map of old IDs to new IDs that should be used.
+     */
+    updateBotLinks(
+        bot: Bot,
+        idMap: Map<string, string | Bot> | { [id: string]: string | Bot }
+    ): void;
 
     /**
      * Shouts the given event to every bot in every loaded simulation.
@@ -9547,7 +10115,10 @@ interface DebuggerBase {
      * @param bot The bot or list of bots that should be watched for changes.
      * @param callback The function that should be called when the bot is changed or destroyed.
      */
-    watchBot(bot: (Bot | string)[] | Bot | string, callback: () => void): number;
+    watchBot(
+        bot: (Bot | string)[] | Bot | string,
+        callback: () => void
+    ): number;
 
     /**
      * Cancels watching a bot using the given ID number that was returned from watchBot().
@@ -9570,11 +10141,11 @@ interface DebuggerBase {
     clearWatchPortal(watchId: number): void;
 
     /**
-    * Asserts that the given condition is true.
-    * Throws an error if the condition is not true.
-    * @param condition The condition to check.
-    * @param message The message to use in the error if the condition is not true.
-    */
+     * Asserts that the given condition is true.
+     * Throws an error if the condition is not true.
+     * @param condition The condition to check.
+     * @param message The message to use in the error if the condition is not true.
+     */
     assert(condition: boolean, message?: string): void;
 
     /**
@@ -9603,8 +10174,8 @@ interface DebuggerBase {
     web: Web;
 
     /**
-    * Creates a Universally Unique IDentifier (UUID).
-    */
+     * Creates a Universally Unique IDentifier (UUID).
+     */
     uuid(): string;
 
     /**
@@ -9613,14 +10184,21 @@ interface DebuggerBase {
      * @param tag The tag that should be animated.
      * @param options The options for the animation. If given null, then any running animations for the given tag will be canceled.
      */
-    animateTag(bot: Bot | (Bot | string)[] | string, tag: string, options: AnimateTagFunctionOptions): Promise<void>;
+    animateTag(
+        bot: Bot | (Bot | string)[] | string,
+        tag: string,
+        options: AnimateTagFunctionOptions
+    ): Promise<void>;
 
     /**
      * Animates the given tags. Returns a promise when the animation is finished.
      * @param bot The bot or list of bots that should be animated.
      * @param options The options for the animation. fromValue should be an object which contains the starting tag values and toValue should be an object that contains the ending tag values.
      */
-    animateTag(bot: Bot | (Bot | string)[] | string, options: AnimateTagFunctionOptions): Promise<void>;
+    animateTag(
+        bot: Bot | (Bot | string)[] | string,
+        options: AnimateTagFunctionOptions
+    ): Promise<void>;
     /**
      * Animates the given tag. Returns a promise when the animation is finished.
      * @param bot The bot or list of bots that should be animated.
@@ -9666,14 +10244,18 @@ interface DebuggerBase {
     /**
      * Sends an event to the given remote or list of remotes.
      * The other remotes will recieve an onRemoteData shout for this whisper.
-     * 
+     *
      * In effect, this allows remotes to communicate with each other by sending arbitrary events.
-     * 
+     *
      * @param remoteId The ID of the other remote or remotes to whisper to.
      * @param name The name of the event.
      * @param arg The optional argument to include in the event.
      */
-    sendRemoteData(remoteId: string | string[], name: string, arg?: any): RemoteAction | RemoteAction[];
+    sendRemoteData(
+        remoteId: string | string[],
+        name: string,
+        arg?: any
+    ): RemoteAction | RemoteAction[];
 
     /**
      * Gets the first bot which matches all of the given filters.
@@ -9778,7 +10360,7 @@ interface DebuggerBase {
     /**
      * Creates a filter function that checks whether bots have the given ID.
      * @param id The ID to check for.
-     * 
+     *
      * @example
      * // Find all the bots with the ID "bob".
      * let bobs = getBots(byId("bob"));
@@ -9820,11 +10402,7 @@ interface DebuggerBase {
      * // Find all the bots at (1, 2) in the "test" dimension.
      * let bots = getBots(atPosition("test", 1, 2));
      */
-    atPosition(
-        dimension: string,
-        x: number,
-        y: number
-    ): BotFilterFunction;
+    atPosition(dimension: string, x: number, y: number): BotFilterFunction;
 
     /**
      * Creates a filter function that checks whether bots were created by the given bot.
@@ -9927,12 +10505,17 @@ interface DebuggerBase {
      * @param tag The tag to set.
      * @param value The value to set.
      * @param space The space that the tag mask should be placed in. If not specified, then the tempLocal space will be used.
-     * 
+     *
      * @example
      * // Set a bot's color to "green".
      * setTagMask(this, "color", "green")
      */
-    setTagMask(bot: Bot | Bot[], tag: string, value: any, space?: BotSpace): any;
+    setTagMask(
+        bot: Bot | Bot[],
+        tag: string,
+        value: any,
+        space?: BotSpace
+    ): any;
 
     /**
      * Clears the tag masks from the given bot.
@@ -9949,12 +10532,7 @@ interface DebuggerBase {
      * @param index The index that the text should be inserted at.
      * @param text The text that should be inserted.
      */
-    insertTagText(
-        bot: Bot,
-        tag: string,
-        index: number,
-        text: string
-    ): string;
+    insertTagText(bot: Bot, tag: string, index: number, text: string): string;
 
     /**
      * Inserts the given text into the given tag and space at the given index.
@@ -9981,12 +10559,7 @@ interface DebuggerBase {
      * @param index The index that the text should be deleted at.
      * @param count The number of characters to delete.
      */
-    deleteTagText(
-        bot: Bot,
-        tag: string,
-        index: number,
-        count: number
-    ): string;
+    deleteTagText(bot: Bot, tag: string, index: number, count: number): string;
 
     /**
      * Deletes the specified number of characters from the given tag mask.
@@ -10018,20 +10591,14 @@ interface DebuggerBase {
      * @param bot The bot or bot ID.
      * @param dimension The dimension that the bot's position should be retrieved for.
      */
-    getBotPosition(
-        bot: Bot | string,
-        dimension: string
-    ): Vector3;
+    getBotPosition(bot: Bot | string, dimension: string): Vector3;
 
     /**
      * Gets the rotation that the given bot is at in the given dimension.
      * @param bot The bot or bot ID.
      * @param dimension The dimension that the bot's rotation should be retrieved for.
      */
-    getBotRotation(
-        bot: Bot | string,
-        dimension: string
-    ): Rotation;
+    getBotRotation(bot: Bot | string, dimension: string): Rotation;
 
     /**
      * Applies the given diff to the given bot.
@@ -10057,6 +10624,11 @@ interface DebuggerBase {
      * Defines a set of functions that relate to common OS operations.
      */
     os: Os;
+
+    /**
+     * Defines a set of functions that relate to the xpExchange.
+     */
+    xp: Xp;
 
     /**
      * Defines a set of functions that relate to AI operations.
@@ -10139,11 +10711,11 @@ interface Debugger extends DebuggerBase {
     destroy(bot: Bot | string | Bot[]): void;
 
     /**
-    * Shouts the given events in order until a bot returns a result.
-    * Returns the result that was produced or undefined if no result was produced.
-    * @param eventNames The names of the events to shout.
-    * @param arg The argument to shout.
-    */
+     * Shouts the given events in order until a bot returns a result.
+     * Returns the result that was produced or undefined if no result was produced.
+     * @param eventNames The names of the events to shout.
+     * @param arg The argument to shout.
+     */
     priorityShout(eventNames: string[], arg?: any): any;
 
     /**
@@ -10235,11 +10807,11 @@ interface PausableDebugger extends DebuggerBase {
     destroy(bot: Bot | string | Bot[]): Promise<void>;
 
     /**
-    * Shouts the given events in order until a bot returns a result.
-    * Returns the result that was produced or undefined if no result was produced.
-    * @param eventNames The names of the events to shout.
-    * @param arg The argument to shout.
-    */
+     * Shouts the given events in order until a bot returns a result.
+     * Returns the result that was produced or undefined if no result was produced.
+     * @param eventNames The names of the events to shout.
+     * @param arg The argument to shout.
+     */
     priorityShout(eventNames: string[], arg?: any): Promise<any>;
 
     /**
@@ -10310,12 +10882,11 @@ interface RecordFileOptions {
     description?: string;
 
     /**
-     * The MIME type of the file. 
+     * The MIME type of the file.
      * See https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types for more information.
      */
     mimeType?: string;
 }
-
 
 /**
  * Defines an interface that contains a bunch of options for starting an animation.
@@ -10419,7 +10990,6 @@ export interface FormAnimationData {
     duration: number;
 }
 
-
 /**
  * Defines an interface that represents a single chat message in a conversation with an AI.
  *
@@ -10455,7 +11025,6 @@ export interface AIChatMessage {
      */
     finishReason?: string;
 }
-
 
 /**
  * Defines an interface that represents the contents of an AI chat message.
@@ -10513,7 +11082,6 @@ export interface AIUrlContent {
     url: string;
 }
 
-
 /**
  * Defines an interface that represents options for {@link ai.chat}.
  *
@@ -10561,7 +11129,7 @@ export interface AIChatOptions extends RecordActionOptions {
 
     /**
      * The list of stop words that should be used.
-     * 
+     *
      * If the AI generates a sequence of tokens that match one of the given words, then it will stop generating tokens.
      */
     stopWords?: string[];
@@ -10605,7 +11173,7 @@ export interface AIGenerateSkyboxBlockadeLabsOptions {
 
 /**
  * Defines an interface that represents a request for {@link ai.generateSkybox-request}.
- * 
+ *
  * @dochash types/ai
  * @docname AIGenerateSkyboxRequest
  */
@@ -10628,7 +11196,7 @@ export interface AIGenerateSkyboxRequest {
 
 /**
  * Defines an interface that represents the result from {@link ai.generateSkybox-request}.
- * 
+ *
  * @dochash types/ai
  * @docname AIGenerateSkyboxResult
  */
@@ -10644,10 +11212,9 @@ export interface AIGenerateSkyboxResult {
     thumbnailUrl?: string;
 }
 
-
 /**
  * Defines an interface that represents options for {@link ai.generateImage-string}.
- * 
+ *
  * @dochash types/ai
  * @docname AIGenerateImageOptions
  */
@@ -10728,10 +11295,9 @@ export interface AIGenerateImageSuccess {
     images: AIGeneratedImage[];
 }
 
-
 /**
  * Defines an interface that represents an AI generated image.
- * 
+ *
  * @dochash types/ai
  * @docname AIGeneratedImage
  */
@@ -10751,7 +11317,6 @@ export interface AIGeneratedImage {
      */
     seed?: number;
 }
-
 
 export type AIHumeGetAccessTokenResult =
     | AIHumeGetAccessTokenSuccess
@@ -10791,10 +11356,9 @@ export interface AIHumeGetAccessTokenFailure {
     errorMessage: string;
 }
 
-
 /**
  * The response to a request to generate a model using the Sloyd AI interface.
- * 
+ *
  * @dochash types/ai
  * @docname AISloydGenerateModelResponse
  */
@@ -10804,7 +11368,7 @@ export type AISloydGenerateModelResponse =
 
 /**
  * A successful response to a request to generate a model using the Sloyd AI interface.
- * 
+ *
  * @dochash types/ai
  * @docname AISloydGenerateModelSuccess
  */
@@ -10846,7 +11410,7 @@ export interface AISloydGenerateModelSuccess {
 
 /**
  * A failed response to a request to generate a model using the Sloyd AI interface.
- * 
+ *
  * @dochash types/ai
  * @docname AISloydGenerateModelFailure
  */
@@ -10868,10 +11432,9 @@ export interface AISloydGenerateModelFailure {
     errorMessage: string;
 }
 
-
 /**
  * The options for generating a model using Sloyd AI.
- * 
+ *
  * @dochash types/ai
  * @docname AISloydGenerateModelOptions
  */
@@ -10923,7 +11486,7 @@ export interface AISloydGenerateModelOptions {
          * The desired height of the thumbnail in pixels.
          */
         height: number;
-    }
+    };
 }
 
 
@@ -11274,7 +11837,6 @@ export interface CrudEraseItemFailure {
     errorMessage: string;
 }
 
-
 export type CrudListItemsResult<T> =
     | CrudListItemsSuccess<T>
     | CrudListItemsFailure;
@@ -11534,7 +12096,6 @@ export interface ApiDatabase {
     get raw(): Omit<ApiDatabase, 'raw'>;
 }
 
-
 export type HandleWebhookResult = HandleWebhookSuccess | HandleWebhookFailure;
 
 export interface HandleWebhookSuccess {
@@ -11567,7 +12128,6 @@ export interface HandleWebhookFailure {
     errorMessage: string;
 }
 
-
 /**
  * Defines an interface that represents the options for a list data action.
  *
@@ -11583,7 +12143,6 @@ export interface ListWebhooksOptions extends RecordActionOptions {
     sort?: 'ascending' | 'descending';
 }
 
-
 /**
  * Defines an interface that represents the options for a list action.
  *
@@ -11598,7 +12157,6 @@ export interface ListNotificationsOptions extends RecordActionOptions {
      */
     sort?: 'ascending' | 'descending';
 }
-
 
 export interface WebhookRecord extends CrudRecord {
     /**
@@ -11669,7 +12227,6 @@ export interface SubscribeToNotificationFailure {
     errorMessage: string;
 }
 
-
 export type UnsubscribeToNotificationResult =
     | UnsubscribeToNotificationSuccess
     | UnsubscribeToNotificationFailure;
@@ -11683,7 +12240,6 @@ export interface UnsubscribeToNotificationFailure {
     errorCode: KnownErrorCodes;
     errorMessage: string;
 }
-
 
 export type SendNotificationResult =
     | SendNotificationSuccess
@@ -11750,32 +12306,31 @@ export interface ListSubscriptionsFailure {
     errorMessage: string;
 }
 
-
 export interface PushNotificationPayload {
     /**
      * The title of the push notification.
-     * 
+     *
      * See https://web.dev/articles/push-notifications-display-a-notification#title_and_body_options
      */
     title: string;
 
     /**
      * The body of the push notification.
-     * 
+     *
      * See https://web.dev/articles/push-notifications-display-a-notification#title_and_body_options for more information.
      */
     body?: string;
 
     /**
      * The URL to the icon that should displayed for the push notification.
-     * 
+     *
      * See https://web.dev/articles/push-notifications-display-a-notification#icon for more information.
      */
     icon?: string;
 
     /**
      * The URL to the image that should be used for the badge of the push notification.
-     * 
+     *
      * See https://web.dev/articles/push-notifications-display-a-notification#badge for more information.
      */
     badge?: string;
@@ -11787,13 +12342,13 @@ export interface PushNotificationPayload {
 
     /**
      * The tag for the notification.
-     * 
+     *
      * See https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerRegistration/showNotification#tag
      */
     tag?: string;
     /**
      * The timestamp for the notification.
-     * 
+     *
      * See https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerRegistration/showNotification#timestamp
      */
     timestamp?: number;
@@ -11809,7 +12364,9 @@ export interface PushNotificationPayload {
     actions?: PushNotificationActionOption[];
 }
 
-export type PushNotificationAction = PushNotificationOpenUrlAction | PushNotificationWebhookAction;
+export type PushNotificationAction =
+    | PushNotificationOpenUrlAction
+    | PushNotificationWebhookAction;
 
 export interface PushNotificationOpenUrlAction {
     type: 'open_url';
@@ -12895,6 +13452,235 @@ export type DynamicListener = (
     tagName: string
 ) => any;
 
+
+/**
+ * Defines an interface that represents a store item.
+ * That is, an item that can be purchased by a user to grant them a role.
+ * 
+ * @dochash types/records/store
+ * @doctitle Store Types
+ * @docdescription Types that are used for store actions.
+ * @docsidebar Store
+ * @docname StoreItem
+ * @docid StoreItem
+ */
+export interface StoreItem {
+    /**
+     * The markers that are associated with the item.
+     */
+    markers: string[];
+
+    /**
+     * The name of the item.
+     */
+    name: string;
+
+    /**
+     * The description of the item.
+     */
+    description: string;
+
+    /**
+     * The list of image URLs that represent the item.
+     */
+    imageUrls: string[];
+
+    /**
+     * The [3-letter ISO currency code](https://www.iso.org/iso-4217-currency-codes.html) that the item is priced in.
+     * 
+     * See https://www.iso.org/iso-4217-currency-codes.html
+     */
+    currency: string;
+
+    /**
+     * The cost of the item in the currency's smallest unit. (e.g. cents, pence, etc.)
+     * Must be an interger.
+     */
+    cost: number;
+
+    /**
+     * The [tax code](https://docs.stripe.com/tax/tax-codes) for the item.
+     * Currently only stripe tax codes are supported.
+     * 
+     * See https://docs.stripe.com/tax/tax-codes
+     */
+    taxCode?: string | null;
+
+    /**
+     * The name of the role that the item grants.
+     */
+    roleName: string;
+
+    /**
+     * The amount of time in miliseconds that the role is granted for after purchase.
+     * If null, then the role is granted forever.
+     */
+    roleGrantTimeMs: number | null;
+}
+
+
+export type CrudRecordItemResult =
+    | CrudRecordItemSuccess
+    | CrudRecordItemFailure;
+
+export interface CrudRecordItemSuccess {
+    success: true;
+    recordName: string;
+    address: string;
+}
+
+export interface CrudRecordItemFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | NotLoggedInError
+        | NotAuthorizedError
+        | 'invalid_request';
+    errorMessage: string;
+}
+
+
+export type CrudGetItemResult<T> = CrudGetItemSuccess<T> | CrudGetItemFailure;
+
+export interface CrudGetItemSuccess<T> {
+    success: true;
+    item: T;
+}
+
+export interface CrudGetItemFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | NotLoggedInError
+        | NotAuthorizedError
+        | 'data_not_found';
+    errorMessage: string;
+}
+
+export type CrudEraseItemResult = CrudEraseItemSuccess | CrudEraseItemFailure;
+
+export interface CrudEraseItemSuccess {
+    success: true;
+}
+
+export interface CrudEraseItemFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | NotLoggedInError
+        | NotAuthorizedError
+        | 'data_not_found';
+    errorMessage: string;
+}
+
+
+
+export type CrudListItemsResult<T> =
+    | CrudListItemsSuccess<T>
+    | CrudListItemsFailure;
+
+export interface CrudListItemsSuccess<T> {
+    success: true;
+    /**
+     * The name of the record that the items are from.
+     */
+    recordName: string;
+
+    /**
+     * The items that were listed.
+     */
+    items: T[];
+
+    /**
+     * The total number of items in the record.
+     */
+    totalCount: number;
+
+    /**
+     * The marker that was listed.
+     * If null, then all markers are listed.
+     */
+    marker?: string;
+}
+
+export interface CrudListItemsFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | NotLoggedInError
+        | NotAuthorizedError
+        | 'data_not_found';
+    errorMessage: string;
+}
+
+/**
+ * Defines a base interface for a record that can be stored in a CrudStore.
+ */
+export interface CrudRecord {
+    /**
+     * The address of the record.
+     */
+    address: string;
+
+    /**
+     * The markers that are associated with the record.
+     */
+    markers: string[];
+}
+
+/**
+ * Defines a purchasable item.
+ * That is, an item that can be purchased by a user to grant them a role.
+ */
+export interface PurchasableItem extends CrudRecord {
+    /**
+     * The name of the item.
+     */
+    name: string;
+
+    /**
+     * The description of the item.
+     */
+    description: string;
+
+    /**
+     * The list of image URLs that represent the item.
+     */
+    imageUrls: string[];
+
+    /**
+     * The [3-letter ISO currency code](https://www.iso.org/iso-4217-currency-codes.html) that the item is priced in.
+     * 
+     * See https://www.iso.org/iso-4217-currency-codes.html
+     */
+    currency: string;
+
+    /**
+     * The cost of the item in the currency's smallest unit. (e.g. cents, pence, etc.)
+     */
+    cost: number;
+
+    /**
+     * The [tax code](https://docs.stripe.com/tax/tax-codes) for the item.
+     * Currently only stripe tax codes are supported.
+     * 
+     * See https://docs.stripe.com/tax/tax-codes
+     */
+    taxCode?: string | null;
+
+    /**
+     * The name of the role that the item grants.
+     */
+    roleName: string;
+
+    /**
+     * The amount of time in miliseconds that the role is granted for after purchase.
+     * If null, then the role is granted forever.
+     */
+    roleGrantTimeMs: number | null;
+}
+
+
 interface Ai {
     /**
      * Sends a chat message to the AI.
@@ -13077,70 +13863,80 @@ interface Ai {
 
     /**
      * Generates a [skybox image](https://en.wikipedia.org/wiki/Skybox_%28video_games%29) from the given prompt.
-     * 
+     *
      * Returns a promise that resolves with a URL to the generated image that can be used as the {@tag formAddress} of a bot that has {@tag form} set to `skybox`.
-     * 
+     *
      * @param prompt the string that describes what the skybox should look like.
      * @param negativePrompt the string that describes what the skybox should avoid looking like.
      * @param options the additional options that should be used.
-     * 
+     *
      * @example Generate a skybox from a prompt.
      * const skybox = await ai.generateSkybox("A skybox with a blue sky and green grass.");
      * masks.formAddress = skybox;
-     * 
+     *
      * @example Generate a skybox from a prompt and a negative prompt
      * const skybox = await ai.generateSkybox("A skybox with a blue sky and green grass.", "A skybox with a red sky and brown grass.");
      * masks.formAddress = skybox;
-     * 
+     *
      * @dochash actions/ai
      * @docname ai.generateSkybox
      * @docid ai.generateSkybox-string
      */
-    generateSkybox(prompt: string, negativePrompt?: string, options?: AIGenerateSkyboxOptions): Promise<string>;
+    generateSkybox(
+        prompt: string,
+        negativePrompt?: string,
+        options?: AIGenerateSkyboxOptions
+    ): Promise<string>;
 
     /**
      * Generates a [skybox image](https://en.wikipedia.org/wiki/Skybox_%28video_games%29) from the given request object.
-     * 
+     *
      * Returns a promise that resolves with an object that contains a URL to the generated image that can be used as the {@tag formAddress} of a bot that has {@tag form} set to `skybox`.
-     * 
+     *
      * @param request the request object that describes what the skybox should look like.
-     * 
+     *
      * @example Generate a skybox from a prompt.
      * const skybox = await ai.generateSkybox("A skybox with a blue sky and green grass.");
      * masks.formAddress = skybox;
-     * 
+     *
      * @example Generate a skybox from a prompt and a negative prompt
      * const skybox = await ai.generateSkybox("A skybox with a blue sky and green grass.", "A skybox with a red sky and brown grass.");
      * masks.formAddress = skybox;
-     * 
+     *
      * @dochash actions/ai
      * @docname ai.generateSkybox
      * @docid ai.generateSkybox-request
      */
-    generateSkybox(request: AIGenerateSkyboxRequest): Promise<AIGenerateSkyboxResult>;
+    generateSkybox(
+        request: AIGenerateSkyboxRequest
+    ): Promise<AIGenerateSkyboxResult>;
 
     /**
      * Generates a [skybox image](https://en.wikipedia.org/wiki/Skybox_%28video_games%29) from the given request object.
-     * 
+     *
      * Returns a promise that resolves with an object that contains a URL to the generated image that can be used as the {@tag formAddress} of a bot that has {@tag form} set to `skybox`.
-     * 
+     *
      * @param request the request object that describes what the skybox should look like.
      * @param negativePrompt the string that describes what the skybox should avoid looking like.
      * @param options the additional options that should be used.
-     * 
+     *
      * @example Generate a skybox from a prompt.
      * const skybox = await ai.generateSkybox("A skybox with a blue sky and green grass.");
      * masks.formAddress = skybox;
-     * 
+     *
      * @example Generate a skybox from a prompt and a negative prompt
      * const skybox = await ai.generateSkybox("A skybox with a blue sky and green grass.", "A skybox with a red sky and brown grass.");
      * masks.formAddress = skybox;
-     * 
+     *
      * @dochash actions/ai
      * @docname ai.generateSkybox
      * @docid ai.generateSkybox-request
      */
-    generateSkybox(prompt: string | AIGenerateSkyboxRequest, negativePrompt?: string, options?: AIGenerateSkyboxOptions): Promise<string | AIGenerateSkyboxResult>
+    generateSkybox(
+        prompt: string | AIGenerateSkyboxRequest,
+        negativePrompt?: string,
+        options?: AIGenerateSkyboxOptions
+    ): Promise<string | AIGenerateSkyboxResult>;
 
     /**
      * Generates an image from the given prompt.
@@ -13209,7 +14005,7 @@ interface Ai {
         /**
          * Gets an access token for the Hume AI API.
          * Returns a promise that resolves with the access token.
-         * 
+         *
          * @example Get an access token for the Hume AI API.
          * const accessToken = await ai.hume.getAccessToken();
          *
@@ -13217,7 +14013,7 @@ interface Ai {
          * @docname ai.hume.getAccessToken
          */
         getAccessToken(): Promise<AIHumeGetAccessTokenResult>;
-    }
+    };
 
     sloyd: {
         /**
@@ -13225,8 +14021,11 @@ interface Ai {
          * @param request The options for the 3D model.
          * @param options The options for the request.
          */
-        generateModel(request: AISloydGenerateModelOptions, options?: RecordActionOptions): Promise<AISloydGenerateModelResponse>;
-    }
+        generateModel(
+            request: AISloydGenerateModelOptions,
+            options?: RecordActionOptions
+        ): Promise<AISloydGenerateModelResponse>;
+    };
 
     openai: {
         /**
@@ -13249,7 +14048,7 @@ interface Ai {
         /**
          * Sends a chat message to the AI and streams the response back.
          * Returns a promise that resolves with an [async iterable](https://javascript.info/async-iterators-generators#async-iterables) that contains the responses from the AI.
-         * 
+         *
          * Throws a {@link CasualOSError} if an error occurs while sending the message.
          *
          * This function can be useful for creating chat bots, or for using an Artificial Intelligence (AI) to process a message.
@@ -13259,7 +14058,7 @@ interface Ai {
          *
          * @example Send a message to the AI and log the response.
          * const response = await ai.stream.chat("Hello!");
-         * 
+         *
          * for await (let message of response) {
          *    console.log(message);
          * }
@@ -13271,7 +14070,10 @@ interface Ai {
          * @docname ai.stream.chat
          * @docid ai.stream.chat-string
          */
-        chat(message: string, options?: AIChatOptions): Promise<AsyncIterable<string>>;
+        chat(
+            message: string,
+            options?: AIChatOptions
+        ): Promise<AsyncIterable<string>>;
 
         /**
          * Sends a chat message to the AI and streams the response back.
@@ -13414,7 +14216,7 @@ interface Ai {
             messages: string | AIChatMessage | AIChatMessage[],
             options?: AIChatOptions
         ): Promise<AsyncIterable<AIChatMessage | string>>;
-    }
+    };
 }
 
 interface Os {
@@ -13447,9 +14249,9 @@ interface Os {
     removeBotListener(bot: Bot, tagName: string, listener: DynamicListener): void;
 
     /**
-         * Sleeps for time in ms.
-         * @param time Time in ms. 1 second is 1000ms.
-         */
+     * Sleeps for time in ms.
+     * @param time Time in ms. 1 second is 1000ms.
+     */
     sleep(time: number): Promise<void>;
 
     /**
@@ -13578,10 +14380,10 @@ interface Os {
     /**
      * Attempts to show the "Account Info" dialog.
      * Does nothing if the user is not logged in.
-     * 
+     *
      * @example Show the "Account Info" dialog.
      * await os.showAccountInfo();
-     * 
+     *
      * @dochash actions/os/system
      * @docname os.showAccountInfo
      */
@@ -13591,7 +14393,10 @@ interface Os {
      * Gets media permission for the device.
      * Promise will resolve if permission was granted, otherwise an error will be thrown.
      */
-    getMediaPermission(options: { audio?: boolean, video?: boolean }): Promise<void>;
+    getMediaPermission(options: {
+        audio?: boolean;
+        video?: boolean;
+    }): Promise<void>;
 
     /**
      * Gets the current average frame rate for the 3D portals in seconds.
@@ -13604,14 +14409,20 @@ interface Os {
      * @param roomName The name of the meeting room to join.
      * @param options The options for the meeting.
      */
-    joinRoom(roomName: string, options?: JoinRoomActionOptions): Promise<JoinRoomResult>;
+    joinRoom(
+        roomName: string,
+        options?: JoinRoomActionOptions
+    ): Promise<JoinRoomResult>;
 
     /**
      * Attempts to leave the given meeting room.
      * @param roomName The name of the meeting room to leave.
      * @param options The options.
      */
-    leaveRoom(roomName: string, options?: LeaveRoomActionOptions): Promise<LeaveRoomResult>;
+    leaveRoom(
+        roomName: string,
+        options?: LeaveRoomActionOptions
+    ): Promise<LeaveRoomResult>;
 
     /**
      * Attempts to set the options for the given meeting room.
@@ -13619,7 +14430,10 @@ interface Os {
      * @param roomName The name of the room.
      * @param options The options to set. Omitted properties remain unchanged.
      */
-    setRoomOptions(roomName: string, options: Partial<RoomOptions>): Promise<SetRoomOptionsResult>;
+    setRoomOptions(
+        roomName: string,
+        options: Partial<RoomOptions>
+    ): Promise<SetRoomOptionsResult>;
 
     /**
      * Gets the options for the given meeting room.
@@ -13633,7 +14447,10 @@ interface Os {
      * @param roomName The name of the room.
      * @param address The address of the track that the options should be retrieved for.
      */
-    getRoomTrackOptions(roomName: string, address: string): Promise<GetRoomTrackOptionsResult>;
+    getRoomTrackOptions(
+        roomName: string,
+        address: string
+    ): Promise<GetRoomTrackOptionsResult>;
 
     /**
      * Sets the options for the track with the given address in the given room.
@@ -13641,14 +14458,21 @@ interface Os {
      * @param address The address of the track that the options should be retrieved for.
      * @param options The options that should be set for the track.
      */
-    setRoomTrackOptions(roomName: string, address: string, options: SetRoomTrackOptions): Promise<SetRoomTrackOptionsResult>;
+    setRoomTrackOptions(
+        roomName: string,
+        address: string,
+        options: SetRoomTrackOptions
+    ): Promise<SetRoomTrackOptionsResult>;
 
     /**
      * Gets the options for the specified remote user in the specified room.
      * @param roomName The name of the room.
      * @param remoteId The ID of the remote user.
      */
-    getRoomRemoteOptions(roomName: string, remoteId: string): Promise<GetRoomRemoteOptionsResult>;
+    getRoomRemoteOptions(
+        roomName: string,
+        remoteId: string
+    ): Promise<GetRoomRemoteOptionsResult>;
 
     /**
      * Gets the URL that AB1 should be bootstrapped from.
@@ -13701,28 +14525,40 @@ interface Os {
      * @param controller The name of the controller that should be checked.
      * @param button The name of the button on the controller.
      */
-    getInputState(controller: 'mousePointer', button: 'left' | 'right' | 'middle'): null | 'down' | 'held';
+    getInputState(
+        controller: 'mousePointer',
+        button: 'left' | 'right' | 'middle'
+    ): null | 'down' | 'held';
 
     /**
      * Gets the input state of the given button on the left or right controller.
      * @param controller The name of the controller that should be checked.
      * @param button The name of the button on the controller.
      */
-    getInputState(controller: 'leftPointer' | 'rightPointer', button: 'primary' | 'squeeze'): null | 'down' | 'held';
+    getInputState(
+        controller: 'leftPointer' | 'rightPointer',
+        button: 'primary' | 'squeeze'
+    ): null | 'down' | 'held';
 
     /**
      * Gets the input state of the given button on the keyboard.
      * @param controller The name of the controller that should be checked.
      * @param button The name of the button on the controller.
      */
-    getInputState(controller: 'keyboard', button: string): null | 'down' | 'held';
+    getInputState(
+        controller: 'keyboard',
+        button: string
+    ): null | 'down' | 'held';
 
     /**
      * Gets the input state of the given touch.
      * @param controller The name of the controller that should be checked.
      * @param button The index of the finger.
      */
-    getInputState(controller: 'touch', button: '0' | '1' | '2' | '3' | '4'): null | 'down' | 'held';
+    getInputState(
+        controller: 'touch',
+        button: '0' | '1' | '2' | '3' | '4'
+    ): null | 'down' | 'held';
 
     /**
      * Gets the input state of the given button on the given controller.
@@ -13741,7 +14577,10 @@ interface Os {
      * @param message The message to show.
      * @param duration The number of seconds the message should be on the screen. (Defaults to 2)
      */
-    toast(message: string | number | boolean | object | Array<any> | null, duration?: number): ShowToastAction;
+    toast(
+        message: string | number | boolean | object | Array<any> | null,
+        duration?: number
+    ): ShowToastAction;
 
     /**
      * Shows a tooltip message to the user.
@@ -13750,13 +14589,18 @@ interface Os {
      * @param pixelY The Y coordinate that the tooltip should be shown at. If null, then the current pointer position will be used.
      * @param duration The duration that the tooltip should be shown in seconds.
      */
-    tip(message: string | number | boolean | object | Array<any> | null, pixelX?: number, pixelY?: number, duration?: number): Promise<number>;
+    tip(
+        message: string | number | boolean | object | Array<any> | null,
+        pixelX?: number,
+        pixelY?: number,
+        duration?: number
+    ): Promise<number>;
 
     /**
      * Hides the given list of tips.
      * If no tip IDs are provided, then all tips will be hidden.
-     * @param tipIds 
-     * @returns 
+     * @param tipIds
+     * @returns
      */
     hideTips(tipIds?: number | number[]): Promise<void>;
 
@@ -13764,7 +14608,7 @@ interface Os {
      * Play the given url's audio.
      * Returns a promise that resolves with the sound ID when the sound starts playing.
      * @param url The URL to play.
-     * 
+     *
      * @example
      * // Play a cow "moo"
      * os.playSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
@@ -13775,7 +14619,7 @@ interface Os {
      * Preloads the audio for the given URL.
      * Returns a promise that resolves when the audio has finished loading.
      * @param url The URl to preload.
-     * 
+     *
      * @example
      * // Preload a cow "moo"
      * os.bufferSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
@@ -13810,7 +14654,7 @@ interface Os {
     /**
      * Sends a command to the Jitsi Meet API.
      * See https://jitsi.github.io/handbook/docs/dev-guide/dev-guide-iframe/#commands for a list of commands.
-     * 
+     *
      * Returns a promise that resolves when the command has been executed.
      * @param command The name of the command to execute.
      * @param args The arguments for the command (if any).
@@ -13830,10 +14674,7 @@ interface Os {
      * @param inst The inst that should be joined. Defaults to the current inst.
      * @param dimension The dimension that should be joined. Defaults to the current dimension.
      */
-    showJoinCode(
-        inst?: string,
-        dimension?: string
-    ): ShowJoinCodeAction;
+    showJoinCode(inst?: string, dimension?: string): ShowJoinCodeAction;
 
     /**
      * Requests that AUX enters fullscreen mode.
@@ -13889,7 +14730,10 @@ interface Os {
      * @param bot The bot.
      * @param targets The targets that should be enabled when the bot is being dropped on.
      */
-    addBotDropSnap(bot: Bot | string, ...targets: SnapTarget[]): AddDropSnapTargetsAction;
+    addBotDropSnap(
+        bot: Bot | string,
+        ...targets: SnapTarget[]
+    ): AddDropSnapTargetsAction;
 
     /**
      * Adds the given list of grids to the current drag operation.
@@ -13902,7 +14746,10 @@ interface Os {
      * @param bot The bot.
      * @param targets The list of grids to add.
      */
-    addBotDropGrid(bot: Bot | string, ...targets: SnapGridTarget[]): AddDropGridTargetsAction;
+    addBotDropGrid(
+        bot: Bot | string,
+        ...targets: SnapGridTarget[]
+    ): AddDropGridTargetsAction;
 
     /**
      * Enables custom dragging for the current drag operation.
@@ -13941,7 +14788,7 @@ interface Os {
      * @param options The options to use for moving the camera.
      */
     focusOn(
-        botOrPosition: Bot | string | { x: number, y: number, z?: number; },
+        botOrPosition: Bot | string | { x: number; y: number; z?: number },
         options: FocusOnOptions
     ): Promise<void>;
 
@@ -13966,6 +14813,37 @@ interface Os {
      * Hides the QR Code.
      */
     hideQRCode(): ShowQRCodeAction;
+
+    /**
+     * Generates a [QR Code](https://en.wikipedia.org/wiki/QR_code) for the given data and returns a [Data URL](https://developer.mozilla.org/en-US/docs/web/http/basics_of_http/data_urls) that can be used in an img tag or as a {@tag formAddress}.
+     *
+     * Returns a promise that resolves with the data URL string.
+     *
+     * @param code the text or data that the generated QR Code should represent.
+     * @param options the options that should be used when generating the QR Code.
+     *
+     * @example Generate a QR Code that contains the data "hello".
+     * const qrCodeUrl = await os.generateQRCode("hello");
+     * masks.formAddress = qrCodeUrl;
+     *
+     * @example Generate a QR Code that links to https://example.com
+     * const qrCodeUrl = await os.generateQRCode("https://example.com");
+     * masks.formAddress = qrCodeUrl;
+     * 
+     * @example Generate a QR Code with custom colors.
+     * const qrCodeUrl = await os.generateQRCode("Custom QR Code", {
+     *   color: {
+     *    dark: "#0000FFFF",
+     *    light: "#FFFF00FF"
+     *   }
+     * });
+     * masks.formAddress = qrCodeUrl;
+     *
+     * @dochash actions/os/barcodes
+     * @docname os.generateQRCode
+     * @docgroup 10-qr-code
+     */
+    generateQRCode(code: string, options?: GenerateQRCodeOptions): Promise<string>;
 
     /**
      * Opens the barcode scanner.
@@ -14006,7 +14884,7 @@ interface Os {
      *
      * @example Close the photo camera
      * await os.closePhotoCamera();
-     * 
+     *
      * @dochash actions/os/camera
      * @docname os.closePhotoCamera
      */
@@ -14037,14 +14915,14 @@ interface Os {
 
     /**
      * Captures a screenshot (i.e. photo/picture) from the grid portal.
-     * 
+     *
      * Returns a promise that resolves with the captured photo.
-     * 
+     *
      * @param portal the portal to capture the screenshot from. Defaults to the grid portal.
-     * 
+     *
      * @example Capture a screenshot from the grid portal.
      * const screenshot = await os.capturePortalScreenshot();
-     * 
+     *
      * @dochash actions/os/portals
      * @docname os.capturePortalScreenshot
      */
@@ -14077,9 +14955,9 @@ interface Os {
 
     /**
      * Classifies the given images using the image classifier. Returns a promise that resolves with the results of the classification.
-     * 
+     *
      * @param options the options that should be used for the image classification.
-     * 
+     *
      * @example Classify the given images.
      * const files = await os.showUploadFiles()
      * const classify = os.classifyImages({
@@ -14088,12 +14966,14 @@ interface Os {
      *         return {file}
      *      })
      * })
-     * 
+     *
      * @dochash actions/os/image-classification
      * @docname os.classifyImages
      * @docgroup 10-image-classifier
-    */
-    classifyImages(options: ClassifyImagesOptions): Promise<ClassifyImagesResult>
+     */
+    classifyImages(
+        options: ClassifyImagesOptions
+    ): Promise<ClassifyImagesResult>;
 
     /**
      * Gets the local device time in miliseconds since January 1st 1970 UTC-0.
@@ -14469,10 +15349,12 @@ interface Os {
      *    type: "text"
      * });
      */
-    showInput: MaskFunc<(
-        currentValue?: any,
-        options?: Partial<ShowInputOptions>
-    ) => Promise<string>>;
+    showInput: MaskFunc<
+        (
+            currentValue?: any,
+            options?: Partial<ShowInputOptions>
+        ) => Promise<string>
+    >;
 
     /**
      * Shows a confirmation dialog. Returns a promise that resolves with true if the "Confirm" button is clicked and false if the "Cancel" button is clicked or the dialog is closed.
@@ -14529,23 +15411,18 @@ interface Os {
     /**
      * Registers a custom app for the given bot with the given options.
      * Apps allow you add custom functionality to the CasualOS frontend and are deeply integrated into the CasualOS platform.
-     * 
+     *
      * @param id The ID of the app.
      * @param bot The bot that should be used to control the app.
      */
-    registerApp(
-        id: string,
-        bot: Bot | string
-    ): Promise<void>;
+    registerApp(id: string, bot: Bot | string): Promise<void>;
 
     /**
      * Removes a custom app from the session.
-     * 
+     *
      * @param id The ID of the app.
      */
-    unregisterApp(
-        id: string
-    ): Promise<void>;
+    unregisterApp(id: string): Promise<void>;
 
     /**
      * Sets the output of the given app.
@@ -14564,10 +15441,7 @@ interface Os {
         /**
          * Returns a stateful value, and a function to update it.
          */
-        useState<S = undefined>(): [
-            S | undefined,
-            StateUpdater<S | undefined>
-        ];
+        useState<S = undefined>(): [S | undefined, StateUpdater<S | undefined>];
 
         /**
          * An alternative to `useState`.
@@ -14683,9 +15557,11 @@ interface Os {
          * @param parent The element that the VDOM should be added inside of.
          * @param replaceNode The element that should be replaced. Can be used as a performance optimization if you know which element was changed by the VDOM.
          */
-        render(vdom: any,
+        render(
+            vdom: any,
             parent: Element | Document | ShadowRoot | DocumentFragment,
-            replaceNode?: Element | Text): void;
+            replaceNode?: Element | Text
+        ): void;
 
         /**
          * Creates a hook that can be used to get a reference to the HTML element that a Preact component is attached to.
@@ -14748,12 +15624,12 @@ interface Os {
 
     /**
      * Shows the "report inst" dialog to the user.
-     * 
+     *
      * Returns a promise that resolves once the dialog has been closed.
-     * 
+     *
      * @example Show the "report inst" dialog.
      * await os.reportInst();
-     * 
+     *
      * @dochash actions/os/moderation
      * @docname os.reportInst
      */
@@ -14769,9 +15645,9 @@ interface Os {
      * On success, the `authBot` global variable will reference the bot that was returned by the promise.
      *
      * See [Auth Bot Tags](page:tags#auth-bot-tags) for more information.
-     * 
+     *
      * See {@link os.requestAuthBotInBackground} for a version of this function that does not show a popup if the user is not signed in.
-     * 
+     *
      * @example Request an auth bot for the user
      * await os.requestAuthBot();
      * os.toast("Logged in!");
@@ -14788,7 +15664,7 @@ interface Os {
     /**
      * Requests that an "authentication" bot be added to the inst for the current browser tab.
      * Works similarly to {@link os.requestAuthBot}, except that the request will not show a popup if the user is not signed in.
-     * 
+     *
      * Auth bots are useful for discovering general information about the logged in user and are typically associated with a [https://publicos.link](https://publicos.link) user account.
      *
      * Returns a promise that resolves with a bot that contains information about the signed in user session.
@@ -14797,7 +15673,7 @@ interface Os {
      * On success, the `authBot` global variable will reference the bot that was returned by the promise.
      *
      * See [Auth Bot Tags](page:tags#auth-bot-tags) for more information.
-     * 
+     *
      * See {@link os.requestAuthBot} for a version of this function that shows a popup if the user is not signed in.
      *
      * @example Request the auth bot in the background.
@@ -14826,7 +15702,9 @@ interface Os {
      * Gets an access key for the given public record.
      * @param name The name of the record.
      */
-    getPublicRecordKey(recordName: string): Promise<CreatePublicRecordKeyResult>;
+    getPublicRecordKey(
+        recordName: string
+    ): Promise<CreatePublicRecordKeyResult>;
 
     /**
      * Gets a subjectless access key for the given public record.
@@ -15027,7 +15905,11 @@ interface Os {
      * @param startingAddress The address that the list should start with.
      * @param endpoint The records endpoint that should be queried. Optional.
      */
-    listData(recordKeyOrName: string, startingAddress?: string, endpoint?: string): Promise<ListDataResult>;
+    listData(
+        recordKeyOrName: string,
+        startingAddress?: string,
+        endpoint?: string
+    ): Promise<ListDataResult>;
 
     /**
      * Gets a partial list of [data](glossary:data-record) with the given marker that is stored in the given record.
@@ -15042,7 +15924,7 @@ interface Os {
      * Since items are ordered within the record by address, this can be used as way to iterate through all the data items in a record.
      * If omitted, then the list will start with the first item.
      * @param options The options for the operation.
-     * 
+     *
      * @example Get a list of publicRead data items in a record
      * const result = await os.listData('myRecord', 'publicRead');
      * if (result.success) {
@@ -15070,7 +15952,7 @@ interface Os {
      *         break;
      *     }
      * }
-     * 
+     *
      * @example List publicRead items in descending order
      * const result = await os.listData('myRecord', 'publicRead', null, { sort: 'descending' });
      * if (result.success) {
@@ -15078,7 +15960,7 @@ interface Os {
      * } else {
      *     os.toast("Failed " + result.errorMessage);
      * }
-     * 
+     *
      * @dochash actions/os/records
      * @docgroup 01-records
      * @docname os.listDataByMarker
@@ -15096,12 +15978,16 @@ interface Os {
      * @param address The address that the data should be erased from.
      * @param endpoint The records endpoint that should be queried. Optional.
      */
-    eraseData(recordKey: string, address: string, endpoint?: string): Promise<EraseDataResult>;
+    eraseData(
+        recordKey: string,
+        address: string,
+        endpoint?: string
+    ): Promise<EraseDataResult>;
 
     /**
      * Records the given data to the given address inside the record for the given record key.
      * This data needs to be manually approved when reading, writing, or erasing it.
-     * 
+     *
      * @param recordKey The key that should be used to access the record.
      * @param address The address that the data should be stored at inside the record.
      * @param data The data that should be stored.
@@ -15117,7 +16003,7 @@ interface Os {
     /**
      * Gets the data stored in the given record at the given address.
      * This data needs to be manually approved when reading, writing, or erasing it.
-     * 
+     *
      * @param recordKeyOrName The record that the data should be retrieved from.
      * @param address The address that the data is stored at.
      * @param endpoint The records endpoint that should be queried. Optional.
@@ -15131,13 +16017,16 @@ interface Os {
     /**
      * Erases the data stored in the given record at the given address.
      * This data needs to be manually approved when reading, writing, or erasing it.
-     * 
+     *
      * @param recordKey The key that should be used to access the record.
      * @param address The address that the data should be erased from.
      * @param endpoint The records endpoint that should be queried. Optional.
      */
-    eraseManualApprovalData(recordKey: string, address: string, endpoint?: string): Promise<EraseDataResult>;
-
+    eraseManualApprovalData(
+        recordKey: string,
+        address: string,
+        endpoint?: string
+    ): Promise<EraseDataResult>;
 
     /**
      * Creates or updates a [webhook](glossary:webhook-record) in the given record using the given options.
@@ -15189,15 +16078,20 @@ interface Os {
      * @param address the address of the webhook.
      * @param input the input to provide to the webhook.
      * @param options the options to use.
-     * 
+     *
      * @example Run a webhook with some input.
      * const result = await os.runWebhook('myRecord', 'myWebhookAddress', { myInput: 'myValue' });
-     * 
+     *
      * @dochash actions/os/records
      * @docgroup 05-records
      * @docname os.runWebhook
      */
-    runWebhook(recordName: string, address: string, input: any, options?: RecordActionOptions): Promise<HandleWebhookResult>;
+    runWebhook(
+        recordName: string,
+        address: string,
+        input: any,
+        options?: RecordActionOptions
+    ): Promise<HandleWebhookResult>;
 
     /**
      * Gets the [webhook](glossary:webhook-record) from the given record.
@@ -15448,14 +16342,14 @@ interface Os {
 
     /**
      * Gets the list of subscriptions for the given notification in the given record.
-     * 
+     *
      * @param recordName the name of the record.
      * @param address the address of the notification.
      * @param options the options to use.
-     * 
+     *
      * @example List notification subscriptions.
      * const result = await os.listNotificationSubscriptions('myRecord', 'myNotificationAddress');
-     * 
+     *
      * @dochash actions/os/records
      * @docgroup 06-records
      * @docname os.listNotificationSubscriptions
@@ -15468,12 +16362,12 @@ interface Os {
 
     /**
      * Gets the list of notification subscriptions for the current user.
-     * 
+     *
      * @param options the options to use.
-     * 
+     *
      * @example List the current user's notification subscriptions.
      * const result = await os.listUserNotificationSubscriptions();
-     * 
+     *
      * @dochash actions/os/records
      * @docgroup 06-records
      * @docname os.listUserNotificationSubscriptions
@@ -15544,10 +16438,7 @@ interface Os {
      * @param result The successful result of a os.recordFile() call.
      * @param endpoint The endpoint that should be queried. Optional.
      */
-    getPrivateFile(
-        result: RecordFileSuccess,
-        endpoint?: string
-    ): Promise<any>;
+    getPrivateFile(result: RecordFileSuccess, endpoint?: string): Promise<any>;
 
     /**
      * Gets the data stored in the given private file.
@@ -15572,21 +16463,33 @@ interface Os {
      * @param result The successful result of a os.recordFile() call.
      * @param endpoint The records endpoint that should be queried. Optional.
      */
-    eraseFile(recordKey: string, result: RecordFileSuccess, endpoint?: string): Promise<EraseFileResult>;
+    eraseFile(
+        recordKey: string,
+        result: RecordFileSuccess,
+        endpoint?: string
+    ): Promise<EraseFileResult>;
     /**
      * Deletes the specified file using the given record key.
      * @param recordKey The key that should be used to delete the file.
      * @param url The URL that the file is stored at.
      * @param endpoint The records endpoint that should be queried. Optional.
      */
-    eraseFile(recordKey: string, url: string, endpoint?: string): Promise<EraseFileResult>;
+    eraseFile(
+        recordKey: string,
+        url: string,
+        endpoint?: string
+    ): Promise<EraseFileResult>;
     /**
      * Deletes the specified file using the given record key.
      * @param recordKey The key that should be used to delete the file.
      * @param urlOrRecordFileResult The URL or the successful result of the record file operation.
      * @param endpoint The records endpoint that should be queried. Optional.
      */
-    eraseFile(recordKey: string, fileUrlOrRecordFileResult: string | RecordFileSuccess, endpoint?: string): Promise<EraseFileResult>;
+    eraseFile(
+        recordKey: string,
+        fileUrlOrRecordFileResult: string | RecordFileSuccess,
+        endpoint?: string
+    ): Promise<EraseFileResult>;
 
     /**
      * Records that the given event occurred.
@@ -15594,7 +16497,11 @@ interface Os {
      * @param eventName The name of the event.
      * @param endpoint The records endpoint that should be queried. Optional.
      */
-    recordEvent(recordKey: string, eventName: string, endpoint?: string): Promise<AddCountResult>;
+    recordEvent(
+        recordKey: string,
+        eventName: string,
+        endpoint?: string
+    ): Promise<AddCountResult>;
 
     /**
      * Gets the number of times that the given event has been recorded.
@@ -15602,7 +16509,11 @@ interface Os {
      * @param eventName The name of the event.
      * @param endpoint The records endpoint that should be queried. Optional.
      */
-    countEvents(recordNameOrKey: string, eventName: string, endpoint?: string): Promise<GetCountResult>;
+    countEvents(
+        recordNameOrKey: string,
+        eventName: string,
+        endpoint?: string
+    ): Promise<GetCountResult>;
 
     /**
      * Grants the given entitlements to a package.
@@ -16223,20 +17134,20 @@ interface Os {
 
     /**
      * Gets the list of studios that the currently logged in user has access to.
-     * 
+     *
      * Returns a promise that resolves with an object that contains the list of studios (if successful) or information about the error that occurred.
-     * 
+     *
      * @param endpoint the HTTP Endpoint of the records website that the data should be retrieved from. If omitted, then the preconfigured records endpoint will be used. Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.
-     * 
+     *
      * @example Get the list of studios that the user has access to
      * const result = await os.listUserStudios();
-     * 
+     *
      * if (result.success) {
      *      os.toast(result.studios.map(s => s.name).join(', '));
      * } else {
      *      os.toast('Failed to get studios ' + result.errorMessage);
      * }
-     * 
+     *
      * @dochash actions/os/records
      * @docgroup 01-records
      * @docname os.listUserStudios
@@ -16245,28 +17156,136 @@ interface Os {
 
     /**
      * Gets the default records endpoint. That is, the records endpoint that is used for records actions when no endpoint is specified.
-     * 
+     *
      * @example Get the default records endpoint.
      * const endpoint = await os.getRecordsEndpoint();
      * os.toast("The default records endpoint is: " + endpoint);
-     * 
+     *
      * @dochash actions/os/records
      * @docname os.getRecordsEndpoint
      */
     getRecordsEndpoint(): Promise<string>;
 
     /**
+     * Creates or updates a store item in a record.
+     * 
+     * Returns a promise that resolves with an object that indicates whether the operation was successful or unsuccessful.
+     * 
+     * @param recordName the name of the record that the store item should be created or updated in.
+     * @param address the address of the item in the record.
+     * @param item the item that should be stored in the record.
+     * @param options the options that should be used to store the item.
+     * 
+     * @example Record an item that can be purchased by anyone
+     * await os.recordStoreItem('myRecord', 'myItem', {
+     *    name: 'My Item',
+     *    description: 'Description of my item!'
+     *    imageUrls: [],
+     *    currency: 'usd',
+     *    cost: 100, // $1.00
+     *    roleName: 'roleToBeGranted',
+     *    roleGrantTimeMs: null,
+     *    markers: ['publicRead']
+     * });
+     * 
+     * @dochash actions/os/records
+     * @docgroup 01-store
+     * @docname os.recordStoreItem
+     */
+    recordStoreItem(recordName: string, address: string, item: StoreItem, options?: RecordActionOptions): Promise<CrudRecordItemResult>;
+
+    /**
+     * Gets the item with the given address from the specified record.
+     * 
+     * Returns a promise that resolves with the item that was stored in the record.
+     * 
+     * @param recordName the name of the record that the store item should be retrieved from.
+     * @param address the address of the item in the record.
+     * @param options the options that should be used to get the item.
+     * 
+     * @example Get an item by address
+     * const item = await os.getStoreItem('myRecord', 'myItem');
+     * 
+     * @dochash actions/os/records
+     * @docgroup 01-store
+     * @docname os.getStoreItem
+     */
+    getStoreItem(recordName: string, address: string, options?: RecordActionOptions): Promise<CrudGetItemResult<PurchasableItem>>;
+
+    /**
+     * Deletes the item with the given address from the specified record.
+     * 
+     * Returns a promise that resolves with the status of the operation.
+     * 
+     * @param recordName the name of the record that the store item should be deleted from.
+     * @param address the address of the item that should be deleted.
+     * @param options the options that should be used to get the item.
+     * 
+     * @example Delete an item by address
+     * const result = await os.eraseStoreItem('myRecord', 'myItem');
+     * 
+     * @dochash actions/os/records
+     * @docgroup 01-store
+     * @docname os.eraseStoreItem
+     */
+    eraseStoreItem(recordName: string, address: string, options?: RecordActionOptions): Promise<CrudEraseItemResult>;
+
+    /**
+     * Gets a partial list of store items from the given record.
+     * You must have permission to access all items in the record to list them.
+     * 
+     * Returns a promise that contains the items in the list.
+     * 
+     * @param recordName the name of the record that the store item should be deleted from.
+     * @param startingAddress the address that the items should be listed after.
+     * @param options the options that should be used to get the item.
+     * 
+     * @example List all items in the record
+     * const result = await os.listStoreItems('myRecord');
+     * 
+     * @dochash actions/os/records
+     * @docgroup 01-store
+     * @docname os.listStoreItems
+     */
+    listStoreItems(recordName: string, startingAddress?: string, options?: RecordActionOptions): Promise<CrudListItemsResult<PurchasableItem>>;
+
+    /**
+     * Gets a partial list of store items that have the given marker from the given record.
+     * You must have permission to access the given marker in the record to list them.
+     * 
+     * Returns a promise that contains the items in the list.
+     * 
+     * @param recordName the name of the record that the store item should be deleted from.
+     * @param marker the marker that the items should have.
+     * @param startingAddress the address that the items should be listed after.
+     * @param options the options that should be used to get the item.
+     * 
+     * @example List all items in the record with the 'publicRead' marker
+     * const result = await os.listStoreItemsByMarker('myRecord', 'publicRead');
+     * 
+     * @dochash actions/os/records
+     * @docgroup 01-store
+     * @docname os.listStoreItemsByMarker
+     */
+    listStoreItemsByMarker(recordName: string, marker: string, startingAddress?: string, options?: RecordActionOptions): Promise<CrudListItemsResult<PurchasableItem>>;
+
+    /**
      * Converts the given geolocation to a what3words (https://what3words.com/) address.
      * @param location The latitude and longitude that should be converted to a 3 word address.
      */
-    convertGeolocationToWhat3Words(location: ConvertGeolocationToWhat3WordsOptions): Promise<string>;
+    convertGeolocationToWhat3Words(
+        location: ConvertGeolocationToWhat3WordsOptions
+    ): Promise<string>;
 
     /**
      * Casts a 3D ray into the specified portal from the camera and returns information about the bots that were hit.
      * @param portal The portal that should be tested.
      * @param viewportCoordinates The 2D camera viewport coordinates that the ray should be sent from.
      */
-    raycastFromCamera(portal: 'grid' | 'miniGrid' | 'map' | 'miniMap', viewportCoordinates: Vector2): Promise<RaycastResult>;
+    raycastFromCamera(
+        portal: 'grid' | 'miniGrid' | 'map' | 'miniMap',
+        viewportCoordinates: Vector2
+    ): Promise<RaycastResult>;
 
     /**
      * Casts a 3D ray into the specified portal using the given origin and direction and returns information about the bots that were hit.
@@ -16274,27 +17293,34 @@ interface Os {
      * @param origin The 3D point that the ray should start at.
      * @param direction The 3D direction that the ray should travel in.
      */
-    raycast(portal: 'grid' | 'miniGrid' | 'map' | 'miniMap', origin: Vector3, direction: Vector3): Promise<RaycastResult>;
+    raycast(
+        portal: 'grid' | 'miniGrid' | 'map' | 'miniMap',
+        origin: Vector3,
+        direction: Vector3
+    ): Promise<RaycastResult>;
 
     /**
      * Calculates the 3D ray that would be projected into the given portal based on the specified camera viewport coordinates.
      * @param portal The portal that the ray should be projected into.
      * @param viewportCoordinates The 2D camera viewport coordinates that the ray should be sent from.
      */
-    calculateRayFromCamera(portal: 'grid' | 'miniGrid' | 'map' | 'miniMap', viewportCoordinates: Vector2): Promise<RaycastRay>;
+    calculateRayFromCamera(
+        portal: 'grid' | 'miniGrid' | 'map' | 'miniMap',
+        viewportCoordinates: Vector2
+    ): Promise<RaycastRay>;
 
     /**
      * Calculates the viewport coordinates that the given position would be projected to in the camera of the given portal.
      * Returns a promise that resolves with the calculated viewport coordinates.
-     * 
+     *
      * Viewport coordinates locate a specific point on the image that the camera produces.
      * `(X: 0, Y: 0)` represents the center of the camera while `(X: -1, Y: -1)` represents the lower left corner and `(X: 1, Y: 1)` represents the upper right corner.
-     * 
+     *
      * This function is useful for converting a position in the portal to a position on the camera viewport (screen position, but the location is not in pixels).
-     * 
+     *
      * @param portal the name of the portal that should be tested.
      * @param position the 3D position that should be projected to the viewport.
-     * 
+     *
      * @example Calculate the viewport coordinates of the current bot in the home dimension in the grid portal
      * const botPosition = new Vector3(
      *   thisBot.homeX,
@@ -16304,28 +17330,34 @@ interface Os {
      * const viewportPosition = await os.calculateViewportCoordinatesFromPosition("grid", botPosition);
      * os.toast(viewportPosition);
      */
-    calculateViewportCoordinatesFromPosition(portal: 'grid' | 'miniGrid' | 'map' | 'miniMap', position: Vector3): Promise<Vector2>;
+    calculateViewportCoordinatesFromPosition(
+        portal: 'grid' | 'miniGrid' | 'map' | 'miniMap',
+        position: Vector3
+    ): Promise<Vector2>;
 
     /**
      * Calculates the screen coordinates that the given viewport coordinates map to on the screen.
      * Returns a promise that resolves with the calculated screen coordinates.
-     * 
+     *
      * Screen coordinates are in pixels and are relative to the top-left corner of the screen.
      * Viewport coordinates locate a specific point on the image that the camera produces.
      * `(X: 0, Y: 0)` represents the center of the camera while `(X: -1, Y: -1)` represents the lower left corner and `(X: 1, Y: 1)` represents the upper right corner.
-     * 
+     *
      * @param portal the name of the portal that should be tested.
      * @param coordinates the 2D viewport coordinates that should be converted to screen coordinates.
-     * 
+     *
      * @example Calculate the screen coordinates at the center of grid portal screen
      * const screenCoordinates = await os.calculateScreenCoordinatesFromViewportCoordinates('grid', new Vector2(0, 0));
      * os.toast(screenCoordinates);
-     * 
+     *
      * @dochash actions/os/portals
      * @docname os.calculateScreenCoordinatesFromViewportCoordinates
      * @docgroup 10-raycast
      */
-    calculateScreenCoordinatesFromViewportCoordinates(portal: 'grid' | 'miniGrid' | 'map' | 'miniMap', coordinates: Vector2): Promise<Vector2>;
+    calculateScreenCoordinatesFromViewportCoordinates(
+        portal: 'grid' | 'miniGrid' | 'map' | 'miniMap',
+        coordinates: Vector2
+    ): Promise<Vector2>;
 
     /**
      * Calculates the screen coordinates that the given 3D position map to on the screen.
@@ -16392,23 +17424,26 @@ interface Os {
     /**
      * Calculates the viewport coordinates that the given screen coordinates map to on the camera.
      * Returns a promise that resolves with the calculated viewport coordinates.
-     * 
+     *
      * Screen coordinates are in pixels and are relative to the top-left corner of the screen.
      * Viewport coordinates locate a specific point on the image that the camera produces.
      * `(X: 0, Y: 0)` represents the center of the camera while `(X: -1, Y: -1)` represents the lower left corner and `(X: 1, Y: 1)` represents the upper right corner.
-     * 
+     *
      * @param portal the name of the portal that should be tested.
      * @param coordinates the 2D screen coordinates that should be converted to viewport coordinates.
-     * 
+     *
      * @example Calculate the viewport coordinates at (0,0) on the screen
      * const viewportCoordinates = await os.calculateViewportCoordinatesFromScreenCoordinates('grid', new Vector2(0, 0));
      * os.toast(viewportCoordinates);
-     * 
+     *
      * @dochash actions/os/portals
      * @docname os.calculateViewportCoordinatesFromScreenCoordinates
      * @docgroup 10-raycast
      */
-    calculateViewportCoordinatesFromScreenCoordinates(portal: 'grid' | 'miniGrid' | 'map' | 'miniMap', coordinates: Vector2): Promise<Vector2>;
+    calculateViewportCoordinatesFromScreenCoordinates(
+        portal: 'grid' | 'miniGrid' | 'map' | 'miniMap',
+        coordinates: Vector2
+    ): Promise<Vector2>;
 
     /**
      * Requests that the given address be pre-cached so that it is available for use on a bot.
@@ -16424,7 +17459,11 @@ interface Os {
      * @param nameOrIndex The name or index of the animation that should be started.
      * @param options The options that should be used for the animation.
      */
-    startFormAnimation(bot: Bot, nameOrIndex: string | number, options?: StartFormAnimationOptions): Promise<void>;
+    startFormAnimation(
+        bot: Bot,
+        nameOrIndex: string | number,
+        options?: StartFormAnimationOptions
+    ): Promise<void>;
     /**
      * Starts the given animation on the given bot(s).
      * Returns a promise that resolves once the animation(s) have been started.
@@ -16432,7 +17471,11 @@ interface Os {
      * @param nameOrIndex The name of the animation.
      * @param options The options for the animation.
      */
-    startFormAnimation(botOrBots: Bot | string | (Bot | string)[], nameOrIndex: string | number, options?: StartFormAnimationOptions): Promise<void>;
+    startFormAnimation(
+        botOrBots: Bot | string | (Bot | string)[],
+        nameOrIndex: string | number,
+        options?: StartFormAnimationOptions
+    ): Promise<void>;
 
     /**
      * Stops the animation on the given bot(s).
@@ -16440,30 +17483,35 @@ interface Os {
      * @param botOrBots The bot or list of bots that the animation(s) should be stopped on.
      * @param options The options that should be used.
      */
-    stopFormAnimation(botOrBots: Bot | string | (Bot | string)[], options?: StopFormAnimationOptions): Promise<void>;
+    stopFormAnimation(
+        botOrBots: Bot | string | (Bot | string)[],
+        options?: StopFormAnimationOptions
+    ): Promise<void>;
 
     /**
      * Gets the list of animations that are included in the given the form or bot.
      * @param botOrAddress The bot, bot ID, or address that the animations should be retrieved from.
      */
-    listFormAnimations(botOrAddress: Bot | string): Promise<FormAnimationData[]>;
+    listFormAnimations(
+        botOrAddress: Bot | string
+    ): Promise<FormAnimationData[]>;
 
     /**
      * Counts the number of build steps that exist in the given lego [LDraw](https://ldraw.org/) file.
      * Returns a promise that resolves with the number of build steps.
-     * 
+     *
      * @param address The address of the file.
-     * 
+     *
      * @example Count the number of build steps in an example LDraw file
      * const steps = await os.ldrawCountAddressBuildSteps('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/ldraw/officialLibrary/models/car.ldr_Packed.mpd');
      * os.toast("There are " + steps + " build steps in the file.");
-     * 
+     *
      * @example Animate the build steps of a bot
      * const steps = await os.ldrawCountAddressBuildSteps('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/ldraw/officialLibrary/models/car.ldr_Packed.mpd');
      * for (let i = 0; i < steps; i++) {
      *    masks.formBuildStep = i;
      * }
-     * 
+     *
      * @dochash actions/os/ldraw
      * @docname os.ldrawCountTextBuildSteps
      */
@@ -16472,15 +17520,15 @@ interface Os {
     /**
      * Counts the number of build steps that exist in the given lego [LDraw](https://ldraw.org/) file.
      * Returns a promise that resolves with the number of build steps.
-     * 
+     *
      * @param text The text content of the file.
-     * 
+     *
      * @example Count the number of build steps in an uploaded LDraw file
      * const files = await os.showUploadFiles();
      * const file = files[0];
      * const steps = await os.ldrawCountTextBuildSteps(file.data);
      * os.toast("There are " + steps + " build steps in the file.");
-     * 
+     *
      * @dochash actions/os/ldraw
      * @doctitle LDraw Actions
      * @docsidebar LDraw
@@ -16494,7 +17542,10 @@ interface Os {
      * @param prefix The prefix that code tags should start with.
      * @param options The options that should be used for the prefix.
      */
-    registerTagPrefix(prefix: string, options?: RegisterPrefixOptions): Promise<void>;
+    registerTagPrefix(
+        prefix: string,
+        options?: RegisterPrefixOptions
+    ): Promise<void>;
 
     /**
      * Gets the number of devices that are viewing the current inst.
@@ -16566,8 +17617,8 @@ interface Os {
     getMemoryDocument(): Promise<SharedDocument>;
 
     /**
-    * Gets the list of remote IDs that are connected to the inst.
-    */
+     * Gets the list of remote IDs that are connected to the inst.
+     */
     remotes(): Promise<string[]>;
 
     /**
@@ -16599,7 +17650,7 @@ interface Os {
 
     /**
      * Gets the current inst update.
-     * 
+     *
      * This function is somewhat equivalent to calling os.listInstUpdates() followed by os.mergeInstUpdates(), but it uses the locally available state instead of fetching from the server.
      * This makes it more efficient as well as usable even when the server is not available.
      */
@@ -16612,8 +17663,8 @@ interface Os {
     mergeInstUpdates(updates: InstUpdate[]): InstUpdate;
 
     /**
-    * Gets the total number of devices that are connected to the server.
-    */
+     * Gets the total number of devices that are connected to the server.
+     */
     totalRemoteCount(): Promise<number>;
 
     /**
@@ -16624,10 +17675,12 @@ interface Os {
     /**
      * Gets the list of instances that are on the server.
      */
-    instStatuses(): Promise<{
-        inst: string,
-        lastUpdateTime: Date
-    }[]>;
+    instStatuses(): Promise<
+        {
+            inst: string;
+            lastUpdateTime: Date;
+        }[]
+    >;
 
     /**
      * Creates a new debugger that can be used to test and simulate bots.
@@ -16655,7 +17708,10 @@ interface Os {
      * Sends an event to attach the given debugger to the CasualOS frontend.
      * @param debug The debugger that should be attached.
      */
-    attachDebugger(debug: Debugger, options?: AttachDebuggerOptions): Promise<void>;
+    attachDebugger(
+        debug: Debugger,
+        options?: AttachDebuggerOptions
+    ): Promise<void>;
 
     /**
      * Sends an event to detach the given debugger from the CasualOS frontend.
@@ -16744,7 +17800,6 @@ interface Os {
 }
 
 interface Server {
-
     /**
      * Executes the given shell script on the server.
      * @param script The shell script that should be executed.
@@ -16764,25 +17819,28 @@ interface Server {
     /**
      * Gets the list of instances that are on the server.
      */
-    instStatuses(): Promise<{
-        inst: string,
-        lastUpdateTime: Date
-    }[]>;
-};
+    instStatuses(): Promise<
+        {
+            inst: string;
+            lastUpdateTime: Date;
+        }[]
+    >;
+}
 
 interface Web {
-
     /**
      * Sends an HTTP GET request for the given URL using the given options.
      * @param url The URL to request.
      * @param options The options to use.
-     * 
+     *
      * @example
-     * 
+     *
      * // Send a HTTP GET request for https://www.example.com
      * const result = await web.get('https://www.example.com');
      */
-    get: MaskFunc<(url: string, options?: WebhookOptions) => Promise<WebhookResult>>;
+    get: MaskFunc<
+        (url: string, options?: WebhookOptions) => Promise<WebhookResult>
+    >;
 
     /**
      * Sends a HTTP POST request to the given URL with the given data.
@@ -16792,32 +17850,37 @@ interface Web {
      * @param options The options that should be included in the request.
      *
      * @example
-     * 
+     *
      * // Send a HTTP POST request to https://www.example.com/api/createThing
      * const result = await web.post('https://www.example.com/api/createThing', {
      *   hello: 'world'
      * });
-     * 
+     *
      */
-    post: MaskFunc<(url: string, data?: any, options?: WebhookOptions) => Promise<WebhookResult>>;
+    post: MaskFunc<
+        (
+            url: string,
+            data?: any,
+            options?: WebhookOptions
+        ) => Promise<WebhookResult>
+    >;
 
     /**
      * Sends a web request based on the given options.
      * @param options The options that specify where and what to send in the web request.
      *
      * @example
-     * 
+     *
      * // Send a HTTP GET request to https://example.com
      * const result = await web.hook({
      *   method: 'GET',
      *   url: 'https://example.com'
      * });
-     * 
+     *
      * os.toast(result);
      */
     hook: MaskFunc<(options: WebhookOptions) => Promise<WebhookResult>>;
-};
-
+}
 
 interface Actions {
     /**
@@ -16831,7 +17894,7 @@ interface Actions {
      * @param action The action to reject.
      */
     reject(action: any): BotAction;
-};
+}
 
 interface Math {
     /**
@@ -16875,7 +17938,9 @@ interface Math {
      * Creates a new random number generator and returns it.
      * @param seed The value that should be used to seed the random number generator.
      */
-    getSeededRandomNumberGenerator(seed?: number | string): PseudoRandomNumberGenerator;
+    getSeededRandomNumberGenerator(
+        seed?: number | string
+    ): PseudoRandomNumberGenerator;
 
     /**
      * Sets the seed that should be used for random numbers.
@@ -16911,7 +17976,12 @@ interface Math {
      * @param planeNormal The direction that the face of the plane is pointing.
      * @param planeOrigin The position that the center of the plane should pass through.
      */
-    intersectPlane(origin: Point3D, direction: Point3D, planeNormal?: Point3D, planeOrigin?: Point3D): Vector3;
+    intersectPlane(
+        origin: Point3D,
+        direction: Point3D,
+        planeNormal?: Point3D,
+        planeOrigin?: Point3D
+    ): Vector3;
 
     /**
      * Gets the position offset for the given bot anchor point.
@@ -16956,7 +18026,7 @@ interface Math {
      * @param scale The number that the vector should be multiplied by.
      */
     scaleVector<T>(vector: T, scale: number): T;
-};
+}
 
 interface ModFuncs {
     /**
@@ -16964,9 +18034,9 @@ interface ModFuncs {
      * @param point The mod that represents the 3D point.
      */
     cameraPositionOffset(point: Partial<Point3D>): {
-        cameraPositionOffsetX: number,
-        cameraPositionOffsetY: number,
-        cameraPositionOffsetZ: number,
+        cameraPositionOffsetX: number;
+        cameraPositionOffsetY: number;
+        cameraPositionOffsetZ: number;
     };
 
     /**
@@ -16974,11 +18044,11 @@ interface ModFuncs {
      * @param rotation The mod that represents the 3D rotation.
      */
     cameraRotationOffset(rotation: Partial<Point3D>): {
-        cameraRotationOffsetX: number,
-        cameraRotationOffsetY: number,
-        cameraRotationOffsetZ: number,
+        cameraRotationOffsetX: number;
+        cameraRotationOffsetY: number;
+        cameraRotationOffsetZ: number;
     };
-};
+}
 
 interface Bytes {
     /**
@@ -17010,13 +18080,13 @@ interface Bytes {
      * @param bytes The data that should be converted to a Base64 Data URL. If given a string, then it should be valid Base 64 data.
      * @param mimeType The [MIME Type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types) of the data.
      * If omitted, then `image/png` will be used.
-     * 
+     *
      * @example Convert some bytes to a base 64 image/png data URL
      * const data = bytes.toBase64Url(new Uint8Array([ 255, 254, 253 ]));
-     * 
+     *
      * @example Convert a base 64 string to a text/plain base 64 data URL
      * const data = bytes.toBase64Url('aGVsbG8=', 'text/plain'); // "hello" encoded in Base64
-     * 
+     *
      * @dochash actions/bytes
      * @docname bytes.toBase64Url
      */
@@ -17024,14 +18094,14 @@ interface Bytes {
 
     /**
      * Converts the given [Data URL](https://developer.mozilla.org/en-US/docs/web/http/basics_of_http/data_urls) into a blob object.
-     * 
+     *
      * Returns a blob that contains the binary data. Returns null if the URL is not a valid Data URL.
-     * 
+     *
      * @param url The URL.
-     * 
+     *
      * @example Convert a data URL to a blob
      * const blob = bytes.fromBase64Url('data:image/png;base64,aGVsbG8='); // "hello" encoded in Base64
-     * 
+     *
      * @dochash actions/bytes
      * @docname bytes.fromBase64Url
      */
@@ -17039,6 +18109,20 @@ interface Bytes {
 }
 
 interface Crypto {
+    /**
+     * Calculates the cryptographic hash for the given data and returns the result in the specified format.
+     * @param algorithm The algorithm that should be used to hash the data.
+     * @param format The format that the hash should be returned in.
+     *               - "hex" indicates that a hexadecimal string should be returned.
+     *               - "base64" indicates that a base64 formatted string should be returned.
+     *               - "raw" indicates that an array of bytes should be returned.
+     * @param data The data that should be hashed.
+     */
+    hash(
+        algorithm: 'sha256' | 'sha512' | 'sha1',
+        format: 'hex' | 'base64',
+        ...data: unknown[]
+    ): string;
 
     /**
      * Calculates the cryptographic hash for the given data and returns the result in the specified format.
@@ -17049,7 +18133,11 @@ interface Crypto {
      *               - "raw" indicates that an array of bytes should be returned.
      * @param data The data that should be hashed.
      */
-    hash(algorithm: 'sha256' | 'sha512' | 'sha1', format: 'hex' | 'base64', ...data: unknown[]): string;
+    hash(
+        algorithm: 'sha256' | 'sha512' | 'sha1',
+        format: 'raw',
+        ...data: unknown[]
+    ): Uint8Array;
 
     /**
      * Calculates the cryptographic hash for the given data and returns the result in the specified format.
@@ -17060,18 +18148,11 @@ interface Crypto {
      *               - "raw" indicates that an array of bytes should be returned.
      * @param data The data that should be hashed.
      */
-    hash(algorithm: 'sha256' | 'sha512' | 'sha1', format: 'raw', ...data: unknown[]): Uint8Array;
-
-    /**
-     * Calculates the cryptographic hash for the given data and returns the result in the specified format.
-     * @param algorithm The algorithm that should be used to hash the data.
-     * @param format The format that the hash should be returned in.
-     *               - "hex" indicates that a hexadecimal string should be returned.
-     *               - "base64" indicates that a base64 formatted string should be returned.
-     *               - "raw" indicates that an array of bytes should be returned.
-     * @param data The data that should be hashed.
-     */
-    hash(algorithm: 'sha256' | 'sha512' | 'sha1', format: 'hex' | 'base64' | 'raw', ...data: unknown[]): string | Uint8Array;
+    hash(
+        algorithm: 'sha256' | 'sha512' | 'sha1',
+        format: 'hex' | 'base64' | 'raw',
+        ...data: unknown[]
+    ): string | Uint8Array;
 
     /**
      * Calculates the HMAC of the given data and returns the result in the specified format.
@@ -17084,7 +18165,12 @@ interface Crypto {
      * @param key The key that should be used to sign the message.
      * @param data The data that should be hashed.
      */
-    hmac(algorithm: 'hmac-sha256' | 'hmac-sha512' | 'hmac-sha1', format: 'hex' | 'base64', key: string, ...data: unknown[]): string;
+    hmac(
+        algorithm: 'hmac-sha256' | 'hmac-sha512' | 'hmac-sha1',
+        format: 'hex' | 'base64',
+        key: string,
+        ...data: unknown[]
+    ): string;
 
     /**
      * Calculates the HMAC of the given data and returns the result in the specified format.
@@ -17097,7 +18183,12 @@ interface Crypto {
      * @param key The key that should be used to sign the message.
      * @param data The data that should be hashed.
      */
-    hmac(algorithm: 'hmac-sha256' | 'hmac-sha512' | 'hmac-sha1', format: 'raw', key: string, ...data: unknown[]): Uint8Array;
+    hmac(
+        algorithm: 'hmac-sha256' | 'hmac-sha512' | 'hmac-sha1',
+        format: 'raw',
+        key: string,
+        ...data: unknown[]
+    ): Uint8Array;
 
     /**
      * Calculates the HMAC of the given data and returns the result in the specified format.
@@ -17110,7 +18201,12 @@ interface Crypto {
      * @param key The key that should be used to sign the message.
      * @param data The data that should be hashed.
      */
-    hmac(algorithm: 'hmac-sha256' | 'hmac-sha512' | 'hmac-sha1', format: 'hex' | 'base64' | 'raw', key: string, ...data: unknown[]): string | Uint8Array
+    hmac(
+        algorithm: 'hmac-sha256' | 'hmac-sha512' | 'hmac-sha1',
+        format: 'hex' | 'base64' | 'raw',
+        key: string,
+        ...data: unknown[]
+    ): string | Uint8Array;
 
     /**
      * Calculates the SHA-256 hash of the given data.
@@ -17146,19 +18242,19 @@ interface Crypto {
 
     /**
      * Encrypts the given data with the given secret and returns the result.
-     * 
+     *
      * @description Always choose a strong unique secret. Use a password manager such as LastPass or 1Password to
      * help you create and keep track of them.
-     * 
+     *
      * Assuming the above, this method will return a string of encrypted data that is confidential (unreadable without the secret),
      * reliable (the encrypted data cannot be changed without making it unreadable), and authentic (decryptability proves that the secret was used to encrypt the data).
-     * 
+     *
      * As a consequence, encrypting the same data with the same secret will produce different results.
      * This is to ensure that an attacker cannot correlate different pieces of data to potentially deduce the original plaintext.
-     * 
-     * Encrypts the given data using an authenticated encryption mechanism 
+     *
+     * Encrypts the given data using an authenticated encryption mechanism
      * based on XSalsa20 (An encryption cipher) and Poly1305 (A message authentication code).
-     * 
+     *
      * @param secret The secret to use to secure the data.
      * @param data The data to encrypt.
      */
@@ -17188,9 +18284,9 @@ interface Crypto {
          *
          * @description Always choose a strong unique secret. Use a password manager such as LastPass or 1Password to
          * help you create and keep track of them.
-         * 
+         *
          * Keypairs are made up of a private key and a public key.
-         * The public key is a special value that can be used to encrypt data and 
+         * The public key is a special value that can be used to encrypt data and
          * the private key is a related value that can be used to decrypt data that was encrypted by the public key.
          *
          * The private key is called "private" because it is encrypted using the given secret
@@ -17221,7 +18317,7 @@ interface Crypto {
          *
          * Encrypts the given data using an asymmetric authenticated encryption mechanism
          * based on x25519 (A key-exchange mechanism), XSalsa20 (An encryption cipher) and Poly1305 (A message authentication code).
-         * 
+         *
          * You may notice that this function does not need a secret to decrypt the keypair.
          * This is because the public key of the keypair is used to encrypt the data.
          * Due to how asymmetric encryption works, only the encrypted private key will be able to decrypt the data.
@@ -17273,10 +18369,10 @@ interface Crypto {
      * Digital signatures are used to verifying the authenticity and integrity of data.
      *
      * This works by leveraging asymetric encryption but in reverse.
-     * 
+     *
      * If we can encrypt some data such that only the public key of a keypair can decrypt it, then we can prove that
      * the data was encrypted (i.e. signed) by the corresponding private key.
-     * 
+     *
      * And since the public key is available to everyone but the private
      * key is only usable when you have the secret, we can use this to prove that a particular piece of data was signed by whoever knows the secret.
      *
@@ -17296,7 +18392,7 @@ interface Crypto {
 
     /**
      * Creates a new certified bot that is signed using the given certified bot.
-     * @param certificate The certified bot that the new certificate should be signed with. 
+     * @param certificate The certified bot that the new certificate should be signed with.
      *                    This is commonly known as the signing certificate.
      *                    If given null, then the new certificate will be self-signed.
      * @param secret The signing certificate's secret. This is the secret that was used to create
@@ -17304,7 +18400,11 @@ interface Crypto {
      *                 is the secret that was used to create the given keypair.
      * @param keypair The keypair that the new certificate should use.
      */
-    createCertificate(certificate: Bot | string, secret: string, keypair: string): Promise<Bot>;
+    createCertificate(
+        certificate: Bot | string,
+        secret: string,
+        keypair: string
+    ): Promise<Bot>;
 
     /**
      * Signs the tag on the given bot using the given certificate and secret.
@@ -17313,7 +18413,12 @@ interface Crypto {
      * @param bot The bot that should be signed.
      * @param tag The tag that should be signed.
      */
-    signTag(certificate: Bot | string, secret: string, bot: Bot | string, tag: string): Promise<void>;
+    signTag(
+        certificate: Bot | string,
+        secret: string,
+        bot: Bot | string,
+        tag: string
+    ): Promise<void>;
 
     /**
      * Verifies that the given tag on the given bot has been signed by a certificate.
@@ -17326,20 +18431,24 @@ interface Crypto {
      * Revokes the given certificate using the given secret.
      * In effect, this deletes the certificate bot from the server.
      * Additionally, any tags signed with the given certificate will no longer be verified.
-     * 
+     *
      * If given a signer, then the specified certificate will be used to sign the revocation.
      * This lets you use a parent or grandparent certificate to remove the child.
-     * 
+     *
      * If no signer is given, then the certificate will be used to revoke itself.
-     * 
+     *
      * @param certificate The certificate that should be revoked.
      * @param secret The secret that should be used to decrypt the corresponding certificate's private key.
      *                 If given a signer, then this is the secret for the signer certificate. If no signer is given,
      *                 then this is the secret for the revoked certificate.
      * @param signer The certificate that should be used to revoke the aforementioned certificate. If not specified then the revocation will be self-signed.
      */
-    revokeCertificate(certificate: Bot | string, secret: string, signer?: Bot | string): Promise<void>;
-};
+    revokeCertificate(
+        certificate: Bot | string,
+        secret: string,
+        signer?: Bot | string
+    ): Promise<void>;
+}
 
 interface Experiment {
     /**
@@ -17363,7 +18472,7 @@ interface Experiment {
     localPositionTween(
         bot: Bot | string,
         dimension: string,
-        position: { x?: number, y?: number, z?: number },
+        position: { x?: number; y?: number; z?: number },
         options?: TweenOptions
     ): LocalPositionTweenAction;
 
@@ -17377,7 +18486,7 @@ interface Experiment {
     localRotationTween(
         bot: Bot | string,
         dimension: string,
-        rotation: { x?: number, y?: number, z?: number },
+        rotation: { x?: number; y?: number; z?: number },
         options?: TweenOptions
     ): LocalRotationTweenAction;
 
@@ -17391,7 +18500,7 @@ interface Experiment {
         bot: Bot,
         dimension: string,
         anchorPoint: BotAnchorPoint
-    ): { x: number, y: number, z: number };
+    ): { x: number; y: number; z: number };
 
     /**
      * Creates a HTML file that, when loaded, will display the given bots in a static version of CasualOS.
@@ -17434,7 +18543,14 @@ interface Experiment {
      * @param text The text that should be spoken.
      * @param options The options that should be used.
      */
-    speakText(text: string, options?: { rate?: number, pitch?: number, voice?: string | SyntheticVoice }): Promise<void>;
+    speakText(
+        text: string,
+        options?: {
+            rate?: number;
+            pitch?: number;
+            voice?: string | SyntheticVoice;
+        }
+    ): Promise<void>;
 
     /**
      * Gets the list of synthetic voices that are supported by the system.
@@ -17462,12 +18578,11 @@ interface Experiment {
      * @param overlayId Id of the overlay to remove.
      */
     removeBotMapLayer(bot: Bot, overlayId: string): Promise<{ success: boolean, data?: { overlayId: string }, message?: string }>;
-};
-
+}
 
 /**
  * Defines a set of options that can be used when recording a loom.
- * 
+ *
  * @dochash types/loom
  * @doctitle Loom Types
  * @docsidebar Loom
@@ -17486,10 +18601,9 @@ export interface RecordLoomOptions {
     recordName?: string | null;
 }
 
-
 /**
  * Defines an interface that contains information for a loom video.
- * 
+ *
  * @dochash types/loom
  * @docname LoomVideo
  */
@@ -17547,7 +18661,7 @@ export interface LoomVideo {
 
 /**
  * Defines an interface that contains embed metadata for a loom video.
- * 
+ *
  * @dochash types/loom
  * @docname LoomVideoEmbedMetadata
  */
@@ -17591,24 +18705,24 @@ export interface LoomVideoEmbedMetadata {
 interface Loom {
     /**
      * Records a loom video using the given options.
-     * 
+     *
      * Returns a promise that resolves with the video data.
      * Resolves with null if the video could not be recorded.
-     * 
+     *
      * **Note:** Loom requires third-party cookies to be enabled. If third-party cookies are not enabled, then the Loom recording will not work.
      *
      * @param options The options to use for recording the video.
-     * 
+     *
      * @example Record a loom video using the "SDK Standard".
      * const video = await loom.recordVideo({
      *     publicAppId: 'your-app-id'
      * });
-     * 
+     *
      * @example Record a loom video using the "SDK Custom".
      * const video = await loom.recordVideo({
      *     recordName: 'your-record-name',
      * });
-     * 
+     *
      * @dochash actions/loom
      * @doctitle Loom Actions
      * @docsidebar Loom
@@ -17619,17 +18733,17 @@ interface Loom {
 
     /**
      * Displays the given loom video to the user.
-     * 
+     *
      * Returns a promise that resolves when the video has been loaded.
-     * 
+     *
      * @param video the loom video that should be displayed.
-     * 
+     *
      * @example Display a loom video.
      * const video = await loom.recordVideo({
      *   publicAppId: 'your-app-id'
      * });
      * await loom.watchVideo(video);
-     * 
+     *
      * @dochash actions/loom
      * @docname loom.watchVideo
      * @docid loom.watchVideo-video
@@ -17638,14 +18752,14 @@ interface Loom {
 
     /**
      * Displays the given loom video to the user.
-     * 
+     *
      * Returns a promise that resolves when the video has been loaded.
-     * 
+     *
      * @param sharedUrl the shared URL of the loom video that should be displayed.
-     * 
+     *
      * @example Display a loom video by its URL.
      * await loom.watchVideo(videoUrl);
-     * 
+     *
      * @dochash actions/loom
      * @docname loom.watchVideo
      * @docid loom.watchVideo-sharedUrl
@@ -17656,35 +18770,602 @@ interface Loom {
 
     /**
      * Gets the embed metadata for the given loom video.
-     * 
+     *
      * @param video the loom video that the embed metadata should be retrieved for.
-     * 
+     *
      * @example Get the embed metadata for a loom video.
      * const video = await loom.recordVideo({
      *   publicAppId: 'your-app-id'
      * });
      * const metadata = await loom.getVideoEmbedMetadata(video);
-     * 
+     *
      * @dochash actions/loom
      * @docname loom.getVideoEmbedMetadata
      * @docid loom.getVideoEmbedMetadata-video
      */
-    getVideoEmbedMetadata(video: LoomVideo): Promise<LoomVideoEmbedMetadata>
+    getVideoEmbedMetadata(video: LoomVideo): Promise<LoomVideoEmbedMetadata>;
 
     /**
      * Gets the embed metadata for the given loom video.
-     * 
+     *
      * @param sharedUrl the shared URL of the the video that the embed metadata should be retrieved for.
-     * 
+     *
      * @example Get the embed metadata for a loom video.
      * const metadata = await loom.getVideoEmbedMetadata(videoUrl);
-     * 
+     *
      * @dochash actions/loom
      * @docname loom.getVideoEmbedMetadata
      * @docid loom.getVideoEmbedMetadata-sharedUrl
      */
     getVideoEmbedMetadata(sharedUrl: string): Promise<LoomVideoEmbedMetadata>;
-    getVideoEmbedMetadata(sharedUrlOrVideo: string | LoomVideo): Promise<LoomVideoEmbedMetadata>;
+    getVideoEmbedMetadata(
+        sharedUrlOrVideo: string | LoomVideo
+    ): Promise<LoomVideoEmbedMetadata>;
+}
+
+/**
+ * Defines an interface for contract-related data structures.
+ */
+export interface ContractRecord {
+    /**
+     * The unique identifier of the contract.
+     */
+    id: string;
+
+    /**
+     * The ID of the user that issued the contract.
+     */
+    issuingUserId: string;
+
+    /**
+     * The ID of the user that is holding/owning the contract.
+     */
+    holdingUserId: string;
+
+    /**
+     * The status of the contract. Can be "open", "closed", or "cancelled".
+     */
+    status: 'open' | 'closed' | 'cancelled';
+
+    /**
+     * The time in milliseconds since the Unix epoch when the contract was issued.
+     */
+    issuedAtMs: number;
+
+    /**
+     * The rate for the contract.
+     */
+    rate: number;
+
+    /**
+     * The initial value of the contract.
+     */
+    initialValue: number;
+}
+
+/**
+ * The status of an invoice.
+ * - "open" means the invoice is pending payment.
+ * - "paid" means the invoice has been paid.
+ * - "void" means the invoice has been voided and is no longer valid.
+ */
+export type InvoiceStatus = 'open' | 'paid' | 'void';
+
+/**
+ * The reason why an invoice was voided.
+ * - "rejected" means the invoice was rejected by the contract issuer, the system, or an admin.
+ * - "cancelled" means the invoice was cancelled by the user, the system, or an admin.
+ */
+export type InvoiceVoidReason = 'rejected' | 'cancelled';
+
+/**
+ * Defines an interface for contract invoice data.
+ */
+export interface ContractInvoice {
+    /**
+     * The ID of the invoice.
+     */
+    id: string;
+
+    /**
+     * The ID of the contract that this invoice is for.
+     */
+    contractId: string;
+
+    /**
+     * The amount charged in the invoice.
+     */
+    amount: number;
+
+    /**
+     * The current status of the invoice.
+     */
+    status: InvoiceStatus;
+
+    /**
+     * The unix time in milliseconds when the invoice was opened.
+     */
+    openedAtMs: number;
+
+    /**
+     * The unix time in miliseconds when the invoice was paid, if applicable.
+     */
+    paidAtMs?: number | null;
+
+    /**
+     * The unix time in milliseconds when the invoice was voided, if applicable.
+     */
+    voidedAtMs?: number | null;
+
+    /**
+     * The destination for the payout of the invoice.
+     */
+    payoutDestination: InvoicePayoutDestination;
+
+    /**
+     * The ID of the external transfer that was created to payout the invoice, if applicable.
+     * Null if the invoice is not paid or the payout destination is "account".
+     */
+    destinationTransferId?: string | null;
+
+    /**
+     * The reason why the invoice was voided, if applicable.
+     */
+    voidReason?: InvoiceVoidReason | null;
+
+    /**
+     * The ID of the transaction that paid the invoice, if applicable.
+     */
+    transactionId?: string | null;
+
+    /**
+     * The ID of the external payout that was created as part of the invoice payment process, if applicatble.
+     * Null if the invoice is not paid or the payout destination is "account".
+     */
+    externalPayoutId?: string | null;
+
+    /**
+     * An additional note about the invoice.
+     */
+    note?: string | null;
+
+    /**
+     * The unix time in milliseconds when the invoice was created.
+     */
+    createdAtMs: number;
+
+    /**
+     * The unix time in milliseconds when the invoice was last updated.
+     */
+    updatedAtMs: number;
+}
+
+
+/**
+ * Represents the balance of a financial account in a JSON-compatible format.
+ */
+export interface JSONAccountBalance {
+    /**
+     * The ID of the account.
+     */
+    accountId: string;
+
+    /**
+     * The number of credits to the account.
+     */
+    credits: string;
+
+    /**
+     * The number of pending credits to the account.
+     */
+    pendingCredits: string;
+
+    /**
+     * The number of debits to the account.
+     */
+    debits: string;
+
+    /**
+     * The number of pending debits to the account.
+     */
+    pendingDebits: string;
+
+    /**
+     * The factor that should be used to convert between credits and USD.
+     */
+    displayFactor: string;
+
+    /**
+     * The currency that the account is in.
+     */
+    currency: string;
+}
+
+/**
+ * Defines an interface for contract record input.
+ */
+export interface ContractRecordInput {
+    /**
+     * The unique identifier of the contract.
+     */
+    id: string;
+
+    /**
+     * The ID of the user that issued the contract.
+     */
+    issuingUserId: string;
+
+    /**
+     * The ID of the user that is holding/owning the contract.
+     */
+    holdingUserId: string;
+
+    /**
+     * The status of the contract.
+     */
+    status: 'open' | 'closed' | 'cancelled';
+
+    /**
+     * The time in milliseconds since the Unix epoch when the contract was issued.
+     */
+    issuedAtMs: number;
+
+    /**
+     * The rate for the contract.
+     */
+    rate: number;
+
+    /**
+     * The initial value of the contract.
+     */
+    initialValue: number;
+}
+
+export interface ContractPricingLineItem {
+    name: string;
+    amount: number;
+}
+
+export interface ContractPricing {
+    /**
+     * The information for the contract.
+     */
+    contract: ContractRecord;
+
+    /**
+     * The total cost to purchase the contract.
+     */
+    total: number;
+
+    /**
+     * The line items that make up the total cost.
+     */
+    lineItems: ContractPricingLineItem[];
+
+    /**
+     * The currency that the cost is in.
+     */
+    currency: string;
+}
+
+
+export interface APIPurchaseContractRequest {
+    recordName: string;
+    address: string;
+    expectedCost: number;
+    currency: 'usd';
+
+    returnUrl: string;
+    successUrl: string;
+}
+export interface APIInvoiceContractRequest {
+    contractId: string;
+    amount: number;
+    note?: string;
+    payoutDestination: InvoicePayoutDestination;
+}
+
+/**
+ * The destination for the payout of an invoice.
+ * - "stripe" means that the invoiced amount will be transfered to the users Stripe account once paid.
+ * - "account" means that the invoiced amount will remain in thier CasualOS account.
+ */
+export type InvoicePayoutDestination = 'stripe' | 'account';
+
+/**
+ * The list of possible payout destinations.
+ *
+ * - `stripe` indicates that the payout should be sent to the user's Stripe account.
+ * - `cash` indicates that the payout was sent as cash (e.g. check, manual bank transfer, cash, etc.)
+ */
+export type PayoutDestination = 'stripe' | 'cash';
+
+export interface APIPayoutRequest {
+    amount?: number;
+    destination?: PayoutDestination;
+}
+
+/**
+ * Defines an interface for XP (Experience Points/Exchange) contract operations.
+ */
+interface Xp {
+    /**
+     * Records a new contract in the given record.
+     *
+     * @param recordName The name of the record that the contract should be stored in.
+     * @param contract The contract data to record.
+     * @param options The options for the request.
+     * @returns A promise that resolves when the contract is recorded.
+     *
+     * @example Record a new contract
+     * await xp.recordContract('myRecord', {
+     *     id: 'contract1',
+     *     issuingUserId: 'user1',
+     *     holdingUserId: 'user2',
+     *     status: 'open',
+     *     issuedAtMs: Date.now(),
+     *     rate: 100,
+     *     initialValue: 1000
+     * });
+     *
+     * @dochash actions/xp
+     * @docname xp.recordContract
+     */
+    recordContract(
+        recordName: string,
+        contract: ContractRecordInput,
+        options?: RecordActionOptions
+    ): Promise<void>;
+
+    /**
+     * Gets the contract with the given address.
+     *
+     * @param recordName The name of the record that the contract is stored in.
+     * @param address The address of the contract.
+     * @param options The options for the request.
+     * @returns A promise that resolves with the contract or null if not found.
+     *
+     * @example Get a contract
+     * const contract = await xp.getContract('myRecord', 'address1');
+     *
+     * @dochash actions/xp
+     * @docname xp.getContract
+     */
+    getContract(
+        recordName: string,
+        address: string,
+        options?: RecordActionOptions
+    ): Promise<ContractRecord | null>;
+
+    /**
+     * Gets a list of contracts from the given record.
+     *
+     * @param recordName The name of the record that the contracts are stored in.
+     * @param address The address that the contracts should be listed after. If null, then the first page of contracts will be returned.
+     * @param options The options for the request.
+     * @returns A promise that resolves with the list of contracts.
+     *
+     * @example List all contracts
+     * const contracts = await xp.listContracts('myRecord');
+     *
+     * @example List contracts after a specific address
+     * const contracts = await xp.listContracts('myRecord', 'address1');
+     *
+     * @dochash actions/xp
+     * @docname xp.listContracts
+     */
+    listContracts(
+        recordName: string,
+        address?: string,
+        options?: RecordActionOptions
+    ): Promise<ContractRecord[]>;
+
+    /**
+     * Gets the pricing for the given contract.
+     *
+     * @param request The pricing request data.
+     * @param options The options for the request.
+     * @returns A promise that resolves with the pricing details for the contract.
+     *
+     * @example Get contract pricing
+     * const pricing = await xp.getContractPricing({
+     *     contractId: 'contract1',
+     *     issuingUserId: 'user1',
+     *     holdingUserId: 'user2',
+     *     rate: 100,
+     *     initialValue: 1000
+     * });
+     *
+     * @dochash actions/xp
+     * @docname xp.getContractPricing
+     */
+    getContractPricing(
+        request: {
+            contractId: string;
+            issuingUserId: string;
+            holdingUserId: string;
+            rate: number;
+            initialValue: number;
+        },
+        options?: RecordActionOptions
+    ): Promise<GenericResult<ContractPricing, SimpleError>>;
+
+    /**
+     * Attempts to purchase a contract via the xpExchange.
+     *
+     * @param request The request for the purchase.
+     * @param options The options for the request.
+     * @returns A promise that resolves when the purchase is complete.
+     *
+     * @example Purchase a contract
+     * await xp.purchaseContract({
+     *     recordName: 'myRecord',
+     *     address: 'address1',
+     *     paymentInfo: { type: 'stripe', token: 'token1' }
+     * });
+     *
+     * @dochash actions/xp
+     * @docname xp.purchaseContract
+     */
+    purchaseContract(
+        request: {
+            recordName: string;
+            address: string;
+            paymentInfo: {
+                type: 'stripe' | 'paypal';
+                token: string;
+            };
+        },
+        options?: RecordActionOptions
+    ): Promise<GenericResult<{
+            /**
+             * The URL that the user should be directed to to complete the purchase.
+             */
+            url?: string;
+    
+            /**
+             * The ID of the checkout session.
+             */
+            sessionId: string;
+        }, SimpleError>>;
+
+    /**
+     * Cancels a contract via the xpExchange and refunds any funds.
+     *
+     * @param recordName The name of the record that the contract is stored in.
+     * @param address The address of the contract to cancel.
+     * @param options The options for the request.
+     * @returns A promise that resolves when the contract is cancelled.
+     *
+     * @example Cancel a contract
+     * await xp.cancelContract('myRecord', 'address1');
+     *
+     * @dochash actions/xp
+     * @docname xp.cancelContract
+     */
+    cancelContract(
+        recordName: string,
+        address: string,
+        options?: RecordActionOptions
+    ): Promise<GenericResult<void, SimpleError>>;
+
+    /**
+     * Creates a new invoice for the given contract.
+     *
+     * @param request The request for the invoice.
+     * @param options The options for the request.
+     * @returns A promise that resolves when the invoice is created.
+     *
+     * @example Create an invoice for a contract
+     * await xp.invoiceContract({
+     *     contractId: 'contract1',
+     *     amount: 500,
+     *     note: 'Payment for services',
+     *     payoutDestination: 'stripe'
+     * });
+     *
+     * @dochash actions/xp
+     * @docname xp.invoiceContract
+     */
+    invoiceContract(
+        request: APIInvoiceContractRequest,
+        options?: RecordActionOptions
+    ): Promise<GenericResult<{ invoiceId: string }, SimpleError>>;
+
+    /**
+     * Voids (cancels) an invoice.
+     *
+     * @param invoiceId The ID of the invoice to void.
+     * @param options The options for the request.
+     * @returns A promise that resolves when the invoice is voided.
+     *
+     * @example Cancel an invoice
+     * await xp.cancelInvoice('invoice1');
+     *
+     * @dochash actions/xp
+     * @docname xp.cancelInvoice
+     */
+    cancelInvoice(
+        invoiceId: string,
+        options?: RecordActionOptions
+    ): Promise<GenericResult<void, SimpleError>>;
+
+    /**
+     * Lists the invoices for the given contract.
+     *
+     * @param contractId The ID of the contract to list invoices for.
+     * @param options The options for the request.
+     * @returns A promise that resolves with the invoices for the contract.
+     *
+     * @example List invoices for a contract
+     * const invoices = await xp.listInvoices('contract1');
+     *
+     * @dochash actions/xp
+     * @docname xp.listInvoices
+     */
+    listInvoices(
+        contractId: string,
+        options?: RecordActionOptions
+    ): Promise<GenericResult<ContractInvoice[], SimpleError>>;
+
+    /**
+     * Pays an invoice. This will attempt to transfer funds from the contract account to the user holding the contract.
+     *
+     * @param request The payment request.
+     * @param options The options for the request.
+     * @returns A promise that resolves when the invoice is paid.
+     *
+     * @example Pay an invoice
+     * await xp.payInvoice({
+     *     invoiceId: 'invoice1',
+     *     paymentInfo: { type: 'stripe', token: 'token1' }
+     * });
+     *
+     * @dochash actions/xp
+     * @docname xp.payInvoice
+     */
+    payInvoice(
+        invoiceId: string,
+        options?: RecordActionOptions
+    ): Promise<GenericResult<void, SimpleError>>;
+
+    /**
+     * Attempts to payout funds from the user's account to their linked payout destination.
+     *
+     * @param request The payout request.
+     * @param options The options for the request.
+     * @returns A promise that resolves when the payout is complete.
+     *
+     * @example Payout funds
+     * await xp.payout({
+     *     destination: 'stripe',
+     *     amount: 1000,
+     *     description: 'Monthly payout'
+     * });
+     *
+     * @dochash actions/xp
+     * @docname xp.payout
+     */
+    payout(
+        request: APIPayoutRequest,
+        options?: RecordActionOptions
+    ): Promise<GenericResult<void, SimpleError>>;
+
+    /**
+     * Attempts to retrieve the account balances for the user's account.
+     *
+     * @param options The options for the request.
+     * @returns A promise that resolves with the account balances.
+     *
+     * @example Get account balances
+     * const balances = await xp.getAccountBalances();
+     *
+     * @dochash actions/xp
+     * @docname xp.getAccountBalances
+     */
+    getAccountBalances(options?: RecordActionOptions): Promise<GenericResult<{
+        [key: string]: JSONAccountBalance;
+    }, SimpleError>>;
 }
 
 interface Perf {
@@ -17692,7 +19373,7 @@ interface Perf {
      * Gets the performance stats for the instance.
      */
     getStats(): PerformanceStats;
-};
+}
 
 interface Analytics {
     /**

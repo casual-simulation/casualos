@@ -36,7 +36,7 @@ export const Y_OFFSET = 0.01;
  */
 export class GridMesh extends Object3D {
     name = 'GridMesh';
-    
+
     tiles: {
         localPosition: Vector3;
         gridPosition: Vector2;

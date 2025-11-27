@@ -220,6 +220,19 @@ describe('LoomController', () => {
         });
 
         it('should return subscription_limit_reached if the studio doesnt have a valid subscription', async () => {
+            store.subscriptionConfiguration = buildSubscriptionConfig(
+                (config) =>
+                    config
+                        .addSubscription('sub1', (sub) =>
+                            sub
+                                .withTier('tier1')
+                                .withAllDefaultFeatures()
+                                .withLoom()
+                        )
+                        .withStudioDefaultFeatures((features) =>
+                            features.withAllDefaultFeatures()
+                        )
+            );
             await store.updateStudio({
                 id: studioId,
                 displayName: 'myStudio',

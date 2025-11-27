@@ -1,0 +1,86 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.md-field {
+    width: 100%;
+}
+
+.md-error-message {
+    color: #f44336;
+    font-size: 0.75rem;
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    background-color: rgba(244, 67, 54, 0.1);
+    border-radius: 2px;
+}
+
+.md-error-message p {
+    margin: 0;
+}
+
+.contract-details-container {
+    margin-top: 2rem;
+}
+
+.details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1rem;
+}
+
+.detail-item {
+    padding: 0.75rem;
+    background-color: rgba(0, 0, 0, 0.02);
+    border-radius: 2px;
+}
+
+.detail-item strong {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-weight: 500;
+}
+
+.detail-item span {
+    word-break: break-word;
+}
+
+.invoices-card {
+    margin-top: 1rem;
+}
+
+.no-invoices {
+    text-align: center;
+    padding: 2rem;
+    color: #999;
+}
+
+.options-cell {
+    text-align: center;
+}
+
+.md-danger {
+    color: #f44336;
+}
+
+.md-danger:not(:disabled) {
+    background-color: rgba(244, 67, 54, 0.1);
+}
+
+.md-danger:not(:disabled):hover {
+    background-color: rgba(244, 67, 54, 0.2);
+}

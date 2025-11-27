@@ -663,6 +663,88 @@ describe('Transpiler', () => {
 
                 expect(result).toBe(`h("span",null,'',)`);
             });
+
+            it('should support no space between keywords and JSX fragments', () => {
+                const result = transpiler.transpile(`return<>Hello</>`);
+
+                expect(result).toBe('return h(Fragment,null,`Hello`,)');
+            });
+
+            it('should support no space between return keyword and JSX elements', () => {
+                const result = transpiler.transpile(`return<div>Hello</div>`);
+
+                expect(result).toBe('return h("div",null,`Hello`,)');
+            });
+
+            it('should support no space between yield keyword and JSX elements', () => {
+                const result = transpiler.transpile(
+                    `function*abc(){yield<div>Hello</div>;}`
+                );
+
+                expect(result).toBe(
+                    'function*abc(){yield h("div",null,`Hello`,);}'
+                );
+            });
+
+            it('should support no space between lambda functions and JSX elements', () => {
+                const result = transpiler.transpile(
+                    `let abc=()=><div>Hello</div>`
+                );
+
+                expect(result).toBe('let abc=()=>h("div",null,`Hello`,)');
+            });
+
+            it('should support no space after assignment expressions and JSX elements', () => {
+                const result = transpiler.transpile(`let abc=<div>Hello</div>`);
+
+                expect(result).toBe('let abc=h("div",null,`Hello`,)');
+            });
+
+            it('should support no spaces between JSX elements', () => {
+                const result = transpiler.transpile(
+                    `return <><div>abc</div></>`
+                );
+
+                expect(result).toBe(
+                    'return h(Fragment,null,h("div",null,`abc`,),)'
+                );
+            });
+
+            it('should support no spaces for JSX elements as function arguments', () => {
+                const result = transpiler.transpile(
+                    `func(<div>abc</div>,<div>def</div>)`
+                );
+
+                expect(result).toBe(
+                    'func(h("div",null,`abc`,),h("div",null,`def`,))'
+                );
+            });
+
+            it('should support JSX elements as the first characters', () => {
+                const result = transpiler.transpile(`<div>abc</div>`);
+
+                expect(result).toBe('h("div",null,`abc`,)');
+            });
+
+            it('should support JSX elements as the first characters after a newline', () => {
+                const result = transpiler.transpile(`\n<div>abc</div>`);
+
+                expect(result).toBe('\nh("div",null,`abc`,)');
+            });
+
+            it('should support JSX elements as the first characters after carriage return', () => {
+                const result = transpiler.transpile(`\r<div>abc</div>`);
+
+                expect(result).toBe('\rh("div",null,`abc`,)');
+            });
+
+            it('should support quotes in JSX text', () => {
+                const result = transpiler.transpile(
+                    `<div>"Hello" 'World'</div>`
+                );
+
+                expect(result).toBe(`h("div",null,\`"Hello" 'World'\`,)`);
+            });
         });
 
         it('should support dynamic import statements', () => {

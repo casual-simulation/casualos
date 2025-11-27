@@ -1,0 +1,12 @@
+diff --git a/dist/tokenizer/index.d.ts b/dist/tokenizer/index.d.ts
+index 3de17505596b19a5ae80f09f947eeb3e5941a6bf..e930f7e785a6b140fb733c5e49f9f142739de27f 100644
+--- a/dist/tokenizer/index.d.ts
++++ b/dist/tokenizer/index.d.ts
+@@ -1,6 +1,6 @@
+ import { Preprocessor } from './preprocessor.js';
+ import { type Token, type CharacterToken, type DoctypeToken, type TagToken, type EOFToken, type CommentToken, type Attribute, type Location } from '../common/token.js';
+-import { EntityDecoder } from 'entities/decode';
++import { EntityDecoder } from '../../../entities/dist/esm/decode';
+ import { ERR, type ParserErrorHandler } from '../common/error-codes.js';
+ declare const enum State {
+     DATA = 0,

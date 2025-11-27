@@ -32,6 +32,8 @@ import type {
     StudioComIdRequest,
     LoomConfig,
     HumeConfig,
+    StripeAccountStatus,
+    StripeRequirementsStatus,
 } from '@casual-simulation/aux-records';
 import {
     COM_ID_PLAYER_CONFIG,
@@ -39,9 +41,10 @@ import {
     LOOM_CONFIG,
     HUME_CONFIG,
 } from '@casual-simulation/aux-records';
-import type { PrismaClient, Prisma } from './generated';
+import type { PrismaClient, Prisma, Studio as PrismaStudio } from './generated';
 import { convertToDate, convertToMillis } from './Utils';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
+import type z from 'zod';
 
 const TRACE_NAME = 'PrismaRecordsStore';
 
@@ -249,6 +252,10 @@ export class PrismaRecordsStore implements RecordsStore {
                 logoUrl: studio.logoUrl,
                 ownerStudioComId: studio.ownerStudioComId,
                 playerConfig: studio.playerConfig,
+                stripeAccountId: studio.stripeAccountId,
+                stripeAccountStatus: studio.stripeAccountStatus,
+                stripeAccountRequirementsStatus:
+                    studio.stripeAccountRequirementsStatus,
             },
         });
     }
@@ -288,31 +295,7 @@ export class PrismaRecordsStore implements RecordsStore {
         });
 
         return {
-            studio: {
-                id: result.id,
-                displayName: result.displayName,
-                stripeCustomerId: result.stripeCustomerId,
-                subscriptionId: result.subscriptionId,
-                subscriptionStatus: result.subscriptionStatus,
-                comId: result.comId,
-                logoUrl: result.logoUrl,
-                subscriptionInfoId: result.subscriptionInfoId,
-                subscriptionPeriodEndMs: convertToMillis(
-                    result.subscriptionPeriodEnd
-                ),
-                subscriptionPeriodStartMs: convertToMillis(
-                    result.subscriptionPeriodStart
-                ),
-                comIdConfig: zodParseConfig(
-                    result.comIdConfig,
-                    COM_ID_CONFIG_SCHEMA
-                ),
-                ownerStudioComId: result.ownerStudioComId,
-                playerConfig: zodParseConfig(
-                    result.playerConfig,
-                    COM_ID_PLAYER_CONFIG
-                ),
-            },
+            studio: this._convertToStudio(result),
             assignment: {
                 studioId: result.id,
                 userId: adminId,
@@ -334,31 +317,7 @@ export class PrismaRecordsStore implements RecordsStore {
             return null;
         }
 
-        return {
-            id: studio.id,
-            displayName: studio.displayName,
-            stripeCustomerId: studio.stripeCustomerId,
-            subscriptionId: studio.subscriptionId,
-            subscriptionStatus: studio.subscriptionStatus,
-            comId: studio.comId,
-            logoUrl: studio.logoUrl,
-            subscriptionInfoId: studio.subscriptionInfoId,
-            subscriptionPeriodEndMs: convertToMillis(
-                studio.subscriptionPeriodEnd
-            ),
-            subscriptionPeriodStartMs: convertToMillis(
-                studio.subscriptionPeriodStart
-            ),
-            comIdConfig: zodParseConfig(
-                studio.comIdConfig,
-                COM_ID_CONFIG_SCHEMA
-            ),
-            ownerStudioComId: studio.ownerStudioComId,
-            playerConfig: zodParseConfig(
-                studio.playerConfig,
-                COM_ID_PLAYER_CONFIG
-            ),
-        };
+        return this._convertToStudio(studio);
     }
 
     @traced(TRACE_NAME)
@@ -373,31 +332,21 @@ export class PrismaRecordsStore implements RecordsStore {
             return null;
         }
 
-        return {
-            id: studio.id,
-            displayName: studio.displayName,
-            stripeCustomerId: studio.stripeCustomerId,
-            subscriptionId: studio.subscriptionId,
-            subscriptionStatus: studio.subscriptionStatus,
-            comId: studio.comId,
-            logoUrl: studio.logoUrl,
-            subscriptionInfoId: studio.subscriptionInfoId,
-            subscriptionPeriodEndMs: convertToMillis(
-                studio.subscriptionPeriodEnd
-            ),
-            subscriptionPeriodStartMs: convertToMillis(
-                studio.subscriptionPeriodStart
-            ),
-            comIdConfig: zodParseConfig(
-                studio.comIdConfig,
-                COM_ID_CONFIG_SCHEMA
-            ),
-            ownerStudioComId: studio.ownerStudioComId,
-            playerConfig: zodParseConfig(
-                studio.playerConfig,
-                COM_ID_PLAYER_CONFIG
-            ),
-        };
+        return this._convertToStudio(studio);
+    }
+
+    async getStudioByStripeAccountId(accountId: string): Promise<Studio> {
+        const studio = await this._client.studio.findUnique({
+            where: {
+                stripeAccountId: accountId,
+            },
+        });
+
+        if (!studio) {
+            return null;
+        }
+
+        return this._convertToStudio(studio);
     }
 
     @traced(TRACE_NAME)
@@ -412,31 +361,7 @@ export class PrismaRecordsStore implements RecordsStore {
             return null;
         }
 
-        return {
-            id: studio.id,
-            displayName: studio.displayName,
-            stripeCustomerId: studio.stripeCustomerId,
-            subscriptionId: studio.subscriptionId,
-            subscriptionStatus: studio.subscriptionStatus,
-            comId: studio.comId,
-            logoUrl: studio.logoUrl,
-            subscriptionInfoId: studio.subscriptionInfoId,
-            subscriptionPeriodEndMs: convertToMillis(
-                studio.subscriptionPeriodEnd
-            ),
-            subscriptionPeriodStartMs: convertToMillis(
-                studio.subscriptionPeriodStart
-            ),
-            comIdConfig: zodParseConfig(
-                studio.comIdConfig,
-                COM_ID_CONFIG_SCHEMA
-            ),
-            ownerStudioComId: studio.ownerStudioComId,
-            playerConfig: zodParseConfig(
-                studio.playerConfig,
-                COM_ID_PLAYER_CONFIG
-            ),
-        };
+        return this._convertToStudio(studio);
     }
 
     @traced(TRACE_NAME)
@@ -462,6 +387,10 @@ export class PrismaRecordsStore implements RecordsStore {
                 logoUrl: studio.logoUrl,
                 comId: studio.comId,
                 ownerStudioComId: studio.ownerStudioComId,
+                stripeAccountId: studio.stripeAccountId,
+                stripeAccountStatus: studio.stripeAccountStatus,
+                stripeAccountRequirementsStatus:
+                    studio.stripeAccountRequirementsStatus,
             },
         });
     }
@@ -730,12 +659,48 @@ export class PrismaRecordsStore implements RecordsStore {
             where,
         });
     }
+
+    private _convertToStudio(studio: PrismaStudio): Studio {
+        if (!studio) {
+            return null;
+        }
+        return {
+            id: studio.id,
+            displayName: studio.displayName,
+            stripeCustomerId: studio.stripeCustomerId,
+            subscriptionId: studio.subscriptionId,
+            subscriptionStatus: studio.subscriptionStatus,
+            comId: studio.comId,
+            logoUrl: studio.logoUrl,
+            subscriptionInfoId: studio.subscriptionInfoId,
+            subscriptionPeriodEndMs: convertToMillis(
+                studio.subscriptionPeriodEnd
+            ),
+            subscriptionPeriodStartMs: convertToMillis(
+                studio.subscriptionPeriodStart
+            ),
+            comIdConfig: zodParseConfig(
+                studio.comIdConfig,
+                COM_ID_CONFIG_SCHEMA
+            ),
+            ownerStudioComId: studio.ownerStudioComId,
+            playerConfig: zodParseConfig(
+                studio.playerConfig,
+                COM_ID_PLAYER_CONFIG
+            ),
+            stripeAccountId: studio.stripeAccountId,
+            stripeAccountStatus:
+                studio.stripeAccountStatus as StripeAccountStatus,
+            stripeAccountRequirementsStatus:
+                studio.stripeAccountRequirementsStatus as StripeRequirementsStatus,
+        };
+    }
 }
 
-function zodParseConfig<T extends Zod.Schema>(
+function zodParseConfig<T extends z.ZodType>(
     value: Prisma.JsonValue,
     schema: T
-): ReturnType<T['parse']> {
+): z.infer<T> | undefined {
     if (!value) {
         return undefined;
     }

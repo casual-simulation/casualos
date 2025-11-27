@@ -15,54 +15,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import type { WebConfig } from '@casual-simulation/aux-common/common/WebConfig';
-import type { ServerConfig } from '@casual-simulation/aux-records';
-
-export const DRIVES_URL = '/drives';
-
-/**
- * The server config.
- */
-export interface Config {
-    /**
-     * The config for the collaboration features of the server.
-     */
-    collaboration: {
-        httpPort: number;
-        player: ClientConfig;
-        dist: string;
-        drives: string;
-        tls: TLSOptions | null;
-        proxy: ProxyConfig;
-
-        /**
-         * Whether to enable debug logging.
-         */
-        debug: boolean;
-    };
-
-    /**
-     * The options for the backend API.
-     */
-    backend: {
-        httpPort: number;
-        dist: string;
-        config: ServerConfig;
-    };
-}
-
-export type SandboxType = 'none' | 'deno';
-
-export interface TLSOptions {
-    key: string;
-    cert: string;
-}
-
-export interface ClientConfig {
-    index: string;
-    manifest: string;
-    web: WebConfig;
-}
 
 export interface DirectoryConfig {
     server: DirectoryServerConfig | null;
@@ -99,14 +51,4 @@ export interface DirectoryClientConfig {
      * If not provided, then the client will determine the local IP from the attached network interfaces.
      */
     ipAddress?: string;
-}
-
-/**
- * The proxy config.
- */
-export interface ProxyConfig {
-    /**
-     * The IP Address range of proxies that should be trusted.
-     */
-    trust: string;
 }

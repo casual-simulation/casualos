@@ -1,0 +1,917 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`Validations ADDRESS_VALIDATION should fail for empty string 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "origin": "string",
+    "code": "too_small",
+    "minimum": 1,
+    "inclusive": true,
+    "path": [],
+    "message": "Too small: expected string to have >=1 characters"
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations ADDRESS_VALIDATION should fail for number 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "expected": "string",
+    "code": "invalid_type",
+    "path": [],
+    "message": "address must be a string."
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations ADDRESS_VALIDATION should fail for too long string 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "origin": "string",
+    "code": "too_big",
+    "maximum": 512,
+    "inclusive": true,
+    "path": [],
+    "message": "Too big: expected string to have <=512 characters"
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations ADDRESS_VALIDATION should fail for undefined 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "expected": "string",
+    "code": "invalid_type",
+    "path": [],
+    "message": "address is required."
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations ADDRESS_VALIDATION should produce a consistent schema 1`] = `
+Object {
+  "description": undefined,
+  "type": "string",
+}
+`;
+
+exports[`Validations COM_ID_VALIDATION should fail for empty string 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "origin": "string",
+    "code": "too_small",
+    "minimum": 1,
+    "inclusive": true,
+    "path": [],
+    "message": "Too small: expected string to have >=1 characters"
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations COM_ID_VALIDATION should fail for number 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "expected": "string",
+    "code": "invalid_type",
+    "path": [],
+    "message": "comId must be a string."
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations COM_ID_VALIDATION should fail for too long string 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "origin": "string",
+    "code": "too_big",
+    "maximum": 128,
+    "inclusive": true,
+    "path": [],
+    "message": "Too big: expected string to have <=128 characters"
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations COM_ID_VALIDATION should fail for undefined 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "expected": "string",
+    "code": "invalid_type",
+    "path": [],
+    "message": "comId is required."
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations COM_ID_VALIDATION should produce a consistent schema 1`] = `
+Object {
+  "description": undefined,
+  "type": "string",
+}
+`;
+
+exports[`Validations DISPLAY_NAME_VALIDATION should fail for empty string 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "origin": "string",
+    "code": "too_small",
+    "minimum": 1,
+    "inclusive": true,
+    "path": [],
+    "message": "Too small: expected string to have >=1 characters"
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations DISPLAY_NAME_VALIDATION should fail for number 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "expected": "string",
+    "code": "invalid_type",
+    "path": [],
+    "message": "Invalid input: expected string, received number"
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations DISPLAY_NAME_VALIDATION should fail for string with newlines 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "origin": "string",
+    "code": "invalid_format",
+    "format": "regex",
+    "pattern": "/^\\\\S*$/g",
+    "path": [],
+    "message": "The value cannot not contain spaces."
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations DISPLAY_NAME_VALIDATION should fail for string with spaces 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "origin": "string",
+    "code": "invalid_format",
+    "format": "regex",
+    "pattern": "/^\\\\S*$/g",
+    "path": [],
+    "message": "The value cannot not contain spaces."
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations DISPLAY_NAME_VALIDATION should fail for string with special characters 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "origin": "string",
+    "code": "invalid_format",
+    "format": "regex",
+    "pattern": "/^[^!@#$%^&*()[\\\\]{}\\\\-_=+\`~,./?;:'\\"\\\\\\\\<>|]*$/g",
+    "path": [],
+    "message": "The value cannot not contain special characters."
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations DISPLAY_NAME_VALIDATION should fail for string with tabs 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "origin": "string",
+    "code": "invalid_format",
+    "format": "regex",
+    "pattern": "/^\\\\S*$/g",
+    "path": [],
+    "message": "The value cannot not contain spaces."
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations DISPLAY_NAME_VALIDATION should fail for too long string 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "origin": "string",
+    "code": "too_big",
+    "maximum": 128,
+    "inclusive": true,
+    "path": [],
+    "message": "Too big: expected string to have <=128 characters"
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations DISPLAY_NAME_VALIDATION should fail for undefined 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "expected": "string",
+    "code": "invalid_type",
+    "path": [],
+    "message": "Invalid input: expected string, received undefined"
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations DISPLAY_NAME_VALIDATION should produce a consistent schema 1`] = `
+Object {
+  "description": undefined,
+  "type": "string",
+}
+`;
+
+exports[`Validations EVENT_NAME_VALIDATION should fail for empty string 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "origin": "string",
+    "code": "too_small",
+    "minimum": 1,
+    "inclusive": true,
+    "path": [],
+    "message": "Too small: expected string to have >=1 characters"
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations EVENT_NAME_VALIDATION should fail for number 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "expected": "string",
+    "code": "invalid_type",
+    "path": [],
+    "message": "eventName must be a string."
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations EVENT_NAME_VALIDATION should fail for too long string 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "origin": "string",
+    "code": "too_big",
+    "maximum": 128,
+    "inclusive": true,
+    "path": [],
+    "message": "Too big: expected string to have <=128 characters"
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations EVENT_NAME_VALIDATION should fail for undefined 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "expected": "string",
+    "code": "invalid_type",
+    "path": [],
+    "message": "eventName is required."
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations EVENT_NAME_VALIDATION should produce a consistent schema 1`] = `
+Object {
+  "description": undefined,
+  "type": "string",
+}
+`;
+
+exports[`Validations INSTANCES_ARRAY_VALIDATION should fail for empty array 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "origin": "array",
+    "code": "too_small",
+    "minimum": 1,
+    "inclusive": true,
+    "path": [],
+    "message": "Too small: expected array to have >=1 items"
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations INSTANCES_ARRAY_VALIDATION should fail for empty string 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "expected": "array",
+    "code": "invalid_type",
+    "path": [],
+    "message": "Invalid input: expected array, received undefined"
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations INSTANCES_ARRAY_VALIDATION should fail for too many instances 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "origin": "array",
+    "code": "too_big",
+    "maximum": 3,
+    "inclusive": true,
+    "path": [],
+    "message": "Too big: expected array to have <=3 items"
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations INSTANCES_ARRAY_VALIDATION should fail for too many instances in array 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "origin": "array",
+    "code": "too_big",
+    "maximum": 3,
+    "inclusive": true,
+    "path": [],
+    "message": "Too big: expected array to have <=3 items"
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations INSTANCES_ARRAY_VALIDATION should produce a consistent schema 1`] = `
+Object {
+  "description": undefined,
+  "exactLength": undefined,
+  "maxLength": 3,
+  "minLength": 1,
+  "schema": Object {
+    "description": undefined,
+    "type": "string",
+  },
+  "type": "array",
+}
+`;
+
+exports[`Validations MARKER_VALIDATION should fail for empty string 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "origin": "string",
+    "code": "too_small",
+    "minimum": 1,
+    "inclusive": true,
+    "path": [],
+    "message": "individual markers must not be null or empty."
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations MARKER_VALIDATION should fail for number 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "expected": "string",
+    "code": "invalid_type",
+    "path": [],
+    "message": "individual markers must be strings."
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations MARKER_VALIDATION should fail for too long string 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "origin": "string",
+    "code": "too_big",
+    "maximum": 100,
+    "inclusive": true,
+    "path": [],
+    "message": "individual markers must not be longer than 100 characters."
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations MARKER_VALIDATION should fail for undefined 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "expected": "string",
+    "code": "invalid_type",
+    "path": [],
+    "message": "invidiaul markers must not be null or empty."
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations MARKER_VALIDATION should produce a consistent schema 1`] = `
+Object {
+  "description": undefined,
+  "type": "string",
+}
+`;
+
+exports[`Validations MARKERS_VALIDATION should fail for number 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "expected": "array",
+    "code": "invalid_type",
+    "path": [],
+    "message": "markers must be an array of strings."
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations MARKERS_VALIDATION should fail for too long array 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "origin": "array",
+    "code": "too_big",
+    "maximum": 10,
+    "inclusive": true,
+    "path": [],
+    "message": "markers lists must not contain more than 10 markers."
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations MARKERS_VALIDATION should fail for undefined 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "expected": "array",
+    "code": "invalid_type",
+    "path": [],
+    "message": "markers is required."
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations MARKERS_VALIDATION should produce a consistent schema 1`] = `
+Object {
+  "description": undefined,
+  "exactLength": undefined,
+  "maxLength": 10,
+  "minLength": undefined,
+  "schema": Object {
+    "description": undefined,
+    "type": "string",
+  },
+  "type": "array",
+}
+`;
+
+exports[`Validations NAME_VALIDATION should fail for empty string 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "origin": "string",
+    "code": "too_small",
+    "minimum": 1,
+    "inclusive": true,
+    "path": [],
+    "message": "Too small: expected string to have >=1 characters"
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations NAME_VALIDATION should fail for number 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "expected": "string",
+    "code": "invalid_type",
+    "path": [],
+    "message": "Invalid input: expected string, received number"
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations NAME_VALIDATION should fail for string with newlines 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "origin": "string",
+    "code": "invalid_format",
+    "format": "regex",
+    "pattern": "/^\\\\S*$/g",
+    "path": [],
+    "message": "The value cannot not contain spaces."
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations NAME_VALIDATION should fail for string with spaces 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "origin": "string",
+    "code": "invalid_format",
+    "format": "regex",
+    "pattern": "/^\\\\S*$/g",
+    "path": [],
+    "message": "The value cannot not contain spaces."
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations NAME_VALIDATION should fail for string with special characters 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "origin": "string",
+    "code": "invalid_format",
+    "format": "regex",
+    "pattern": "/^[^!@#$%^&*()[\\\\]{}\\\\-_=+\`~,./?;:'\\"\\\\\\\\<>|]*$/g",
+    "path": [],
+    "message": "The value cannot not contain special characters."
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations NAME_VALIDATION should fail for string with tabs 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "origin": "string",
+    "code": "invalid_format",
+    "format": "regex",
+    "pattern": "/^\\\\S*$/g",
+    "path": [],
+    "message": "The value cannot not contain spaces."
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations NAME_VALIDATION should fail for too long string 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "origin": "string",
+    "code": "too_big",
+    "maximum": 128,
+    "inclusive": true,
+    "path": [],
+    "message": "Too big: expected string to have <=128 characters"
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations NAME_VALIDATION should fail for undefined 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "expected": "string",
+    "code": "invalid_type",
+    "path": [],
+    "message": "Invalid input: expected string, received undefined"
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations NAME_VALIDATION should produce a consistent schema 1`] = `
+Object {
+  "description": undefined,
+  "type": "string",
+}
+`;
+
+exports[`Validations RECORD_KEY_VALIDATION should fail for empty string 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "origin": "string",
+    "code": "too_small",
+    "minimum": 1,
+    "inclusive": true,
+    "path": [],
+    "message": "recordKey must not be empty."
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations RECORD_KEY_VALIDATION should fail for number 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "expected": "string",
+    "code": "invalid_type",
+    "path": [],
+    "message": "recordKey must be a string."
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations RECORD_KEY_VALIDATION should fail for undefined 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "expected": "string",
+    "code": "invalid_type",
+    "path": [],
+    "message": "recordKey is required."
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations RECORD_KEY_VALIDATION should produce a consistent schema 1`] = `
+Object {
+  "description": undefined,
+  "type": "string",
+}
+`;
+
+exports[`Validations RECORD_NAME_VALIDATION should fail for empty string 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "origin": "string",
+    "code": "too_small",
+    "minimum": 1,
+    "inclusive": true,
+    "path": [],
+    "message": "Too small: expected string to have >=1 characters"
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations RECORD_NAME_VALIDATION should fail for number 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "expected": "string",
+    "code": "invalid_type",
+    "path": [],
+    "message": "recordName must be a string."
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations RECORD_NAME_VALIDATION should fail for too long string 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "origin": "string",
+    "code": "too_big",
+    "maximum": 128,
+    "inclusive": true,
+    "path": [],
+    "message": "Too big: expected string to have <=128 characters"
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations RECORD_NAME_VALIDATION should fail for undefined 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "expected": "string",
+    "code": "invalid_type",
+    "path": [],
+    "message": "recordName is required."
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations RECORD_NAME_VALIDATION should produce a consistent schema 1`] = `
+Object {
+  "description": undefined,
+  "type": "string",
+}
+`;
+
+exports[`Validations STUDIO_DISPLAY_NAME_VALIDATION should fail for empty string 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "origin": "string",
+    "code": "too_small",
+    "minimum": 1,
+    "inclusive": true,
+    "path": [],
+    "message": "Too small: expected string to have >=1 characters"
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations STUDIO_DISPLAY_NAME_VALIDATION should fail for number 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "expected": "string",
+    "code": "invalid_type",
+    "path": [],
+    "message": "displayName must be a string."
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations STUDIO_DISPLAY_NAME_VALIDATION should fail for too long string 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "origin": "string",
+    "code": "too_big",
+    "maximum": 128,
+    "inclusive": true,
+    "path": [],
+    "message": "Too big: expected string to have <=128 characters"
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations STUDIO_DISPLAY_NAME_VALIDATION should fail for undefined 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "expected": "string",
+    "code": "invalid_type",
+    "path": [],
+    "message": "displayName is required."
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations STUDIO_DISPLAY_NAME_VALIDATION should produce a consistent schema 1`] = `
+Object {
+  "description": undefined,
+  "type": "string",
+}
+`;
+
+exports[`Validations STUDIO_ID_VALIDATION should fail for empty string 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "origin": "string",
+    "code": "too_small",
+    "minimum": 1,
+    "inclusive": true,
+    "path": [],
+    "message": "Too small: expected string to have >=1 characters"
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations STUDIO_ID_VALIDATION should fail for number 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "expected": "string",
+    "code": "invalid_type",
+    "path": [],
+    "message": "studioId must be a string."
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations STUDIO_ID_VALIDATION should fail for too long string 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "origin": "string",
+    "code": "too_big",
+    "maximum": 128,
+    "inclusive": true,
+    "path": [],
+    "message": "Too big: expected string to have <=128 characters"
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations STUDIO_ID_VALIDATION should fail for undefined 1`] = `
+Object {
+  "error": [ZodError: [
+  {
+    "expected": "string",
+    "code": "invalid_type",
+    "path": [],
+    "message": "studioId is required."
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`Validations STUDIO_ID_VALIDATION should produce a consistent schema 1`] = `
+Object {
+  "description": undefined,
+  "type": "string",
+}
+`;

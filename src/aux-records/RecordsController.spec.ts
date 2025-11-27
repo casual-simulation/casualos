@@ -29,7 +29,10 @@ import {
 import { randomBytes } from 'tweetnacl';
 import { fromByteArray } from 'base64-js';
 import { v4 as uuid } from 'uuid';
-import { createTestSubConfiguration } from './TestUtils';
+import {
+    createTestSubConfiguration,
+    createTestPrivoConfiguration,
+} from './TestUtils';
 import { MemoryStore } from './MemoryStore';
 import { buildSubscriptionConfig } from './SubscriptionConfigBuilder';
 import type { PrivoClientInterface } from './PrivoClient';
@@ -38,6 +41,7 @@ import {
     formatV2RecordKey,
     isRecordKey,
 } from '@casual-simulation/aux-common/records/RecordKeys';
+import { success } from '@casual-simulation/aux-common';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -2692,6 +2696,12 @@ describe('RecordsController', () => {
                     humeFeatures: {
                         allowed: true,
                     },
+                    storeFeatures: {
+                        allowed: false,
+                        currencyLimits: expect.any(Object),
+                    },
+                    stripeAccountStatus: null,
+                    stripeRequirementsStatus: null,
                 },
             });
         });
@@ -2735,6 +2745,68 @@ describe('RecordsController', () => {
                     humeFeatures: {
                         allowed: true,
                     },
+                    storeFeatures: {
+                        allowed: false,
+                        currencyLimits: expect.any(Object),
+                    },
+                    stripeAccountStatus: null,
+                    stripeRequirementsStatus: null,
+                },
+            });
+        });
+
+        it('should include the configured store features', async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withStore()
+                            .withStoreMaxItems(100)
+                            .withStoreCurrencyLimit('usd', {
+                                minCost: 10,
+                                maxCost: 10000,
+                            })
+                    )
+            );
+
+            const result = await manager.getStudio('studioId', 'userId');
+
+            expect(result).toEqual({
+                success: true,
+                studio: {
+                    id: 'studioId',
+                    displayName: 'studio',
+                    logoUrl: 'https://example.com/logo.png',
+                    comId: 'comId1',
+                    comIdConfig: {
+                        allowedStudioCreators: 'anyone',
+                    },
+                    playerConfig: {
+                        ab1BootstrapURL: 'https://example.com/ab1',
+                    },
+                    comIdFeatures: {
+                        allowed: false,
+                    },
+                    loomFeatures: {
+                        allowed: false,
+                    },
+                    humeFeatures: {
+                        allowed: true,
+                    },
+                    storeFeatures: {
+                        allowed: true,
+                        maxItems: 100,
+                        currencyLimits: {
+                            usd: {
+                                maxCost: 10000,
+                                minCost: 10,
+                            },
+                        },
+                    },
+                    stripeAccountStatus: null,
+                    stripeRequirementsStatus: null,
                 },
             });
         });
@@ -2776,6 +2848,12 @@ describe('RecordsController', () => {
                     humeFeatures: {
                         allowed: true,
                     },
+                    storeFeatures: {
+                        allowed: false,
+                        currencyLimits: expect.any(Object),
+                    },
+                    stripeAccountStatus: null,
+                    stripeRequirementsStatus: null,
                 },
             });
         });
@@ -2795,7 +2873,6 @@ describe('RecordsController', () => {
                 appId: 'appId',
                 privateKey: 'privateKey',
             });
-
             const result = await manager.getStudio('studioId', 'userId');
 
             expect(result).toEqual({
@@ -2817,12 +2894,71 @@ describe('RecordsController', () => {
                     loomFeatures: {
                         allowed: true,
                     },
-                    humeFeatures: {
-                        allowed: true,
-                    },
                     loomConfig: {
                         appId: 'appId',
                     },
+                    humeFeatures: {
+                        allowed: true,
+                    },
+                    storeFeatures: {
+                        allowed: false,
+                        currencyLimits: expect.any(Object),
+                    },
+                    stripeAccountStatus: null,
+                    stripeRequirementsStatus: null,
+                },
+            });
+        });
+
+        it('should include the studio stripe account status', async () => {
+            await store.updateStudio({
+                id: 'studioId',
+                displayName: 'studio',
+                logoUrl: 'https://example.com/logo.png',
+                comId: 'comId1',
+                comIdConfig: {
+                    allowedStudioCreators: 'anyone',
+                },
+                playerConfig: {
+                    ab1BootstrapURL: 'https://example.com/ab1',
+                },
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                stripeAccountId: 'acct_123',
+                stripeAccountRequirementsStatus: 'incomplete',
+                stripeAccountStatus: 'pending',
+            });
+
+            const result = await manager.getStudio('studioId', 'userId');
+
+            expect(result).toEqual({
+                success: true,
+                studio: {
+                    id: 'studioId',
+                    displayName: 'studio',
+                    logoUrl: 'https://example.com/logo.png',
+                    comId: 'comId1',
+                    comIdConfig: {
+                        allowedStudioCreators: 'anyone',
+                    },
+                    playerConfig: {
+                        ab1BootstrapURL: 'https://example.com/ab1',
+                    },
+                    comIdFeatures: {
+                        allowed: false,
+                    },
+                    loomFeatures: {
+                        allowed: false,
+                    },
+                    humeFeatures: {
+                        allowed: true,
+                    },
+                    storeFeatures: {
+                        allowed: false,
+                        currencyLimits: expect.any(Object),
+                    },
+                    stripeAccountStatus: 'pending',
+                    stripeRequirementsStatus: 'incomplete',
                 },
             });
         });
@@ -2862,6 +2998,12 @@ describe('RecordsController', () => {
                     humeFeatures: {
                         allowed: true,
                     },
+                    storeFeatures: {
+                        allowed: false,
+                        currencyLimits: expect.any(Object),
+                    },
+                    stripeAccountStatus: null,
+                    stripeRequirementsStatus: null,
                 },
             });
         });
@@ -2909,6 +3051,12 @@ describe('RecordsController', () => {
                     humeConfig: {
                         apiKey: 'apiKey',
                     },
+                    storeFeatures: {
+                        allowed: false,
+                        currencyLimits: expect.any(Object),
+                    },
+                    stripeAccountStatus: null,
+                    stripeRequirementsStatus: null,
                 },
             });
         });
@@ -4896,6 +5044,163 @@ describe('RecordsController', () => {
                     studioId: 'studioId',
                 },
             ]);
+        });
+    });
+
+    describe('getWebConfig()', () => {
+        it('should return the web config with subscriptionsSupported and studiosSupported set to true when subscription configuration exists', async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration();
+
+            const result = await manager.getWebConfig();
+
+            expect(result).toEqual(
+                success({
+                    version: 2,
+                    causalRepoConnectionProtocol: 'websocket',
+                    subscriptionsSupported: true,
+                    studiosSupported: true,
+                    requirePrivoLogin: false,
+                })
+            );
+        });
+
+        it('should return the web config with subscriptionsSupported and studiosSupported set to false when subscription configuration is null', async () => {
+            store.subscriptionConfiguration = null;
+
+            const result = await manager.getWebConfig();
+
+            expect(result).toEqual(
+                success({
+                    version: 2,
+                    causalRepoConnectionProtocol: 'websocket',
+                    subscriptionsSupported: false,
+                    studiosSupported: false,
+                    requirePrivoLogin: false,
+                })
+            );
+        });
+
+        it('should return the web config with requirePrivoLogin set to true when privo configuration exists', async () => {
+            store.privoConfiguration = createTestPrivoConfiguration();
+
+            const result = await manager.getWebConfig();
+
+            expect(result).toEqual(
+                success({
+                    version: 2,
+                    causalRepoConnectionProtocol: 'websocket',
+                    subscriptionsSupported: true,
+                    studiosSupported: true,
+                    requirePrivoLogin: true,
+                })
+            );
+        });
+
+        it('should return the web config with requirePrivoLogin set to false when privo configuration is null', async () => {
+            store.privoConfiguration = null;
+
+            const result = await manager.getWebConfig();
+
+            expect(result).toEqual(
+                success({
+                    version: 2,
+                    causalRepoConnectionProtocol: 'websocket',
+                    subscriptionsSupported: true,
+                    studiosSupported: true,
+                    requirePrivoLogin: false,
+                })
+            );
+        });
+
+        it('should merge the web config properties from the configuration store', async () => {
+            store.webConfig = {
+                version: 2,
+                causalRepoConnectionProtocol: 'apiary-aws',
+                vmOrigin: 'https://vm.example.com',
+                authOrigin: 'https://auth.example.com',
+            };
+
+            const result = await manager.getWebConfig();
+
+            expect(result).toEqual(
+                success({
+                    version: 2,
+                    causalRepoConnectionProtocol: 'apiary-aws',
+                    vmOrigin: 'https://vm.example.com',
+                    authOrigin: 'https://auth.example.com',
+                    subscriptionsSupported: true,
+                    studiosSupported: true,
+                    requirePrivoLogin: false,
+                })
+            );
+        });
+
+        it('should handle all configuration states correctly', async () => {
+            store.subscriptionConfiguration = null;
+            store.privoConfiguration = createTestPrivoConfiguration();
+            store.webConfig = {
+                version: 1,
+                causalRepoConnectionProtocol: 'websocket',
+                disableCollaboration: true,
+                jitsiAppName: 'my-jitsi-app',
+            };
+
+            const result = await manager.getWebConfig();
+
+            expect(result).toEqual(
+                success({
+                    version: 1,
+                    causalRepoConnectionProtocol: 'websocket',
+                    disableCollaboration: true,
+                    jitsiAppName: 'my-jitsi-app',
+                    subscriptionsSupported: false,
+                    studiosSupported: false,
+                    requirePrivoLogin: true,
+                })
+            );
+        });
+
+        it('should return default config when webConfig is null', async () => {
+            store.webConfig = null;
+            store.subscriptionConfiguration = null;
+            store.privoConfiguration = null;
+
+            const result = await manager.getWebConfig();
+
+            expect(result).toEqual(
+                success({
+                    version: 2,
+                    causalRepoConnectionProtocol: 'websocket',
+                    subscriptionsSupported: false,
+                    studiosSupported: false,
+                    requirePrivoLogin: false,
+                })
+            );
+        });
+
+        it('should handle partial web config properties', async () => {
+            store.webConfig = {
+                version: 2,
+                causalRepoConnectionProtocol: 'websocket',
+                playerMode: 'builder',
+                logoUrl: 'https://example.com/logo.png',
+                logoTitle: 'My App',
+            };
+
+            const result = await manager.getWebConfig();
+
+            expect(result).toEqual(
+                success({
+                    version: 2,
+                    causalRepoConnectionProtocol: 'websocket',
+                    playerMode: 'builder',
+                    logoUrl: 'https://example.com/logo.png',
+                    logoTitle: 'My App',
+                    subscriptionsSupported: true,
+                    studiosSupported: true,
+                    requirePrivoLogin: false,
+                })
+            );
         });
     });
 });

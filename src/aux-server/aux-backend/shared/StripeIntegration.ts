@@ -16,19 +16,29 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import type {
+    CreateStripeAccountSessionRequest,
+    StripeAccount,
+    StripeAccountLink,
+    StripeAccountSession,
     StripeCheckoutRequest,
     StripeCheckoutResponse,
+    StripeCreateAccountLinkRequest,
+    StripeCreateAccountRequest,
     StripeCreateCustomerRequest,
     StripeCreateCustomerResponse,
+    StripeCreateLoginLinkRequest,
+    StripeCreateTransferRequest,
     StripeEvent,
     StripeInterface,
     StripeListActiveSubscriptionsResponse,
+    StripePaymentIntent,
     StripePortalRequest,
     StripePortalResponse,
     StripePrice,
     StripeProduct,
     StripeSubscription,
     StripeSubscriptionItem,
+    StripeTransfer,
 } from '@casual-simulation/aux-records';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 import type { SpanOptions } from '@opentelemetry/api';
@@ -66,6 +76,83 @@ export class StripeIntegration implements StripeInterface {
         this._testClock = testClock;
     }
 
+    async getPaymentIntentById(id: string): Promise<StripePaymentIntent> {
+        return await this._stripe.paymentIntents.retrieve(id);
+    }
+
+    test?: StripeInterface;
+
+    @traced(TRACE_NAME, SPAN_OPTIONS)
+    async getCheckoutSessionById(id: string): Promise<StripeCheckoutResponse> {
+        const session = await this._stripe.checkout.sessions.retrieve(id, {
+            expand: ['invoice'],
+        });
+
+        return this._convertCheckoutSession(session);
+    }
+
+    @traced(TRACE_NAME, SPAN_OPTIONS)
+    async createAccountLink(
+        request: StripeCreateAccountLinkRequest
+    ): Promise<StripeAccountLink> {
+        const link = await this._stripe.accountLinks.create({
+            account: request.account,
+            refresh_url: request.refresh_url,
+            return_url: request.return_url,
+            type: request.type,
+        });
+
+        return {
+            url: link.url,
+        };
+    }
+
+    @traced(TRACE_NAME, SPAN_OPTIONS)
+    async createLoginLink(
+        request: StripeCreateLoginLinkRequest
+    ): Promise<StripeAccountLink> {
+        const link = await this._stripe.accounts.createLoginLink(
+            request.account
+        );
+
+        return {
+            url: link.url,
+        };
+    }
+
+    @traced(TRACE_NAME, SPAN_OPTIONS)
+    async createAccountSession(
+        request: CreateStripeAccountSessionRequest
+    ): Promise<StripeAccountSession> {
+        const session = await this._stripe.accountSessions.create({
+            account: request.account,
+            components: request.components,
+        });
+
+        return {
+            account: session.account,
+            client_secret: session.client_secret,
+            expires_at: session.expires_at,
+        };
+    }
+
+    @traced(TRACE_NAME, SPAN_OPTIONS)
+    async createAccount(
+        request: StripeCreateAccountRequest
+    ): Promise<StripeAccount> {
+        const account = await this._stripe.accounts.create({
+            controller: request.controller,
+            type: request.type,
+            metadata: request.metadata,
+        });
+        return this._convertToAccount(account);
+    }
+
+    async getAccountById(id: string): Promise<StripeAccount> {
+        const account = await this._stripe.accounts.retrieve(id);
+        return this._convertToAccount(account);
+    }
+
     @traced(TRACE_NAME, SPAN_OPTIONS)
     async listPricesForProduct(product: string): Promise<StripePrice[]> {
         const prices = await this._stripe.prices.list({
@@ -88,13 +175,17 @@ export class StripeIntegration implements StripeInterface {
     async createCheckoutSession(
         request: StripeCheckoutRequest
     ): Promise<StripeCheckoutResponse> {
-        const result = await this._stripe.checkout.sessions.create({
-            ...request,
-        });
+        const { connect, ...rest } = request;
+        const result = await this._stripe.checkout.sessions.create(
+            {
+                ...rest,
+            },
+            {
+                stripeAccount: connect?.stripeAccount,
+            }
+        );
 
-        return {
-            url: result.url,
-        };
+        return this._convertCheckoutSession(result);
     }
 
     @traced(TRACE_NAME, SPAN_OPTIONS)
@@ -108,6 +199,22 @@ export class StripeIntegration implements StripeInterface {
         return {
             url: result.url,
         };
+    }
+
+    async createTransfer(
+        request: StripeCreateTransferRequest
+    ): Promise<StripeTransfer> {
+        const result = await this._stripe.transfers.create({
+            amount: request.amount,
+            currency: request.currency,
+            destination: request.destination,
+            transfer_group: request.transferGroup,
+            source_transaction: request.sourceTransaction,
+            description: request.description,
+            metadata: request.metadata,
+        });
+
+        return result;
     }
 
     @traced(TRACE_NAME, SPAN_OPTIONS)
@@ -152,8 +259,8 @@ export class StripeIntegration implements StripeInterface {
                 id: s.id,
                 status: s.status,
                 start_date: s.start_date,
-                current_period_start: s.current_period_start,
-                current_period_end: s.current_period_end,
+                current_period_start: s.items.data[0].current_period_start,
+                current_period_end: s.items.data[0].current_period_end,
                 cancel_at: s.cancel_at,
                 canceled_at: s.canceled_at,
                 ended_at: s.ended_at,
@@ -191,6 +298,77 @@ export class StripeIntegration implements StripeInterface {
     async getSubscriptionById(
         id: string
     ): Promise<Omit<StripeSubscription, 'items'>> {
-        return await this._stripe.subscriptions.retrieve(id);
+        const s = await this._stripe.subscriptions.retrieve(id);
+
+        return {
+            id: s.id,
+            status: s.status,
+            start_date: s.start_date,
+            current_period_start: s.items.data[0].current_period_start,
+            current_period_end: s.items.data[0].current_period_end,
+            cancel_at: s.cancel_at,
+            canceled_at: s.canceled_at,
+            ended_at: s.ended_at,
+        };
+    }
+
+    private _convertToAccount(
+        account: Stripe.Response<Stripe.Account>
+    ): StripeAccount {
+        return {
+            id: account.id,
+            charges_enabled: account.charges_enabled,
+            metadata: account.metadata,
+            requirements: account.requirements,
+        };
+    }
+
+    private _convertCheckoutSession(
+        session: Stripe.Checkout.Session
+    ): StripeCheckoutResponse {
+        return {
+            id: session.id,
+            url: session.url,
+            status: session.status,
+            payment_status: session.payment_status,
+
+            invoice:
+                session.invoice && typeof session.invoice === 'object'
+                    ? {
+                          id: session.invoice.id,
+                          status: session.invoice.status,
+                          currency: session.invoice.currency,
+                          customer:
+                              typeof session.invoice.customer === 'string'
+                                  ? session.invoice.customer
+                                  : session.invoice.customer.id,
+                          description: session.invoice.description,
+                          hosted_invoice_url:
+                              session.invoice.hosted_invoice_url,
+                          invoice_pdf: session.invoice.invoice_pdf,
+                          paid: session.invoice.status === 'paid',
+                          subscription:
+                              typeof session.invoice.parent.subscription_details
+                                  .subscription === 'string'
+                                  ? session.invoice.parent.subscription_details
+                                        .subscription
+                                  : session.invoice.parent.subscription_details
+                                        .subscription.id,
+                          subtotal: session.invoice.subtotal,
+                          total: session.invoice.total,
+                          tax: session.invoice.total_taxes[0].amount,
+                          lines: {
+                              object: 'list',
+                              data: session.invoice.lines.data.map((l) => ({
+                                  id: l.id,
+                                  price: {
+                                      id: l.pricing.price_details.price,
+                                      product: l.pricing.price_details.product,
+                                  },
+                              })),
+                          },
+                      }
+                    : null,
+        };
     }
 }

@@ -48,7 +48,7 @@ export interface Text3DFont {
 
 export class Text3D extends Object3D {
     name = 'Text3D';
-    
+
     // Map of loaded font textures.
     public static FontTextures: {
         [texturePath: string]: Texture;
@@ -154,7 +154,11 @@ export class Text3D extends Object3D {
         this.updateBoundingBox();
     }
 
-    public setPositionForObject(obj: Object3D, gridScale: number, objCenter: Vector3 = null) {
+    public setPositionForObject(
+        obj: Object3D,
+        gridScale: number,
+        objCenter: Vector3 = null
+    ) {
         this.updateBoundingBox();
 
         const tempPos = new Vector3();
@@ -606,9 +610,8 @@ export class Text3D extends Object3D {
                     targetCenter.z +
                         targetSize.z * positionMultiplier +
                         (anchor === 'floatingBillboard'
-                            ? (Text3D.floatingBillboardExtraSpace * gridScale)
-                            : (Text3D.floatingExtraSpace * gridScale)
-                        )
+                            ? Text3D.floatingBillboardExtraSpace * gridScale
+                            : Text3D.floatingExtraSpace * gridScale)
                 )
             );
 

@@ -136,6 +136,12 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
         return <HTMLElement>this.$refs.miniMapView;
     }
 
+    getMapViewportTarget(): HTMLElement {
+        return this.mapView.querySelector(
+            '.esri-view-root > .esri-view-surface'
+        );
+    }
+
     getMiniMapViewportTarget(): HTMLElement {
         return this.miniMapView.querySelector(
             '.esri-view-root > .esri-view-surface'
@@ -426,7 +432,7 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
         });
 
         // Disable double-click zooming functionality for this map view.
-        this._mapView.on("double-click", (event) => {
+        this._mapView.on('double-click', (event) => {
             event.stopPropagation();
         });
 
@@ -503,7 +509,7 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
         });
 
         // Disable double-click zooming functionality for this map view.
-        this._miniMapView.on("double-click", (event) => {
+        this._miniMapView.on('double-click', (event) => {
             event.stopPropagation();
         });
 

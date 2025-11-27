@@ -93,7 +93,13 @@ export type KnownErrorCodes =
     | 'invalid_webhook_target'
     | 'took_too_long'
     | 'parent_not_found'
-    | 'service_unavailable';
+    | 'service_unavailable'
+    | 'insufficient_funds'
+    | 'item_already_purchased'
+    | 'item_not_found'
+    | 'store_disabled'
+    | 'currency_not_supported'
+    | 'invalid_user';
 
 /**
  * Gets the status code that should be used for the given response.
@@ -159,8 +165,6 @@ export function getStatusCode(
             return 400;
         } else if (response.errorCode === 'address_type_not_supported') {
             return 501;
-        } else if (response.errorCode === 'invalid_webhook_target') {
-            return 501;
         } else if (response.errorCode === 'server_error') {
             return 500;
         } else if (response.errorCode === 'unauthorized_to_create_record_key') {
@@ -196,6 +200,8 @@ export function getStatusCode(
         } else if (response.errorCode === 'message_not_found') {
             return 404;
         } else if (response.errorCode === 'not_found') {
+            return 404;
+        } else if (response.errorCode === 'item_not_found') {
             return 404;
         } else if (response.errorCode === 'invalid_connection_state') {
             return 500;

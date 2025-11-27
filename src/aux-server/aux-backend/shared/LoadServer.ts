@@ -49,7 +49,7 @@ export const SNS_TOPIC_ARN = process.env.SNS_TOPIC_ARN;
  * @returns
  */
 export function constructServerlessAwsServerBuilder() {
-    const dynamicConfig: ServerConfig = {
+    const dynamicConfig: Partial<ServerConfig> = {
         s3: {
             region: REGION,
             filesBucket: FILES_BUCKET,
@@ -121,7 +121,9 @@ export function constructServerlessAwsServerBuilder() {
 /**
  * Loads the server and configures it.
  */
-export function constructServerBuilder(dynamicConfig: ServerConfig = {}) {
+export function constructServerBuilder(
+    dynamicConfig: Partial<ServerConfig> = {}
+) {
     const config = loadConfig(true, dynamicConfig);
 
     const allowedApiOrigins = new Set([
@@ -219,6 +221,10 @@ export function constructServerBuilder(dynamicConfig: ServerConfig = {}) {
         builder.usePrismaAndRedisInstRecords();
     }
 
+    if (config.tigerBeetle) {
+        builder.useTigerBeetle();
+    }
+
     if (config.ai) {
         builder.useAI();
     }
@@ -249,6 +255,10 @@ export function constructServerBuilder(dynamicConfig: ServerConfig = {}) {
 
     if (config.rekognition?.moderation && config.s3) {
         builder.useRekognitionModeration();
+    }
+
+    if (config.tigerBeetle) {
+        builder.useTigerBeetle();
     }
 
     if (config.webhooks) {

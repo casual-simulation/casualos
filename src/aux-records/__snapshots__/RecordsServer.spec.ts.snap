@@ -1,8 +1,28 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`RecordsServer GET /api/v2/procedures should return the list of procedures 1`] = `
 Object {
   "procedures": Array [
+    Object {
+      "name": "playerIndex",
+      "origins": true,
+    },
+    Object {
+      "name": "playerVmIframe",
+      "origins": true,
+    },
+    Object {
+      "name": "playerVmIframeDom",
+      "origins": true,
+    },
+    Object {
+      "name": "authIndex",
+      "origins": true,
+    },
+    Object {
+      "name": "authIframe",
+      "origins": true,
+    },
     Object {
       "inputs": Object {
         "schema": Object {
@@ -638,7 +658,6 @@ Object {
           },
           "markers": Object {
             "maxLength": 10,
-            "minLength": 1,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -750,7 +769,6 @@ Object {
           },
           "markers": Object {
             "maxLength": 10,
-            "minLength": 1,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -904,7 +922,6 @@ Object {
           },
           "markers": Object {
             "maxLength": 10,
-            "minLength": 1,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -941,7 +958,6 @@ Object {
           },
           "markers": Object {
             "maxLength": 10,
-            "minLength": 1,
             "schema": Object {
               "type": "string",
             },
@@ -1125,7 +1141,6 @@ Object {
           },
           "markers": Object {
             "maxLength": 10,
-            "minLength": 1,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -1175,6 +1190,7 @@ Object {
           },
           "item": Object {
             "discriminator": "targetResourceKind",
+            "optional": false,
             "options": Array [
               Object {
                 "schema": Object {
@@ -1187,7 +1203,6 @@ Object {
                     ],
                     "hasDefault": true,
                     "maxLength": 10,
-                    "minLength": 1,
                     "optional": true,
                     "schema": Object {
                       "type": "string",
@@ -1221,7 +1236,6 @@ Object {
                     ],
                     "hasDefault": true,
                     "maxLength": 10,
-                    "minLength": 1,
                     "optional": true,
                     "schema": Object {
                       "type": "string",
@@ -1337,7 +1351,18 @@ Object {
       "origins": "api",
       "query": Object {
         "catchall": Object {
-          "type": "string",
+          "options": Array [
+            Object {
+              "type": "string",
+            },
+            Object {
+              "schema": Object {
+                "type": "string",
+              },
+              "type": "array",
+            },
+          ],
+          "type": "union",
         },
         "schema": Object {
           "address": Object {
@@ -1461,6 +1486,7 @@ Object {
             "type": "array",
           },
           "item": Object {
+            "optional": false,
             "schema": Object {
               "address": Object {
                 "type": "string",
@@ -1474,7 +1500,6 @@ Object {
                 ],
                 "hasDefault": true,
                 "maxLength": 10,
-                "minLength": 1,
                 "optional": true,
                 "schema": Object {
                   "type": "string",
@@ -1985,13 +2010,13 @@ Object {
             "type": "array",
           },
           "item": Object {
+            "optional": false,
             "schema": Object {
               "address": Object {
                 "type": "string",
               },
               "markers": Object {
                 "maxLength": 10,
-                "minLength": 1,
                 "schema": Object {
                   "type": "string",
                 },
@@ -2241,7 +2266,6 @@ Object {
               },
               "markers": Object {
                 "maxLength": 10,
-                "minLength": 1,
                 "optional": true,
                 "schema": Object {
                   "type": "string",
@@ -2517,13 +2541,13 @@ Object {
             "type": "array",
           },
           "item": Object {
+            "optional": false,
             "schema": Object {
               "address": Object {
                 "type": "string",
               },
               "markers": Object {
                 "maxLength": 10,
-                "minLength": 1,
                 "schema": Object {
                   "type": "string",
                 },
@@ -2813,6 +2837,9 @@ Object {
                   "package.version",
                   "search",
                   "database",
+                  "purchasableItem",
+                  "contract",
+                  "invoice",
                 ],
               },
             },
@@ -3022,13 +3049,13 @@ Object {
             "type": "array",
           },
           "item": Object {
+            "optional": false,
             "schema": Object {
               "address": Object {
                 "type": "string",
               },
               "markers": Object {
                 "maxLength": 10,
-                "minLength": 1,
                 "schema": Object {
                   "type": "string",
                 },
@@ -3991,6 +4018,143 @@ Object {
                 },
                 "type": "object",
               },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "delete",
+                      "list",
+                      "purchase",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "purchasableItem",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
+                    ],
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "delete",
+                      "list",
+                      "purchase",
+                      "cancel",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "contract",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
+                    ],
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "delete",
+                      "list",
+                      "approve",
+                      "cancel",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "invoice",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
+                    ],
+                  },
+                },
+                "type": "object",
+              },
             ],
             "type": "union",
           },
@@ -4066,6 +4230,9 @@ Object {
               "package.version",
               "search",
               "database",
+              "purchasableItem",
+              "contract",
+              "invoice",
             ],
           },
         },
@@ -4354,6 +4521,7 @@ Object {
                       "type": "string",
                     },
                     Object {
+                      "minLength": 1,
                       "schema": Object {
                         "options": Array [
                           Object {
@@ -4481,6 +4649,7 @@ Object {
                       "type": "string",
                     },
                     Object {
+                      "minLength": 1,
                       "schema": Object {
                         "options": Array [
                           Object {
@@ -5333,6 +5502,34 @@ Object {
     },
     Object {
       "http": Object {
+        "method": "POST",
+        "path": "/api/v2/studios/store/manage",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "studioId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getManageStudioStoreLink",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/config",
+      },
+      "inputs": Object {
+        "schema": Object {},
+        "type": "object",
+      },
+      "name": "getWebConfig",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
         "method": "GET",
         "path": "/api/v2/player/config",
       },
@@ -5346,6 +5543,31 @@ Object {
       },
       "name": "getPlayerConfig",
       "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/balances",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "contractId": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "studioId": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "userId": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getBalances",
+      "origins": "account",
     },
     Object {
       "http": Object {
@@ -5467,6 +5689,221 @@ Object {
     },
     Object {
       "http": Object {
+        "method": "POST",
+        "path": "/api/v2/xp/account/manage",
+      },
+      "inputs": Object {
+        "schema": Object {},
+        "type": "object",
+      },
+      "name": "getManageXpAccountLink",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/stripe/login",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "studioId": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getStripeLoginLink",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/contract",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "item": Object {
+            "optional": false,
+            "schema": Object {
+              "address": Object {
+                "type": "string",
+              },
+              "description": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
+              },
+              "holdingUser": Object {
+                "type": "string",
+              },
+              "initialValue": Object {
+                "type": "number",
+              },
+              "markers": Object {
+                "defaultValue": Array [
+                  "private",
+                ],
+                "hasDefault": true,
+                "maxLength": 10,
+                "optional": true,
+                "schema": Object {
+                  "type": "string",
+                },
+                "type": "array",
+              },
+              "rate": Object {
+                "type": "number",
+              },
+            },
+            "type": "object",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "recordContract",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/contract",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getContract",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/contract/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "marker": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "sort": Object {
+            "optional": true,
+            "type": "enum",
+            "values": Array [
+              "ascending",
+              "descending",
+            ],
+          },
+        },
+        "type": "object",
+      },
+      "name": "listContracts",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "DELETE",
+        "path": "/api/v2/records/contract",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "eraseContract",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/contract/cancel",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "cancelContract",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
         "method": "GET",
         "path": "/api/v2/records/insts/list",
       },
@@ -5488,6 +5925,116 @@ Object {
         "type": "object",
       },
       "name": "listInsts",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/contract/invoice",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "amount": Object {
+            "type": "number",
+          },
+          "contractId": Object {
+            "type": "string",
+          },
+          "note": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "payoutDestination": Object {
+            "type": "enum",
+            "values": Array [
+              "account",
+              "stripe",
+            ],
+          },
+        },
+        "type": "object",
+      },
+      "name": "invoiceContract",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/contract/invoice/pay",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "invoiceId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "payContractInvoice",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/financial/payouts",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "amount": Object {
+            "optional": true,
+            "type": "number",
+          },
+          "destination": Object {
+            "type": "enum",
+            "values": Array [
+              "stripe",
+              "cash",
+            ],
+          },
+          "studioId": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "userId": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "payoutAccount",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/contract/invoices",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "contractId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listContractInvoices",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/contract/invoice/cancel",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "invoiceId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "cancelInvoice",
       "origins": "api",
     },
     Object {
@@ -5617,6 +6164,347 @@ Object {
       },
       "name": "listProcedures",
       "origins": true,
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/purchasableItems",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getPurchasableItem",
+      "origins": true,
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/purchasableItems/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "marker": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "sort": Object {
+            "optional": true,
+            "type": "enum",
+            "values": Array [
+              "ascending",
+              "descending",
+            ],
+          },
+        },
+        "type": "object",
+      },
+      "name": "listPurchasableItems",
+      "origins": true,
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/purchasableItems",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "item": Object {
+            "schema": Object {
+              "address": Object {
+                "type": "string",
+              },
+              "cost": Object {
+                "type": "number",
+              },
+              "currency": Object {
+                "type": "string",
+              },
+              "description": Object {
+                "type": "string",
+              },
+              "imageUrls": Object {
+                "maxLength": 8,
+                "schema": Object {
+                  "type": "string",
+                },
+                "type": "array",
+              },
+              "markers": Object {
+                "maxLength": 10,
+                "schema": Object {
+                  "type": "string",
+                },
+                "type": "array",
+              },
+              "name": Object {
+                "type": "string",
+              },
+              "redirectUrl": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
+              },
+              "roleGrantTimeMs": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "number",
+              },
+              "roleName": Object {
+                "type": "string",
+              },
+              "taxCode": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
+              },
+            },
+            "type": "object",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "recordPurchasableItem",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/purchasableItems/erase",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "erasePurchasableItem",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/purchasableItems/purchase",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "item": Object {
+            "schema": Object {
+              "address": Object {
+                "type": "string",
+              },
+              "currency": Object {
+                "type": "string",
+              },
+              "expectedCost": Object {
+                "type": "number",
+              },
+            },
+            "type": "object",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "returnUrl": Object {
+            "type": "string",
+          },
+          "successUrl": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "purchaseItem",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/contract/purchase",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "contract": Object {
+            "schema": Object {
+              "address": Object {
+                "type": "string",
+              },
+              "currency": Object {
+                "defaultValue": "usd",
+                "hasDefault": true,
+                "type": "string",
+              },
+              "expectedCost": Object {
+                "type": "number",
+              },
+            },
+            "type": "object",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "returnUrl": Object {
+            "type": "string",
+          },
+          "successUrl": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "purchaseContract",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/contract/pricing",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getContractPricing",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/checkoutSession/fulfill",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "activation": Object {
+            "type": "enum",
+            "values": Array [
+              "now",
+              "later",
+            ],
+          },
+          "sessionId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "fulfillCheckoutSession",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/activationKey/claim",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "activationKey": Object {
+            "type": "string",
+          },
+          "target": Object {
+            "type": "enum",
+            "values": Array [
+              "self",
+              "guest",
+            ],
+          },
+        },
+        "type": "object",
+      },
+      "name": "claimActivationKey",
+      "origins": "account",
     },
   ],
   "success": true,
@@ -5627,6 +6515,26 @@ exports[`RecordsServer GET /api/v2/procedures should support procedures 1`] = `
 Object {
   "procedures": Array [
     Object {
+      "name": "playerIndex",
+      "origins": true,
+    },
+    Object {
+      "name": "playerVmIframe",
+      "origins": true,
+    },
+    Object {
+      "name": "playerVmIframeDom",
+      "origins": true,
+    },
+    Object {
+      "name": "authIndex",
+      "origins": true,
+    },
+    Object {
+      "name": "authIframe",
+      "origins": true,
+    },
+    Object {
       "inputs": Object {
         "schema": Object {
           "userId": Object {
@@ -6261,7 +7169,6 @@ Object {
           },
           "markers": Object {
             "maxLength": 10,
-            "minLength": 1,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -6373,7 +7280,6 @@ Object {
           },
           "markers": Object {
             "maxLength": 10,
-            "minLength": 1,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -6527,7 +7433,6 @@ Object {
           },
           "markers": Object {
             "maxLength": 10,
-            "minLength": 1,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -6564,7 +7469,6 @@ Object {
           },
           "markers": Object {
             "maxLength": 10,
-            "minLength": 1,
             "schema": Object {
               "type": "string",
             },
@@ -6748,7 +7652,6 @@ Object {
           },
           "markers": Object {
             "maxLength": 10,
-            "minLength": 1,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -6798,6 +7701,7 @@ Object {
           },
           "item": Object {
             "discriminator": "targetResourceKind",
+            "optional": false,
             "options": Array [
               Object {
                 "schema": Object {
@@ -6810,7 +7714,6 @@ Object {
                     ],
                     "hasDefault": true,
                     "maxLength": 10,
-                    "minLength": 1,
                     "optional": true,
                     "schema": Object {
                       "type": "string",
@@ -6844,7 +7747,6 @@ Object {
                     ],
                     "hasDefault": true,
                     "maxLength": 10,
-                    "minLength": 1,
                     "optional": true,
                     "schema": Object {
                       "type": "string",
@@ -6960,7 +7862,18 @@ Object {
       "origins": "api",
       "query": Object {
         "catchall": Object {
-          "type": "string",
+          "options": Array [
+            Object {
+              "type": "string",
+            },
+            Object {
+              "schema": Object {
+                "type": "string",
+              },
+              "type": "array",
+            },
+          ],
+          "type": "union",
         },
         "schema": Object {
           "address": Object {
@@ -7084,6 +7997,7 @@ Object {
             "type": "array",
           },
           "item": Object {
+            "optional": false,
             "schema": Object {
               "address": Object {
                 "type": "string",
@@ -7097,7 +8011,6 @@ Object {
                 ],
                 "hasDefault": true,
                 "maxLength": 10,
-                "minLength": 1,
                 "optional": true,
                 "schema": Object {
                   "type": "string",
@@ -7608,13 +8521,13 @@ Object {
             "type": "array",
           },
           "item": Object {
+            "optional": false,
             "schema": Object {
               "address": Object {
                 "type": "string",
               },
               "markers": Object {
                 "maxLength": 10,
-                "minLength": 1,
                 "schema": Object {
                   "type": "string",
                 },
@@ -7864,7 +8777,6 @@ Object {
               },
               "markers": Object {
                 "maxLength": 10,
-                "minLength": 1,
                 "optional": true,
                 "schema": Object {
                   "type": "string",
@@ -8140,13 +9052,13 @@ Object {
             "type": "array",
           },
           "item": Object {
+            "optional": false,
             "schema": Object {
               "address": Object {
                 "type": "string",
               },
               "markers": Object {
                 "maxLength": 10,
-                "minLength": 1,
                 "schema": Object {
                   "type": "string",
                 },
@@ -8436,6 +9348,9 @@ Object {
                   "package.version",
                   "search",
                   "database",
+                  "purchasableItem",
+                  "contract",
+                  "invoice",
                 ],
               },
             },
@@ -8645,13 +9560,13 @@ Object {
             "type": "array",
           },
           "item": Object {
+            "optional": false,
             "schema": Object {
               "address": Object {
                 "type": "string",
               },
               "markers": Object {
                 "maxLength": 10,
-                "minLength": 1,
                 "schema": Object {
                   "type": "string",
                 },
@@ -9614,6 +10529,143 @@ Object {
                 },
                 "type": "object",
               },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "delete",
+                      "list",
+                      "purchase",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "purchasableItem",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
+                    ],
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "delete",
+                      "list",
+                      "purchase",
+                      "cancel",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "contract",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
+                    ],
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "delete",
+                      "list",
+                      "approve",
+                      "cancel",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "invoice",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
+                    ],
+                  },
+                },
+                "type": "object",
+              },
             ],
             "type": "union",
           },
@@ -9689,6 +10741,9 @@ Object {
               "package.version",
               "search",
               "database",
+              "purchasableItem",
+              "contract",
+              "invoice",
             ],
           },
         },
@@ -9977,6 +11032,7 @@ Object {
                       "type": "string",
                     },
                     Object {
+                      "minLength": 1,
                       "schema": Object {
                         "options": Array [
                           Object {
@@ -10104,6 +11160,7 @@ Object {
                       "type": "string",
                     },
                     Object {
+                      "minLength": 1,
                       "schema": Object {
                         "options": Array [
                           Object {
@@ -10956,6 +12013,34 @@ Object {
     },
     Object {
       "http": Object {
+        "method": "POST",
+        "path": "/api/v2/studios/store/manage",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "studioId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getManageStudioStoreLink",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/config",
+      },
+      "inputs": Object {
+        "schema": Object {},
+        "type": "object",
+      },
+      "name": "getWebConfig",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
         "method": "GET",
         "path": "/api/v2/player/config",
       },
@@ -10969,6 +12054,31 @@ Object {
       },
       "name": "getPlayerConfig",
       "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/balances",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "contractId": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "studioId": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "userId": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getBalances",
+      "origins": "account",
     },
     Object {
       "http": Object {
@@ -11090,6 +12200,221 @@ Object {
     },
     Object {
       "http": Object {
+        "method": "POST",
+        "path": "/api/v2/xp/account/manage",
+      },
+      "inputs": Object {
+        "schema": Object {},
+        "type": "object",
+      },
+      "name": "getManageXpAccountLink",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/stripe/login",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "studioId": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getStripeLoginLink",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/contract",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "item": Object {
+            "optional": false,
+            "schema": Object {
+              "address": Object {
+                "type": "string",
+              },
+              "description": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
+              },
+              "holdingUser": Object {
+                "type": "string",
+              },
+              "initialValue": Object {
+                "type": "number",
+              },
+              "markers": Object {
+                "defaultValue": Array [
+                  "private",
+                ],
+                "hasDefault": true,
+                "maxLength": 10,
+                "optional": true,
+                "schema": Object {
+                  "type": "string",
+                },
+                "type": "array",
+              },
+              "rate": Object {
+                "type": "number",
+              },
+            },
+            "type": "object",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "recordContract",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/contract",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getContract",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/contract/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "marker": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "sort": Object {
+            "optional": true,
+            "type": "enum",
+            "values": Array [
+              "ascending",
+              "descending",
+            ],
+          },
+        },
+        "type": "object",
+      },
+      "name": "listContracts",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "DELETE",
+        "path": "/api/v2/records/contract",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "eraseContract",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/contract/cancel",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "cancelContract",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
         "method": "GET",
         "path": "/api/v2/records/insts/list",
       },
@@ -11111,6 +12436,116 @@ Object {
         "type": "object",
       },
       "name": "listInsts",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/contract/invoice",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "amount": Object {
+            "type": "number",
+          },
+          "contractId": Object {
+            "type": "string",
+          },
+          "note": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "payoutDestination": Object {
+            "type": "enum",
+            "values": Array [
+              "account",
+              "stripe",
+            ],
+          },
+        },
+        "type": "object",
+      },
+      "name": "invoiceContract",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/contract/invoice/pay",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "invoiceId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "payContractInvoice",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/financial/payouts",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "amount": Object {
+            "optional": true,
+            "type": "number",
+          },
+          "destination": Object {
+            "type": "enum",
+            "values": Array [
+              "stripe",
+              "cash",
+            ],
+          },
+          "studioId": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "userId": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "payoutAccount",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/contract/invoices",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "contractId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listContractInvoices",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/contract/invoice/cancel",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "invoiceId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "cancelInvoice",
       "origins": "api",
     },
     Object {
@@ -11240,6 +12675,347 @@ Object {
       },
       "name": "listProcedures",
       "origins": true,
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/purchasableItems",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getPurchasableItem",
+      "origins": true,
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/purchasableItems/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "marker": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "sort": Object {
+            "optional": true,
+            "type": "enum",
+            "values": Array [
+              "ascending",
+              "descending",
+            ],
+          },
+        },
+        "type": "object",
+      },
+      "name": "listPurchasableItems",
+      "origins": true,
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/purchasableItems",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "item": Object {
+            "schema": Object {
+              "address": Object {
+                "type": "string",
+              },
+              "cost": Object {
+                "type": "number",
+              },
+              "currency": Object {
+                "type": "string",
+              },
+              "description": Object {
+                "type": "string",
+              },
+              "imageUrls": Object {
+                "maxLength": 8,
+                "schema": Object {
+                  "type": "string",
+                },
+                "type": "array",
+              },
+              "markers": Object {
+                "maxLength": 10,
+                "schema": Object {
+                  "type": "string",
+                },
+                "type": "array",
+              },
+              "name": Object {
+                "type": "string",
+              },
+              "redirectUrl": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
+              },
+              "roleGrantTimeMs": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "number",
+              },
+              "roleName": Object {
+                "type": "string",
+              },
+              "taxCode": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
+              },
+            },
+            "type": "object",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "recordPurchasableItem",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/purchasableItems/erase",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "erasePurchasableItem",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/purchasableItems/purchase",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "item": Object {
+            "schema": Object {
+              "address": Object {
+                "type": "string",
+              },
+              "currency": Object {
+                "type": "string",
+              },
+              "expectedCost": Object {
+                "type": "number",
+              },
+            },
+            "type": "object",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "returnUrl": Object {
+            "type": "string",
+          },
+          "successUrl": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "purchaseItem",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/contract/purchase",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "contract": Object {
+            "schema": Object {
+              "address": Object {
+                "type": "string",
+              },
+              "currency": Object {
+                "defaultValue": "usd",
+                "hasDefault": true,
+                "type": "string",
+              },
+              "expectedCost": Object {
+                "type": "number",
+              },
+            },
+            "type": "object",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "returnUrl": Object {
+            "type": "string",
+          },
+          "successUrl": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "purchaseContract",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/contract/pricing",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getContractPricing",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/checkoutSession/fulfill",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "activation": Object {
+            "type": "enum",
+            "values": Array [
+              "now",
+              "later",
+            ],
+          },
+          "sessionId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "fulfillCheckoutSession",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/activationKey/claim",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "activationKey": Object {
+            "type": "string",
+          },
+          "target": Object {
+            "type": "enum",
+            "values": Array [
+              "self",
+              "guest",
+            ],
+          },
+        },
+        "type": "object",
+      },
+      "name": "claimActivationKey",
+      "origins": "account",
     },
   ],
   "success": true,

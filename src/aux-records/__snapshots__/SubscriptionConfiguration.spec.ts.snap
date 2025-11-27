@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`allowAllFeatures() should match the snapshot 1`] = `
 Object {
@@ -24,8 +24,21 @@ Object {
       "allowed": true,
     },
   },
+  "comId": Object {
+    "allowed": false,
+  },
+  "contracts": Object {
+    "allowed": true,
+    "currencyLimits": Object {
+      "usd": Object {
+        "maxCost": 100000,
+        "minCost": 50,
+      },
+    },
+  },
   "data": Object {
     "allowed": true,
+    "maxItemSizeInBytes": 500000,
   },
   "databases": Object {
     "allowed": true,
@@ -39,10 +52,16 @@ Object {
   "insts": Object {
     "allowed": true,
   },
+  "loom": Object {
+    "allowed": true,
+  },
   "notifications": Object {
     "allowed": true,
   },
   "packages": Object {
+    "allowed": true,
+  },
+  "policies": Object {
     "allowed": true,
   },
   "records": Object {
@@ -50,6 +69,23 @@ Object {
   },
   "search": Object {
     "allowed": true,
+  },
+  "store": Object {
+    "allowed": true,
+    "currencyLimits": Object {
+      "usd": Object {
+        "maxCost": 100000,
+        "minCost": 50,
+      },
+    },
+  },
+  "webhooks": Object {
+    "addStateTimeoutMs": 1000,
+    "allowed": true,
+    "fetchTimeoutMs": 5000,
+    "initTimeoutMs": 5000,
+    "requestTimeoutMs": 5000,
+    "tokenLifetimeMs": 300000,
   },
 }
 `;

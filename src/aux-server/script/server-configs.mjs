@@ -23,6 +23,8 @@ import {
     replaceEsbuildPlugin,
     replaceThreePlugin,
     replaceLodashPlugin,
+    replaceReactPlugin,
+    replaceJsxRuntimePlugin,
 } from '../../../script/build-helpers.mjs';
 import { GIT_HASH, GIT_TAG } from '../../../script/git-stats.mjs';
 import copy from 'esbuild-copy-static-files';
@@ -41,6 +43,7 @@ const serverExternals = [...getExternals(serverPackageJson), 'esbuild'];
 const auxWeb = path.resolve(auxServer, 'aux-web');
 const auxWebDist = path.resolve(auxWeb, 'dist');
 
+const auxPlayer = path.resolve(auxWeb, 'aux-player');
 const auxAuth = path.resolve(auxWeb, 'aux-auth');
 const auxAuthDist = path.resolve(auxAuth, 'dist');
 
@@ -119,13 +122,22 @@ export function createConfigs(dev, version) {
                     ...developmentVariables,
                     ...configVariables,
                 },
-                external: ['deno-vm'],
+                external: ['deno-vm', 'tigerbeetle-node', 'express-http-proxy'],
                 minify: !dev,
                 plugins: [
                     replaceThreePlugin(),
                     replaceLodashPlugin(),
                     ImportGlobPlugin(),
+                    replaceReactPlugin(),
+                    replaceJsxRuntimePlugin(),
                 ],
+                jsx: 'automatic',
+                jsxImportSource: 'preact',
+                tsconfigRaw: `{
+                    "compilerOptions": {
+                        "experimentalDecorators": true
+                    }
+                }`,
             },
         ],
         [

@@ -708,73 +708,71 @@ export const SEARCH_COLLECTION_FIELD = z.object({
     //     .nullable(),
     optional: z
         .boolean()
+        .optional()
+        .nullable()
         .describe(
             'When set to `true`, the field can have empty, null or missing values. Default: `false`.'
-        )
-        .optional()
-        .nullable(),
+        ),
     index: z
         .boolean()
+        .optional()
+        .nullable()
         .describe(
             'When set to `false`, the field will not be indexed in any in-memory index (e.g. search/sort/filter/facet). Default: `true`.'
-        )
-        .optional()
-        .nullable(),
+        ),
     store: z
         .boolean()
+        .optional()
+        .nullable()
         .describe(
             'When set to `false`, the field value will not be stored on disk. Default: `true`.'
-        )
-        .optional()
-        .nullable(),
+        ),
     sort: z
         .boolean()
+        .optional()
+        .nullable()
         .describe(
             'When set to true, the field will be sortable. Default: `true` for numbers, `false` otherwise.'
-        )
-        .optional()
-        .nullable(),
+        ),
     infix: z
         .boolean()
+        .optional()
+        .nullable()
         .describe(
             'When set to `true`, the field value can be infix-searched. Incurs significant memory overhead. Default: `false`.'
-        )
-        .optional()
-        .nullable(),
+        ),
     locale: z
         .string()
-        .describe(
-            'For configuring language specific tokenization, e.g. `jp` for Japanese. Default: `en` which also broadly supports most European languages.'
-        )
         .max(10)
         .optional()
-        .nullable(),
-
+        .nullable()
+        .describe(
+            'For configuring language specific tokenization, e.g. `jp` for Japanese. Default: `en` which also broadly supports most European languages.'
+        ),
     stem: z
         .boolean()
+        .optional()
+        .nullable()
         .describe(
             'When set to `true`, the field value will be stemmed. Default: `false`.'
-        )
-        .optional()
-        .nullable(),
-
+        ),
     drop: z
         .boolean()
+        .optional()
+        .nullable()
         .describe(
             'When set to `true`, the field will be dropped from the collection if it is not present in the input. Default: `false`.'
-        )
-        .optional()
-        .nullable(),
+        ),
 });
 
 export const SEARCH_COLLECTION_SCHEMA = z
     .object({})
     .catchall(SEARCH_COLLECTION_FIELD)
     .refine((val) => Object.keys(val).length < 100, {
-        message: 'Search collections cannot have more than 100 fields.',
+        error: 'Search collections cannot have more than 100 fields.',
     })
     .refine((val) => Object.keys(val).length >= 1, {
-        message: 'Search collections must have at least 1 field.',
+        error: 'Search collections must have at least 1 field.',
     });
 
 /**
@@ -834,12 +832,12 @@ export const SEARCH_DOCUMENT_SCHEMA = z
                     ])
                 )
                 .refine((val) => Object.keys(val).length < 15, {
-                    message: 'Nested objects cannot have more than 15 keys.',
+                    error: 'Nested objects cannot have more than 15 keys.',
                 }),
         ])
     )
     .refine((val) => Object.keys(val).length < 100, {
-        message: 'Search documents cannot have more than 100 keys.',
+        error: 'Search documents cannot have more than 100 keys.',
     });
 
 export interface SearchRecordInput

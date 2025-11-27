@@ -33,7 +33,7 @@ export const PointerRay_DefaultCursorVisible: boolean = false;
 
 export class PointerRay3D extends Object3D {
     name = 'PointerRay3D';
-    
+
     /**
      * The ray that this pointer ray 3d object is representing.
      */

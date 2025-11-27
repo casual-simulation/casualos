@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`lastCalledWith includes the custom mock name in the error message 1`] = `
 <d>expect(</><r>named-mock</><d>).</>not<d>.</>lastCalledWith<d>(</><g>...expected</><d>)</>

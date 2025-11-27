@@ -29,11 +29,13 @@
             }
         </style>
         <script src="https://js.stripe.com/v3" async></script>
+        <!--ssr-head-->
     </head>
 
     <body>
-        <div id="app"></div>
+        <div id="app"><!--ssr-app--></div>
         <div id="loading"></div>
+        <!--ssr-postApp-->
 
         <script type="module" src="./site/index.ts"></script>
 

@@ -46,7 +46,7 @@ export const EARTH_RADIUS = 6378137;
  */
 export class SphereGrid3D extends Object3D implements Grid3D {
     name = 'SphereGrid3D';
-    
+
     private _enabled: boolean = true;
     private _tileScale: number = 1;
     private _showGrid: boolean;

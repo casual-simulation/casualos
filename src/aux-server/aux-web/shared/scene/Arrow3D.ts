@@ -28,7 +28,7 @@ import { disposeMaterial, buildSRGBColor } from './SceneUtils';
 
 export class Arrow3D extends Object3D {
     name = 'Arrow3D';
-    
+
     public static DefaultColor: Color = buildSRGBColor(1, 1, 1);
     public static DefaultHeadWidth = 0.15;
     public static DefaultHeadLength = 0.3;
