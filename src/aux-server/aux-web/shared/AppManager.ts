@@ -697,6 +697,7 @@ export class AppManager {
             isCollaborative: !isStatic,
             allowCollaborationUpgrade: false,
             ab1BootstrapUrl: this._ab1BootstrapUrl,
+            comID: this._comId,
         };
     }
 
