@@ -257,20 +257,6 @@ export class AppManager {
                 vmOrigin = storedInst.vmOrigin ?? location.origin;
             }
 
-            if (this._db) {
-                putItem<StoredInst>(
-                    this._db,
-                    isStatic ? STATIC_INSTS_STORE : INSTS_STORE,
-                    {
-                        id: id,
-                        origin,
-                        isStatic: isStatic,
-                        vmOrigin: vmOrigin,
-                        version: storedInst ? storedInst.version : this.version,
-                    }
-                );
-            }
-
             let vm: AuxVM;
             const auxConfig: AuxConfig = {
                 configBotId: configBotId,
@@ -282,6 +268,7 @@ export class AppManager {
             };
 
             if (config.disableVM && config.enableDom) {
+                vmOrigin = location.origin;
                 const { BrowserAuxChannel } = await import(
                     '@casual-simulation/aux-vm-browser/vm/BrowserAuxChannel'
                 );
@@ -298,6 +285,20 @@ export class AppManager {
                     );
                 }
                 vm = new AuxVMImpl(id, origin, auxConfig, relaxOrigin);
+            }
+
+            if (this._db) {
+                putItem<StoredInst>(
+                    this._db,
+                    isStatic ? STATIC_INSTS_STORE : INSTS_STORE,
+                    {
+                        id: id,
+                        origin,
+                        isStatic: isStatic,
+                        vmOrigin: vmOrigin,
+                        version: storedInst ? storedInst.version : this.version,
+                    }
+                );
             }
 
             return new BotManager(origin, config, vm, this._auth);

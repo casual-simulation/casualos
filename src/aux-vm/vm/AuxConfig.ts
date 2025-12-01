@@ -93,6 +93,8 @@ export interface AuxConfigParameters {
 
     /**
      * The origin that the VM iframe should be loaded from.
+     *
+     * If null or omitted, then the VM iframe either wasn't loaded or it was loaded from the same origin.
      */
     vmOrigin?: string;
 
