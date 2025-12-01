@@ -2,7 +2,7 @@
 
 ## V3.9.0
 
-#### Date: 11/26/2025
+#### Date: 12/1/2025
 
 ### :rocket: Features
 
@@ -73,6 +73,7 @@
 -   Fixed camera rotation in mapPortal continuing after releasing the right mouse button outside the browser window.
 -   Fixed camera rotation in mapPortal continuing after moving your finger off the screen.
 -   Fixed an issue where CasualOS would produce incorrect code when JSX elements were directly after return statements.
+-   Fixed the handling of `className` for custom apps when using SVG elements.
 
 ## V3.8.1
 

@@ -268,7 +268,7 @@ export default class HtmlApp extends Vue {
                       skeleton.localName ?? nodeName
                   )
                 : document.createElement(nodeName));
-            if (skeleton.className) {
+            if (skeleton.className && !(el instanceof SVGElement)) {
                 el.className = skeleton.className;
             }
 
