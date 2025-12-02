@@ -26636,6 +26636,293 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
         );
     });
 
+    describe('GET /api/v2/studios/domains/list', () => {
+        beforeEach(async () => {
+            await store.addStudio({
+                id: 'studioId',
+                displayName: 'Test Studio',
+                ownerStudioComId: null,
+                subscriptionPeriodStartMs: null,
+                subscriptionPeriodEndMs: null,
+                comId: 'test-comid',
+            });
+
+            await store.addStudioAssignment({
+                studioId: 'studioId',
+                userId: userId,
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+        });
+
+        it('should return a list of custom domains', async () => {
+            await store.saveCustomDomain({
+                id: 'domain-1',
+                domainName: 'example1.com',
+                studioId: 'studioId',
+                verificationKey: 'key-1',
+                verified: true,
+            });
+
+            await store.saveCustomDomain({
+                id: 'domain-2',
+                domainName: 'example2.com',
+                studioId: 'studioId',
+                verificationKey: 'key-2',
+                verified: null,
+            });
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/studios/domains/list?studioId=studioId`,
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    domains: [
+                        {
+                            id: 'domain-1',
+                            domainName: 'example1.com',
+                            verified: true,
+                        },
+                        {
+                            id: 'domain-2',
+                            domainName: 'example2.com',
+                            verified: null,
+                        },
+                    ],
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return an empty list when no domains exist', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/studios/domains/list?studioId=studioId`,
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    domains: [],
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return not_logged_in when the user is not logged in', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(`/api/v2/studios/domains/list?studioId=studioId`, {
+                    origin: accountOrigin,
+                })
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 401,
+                body: {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user is not logged in. A session key must be provided for this operation.',
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return studio_not_found if the studio does not exist', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/studios/domains/list?studioId=nonexistent`,
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 404,
+                body: {
+                    success: false,
+                    errorCode: 'studio_not_found',
+                    errorMessage: 'The given studio was not found.',
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return not_authorized if the user is not an admin', async () => {
+            await store.addStudioAssignment({
+                studioId: 'studioId',
+                userId: ownerId,
+                isPrimaryContact: false,
+                role: 'member',
+            });
+
+            const result = await server.handleHttpRequest(
+                httpGet(`/api/v2/studios/domains/list?studioId=studioId`, {
+                    authorization: `Bearer ${ownerSessionKey}`,
+                    origin: accountOrigin,
+                })
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this operation.',
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should only return domains for the specified studio', async () => {
+            const otherStudioId = 'other-studio';
+            await store.addStudio({
+                id: otherStudioId,
+                displayName: 'Other Studio',
+                ownerStudioComId: null,
+                subscriptionPeriodStartMs: null,
+                subscriptionPeriodEndMs: null,
+                comId: 'other-comid',
+            });
+
+            await store.addStudioAssignment({
+                userId,
+                studioId: otherStudioId,
+                role: 'admin',
+                isPrimaryContact: false,
+            });
+
+            await store.saveCustomDomain({
+                id: 'domain-1',
+                domainName: 'example1.com',
+                studioId: 'studioId',
+                verificationKey: 'key-1',
+                verified: true,
+            });
+
+            await store.saveCustomDomain({
+                id: 'other-domain',
+                domainName: 'other.com',
+                studioId: otherStudioId,
+                verificationKey: 'other-key',
+                verified: true,
+            });
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/studios/domains/list?studioId=studioId`,
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    domains: [
+                        {
+                            id: 'domain-1',
+                            domainName: 'example1.com',
+                            verified: true,
+                        },
+                    ],
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return domains with both verified and unverified status', async () => {
+            await store.saveCustomDomain({
+                id: 'domain-1',
+                domainName: 'verified1.com',
+                studioId: 'studioId',
+                verificationKey: 'key-1',
+                verified: true,
+            });
+
+            await store.saveCustomDomain({
+                id: 'domain-2',
+                domainName: 'unverified1.com',
+                studioId: 'studioId',
+                verificationKey: 'key-2',
+                verified: null,
+            });
+
+            await store.saveCustomDomain({
+                id: 'domain-3',
+                domainName: 'verified2.com',
+                studioId: 'studioId',
+                verificationKey: 'key-3',
+                verified: true,
+            });
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/studios/domains/list?studioId=studioId`,
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    domains: [
+                        {
+                            id: 'domain-1',
+                            domainName: 'verified1.com',
+                            verified: true,
+                        },
+                        {
+                            id: 'domain-2',
+                            domainName: 'unverified1.com',
+                            verified: null,
+                        },
+                        {
+                            id: 'domain-3',
+                            domainName: 'verified2.com',
+                            verified: true,
+                        },
+                    ],
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return invalid_request if studioId is missing', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(`/api/v2/studios/domains/list`, authenticatedHeaders)
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage: expect.any(String),
+                    issues: expect.any(Array),
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testUrl(
+            'GET',
+            '/api/v2/studios/domains/list?studioId=studioId',
+            () => null,
+            () => authenticatedHeaders
+        );
+    });
+
     describe('GET /api/config', () => {
         it('should return the web config', async () => {
             store.webConfig = {
