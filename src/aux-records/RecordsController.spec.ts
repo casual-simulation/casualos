@@ -6133,4 +6133,227 @@ describe('RecordsController', () => {
             );
         });
     });
+
+    describe('verifyCustomDomain()', () => {
+        let userId: string;
+        let studioId: string;
+        let domainId: string;
+
+        beforeEach(async () => {
+            userId = 'test-user';
+            studioId = 'test-studio';
+            domainId = 'test-domain-id';
+
+            await store.saveUser({
+                id: userId,
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await store.addStudio({
+                id: studioId,
+                displayName: 'Test Studio',
+                ownerStudioComId: null,
+                subscriptionPeriodStartMs: null,
+                subscriptionPeriodEndMs: null,
+                comId: 'test-comid',
+            });
+
+            await store.addStudioAssignment({
+                studioId: studioId,
+                userId: userId,
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+
+            await store.saveCustomDomain({
+                id: domainId,
+                domainName: 'example.com',
+                studioId,
+                verificationKey: 'verification-key',
+                verified: null,
+            });
+        });
+
+        it('should return not_supported if domainNameValidator is not configured', async () => {
+            manager = new RecordsController({
+                store,
+                auth: store,
+                metrics: store,
+                config: store,
+                messenger: store,
+                privo: null,
+                domainNameValidator: null,
+            });
+
+            const result = await manager.verifyCustomDomain({
+                userId,
+                customDomainId: domainId,
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'Custom domains are not supported on this server.',
+                })
+            );
+        });
+
+        it('should return not_found if the custom domain does not exist', async () => {
+            const result = await manager.verifyCustomDomain({
+                userId,
+                customDomainId: 'nonexistent-domain',
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_found',
+                    errorMessage: 'The given custom domain was not found.',
+                })
+            );
+        });
+
+        it('should return not_authorized if the user is not an admin of the studio', async () => {
+            const otherUserId = 'other-user';
+            await store.saveUser({
+                id: otherUserId,
+                email: 'other@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            const result = await manager.verifyCustomDomain({
+                userId: otherUserId,
+                customDomainId: domainId,
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this operation.',
+                })
+            );
+        });
+
+        it('should return failure if domain validation fails', async () => {
+            domainNameValidator.validateDomainName.mockResolvedValue(
+                failure({
+                    errorCode: 'invalid_request',
+                    errorMessage: 'DNS verification record not found.',
+                })
+            );
+
+            const result = await manager.verifyCustomDomain({
+                userId,
+                customDomainId: domainId,
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'invalid_request',
+                    errorMessage: 'DNS verification record not found.',
+                })
+            );
+
+            expect(domainNameValidator.validateDomainName).toHaveBeenCalledWith(
+                'example.com',
+                'verification-key'
+            );
+
+            // Verify domain was not marked as verified
+            const domain = await store.getCustomDomainById(domainId);
+            expect(domain?.verified).toBe(null);
+        });
+
+        it('should successfully verify a custom domain', async () => {
+            domainNameValidator.validateDomainName.mockResolvedValue(success());
+
+            const result = await manager.verifyCustomDomain({
+                userId,
+                customDomainId: domainId,
+            });
+
+            expect(result).toEqual(success());
+
+            expect(domainNameValidator.validateDomainName).toHaveBeenCalledWith(
+                'example.com',
+                'verification-key'
+            );
+
+            // Verify domain was marked as verified
+            const domain = await store.getCustomDomainById(domainId);
+            expect(domain?.verified).toBe(true);
+        });
+
+        it('should verify an already verified domain without error', async () => {
+            // First verification
+            domainNameValidator.validateDomainName.mockResolvedValue(success());
+
+            const firstResult = await manager.verifyCustomDomain({
+                userId,
+                customDomainId: domainId,
+            });
+
+            expect(firstResult).toEqual(success());
+
+            const domain1 = await store.getCustomDomainById(domainId);
+            expect(domain1?.verified).toBe(true);
+
+            // Second verification
+            const result = await manager.verifyCustomDomain({
+                userId,
+                customDomainId: domainId,
+            });
+
+            expect(result).toEqual(success());
+
+            const domain2 = await store.getCustomDomainById(domainId);
+            expect(domain2?.verified).toBe(true);
+        });
+
+        it('should not verify domains from other studios if the user does not have access', async () => {
+            const otherStudioId = 'other-studio';
+            const otherDomainId = 'other-domain-id';
+
+            await store.addStudio({
+                id: otherStudioId,
+                displayName: 'Other Studio',
+                ownerStudioComId: null,
+                subscriptionPeriodStartMs: null,
+                subscriptionPeriodEndMs: null,
+                comId: 'other-comid',
+            });
+
+            await store.saveCustomDomain({
+                id: otherDomainId,
+                domainName: 'other.com',
+                studioId: otherStudioId,
+                verificationKey: 'other-key',
+                verified: null,
+            });
+
+            // User is not admin of the other studio
+            const result = await manager.verifyCustomDomain({
+                userId,
+                customDomainId: otherDomainId,
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this operation.',
+                })
+            );
+
+            // Verify domain was not marked as verified
+            const domain = await store.getCustomDomainById(otherDomainId);
+            expect(domain?.verified).toBe(null);
+        });
+    });
 });
