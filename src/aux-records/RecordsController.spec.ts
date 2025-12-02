@@ -28,7 +28,7 @@ import {
 } from '@casual-simulation/crypto';
 import { randomBytes } from 'tweetnacl';
 import { fromByteArray } from 'base64-js';
-import { v4 as uuid } from 'uuid';
+import { v4 as uuid, v7 as uuidv7 } from 'uuid';
 import {
     createTestSubConfiguration,
     createTestPrivoConfiguration,
@@ -41,10 +41,11 @@ import {
     formatV2RecordKey,
     isRecordKey,
 } from '@casual-simulation/aux-common/records/RecordKeys';
-import { success } from '@casual-simulation/aux-common';
+import { failure, success } from '@casual-simulation/aux-common';
 import type { DomainNameValidator } from './dns';
 
 const uuidMock: jest.Mock = <any>uuid;
+const uuidv7Mock: jest.Mock = <any>uuidv7;
 jest.mock('uuid');
 
 console.error = jest.fn();
@@ -5289,6 +5290,329 @@ describe('RecordsController', () => {
                     requirePrivoLogin: false,
                     arcGisApiKey: 'customArcGisKey',
                     comId: 'customComId',
+                })
+            );
+        });
+    });
+
+    describe('addCustomDomain()', () => {
+        let userId: string;
+        let studioId: string;
+
+        beforeEach(async () => {
+            userId = 'test-user';
+            studioId = 'test-studio';
+
+            await store.saveUser({
+                id: userId,
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await store.addStudio({
+                id: studioId,
+                displayName: 'Test Studio',
+                ownerStudioComId: null,
+                stripeCustomerId: null,
+                subscriptionId: null,
+                subscriptionStatus: null,
+                subscriptionPeriodStartMs: null,
+                subscriptionPeriodEndMs: null,
+                comId: 'test-comid',
+            });
+
+            await store.addStudioAssignment({
+                studioId: studioId,
+                userId: userId,
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+
+            uuidv7Mock.mockReturnValue('test-domain-id');
+
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.withStudioDefaultFeatures((f) =>
+                        f.withComId({
+                            allowed: true,
+                        })
+                    )
+            );
+        });
+
+        it('should create a custom domain and return verification DNS record', async () => {
+            domainNameValidator.getVerificationDNSRecord.mockResolvedValue(
+                success({
+                    recordType: 'TXT',
+                    value: 'verification-value',
+                    ttlSeconds: 300,
+                })
+            );
+
+            const result = await manager.addCustomDomain({
+                userId,
+                studioId,
+                domain: 'example.com',
+            });
+
+            expect(result).toEqual(
+                success({
+                    recordType: 'TXT',
+                    value: 'verification-value',
+                    ttlSeconds: 300,
+                })
+            );
+
+            const domains = await store.listCustomDomainsByStudioId(studioId);
+            expect(domains).toHaveLength(1);
+            expect(domains[0]).toMatchObject({
+                id: 'test-domain-id',
+                domainName: 'example.com',
+                studioId,
+                verificationKey: expect.any(String),
+                verified: null,
+            });
+
+            expect(
+                domainNameValidator.getVerificationDNSRecord
+            ).toHaveBeenCalledWith('example.com', domains[0].verificationKey);
+        });
+
+        it('should return not_supported if domainNameValidator is not configured', async () => {
+            manager = new RecordsController({
+                store,
+                auth: store,
+                metrics: store,
+                config: store,
+                messenger: store,
+                privo: null,
+                domainNameValidator: null,
+            });
+
+            const result = await manager.addCustomDomain({
+                userId,
+                studioId,
+                domain: 'example.com',
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'Custom domains are not supported on this server.',
+                })
+            );
+        });
+
+        it('should return studio_not_found if the studio does not exist', async () => {
+            const result = await manager.addCustomDomain({
+                userId,
+                studioId: 'nonexistent-studio',
+                domain: 'example.com',
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'studio_not_found',
+                    errorMessage: 'The given studio was not found.',
+                })
+            );
+        });
+
+        it('should return not_authorized if the user is not an admin of the studio', async () => {
+            const otherUserId = 'other-user';
+            await store.saveUser({
+                id: otherUserId,
+                email: 'other@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+            await store.addStudioAssignment({
+                role: 'member',
+                userId: otherUserId,
+                isPrimaryContact: false,
+                studioId: studioId,
+            });
+
+            const result = await manager.addCustomDomain({
+                userId: otherUserId,
+                studioId,
+                domain: 'example.com',
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this operation.',
+                })
+            );
+        });
+
+        it('should return not_authorized if comId features are not allowed', async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.withStudioDefaultFeatures((f) =>
+                        f.withComId({
+                            allowed: false,
+                        })
+                    )
+            );
+
+            const result = await manager.addCustomDomain({
+                userId,
+                studioId,
+                domain: 'example.com',
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'comId features are not allowed for this comId. Make sure you have an active subscription that provides comId features.',
+                })
+            );
+        });
+
+        it('should return subscription_limit_reached if the maximum number of domains has been reached', async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.withStudioDefaultFeatures((f) =>
+                        f.withComId({
+                            allowed: true,
+                            maxDomains: 1,
+                        })
+                    )
+            );
+
+            await store.saveCustomDomain({
+                id: 'existing-domain',
+                domainName: 'existing.com',
+                studioId,
+                verificationKey: 'existing-key',
+                verified: true,
+            });
+
+            const result = await manager.addCustomDomain({
+                userId,
+                studioId,
+                domain: 'example.com',
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'subscription_limit_reached',
+                    errorMessage:
+                        'The maximum number of custom domains allowed for your comId subscription has been reached.',
+                })
+            );
+        });
+
+        it('should allow adding a domain when maxDomains is undefined', async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.withStudioDefaultFeatures((f) =>
+                        f.withComId({
+                            allowed: true,
+                            maxDomains: undefined,
+                        })
+                    )
+            );
+
+            domainNameValidator.getVerificationDNSRecord.mockResolvedValue(
+                success({
+                    recordType: 'TXT',
+                    value: 'verification-value',
+                    ttlSeconds: 300,
+                })
+            );
+
+            // Add multiple domains to verify no limit is enforced
+            await store.saveCustomDomain({
+                id: 'domain-1',
+                domainName: 'domain1.com',
+                studioId,
+                verificationKey: 'key-1',
+                verified: true,
+            });
+
+            await store.saveCustomDomain({
+                id: 'domain-2',
+                domainName: 'domain2.com',
+                studioId,
+                verificationKey: 'key-2',
+                verified: true,
+            });
+
+            const result = await manager.addCustomDomain({
+                userId,
+                studioId,
+                domain: 'example.com',
+            });
+
+            expect(result).toEqual(
+                success({
+                    recordType: 'TXT',
+                    value: 'verification-value',
+                    ttlSeconds: 300,
+                })
+            );
+
+            const domains = await store.listCustomDomainsByStudioId(studioId);
+            expect(domains).toHaveLength(3);
+        });
+
+        it('should generate a unique verification key for each domain', async () => {
+            domainNameValidator.getVerificationDNSRecord.mockResolvedValue(
+                success({
+                    recordType: 'TXT',
+                    value: 'verification-value',
+                    ttlSeconds: 300,
+                })
+            );
+
+            uuidv7Mock.mockReturnValueOnce('domain-1');
+            await manager.addCustomDomain({
+                userId,
+                studioId,
+                domain: 'example1.com',
+            });
+
+            uuidv7Mock.mockReturnValueOnce('domain-2');
+            await manager.addCustomDomain({
+                userId,
+                studioId,
+                domain: 'example2.com',
+            });
+
+            const domains = await store.listCustomDomainsByStudioId(studioId);
+            expect(domains).toHaveLength(2);
+            expect(domains[0].verificationKey).not.toBe(
+                domains[1].verificationKey
+            );
+        });
+
+        it('should return failure if getVerificationDNSRecord returns an error', async () => {
+            domainNameValidator.getVerificationDNSRecord.mockResolvedValue(
+                failure({
+                    errorCode: 'invalid_request',
+                    errorMessage: 'Invalid domain name',
+                })
+            );
+
+            const result = await manager.addCustomDomain({
+                userId,
+                studioId,
+                domain: 'invalid..domain',
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'invalid_request',
+                    errorMessage: 'Invalid domain name',
                 })
             );
         });
