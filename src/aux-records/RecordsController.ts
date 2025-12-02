@@ -1349,6 +1349,11 @@ export class RecordsController {
         }
     }
 
+    /**
+     * Attempts to add a custom domain to a studio.
+     * @param request The request to add the custom domain.
+     * @returns A result containing the verification DNS record or an error.
+     */
     @traced(TRACE_NAME)
     async addCustomDomain(
         request: AddCustomDomainRequest
@@ -1434,6 +1439,11 @@ export class RecordsController {
         return verificationDnsRecord;
     }
 
+    /**
+     * Attempts to delete a custom domain.
+     * @param request The request to delete the custom domain.
+     * @returns A result indicating success or failure.
+     */
     @traced(TRACE_NAME)
     async deleteCustomDomain(
         request: DeleteCustomDomainRequest
@@ -1478,6 +1488,11 @@ export class RecordsController {
         return success(undefined);
     }
 
+    /**
+     * Lists all custom domains for a given studio.
+     * @param request The request to list custom domains.
+     * @returns A result containing the list of custom domains or an error.
+     */
     @traced(TRACE_NAME)
     async listCustomDomains(
         request: ListCustomDomainsRequest
@@ -1528,6 +1543,10 @@ export class RecordsController {
         });
     }
 
+    /**
+     * Attempts to verify a custom domain.
+     * @param request The request to verify the custom domain.
+     */
     @traced(TRACE_NAME)
     async verifyCustomDomain(
         request: VerifyCustomDomainRequest
