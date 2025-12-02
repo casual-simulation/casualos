@@ -1446,7 +1446,7 @@ export class RecordsController {
             });
         }
 
-        const customDomain = await this._store.getVerifiedCustomDomainByName(
+        const customDomain = await this._store.getCustomDomainById(
             request.customDomainId
         );
 
