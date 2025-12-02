@@ -5617,4 +5617,219 @@ describe('RecordsController', () => {
             );
         });
     });
+
+    describe('deleteCustomDomain()', () => {
+        let userId: string;
+        let studioId: string;
+        let domainId: string;
+
+        beforeEach(async () => {
+            userId = 'test-user';
+            studioId = 'test-studio';
+            domainId = 'test-domain-id';
+
+            await store.saveUser({
+                id: userId,
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await store.addStudio({
+                id: studioId,
+                displayName: 'Test Studio',
+                ownerStudioComId: null,
+                subscriptionPeriodStartMs: null,
+                subscriptionPeriodEndMs: null,
+                comId: 'test-comid',
+            });
+
+            await store.addStudioAssignment({
+                studioId: studioId,
+                userId: userId,
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+
+            await store.saveCustomDomain({
+                id: domainId,
+                domainName: 'example.com',
+                studioId,
+                verificationKey: 'verification-key',
+                verified: true,
+            });
+        });
+
+        it('should return not_supported if domainNameValidator is not configured', async () => {
+            manager = new RecordsController({
+                store,
+                auth: store,
+                metrics: store,
+                config: store,
+                messenger: store,
+                privo: null,
+                domainNameValidator: null,
+            });
+
+            const result = await manager.deleteCustomDomain({
+                userId,
+                customDomainId: domainId,
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'Custom domains are not supported on this server.',
+                })
+            );
+        });
+
+        it('should return not_found if the custom domain does not exist', async () => {
+            const result = await manager.deleteCustomDomain({
+                userId,
+                customDomainId: 'nonexistent-domain.com',
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_found',
+                    errorMessage: 'The given custom domain was not found.',
+                })
+            );
+        });
+
+        it('should return not_authorized if the user is not an admin of the studio', async () => {
+            const otherUserId = 'other-user';
+            await store.saveUser({
+                id: otherUserId,
+                email: 'other@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            const result = await manager.deleteCustomDomain({
+                userId: otherUserId,
+                customDomainId: domainId,
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this operation.',
+                })
+            );
+        });
+
+        it('should successfully delete a custom domain', async () => {
+            const result = await manager.deleteCustomDomain({
+                userId,
+                customDomainId: domainId,
+            });
+
+            expect(result).toEqual(success(undefined));
+
+            const domains = await store.listCustomDomainsByStudioId(studioId);
+            expect(domains).toHaveLength(0);
+        });
+
+        it('should work with users who have admin role in the studio', async () => {
+            const adminUserId = 'admin-user';
+            await store.saveUser({
+                id: adminUserId,
+                email: 'admin@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await store.addStudioAssignment({
+                studioId: studioId,
+                userId: adminUserId,
+                isPrimaryContact: false,
+                role: 'admin',
+            });
+
+            const result = await manager.deleteCustomDomain({
+                userId: adminUserId,
+                customDomainId: domainId,
+            });
+
+            expect(result).toEqual(success(undefined));
+        });
+
+        it('should not delete domains from other studios', async () => {
+            const otherStudioId = 'other-studio';
+            await store.addStudio({
+                id: otherStudioId,
+                displayName: 'Other Studio',
+                ownerStudioComId: null,
+                subscriptionPeriodStartMs: null,
+                subscriptionPeriodEndMs: null,
+                comId: 'other-comid',
+            });
+
+            await store.saveCustomDomain({
+                id: 'other-domain-id',
+                domainName: 'other.com',
+                studioId: otherStudioId,
+                verificationKey: 'other-key',
+                verified: true,
+            });
+
+            const result = await manager.deleteCustomDomain({
+                userId,
+                customDomainId: 'other-domain-id',
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this operation.',
+                })
+            );
+
+            // Verify the other domain still exists
+            const otherDomains = await store.listCustomDomainsByStudioId(
+                otherStudioId
+            );
+            expect(otherDomains).toHaveLength(1);
+        });
+
+        it('should delete the correct domain when multiple domains exist', async () => {
+            await store.saveCustomDomain({
+                id: 'domain-2',
+                domainName: 'example2.com',
+                studioId,
+                verificationKey: 'key-2',
+                verified: true,
+            });
+
+            await store.saveCustomDomain({
+                id: 'domain-3',
+                domainName: 'example3.com',
+                studioId,
+                verificationKey: 'key-3',
+                verified: true,
+            });
+
+            const result = await manager.deleteCustomDomain({
+                userId,
+                customDomainId: 'domain-2',
+            });
+
+            expect(result).toEqual(success(undefined));
+
+            const domains = await store.listCustomDomainsByStudioId(studioId);
+            expect(domains).toHaveLength(2);
+            expect(domains.map((d) => d.domainName)).toEqual([
+                'example.com',
+                'example3.com',
+            ]);
+        });
+    });
 });
