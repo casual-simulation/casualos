@@ -5132,7 +5132,7 @@ export class RecordsServer {
                 .http('GET', '/api/config')
                 .inputs(z.object({}))
                 .handler(async (inputs, context) => {
-                    const result = await this._records.getWebConfig();
+                    const result = await this._records.getWebConfig(null);
                     return genericResult(result);
                 }),
 

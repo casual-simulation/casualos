@@ -38,6 +38,7 @@ import {
     merge,
     parseSessionKey,
     SUBSCRIPTION_ID_NAMESPACE,
+    success,
     unwrap,
 } from '@casual-simulation/aux-common';
 import type { RelyingParty } from './AuthController';
@@ -230,6 +231,7 @@ import {
     getWebsocketHttpResponse,
     getWebsocketHttpPartialResponses,
 } from './HttpTestUtils';
+import type { DomainNameValidator } from './dns';
 
 jest.setTimeout(10000); // 10 seconds
 
@@ -537,6 +539,8 @@ describe('RecordsServer', () => {
     let privoClient: PrivoClientInterface;
     let privoClientMock: jest.MockedObject<PrivoClientInterface>;
 
+    let domainNameValidator: jest.Mocked<DomainNameValidator>;
+
     let currentId: bigint;
 
     let viewTemplateRenderer: ViewTemplateRenderer;
@@ -618,6 +622,10 @@ describe('RecordsServer', () => {
             livekitEndpoint
         );
 
+        domainNameValidator = {
+            getVerificationDNSRecord: jest.fn(),
+            validateDomainName: jest.fn(),
+        };
         // const memRecordsStore = (store = new MemoryRecordsStore(
         //     store
         // ));
@@ -628,6 +636,7 @@ describe('RecordsServer', () => {
             metrics: store,
             messenger: store,
             privo: privoClient,
+            domainNameValidator,
         });
 
         websocketConnectionStore = new MemoryWebsocketConnectionStore();
@@ -26245,6 +26254,213 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
             () =>
                 JSON.stringify({
                     studioId: 'studioId',
+                }),
+            () => authenticatedHeaders
+        );
+    });
+
+    describe('POST /api/v2/studios/domains', () => {
+        beforeEach(async () => {
+            await store.addStudio({
+                id: 'studioId',
+                displayName: 'Test Studio',
+                ownerStudioComId: null,
+                subscriptionPeriodStartMs: null,
+                subscriptionPeriodEndMs: null,
+                comId: 'test-comid',
+            });
+
+            await store.addStudioAssignment({
+                studioId: 'studioId',
+                userId: userId,
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.withStudioDefaultFeatures((f) =>
+                        f.withAllDefaultFeatures().withComId()
+                    )
+            );
+        });
+
+        it('should add a custom domain', async () => {
+            domainNameValidator.getVerificationDNSRecord.mockResolvedValueOnce(
+                success({
+                    recordType: 'TXT',
+                    value: 'verification-value',
+                    ttlSeconds: 300,
+                })
+            );
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/studios/domains',
+                    JSON.stringify({
+                        studioId: 'studioId',
+                        domain: 'example.com',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordType: 'TXT',
+                    value: 'verification-value',
+                    ttlSeconds: 300,
+                },
+                headers: accountCorsHeaders,
+            });
+
+            const domains = await store.listCustomDomainsByStudioId('studioId');
+            expect(domains).toHaveLength(1);
+            expect(domains[0]).toMatchObject({
+                domainName: 'example.com',
+                studioId: 'studioId',
+                verified: null,
+            });
+        });
+
+        it('should return not_logged_in when the user is not logged in', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/studios/domains',
+                    JSON.stringify({
+                        studioId: 'studioId',
+                        domain: 'example.com',
+                    }),
+                    {
+                        origin: accountOrigin,
+                    }
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 401,
+                body: {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user is not logged in. A session key must be provided for this operation.',
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return studio_not_found if the studio does not exist', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/studios/domains',
+                    JSON.stringify({
+                        studioId: 'nonexistent',
+                        domain: 'example.com',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 404,
+                body: {
+                    success: false,
+                    errorCode: 'studio_not_found',
+                    errorMessage: 'The given studio was not found.',
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return not_authorized if the user is not an admin', async () => {
+            await store.addStudioAssignment({
+                studioId: 'studioId',
+                userId: ownerId,
+                isPrimaryContact: false,
+                role: 'member',
+            });
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/studios/domains',
+                    JSON.stringify({
+                        studioId: 'studioId',
+                        domain: 'example.com',
+                    }),
+                    {
+                        authorization: `Bearer ${ownerSessionKey}`,
+                        origin: accountOrigin,
+                    }
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this operation.',
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return invalid_request if domain is missing', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/studios/domains',
+                    JSON.stringify({
+                        studioId: 'studioId',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage: expect.any(String),
+                    issues: expect.any(Array),
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return invalid_request if studioId is missing', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/studios/domains',
+                    JSON.stringify({
+                        domain: 'example.com',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage: expect.any(String),
+                    issues: expect.any(Array),
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testUrl(
+            'POST',
+            '/api/v2/studios/domains',
+            () =>
+                JSON.stringify({
+                    studioId: 'studioId',
+                    domain: 'example.com',
                 }),
             () => authenticatedHeaders
         );
