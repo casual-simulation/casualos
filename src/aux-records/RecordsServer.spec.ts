@@ -26466,6 +26466,176 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
         );
     });
 
+    describe('DELETE /api/v2/studios/domains', () => {
+        let domainId: string;
+
+        beforeEach(async () => {
+            domainId = 'domain-id';
+
+            await store.addStudio({
+                id: 'studioId',
+                displayName: 'Test Studio',
+                ownerStudioComId: null,
+                subscriptionPeriodStartMs: null,
+                subscriptionPeriodEndMs: null,
+                comId: 'test-comid',
+            });
+
+            await store.addStudioAssignment({
+                studioId: 'studioId',
+                userId: userId,
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+
+            await store.saveCustomDomain({
+                id: domainId,
+                domainName: 'example.com',
+                studioId: 'studioId',
+                verificationKey: 'verification-key',
+                verified: true,
+            });
+        });
+
+        it('should delete a custom domain', async () => {
+            const result = await server.handleHttpRequest(
+                httpDelete(
+                    '/api/v2/studios/domains',
+                    JSON.stringify({
+                        customDomainId: domainId,
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+
+            const domains = await store.listCustomDomainsByStudioId('studioId');
+            expect(domains).toHaveLength(0);
+        });
+
+        it('should return not_logged_in when the user is not logged in', async () => {
+            const result = await server.handleHttpRequest(
+                httpDelete(
+                    '/api/v2/studios/domains',
+                    JSON.stringify({
+                        customDomainId: domainId,
+                    }),
+                    {
+                        origin: accountOrigin,
+                    }
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 401,
+                body: {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user is not logged in. A session key must be provided for this operation.',
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return not_found if the custom domain does not exist', async () => {
+            const result = await server.handleHttpRequest(
+                httpDelete(
+                    '/api/v2/studios/domains',
+                    JSON.stringify({
+                        customDomainId: 'missing',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 404,
+                body: {
+                    success: false,
+                    errorCode: 'not_found',
+                    errorMessage: 'The given custom domain was not found.',
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return not_authorized if the user is not an admin', async () => {
+            await store.addStudioAssignment({
+                studioId: 'studioId',
+                userId: ownerId,
+                isPrimaryContact: false,
+                role: 'member',
+            });
+
+            const result = await server.handleHttpRequest(
+                httpDelete(
+                    '/api/v2/studios/domains',
+                    JSON.stringify({
+                        customDomainId: domainId,
+                    }),
+                    {
+                        authorization: `Bearer ${ownerSessionKey}`,
+                        origin: accountOrigin,
+                    }
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this operation.',
+                },
+                headers: accountCorsHeaders,
+            });
+
+            // Verify domain was not deleted
+            const domains = await store.listCustomDomainsByStudioId('studioId');
+            expect(domains).toHaveLength(1);
+        });
+
+        it('should return invalid_request if customDomainId is missing', async () => {
+            const result = await server.handleHttpRequest(
+                httpDelete(
+                    '/api/v2/studios/domains',
+                    JSON.stringify({}),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage: expect.any(String),
+                    issues: expect.any(Array),
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testUrl(
+            'DELETE',
+            '/api/v2/studios/domains',
+            () =>
+                JSON.stringify({
+                    customDomainId: 'example.com',
+                }),
+            () => authenticatedHeaders
+        );
+    });
+
     describe('GET /api/config', () => {
         it('should return the web config', async () => {
             store.webConfig = {
