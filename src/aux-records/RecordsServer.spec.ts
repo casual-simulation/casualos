@@ -30,6 +30,7 @@ import type {
 } from '@casual-simulation/aux-common';
 import {
     DEFAULT_BRANCH_NAME,
+    failure,
     formatV1SessionKey,
     generateV1ConnectionToken,
     getStateFromUpdates,
@@ -26919,6 +26920,266 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
             'GET',
             '/api/v2/studios/domains/list?studioId=studioId',
             () => null,
+            () => authenticatedHeaders
+        );
+    });
+
+    describe('POST /api/v2/studios/domains/verify', () => {
+        let domainId: string;
+
+        beforeEach(async () => {
+            domainId = 'domain-id';
+
+            await store.addStudio({
+                id: 'studioId',
+                displayName: 'Test Studio',
+                ownerStudioComId: null,
+                stripeCustomerId: null,
+                subscriptionId: null,
+                subscriptionStatus: null,
+                subscriptionPeriodStartMs: null,
+                subscriptionPeriodEndMs: null,
+                comId: 'test-comid',
+            });
+
+            await store.addStudioAssignment({
+                studioId: 'studioId',
+                userId: userId,
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+
+            await store.saveCustomDomain({
+                id: domainId,
+                domainName: 'example.com',
+                studioId: 'studioId',
+                verificationKey: 'verification-key',
+                verified: null,
+            });
+
+            domainNameValidator.validateDomainName.mockResolvedValue(success());
+        });
+
+        it('should verify a custom domain', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/studios/domains/verify',
+                    JSON.stringify({
+                        customDomainId: domainId,
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+
+            expect(domainNameValidator.validateDomainName).toHaveBeenCalledWith(
+                'example.com',
+                'verification-key'
+            );
+
+            // Verify domain was marked as verified
+            const domain = await store.getCustomDomainById(domainId);
+            expect(domain?.verified).toBe(true);
+        });
+
+        it('should return not_logged_in when the user is not logged in', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/studios/domains/verify',
+                    JSON.stringify({
+                        customDomainId: domainId,
+                    }),
+                    {
+                        origin: accountOrigin,
+                    }
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 401,
+                body: {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user is not logged in. A session key must be provided for this operation.',
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return not_found if the custom domain does not exist', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/studios/domains/verify',
+                    JSON.stringify({
+                        customDomainId: 'nonexistent-id',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 404,
+                body: {
+                    success: false,
+                    errorCode: 'not_found',
+                    errorMessage: 'The given custom domain was not found.',
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return not_authorized if the user is not an admin', async () => {
+            await store.addStudioAssignment({
+                studioId: 'studioId',
+                userId: ownerId,
+                isPrimaryContact: false,
+                role: 'member',
+            });
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/studios/domains/verify',
+                    JSON.stringify({
+                        customDomainId: domainId,
+                    }),
+                    {
+                        authorization: `Bearer ${ownerSessionKey}`,
+                        origin: accountOrigin,
+                    }
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this operation.',
+                },
+                headers: accountCorsHeaders,
+            });
+
+            // Verify domain was not marked as verified
+            const domain = await store.getCustomDomainById(domainId);
+            expect(domain?.verified).toBe(null);
+        });
+
+        it('should return failure if DNS validation fails', async () => {
+            domainNameValidator.validateDomainName.mockResolvedValue(
+                failure({
+                    errorCode: 'invalid_request',
+                    errorMessage: 'DNS verification record not found.',
+                })
+            );
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/studios/domains/verify',
+                    JSON.stringify({
+                        customDomainId: domainId,
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: 'DNS verification record not found.',
+                },
+                headers: accountCorsHeaders,
+            });
+
+            // Verify domain was not marked as verified
+            const domain = await store.getCustomDomainById(domainId);
+            expect(domain?.verified).toBe(null);
+        });
+
+        it('should return invalid_request if customDomainId is missing', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/studios/domains/verify',
+                    JSON.stringify({}),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage: expect.any(String),
+                    issues: expect.any(Array),
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should verify an already verified domain without error', async () => {
+            // First verification
+            const firstResult = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/studios/domains/verify',
+                    JSON.stringify({
+                        customDomainId: domainId,
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(firstResult, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+
+            const domain1 = await store.getCustomDomainById(domainId);
+            expect(domain1?.verified).toBe(true);
+
+            // Second verification
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/studios/domains/verify',
+                    JSON.stringify({
+                        customDomainId: domainId,
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+
+            const domain2 = await store.getCustomDomainById(domainId);
+            expect(domain2?.verified).toBe(true);
+        });
+
+        testUrl(
+            'POST',
+            '/api/v2/studios/domains/verify',
+            () =>
+                JSON.stringify({
+                    customDomainId: 'domain-id',
+                }),
             () => authenticatedHeaders
         );
     });
