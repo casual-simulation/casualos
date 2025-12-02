@@ -32,6 +32,8 @@ import type {
     StripeAccountStatus,
     StripeRequirementsStatus,
     UpdateStudioRequest,
+    ListedCustomDomain,
+    DomainNameVerificationDNSRecord,
 } from '@casual-simulation/aux-records';
 import { getFormErrors } from '@casual-simulation/aux-common';
 import FieldErrors from '../../../shared/vue-components/FieldErrors/FieldErrors';
@@ -142,6 +144,16 @@ export default class AuthStudio extends Vue {
     showUpdateLoomConfig: boolean = false;
     showUpdateHumeConfig: boolean = false;
     showUpdateStoreConfig: boolean = false;
+    showCustomDomains: boolean = false;
+
+    customDomains: ListedCustomDomain[] = [];
+    loadingDomains: boolean = false;
+    newDomainName: string = '';
+    addingDomain: boolean = false;
+    verifyingDomain: string = null;
+    deletingDomain: string = null;
+    domainError: string = null;
+    verificationRecord: DomainNameVerificationDNSRecord = null;
 
     errors: FormError[] = [];
 
@@ -274,6 +286,14 @@ export default class AuthStudio extends Vue {
         return this.storeFeatures?.allowed;
     }
 
+    get customDomainsCount() {
+        return this.customDomains.length;
+    }
+
+    get newDomainFieldClass() {
+        return this.domainError ? 'md-invalid' : '';
+    }
+
     get hasStudioChange() {
         return (
             this.displayName !== this.originalDisplayName ||
@@ -303,6 +323,143 @@ export default class AuthStudio extends Vue {
         this.errors = [];
 
         this._loadPageInfo();
+    }
+
+    async openCustomDomains() {
+        this.showCustomDomains = true;
+        this.newDomainName = '';
+        this.domainError = null;
+        this.verificationRecord = null;
+        await this.loadCustomDomains();
+    }
+
+    closeCustomDomains() {
+        this.showCustomDomains = false;
+        this.newDomainName = '';
+        this.domainError = null;
+        this.verificationRecord = null;
+    }
+
+    async loadCustomDomains() {
+        try {
+            this.loadingDomains = true;
+            const result = await authManager.client.listCustomDomains({
+                studioId: this.studioId,
+            });
+
+            if (result.success === false) {
+                console.error('Failed to load custom domains:', result);
+                return;
+            }
+
+            this.customDomains = result.domains;
+        } catch (error) {
+            console.error('Error loading custom domains:', error);
+        } finally {
+            this.loadingDomains = false;
+        }
+    }
+
+    async addDomain() {
+        try {
+            this.addingDomain = true;
+            this.domainError = null;
+            this.verificationRecord = null;
+
+            const result = await authManager.client.addCustomDomain({
+                studioId: this.studioId,
+                domain: this.newDomainName,
+            });
+
+            if (result.success === false) {
+                this.domainError =
+                    result.errorMessage || 'Failed to add domain';
+                return;
+            }
+
+            // Store verification record for display
+            this.verificationRecord = {
+                recordType: result.recordType,
+                value: result.value,
+                ttlSeconds: result.ttlSeconds,
+            };
+
+            // Reload the domains list
+            await this.loadCustomDomains();
+
+            // Clear the input but keep verification instructions visible
+            // this.newDomainName = '';
+        } catch (error) {
+            console.error('Error adding domain:', error);
+            this.domainError = 'An error occurred while adding the domain';
+        } finally {
+            this.addingDomain = false;
+        }
+    }
+
+    async verifyDomain(domain: ListedCustomDomain) {
+        try {
+            this.verifyingDomain = domain.id;
+            this.domainError = null;
+
+            const result = await authManager.client.verifyCustomDomain({
+                customDomainId: domain.id,
+            });
+
+            if (result.success === false) {
+                this.domainError =
+                    result.errorMessage || 'Failed to verify domain';
+                return;
+            }
+
+            // Reload the domains list to show updated status
+            await this.loadCustomDomains();
+
+            // Clear verification instructions if visible
+            if (this.newDomainName === domain.domainName) {
+                this.verificationRecord = null;
+            }
+        } catch (error) {
+            console.error('Error verifying domain:', error);
+            this.domainError = 'An error occurred while verifying the domain';
+        } finally {
+            this.verifyingDomain = null;
+        }
+    }
+
+    async deleteDomain(domain: ListedCustomDomain) {
+        if (!confirm(`Are you sure you want to delete ${domain.domainName}?`)) {
+            return;
+        }
+
+        try {
+            this.deletingDomain = domain.id;
+            this.domainError = null;
+
+            const result = await authManager.client.deleteCustomDomain({
+                customDomainId: domain.id,
+            });
+
+            if (result.success === false) {
+                this.domainError =
+                    result.errorMessage || 'Failed to delete domain';
+                return;
+            }
+
+            // Clear verification instructions if this was the domain being added
+            if (this.newDomainName === domain.domainName) {
+                this.verificationRecord = null;
+                this.newDomainName = '';
+            }
+
+            // Reload the domains list
+            await this.loadCustomDomains();
+        } catch (error) {
+            console.error('Error deleting domain:', error);
+            this.domainError = 'An error occurred while deleting the domain';
+        } finally {
+            this.deletingDomain = null;
+        }
     }
 
     async saveStudio() {
@@ -486,6 +643,7 @@ export default class AuthStudio extends Vue {
     private async _loadPageInfo() {
         this._loadStudioInfo();
         this._loadMembers();
+        this.loadCustomDomains();
     }
 
     private async _loadStudioInfo() {
