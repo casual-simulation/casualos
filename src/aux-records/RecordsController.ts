@@ -26,6 +26,7 @@ import type {
     HumeConfig,
     CustomDomain,
     ListedCustomDomain,
+    CustomDomainWithStudio,
 } from './RecordsStore';
 import type {
     StripeAccountStatus,
@@ -1680,6 +1681,19 @@ export class RecordsController {
         }
 
         return success(webConfig);
+    }
+
+    /**
+     * Attempts to get a verified custom domain by its name.
+     * @param hostname The hostname of the custom domain.
+     */
+    async getVerifiedCustomDomainByName(
+        hostname: string
+    ): Promise<Result<CustomDomainWithStudio | null, SimpleError>> {
+        const customDomain = await this._store.getVerifiedCustomDomainByName(
+            hostname
+        );
+        return success(customDomain);
     }
 
     /**

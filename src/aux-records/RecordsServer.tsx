@@ -6903,22 +6903,50 @@ export class RecordsServer {
                 span.updateName(`http:${route.name}`);
             }
 
-            const origins =
+            let origins =
                 route.allowedOrigins === 'account'
                     ? this._allowedAccountOrigins
                     : route.allowedOrigins === 'api'
                     ? this._allowedApiOrigins
                     : route.allowedOrigins ?? true;
 
-            if (origins !== true && !validateOrigin(request, origins)) {
-                return formatResponse(
-                    request,
-                    returnResult(INVALID_ORIGIN_RESULT),
-                    origins
-                );
-            }
-
             try {
+                if (origins !== true && !validateOrigin(request, origins)) {
+                    let allow = false;
+                    const host = request.headers.host;
+                    if (host && route.allowedOrigins === 'api') {
+                        // Fallback to checking custom domains
+                        const requestUrl = new URL(
+                            request.path,
+                            `http://${host}`
+                        );
+                        const origin = new URL(request.headers.origin);
+
+                        // All custom domain requests must come from the custom domain
+                        if (origin.host === requestUrl.host) {
+                            // Only allow API routes to use custom domains
+                            const customDomain =
+                                await this._records.getVerifiedCustomDomainByName(
+                                    requestUrl.hostname
+                                );
+
+                            if (isSuccess(customDomain) && customDomain.value) {
+                                // allow the request
+                                allow = true;
+                                origins = true;
+                            }
+                        }
+                    }
+
+                    if (!allow) {
+                        return formatResponse(
+                            request,
+                            returnResult(INVALID_ORIGIN_RESULT),
+                            origins
+                        );
+                    }
+                }
+
                 let response: GenericHttpResponse;
                 if (route.schema) {
                     let data: any;
