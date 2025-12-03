@@ -56,5 +56,5 @@ export interface AuxDevice {
      *
      * Null if it was not loaded from a comID.
      */
-    comID: string;
+    comID: string | null;
 }
