@@ -1819,6 +1819,7 @@ export class ServerBuilder implements SubscriptionLike {
                 supportsDOM: false,
                 allowCollaborationUpgrade: false,
                 ab1BootstrapUrl: null,
+                comID: null,
             },
         };
 
