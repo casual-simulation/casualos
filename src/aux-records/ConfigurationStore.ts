@@ -19,6 +19,7 @@ import type { SubscriptionConfiguration } from './SubscriptionConfiguration';
 import type { PrivoConfiguration } from './PrivoConfiguration';
 import type { ModerationConfiguration } from './ModerationConfiguration';
 import type { WebConfig } from '@casual-simulation/aux-common';
+import type { WebManifest } from '@casual-simulation/aux-common/common/WebManifest';
 
 export const SUBSCRIPTIONS_CONFIG_KEY = 'subscriptions';
 
@@ -78,4 +79,10 @@ export interface ConfigurationStore {
      * Resolves with null if no configuration is found.
      */
     getWebConfig(): Promise<WebConfig | null>;
+
+    /**
+     * Retrieves the PWA web manifest that should be served for the player.
+     * Resolves with null if no manifest is found.
+     */
+    getPlayerWebManifest(): Promise<WebManifest | null>;
 }

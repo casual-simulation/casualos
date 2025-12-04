@@ -168,6 +168,7 @@ import type { ContractRecordsController } from './contracts/ContractRecordsContr
 import type { ViewParams, ViewTemplateRenderer } from './ViewTemplateRenderer';
 import type { JSX } from 'preact';
 import { omitBy } from 'es-toolkit';
+import { WEB_MANIFEST_SCHEMA } from '@casual-simulation/aux-common/common/WebManifest';
 
 declare const GIT_TAG: string;
 declare const GIT_HASH: string;
@@ -4688,6 +4689,10 @@ export class RecordsServer {
                             'The configuration that can be used by studios to setup loom.'
                         ),
                         humeConfig: HUME_CONFIG.optional(),
+                        playerWebManifest:
+                            WEB_MANIFEST_SCHEMA.optional().describe(
+                                'The PWA web manifest that should be served for custom domains for the studio.'
+                            ),
                     })
                 )
                 .handler(
@@ -4700,6 +4705,7 @@ export class RecordsServer {
                             playerConfig,
                             loomConfig,
                             humeConfig,
+                            playerWebManifest,
                         },
                         context
                     ) => {
@@ -4725,6 +4731,7 @@ export class RecordsServer {
                                 playerConfig,
                                 loomConfig,
                                 humeConfig,
+                                playerWebManifest,
                             },
                         });
                         return result;
@@ -5133,6 +5140,17 @@ export class RecordsServer {
                 .inputs(z.object({}))
                 .handler(async (inputs, context) => {
                     const result = await this._records.getWebConfig(null);
+                    return genericResult(result);
+                }),
+
+            getPlayerWebManifest: procedure()
+                .origins(true)
+                .http('GET', '/player.webmanifest')
+                .inputs(z.object({}))
+                .handler(async (_, context) => {
+                    const result = await this._records.getPlayerWebManifest(
+                        context.url.hostname
+                    );
                     return genericResult(result);
                 }),
 

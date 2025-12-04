@@ -21,6 +21,7 @@ import { privoSchema } from './PrivoConfiguration';
 import { subscriptionConfigSchema } from './SubscriptionConfiguration';
 import { z } from 'zod';
 import { WEB_CONFIG_SCHEMA } from '@casual-simulation/aux-common';
+import { WEB_MANIFEST_SCHEMA } from '@casual-simulation/aux-common/common/WebManifest';
 
 /**
  * The schema for the S3 configuration.
@@ -1447,6 +1448,44 @@ export const serverConfigSchema = z.object({
                 defaultBiosOption: null,
                 automaticBiosOption: null,
             }).describe('The web configuration for the CasualOS frontend.'),
+
+            playerWebManifest: WEB_MANIFEST_SCHEMA.prefault({
+                name: 'CasualOS',
+                short_name: 'CasualOS',
+                icons: [
+                    {
+                        src: '/pwa-192x192.png',
+                        sizes: '192x192',
+                        type: 'image/png',
+                        purpose: 'any',
+                    },
+                    {
+                        src: '/pwa-512x512.png',
+                        sizes: '512x512',
+                        type: 'image/png',
+                        purpose: 'any',
+                    },
+                    {
+                        src: '/pwa-maskable-192x192.png',
+                        sizes: '192x192',
+                        type: 'image/png',
+                        purpose: 'maskable',
+                    },
+                    {
+                        src: '/pwa-maskable-512x512.png',
+                        sizes: '512x512',
+                        type: 'image/png',
+                        purpose: 'maskable',
+                    },
+                ],
+                start_url: '/',
+                display: 'standalone',
+                background_color: '#FFFFFF',
+                theme_color: '#FFFFFF',
+                description: 'Casual Open Simulation for the Web',
+            }).describe(
+                'The PWA web manifest that should be served by CasualOS. If omitted, then the default will be used.'
+            ),
 
             drives: z
                 .object({

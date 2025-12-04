@@ -178,6 +178,7 @@ import type {
     UniqueFinancialAccountFilter,
 } from './financial/FinancialStore';
 import type { PartialExcept } from './crud';
+import type { WebManifest } from '@casual-simulation/aux-common/common/WebManifest';
 
 export interface MemoryConfiguration {
     subscriptions: SubscriptionConfiguration;
@@ -239,6 +240,7 @@ export class MemoryStore
     private _privoConfiguration: PrivoConfiguration | null = null;
     private _moderationConfiguration: ModerationConfiguration | null = null;
     private _webConfig: WebConfig | null = null;
+    private _playerWebManifest: WebManifest | null = null;
     private _recordNotifications: RecordsNotification[] = [];
     private _comIdRequests: StudioComIdRequest[] = [];
 
@@ -377,6 +379,14 @@ export class MemoryStore
 
     set webConfig(value: WebConfig | null) {
         this._webConfig = value;
+    }
+
+    get playerWebManifest() {
+        return this._playerWebManifest;
+    }
+
+    set playerWebManifest(value: WebManifest | null) {
+        this._playerWebManifest = value;
     }
 
     get userInstReports() {
@@ -794,6 +804,10 @@ export class MemoryStore
 
     async getWebConfig(): Promise<WebConfig | null> {
         return this._webConfig;
+    }
+
+    async getPlayerWebManifest(): Promise<WebManifest | null> {
+        return this._playerWebManifest;
     }
 
     async getRecordByName(name: string): Promise<Record> {

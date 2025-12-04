@@ -94,6 +94,7 @@ import type {
     DomainNameValidator,
     DomainNameVerificationDNSRecord,
 } from './dns/DomainNameValidator';
+import type { WebManifest } from '@casual-simulation/aux-common/common/WebManifest';
 
 const TRACE_NAME = 'RecordsController';
 
@@ -1684,6 +1685,34 @@ export class RecordsController {
     }
 
     /**
+     * Attempts to get the web manifest for the player.
+     * @param hostname The hostname that the request was made to.
+     */
+    @traced(TRACE_NAME)
+    async getPlayerWebManifest(
+        hostname: string
+    ): Promise<Result<WebManifest, SimpleError>> {
+        const customDomain = await this._store.getVerifiedCustomDomainByName(
+            hostname
+        );
+
+        if (customDomain?.studio.playerWebManifest) {
+            return success(customDomain.studio.playerWebManifest);
+        }
+
+        const manifest = await this._config.getPlayerWebManifest();
+
+        if (!manifest) {
+            return failure({
+                errorCode: 'not_found',
+                errorMessage: 'No web manifest found.',
+            });
+        }
+
+        return success(manifest);
+    }
+
+    /**
      * Attempts to get a verified custom domain by its name.
      * @param hostname The hostname of the custom domain.
      */
@@ -2722,6 +2751,12 @@ export interface UpdateStudioRequest {
          * If omitted, then the player configuration will not be updated.
          */
         playerConfig?: ComIdPlayerConfig;
+
+        /**
+         * The PWA web manifest that should be served for custom domains for the server.
+         * If omitted, then the web manifest will not be updated.
+         */
+        playerWebManifest?: WebManifest;
 
         /**
          * The configuration for the studio's comId.

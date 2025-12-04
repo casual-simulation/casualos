@@ -43,6 +43,8 @@ import {
 } from '@casual-simulation/aux-common/records/RecordKeys';
 import { failure, success } from '@casual-simulation/aux-common';
 import type { DomainNameValidator } from './dns';
+import { WEB_MANIFEST_SCHEMA } from '@casual-simulation/aux-common/common/WebManifest';
+import type z from 'zod';
 
 const uuidMock: jest.Mock = <any>uuid;
 const uuidv7Mock: jest.Mock = <any>uuidv7;
@@ -6354,6 +6356,97 @@ describe('RecordsController', () => {
             // Verify domain was not marked as verified
             const domain = await store.getCustomDomainById(otherDomainId);
             expect(domain?.verified).toBe(null);
+        });
+    });
+
+    describe('getPlayerWebManifest()', () => {
+        const studioId = 'studioId';
+
+        beforeEach(async () => {
+            store.playerWebManifest = WEB_MANIFEST_SCHEMA.parse({
+                name: 'Test',
+                short_name: 'Test',
+            } satisfies z.input<typeof WEB_MANIFEST_SCHEMA>);
+        });
+
+        it('should return the default web manifest there is no custom domain', async () => {
+            const result = await manager.getPlayerWebManifest('example.com');
+            expect(result).toEqual(success(store.playerWebManifest));
+        });
+
+        it('should return not_found if there is no configured web manifest', async () => {
+            store.playerWebManifest = null;
+
+            const result = await manager.getPlayerWebManifest('example.com');
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_found',
+                    errorMessage: 'No web manifest found.',
+                })
+            );
+        });
+
+        it('should return the custom domain web manifest if one is configured', async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub.withAllDefaultFeatures().withComId()
+                    )
+            );
+
+            const studioManifest = WEB_MANIFEST_SCHEMA.parse({
+                name: 'Custom Domain Test',
+                short_name: 'CD Test',
+            } satisfies z.input<typeof WEB_MANIFEST_SCHEMA>);
+            await store.addStudio({
+                id: studioId,
+                displayName: 'Test Studio',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                playerWebManifest: studioManifest,
+            });
+
+            await store.saveCustomDomain({
+                id: 'domain-1',
+                domainName: 'customdomain.com',
+                studioId,
+                verificationKey: 'key-1',
+                verified: true,
+            });
+
+            const result = await manager.getPlayerWebManifest(
+                'customdomain.com'
+            );
+            expect(result).toEqual(success(studioManifest));
+        });
+
+        it('should return the default web manifest if the studio does not have one configured', async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub.withAllDefaultFeatures().withComId()
+                    )
+            );
+
+            await store.addStudio({
+                id: studioId,
+                displayName: 'Test Studio',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            await store.saveCustomDomain({
+                id: 'domain-1',
+                domainName: 'customdomain.com',
+                studioId,
+                verificationKey: 'key-1',
+                verified: true,
+            });
+
+            const result = await manager.getPlayerWebManifest(
+                'customdomain.com'
+            );
+            expect(result).toEqual(success(store.playerWebManifest));
         });
     });
 });
