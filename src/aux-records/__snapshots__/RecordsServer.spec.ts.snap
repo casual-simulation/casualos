@@ -5722,7 +5722,8 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
     Object {
       "http": Object {
         "method": "GET",
-        "path": "/api/v2/player.webmanifest",
+        "path": "/api/v2/site.webmanifest",
+        "scope": "player",
       },
       "inputs": Object {
         "schema": Object {},
@@ -12436,7 +12437,8 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
     Object {
       "http": Object {
         "method": "GET",
-        "path": "/api/v2/player.webmanifest",
+        "path": "/api/v2/site.webmanifest",
+        "scope": "player",
       },
       "inputs": Object {
         "schema": Object {},

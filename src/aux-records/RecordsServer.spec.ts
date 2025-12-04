@@ -231,6 +231,7 @@ import {
     getWebSockerErrors,
     getWebsocketHttpResponse,
     getWebsocketHttpPartialResponses,
+    scoped,
 } from './HttpTestUtils';
 import type { DomainNameValidator } from './dns';
 import { WEB_MANIFEST_SCHEMA } from '@casual-simulation/aux-common/common/WebManifest';
@@ -27479,7 +27480,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
         });
     });
 
-    describe('GET /api/v2/player.webmanifest', () => {
+    describe('GET /api/v2/site.webmanifest', () => {
         beforeEach(async () => {
             store.playerWebManifest = WEB_MANIFEST_SCHEMA.parse({
                 name: 'Test',
@@ -27489,7 +27490,10 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
 
         it('should return the default web manifest there is no custom domain', async () => {
             const result = await server.handleHttpRequest(
-                httpGet('/api/v2/player.webmanifest', apiHeaders)
+                scoped(
+                    'player',
+                    httpGet('/api/v2/site.webmanifest', apiHeaders)
+                )
             );
 
             await expectResponseBodyToEqual(result, {
@@ -27505,7 +27509,10 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
         it('should work if the user isnt logged in', async () => {
             delete apiHeaders['authorization'];
             const result = await server.handleHttpRequest(
-                httpGet('/api/v2/player.webmanifest', apiHeaders)
+                scoped(
+                    'player',
+                    httpGet('/api/v2/site.webmanifest', apiHeaders)
+                )
             );
 
             await expectResponseBodyToEqual(result, {
@@ -27521,7 +27528,10 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
         it('should return 404 if there is no web manifest', async () => {
             store.playerWebManifest = null;
             const result = await server.handleHttpRequest(
-                httpGet('/api/v2/player.webmanifest', apiHeaders)
+                scoped(
+                    'player',
+                    httpGet('/api/v2/site.webmanifest', apiHeaders)
+                )
             );
 
             await expectResponseBodyToEqual(result, {
@@ -27564,10 +27574,13 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
             });
 
             const result = await server.handleHttpRequest(
-                httpGet('/api/v2/player.webmanifest', {
-                    host: 'customdomain.com',
-                    origin: 'customdomain.com',
-                })
+                scoped(
+                    'player',
+                    httpGet('/api/v2/site.webmanifest', {
+                        host: 'customdomain.com',
+                        origin: 'customdomain.com',
+                    })
+                )
             );
 
             await expectResponseBodyToEqual(result, {

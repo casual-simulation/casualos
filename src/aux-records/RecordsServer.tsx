@@ -5145,7 +5145,7 @@ export class RecordsServer {
 
             getPlayerWebManifest: procedure()
                 .origins(true)
-                .http('GET', '/api/v2/player.webmanifest')
+                .http('GET', '/api/v2/site.webmanifest', 'player')
                 .inputs(z.object({}))
                 .handler(
                     async (_, context) => {
@@ -6614,6 +6614,7 @@ export class RecordsServer {
             path: route.path,
             schema: procedure.schema,
             querySchema: procedure.querySchema,
+            scope: route.scope,
             name: name,
             handler: async (request, data, query) => {
                 const context: RPCContext = {
