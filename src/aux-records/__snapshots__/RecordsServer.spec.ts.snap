@@ -5377,6 +5377,125 @@ Object {
             },
             "type": "object",
           },
+          "playerWebManifest": Object {
+            "catchall": Object {
+              "type": "any",
+            },
+            "description": "The PWA web manifest that should be served for custom domains for the studio.",
+            "optional": true,
+            "schema": Object {
+              "background_color": Object {
+                "defaultValue": "#ffffff",
+                "description": "The background color that should be used on the splash screen when the PWA is launched.",
+                "hasDefault": true,
+                "type": "string",
+              },
+              "description": Object {
+                "description": "The description of the PWA app.",
+                "optional": true,
+                "type": "string",
+              },
+              "display": Object {
+                "defaultValue": "standalone",
+                "description": "The display mode that should be used for the PWA app.",
+                "hasDefault": true,
+                "type": "enum",
+                "values": Array [
+                  "fullscreen",
+                  "standalone",
+                  "minimal-ui",
+                  "browser",
+                ],
+              },
+              "icons": Object {
+                "defaultValue": Array [
+                  Object {
+                    "purpose": "any",
+                    "sizes": "192x192",
+                    "src": "/pwa-192x192.png",
+                    "type": "image/png",
+                  },
+                  Object {
+                    "purpose": "any",
+                    "sizes": "512x512",
+                    "src": "/pwa-512x512.png",
+                    "type": "image/png",
+                  },
+                  Object {
+                    "purpose": "maskable",
+                    "sizes": "192x192",
+                    "src": "/pwa-maskable-192x192.png",
+                    "type": "image/png",
+                  },
+                  Object {
+                    "purpose": "maskable",
+                    "sizes": "512x512",
+                    "src": "/pwa-maskable-512x512.png",
+                    "type": "image/png",
+                  },
+                ],
+                "description": "The icons that should be used for the PWA app.
+See https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Manifest/Reference/icons
+Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons.",
+                "hasDefault": true,
+                "schema": Object {
+                  "schema": Object {
+                    "purpose": Object {
+                      "description": "The purpose of the icon.",
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "sizes": Object {
+                      "description": "The size(s) that the icon can display formatted as \\"{width}x{height}\\". Use \\"any\\" for scalable icons like SVG.",
+                      "options": Array [
+                        Object {
+                          "description": "The icon is scalable and can be used at any size.",
+                          "type": "literal",
+                          "value": "any",
+                        },
+                        Object {
+                          "description": "The sizes of the icon.",
+                          "type": "string",
+                        },
+                      ],
+                      "type": "union",
+                    },
+                    "src": Object {
+                      "description": "The source URL of the icon.",
+                      "type": "string",
+                    },
+                    "type": Object {
+                      "description": "The MIME type of the icon.",
+                      "type": "string",
+                    },
+                  },
+                  "type": "object",
+                },
+                "type": "array",
+              },
+              "name": Object {
+                "description": "The name of the PWA app.",
+                "type": "string",
+              },
+              "short_name": Object {
+                "description": "The short name of the PWA app.",
+                "type": "string",
+              },
+              "start_url": Object {
+                "defaultValue": "/",
+                "description": "The URL that should be launched when opening the PWA. Defaults to \\"/\\"",
+                "hasDefault": true,
+                "type": "string",
+              },
+              "theme_color": Object {
+                "defaultValue": "#000000",
+                "description": "The theme color that should be used for the PWA app.",
+                "hasDefault": true,
+                "type": "string",
+              },
+            },
+            "type": "object",
+          },
         },
         "type": "object",
       },
@@ -5599,6 +5718,18 @@ Object {
       },
       "name": "getWebConfig",
       "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/player.webmanifest",
+      },
+      "inputs": Object {
+        "schema": Object {},
+        "type": "object",
+      },
+      "name": "getPlayerWebManifest",
+      "origins": true,
     },
     Object {
       "http": Object {
@@ -11960,6 +12091,125 @@ Object {
             },
             "type": "object",
           },
+          "playerWebManifest": Object {
+            "catchall": Object {
+              "type": "any",
+            },
+            "description": "The PWA web manifest that should be served for custom domains for the studio.",
+            "optional": true,
+            "schema": Object {
+              "background_color": Object {
+                "defaultValue": "#ffffff",
+                "description": "The background color that should be used on the splash screen when the PWA is launched.",
+                "hasDefault": true,
+                "type": "string",
+              },
+              "description": Object {
+                "description": "The description of the PWA app.",
+                "optional": true,
+                "type": "string",
+              },
+              "display": Object {
+                "defaultValue": "standalone",
+                "description": "The display mode that should be used for the PWA app.",
+                "hasDefault": true,
+                "type": "enum",
+                "values": Array [
+                  "fullscreen",
+                  "standalone",
+                  "minimal-ui",
+                  "browser",
+                ],
+              },
+              "icons": Object {
+                "defaultValue": Array [
+                  Object {
+                    "purpose": "any",
+                    "sizes": "192x192",
+                    "src": "/pwa-192x192.png",
+                    "type": "image/png",
+                  },
+                  Object {
+                    "purpose": "any",
+                    "sizes": "512x512",
+                    "src": "/pwa-512x512.png",
+                    "type": "image/png",
+                  },
+                  Object {
+                    "purpose": "maskable",
+                    "sizes": "192x192",
+                    "src": "/pwa-maskable-192x192.png",
+                    "type": "image/png",
+                  },
+                  Object {
+                    "purpose": "maskable",
+                    "sizes": "512x512",
+                    "src": "/pwa-maskable-512x512.png",
+                    "type": "image/png",
+                  },
+                ],
+                "description": "The icons that should be used for the PWA app.
+See https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Manifest/Reference/icons
+Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons.",
+                "hasDefault": true,
+                "schema": Object {
+                  "schema": Object {
+                    "purpose": Object {
+                      "description": "The purpose of the icon.",
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "sizes": Object {
+                      "description": "The size(s) that the icon can display formatted as \\"{width}x{height}\\". Use \\"any\\" for scalable icons like SVG.",
+                      "options": Array [
+                        Object {
+                          "description": "The icon is scalable and can be used at any size.",
+                          "type": "literal",
+                          "value": "any",
+                        },
+                        Object {
+                          "description": "The sizes of the icon.",
+                          "type": "string",
+                        },
+                      ],
+                      "type": "union",
+                    },
+                    "src": Object {
+                      "description": "The source URL of the icon.",
+                      "type": "string",
+                    },
+                    "type": Object {
+                      "description": "The MIME type of the icon.",
+                      "type": "string",
+                    },
+                  },
+                  "type": "object",
+                },
+                "type": "array",
+              },
+              "name": Object {
+                "description": "The name of the PWA app.",
+                "type": "string",
+              },
+              "short_name": Object {
+                "description": "The short name of the PWA app.",
+                "type": "string",
+              },
+              "start_url": Object {
+                "defaultValue": "/",
+                "description": "The URL that should be launched when opening the PWA. Defaults to \\"/\\"",
+                "hasDefault": true,
+                "type": "string",
+              },
+              "theme_color": Object {
+                "defaultValue": "#000000",
+                "description": "The theme color that should be used for the PWA app.",
+                "hasDefault": true,
+                "type": "string",
+              },
+            },
+            "type": "object",
+          },
         },
         "type": "object",
       },
@@ -12182,6 +12432,18 @@ Object {
       },
       "name": "getWebConfig",
       "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/player.webmanifest",
+      },
+      "inputs": Object {
+        "schema": Object {},
+        "type": "object",
+      },
+      "name": "getPlayerWebManifest",
+      "origins": true,
     },
     Object {
       "http": Object {
