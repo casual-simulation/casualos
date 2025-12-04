@@ -5147,12 +5147,26 @@ export class RecordsServer {
                 .origins(true)
                 .http('GET', '/player.webmanifest')
                 .inputs(z.object({}))
-                .handler(async (_, context) => {
-                    const result = await this._records.getPlayerWebManifest(
-                        context.url.hostname
-                    );
-                    return genericResult(result);
-                }),
+                .handler(
+                    async (_, context) => {
+                        const result = await this._records.getPlayerWebManifest(
+                            context.url.hostname
+                        );
+                        return genericResult(result);
+                    },
+                    async (result) => {
+                        if (result.success === true) {
+                            const { success, ...data } = result;
+                            return {
+                                body: JSON.stringify(data),
+                                headers: {
+                                    'content-type': 'application/manifest+json',
+                                },
+                            };
+                        }
+                        return {};
+                    }
+                ),
 
             getPlayerConfig: procedure()
                 .origins('api')

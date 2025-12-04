@@ -233,6 +233,7 @@ import {
     getWebsocketHttpPartialResponses,
 } from './HttpTestUtils';
 import type { DomainNameValidator } from './dns';
+import { WEB_MANIFEST_SCHEMA } from '@casual-simulation/aux-common/common/WebManifest';
 
 jest.setTimeout(10000); // 10 seconds
 
@@ -27474,6 +27475,108 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                     requirePrivoLogin: false,
                 },
                 headers: apiCorsHeaders,
+            });
+        });
+    });
+
+    describe('GET /player.webmanifest', () => {
+        beforeEach(async () => {
+            store.playerWebManifest = WEB_MANIFEST_SCHEMA.parse({
+                name: 'Test',
+                short_name: 'Test',
+            } satisfies z.input<typeof WEB_MANIFEST_SCHEMA>);
+        });
+
+        it('should return the default web manifest there is no custom domain', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet('/player.webmanifest', apiHeaders)
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: store.playerWebManifest,
+                headers: {
+                    ...apiCorsHeaders,
+                    'content-type': 'application/manifest+json',
+                },
+            });
+        });
+
+        it('should work if the user isnt logged in', async () => {
+            delete apiHeaders['authorization'];
+            const result = await server.handleHttpRequest(
+                httpGet('/player.webmanifest', apiHeaders)
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: store.playerWebManifest,
+                headers: {
+                    ...apiCorsHeaders,
+                    'content-type': 'application/manifest+json',
+                },
+            });
+        });
+
+        it('should return 404 if there is no web manifest', async () => {
+            store.playerWebManifest = null;
+            const result = await server.handleHttpRequest(
+                httpGet('/player.webmanifest', apiHeaders)
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 404,
+                body: {
+                    success: false,
+                    errorCode: 'not_found',
+                    errorMessage: 'No web manifest found.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return the configured studio player web manifest', async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub.withAllDefaultFeatures().withComId()
+                    )
+            );
+
+            const studioManifest = WEB_MANIFEST_SCHEMA.parse({
+                name: 'Custom Domain Test',
+                short_name: 'CD Test',
+            } satisfies z.input<typeof WEB_MANIFEST_SCHEMA>);
+            await store.addStudio({
+                id: 'studioId',
+                displayName: 'Test Studio',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                playerWebManifest: studioManifest,
+            });
+
+            await store.saveCustomDomain({
+                id: 'domain-1',
+                domainName: 'customdomain.com',
+                studioId: 'studioId',
+                verificationKey: 'key-1',
+                verified: true,
+            });
+
+            const result = await server.handleHttpRequest(
+                httpGet('/player.webmanifest', {
+                    host: 'customdomain.com',
+                    origin: 'customdomain.com',
+                })
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: studioManifest,
+                headers: {
+                    ...corsHeaders('customdomain.com'),
+                    'content-type': 'application/manifest+json',
+                },
             });
         });
     });
