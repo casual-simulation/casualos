@@ -608,7 +608,10 @@ export function getSchemaMetadata(schema: _z.$ZodType): SchemaMetadata {
         return { type: 'boolean', description: getDescription(schema) };
     } else if (schema instanceof _z.$ZodNumber) {
         return { type: 'number', description: getDescription(schema) };
-    } else if (schema instanceof _z.$ZodAny) {
+    } else if (
+        schema instanceof _z.$ZodAny ||
+        schema instanceof _z.$ZodUnknown
+    ) {
         return { type: 'any', description: getDescription(schema) };
     } else if (schema instanceof _z.$ZodNull) {
         return { type: 'null', description: getDescription(schema) };
