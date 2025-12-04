@@ -29,6 +29,8 @@ export const MODERATION_CONFIG_KEY = 'moderation';
 
 export const WEB_CONFIG_KEY = 'web';
 
+export const PLAYER_WEB_MANIFEST_KEY = 'playerWebManifest';
+
 /**
  * The default configuration values used when no configuration is found in the store.
  */
@@ -52,6 +54,11 @@ export interface DefaultConfiguration {
      * The default web configuration.
      */
     webConfig: WebConfig;
+
+    /**
+     * The default player web manifest.
+     */
+    playerWebManifest: WebManifest | null;
 }
 
 /**

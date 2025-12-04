@@ -17,11 +17,16 @@
  */
 import type { PrivoConfiguration } from './PrivoConfiguration';
 import type { Cache } from './Cache';
-import { WEB_CONFIG_KEY, type ConfigurationStore } from './ConfigurationStore';
+import {
+    PLAYER_WEB_MANIFEST_KEY,
+    WEB_CONFIG_KEY,
+    type ConfigurationStore,
+} from './ConfigurationStore';
 import type { SubscriptionConfiguration } from './SubscriptionConfiguration';
 import type { ModerationConfiguration } from './ModerationConfiguration';
 import { traced } from './tracing/TracingDecorators';
 import type { WebConfig } from '@casual-simulation/aux-common';
+import type { WebManifest } from '@casual-simulation/aux-common/common/WebManifest';
 
 const TRACE_NAME = 'CachingConfigStore';
 
@@ -56,6 +61,28 @@ export class CachingConfigStore implements ConfigurationStore {
         const result = await this._store.getWebConfig();
         if (result) {
             await this._cache.store(WEB_CONFIG_KEY, result, this._cacheSeconds);
+        }
+
+        return result;
+    }
+
+    @traced(TRACE_NAME)
+    async getPlayerWebManifest(): Promise<WebManifest | null> {
+        const cached = await this._cache.retrieve<WebManifest>(
+            PLAYER_WEB_MANIFEST_KEY
+        );
+
+        if (cached) {
+            return cached;
+        }
+
+        const result = await this._store.getPlayerWebManifest();
+        if (result) {
+            await this._cache.store(
+                PLAYER_WEB_MANIFEST_KEY,
+                result,
+                this._cacheSeconds
+            );
         }
 
         return result;

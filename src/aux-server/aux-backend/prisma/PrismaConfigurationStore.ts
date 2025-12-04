@@ -23,6 +23,7 @@ import type {
 } from '@casual-simulation/aux-records';
 import {
     MODERATION_CONFIG_KEY,
+    PLAYER_WEB_MANIFEST_KEY,
     PRIVO_CONFIG_KEY,
     SUBSCRIPTIONS_CONFIG_KEY,
     WEB_CONFIG_KEY,
@@ -34,6 +35,8 @@ import type { PrismaClient } from './generated';
 import { parseModerationConfiguration } from '@casual-simulation/aux-records/ModerationConfiguration';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 import { parseWebConfig, type WebConfig } from '@casual-simulation/aux-common';
+import type { WebManifest } from '@casual-simulation/aux-common/common/WebManifest';
+import { parseWebManifest } from '@casual-simulation/aux-common/common/WebManifest';
 
 const TRACE_NAME = 'PrismaConfigurationStore';
 
@@ -57,6 +60,20 @@ export class PrismaConfigurationStore implements ConfigurationStore {
         return parseWebConfig(
             result?.data,
             this._defaultConfiguration.webConfig
+        );
+    }
+
+    @traced(TRACE_NAME)
+    async getPlayerWebManifest(): Promise<WebManifest | null> {
+        const result = await this._client.configuration.findUnique({
+            where: {
+                key: PLAYER_WEB_MANIFEST_KEY,
+            },
+        });
+
+        return parseWebManifest(
+            result?.data,
+            this._defaultConfiguration.playerWebManifest
         );
     }
 

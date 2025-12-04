@@ -111,3 +111,18 @@ export const WEB_MANIFEST_SCHEMA = z
     .optional();
 
 export type WebManifest = z.infer<typeof WEB_MANIFEST_SCHEMA>;
+
+export function parseWebManifest(
+    config: any,
+    defaultConfig: WebManifest
+): WebManifest {
+    if (config) {
+        const result = WEB_MANIFEST_SCHEMA.safeParse(config);
+        if (result.success) {
+            return result.data;
+        } else {
+            console.error('[WebManifest] Invalid web manifest', result);
+        }
+    }
+    return defaultConfig;
+}
