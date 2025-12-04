@@ -5145,7 +5145,7 @@ export class RecordsServer {
 
             getPlayerWebManifest: procedure()
                 .origins(true)
-                .http('GET', '/player.webmanifest')
+                .http('GET', '/api/v2/player.webmanifest')
                 .inputs(z.object({}))
                 .handler(
                     async (_, context) => {
