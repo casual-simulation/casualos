@@ -1,7 +1,6 @@
 {
     "extends": "../../tsconfig.base.json",
     "compilerOptions": {
-        "baseUrl": ".",
         "outDir": "../../temp/aux-server/dom/",
         "composite": true,
         "incremental": true,
