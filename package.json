@@ -136,6 +136,7 @@
         "@types/ws": "^8.5.12",
         "@typescript-eslint/utils": "^8.26.1",
         "@typescript/analyze-trace": "^0.10.1",
+        "@typescript/native-preview": "7.0.0-dev.20251204.1",
         "@zip.js/zip.js": "2.6.40",
         "browserslist": ">=4.16.5",
         "chai": "^4.2.0",
@@ -143,6 +144,7 @@
         "chokidar": "3.5.2",
         "commander": "12.0.0",
         "concurrently": "8.2.2",
+        "cross-env": "7.0.3",
         "del": "7.0.0",
         "es-toolkit": "1.39.10",
         "esbuild": "0.27.0",
@@ -191,8 +193,7 @@
         "typescript-eslint": "^8.26.1",
         "unified": "11.0.4",
         "vue-template-compiler": "^2.6.14",
-        "wait-on": "7",
-        "cross-env": "7.0.3"
+        "wait-on": "7"
     },
     "engines": {
         "node": ">=v20.18",
