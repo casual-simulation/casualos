@@ -112,6 +112,7 @@ describe('AuxHelper', () => {
                 isCollaborative: true,
                 allowCollaborationUpgrade: true,
                 ab1BootstrapUrl: 'ab1Bootstrap',
+                comID: null,
             }
         );
         subs.push(runtime);
