@@ -499,7 +499,7 @@ export class PrismaRecordsStore implements RecordsStore {
                 ),
                 comIdConfig: studio.comIdConfig,
                 playerConfig: studio.playerConfig,
-                playerWebManifest: studio.playerWebManifest,
+                playerWebManifest: studio.playerWebManifest as Prisma.JsonValue,
                 logoUrl: studio.logoUrl,
                 comId: studio.comId,
                 ownerStudioComId: studio.ownerStudioComId,
