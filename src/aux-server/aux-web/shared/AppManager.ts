@@ -55,6 +55,7 @@ import AuxVMImpl from '@casual-simulation/aux-vm-browser/vm/AuxVMImpl';
 import AuxNoVM, {
     processPartitions as processNoVmPartitions,
 } from '@casual-simulation/aux-vm-browser/vm/AuxNoVM';
+import { getVMOrigin } from '@casual-simulation/aux-vm-browser/vm/AuxVMUtils';
 import bootstrap from './ab1/ab-1.bootstrap.json';
 import { registerSW } from 'virtual:pwa-register';
 import { openIDB, getItem, getItems, putItem, deleteItem } from './IDB';
@@ -913,9 +914,16 @@ export class AppManager {
             `[AppManager] Attempting to cleanup all databases for inst: ${inst}`
         );
 
-        const vmOrigin = this._config.vmOrigin || location.origin;
+        const configuredOrigin = this._config.vmOrigin;
+        const vmOrigin = getVMOrigin(
+            configuredOrigin,
+            location.origin,
+            inst
+        );
 
-        if (vmOrigin === location.origin) {
+        console.log(`[AppManager] VM Origin for cleanup: ${vmOrigin}`);
+
+        if (vmOrigin === location.origin || !configuredOrigin) {
             return await this._directCleanup(inst);
         }
 
@@ -930,17 +938,17 @@ export class AppManager {
         vmOrigin: string
     ): Promise<boolean> {
         return new Promise((resolve, reject) => {
-            const cleanupUrl = `${vmOrigin}/cleanup-indexeddb.html?inst=${encodeURIComponent(
-                inst
-            )}`;
+            // Use URL class to properly construct the cleanup URL
+            const cleanupUrl = new URL('/cleanup-indexeddb.html', vmOrigin);
+            cleanupUrl.searchParams.set('inst', inst);
 
-            console.log(`[AppManager] Loading cleanup iframe: ${cleanupUrl}`);
+            console.log(`[AppManager] Loading cleanup iframe: ${cleanupUrl.href}`);
 
             const iframe = document.createElement('iframe');
             iframe.style.display = 'none';
             iframe.style.width = '0';
             iframe.style.height = '0';
-            iframe.src = cleanupUrl;
+            iframe.src = cleanupUrl.href;
             iframe.sandbox = 'allow-scripts allow-same-origin';
 
             let timeoutId: NodeJS.Timeout;
@@ -1010,6 +1018,7 @@ export class AppManager {
             const dbNames = [`/${inst}/default`, `/${inst}/shared`];
             let deletedAny = false;
 
+            // Clean up IndexedDB databases
             for (const dbName of dbNames) {
                 try {
                     await indexedDB.deleteDatabase(dbName);
@@ -1018,6 +1027,30 @@ export class AppManager {
                 } catch (err) {
                     console.warn(
                         `[AppManager] Could not delete ${dbName}:`,
+                        err
+                    );
+                }
+            }
+
+            // Clean up LocalStorage keys
+            const localStoragePrefix = `aux/${inst}`;
+            const keysToDelete: string[] = [];
+
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith(localStoragePrefix)) {
+                    keysToDelete.push(key);
+                }
+            }
+
+            for (const key of keysToDelete) {
+                try {
+                    localStorage.removeItem(key);
+                    console.log(`[AppManager] Deleted localStorage key: ${key}`);
+                    deletedAny = true;
+                } catch (err) {
+                    console.warn(
+                        `[AppManager] Could not delete localStorage key ${key}:`,
                         err
                     );
                 }

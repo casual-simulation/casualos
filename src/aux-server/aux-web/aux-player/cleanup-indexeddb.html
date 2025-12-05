@@ -56,6 +56,8 @@
 
                 let deletedDatabases = [];
                 let failedDatabases = [];
+                let deletedLocalStorageKeys = [];
+                let failedLocalStorageKeys = [];
 
                 if (typeof indexedDB.databases === 'function') {
                     try {
@@ -136,11 +138,46 @@
                     }
                 }
 
+                // Clean up LocalStorage keys
+                const localStoragePrefix = `aux/${inst}`;
+                const keysToDelete = [];
+
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && key.startsWith(localStoragePrefix)) {
+                        keysToDelete.push(key);
+                    }
+                }
+
+                console.log(
+                    '[Cleanup] Found localStorage keys to delete:',
+                    keysToDelete
+                );
+
+                for (const key of keysToDelete) {
+                    try {
+                        localStorage.removeItem(key);
+                        console.log('[Cleanup] Deleted localStorage key:', key);
+                        deletedLocalStorageKeys.push(key);
+                    } catch (err) {
+                        console.error(
+                            '[Cleanup] Failed to delete localStorage key:',
+                            key,
+                            err
+                        );
+                        failedLocalStorageKeys.push(key);
+                    }
+                }
+
                 return {
                     inst: inst,
                     deletedDatabases: deletedDatabases,
                     failedDatabases: failedDatabases,
-                    success: deletedDatabases.length > 0,
+                    deletedLocalStorageKeys: deletedLocalStorageKeys,
+                    failedLocalStorageKeys: failedLocalStorageKeys,
+                    success:
+                        deletedDatabases.length > 0 ||
+                        deletedLocalStorageKeys.length > 0,
                 };
             }
 
