@@ -57,9 +57,14 @@
 -   Added basic server side rendering.
     -   Currently, this is used for injecting the web config so that CasualOS doesn't need to make a call to `/api/config` on initialization.
 -   Added initial support for custom domains for comID
-    -   Studios with comID features can now register and verify custom domains.
     -   Only supported on server deployments.
+    -   Studios with comID features can now register and verify custom domains.
     -   Once registered, CasualOS will automatically adopt configuration values from the custom domain.
+-   Added support for configuring [PWA](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps) manifests
+    -   Only supported on server deployments.
+    -   If configured, then CasualOS will serve a [web application manifest](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Manifest) that enables PWA features like installation.
+    -   By default, PWA is disabled.
+    -   comIDs can configure their own PWA manifest if desired.
 
 ### :bug: Bug Fixes
 
