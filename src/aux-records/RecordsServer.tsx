@@ -169,6 +169,10 @@ import type { ViewParams, ViewTemplateRenderer } from './ViewTemplateRenderer';
 import type { JSX } from 'preact';
 import { omitBy } from 'es-toolkit';
 import { WEB_MANIFEST_SCHEMA } from '@casual-simulation/aux-common/common/WebManifest';
+import {
+    CONFIGURATION_KEYS,
+    CONFIGURATION_SCHEMAS,
+} from './ConfigurationStore';
 
 declare const GIT_TAG: string;
 declare const GIT_HASH: string;
@@ -6444,6 +6448,70 @@ export class RecordsServer {
                     );
 
                     return result;
+                }),
+
+            getConfigurationValue: procedure()
+                .origins('account')
+                .http('GET', '/api/v2/configuration')
+                .inputs(
+                    z.object({
+                        key: z.enum(CONFIGURATION_KEYS),
+                    })
+                )
+                .handler(async ({ key }, context) => {
+                    const validation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (validation.success === false) {
+                        if (validation.errorCode === 'no_session_key') {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return validation;
+                    }
+
+                    const result = await this._records.getConfigurationValue({
+                        userRole: validation.role,
+                        key: key,
+                    });
+
+                    return genericResult(result);
+                }),
+
+            setConfigurationValue: procedure()
+                .origins('account')
+                .http('POST', '/api/v2/configuration')
+                .inputs(
+                    z.discriminatedUnion(
+                        'key',
+                        CONFIGURATION_SCHEMAS.map((s) =>
+                            z.object({
+                                key: z.literal(s.key),
+                                value: s.schema,
+                            })
+                        ) as unknown as [
+                            z.core.$ZodTypeDiscriminable,
+                            ...z.core.$ZodTypeDiscriminable[]
+                        ]
+                    )
+                )
+                .handler(async ({ key, value }, context) => {
+                    const validation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (validation.success === false) {
+                        if (validation.errorCode === 'no_session_key') {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return validation;
+                    }
+
+                    const result = await this._records.setConfigurationValue({
+                        userRole: validation.role,
+                        key,
+                        value,
+                    });
+
+                    return genericResult(result);
                 }),
         };
     }

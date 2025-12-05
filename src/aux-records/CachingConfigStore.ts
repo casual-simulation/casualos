@@ -17,6 +17,11 @@
  */
 import type { PrivoConfiguration } from './PrivoConfiguration';
 import type { Cache } from './Cache';
+import type {
+    ConfigurationInput,
+    ConfigurationKey,
+    ConfigurationOutput,
+} from './ConfigurationStore';
 import {
     PLAYER_WEB_MANIFEST_KEY,
     WEB_CONFIG_KEY,
@@ -48,6 +53,37 @@ export class CachingConfigStore implements ConfigurationStore {
         this._store = store;
         this._cache = cache;
         this._cacheSeconds = cacheSeconds;
+    }
+
+    @traced(TRACE_NAME)
+    async setConfiguration<TKey extends ConfigurationKey>(
+        key: TKey,
+        value: ConfigurationInput<TKey>
+    ): Promise<void> {
+        await this._cache.remove(key);
+        await this._store.setConfiguration(key, value);
+    }
+
+    @traced(TRACE_NAME)
+    async getConfiguration<TKey extends ConfigurationKey>(
+        key: TKey,
+        defaultValue?: ConfigurationInput<TKey>
+    ): Promise<ConfigurationOutput<TKey> | null> {
+        const cached = await this._cache.retrieve<ConfigurationOutput<TKey>>(
+            key
+        );
+
+        if (cached) {
+            return cached;
+        }
+
+        const result = await this._store.getConfiguration(key, defaultValue);
+
+        if (result) {
+            await this._cache.store(key, result, this._cacheSeconds);
+        }
+
+        return result;
     }
 
     @traced(TRACE_NAME)

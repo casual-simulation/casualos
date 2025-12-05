@@ -49,7 +49,12 @@ import type { ValidateSessionKeyFailure } from './AuthController';
 import type { AuthStore } from './AuthStore';
 import { v4 as uuid, v7 as uuidv7 } from 'uuid';
 import type { MetricsStore, SubscriptionFilter } from './MetricsStore';
-import type { ConfigurationStore } from './ConfigurationStore';
+import type {
+    ConfigurationInput,
+    ConfigurationKey,
+    ConfigurationOutput,
+    ConfigurationStore,
+} from './ConfigurationStore';
 import type {
     AIHumeFeaturesConfiguration,
     PurchasableItemFeaturesConfiguration,
@@ -1716,6 +1721,7 @@ export class RecordsController {
      * Attempts to get a verified custom domain by its name.
      * @param hostname The hostname of the custom domain.
      */
+    @traced(TRACE_NAME)
     async getVerifiedCustomDomainByName(
         hostname: string
     ): Promise<Result<CustomDomainWithStudio | null, SimpleError>> {
@@ -1723,6 +1729,39 @@ export class RecordsController {
             hostname
         );
         return success(customDomain);
+    }
+
+    @traced(TRACE_NAME)
+    async getConfigurationValue(
+        request: GetConfigurationValueRequest
+    ): Promise<Result<ConfigurationOutput<ConfigurationKey>, SimpleError>> {
+        if (!isSuperUserRole(request.userRole)) {
+            return failure({
+                errorCode: 'not_authorized',
+                errorMessage:
+                    'You are not authorized to perform this operation.',
+            });
+        }
+
+        const value = await this._config.getConfiguration(request.key);
+        return success(value);
+    }
+
+    @traced(TRACE_NAME)
+    async setConfigurationValue(
+        request: SetConfigurationValueRequest
+    ): Promise<Result<void, SimpleError>> {
+        if (!isSuperUserRole(request.userRole)) {
+            return failure({
+                errorCode: 'not_authorized',
+                errorMessage:
+                    'You are not authorized to perform this operation.',
+            });
+        }
+
+        await this._config.setConfiguration(request.key, request.value);
+
+        return success();
     }
 
     /**
@@ -3039,3 +3078,14 @@ export type ListCustomDomainsResult = Result<
     },
     SimpleError
 >;
+
+export interface GetConfigurationValueRequest {
+    userRole: UserRole | null;
+    key: ConfigurationKey;
+}
+
+export interface SetConfigurationValueRequest {
+    userRole: UserRole | null;
+    key: ConfigurationKey;
+    value: ConfigurationInput<ConfigurationKey>;
+}
