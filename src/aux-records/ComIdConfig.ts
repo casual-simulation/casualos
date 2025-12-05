@@ -44,6 +44,7 @@ export const COM_ID_PLAYER_CONFIG = WEB_CONFIG_SCHEMA.pick({
     jitsiAppName: true,
     what3WordsApiKey: true,
     logoBackgroundColor: true,
+    disableVM: true,
 }).partial();
 
 export type ComIdPlayerConfig = z.infer<typeof COM_ID_PLAYER_CONFIG>;

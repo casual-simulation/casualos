@@ -51,6 +51,11 @@ export interface RPCContext {
     origin: string | null;
 
     /**
+     * The URL that the request was made to.
+     */
+    url: URL | null;
+
+    /**
      * The span that the RPC call is being made in.
      */
     span?: Span;

@@ -71,6 +71,7 @@ describe('CustomAppHelper', () => {
                 isCollaborative: true,
                 allowCollaborationUpgrade: true,
                 ab1BootstrapUrl: 'ab1Bootstrap',
+                comID: null,
             }
         );
         memory = createMemoryPartition({
@@ -106,6 +107,7 @@ describe('CustomAppHelper', () => {
                 isCollaborative: true,
                 allowCollaborationUpgrade: true,
                 ab1BootstrapUrl: 'ab1Bootstrap',
+                comID: null,
             }
         );
         const helper = new AuxHelper('user', partitions, runtime);

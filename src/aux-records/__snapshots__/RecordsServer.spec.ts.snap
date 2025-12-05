@@ -5354,6 +5354,11 @@ Object {
                   "delete inst",
                 ],
               },
+              "disableVM": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "boolean",
+              },
               "jitsiAppName": Object {
                 "nullable": true,
                 "optional": true,
@@ -5376,6 +5381,73 @@ Object {
         "type": "object",
       },
       "name": "updateStudio",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/studios/domains",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "domain": Object {
+            "type": "string",
+          },
+          "studioId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "addCustomDomain",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "DELETE",
+        "path": "/api/v2/studios/domains",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "customDomainId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "deleteCustomDomain",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/studios/domains/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "studioId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listCustomDomains",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/studios/domains/verify",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "customDomainId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "verifyCustomDomain",
       "origins": "account",
     },
     Object {
@@ -11865,6 +11937,11 @@ Object {
                   "delete inst",
                 ],
               },
+              "disableVM": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "boolean",
+              },
               "jitsiAppName": Object {
                 "nullable": true,
                 "optional": true,
@@ -11887,6 +11964,73 @@ Object {
         "type": "object",
       },
       "name": "updateStudio",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/studios/domains",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "domain": Object {
+            "type": "string",
+          },
+          "studioId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "addCustomDomain",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "DELETE",
+        "path": "/api/v2/studios/domains",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "customDomainId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "deleteCustomDomain",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/studios/domains/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "studioId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listCustomDomains",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/studios/domains/verify",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "customDomainId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "verifyCustomDomain",
       "origins": "account",
     },
     Object {

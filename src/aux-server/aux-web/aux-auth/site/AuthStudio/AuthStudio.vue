@@ -193,6 +193,11 @@
                     <md-table-cell>store.requirements</md-table-cell>
                     <md-table-cell>{{ stripeRequirementsStatus || '(not setup)' }}</md-table-cell>
                 </md-table-row>
+                <md-table-row v-if="allowComId" @click="openCustomDomains()">
+                    <md-tooltip>Manage custom domains for this comID. Click to manage.</md-tooltip>
+                    <md-table-cell>comID.customDomains</md-table-cell>
+                    <md-table-cell>{{ customDomainsCount }} domain(s)</md-table-cell>
+                </md-table-row>
             </md-table>
         </div>
 
@@ -551,6 +556,102 @@
                     <span v-else-if="!stripeAccountStatus">Setup</span>
                     <span v-else>Manage</span>
                 </md-button>
+            </md-dialog-actions>
+        </md-dialog>
+
+        <md-dialog :md-active.sync="showCustomDomains" class="custom-domains-dialog">
+            <md-dialog-title>Custom Domains</md-dialog-title>
+            <md-dialog-content>
+                <div v-if="loadingDomains">
+                    <md-progress-spinner
+                        md-mode="indeterminate"
+                        :md-diameter="20"
+                        :md-stroke="2"
+                    ></md-progress-spinner>
+                    <p class="sr-only">Loading domains...</p>
+                </div>
+                <div v-else>
+                    <div v-if="customDomains.length === 0">
+                        <p>No custom domains configured.</p>
+                    </div>
+                    <md-table v-else>
+                        <md-table-row>
+                            <md-table-head>Domain Name</md-table-head>
+                            <md-table-head>Status</md-table-head>
+                            <md-table-head>Actions</md-table-head>
+                        </md-table-row>
+                        <md-table-row v-for="domain of customDomains" :key="domain.id">
+                            <md-table-cell>{{ domain.domainName }}</md-table-cell>
+                            <md-table-cell>
+                                <md-chip v-if="domain.verified" class="md-primary"
+                                    >Verified</md-chip
+                                >
+                                <md-chip v-else>Pending</md-chip>
+                            </md-table-cell>
+                            <md-table-cell>
+                                <md-button
+                                    v-if="!domain.verified"
+                                    class="md-icon-button"
+                                    @click="verifyDomain(domain)"
+                                    :disabled="verifyingDomain === domain.id"
+                                >
+                                    <md-icon>verified</md-icon>
+                                    <md-tooltip>Verify Domain</md-tooltip>
+                                </md-button>
+                                <md-button
+                                    class="md-icon-button"
+                                    @click="deleteDomain(domain)"
+                                    :disabled="deletingDomain === domain.id"
+                                >
+                                    <md-icon>delete</md-icon>
+                                    <md-tooltip>Delete Domain</md-tooltip>
+                                </md-button>
+                            </md-table-cell>
+                        </md-table-row>
+                    </md-table>
+
+                    <div class="add-domain-section">
+                        <h3>Add New Domain</h3>
+                        <md-field :class="newDomainFieldClass">
+                            <label>Domain Name</label>
+                            <md-input v-model="newDomainName" placeholder="example.com"></md-input>
+                            <span v-if="domainError" class="md-error">{{ domainError }}</span>
+                        </md-field>
+                        <md-button
+                            class="md-raised md-primary"
+                            @click="addDomain()"
+                            :disabled="addingDomain || !newDomainName"
+                        >
+                            <md-progress-spinner
+                                v-if="addingDomain"
+                                md-mode="indeterminate"
+                                :md-diameter="20"
+                                :md-stroke="2"
+                            ></md-progress-spinner>
+                            <span v-else>Add Domain</span>
+                        </md-button>
+                    </div>
+
+                    <div v-if="verificationRecord" class="verification-instructions">
+                        <h3>Verification Instructions</h3>
+                        <p>
+                            To verify your domain <strong>{{ newDomainName }}</strong
+                            >, add the following DNS record:
+                        </p>
+                        <div class="dns-record">
+                            <p><strong>Type:</strong> {{ verificationRecord.recordType }}</p>
+                            <p><strong>Value:</strong> {{ verificationRecord.value }}</p>
+                            <p><strong>TTL:</strong> {{ verificationRecord.ttlSeconds }} seconds</p>
+                        </div>
+                        <p>
+                            After adding the DNS record, click the verify button next to the domain
+                            to check verification status.
+                        </p>
+                    </div>
+                </div>
+            </md-dialog-content>
+            <md-dialog-actions>
+                <md-button @click="closeCustomDomains()">Close</md-button>
             </md-dialog-actions>
         </md-dialog>
     </div>

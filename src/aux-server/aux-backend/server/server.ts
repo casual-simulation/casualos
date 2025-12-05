@@ -379,13 +379,13 @@ export class Server {
             };
 
             const map = [
-                ['playerIndex', 'http://localhost:5173/'],
+                ['playerIndex', 'http://localhost:5173/index.html'],
                 ['playerVmIframe', 'http://localhost:5173/aux-vm-iframe.html'],
                 [
                     'playerVmIframeDom',
                     'http://localhost:5173/aux-vm-iframe-dom.html',
                 ],
-                ['authIndex', 'http://localhost:5174/'],
+                ['authIndex', 'http://localhost:5174/index.html'],
                 ['authIframe', 'http://localhost:5174/iframe.html'],
             ];
 

@@ -135,6 +135,7 @@ describe('RuntimeBot', () => {
             isCollaborative: true,
             allowCollaborationUpgrade: true,
             ab1BootstrapUrl: 'ab1Bootstrap',
+            comID: null,
         };
         realtimeEditMode = RealtimeEditMode.Immediate;
         changedValue = null;

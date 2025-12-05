@@ -46,6 +46,7 @@ import type {
     PurchasableItemRecordsStore,
 } from '@casual-simulation/aux-records';
 import {
+    DNSDomainNameValidator,
     PurchasableItemRecordsController,
     serverConfigSchema,
 } from '@casual-simulation/aux-records';
@@ -1818,6 +1819,7 @@ export class ServerBuilder implements SubscriptionLike {
                 supportsDOM: false,
                 allowCollaborationUpgrade: false,
                 ab1BootstrapUrl: null,
+                comID: null,
             },
         };
 
@@ -2094,6 +2096,7 @@ export class ServerBuilder implements SubscriptionLike {
             metrics: this._metricsStore,
             messenger: this._notificationMessenger,
             privo: this._privoClient ?? null,
+            domainNameValidator: new DNSDomainNameValidator(),
         });
         this._policyController = new PolicyController(
             this._authController,

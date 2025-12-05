@@ -6827,6 +6827,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             isCollaborative: null as boolean,
             allowCollaborationUpgrade: null as boolean,
             ab1BootstrapUrl: null as string,
+            comID: null as string,
         };
     }
 

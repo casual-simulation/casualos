@@ -34,7 +34,10 @@ import {
     isStoredVersion2,
 } from '@casual-simulation/aux-common';
 import { v4 as uuid } from 'uuid';
-import type { WebConfig } from '@casual-simulation/aux-common/common/WebConfig';
+import type {
+    CasualOSConfig,
+    WebConfig,
+} from '@casual-simulation/aux-common/common/WebConfig';
 import type {
     AuxConfig,
     SimulationOrigin,
@@ -49,6 +52,9 @@ import {
     SystemPortalCoordinator,
 } from '@casual-simulation/aux-vm-browser';
 import AuxVMImpl from '@casual-simulation/aux-vm-browser/vm/AuxVMImpl';
+import AuxNoVM, {
+    processPartitions as processNoVmPartitions,
+} from '@casual-simulation/aux-vm-browser/vm/AuxNoVM';
 import bootstrap from './ab1/ab-1.bootstrap.json';
 import { registerSW } from 'virtual:pwa-register';
 import { openIDB, getItem, getItems, putItem, deleteItem } from './IDB';
@@ -59,6 +65,7 @@ import type { GetPlayerConfigSuccess } from '@casual-simulation/aux-records';
 import { tryParseJson } from '@casual-simulation/aux-common';
 import type { AuxDevice } from '@casual-simulation/aux-runtime';
 import { getSimulationId } from '../../shared/SimulationHelpers';
+import type { AuxVM } from '@casual-simulation/aux-vm/vm';
 
 /**
  * Defines an interface that contains version information about the app.
@@ -152,7 +159,7 @@ export class AppManager {
     private _progress: BehaviorSubject<ProgressMessage>;
     private _updateAvailable: BehaviorSubject<boolean>;
     private _simulationManager: SimulationManager<BotManager>;
-    private _config: WebConfig;
+    private _config: CasualOSConfig;
     private _primaryPromise: Promise<BotManager>;
     private _registration: ServiceWorkerRegistration;
     private _systemPortal: SystemPortalCoordinator<BotManager>;
@@ -250,6 +257,36 @@ export class AppManager {
                 vmOrigin = storedInst.vmOrigin ?? location.origin;
             }
 
+            let vm: AuxVM;
+            const auxConfig: AuxConfig = {
+                configBotId: configBotId,
+                config: {
+                    ...config,
+                    vmOrigin,
+                },
+                partitions,
+            };
+
+            if (config.disableVM && config.enableDom) {
+                vmOrigin = location.origin;
+                const { BrowserAuxChannel } = await import(
+                    '@casual-simulation/aux-vm-browser/vm/BrowserAuxChannel'
+                );
+                const processedConfig = processNoVmPartitions(auxConfig);
+                const channel = new BrowserAuxChannel(
+                    location.origin,
+                    processedConfig
+                );
+                vm = new AuxNoVM(id, origin, auxConfig.configBotId, channel);
+            } else {
+                if (config.disableVM) {
+                    console.error(
+                        '[AppManager] Broken configuration! The VM can only be disabled (disableVM=true) when DOM features are also enabled (enableDom=true). Enabling VM to ensure that DOM features are disabled.'
+                    );
+                }
+                vm = new AuxVMImpl(id, origin, auxConfig, relaxOrigin);
+            }
+
             if (this._db) {
                 putItem<StoredInst>(
                     this._db,
@@ -264,24 +301,7 @@ export class AppManager {
                 );
             }
 
-            return new BotManager(
-                origin,
-                config,
-                new AuxVMImpl(
-                    id,
-                    origin,
-                    {
-                        configBotId: configBotId,
-                        config: {
-                            ...config,
-                            vmOrigin,
-                        },
-                        partitions,
-                    },
-                    relaxOrigin
-                ),
-                this._auth
-            );
+            return new BotManager(origin, config, vm, this._auth);
         };
         this._simulationManager = new SimulationManager(async (id, config) => {
             const params = new URLSearchParams(location.search);
@@ -341,6 +361,7 @@ export class AppManager {
             comId: this._comId,
             enableDom: this._config.enableDom,
             debug: this._config.debug,
+            disableVM: this._config.disableVm,
         };
     }
 
@@ -676,6 +697,7 @@ export class AppManager {
             isCollaborative: !isStatic,
             allowCollaborationUpgrade: false,
             ab1BootstrapUrl: this._ab1BootstrapUrl,
+            comID: this._comId,
         };
     }
 
@@ -711,6 +733,15 @@ export class AppManager {
     }
 
     private async _initComId() {
+        if (this._config.comId) {
+            this._comId = this._config.comId;
+            console.log('[AppManager] Using comId:', this._comId);
+        } else {
+            await this._initComIdFromUrl();
+        }
+    }
+
+    private async _initComIdFromUrl() {
         this._comId = this.getComIdFromUrl();
         if (this._comId) {
             console.log('[AppManager] Using comId:', this._comId);
@@ -1136,13 +1167,15 @@ export class AppManager {
         }
     }
 
-    private async _getBaseConfig(): Promise<WebConfig> {
+    private async _getBaseConfig(): Promise<CasualOSConfig> {
         if (import.meta.env.MODE === 'static' || import.meta.env.SSR) {
             return {
                 version: null,
                 causalRepoConnectionProtocol: 'websocket',
                 disableCollaboration: true,
                 staticRepoLocalPersistence: true,
+                studiosSupported: false,
+                subscriptionsSupported: false,
             };
         } else {
             const injectedConfig = tryParseJson(
@@ -1160,9 +1193,9 @@ export class AppManager {
         }
     }
 
-    private async _fetchConfigFromServer(): Promise<WebConfig> {
+    private async _fetchConfigFromServer(): Promise<CasualOSConfig> {
         try {
-            const result = await Axios.get<WebConfig>(`/api/config`, {
+            const result = await Axios.get<CasualOSConfig>(`/api/config`, {
                 timeout: FETCH_CONFIG_TIMEOUT_MILISECONDS,
                 timeoutErrorMessage: 'Fetch config request timed out',
             });
@@ -1210,12 +1243,12 @@ export class AppManager {
         }
     }
 
-    private async _fetchConfigFromLocalStorage(): Promise<WebConfig> {
+    private async _fetchConfigFromLocalStorage(): Promise<CasualOSConfig> {
         try {
             if (!this._db) {
                 return null;
             }
-            const val = await getItem<StoredValue<WebConfig>>(
+            const val = await getItem<StoredValue<CasualOSConfig>>(
                 this._db,
                 'keyval',
                 'config'

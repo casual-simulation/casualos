@@ -356,6 +356,7 @@ describe('AuxLibrary', () => {
             isCollaborative: true,
             allowCollaborationUpgrade: true,
             ab1BootstrapUrl: 'bootstrapURL',
+            comID: null,
         };
         notifier = {
             notifyChange: jest.fn(),
@@ -4218,6 +4219,7 @@ describe('AuxLibrary', () => {
                     isCollaborative: null,
                     ab1BootstrapUrl: null,
                     allowCollaborationUpgrade: null,
+                    comID: null,
                 });
             });
         });
@@ -4276,6 +4278,7 @@ describe('AuxLibrary', () => {
                     supportsAR: true,
                     supportsVR: true,
                     supportsDOM: false,
+                    comID: null,
                 };
                 const promise: any = library.api.os.enableCollaboration();
                 const expected = enableCollaboration(context.tasks.size);
@@ -4291,6 +4294,7 @@ describe('AuxLibrary', () => {
                     supportsAR: true,
                     supportsVR: true,
                     supportsDOM: false,
+                    comID: null,
                 };
                 const promise: any = library.api.os.enableCollaboration();
                 expect(promise[ORIGINAL_OBJECT]).toBeUndefined();
@@ -4309,6 +4313,7 @@ describe('AuxLibrary', () => {
                     supportsAR: true,
                     supportsVR: true,
                     supportsDOM: false,
+                    comID: null,
                 };
                 const promise: any = library.api.os.enableCollaboration();
                 expect(promise[ORIGINAL_OBJECT]).toBeUndefined();
@@ -11869,6 +11874,7 @@ describe('AuxLibrary', () => {
                         isCollaborative: true,
                         allowCollaborationUpgrade: true,
                         ab1BootstrapUrl: 'bootstrapURL',
+                        comID: null,
                     };
                     notifier = {
                         notifyChange: jest.fn(),

@@ -128,6 +128,7 @@ import { PurchasableItemRecordsController } from './purchasable-items/Purchasabl
 import type { PurchasableItemRecordsStore } from './purchasable-items/PurchasableItemRecordsStore';
 import { MemoryContractRecordsStore } from './contracts/MemoryContractRecordsStore';
 import { ContractRecordsController } from './contracts/ContractRecordsController';
+import type { DomainNameValidator } from './dns';
 
 jest.mock('@simplewebauthn/server');
 let verifyRegistrationResponseMock: jest.Mock<
@@ -402,6 +403,8 @@ describe('RecordsServer', () => {
     let privoClient: PrivoClientInterface;
     let privoClientMock: jest.MockedObject<PrivoClientInterface>;
 
+    let domainNameValidator: jest.Mocked<DomainNameValidator>;
+
     let viewTemplateRenderer: ViewTemplateRenderer;
 
     beforeEach(async () => {
@@ -480,6 +483,10 @@ describe('RecordsServer', () => {
             livekitEndpoint
         );
 
+        domainNameValidator = {
+            getVerificationDNSRecord: jest.fn(),
+            validateDomainName: jest.fn(),
+        };
         // const memRecordsStore = (store = new MemoryRecordsStore(
         //     store
         // ));
@@ -490,6 +497,7 @@ describe('RecordsServer', () => {
             metrics: store,
             messenger: store,
             privo: privoClient,
+            domainNameValidator,
         });
 
         websocketConnectionStore = new MemoryWebsocketConnectionStore();

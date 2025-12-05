@@ -5917,6 +5917,7 @@ describe('PolicyController', () => {
                         metrics: store,
                         store,
                         privo: privoClient,
+                        domainNameValidator: null,
                     });
 
                     controller = new PolicyController(auth, records, store);

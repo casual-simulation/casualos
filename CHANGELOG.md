@@ -56,6 +56,10 @@
     -   This saves space and can help your `.aux` files load quicker, at the expense of readability.
 -   Added basic server side rendering.
     -   Currently, this is used for injecting the web config so that CasualOS doesn't need to make a call to `/api/config` on initialization.
+-   Added initial support for custom domains for comID
+    -   Studios with comID features can now register and verify custom domains.
+    -   Only supported on server deployments.
+    -   Once registered, CasualOS will automatically adopt configuration values from the custom domain.
 
 ### :bug: Bug Fixes
 

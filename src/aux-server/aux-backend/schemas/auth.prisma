@@ -304,6 +304,7 @@ model Studio {
     aiSkyboxMetrics AiSkyboxMetrics[]
     aiSloydMetrics AiSloydMetrics[]
     aiOpenAIRealtimeMetrics AiOpenAIRealtimeMetrics[]
+    customDomains CustomDomain[]
 
     accounts FinancialAccount[]
 
@@ -1706,3 +1707,29 @@ model ExternalPayout {
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }
+
+// Represents a custom domain that a studio has setup
+model CustomDomain {
+    id String @id @db.Uuid
+
+    studioId String
+    studio Studio @relation(fields: [studioId], references: [id], onDelete: Cascade, map: "CustomDomain_studioId_fkey1")
+
+    // The domain name that is being used
+    domainName String @db.String(256)
+
+    // The HMAC-SHA-256 key used to validate requests for this domain
+    verificationKey String @db.String(256)
+
+    // Whether the domain has been verified
+    // Null if not yet verified
+    verified Boolean?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@unique([domainName, verified])
+    @@unique([studioId, domainName])
+    @@index([domainName])
+}
+

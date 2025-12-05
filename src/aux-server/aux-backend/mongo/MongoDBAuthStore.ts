@@ -33,6 +33,8 @@ import type {
     StudioComIdRequest,
     HumeConfig,
     LoomConfig,
+    CustomDomain,
+    CustomDomainWithStudio,
 } from '@casual-simulation/aux-records';
 import type {
     ActivationKey,
@@ -136,12 +138,43 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
                 WEB_AUTHN_LOGIN_REQUESTS_COLLECTION_NAME
             );
     }
+
+    saveCustomDomain(domain: CustomDomain): Promise<void> {
+        throw new Error('Method not implemented.');
+    }
+
+    deleteCustomDomain(domainId: string): Promise<void> {
+        throw new Error('Method not implemented.');
+    }
+
+    getCustomDomainById(
+        domainId: string
+    ): Promise<CustomDomainWithStudio | null> {
+        throw new Error('Method not implemented.');
+    }
+
+    listCustomDomainsByStudioId(studioId: string): Promise<CustomDomain[]> {
+        throw new Error('Method not implemented.');
+    }
+
+    getVerifiedCustomDomainByName(
+        domainName: string
+    ): Promise<CustomDomainWithStudio | null> {
+        throw new Error('Method not implemented.');
+    }
+
+    markCustomDomainAsVerified(domainId: string): Promise<void> {
+        throw new Error('Method not implemented.');
+    }
+
     findUserByStripeAccountId(accountId: string): Promise<AuthUser | null> {
         throw new Error('Method not implemented.');
     }
+
     getInvoiceByStripeId(id: string): Promise<AuthInvoice | null> {
         throw new Error('Method not implemented.');
     }
+
     updateCheckoutSessionInfo(
         request: UpdateCheckoutSessionRequest
     ): Promise<void> {

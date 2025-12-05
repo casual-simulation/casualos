@@ -611,7 +611,9 @@ export class RecordsServer {
                 .origins(true)
                 .view('player', true)
                 .handler(async (_, context) => {
-                    const config = await this._records.getWebConfig();
+                    const config = await this._records.getWebConfig(
+                        context.url.hostname
+                    );
 
                     const postApp: JSX.Element[] = [];
 
@@ -660,7 +662,9 @@ export class RecordsServer {
                 .origins(true)
                 .view('auth', true)
                 .handler(async (_, context) => {
-                    const config = await this._records.getWebConfig();
+                    const config = await this._records.getWebConfig(
+                        context.url.hostname
+                    );
                     const postApp: JSX.Element[] = [];
 
                     if (isSuccess(config) && config.value) {
@@ -686,7 +690,9 @@ export class RecordsServer {
                 .origins(true)
                 .view('auth', '/iframe.html')
                 .handler(async (_, context) => {
-                    const config = await this._records.getWebConfig();
+                    const config = await this._records.getWebConfig(
+                        context.url.hostname
+                    );
                     const postApp: JSX.Element[] = [];
 
                     if (isSuccess(config) && config.value) {
@@ -4725,6 +4731,128 @@ export class RecordsServer {
                     }
                 ),
 
+            addCustomDomain: procedure()
+                .origins('account')
+                .http('POST', '/api/v2/studios/domains')
+                .inputs(
+                    z.object({
+                        studioId: STUDIO_ID_VALIDATION,
+                        domain: z.string().min(1).max(255),
+                    })
+                )
+                .handler(async ({ studioId, domain }, context) => {
+                    const sessionKeyValidation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (sessionKeyValidation.success === false) {
+                        if (
+                            sessionKeyValidation.errorCode === 'no_session_key'
+                        ) {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return sessionKeyValidation;
+                    }
+
+                    const result = await this._records.addCustomDomain({
+                        userId: sessionKeyValidation.userId,
+                        userRole: sessionKeyValidation.role,
+                        studioId,
+                        domain,
+                    });
+
+                    return genericResult(result);
+                }),
+
+            deleteCustomDomain: procedure()
+                .origins('account')
+                .http('DELETE', '/api/v2/studios/domains')
+                .inputs(
+                    z.object({
+                        customDomainId: z.string().nonempty(),
+                    })
+                )
+                .handler(async ({ customDomainId }, context) => {
+                    const sessionKeyValidation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (sessionKeyValidation.success === false) {
+                        if (
+                            sessionKeyValidation.errorCode === 'no_session_key'
+                        ) {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return sessionKeyValidation;
+                    }
+
+                    const result = await this._records.deleteCustomDomain({
+                        userId: sessionKeyValidation.userId,
+                        userRole: sessionKeyValidation.role,
+                        customDomainId,
+                    });
+
+                    return genericResult(result);
+                }),
+
+            listCustomDomains: procedure()
+                .origins('account')
+                .http('GET', '/api/v2/studios/domains/list')
+                .inputs(
+                    z.object({
+                        studioId: STUDIO_ID_VALIDATION,
+                    })
+                )
+                .handler(async ({ studioId }, context) => {
+                    const sessionKeyValidation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (sessionKeyValidation.success === false) {
+                        if (
+                            sessionKeyValidation.errorCode === 'no_session_key'
+                        ) {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return sessionKeyValidation;
+                    }
+
+                    const result = await this._records.listCustomDomains({
+                        userId: sessionKeyValidation.userId,
+                        userRole: sessionKeyValidation.role,
+                        studioId,
+                    });
+
+                    return genericResult(result);
+                }),
+
+            verifyCustomDomain: procedure()
+                .origins('account')
+                .http('POST', '/api/v2/studios/domains/verify')
+                .inputs(
+                    z.object({
+                        customDomainId: z.string().nonempty(),
+                    })
+                )
+                .handler(async ({ customDomainId }, context) => {
+                    const sessionKeyValidation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (sessionKeyValidation.success === false) {
+                        if (
+                            sessionKeyValidation.errorCode === 'no_session_key'
+                        ) {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return sessionKeyValidation;
+                    }
+
+                    const result = await this._records.verifyCustomDomain({
+                        userId: sessionKeyValidation.userId,
+                        userRole: sessionKeyValidation.role,
+                        customDomainId,
+                    });
+
+                    return genericResult(result);
+                }),
+
             requestStudioComId: procedure()
                 .origins('account')
                 .http('POST', '/api/v2/studios/requestComId')
@@ -5004,7 +5132,7 @@ export class RecordsServer {
                 .http('GET', '/api/config')
                 .inputs(z.object({}))
                 .handler(async (inputs, context) => {
-                    const result = await this._records.getWebConfig();
+                    const result = await this._records.getWebConfig(null);
                     return genericResult(result);
                 }),
 
@@ -6350,6 +6478,10 @@ export class RecordsServer {
                     sessionKey: getSessionKey(request),
                     httpRequest: request,
                     origin: request.headers.origin ?? null,
+                    url: new URL(
+                        request.path,
+                        `http://${request.headers.host}`
+                    ),
                 };
 
                 let result: ProcedureOutput;
@@ -6457,6 +6589,10 @@ export class RecordsServer {
                     sessionKey: getSessionKey(request),
                     httpRequest: request,
                     origin: request.headers.origin ?? null,
+                    url: new URL(
+                        request.path,
+                        `http://${request.headers.host}`
+                    ),
                 };
                 const result = await procedure.handler(data, context, query);
                 const response = returnProcedureOutput(result);
@@ -6513,6 +6649,10 @@ export class RecordsServer {
                     sessionKey: getSessionKey(request),
                     httpRequest: request,
                     origin: request.headers.origin ?? null,
+                    url: new URL(
+                        request.path,
+                        `http://${request.headers.host}`
+                    ),
                 };
                 let result: ProcedureOutput;
                 try {
@@ -6763,22 +6903,50 @@ export class RecordsServer {
                 span.updateName(`http:${route.name}`);
             }
 
-            const origins =
+            let origins =
                 route.allowedOrigins === 'account'
                     ? this._allowedAccountOrigins
                     : route.allowedOrigins === 'api'
                     ? this._allowedApiOrigins
                     : route.allowedOrigins ?? true;
 
-            if (origins !== true && !validateOrigin(request, origins)) {
-                return formatResponse(
-                    request,
-                    returnResult(INVALID_ORIGIN_RESULT),
-                    origins
-                );
-            }
-
             try {
+                if (origins !== true && !validateOrigin(request, origins)) {
+                    let allow = false;
+                    const host = request.headers.host;
+                    if (host && route.allowedOrigins === 'api') {
+                        // Fallback to checking custom domains
+                        const requestUrl = new URL(
+                            request.path,
+                            `http://${host}`
+                        );
+                        const origin = new URL(request.headers.origin);
+
+                        // All custom domain requests must come from the custom domain
+                        if (origin.host === requestUrl.host) {
+                            // Only allow API routes to use custom domains
+                            const customDomain =
+                                await this._records.getVerifiedCustomDomainByName(
+                                    requestUrl.hostname
+                                );
+
+                            if (isSuccess(customDomain) && customDomain.value) {
+                                // allow the request
+                                allow = true;
+                                origins = true;
+                            }
+                        }
+                    }
+
+                    if (!allow) {
+                        return formatResponse(
+                            request,
+                            returnResult(INVALID_ORIGIN_RESULT),
+                            origins
+                        );
+                    }
+                }
+
                 let response: GenericHttpResponse;
                 if (route.schema) {
                     let data: any;

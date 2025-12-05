@@ -46,7 +46,8 @@ export type PartitionConfig =
     | OtherPlayersRepoPartitionConfig
     | YjsPartitionConfig
     | RemoteYjsPartitionConfig
-    | YjsClientPartitionConfig;
+    | YjsClientPartitionConfig
+    | InjectedPartitionConfig;
 
 /**
  * Defines a base interface for partitions.
@@ -131,6 +132,18 @@ export interface LocalStoragePartitionConfig extends PartitionConfigBase {
      * The namespace that the partition should store bots under.
      */
     namespace: string;
+}
+
+/**
+ * Defines a partition config that uses a pre-built partition.
+ */
+export interface InjectedPartitionConfig extends PartitionConfigBase {
+    type: 'injected';
+
+    /**
+     * The partition that should be used.
+     */
+    partition: AuxPartition;
 }
 
 /**

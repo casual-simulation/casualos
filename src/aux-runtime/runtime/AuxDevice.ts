@@ -50,4 +50,11 @@ export interface AuxDevice {
      * The URL that AB-1 should be bootstraped from.
      */
     ab1BootstrapUrl: string;
+
+    /**
+     * The comID that this inst was loaded from.
+     *
+     * Null if it was not loaded from a comID.
+     */
+    comID: string | null;
 }

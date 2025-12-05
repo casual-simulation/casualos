@@ -109,6 +109,7 @@ export function createTestControllers(
         metrics: store,
         messenger: store,
         privo: null,
+        domainNameValidator: null,
     });
     const packagesStore = new MemoryPackageRecordsStore(store);
     const packageVersionStore = new MemoryPackageVersionRecordsStore(
