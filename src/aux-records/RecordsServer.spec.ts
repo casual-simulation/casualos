@@ -27597,7 +27597,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
         });
     });
 
-    describe.only('GET /api/v2/configuration', () => {
+    describe('GET /api/v2/configuration', () => {
         beforeEach(async () => {
             const user = await store.findUser(userId);
             await store.saveUser({
@@ -27822,7 +27822,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
         testUrl('account', 'GET', '/api/v2/configuration?key=subscriptions');
     });
 
-    describe.only('POST /api/v2/configuration', () => {
+    describe('POST /api/v2/configuration', () => {
         beforeEach(async () => {
             const user = await store.findUser(userId);
             await store.saveUser({
