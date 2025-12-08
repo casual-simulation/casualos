@@ -83,6 +83,7 @@
 -   Fixed camera rotation in mapPortal continuing after moving your finger off the screen.
 -   Fixed an issue where CasualOS would produce incorrect code when JSX elements were directly after return statements.
 -   Fixed the handling of `className` for custom apps when using SVG elements.
+-   Added "Close" buttons to login-related dialogs so that users can close them on mobile devices.
 
 ## V3.8.1
 
