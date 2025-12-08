@@ -22,6 +22,7 @@ import type {
     StripeAccountStatus,
     StripeRequirementsStatus,
 } from './StripeInterface';
+import type { WebManifest } from '@casual-simulation/aux-common/common/WebManifest';
 
 /**
  * Defines an interface for objects that can store records.
@@ -434,6 +435,11 @@ export interface Studio {
      * The player web config for the studio.
      */
     playerConfig?: ComIdPlayerConfig;
+
+    /**
+     * The PWA web manifest that should be served for the player.
+     */
+    playerWebManifest?: WebManifest;
 
     /**
      * The config for comId features.

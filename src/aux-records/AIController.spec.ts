@@ -5106,6 +5106,15 @@ describe('AIController', () => {
                     )
             );
 
+            realtimeInterface.createRealtimeSessionToken.mockResolvedValueOnce({
+                success: true,
+                sessionId: 'sessionId',
+                clientSecret: {
+                    value: 'secret',
+                    expiresAt: 999,
+                },
+            });
+
             await store.recordOpenAIRealtimeMetrics({
                 userId,
                 sessionId: 'sessionId',

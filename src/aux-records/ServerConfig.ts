@@ -21,6 +21,7 @@ import { privoSchema } from './PrivoConfiguration';
 import { subscriptionConfigSchema } from './SubscriptionConfiguration';
 import { z } from 'zod';
 import { WEB_CONFIG_SCHEMA } from '@casual-simulation/aux-common';
+import { WEB_MANIFEST_SCHEMA } from '@casual-simulation/aux-common/common/WebManifest';
 
 /**
  * The schema for the S3 configuration.
@@ -1447,6 +1448,12 @@ export const serverConfigSchema = z.object({
                 defaultBiosOption: null,
                 automaticBiosOption: null,
             }).describe('The web configuration for the CasualOS frontend.'),
+
+            playerWebManifest: WEB_MANIFEST_SCHEMA.optional()
+                .nullable()
+                .describe(
+                    'The PWA web manifest that should be served by CasualOS. If omitted or null, then none will be used.'
+                ),
 
             drives: z
                 .object({
