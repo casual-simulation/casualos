@@ -942,10 +942,11 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             if (sim instanceof MapSimulation3D) {
                 const view = sim.mapView;
                 if (view?.camera?.position) {
-                    const gridPosition =
-                        sim.grid3D.getGridPosition(cameraWorld);
-                    gridPosition.setZ(gridPosition.z * -1);
-                    update[`cameraMapPosition`] = formatBotVector(gridPosition);
+                    update[`cameraMapPosition`] = formatBotVector({
+                        x: view.camera.position.longitude,
+                        y: view.camera.position.latitude,
+                        z: view.camera.position.z ?? 0,
+                    });
                 } else {
                     update[`cameraMapPosition`] = null;
                 }
