@@ -3128,14 +3128,14 @@ export class MemoryStore
                       m.userId === filter.ownerId &&
                       (!info.currentPeriodStartMs ||
                           (m.createdAtMs >= info.currentPeriodStartMs &&
-                              m.createdAtMs < info.currentPeriodEndMs))
+                              m.createdAtMs <= info.currentPeriodEndMs))
               )
             : this._aiChatMetrics.filter(
                   (m) =>
                       m.studioId === filter.studioId &&
                       (!info.currentPeriodStartMs ||
                           (m.createdAtMs >= info.currentPeriodStartMs &&
-                              m.createdAtMs < info.currentPeriodEndMs))
+                              m.createdAtMs <= info.currentPeriodEndMs))
               );
 
         let totalTokens = 0;
@@ -3211,14 +3211,14 @@ export class MemoryStore
                       m.userId === filter.ownerId &&
                       (!info.currentPeriodStartMs ||
                           (m.createdAtMs >= info.currentPeriodStartMs &&
-                              m.createdAtMs < info.currentPeriodEndMs))
+                              m.createdAtMs <= info.currentPeriodEndMs))
               )
             : this._aiSloydMetrics.filter(
                   (m) =>
                       m.studioId === filter.studioId &&
                       (!info.currentPeriodStartMs ||
                           (m.createdAtMs >= info.currentPeriodStartMs &&
-                              m.createdAtMs < info.currentPeriodEndMs))
+                              m.createdAtMs <= info.currentPeriodEndMs))
               );
 
         let totalModels = 0;
@@ -3266,14 +3266,14 @@ export class MemoryStore
                       m.userId === filter.ownerId &&
                       (!info.currentPeriodStartMs ||
                           (m.createdAtMs >= info.currentPeriodStartMs &&
-                              m.createdAtMs < info.currentPeriodEndMs))
+                              m.createdAtMs <= info.currentPeriodEndMs))
               )
             : this._aiRealtimeMetrics.filter(
                   (m) =>
                       m.studioId === filter.studioId &&
                       (!info.currentPeriodStartMs ||
                           (m.createdAtMs >= info.currentPeriodStartMs &&
-                              m.createdAtMs < info.currentPeriodEndMs))
+                              m.createdAtMs <= info.currentPeriodEndMs))
               );
 
         let totalModels = metrics.length;
@@ -3303,14 +3303,14 @@ export class MemoryStore
                       m.userId === filter.ownerId &&
                       (!info.currentPeriodStartMs ||
                           (m.createdAtMs >= info.currentPeriodStartMs &&
-                              m.createdAtMs < info.currentPeriodEndMs))
+                              m.createdAtMs <= info.currentPeriodEndMs))
               )
             : this._aiImageMetrics.filter(
                   (m) =>
                       m.studioId === filter.studioId &&
                       (!info.currentPeriodStartMs ||
                           (m.createdAtMs >= info.currentPeriodStartMs &&
-                              m.createdAtMs < info.currentPeriodEndMs))
+                              m.createdAtMs <= info.currentPeriodEndMs))
               );
 
         let totalPixels = 0;
@@ -3338,14 +3338,14 @@ export class MemoryStore
                       m.userId === filter.ownerId &&
                       (!info.currentPeriodStartMs ||
                           (m.createdAtMs >= info.currentPeriodStartMs &&
-                              m.createdAtMs < info.currentPeriodEndMs))
+                              m.createdAtMs <= info.currentPeriodEndMs))
               )
             : this._aiSkyboxMetrics.filter(
                   (m) =>
                       m.studioId === filter.studioId &&
                       (!info.currentPeriodStartMs ||
                           (m.createdAtMs >= info.currentPeriodStartMs &&
-                              m.createdAtMs < info.currentPeriodEndMs))
+                              m.createdAtMs <= info.currentPeriodEndMs))
               );
 
         let totalSkyboxes = 0;
