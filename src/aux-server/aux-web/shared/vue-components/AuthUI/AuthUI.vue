@@ -67,6 +67,8 @@
                 </div>
             </md-dialog-content>
             <md-dialog-actions>
+                <md-button @click="closeAccountInfo()">Close</md-button>
+                <div class="spacer"></div>
                 <md-button v-if="reportInstVisible" @click="showReportInst()"
                     >Report Inst</md-button
                 >
@@ -78,7 +80,7 @@
         <md-dialog
             :md-active.sync="showGrantAccess"
             class="account-info-dialog"
-            @md-closed="closeAccountInfo()"
+            @md-closed="denyAccess()"
         >
             <md-dialog-title>Grant Access?</md-dialog-title>
             <md-dialog-content>

@@ -300,6 +300,8 @@ export default class AuthUI extends Vue {
                     );
 
                 if (result.success === true) {
+                    this._simId = null;
+                    this._origin = null;
                     this.grantAccessErrors = [];
                     this.showGrantAccess = false;
                 } else {
