@@ -263,6 +263,20 @@ describe('getSchemaMetadata()', () => {
                 ],
             },
         ] as const,
+        [
+            'loose objects',
+            z.looseObject({
+                abc: z.string(),
+            }),
+            {
+                type: 'object',
+                schema: {
+                    abc: { type: 'string' },
+                },
+                catchall: { type: 'any' },
+            },
+        ],
+        ['unknown', z.unknown(), { type: 'any' }],
     ] as const;
 
     it.each(cases)(

@@ -146,6 +146,11 @@ export interface Procedure<
          * The path for the HTTP route.
          */
         path: string;
+
+        /**
+         * The scope of the HTTP route.
+         */
+        scope?: 'player' | 'auth';
     };
 
     /**
@@ -281,8 +286,13 @@ export interface ProcedureBuilder {
     /**
      * Configures the HTTP method and path for this RPC.
      * @param method The method that should be used for http requests to this RPC.
+     * @param scope The scope of the HTTP route.
      */
-    http(method: GenericHttpRequest['method'], path: string): this;
+    http(
+        method: GenericHttpRequest['method'],
+        path: string,
+        scope?: 'player' | 'auth'
+    ): this;
 
     /**
      * Configures the view for this RPC.
@@ -360,10 +370,15 @@ class ProcBuilder
         return this;
     }
 
-    http(method: GenericHttpRequest['method'], path: string): this {
+    http(
+        method: GenericHttpRequest['method'],
+        path: string,
+        scope?: 'player' | 'auth'
+    ): this {
         this._http = {
             method: method,
             path: path,
+            scope: scope,
         };
         return this;
     }
@@ -608,7 +623,10 @@ export function getSchemaMetadata(schema: _z.$ZodType): SchemaMetadata {
         return { type: 'boolean', description: getDescription(schema) };
     } else if (schema instanceof _z.$ZodNumber) {
         return { type: 'number', description: getDescription(schema) };
-    } else if (schema instanceof _z.$ZodAny) {
+    } else if (
+        schema instanceof _z.$ZodAny ||
+        schema instanceof _z.$ZodUnknown
+    ) {
         return { type: 'any', description: getDescription(schema) };
     } else if (schema instanceof _z.$ZodNull) {
         return { type: 'null', description: getDescription(schema) };

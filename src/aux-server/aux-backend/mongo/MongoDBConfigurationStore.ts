@@ -16,11 +16,15 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import type {
+    ConfigurationInput,
+    ConfigurationKey,
+    ConfigurationOutput,
     ConfigurationStore,
     DefaultConfiguration,
 } from '@casual-simulation/aux-records';
 import {
     MODERATION_CONFIG_KEY,
+    PLAYER_WEB_MANIFEST_KEY,
     PRIVO_CONFIG_KEY,
     SUBSCRIPTIONS_CONFIG_KEY,
     WEB_CONFIG_KEY,
@@ -34,6 +38,8 @@ import type { ModerationConfiguration } from '@casual-simulation/aux-records/Mod
 import { parseModerationConfiguration } from '@casual-simulation/aux-records/ModerationConfiguration';
 import type { WebConfig } from '@casual-simulation/aux-common';
 import { parseWebConfig } from '@casual-simulation/aux-common';
+import type { WebManifest } from '@casual-simulation/aux-common/common/WebManifest';
+import { parseWebManifest } from '@casual-simulation/aux-common/common/WebManifest';
 
 export class MongoDBConfigurationStore implements ConfigurationStore {
     private _defaultConfiguration: DefaultConfiguration;
@@ -47,6 +53,20 @@ export class MongoDBConfigurationStore implements ConfigurationStore {
         this._collection = collection;
     }
 
+    setConfiguration<TKey extends ConfigurationKey>(
+        key: TKey,
+        value: ConfigurationInput<TKey>
+    ): Promise<void> {
+        throw new Error('Method not implemented.');
+    }
+
+    getConfiguration<TKey extends ConfigurationKey>(
+        key: TKey,
+        defaultValue?: ConfigurationInput<TKey>
+    ): Promise<ConfigurationOutput<TKey> | null> {
+        throw new Error('Method not implemented.');
+    }
+
     async getWebConfig(): Promise<WebConfig | null> {
         const result = await this._collection.findOne({
             _id: WEB_CONFIG_KEY,
@@ -55,6 +75,17 @@ export class MongoDBConfigurationStore implements ConfigurationStore {
         return parseWebConfig(
             result?.data,
             this._defaultConfiguration.webConfig
+        );
+    }
+
+    async getPlayerWebManifest(): Promise<WebManifest | null> {
+        const result = await this._collection.findOne({
+            _id: PLAYER_WEB_MANIFEST_KEY,
+        });
+
+        return parseWebManifest(
+            result?.data,
+            this._defaultConfiguration.playerWebManifest
         );
     }
 

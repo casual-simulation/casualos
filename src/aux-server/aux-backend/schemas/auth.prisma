@@ -274,6 +274,9 @@ model Studio {
     // The player web config for this studio.
     playerConfig Json?
 
+    // The player web manifest for this studio.
+    playerWebManifest Json?
+
     // The comId config for this studio.
     comIdConfig Json?
 
