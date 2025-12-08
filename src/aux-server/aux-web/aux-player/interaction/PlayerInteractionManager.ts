@@ -110,6 +110,8 @@ import { getPortalConfigBot } from '@casual-simulation/aux-vm-browser';
 import { MapPortalDimensionGroup3D } from '../scene/MapPortalDimensionGroup3D';
 import { MiniMapPortalDimensionGroup3D } from '../scene/MiniMapPortalDimensionGroup3D';
 import type { Block } from 'three-mesh-ui';
+import { MapSimulation3D } from '../scene/MapSimulation3D';
+import { MiniMapSimulation3D } from '../scene/MiniMapSimulation3D';
 
 export class PlayerInteractionManager extends BaseInteractionManager {
     // This overrides the base class Game.
@@ -982,7 +984,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
 }
 
 function portalInfoForSim(sim: Simulation3D) {
-    let portal: 'grid' | 'miniGrid';
+    let portal: 'grid' | 'miniGrid' | 'map' | 'miniMap';
     let gridScale: number;
     if (sim instanceof PlayerPageSimulation3D) {
         portal = 'grid';
@@ -990,6 +992,12 @@ function portalInfoForSim(sim: Simulation3D) {
     } else if (sim instanceof MiniSimulation3D) {
         portal = 'miniGrid';
         gridScale = sim.miniConfig.gridScale;
+    } else if (sim instanceof MiniMapSimulation3D) {
+        portal = 'miniMap';
+        gridScale = sim.mapConfig.gridScale;
+    } else if (sim instanceof MapSimulation3D) {
+        portal = 'map';
+        gridScale = sim.mapConfig.gridScale;
     }
     let inverseScale = 1 / gridScale;
 
