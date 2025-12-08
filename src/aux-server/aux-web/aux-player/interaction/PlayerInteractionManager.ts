@@ -810,7 +810,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                 focusWorld = new Vector3();
             }
 
-            let update = {
+            let update: BotTags = {
                 [`cameraPositionX`]: cameraWorld.x,
                 [`cameraPositionY`]: cameraWorld.y,
                 [`cameraPositionZ`]: cameraWorld.z,
@@ -937,6 +937,23 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                         );
                     }
                 }
+            }
+
+            if (sim instanceof MapSimulation3D) {
+                const view = sim.mapView;
+                if (view?.camera?.position) {
+                    const gridPosition =
+                        sim.grid3D.getGridPosition(cameraWorld);
+                    gridPosition.setZ(gridPosition.z * -1);
+                    update[`cameraMapPosition`] = formatBotVector(gridPosition);
+                } else {
+                    update[`cameraMapPosition`] = null;
+                }
+
+                delete update[`cameraFocusX`];
+                delete update[`cameraFocusY`];
+                delete update[`cameraFocusZ`];
+                delete update[`cameraFocus`];
             }
 
             // We have to postfix with "Portal" because the portal names are "gridPortal"
