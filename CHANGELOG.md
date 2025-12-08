@@ -60,6 +60,9 @@
     -   Studios with comID features can now register and verify custom domains.
     -   Only supported on server deployments.
     -   Once registered, CasualOS will automatically adopt configuration values from the custom domain.
+-   Added support for `cameraPosition` for the mapPortalBot and miniMapPortalBot.
+-   Added the `cameraMapPosition` tag for the mapPortalBot and miniMapPortalBot.
+    -   Contains the longitude (x), latitude (y), and altitude (z) of the camera.
 
 ### :bug: Bug Fixes
 
