@@ -18,11 +18,7 @@
 import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
 import { clientsClaim } from 'workbox-core';
 import { registerRoute } from 'workbox-routing';
-import {
-    StaleWhileRevalidate,
-    CacheFirst,
-    NetworkFirst,
-} from 'workbox-strategies';
+import { StaleWhileRevalidate, CacheFirst } from 'workbox-strategies';
 import { ExpirationPlugin } from 'workbox-expiration';
 import type { PushNotificationPayload } from '@casual-simulation/aux-records';
 import '../shared/service-worker';
@@ -157,5 +153,12 @@ registerRoute(
 
 registerRoute(
     ({ url }) => /\/api\/config$/.test(url.pathname),
-    new NetworkFirst()
+    new StaleWhileRevalidate({
+        cacheName: 'web-config',
+        plugins: [
+            new ExpirationPlugin({
+                maxEntries: 1,
+            }),
+        ],
+    })
 );

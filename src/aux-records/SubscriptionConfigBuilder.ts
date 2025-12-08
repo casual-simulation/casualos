@@ -482,6 +482,7 @@ export class SubscriptionConfigBuilder {
             defaultFeatures: {
                 user: allowAllFeatures(),
                 studio: allowAllFeatures(),
+                defaultPeriodLength: { months: 1, days: 0 },
             },
         };
     }
@@ -501,6 +502,11 @@ export class SubscriptionConfigBuilder {
         this._config.defaultFeatures.studio = build(
             new FeaturesBuilder()
         ).features;
+        return this;
+    }
+
+    withDefaultPeriodLength(months: number = 1, days: number = 0): this {
+        this._config.defaultFeatures.defaultPeriodLength = { months, days };
         return this;
     }
 
@@ -587,21 +593,7 @@ export function apiSubscriptionBuilder(id: string): SubscriptionBuilder {
  * Gets a SubscriptionConfigBuilder that can be used to build asubscription configuration.
  */
 export function subscriptionConfigBuilder(): SubscriptionConfigBuilder {
-    const config = new SubscriptionConfigBuilder({
-        subscriptions: [],
-        checkoutConfig: {},
-        portalConfig: {},
-        webhookSecret: '',
-        successUrl: '',
-        cancelUrl: '',
-        returnUrl: '',
-        tiers: {},
-        defaultFeatures: {
-            user: allowAllFeatures(),
-            studio: allowAllFeatures(),
-        },
-    });
-
+    const config = new SubscriptionConfigBuilder();
     return config;
 }
 

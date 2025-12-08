@@ -109,6 +109,15 @@ export interface WebConfig {
     vmOrigin?: string | null;
 
     /**
+     * Whether to disable the VM entirely.
+     *
+     * This is primarily for custom domains and enabling full PWA support.
+     *
+     * Defaults to false.
+     */
+    disableVm?: boolean;
+
+    /**
      * The HTTP origin that should be used for auth iframes.
      */
     authOrigin?: string | null;
@@ -240,6 +249,11 @@ export interface CasualOSConfig extends WebConfig {
      * Whether studios are supported in this configuration.
      */
     studiosSupported: boolean;
+
+    /**
+     * The comID that was used to load this configuration.
+     */
+    comId?: string | null;
 }
 
 export const WEB_CONFIG_SCHEMA = z.object({
@@ -251,6 +265,7 @@ export const WEB_CONFIG_SCHEMA = z.object({
     staticRepoLocalPersistence: z.boolean().prefault(true),
     sharedPartitionsVersion: z.enum(['v2']).prefault('v2'),
     vmOrigin: z.string().min(1).max(128).nullable().optional(),
+    disableVM: z.boolean().nullable().optional(),
     authOrigin: z.string().min(1).max(128).nullable().optional(),
     recordsOrigin: z.string().min(1).max(128).nullable().optional(),
     disableCollaboration: z.boolean().nullable().optional(),

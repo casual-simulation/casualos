@@ -2,7 +2,7 @@
 
 ## V3.9.0
 
-#### Date: 12/1/2025
+#### Date: 12/8/2025
 
 ### :rocket: Features
 
@@ -56,6 +56,15 @@
     -   This saves space and can help your `.aux` files load quicker, at the expense of readability.
 -   Added basic server side rendering.
     -   Currently, this is used for injecting the web config so that CasualOS doesn't need to make a call to `/api/config` on initialization.
+-   Added initial support for custom domains for comID
+    -   Only supported on server deployments.
+    -   Studios with comID features can now register and verify custom domains.
+    -   Once registered, CasualOS will automatically adopt configuration values from the custom domain.
+-   Added support for configuring [PWA](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps) manifests
+    -   Only supported on server deployments.
+    -   If configured, then CasualOS will serve a [web application manifest](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Manifest) that enables PWA features like installation.
+    -   By default, PWA is disabled.
+    -   comIDs can configure their own PWA manifest if desired.
 
 ### :bug: Bug Fixes
 
@@ -74,6 +83,7 @@
 -   Fixed camera rotation in mapPortal continuing after moving your finger off the screen.
 -   Fixed an issue where CasualOS would produce incorrect code when JSX elements were directly after return statements.
 -   Fixed the handling of `className` for custom apps when using SVG elements.
+-   Added "Close" buttons to login-related dialogs so that users can close them on mobile devices.
 
 ## V3.8.1
 

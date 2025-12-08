@@ -1,7 +1,7 @@
 <template>
     <md-dialog
         :md-active.sync="showEnterAddress"
-        @md-closed="cancelLogin(true)"
+        @md-closed="cancelLogin()"
         :md-close-on-esc="true"
         :md-click-outside-to-close="true"
         :md-fullscreen="true"
@@ -56,6 +56,10 @@
                 </div>
             </md-dialog-content>
             <md-dialog-actions>
+                <md-button type="button" @click="cancelLogin()" :disabled="processing">
+                    <span>Close</span>
+                </md-button>
+                <span class="spacer"></span>
                 <md-button
                     v-if="supportsWebAuthn"
                     type="button"

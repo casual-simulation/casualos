@@ -29,3 +29,51 @@ h2 {
 .player-config-dialog {
     min-width: 350px;
 }
+
+.custom-domains-dialog {
+    min-width: 600px;
+}
+
+.custom-domains-dialog .md-dialog-content {
+    min-height: 300px;
+}
+
+.add-domain-section {
+    margin-top: 30px;
+    padding: 20px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+}
+
+.add-domain-section h3 {
+    margin-top: 0;
+}
+
+.verification-instructions {
+    margin-top: 30px;
+    padding: 20px;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+}
+
+.verification-instructions h3 {
+    margin-top: 0;
+}
+
+.dns-record {
+    padding: 15px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin: 15px 0;
+    font-family: monospace;
+}
+
+.dns-record p {
+    margin: 5px 0;
+}
+
+.dns-record strong {
+    display: inline-block;
+    width: 80px;
+}

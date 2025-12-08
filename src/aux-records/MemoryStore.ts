@@ -55,6 +55,8 @@ import type {
     StudioComIdRequest,
     LoomConfig,
     HumeConfig,
+    CustomDomain,
+    CustomDomainWithStudio,
 } from './RecordsStore';
 import { v4 as uuid } from 'uuid';
 import type {
@@ -137,7 +139,13 @@ import type {
     AIOpenAIRealtimeSubscriptionMetrics,
     AIOpenAIRealtimeMetrics,
 } from './MetricsStore';
-import type { ConfigurationStore } from './ConfigurationStore';
+import {
+    CONFIGURATION_SCHEMAS_MAP,
+    type ConfigurationInput,
+    type ConfigurationKey,
+    type ConfigurationOutput,
+    type ConfigurationStore,
+} from './ConfigurationStore';
 import type { SubscriptionConfiguration } from './SubscriptionConfiguration';
 import { DateTime } from 'luxon';
 import type {
@@ -176,6 +184,7 @@ import type {
     UniqueFinancialAccountFilter,
 } from './financial/FinancialStore';
 import type { PartialExcept } from './crud';
+import type { WebManifest } from '@casual-simulation/aux-common/common/WebManifest';
 
 export interface MemoryConfiguration {
     subscriptions: SubscriptionConfiguration;
@@ -237,6 +246,7 @@ export class MemoryStore
     private _privoConfiguration: PrivoConfiguration | null = null;
     private _moderationConfiguration: ModerationConfiguration | null = null;
     private _webConfig: WebConfig | null = null;
+    private _playerWebManifest: WebManifest | null = null;
     private _recordNotifications: RecordsNotification[] = [];
     private _comIdRequests: StudioComIdRequest[] = [];
 
@@ -249,6 +259,7 @@ export class MemoryStore
     private _loadedPackages: Map<string, LoadedPackage> = new Map();
 
     private _financialAccounts: FinancialAccount[] = [];
+    private _customDomains: CustomDomain[] = [];
 
     get aiOpenAIRealtimeMetrics(): AIOpenAIRealtimeMetrics[] {
         return this._aiRealtimeMetrics;
@@ -376,6 +387,14 @@ export class MemoryStore
         this._webConfig = value;
     }
 
+    get playerWebManifest() {
+        return this._playerWebManifest;
+    }
+
+    set playerWebManifest(value: WebManifest | null) {
+        this._playerWebManifest = value;
+    }
+
     get userInstReports() {
         return this._userInstReports;
     }
@@ -420,6 +439,10 @@ export class MemoryStore
         return this._externalPayouts;
     }
 
+    get customDomains() {
+        return this._customDomains;
+    }
+
     constructor(config: MemoryConfiguration) {
         this._subscriptionConfiguration = config.subscriptions;
         this._privoConfiguration = config.privo ?? null;
@@ -427,6 +450,146 @@ export class MemoryStore
         this.policies = {};
         this.roles = {};
         this.roleAssignments = {};
+    }
+
+    async setConfiguration<TKey extends ConfigurationKey>(
+        key: TKey,
+        value: ConfigurationInput<TKey> | null
+    ): Promise<void> {
+        const finalValue = value
+            ? CONFIGURATION_SCHEMAS_MAP[key].parse(value)
+            : null;
+        if (key === 'moderation') {
+            this._moderationConfiguration =
+                finalValue as ModerationConfiguration;
+        } else if (key === 'privo') {
+            this._privoConfiguration = finalValue as PrivoConfiguration;
+        } else if (key === 'subscriptions') {
+            this._subscriptionConfiguration =
+                finalValue as SubscriptionConfiguration;
+        } else if (key === 'web') {
+            this._webConfig = finalValue as WebConfig;
+        } else if (key === 'playerWebManifest') {
+            this._playerWebManifest = finalValue as WebManifest;
+        } else {
+            throw new Error('Unsupported configuration key: ' + key);
+        }
+    }
+
+    async getConfiguration<TKey extends ConfigurationKey>(
+        key: TKey,
+        defaultValue?: ConfigurationInput<TKey>
+    ): Promise<ConfigurationOutput<TKey> | null> {
+        if (key === 'moderation') {
+            return (this._moderationConfiguration ??
+                CONFIGURATION_SCHEMAS_MAP[key]
+                    .nullable()
+                    .parse(defaultValue ?? null)) as ConfigurationOutput<TKey>;
+        } else if (key === 'privo') {
+            return (this._privoConfiguration ??
+                CONFIGURATION_SCHEMAS_MAP[key]
+                    .nullable()
+                    .parse(defaultValue ?? null)) as ConfigurationOutput<TKey>;
+        } else if (key === 'subscriptions') {
+            return (this._subscriptionConfiguration ??
+                CONFIGURATION_SCHEMAS_MAP[key]
+                    .nullable()
+                    .parse(defaultValue ?? null)) as ConfigurationOutput<TKey>;
+        } else if (key === 'web') {
+            return (this._webConfig ??
+                CONFIGURATION_SCHEMAS_MAP[key]
+                    .nullable()
+                    .parse(defaultValue ?? null)) as ConfigurationOutput<TKey>;
+        } else if (key === 'playerWebManifest') {
+            return (this._playerWebManifest ??
+                CONFIGURATION_SCHEMAS_MAP[key]
+                    .nullable()
+                    .parse(defaultValue ?? null)) as ConfigurationOutput<TKey>;
+        } else {
+            throw new Error('Unsupported configuration key: ' + key);
+        }
+    }
+
+    async saveCustomDomain(domain: CustomDomain): Promise<void> {
+        const existingIndex = this._customDomains.findIndex(
+            (d) => d.id === domain.id
+        );
+        if (existingIndex >= 0) {
+            this._customDomains[existingIndex] = domain;
+        } else {
+            this._customDomains.push(domain);
+        }
+    }
+
+    async deleteCustomDomain(domainId: string): Promise<void> {
+        this._customDomains = this._customDomains.filter(
+            (d) => d.id !== domainId
+        );
+    }
+
+    async listCustomDomainsByStudioId(
+        studioId: string
+    ): Promise<CustomDomain[]> {
+        return this._customDomains.filter((d) => d.studioId === studioId);
+    }
+
+    async getVerifiedCustomDomainByName(
+        domainName: string
+    ): Promise<CustomDomainWithStudio | null> {
+        const domain = this._customDomains.find(
+            (d) => d.domainName === domainName && d.verified === true
+        );
+
+        if (!domain) {
+            return null;
+        }
+
+        const studio = await this.getStudioById(domain.studioId);
+        if (!studio) {
+            return null;
+        }
+
+        return {
+            id: domain.id,
+            domainName: domain.domainName,
+            studioId: domain.studioId,
+            verificationKey: domain.verificationKey,
+            verified: domain.verified,
+            studio,
+        };
+    }
+
+    async getCustomDomainById(
+        domainId: string
+    ): Promise<CustomDomainWithStudio | null> {
+        const domain = this._customDomains.find((d) => d.id === domainId);
+        if (!domain) {
+            return null;
+        }
+
+        const studio = await this.getStudioById(domain.studioId);
+        if (!studio) {
+            return null;
+        }
+
+        return {
+            id: domain.id,
+            domainName: domain.domainName,
+            studioId: domain.studioId,
+            verificationKey: domain.verificationKey,
+            verified: domain.verified,
+            studio,
+        };
+    }
+
+    async markCustomDomainAsVerified(domainId: string): Promise<void> {
+        const index = this._customDomains.findIndex((d) => d.id === domainId);
+        if (index >= 0) {
+            this._customDomains[index] = {
+                ...this._customDomains[index],
+                verified: true,
+            };
+        }
     }
 
     async createExternalPayout(payout: ExternalPayout): Promise<void> {
@@ -587,6 +750,7 @@ export class MemoryStore
         newStore._markerPermissionAssignments = cloneDeep(
             this._markerPermissionAssignments
         );
+        newStore._customDomains = cloneDeep(this._customDomains);
         newStore.maxAllowedInstSize = this.maxAllowedInstSize;
         newStore.roles = cloneDeep(this.roles);
         newStore.roleAssignments = cloneDeep(this.roleAssignments);
@@ -704,6 +868,10 @@ export class MemoryStore
 
     async getWebConfig(): Promise<WebConfig | null> {
         return this._webConfig;
+    }
+
+    async getPlayerWebManifest(): Promise<WebManifest | null> {
+        return this._playerWebManifest;
     }
 
     async getRecordByName(name: string): Promise<Record> {
@@ -2960,14 +3128,14 @@ export class MemoryStore
                       m.userId === filter.ownerId &&
                       (!info.currentPeriodStartMs ||
                           (m.createdAtMs >= info.currentPeriodStartMs &&
-                              m.createdAtMs < info.currentPeriodEndMs))
+                              m.createdAtMs <= info.currentPeriodEndMs))
               )
             : this._aiChatMetrics.filter(
                   (m) =>
                       m.studioId === filter.studioId &&
                       (!info.currentPeriodStartMs ||
                           (m.createdAtMs >= info.currentPeriodStartMs &&
-                              m.createdAtMs < info.currentPeriodEndMs))
+                              m.createdAtMs <= info.currentPeriodEndMs))
               );
 
         let totalTokens = 0;
@@ -3043,14 +3211,14 @@ export class MemoryStore
                       m.userId === filter.ownerId &&
                       (!info.currentPeriodStartMs ||
                           (m.createdAtMs >= info.currentPeriodStartMs &&
-                              m.createdAtMs < info.currentPeriodEndMs))
+                              m.createdAtMs <= info.currentPeriodEndMs))
               )
             : this._aiSloydMetrics.filter(
                   (m) =>
                       m.studioId === filter.studioId &&
                       (!info.currentPeriodStartMs ||
                           (m.createdAtMs >= info.currentPeriodStartMs &&
-                              m.createdAtMs < info.currentPeriodEndMs))
+                              m.createdAtMs <= info.currentPeriodEndMs))
               );
 
         let totalModels = 0;
@@ -3098,14 +3266,14 @@ export class MemoryStore
                       m.userId === filter.ownerId &&
                       (!info.currentPeriodStartMs ||
                           (m.createdAtMs >= info.currentPeriodStartMs &&
-                              m.createdAtMs < info.currentPeriodEndMs))
+                              m.createdAtMs <= info.currentPeriodEndMs))
               )
             : this._aiRealtimeMetrics.filter(
                   (m) =>
                       m.studioId === filter.studioId &&
                       (!info.currentPeriodStartMs ||
                           (m.createdAtMs >= info.currentPeriodStartMs &&
-                              m.createdAtMs < info.currentPeriodEndMs))
+                              m.createdAtMs <= info.currentPeriodEndMs))
               );
 
         let totalModels = metrics.length;
@@ -3135,14 +3303,14 @@ export class MemoryStore
                       m.userId === filter.ownerId &&
                       (!info.currentPeriodStartMs ||
                           (m.createdAtMs >= info.currentPeriodStartMs &&
-                              m.createdAtMs < info.currentPeriodEndMs))
+                              m.createdAtMs <= info.currentPeriodEndMs))
               )
             : this._aiImageMetrics.filter(
                   (m) =>
                       m.studioId === filter.studioId &&
                       (!info.currentPeriodStartMs ||
                           (m.createdAtMs >= info.currentPeriodStartMs &&
-                              m.createdAtMs < info.currentPeriodEndMs))
+                              m.createdAtMs <= info.currentPeriodEndMs))
               );
 
         let totalPixels = 0;
@@ -3170,14 +3338,14 @@ export class MemoryStore
                       m.userId === filter.ownerId &&
                       (!info.currentPeriodStartMs ||
                           (m.createdAtMs >= info.currentPeriodStartMs &&
-                              m.createdAtMs < info.currentPeriodEndMs))
+                              m.createdAtMs <= info.currentPeriodEndMs))
               )
             : this._aiSkyboxMetrics.filter(
                   (m) =>
                       m.studioId === filter.studioId &&
                       (!info.currentPeriodStartMs ||
                           (m.createdAtMs >= info.currentPeriodStartMs &&
-                              m.createdAtMs < info.currentPeriodEndMs))
+                              m.createdAtMs <= info.currentPeriodEndMs))
               );
 
         let totalSkyboxes = 0;

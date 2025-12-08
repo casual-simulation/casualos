@@ -93,6 +93,8 @@ export interface AuxConfigParameters {
 
     /**
      * The origin that the VM iframe should be loaded from.
+     *
+     * If null or omitted, then the VM iframe either wasn't loaded or it was loaded from the same origin.
      */
     vmOrigin?: string;
 
@@ -142,6 +144,15 @@ export interface AuxConfigParameters {
      * Defaults to false.
      */
     enableDom?: boolean;
+
+    /**
+     * Whether to disable the VM entirely.
+     *
+     * When disabled, there is no real security boundary between user scripts and the main application.
+     *
+     * Defaults to false.
+     */
+    disableVM?: boolean;
 }
 
 export interface AuxTimeSyncConfiguration {

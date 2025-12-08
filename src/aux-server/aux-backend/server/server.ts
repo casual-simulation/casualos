@@ -219,10 +219,6 @@ export class Server {
             frontend.use(this._config.server.drives.path, driveMiddleware);
         }
 
-        frontend.get('/api/*', (req, res) => {
-            res.sendStatus(404);
-        });
-
         const playerDist = path.resolve(
             __dirname,
             '..',
@@ -354,6 +350,10 @@ export class Server {
                 request: Request,
                 response: Response
             ): boolean {
+                if (request.path.startsWith('/api/')) {
+                    return false;
+                }
+
                 const result =
                     /@vite/g.test(request.path) ||
                     /@fs/g.test(request.path) ||
@@ -379,13 +379,13 @@ export class Server {
             };
 
             const map = [
-                ['playerIndex', 'http://localhost:5173/'],
+                ['playerIndex', 'http://localhost:5173/index.html'],
                 ['playerVmIframe', 'http://localhost:5173/aux-vm-iframe.html'],
                 [
                     'playerVmIframeDom',
                     'http://localhost:5173/aux-vm-iframe-dom.html',
                 ],
-                ['authIndex', 'http://localhost:5174/'],
+                ['authIndex', 'http://localhost:5174/index.html'],
                 ['authIframe', 'http://localhost:5174/iframe.html'],
             ];
 

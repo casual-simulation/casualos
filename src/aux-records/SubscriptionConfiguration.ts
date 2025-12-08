@@ -571,6 +571,13 @@ export const subscriptionFeaturesSchema = z.object({
                 .describe(
                     'The maximum number of studios that can be created in this comId. If omitted, then there is no limit.'
                 ),
+            maxDomains: z
+                .int()
+                .positive()
+                .optional()
+                .describe(
+                    'The maximum number of custom domains that can be used with this comId. If omitted, then there is no limit.'
+                ),
         })
         .optional()
         .prefault({
@@ -1488,6 +1495,11 @@ export interface StudioComIdFeaturesConfiguration {
      * If not specified, then there is no limit.
      */
     maxStudios?: number;
+
+    /**
+     * The maximum number of domains that can be used with this comId.
+     */
+    maxDomains?: number;
 }
 
 export type StudioLoomFeaturesConfiguration = z.infer<

@@ -207,11 +207,9 @@ Use the following environment variables to configure infrastructure-related opti
 
 -   `WEBHOOK_LAMBDA_FUNCTION_NAME`: The name of the lambda function that should be called to process webhooks. Only used when `webhooks.environment.type` is set to `lambda` and `webhooks.environment.functionName` is omitted.
 
-## Security Note
+### PWA Support
 
-In the default configuration, CasualOS allows running arbitrary user scripts inside the web server process. Potential capabilities include filesystem access, executing commands, making arbitrary web requests, and reading environment variables.
-
-Therefore, it is highly recommended to isolate the web server from other sensitive networks and components to ensure malicious scripts cannot infect them.
+To enable [PWA](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps) support, you need to set the `server.playerWebManifest` key to the [web app manifest](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Manifest) that you want to be served. You can see an example web manifest [here](./example.webmanifest). By default, PWA support is disabled.
 
 [docker]: https://www.docker.com/
 [docker-install]: https://docs.docker.com/install/

@@ -45,6 +45,10 @@
             </div>
         </md-dialog-content>
         <md-dialog-actions>
+            <md-button type="button" @click="cancelHasAccount()" :disabled="processing">
+                <span>Close</span>
+            </md-button>
+            <span class="spacer"></span>
             <md-button type="button" @click="hasAccount(true)" :disabled="processing">
                 <md-progress-spinner
                     v-if="processing && hasAccountValue === true"

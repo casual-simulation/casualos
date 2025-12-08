@@ -34,6 +34,8 @@ import type {
     HumeConfig,
     StripeAccountStatus,
     StripeRequirementsStatus,
+    CustomDomain,
+    CustomDomainWithStudio,
 } from '@casual-simulation/aux-records';
 import {
     COM_ID_PLAYER_CONFIG,
@@ -53,6 +55,119 @@ export class PrismaRecordsStore implements RecordsStore {
 
     constructor(client: PrismaClient) {
         this._client = client;
+    }
+
+    async saveCustomDomain(domain: CustomDomain): Promise<void> {
+        await this._client.customDomain.upsert({
+            create: {
+                id: domain.id,
+                domainName: domain.domainName,
+                studioId: domain.studioId,
+                verificationKey: domain.verificationKey,
+                verified: domain.verified,
+            },
+            update: {
+                id: domain.id,
+                domainName: domain.domainName,
+                studioId: domain.studioId,
+                verificationKey: domain.verificationKey,
+                verified: domain.verified,
+            },
+            where: {
+                id: domain.id,
+            },
+        });
+    }
+
+    async deleteCustomDomain(domainId: string): Promise<void> {
+        await this._client.customDomain.delete({
+            where: {
+                id: domainId,
+            },
+        });
+    }
+    async getCustomDomainById(
+        domainId: string
+    ): Promise<CustomDomainWithStudio | null> {
+        const domain = await this._client.customDomain.findUnique({
+            where: {
+                id: domainId,
+            },
+            include: {
+                studio: true,
+            },
+        });
+
+        if (!domain) {
+            return null;
+        }
+
+        return {
+            id: domain.id,
+            domainName: domain.domainName,
+            studioId: domain.studioId,
+            verificationKey: domain.verificationKey,
+            verified: domain.verified as true | null,
+            studio: this._convertToStudio(domain.studio),
+        };
+    }
+
+    async listCustomDomainsByStudioId(
+        studioId: string
+    ): Promise<CustomDomain[]> {
+        const domains = await this._client.customDomain.findMany({
+            where: {
+                studioId: studioId,
+            },
+        });
+
+        return domains.map((domain) => ({
+            id: domain.id,
+            domainName: domain.domainName,
+            studioId: domain.studioId,
+            verificationKey: domain.verificationKey,
+            verified: domain.verified as true | null,
+        }));
+    }
+
+    async getVerifiedCustomDomainByName(
+        domainName: string
+    ): Promise<CustomDomainWithStudio | null> {
+        const domain = await this._client.customDomain.findUnique({
+            where: {
+                domainName_verified: {
+                    domainName,
+                    verified: true,
+                },
+            },
+            include: {
+                studio: true,
+            },
+        });
+
+        if (!domain) {
+            return null;
+        }
+
+        return {
+            id: domain.id,
+            domainName: domain.domainName,
+            studioId: domain.studioId,
+            verificationKey: domain.verificationKey,
+            verified: domain.verified as true | null,
+            studio: this._convertToStudio(domain.studio),
+        };
+    }
+
+    async markCustomDomainAsVerified(domainId: string): Promise<void> {
+        await this._client.customDomain.update({
+            where: {
+                id: domainId,
+            },
+            data: {
+                verified: true,
+            },
+        });
     }
 
     async getStudioHumeConfig(studioId: string): Promise<HumeConfig | null> {
@@ -384,6 +499,7 @@ export class PrismaRecordsStore implements RecordsStore {
                 ),
                 comIdConfig: studio.comIdConfig,
                 playerConfig: studio.playerConfig,
+                playerWebManifest: studio.playerWebManifest as Prisma.JsonValue,
                 logoUrl: studio.logoUrl,
                 comId: studio.comId,
                 ownerStudioComId: studio.ownerStudioComId,
