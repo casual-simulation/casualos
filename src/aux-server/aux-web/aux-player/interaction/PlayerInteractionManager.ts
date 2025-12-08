@@ -790,7 +790,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                 (c) => c.rig === rig
             );
             const cameraWorld = new Vector3();
-            cameraWorld.setFromMatrixPosition(rig.mainCamera.matrixWorld);
+            rig.mainCamera.getWorldPosition(cameraWorld);
             const cameraForward = cameraForwardRay(rig.mainCamera);
             const cameraUp = cameraUpwardRay(rig.mainCamera);
             const { euler: cameraRotation, quaternion: cameraQuaternion } =
