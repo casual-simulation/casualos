@@ -632,6 +632,26 @@ export class RecordsServer {
                                 }}
                             />
                         );
+
+                        if (
+                            config.value.ab1BootstrapURL &&
+                            config.value.serverInjectBootstrapper
+                        ) {
+                            const result = await this._records.getAb1Bootstrap(
+                                config.value
+                            );
+                            if (isSuccess(result)) {
+                                postApp.push(
+                                    <script
+                                        type="text/aux"
+                                        id="casualos-ab1-bootstrap"
+                                        dangerouslySetInnerHTML={{
+                                            __html: result.value,
+                                        }}
+                                    />
+                                );
+                            }
+                        }
                     }
 
                     const result = success<ViewParams>({

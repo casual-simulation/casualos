@@ -33,6 +33,7 @@ import {
     type WebManifest,
 } from '@casual-simulation/aux-common/common/WebManifest';
 import type z from 'zod';
+import { STORED_AUX_SCHEMA } from './webhooks';
 
 export const SUBSCRIPTIONS_CONFIG_KEY = 'subscriptions';
 
@@ -43,6 +44,8 @@ export const MODERATION_CONFIG_KEY = 'moderation';
 export const WEB_CONFIG_KEY = 'web';
 
 export const PLAYER_WEB_MANIFEST_KEY = 'playerWebManifest';
+
+export const AB1_BOOTSTRAP_KEY = 'ab1Bootstrap';
 
 /**
  * The default configuration values used when no configuration is found in the store.
@@ -83,6 +86,7 @@ export const CONFIGURATION_SCHEMAS = [
     { key: MODERATION_CONFIG_KEY, schema: moderationSchema } as const,
     { key: WEB_CONFIG_KEY, schema: WEB_CONFIG_SCHEMA } as const,
     { key: PLAYER_WEB_MANIFEST_KEY, schema: WEB_MANIFEST_SCHEMA } as const,
+    { key: AB1_BOOTSTRAP_KEY, schema: STORED_AUX_SCHEMA } as const,
 ];
 
 /**
@@ -94,6 +98,7 @@ export const CONFIGURATION_SCHEMAS_MAP = {
     [MODERATION_CONFIG_KEY]: moderationSchema,
     [WEB_CONFIG_KEY]: WEB_CONFIG_SCHEMA,
     [PLAYER_WEB_MANIFEST_KEY]: WEB_MANIFEST_SCHEMA,
+    [AB1_BOOTSTRAP_KEY]: STORED_AUX_SCHEMA,
 };
 
 export const CONFIGURATION_KEYS: ConfigurationKey[] = CONFIGURATION_SCHEMAS.map(
