@@ -2,7 +2,7 @@
 
 ## V3.9.0
 
-#### Date: 12/8/2025
+#### Date: 12/9/2025
 
 ### :rocket: Features
 
@@ -65,6 +65,9 @@
     -   If configured, then CasualOS will serve a [web application manifest](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Manifest) that enables PWA features like installation.
     -   By default, PWA is disabled.
     -   comIDs can configure their own PWA manifest if desired.
+-   Added support for `cameraPosition` for the mapPortalBot and miniMapPortalBot.
+-   Added the `cameraMapPosition` tag for the mapPortalBot and miniMapPortalBot.
+    -   Contains the longitude (x), latitude (y), and altitude (z) of the camera.
 
 ### :bug: Bug Fixes
 
