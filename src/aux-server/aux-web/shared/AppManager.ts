@@ -136,6 +136,7 @@ export class AppManager {
     private _ab1BootstrapUrl: string;
     private _comId: string;
     private _comIdConfig: GetPlayerConfigSuccess;
+    private _ab1BootstrapAux: StoredAux;
 
     get loadingProgress(): Observable<ProgressMessage> {
         return this._progress;
@@ -672,18 +673,32 @@ export class AppManager {
                 .catch(() => false);
         }
 
+        const injectedBootstrap = tryParseJson(
+            document.querySelector('script#casualos-ab1-bootstrap')?.innerHTML
+        );
+        let aux: StoredAux;
         let ab1Bootstrap: string;
+        if (injectedBootstrap.success) {
+            console.log('[AppManager] Using injected AB-1 AUX.');
+            aux = injectedBootstrap.value;
+        }
+
         if (hasValue(this._config.ab1BootstrapURL)) {
-            console.log('[AppManager] Using configured AB-1');
+            if (!aux) {
+                console.log('[AppManager] Using configured AB-1');
+            }
             ab1Bootstrap = this._config.ab1BootstrapURL;
         } else {
-            console.log('[AppManager] Using built-in AB-1');
+            if (!aux) {
+                console.log('[AppManager] Using built-in AB-1');
+            }
             ab1Bootstrap = new URL('ab1/prod/ab1.aux', location.href).href;
         }
 
         this._arSupported = arSupported;
         this._vrSupported = vrSupported;
         this._ab1BootstrapUrl = ab1Bootstrap;
+        this._ab1BootstrapAux = aux;
         this._domSupported = this._config.enableDom ?? false;
 
         console.log('[AppManager] AB-1 URL: ' + ab1Bootstrap);
@@ -697,6 +712,7 @@ export class AppManager {
             isCollaborative: !isStatic,
             allowCollaborationUpgrade: false,
             ab1BootstrapUrl: this._ab1BootstrapUrl,
+            ab1BootstrapAux: this._ab1BootstrapAux,
             comID: this._comId,
         };
     }
