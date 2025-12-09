@@ -71,6 +71,8 @@
 -   Added the ability to automatically inject the bootstrap AUX from the server to reduce initialization time on the client.
     -   Only supported on server deployments.
     -   Set `serverInjectBootstrapper` to `true` on the web config in the server config.
+-   Added the ability to configure a custom favicon for server-based deployments.
+    -   Use the `icons` property on the web config in the server config.
 
 ### :bug: Bug Fixes
 

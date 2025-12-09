@@ -41,6 +41,11 @@ export interface ViewParams {
      * The content to be placed just after the main application content.
      */
     postApp?: JSX.Element;
+
+    /**
+     * The icons to be placed in the head of the document.
+     */
+    icons?: JSX.Element;
 }
 
 /**

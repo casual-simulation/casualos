@@ -621,6 +621,7 @@ export class RecordsServer {
                     );
 
                     const postApp: JSX.Element[] = [];
+                    const icons: JSX.Element[] = [];
 
                     if (isSuccess(config) && config.value) {
                         postApp.push(
@@ -652,9 +653,41 @@ export class RecordsServer {
                                 );
                             }
                         }
+
+                        if (config.value.icons) {
+                            if (config.value.icons.appleTouchIcon) {
+                                icons.push(
+                                    <link
+                                        rel="apple-touch-icon"
+                                        href={config.value.icons.appleTouchIcon}
+                                    />
+                                );
+                            }
+                            if (config.value.icons.favicon) {
+                                if (
+                                    config.value.icons.favicon.endsWith('.png')
+                                ) {
+                                    icons.push(
+                                        <link
+                                            rel="icon"
+                                            href={config.value.icons.favicon}
+                                            type="image/png"
+                                        />
+                                    );
+                                } else {
+                                    icons.push(
+                                        <link
+                                            rel="icon"
+                                            href={config.value.icons.favicon}
+                                        />
+                                    );
+                                }
+                            }
+                        }
                     }
 
                     const result = success<ViewParams>({
+                        icons: <>{icons}</>,
                         postApp: <>{postApp}</>,
                     });
 
