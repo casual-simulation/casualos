@@ -9498,22 +9498,45 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                     "optional": true,
                     "type": "boolean",
                   },
+                  "icons": Object {
+                    "description": "The set of icons that should be used for the web client.",
+                    "nullable": true,
+                    "optional": true,
+                    "schema": Object {
+                      "appleTouchIcon": Object {
+                        "description": "The apple touch icon that should be used for the web client. If not specified, a default apple touch icon will be used. Should be 180x180 px and not use transparency (background should be a solid color).",
+                        "nullable": true,
+                        "optional": true,
+                        "type": "string",
+                      },
+                      "favicon": Object {
+                        "description": "The favicon that should be served for the web client. If not specified, a default favicon will be used. Should be 48x48 px and utilize transparency.",
+                        "nullable": true,
+                        "optional": true,
+                        "type": "string",
+                      },
+                    },
+                    "type": "object",
+                  },
                   "jitsiAppName": Object {
                     "nullable": true,
                     "optional": true,
                     "type": "string",
                   },
                   "logoBackgroundColor": Object {
+                    "description": "The background color of the logo to display in the loading screen. This is used to set the background color of the splash screen.",
                     "nullable": true,
                     "optional": true,
                     "type": "string",
                   },
                   "logoTitle": Object {
+                    "description": "The title text that accompanies the logo in the loading screen.",
                     "nullable": true,
                     "optional": true,
                     "type": "string",
                   },
                   "logoUrl": Object {
+                    "description": "The URL of the logo to display in the loading screen.",
                     "nullable": true,
                     "optional": true,
                     "type": "string",
@@ -19299,22 +19322,45 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                     "optional": true,
                     "type": "boolean",
                   },
+                  "icons": Object {
+                    "description": "The set of icons that should be used for the web client.",
+                    "nullable": true,
+                    "optional": true,
+                    "schema": Object {
+                      "appleTouchIcon": Object {
+                        "description": "The apple touch icon that should be used for the web client. If not specified, a default apple touch icon will be used. Should be 180x180 px and not use transparency (background should be a solid color).",
+                        "nullable": true,
+                        "optional": true,
+                        "type": "string",
+                      },
+                      "favicon": Object {
+                        "description": "The favicon that should be served for the web client. If not specified, a default favicon will be used. Should be 48x48 px and utilize transparency.",
+                        "nullable": true,
+                        "optional": true,
+                        "type": "string",
+                      },
+                    },
+                    "type": "object",
+                  },
                   "jitsiAppName": Object {
                     "nullable": true,
                     "optional": true,
                     "type": "string",
                   },
                   "logoBackgroundColor": Object {
+                    "description": "The background color of the logo to display in the loading screen. This is used to set the background color of the splash screen.",
                     "nullable": true,
                     "optional": true,
                     "type": "string",
                   },
                   "logoTitle": Object {
+                    "description": "The title text that accompanies the logo in the loading screen.",
                     "nullable": true,
                     "optional": true,
                     "type": "string",
                   },
                   "logoUrl": Object {
+                    "description": "The URL of the logo to display in the loading screen.",
                     "nullable": true,
                     "optional": true,
                     "type": "string",

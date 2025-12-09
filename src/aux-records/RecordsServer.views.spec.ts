@@ -926,6 +926,79 @@ describe('RecordsServer', () => {
                     });
                 });
 
+                it('should include the configured icons', async () => {
+                    store.webConfig = {
+                        causalRepoConnectionProtocol: 'websocket',
+                        version: 2,
+                        logoTitle: 'Test Logo',
+                        logoUrl: 'https://example.com/logo.png',
+
+                        icons: {
+                            favicon: 'https://example.com/favicon.ico',
+                            appleTouchIcon:
+                                'https://example.com/apple-touch-icon.png',
+                        },
+                    };
+
+                    const result = await server.handleHttpRequest(
+                        scoped('player', httpGet(path, defaultHeaders))
+                    );
+
+                    expect(result.statusCode).toBe(200);
+
+                    const body = result.body as string;
+                    const dom = new JSDOM(body);
+
+                    const favicon = dom.window.document.querySelector(
+                        'icons link[rel="icon"]'
+                    );
+
+                    expect(
+                        favicon?.attributes.getNamedItem('href')?.value
+                    ).toBe('https://example.com/favicon.ico');
+                    expect(
+                        favicon?.attributes.getNamedItem('type')?.value
+                    ).toBeFalsy();
+
+                    const appleTouchIcon = dom.window.document.querySelector(
+                        'icons link[rel="apple-touch-icon"]'
+                    );
+
+                    expect(
+                        appleTouchIcon?.attributes.getNamedItem('href')?.value
+                    ).toBe('https://example.com/apple-touch-icon.png');
+                });
+
+                it('should do nothing for default icons', async () => {
+                    store.webConfig = {
+                        causalRepoConnectionProtocol: 'websocket',
+                        version: 2,
+                        logoTitle: 'Test Logo',
+                        logoUrl: 'https://example.com/logo.png',
+                    };
+
+                    const result = await server.handleHttpRequest(
+                        scoped('player', httpGet(path, defaultHeaders))
+                    );
+
+                    expect(result.statusCode).toBe(200);
+
+                    const body = result.body as string;
+                    const dom = new JSDOM(body);
+
+                    const favicon = dom.window.document.querySelector(
+                        'icons link[rel="icon"]'
+                    );
+
+                    expect(!favicon).toBe(true);
+
+                    const appleTouchIcon = dom.window.document.querySelector(
+                        'icons link[rel="apple-touch-icon"]'
+                    );
+
+                    expect(!appleTouchIcon).toBe(true);
+                });
+
                 it('should return nothing if getting the config fails', async () => {
                     recordsController.getWebConfig = jest
                         .fn()
