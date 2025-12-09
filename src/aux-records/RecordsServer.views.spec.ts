@@ -17,8 +17,12 @@
  */
 
 import { RecordsServer } from './RecordsServer';
-import type { GenericHttpHeaders } from '@casual-simulation/aux-common';
+import type {
+    GenericHttpHeaders,
+    StoredAux,
+} from '@casual-simulation/aux-common';
 import {
+    createBot,
     failure,
     parseSessionKey,
     tryParseJson,
@@ -131,6 +135,8 @@ import { ContractRecordsController } from './contracts/ContractRecordsController
 import type { DomainNameValidator } from './dns';
 
 jest.mock('@simplewebauthn/server');
+jest.mock('axios');
+
 let verifyRegistrationResponseMock: jest.Mock<
     Promise<VerifiedRegistrationResponse>,
     [VerifyAuthenticationResponseOpts]
@@ -845,6 +851,30 @@ describe('RecordsServer', () => {
         jest.useRealTimers();
     });
 
+    beforeEach(() => {
+        require('axios').__reset();
+    });
+
+    function setResponse(response: any) {
+        require('axios').__setResponse(response);
+    }
+
+    function setNextResponse(response: any) {
+        require('axios').__setNextResponse(response);
+    }
+
+    function getLastPost() {
+        return require('axios').__getLastPost();
+    }
+
+    function getLastGet() {
+        return require('axios').__getLastGet();
+    }
+
+    function getRequests() {
+        return require('axios').__getRequests();
+    }
+
     describe('views', () => {
         describe('player', () => {
             const indexPaths = [['/'], ['/index.html']];
@@ -894,6 +924,79 @@ describe('RecordsServer', () => {
                         ...corsHeaders(defaultHeaders.origin),
                         'Content-Type': 'text/html; charset=utf-8',
                     });
+                });
+
+                it('should include the configured icons', async () => {
+                    store.webConfig = {
+                        causalRepoConnectionProtocol: 'websocket',
+                        version: 2,
+                        logoTitle: 'Test Logo',
+                        logoUrl: 'https://example.com/logo.png',
+
+                        icons: {
+                            favicon: 'https://example.com/favicon.ico',
+                            appleTouchIcon:
+                                'https://example.com/apple-touch-icon.png',
+                        },
+                    };
+
+                    const result = await server.handleHttpRequest(
+                        scoped('player', httpGet(path, defaultHeaders))
+                    );
+
+                    expect(result.statusCode).toBe(200);
+
+                    const body = result.body as string;
+                    const dom = new JSDOM(body);
+
+                    const favicon = dom.window.document.querySelector(
+                        'icons link[rel="icon"]'
+                    );
+
+                    expect(
+                        favicon?.attributes.getNamedItem('href')?.value
+                    ).toBe('https://example.com/favicon.ico');
+                    expect(
+                        favicon?.attributes.getNamedItem('type')?.value
+                    ).toBeFalsy();
+
+                    const appleTouchIcon = dom.window.document.querySelector(
+                        'icons link[rel="apple-touch-icon"]'
+                    );
+
+                    expect(
+                        appleTouchIcon?.attributes.getNamedItem('href')?.value
+                    ).toBe('https://example.com/apple-touch-icon.png');
+                });
+
+                it('should do nothing for default icons', async () => {
+                    store.webConfig = {
+                        causalRepoConnectionProtocol: 'websocket',
+                        version: 2,
+                        logoTitle: 'Test Logo',
+                        logoUrl: 'https://example.com/logo.png',
+                    };
+
+                    const result = await server.handleHttpRequest(
+                        scoped('player', httpGet(path, defaultHeaders))
+                    );
+
+                    expect(result.statusCode).toBe(200);
+
+                    const body = result.body as string;
+                    const dom = new JSDOM(body);
+
+                    const favicon = dom.window.document.querySelector(
+                        'icons link[rel="icon"]'
+                    );
+
+                    expect(!favicon).toBe(true);
+
+                    const appleTouchIcon = dom.window.document.querySelector(
+                        'icons link[rel="apple-touch-icon"]'
+                    );
+
+                    expect(!appleTouchIcon).toBe(true);
                 });
 
                 it('should return nothing if getting the config fails', async () => {
@@ -951,6 +1054,99 @@ describe('RecordsServer', () => {
                         ...corsHeaders(defaultHeaders.origin),
                         'Content-Type': 'text/html; charset=utf-8',
                     });
+                });
+
+                it('should include the ab1 bootstrap AUX if configured', async () => {
+                    store.webConfig = {
+                        causalRepoConnectionProtocol: 'websocket',
+                        version: 2,
+                        logoTitle: 'Test Logo',
+                        logoUrl: 'https://example.com/logo.png',
+                        ab1BootstrapURL: 'https://example.com/ab1.aux',
+                        serverInjectBootstrapper: true,
+                    };
+
+                    setResponse({
+                        status: 200,
+                        data: {
+                            version: 1,
+                            state: {
+                                test: createBot('test', {}),
+                                test2: createBot('test2', {}),
+                            },
+                        } satisfies StoredAux,
+                    });
+
+                    const result = await server.handleHttpRequest(
+                        scoped('player', httpGet(path, defaultHeaders))
+                    );
+
+                    expect(result.statusCode).toBe(200);
+
+                    const body = result.body as string;
+                    const dom = new JSDOM(body);
+
+                    const webConfig = dom.window.document.querySelector(
+                        'postApp script[type="text/aux"]#casualos-ab1-bootstrap'
+                    );
+
+                    expect(
+                        webConfig?.attributes.getNamedItem('type')?.value
+                    ).toBe('text/aux');
+
+                    const json = tryParseJson(webConfig!.innerHTML!);
+
+                    expect(json).toEqual({
+                        success: true,
+                        value: {
+                            version: 1,
+                            state: {
+                                test: createBot('test', {}),
+                                test2: createBot('test2', {}),
+                            },
+                        },
+                    });
+
+                    expect(result.headers).toEqual({
+                        ...corsHeaders(defaultHeaders.origin),
+                        'Content-Type': 'text/html; charset=utf-8',
+                    });
+                });
+
+                it('should not include the ab1 bootstrap AUX if disabled', async () => {
+                    store.webConfig = {
+                        causalRepoConnectionProtocol: 'websocket',
+                        version: 2,
+                        logoTitle: 'Test Logo',
+                        logoUrl: 'https://example.com/logo.png',
+                        ab1BootstrapURL: 'https://example.com/ab1.aux',
+                    };
+
+                    setResponse({
+                        status: 200,
+                        data: {
+                            version: 1,
+                            state: {
+                                test: createBot('test', {}),
+                                test2: createBot('test2', {}),
+                            },
+                        } satisfies StoredAux,
+                    });
+
+                    const result = await server.handleHttpRequest(
+                        scoped('player', httpGet(path, defaultHeaders))
+                    );
+
+                    expect(result.statusCode).toBe(200);
+
+                    const body = result.body as string;
+                    const dom = new JSDOM(body);
+
+                    const ab1 = dom.window.document.querySelector(
+                        'postApp script[type="text/aux"]#casualos-ab1-bootstrap'
+                    );
+
+                    expect(!ab1).toBe(true);
                 });
             });
         });

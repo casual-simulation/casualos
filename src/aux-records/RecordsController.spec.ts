@@ -41,9 +41,13 @@ import {
     formatV2RecordKey,
     isRecordKey,
 } from '@casual-simulation/aux-common/records/RecordKeys';
+import type { StoredAux, Success } from '@casual-simulation/aux-common';
 import {
+    createBot,
     failure,
+    isSuccess,
     success,
+    tryParseJson,
     WEB_CONFIG_SCHEMA,
 } from '@casual-simulation/aux-common';
 import type { DomainNameValidator } from './dns';
@@ -53,6 +57,7 @@ import type z from 'zod';
 const uuidMock: jest.Mock = <any>uuid;
 const uuidv7Mock: jest.Mock = <any>uuidv7;
 jest.mock('uuid');
+jest.mock('axios');
 
 console.error = jest.fn();
 console.log = jest.fn();
@@ -82,6 +87,30 @@ describe('RecordsController', () => {
             domainNameValidator,
         });
     });
+
+    beforeEach(() => {
+        require('axios').__reset();
+    });
+
+    function setResponse(response: any) {
+        require('axios').__setResponse(response);
+    }
+
+    function setNextResponse(response: any) {
+        require('axios').__setNextResponse(response);
+    }
+
+    function getLastPost() {
+        return require('axios').__getLastPost();
+    }
+
+    function getLastGet() {
+        return require('axios').__getLastGet();
+    }
+
+    function getRequests() {
+        return require('axios').__getRequests();
+    }
 
     describe('createPublicRecordKey()', () => {
         it('should return a value that contains the formatted record name and a random password', async () => {
@@ -5298,6 +5327,129 @@ describe('RecordsController', () => {
                     comId: 'customComId',
                 })
             );
+        });
+    });
+
+    describe('getAb1Bootstrap()', () => {
+        it('should fetch the AB1 bootstrap AUX from the given URL', async () => {
+            setResponse({
+                status: 200,
+                data: {
+                    version: 1,
+                    state: {
+                        test1: createBot('test1'),
+                        test2: createBot('test2'),
+                    },
+                } satisfies StoredAux,
+            });
+
+            const result = await manager.getAb1Bootstrap({
+                version: 2,
+                causalRepoConnectionProtocol: 'websocket',
+                ab1BootstrapURL: 'https://example.com/ab1.aux',
+            });
+
+            expect(isSuccess(result)).toBe(true);
+
+            const json = tryParseJson((result as Success<string>).value);
+
+            expect(json).toEqual({
+                success: true,
+                value: {
+                    version: 1,
+                    state: {
+                        test1: createBot('test1'),
+                        test2: createBot('test2'),
+                    },
+                } satisfies StoredAux,
+            });
+
+            expect(getLastGet()).toEqual([
+                'https://example.com/ab1.aux',
+                {
+                    validateStatus: expect.any(Function),
+                },
+            ]);
+        });
+
+        it('should load from the config store first', async () => {
+            store.ab1Bootstrap = {
+                version: 1,
+                state: {
+                    test1: createBot('test1'),
+                    test2: createBot('test2'),
+                },
+            };
+
+            setResponse({
+                status: 500,
+                data: 'Broken',
+            });
+
+            const result = await manager.getAb1Bootstrap({
+                version: 2,
+                causalRepoConnectionProtocol: 'websocket',
+                ab1BootstrapURL: 'https://example.com/ab1.aux',
+            });
+
+            expect(isSuccess(result)).toBe(true);
+
+            const json = tryParseJson((result as Success<string>).value);
+
+            expect(json).toEqual({
+                success: true,
+                value: {
+                    version: 1,
+                    state: {
+                        test1: createBot('test1'),
+                        test2: createBot('test2'),
+                    },
+                } satisfies StoredAux,
+            });
+
+            expect(getLastGet()).toEqual([]);
+        });
+
+        it('should store the bootstrapper in the config store', async () => {
+            setResponse({
+                status: 200,
+                data: {
+                    version: 1,
+                    state: {
+                        test1: createBot('test1'),
+                        test2: createBot('test2'),
+                    },
+                } satisfies StoredAux,
+            });
+
+            const result = await manager.getAb1Bootstrap({
+                version: 2,
+                causalRepoConnectionProtocol: 'websocket',
+                ab1BootstrapURL: 'https://example.com/ab1.aux',
+            });
+
+            expect(isSuccess(result)).toBe(true);
+
+            const json = tryParseJson((result as Success<string>).value);
+
+            expect(json).toEqual({
+                success: true,
+                value: {
+                    version: 1,
+                    state: {
+                        test1: createBot('test1'),
+                        test2: createBot('test2'),
+                    },
+                } satisfies StoredAux,
+            });
+
+            expect(store.ab1Bootstrap).toEqual({
+                version: 1,
+                state: {
+                    test1: createBot('test1'),
+                    test2: createBot('test2'),
+                },
+            });
         });
     });
 

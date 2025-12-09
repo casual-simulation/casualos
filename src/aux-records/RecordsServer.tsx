@@ -621,6 +621,7 @@ export class RecordsServer {
                     );
 
                     const postApp: JSX.Element[] = [];
+                    const icons: JSX.Element[] = [];
 
                     if (isSuccess(config) && config.value) {
                         postApp.push(
@@ -632,9 +633,61 @@ export class RecordsServer {
                                 }}
                             />
                         );
+
+                        if (
+                            config.value.ab1BootstrapURL &&
+                            config.value.serverInjectBootstrapper
+                        ) {
+                            const result = await this._records.getAb1Bootstrap(
+                                config.value
+                            );
+                            if (isSuccess(result)) {
+                                postApp.push(
+                                    <script
+                                        type="text/aux"
+                                        id="casualos-ab1-bootstrap"
+                                        dangerouslySetInnerHTML={{
+                                            __html: result.value,
+                                        }}
+                                    />
+                                );
+                            }
+                        }
+
+                        if (config.value.icons) {
+                            if (config.value.icons.appleTouchIcon) {
+                                icons.push(
+                                    <link
+                                        rel="apple-touch-icon"
+                                        href={config.value.icons.appleTouchIcon}
+                                    />
+                                );
+                            }
+                            if (config.value.icons.favicon) {
+                                if (
+                                    config.value.icons.favicon.endsWith('.png')
+                                ) {
+                                    icons.push(
+                                        <link
+                                            rel="icon"
+                                            href={config.value.icons.favicon}
+                                            type="image/png"
+                                        />
+                                    );
+                                } else {
+                                    icons.push(
+                                        <link
+                                            rel="icon"
+                                            href={config.value.icons.favicon}
+                                        />
+                                    );
+                                }
+                            }
+                        }
                     }
 
                     const result = success<ViewParams>({
+                        icons: <>{icons}</>,
                         postApp: <>{postApp}</>,
                     });
 

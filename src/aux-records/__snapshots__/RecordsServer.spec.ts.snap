@@ -6725,6 +6725,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
               "moderation",
               "web",
               "playerWebManifest",
+              "ab1Bootstrap",
             ],
           },
         },
@@ -9497,22 +9498,45 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                     "optional": true,
                     "type": "boolean",
                   },
+                  "icons": Object {
+                    "description": "The set of icons that should be used for the web client.",
+                    "nullable": true,
+                    "optional": true,
+                    "schema": Object {
+                      "appleTouchIcon": Object {
+                        "description": "The apple touch icon that should be used for the web client. If not specified, a default apple touch icon will be used. Should be 180x180 px and not use transparency (background should be a solid color).",
+                        "nullable": true,
+                        "optional": true,
+                        "type": "string",
+                      },
+                      "favicon": Object {
+                        "description": "The favicon that should be served for the web client. If not specified, a default favicon will be used. Should be 48x48 px and utilize transparency.",
+                        "nullable": true,
+                        "optional": true,
+                        "type": "string",
+                      },
+                    },
+                    "type": "object",
+                  },
                   "jitsiAppName": Object {
                     "nullable": true,
                     "optional": true,
                     "type": "string",
                   },
                   "logoBackgroundColor": Object {
+                    "description": "The background color of the logo to display in the loading screen. This is used to set the background color of the splash screen.",
                     "nullable": true,
                     "optional": true,
                     "type": "string",
                   },
                   "logoTitle": Object {
+                    "description": "The title text that accompanies the logo in the loading screen.",
                     "nullable": true,
                     "optional": true,
                     "type": "string",
                   },
                   "logoUrl": Object {
+                    "description": "The URL of the logo to display in the loading screen.",
                     "nullable": true,
                     "optional": true,
                     "type": "string",
@@ -9534,6 +9558,11 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                   "requirePrivoLogin": Object {
                     "defaultValue": false,
                     "hasDefault": true,
+                    "type": "boolean",
+                  },
+                  "serverInjectBootstrapper": Object {
+                    "nullable": true,
+                    "optional": true,
                     "type": "boolean",
                   },
                   "sharedPartitionsVersion": Object {
@@ -9693,6 +9722,93 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                   },
                 },
                 "type": "object",
+              },
+            },
+            "type": "object",
+          },
+          Object {
+            "schema": Object {
+              "key": Object {
+                "type": "literal",
+                "value": "ab1Bootstrap",
+              },
+              "value": Object {
+                "discriminator": "version",
+                "options": Array [
+                  Object {
+                    "schema": Object {
+                      "state": Object {
+                        "catchall": Object {
+                          "schema": Object {
+                            "id": Object {
+                              "type": "string",
+                            },
+                            "masks": Object {
+                              "catchall": Object {
+                                "catchall": Object {
+                                  "type": "any",
+                                },
+                                "schema": Object {},
+                                "type": "object",
+                              },
+                              "nullable": true,
+                              "optional": true,
+                              "schema": Object {},
+                              "type": "object",
+                            },
+                            "space": Object {
+                              "nullable": true,
+                              "optional": true,
+                              "type": "string",
+                            },
+                            "tags": Object {
+                              "catchall": Object {
+                                "type": "any",
+                              },
+                              "schema": Object {},
+                              "type": "object",
+                            },
+                          },
+                          "type": "object",
+                        },
+                        "schema": Object {},
+                        "type": "object",
+                      },
+                      "version": Object {
+                        "type": "literal",
+                        "value": 1,
+                      },
+                    },
+                    "type": "object",
+                  },
+                  Object {
+                    "schema": Object {
+                      "updates": Object {
+                        "schema": Object {
+                          "schema": Object {
+                            "id": Object {
+                              "type": "number",
+                            },
+                            "timestamp": Object {
+                              "type": "number",
+                            },
+                            "update": Object {
+                              "type": "string",
+                            },
+                          },
+                          "type": "object",
+                        },
+                        "type": "array",
+                      },
+                      "version": Object {
+                        "type": "literal",
+                        "value": 2,
+                      },
+                    },
+                    "type": "object",
+                  },
+                ],
+                "type": "union",
               },
             },
             "type": "object",
@@ -16433,6 +16549,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
               "moderation",
               "web",
               "playerWebManifest",
+              "ab1Bootstrap",
             ],
           },
         },
@@ -19205,22 +19322,45 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                     "optional": true,
                     "type": "boolean",
                   },
+                  "icons": Object {
+                    "description": "The set of icons that should be used for the web client.",
+                    "nullable": true,
+                    "optional": true,
+                    "schema": Object {
+                      "appleTouchIcon": Object {
+                        "description": "The apple touch icon that should be used for the web client. If not specified, a default apple touch icon will be used. Should be 180x180 px and not use transparency (background should be a solid color).",
+                        "nullable": true,
+                        "optional": true,
+                        "type": "string",
+                      },
+                      "favicon": Object {
+                        "description": "The favicon that should be served for the web client. If not specified, a default favicon will be used. Should be 48x48 px and utilize transparency.",
+                        "nullable": true,
+                        "optional": true,
+                        "type": "string",
+                      },
+                    },
+                    "type": "object",
+                  },
                   "jitsiAppName": Object {
                     "nullable": true,
                     "optional": true,
                     "type": "string",
                   },
                   "logoBackgroundColor": Object {
+                    "description": "The background color of the logo to display in the loading screen. This is used to set the background color of the splash screen.",
                     "nullable": true,
                     "optional": true,
                     "type": "string",
                   },
                   "logoTitle": Object {
+                    "description": "The title text that accompanies the logo in the loading screen.",
                     "nullable": true,
                     "optional": true,
                     "type": "string",
                   },
                   "logoUrl": Object {
+                    "description": "The URL of the logo to display in the loading screen.",
                     "nullable": true,
                     "optional": true,
                     "type": "string",
@@ -19242,6 +19382,11 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                   "requirePrivoLogin": Object {
                     "defaultValue": false,
                     "hasDefault": true,
+                    "type": "boolean",
+                  },
+                  "serverInjectBootstrapper": Object {
+                    "nullable": true,
+                    "optional": true,
                     "type": "boolean",
                   },
                   "sharedPartitionsVersion": Object {
@@ -19401,6 +19546,93 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                   },
                 },
                 "type": "object",
+              },
+            },
+            "type": "object",
+          },
+          Object {
+            "schema": Object {
+              "key": Object {
+                "type": "literal",
+                "value": "ab1Bootstrap",
+              },
+              "value": Object {
+                "discriminator": "version",
+                "options": Array [
+                  Object {
+                    "schema": Object {
+                      "state": Object {
+                        "catchall": Object {
+                          "schema": Object {
+                            "id": Object {
+                              "type": "string",
+                            },
+                            "masks": Object {
+                              "catchall": Object {
+                                "catchall": Object {
+                                  "type": "any",
+                                },
+                                "schema": Object {},
+                                "type": "object",
+                              },
+                              "nullable": true,
+                              "optional": true,
+                              "schema": Object {},
+                              "type": "object",
+                            },
+                            "space": Object {
+                              "nullable": true,
+                              "optional": true,
+                              "type": "string",
+                            },
+                            "tags": Object {
+                              "catchall": Object {
+                                "type": "any",
+                              },
+                              "schema": Object {},
+                              "type": "object",
+                            },
+                          },
+                          "type": "object",
+                        },
+                        "schema": Object {},
+                        "type": "object",
+                      },
+                      "version": Object {
+                        "type": "literal",
+                        "value": 1,
+                      },
+                    },
+                    "type": "object",
+                  },
+                  Object {
+                    "schema": Object {
+                      "updates": Object {
+                        "schema": Object {
+                          "schema": Object {
+                            "id": Object {
+                              "type": "number",
+                            },
+                            "timestamp": Object {
+                              "type": "number",
+                            },
+                            "update": Object {
+                              "type": "string",
+                            },
+                          },
+                          "type": "object",
+                        },
+                        "type": "array",
+                      },
+                      "version": Object {
+                        "type": "literal",
+                        "value": 2,
+                      },
+                    },
+                    "type": "object",
+                  },
+                ],
+                "type": "union",
               },
             },
             "type": "object",
