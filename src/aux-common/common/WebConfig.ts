@@ -140,6 +140,11 @@ export interface WebConfig {
     ab1BootstrapURL?: string | null;
 
     /**
+     * Whether the server should inject the AB1 Bootstrap script via a script tag.
+     */
+    serverInjectBootstrapper?: boolean;
+
+    /**
      * The API key that should be used for the ArcGIS mapping API.
      */
     arcGisApiKey?: string | null;
@@ -270,6 +275,7 @@ export const WEB_CONFIG_SCHEMA = z.object({
     recordsOrigin: z.string().min(1).max(128).nullable().optional(),
     disableCollaboration: z.boolean().nullable().optional(),
     ab1BootstrapURL: z.string().min(1).max(512).nullable().optional(),
+    serverInjectBootstrapper: z.boolean().nullable().optional(),
     arcGisApiKey: z.string().min(1).max(128).nullable().optional(),
     jitsiAppName: z.string().min(1).max(128).nullable().optional(),
     what3WordsApiKey: z.string().min(1).max(128).nullable().optional(),

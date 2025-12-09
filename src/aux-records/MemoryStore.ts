@@ -118,6 +118,7 @@ import type {
     Entitlement,
     GrantedEntitlementScope,
     WebConfig,
+    StoredAux,
 } from '@casual-simulation/aux-common';
 import type {
     AIChatMetrics,
@@ -247,6 +248,7 @@ export class MemoryStore
     private _moderationConfiguration: ModerationConfiguration | null = null;
     private _webConfig: WebConfig | null = null;
     private _playerWebManifest: WebManifest | null = null;
+    private _ab1Bootstrap: StoredAux | null = null;
     private _recordNotifications: RecordsNotification[] = [];
     private _comIdRequests: StudioComIdRequest[] = [];
 
@@ -395,6 +397,14 @@ export class MemoryStore
         this._playerWebManifest = value;
     }
 
+    get ab1Bootstrap() {
+        return this._ab1Bootstrap;
+    }
+
+    set ab1Bootstrap(value: StoredAux | null) {
+        this._ab1Bootstrap = value;
+    }
+
     get userInstReports() {
         return this._userInstReports;
     }
@@ -471,6 +481,8 @@ export class MemoryStore
             this._webConfig = finalValue as WebConfig;
         } else if (key === 'playerWebManifest') {
             this._playerWebManifest = finalValue as WebManifest;
+        } else if (key === 'ab1Bootstrap') {
+            this._ab1Bootstrap = finalValue as StoredAux;
         } else {
             throw new Error('Unsupported configuration key: ' + key);
         }
@@ -505,6 +517,8 @@ export class MemoryStore
                 CONFIGURATION_SCHEMAS_MAP[key]
                     .nullable()
                     .parse(defaultValue ?? null)) as ConfigurationOutput<TKey>;
+        } else if (key === 'ab1Bootstrap') {
+            return (this._ab1Bootstrap ?? null) as ConfigurationOutput<TKey>;
         } else {
             throw new Error('Unsupported configuration key: ' + key);
         }
