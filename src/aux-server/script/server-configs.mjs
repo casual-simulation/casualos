@@ -205,7 +205,7 @@ export function createConfigs(dev, version) {
                         dest: path.resolve(
                             serverlessDist,
                             'handlers',
-                            '.bin',
+                            'bin',
                             'x86_64-linux-gnu'
                         ),
                         force: true,
