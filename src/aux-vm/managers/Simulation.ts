@@ -49,10 +49,15 @@ export interface SimulationOrigin {
     host?: string;
 
     /**
-     * Whether the simulation is static.
-     * Defaults to false.
+     * The kind of the simulation.
+     *
+     * - "default": A regular simulation with persistence over the network.
+     * - "static": A simulation that persists only locally.
+     * - "temp": A temporary simulation that does not persist at all.
+     *
+     * Defaults to "default".
      */
-    isStatic?: boolean;
+    kind?: 'default' | 'static' | 'temp';
 }
 
 /**

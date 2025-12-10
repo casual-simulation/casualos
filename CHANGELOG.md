@@ -73,6 +73,13 @@
     -   Set `serverInjectBootstrapper` to `true` on the web config in the server config.
 -   Added the ability to configure a custom favicon for server-based deployments.
     -   Use the `icons` property on the web config in the server config.
+-   Added the `locked` BIOS option as an alternative to `studio` and `private inst`.
+    -   `studio` remains the default, so if you want to use `locked`, you should configure a custom list of `allowedBiosOptions` in the web config.
+-   Added support for for temporary instances.
+    -   Temporary instances aren't stored at all. This means that once you refresh, all the bot data will be lost.
+    -   You can use the `temp` bios option to generate a temporary inst.
+    -   You can also use the `tempInst` query parameter to load a temporary inst directly.
+    -   By default, the `temp` bios option is disabled and needs to be manually enabled.
 
 ### :bug: Bug Fixes
 

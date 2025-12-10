@@ -16,6 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import { hasValue } from '@casual-simulation/aux-common';
+import type { SimulationOrigin } from '@casual-simulation/aux-vm';
 
 export interface InstParameters {
     /**
@@ -35,9 +36,9 @@ export interface InstParameters {
     owner: string | null;
 
     /**
-     * Whether the inst should be static.
+     * The kind of the inst.
      */
-    isStatic: boolean;
+    kind: SimulationOrigin['kind'];
 
     /**
      * Whether the story query parameter was used for the inst.
@@ -55,7 +56,12 @@ export interface InstParameters {
  */
 export function getInstParameters(query: any): InstParameters {
     const inst: string =
-        query.staticInst ?? query.inst ?? query.story ?? query.server ?? null;
+        query.tempInst ??
+        query.staticInst ??
+        query.inst ??
+        query.story ??
+        query.server ??
+        null;
     const recordName = query.owner ?? query.record ?? query.player ?? null;
     const owner = query.owner ?? null;
 
@@ -67,7 +73,12 @@ export function getInstParameters(query: any): InstParameters {
         inst: inst,
         recordName: recordName,
         owner,
-        isStatic: inst === query.staticInst,
+        kind:
+            inst === query.staticInst
+                ? 'static'
+                : inst === query.tempInst
+                ? 'temp'
+                : 'default',
     };
 
     if (inst === query.story) {
