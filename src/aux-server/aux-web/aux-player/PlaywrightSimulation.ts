@@ -317,7 +317,7 @@ export class PlaywrightSimulation
             {
                 recordName: null,
                 inst: null,
-                isStatic: this.origin.isStatic,
+                kind: this.origin.kind,
             },
             {
                 version: this._config.version,

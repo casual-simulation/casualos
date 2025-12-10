@@ -50,7 +50,12 @@ import {
     getUserBotAsync,
     userBotTagsChanged,
 } from '@casual-simulation/aux-vm-browser';
-import type { UpdatedBotInfo } from '@casual-simulation/aux-vm';
+import type { SimulationOrigin } from '@casual-simulation/aux-vm';
+import {
+    isStatic,
+    isTemp,
+    type UpdatedBotInfo,
+} from '@casual-simulation/aux-vm';
 import { intersection, isEqual, without, union } from 'es-toolkit/compat';
 import type { Subscription } from 'rxjs';
 import type { Config } from 'unique-names-generator';
@@ -79,8 +84,13 @@ function isPrivateInst(
     return (
         biosOption === 'private inst' ||
         biosOption === 'studio inst' ||
-        biosOption === 'studio'
+        biosOption === 'studio' ||
+        biosOption === 'locked'
     );
+}
+
+function isTempInst(biosOption: BiosOption): biosOption is 'temp' {
+    return biosOption === 'temp';
 }
 
 function isPublicInst(
@@ -178,7 +188,7 @@ export default class PlayerHome extends Vue {
 
     errors: FormError[] = [];
 
-    private _loadedStaticInst: boolean = false;
+    private _loadedKind: SimulationOrigin['kind'] = 'default';
     private _partialHistoryQueryParams: string[] = [];
     private _fullHistoryQueryParams: string[] = [];
     private _simulations: Map<BrowserSimulation, Subscription>;
@@ -268,6 +278,8 @@ export default class PlayerHome extends Vue {
             return 'bots are stored in the cloud and shared publicly, expires in 24h';
         } else if (isJoinCode(option)) {
             return 'enter a join code to load an existing inst';
+        } else if (isTempInst(option)) {
+            return 'bots are not stored and will be lost when you leave or refresh';
         }
         return '';
     }
@@ -291,16 +303,19 @@ export default class PlayerHome extends Vue {
     @Watch('query')
     async onQueryChanged(newValue: any, oldQuery: any) {
         const staticInst = this.query['staticInst'] as string | string[];
+        const tempInst = this.query['tempInst'] as string | string[];
         const inst = this.query['inst'] as string | string[];
         let recordName =
             this.query['owner'] ??
             this.query['record'] ??
             this.query['player'] ??
             null;
-        if (hasValue(staticInst)) {
-            await this._setServer(recordName, staticInst, true);
+        if (hasValue(tempInst)) {
+            await this._setServer(recordName, tempInst, 'temp');
+        } else if (hasValue(staticInst)) {
+            await this._setServer(recordName, staticInst, 'static');
         } else if (hasValue(inst)) {
-            await this._setServer(recordName, inst, false);
+            await this._setServer(recordName, inst, 'default');
         }
         for (let [sim, sub] of this._simulations) {
             getUserBotAsync(sim).subscribe({
@@ -389,11 +404,7 @@ export default class PlayerHome extends Vue {
             const params = getInstParameters(this.query);
 
             if (params) {
-                this._setServer(
-                    params.recordName,
-                    params.inst,
-                    params.isStatic
-                );
+                this._setServer(params.recordName, params.inst, params.kind);
 
                 if ('bios' in this.query) {
                     this._updateQuery({
@@ -423,7 +434,8 @@ export default class PlayerHome extends Vue {
                                     o === bios ||
                                     (isStaticInst(o) && isStaticInst(bios)) ||
                                     (isPrivateInst(o) && isPrivateInst(bios)) ||
-                                    (isPublicInst(o) && isPublicInst(bios))
+                                    (isPublicInst(o) && isPublicInst(bios)) ||
+                                    (isTempInst(o) && isTempInst(bios))
                             )
                         ) {
                             this.biosSelection = bios;
@@ -536,6 +548,8 @@ export default class PlayerHome extends Vue {
             await appManager.auth.primary.logout();
             this.biosSelection = null;
             this._showBiosOptions();
+        } else if (isTempInst(option)) {
+            this._loadTempInst(inst);
         } else if (isStaticInst(option)) {
             this._loadStaticInst(inst);
         } else if (isPrivateInst(option)) {
@@ -558,6 +572,27 @@ export default class PlayerHome extends Vue {
 
     async showAccountInfo() {
         await appManager.authCoordinator.showAccountInfo(null);
+    }
+
+    private async _loadTempInst(instSelection: string) {
+        const inst =
+            !instSelection || instSelection === 'new-inst'
+                ? this.instName && this.instName.trim() !== ''
+                    ? this.instName.trim()
+                    : this.generatedName
+                : instSelection;
+
+        const update: Dictionary<string | string[]> = {};
+        update.tempInst = inst;
+        update.bios = null;
+
+        this._addGridPortalToQuery(update);
+
+        if (Object.keys(update).length > 0) {
+            this._updateQuery(update);
+        }
+
+        await this._setServer(null, inst, 'temp');
     }
 
     private async _loadStaticInst(instSelection: string) {
@@ -588,7 +623,7 @@ export default class PlayerHome extends Vue {
         }
 
         try {
-            await this._setServer(null, inst, true);
+            await this._setServer(null, inst, 'static');
         } catch (error) {
             // Check for the correct error message
             if (error?.message?.includes('was deleted and cleaned up')) {
@@ -633,7 +668,8 @@ export default class PlayerHome extends Vue {
             this._updateQuery(update);
         }
 
-        this._setServer(null, inst, true);
+        // Load a temp inst so that the bootstrapper can respond to the join code
+        this._setServer(null, inst, 'temp');
     }
 
     private _loadPrivateInst() {
@@ -654,7 +690,7 @@ export default class PlayerHome extends Vue {
                 this._updateQuery(update);
             }
 
-            this._setServer(userId, inst, false);
+            this._setServer(userId, inst, 'default');
         }
     }
 
@@ -672,7 +708,7 @@ export default class PlayerHome extends Vue {
             this._updateQuery(update);
         }
 
-        this._setServer(PUBLIC_OWNER, inst, false);
+        this._setServer(PUBLIC_OWNER, inst, 'default');
     }
 
     private _addGridPortalToQuery(update: Dictionary<string | string[]>) {
@@ -713,6 +749,8 @@ export default class PlayerHome extends Vue {
             ) {
                 return true;
             } else if (isStaticInst(option)) {
+                return true;
+            } else if (isTempInst(option)) {
                 return true;
             } else if (
                 (option === 'sign in' || option === 'sign up') &&
@@ -771,7 +809,7 @@ export default class PlayerHome extends Vue {
                                 );
                             if (hasValue(inst)) {
                                 // Handle changing inst tag
-                                const wasStatic = !!this._loadedStaticInst;
+                                const oldKind = this._loadedKind;
                                 const final = {
                                     ...this.$route,
                                     query: {
@@ -780,7 +818,7 @@ export default class PlayerHome extends Vue {
                                 };
 
                                 let hasChange = false;
-                                if (wasStatic) {
+                                if (isStatic(oldKind)) {
                                     if (
                                         !areEqualInstLists(
                                             final.query.staticInst,
@@ -788,6 +826,16 @@ export default class PlayerHome extends Vue {
                                         )
                                     ) {
                                         final.query.staticInst = inst;
+                                        hasChange = true;
+                                    }
+                                } else if (isTemp(oldKind)) {
+                                    if (
+                                        !areEqualInstLists(
+                                            final.query.tempInst,
+                                            inst
+                                        )
+                                    ) {
+                                        final.query.tempInst = inst;
                                         hasChange = true;
                                     }
                                 } else {
@@ -808,11 +856,7 @@ export default class PlayerHome extends Vue {
                                         window.document.title
                                     );
                                     this.$router.replace(final);
-                                    this._setServer(
-                                        recordName,
-                                        inst,
-                                        wasStatic
-                                    );
+                                    this._setServer(recordName, inst, oldKind);
                                 }
                             }
                         }
@@ -921,9 +965,9 @@ export default class PlayerHome extends Vue {
     private async _setServer(
         recordName: string | string[],
         newServer: string | string[],
-        isStatic: boolean
+        kind: SimulationOrigin['kind']
     ) {
-        this._loadedStaticInst = isStatic;
+        this._loadedKind = kind;
         const owner = getFirst(recordName);
         let recordInfo = appManager.getRecordName(owner);
 
@@ -934,39 +978,35 @@ export default class PlayerHome extends Vue {
 
         const record = recordInfo.recordName;
         if (typeof newServer === 'string') {
-            await this._loadPrimarySimulation(record, newServer, isStatic);
+            await this._loadPrimarySimulation(record, newServer, kind);
 
             if (appManager.simulationManager.simulations.size >= 2) {
-                const simId = getSimulationId(record, newServer, isStatic);
+                const simId = getSimulationId(record, newServer, kind);
                 await appManager.simulationManager.removeNonMatchingSimulations(
                     simId
                 );
             }
         } else if (newServer.length === 1) {
             const server = newServer[0];
-            await this._loadPrimarySimulation(record, server, isStatic);
+            await this._loadPrimarySimulation(record, server, kind);
 
             if (appManager.simulationManager.simulations.size >= 2) {
-                const simId = getSimulationId(record, server, isStatic);
+                const simId = getSimulationId(record, server, kind);
                 await appManager.simulationManager.removeNonMatchingSimulations(
                     simId
                 );
             }
         } else {
             if (!appManager.simulationManager.primary) {
-                await this._loadPrimarySimulation(
-                    record,
-                    newServer[0],
-                    isStatic
-                );
+                await this._loadPrimarySimulation(record, newServer[0], kind);
             }
             await appManager.simulationManager.updateSimulations(
                 newServer.map((s) => ({
-                    id: getSimulationId(record, s, isStatic),
+                    id: getSimulationId(record, s, kind),
                     options: {
                         recordName: record,
                         inst: s,
-                        isStatic: isStatic,
+                        kind,
                     },
                 }))
             );
@@ -976,12 +1016,12 @@ export default class PlayerHome extends Vue {
     private async _loadPrimarySimulation(
         recordName: string,
         newServer: string,
-        isStatic: boolean
+        kind: SimulationOrigin['kind']
     ) {
         const sim = await appManager.setPrimarySimulation(
             recordName,
             newServer,
-            isStatic
+            kind
         );
         sim.connection.syncStateChanged
             .pipe(first((synced) => synced))
@@ -1036,7 +1076,7 @@ export default class PlayerHome extends Vue {
         }
         if (
             hasChange &&
-            botManager.origin.isStatic &&
+            isStatic(botManager.origin) &&
             changes.staticInst !== bot.tags.inst
         ) {
             changes.inst = changes.staticInst;

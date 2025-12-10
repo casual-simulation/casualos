@@ -100,7 +100,11 @@ export class SimulationWebhookEnvironment implements WebhookEnvironment {
     ): Promise<HandleHttpRequestResult> {
         const configBotId = uuid();
         const inst = request.inst ?? uuid();
-        const simId = getSimulationId(request.recordName, inst, false);
+        const simId = getSimulationId(
+            request.recordName,
+            inst,
+            request.inst ? 'default' : 'static'
+        );
         const origin: SimulationOrigin = request.inst
             ? {
                   recordName: request.recordName,

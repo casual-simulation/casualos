@@ -1881,7 +1881,7 @@ export class ServerBuilder implements SubscriptionLike {
                         {
                             recordName: null,
                             inst: null,
-                            isStatic: false,
+                            kind: 'default',
                         },
                         vm
                     );

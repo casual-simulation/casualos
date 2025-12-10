@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import { firstValueFrom } from 'rxjs';
-import type { Simulation } from './Simulation';
+import type { Simulation, SimulationOrigin } from './Simulation';
 import { first } from 'rxjs/operators';
 
 /**
@@ -31,4 +31,37 @@ export function waitForSync(simulation: Simulation): Promise<boolean> {
     return firstValueFrom(
         simulation.connection.syncStateChanged.pipe(first((synced) => synced))
     );
+}
+
+/**
+ * Gets whether the given simulation origin is for a static simulation.
+ * @param origin The origin or kind of the simulation.
+ */
+export function isStatic(
+    origin: SimulationOrigin | SimulationOrigin['kind']
+): boolean {
+    return (typeof origin === 'string' ? origin : origin?.kind) === 'static';
+}
+
+/**
+ * Gets whether the given simulation origin is for a default simulation.
+ * @param origin The origin or kind of the simulation.
+ */
+export function isDefault(
+    origin: SimulationOrigin | SimulationOrigin['kind']
+): boolean {
+    return (
+        ((typeof origin === 'string' ? origin : origin?.kind) ?? 'default') ===
+        'default'
+    );
+}
+
+/**
+ * Gets whether the given simulation origin is for a temp simulation.
+ * @param origin The origin or kind of the simulation.
+ */
+export function isTemp(
+    origin: SimulationOrigin | SimulationOrigin['kind']
+): boolean {
+    return (typeof origin === 'string' ? origin : origin?.kind) === 'temp';
 }

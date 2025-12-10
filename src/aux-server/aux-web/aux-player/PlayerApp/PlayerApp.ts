@@ -71,7 +71,13 @@ import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
 import LoadApp from '../../shared/vue-components/LoadApp/LoadApp';
 import { tap } from 'rxjs/operators';
 import { merge } from 'es-toolkit/compat';
-import type { Simulation, LoginState } from '@casual-simulation/aux-vm';
+import {
+    type Simulation,
+    type LoginState,
+    type SimulationOrigin,
+    isStatic,
+    isTemp,
+} from '@casual-simulation/aux-vm';
 import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import type { SidebarItem } from '../../shared/vue-components/BaseGameView';
 import type { ConnectionInfo } from '@casual-simulation/aux-common';
@@ -848,19 +854,27 @@ export default class PlayerApp extends Vue {
                     let simId: string;
                     let recordName: string = null;
                     let inst: string = null;
-                    let isStatic: boolean = false;
-                    if (e.config.staticInst) {
+                    let kind: SimulationOrigin['kind'] = 'default';
+                    if (e.config.tempInst) {
+                        simId = getSimulationId(
+                            null,
+                            e.config.tempInst,
+                            'temp'
+                        );
+                        inst = e.config.tempInst;
+                        kind = 'temp';
+                    } else if (e.config.staticInst) {
                         simId = getSimulationId(
                             null,
                             e.config.staticInst,
-                            true
+                            'static'
                         );
                         inst = e.config.staticInst;
-                        isStatic = true;
+                        kind = 'static';
                     } else {
                         recordName = e.config.owner ?? e.config.record ?? null;
                         inst = e.config.inst;
-                        isStatic = false;
+                        kind = 'default';
 
                         let recordInfo = appManager.getRecordName(recordName);
 
@@ -873,35 +887,43 @@ export default class PlayerApp extends Vue {
                         }
 
                         recordName = recordInfo.recordName;
-                        simId = getSimulationId(recordName, inst, false);
+                        simId = getSimulationId(recordName, inst, kind);
                     }
 
                     appManager.simulationManager.addSimulation(simId, {
                         recordName,
                         inst,
-                        isStatic,
+                        kind,
                     });
                 } else if (e.type === 'unload_server_config') {
                     let simId: string;
                     let recordName: string = null;
                     let inst: string = null;
-                    let isStatic: boolean = false;
-                    if (e.config.staticInst) {
+                    let kind: SimulationOrigin['kind'] = 'default';
+                    if (e.config.tempInst) {
+                        simId = getSimulationId(
+                            null,
+                            e.config.tempInst,
+                            'temp'
+                        );
+                        inst = e.config.tempInst;
+                        kind = 'temp';
+                    } else if (e.config.staticInst) {
                         simId = getSimulationId(
                             null,
                             e.config.staticInst,
-                            true
+                            'static'
                         );
                         inst = e.config.staticInst;
-                        isStatic = true;
+                        kind = 'static';
                     } else {
                         recordName = e.config.owner ?? e.config.record ?? null;
                         inst = e.config.inst;
-                        isStatic = false;
+                        kind = 'default';
 
                         const recordInfo = appManager.getRecordName(recordName);
                         recordName = recordInfo.recordName;
-                        simId = getSimulationId(recordName, inst, false);
+                        simId = getSimulationId(recordName, inst, kind);
                     }
 
                     appManager.simulationManager.removeSimulation(simId);
@@ -2037,7 +2059,10 @@ export default class PlayerApp extends Vue {
         if (primarySim) {
             if (hasValue(primarySim.origin.recordName)) {
                 document.title = `${primarySim.origin.recordName}/${primarySim.origin.inst}`;
-            } else if (primarySim.origin.isStatic) {
+            } else if (
+                isStatic(primarySim.origin.kind) ||
+                isTemp(primarySim.origin.kind)
+            ) {
                 document.title = primarySim.origin.inst;
             } else {
                 document.title = 'public/' + primarySim.origin.inst;

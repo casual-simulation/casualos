@@ -43,7 +43,12 @@ import type {
     SimulationOrigin,
     AuthHelperInterface,
 } from '@casual-simulation/aux-vm';
-import { SimulationManager } from '@casual-simulation/aux-vm';
+import {
+    isDefault,
+    isStatic,
+    isTemp,
+    SimulationManager,
+} from '@casual-simulation/aux-vm';
 import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import {
     AuthCoordinator,
@@ -175,8 +180,7 @@ export class AppManager {
     private _simulationFactory: (
         id: string,
         origin: SimulationOrigin,
-        config: AuxConfig['config'],
-        isStatic: boolean
+        config: AuxConfig['config']
     ) => Promise<BotManager>;
 
     get systemPortal() {
@@ -186,10 +190,11 @@ export class AppManager {
     constructor() {
         this._progress = new BehaviorSubject<ProgressMessage>(null);
         this._updateAvailable = new BehaviorSubject<boolean>(false);
-        this._simulationFactory = async (id, origin, config, isStatic) => {
+        this._simulationFactory = async (id, origin, config) => {
             const configBotId = uuid();
 
-            if (isStatic && (await this.checkPendingCleanup(id))) {
+            const isStaticOrigin = isStatic(origin);
+            if (isStaticOrigin && (await this.checkPendingCleanup(id))) {
                 console.log(
                     `[AppManager] Executing pending cleanup for inst: ${id}`
                 );
@@ -210,6 +215,7 @@ export class AppManager {
 
                 throw new Error(`Static inst ${id} was deleted and cleaned up`);
             }
+
             let initialState: BotsState = undefined;
             if (import.meta.env.MODE === 'static') {
                 const injectedAux = document.querySelector(
@@ -230,7 +236,15 @@ export class AppManager {
                 config.staticRepoLocalPersistence = false;
             }
 
-            const partitions = isStatic
+            const partitions = isTemp(origin)
+                ? BotManager.createTempPartitions(
+                      id,
+                      configBotId,
+                      origin,
+                      config,
+                      initialState
+                  )
+                : isStaticOrigin
                 ? BotManager.createStaticPartitions(
                       id,
                       configBotId,
@@ -240,22 +254,34 @@ export class AppManager {
                   )
                 : BotManager.createPartitions(id, configBotId, origin, config);
 
-            const storedInst = this._db
-                ? await getItem<StoredInst>(
-                      this._db,
-                      isStatic ? STATIC_INSTS_STORE : INSTS_STORE,
-                      id
-                  )
-                : null;
-
             let relaxOrigin = false;
             let vmOrigin: string | null = config.vmOrigin;
-            if (isStatic && storedInst && vmOrigin !== storedInst.vmOrigin) {
-                console.log(
-                    `[AppManager] old static inst already exists for "${id}". Relaxing origin and using stored inst origin.`
-                );
-                relaxOrigin = true;
-                vmOrigin = storedInst.vmOrigin ?? location.origin;
+            let version = this.version;
+
+            if (!isTemp(origin)) {
+                const storedInst = this._db
+                    ? await getItem<StoredInst>(
+                          this._db,
+                          isStaticOrigin ? STATIC_INSTS_STORE : INSTS_STORE,
+                          id
+                      )
+                    : null;
+
+                if (storedInst) {
+                    version = storedInst.version;
+                }
+
+                if (
+                    isStaticOrigin &&
+                    storedInst &&
+                    vmOrigin !== storedInst.vmOrigin
+                ) {
+                    console.log(
+                        `[AppManager] old static inst already exists for "${id}". Relaxing origin and using stored inst origin.`
+                    );
+                    relaxOrigin = true;
+                    vmOrigin = storedInst.vmOrigin ?? location.origin;
+                }
             }
 
             let vm: AuxVM;
@@ -288,16 +314,16 @@ export class AppManager {
                 vm = new AuxVMImpl(id, origin, auxConfig, relaxOrigin);
             }
 
-            if (this._db) {
+            if (this._db && !isTemp(origin)) {
                 putItem<StoredInst>(
                     this._db,
-                    isStatic ? STATIC_INSTS_STORE : INSTS_STORE,
+                    isStaticOrigin ? STATIC_INSTS_STORE : INSTS_STORE,
                     {
                         id: id,
                         origin,
-                        isStatic: isStatic,
+                        isStatic: isStaticOrigin,
                         vmOrigin: vmOrigin,
-                        version: storedInst ? storedInst.version : this.version,
+                        version: version,
                     }
                 );
             }
@@ -311,12 +337,13 @@ export class AppManager {
             if (forceSignedScripts) {
                 console.log('[AppManager] Forcing signed scripts for ' + id);
             }
-            const { isStatic, ...origin } = config;
             return await this._simulationFactory(
                 id,
-                { ...origin, isStatic: !!isStatic },
-                this.createSimulationConfig({ forceSignedScripts, isStatic }),
-                isStatic
+                config,
+                this.createSimulationConfig({
+                    forceSignedScripts,
+                    origin: config,
+                })
             );
         });
         this._systemPortal = new SystemPortalCoordinator(
@@ -327,9 +354,9 @@ export class AppManager {
 
     createSimulationConfig(options: {
         forceSignedScripts: boolean;
-        isStatic: boolean;
+        origin: SimulationOrigin;
     }): AuxConfig['config'] {
-        const device = this._calculateDeviceConfig(options.isStatic);
+        const device = this._calculateDeviceConfig(options.origin);
         return {
             version: this.version.latestTaggedVersion,
             versionHash: this.version.gitCommit,
@@ -396,8 +423,7 @@ export class AppManager {
         factory: (
             id: string,
             origin: SimulationOrigin,
-            config: AuxConfig['config'],
-            isStatic: boolean
+            config: AuxConfig['config']
         ) => Promise<BotManager>
     ) {
         this._simulationFactory = factory;
@@ -704,12 +730,12 @@ export class AppManager {
         console.log('[AppManager] AB-1 URL: ' + ab1Bootstrap);
     }
 
-    private _calculateDeviceConfig(isStatic: boolean): AuxDevice {
+    private _calculateDeviceConfig(origin: SimulationOrigin): AuxDevice {
         return {
             supportsAR: this._arSupported,
             supportsVR: this._vrSupported,
             supportsDOM: this._domSupported,
-            isCollaborative: !isStatic,
+            isCollaborative: isDefault(origin),
             allowCollaborationUpgrade: false,
             ab1BootstrapUrl: this._ab1BootstrapUrl,
             ab1BootstrapAux: this._ab1BootstrapAux,
@@ -836,10 +862,10 @@ export class AppManager {
     async setPrimarySimulation(
         recordName: string | null,
         inst: string,
-        isStatic: boolean
+        kind: SimulationOrigin['kind']
     ) {
         const timeBasis = Date.now();
-        const simulationId = getSimulationId(recordName, inst, isStatic);
+        const simulationId = getSimulationId(recordName, inst, kind);
         if (
             (this.simulationManager.primary &&
                 this.simulationManager.primary.id === simulationId) ||
@@ -852,7 +878,7 @@ export class AppManager {
             simulationId,
             recordName,
             inst,
-            isStatic
+            kind
         );
 
         this._primaryPromise.then((manager) => {
@@ -882,7 +908,7 @@ export class AppManager {
         id: string,
         recordName: string | null,
         inst: string,
-        isStatic: boolean
+        kind: SimulationOrigin['kind']
     ) {
         this._sendProgress('Requesting inst...', 0.1);
 
@@ -896,7 +922,7 @@ export class AppManager {
         await this.simulationManager.setPrimary(id, {
             recordName,
             inst,
-            isStatic,
+            kind,
         });
         this._primarySimulationAvailableSubject.next(true);
 
