@@ -750,6 +750,8 @@ export default class PlayerHome extends Vue {
                 return true;
             } else if (isStaticInst(option)) {
                 return true;
+            } else if (isTempInst(option)) {
+                return true;
             } else if (
                 (option === 'sign in' || option === 'sign up') &&
                 !authenticated

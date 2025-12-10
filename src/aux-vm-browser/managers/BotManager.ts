@@ -344,8 +344,15 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
 
         let partitions: AuxPartitionConfig = {
             shared: {
-                type: 'memory',
-                initialState: {},
+                type: 'yjs',
+                remoteEvents: true,
+                branch: `${origin.recordName ?? ''}/${
+                    origin.inst
+                }/${DEFAULT_BRANCH_NAME}`,
+                localPersistence: {
+                    saveToIndexedDb: false,
+                },
+                connectionId: configBotId,
             },
             [TEMPORARY_SHARED_PARTITION_ID]: {
                 type: 'memory',
