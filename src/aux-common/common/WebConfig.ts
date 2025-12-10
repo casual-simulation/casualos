@@ -39,11 +39,12 @@ export type BiosOption =
     | 'local inst'
     | 'local'
     | 'public inst'
-    | 'private inst'
     | 'free inst'
     | 'free'
+    | 'private inst'
     | 'studio inst'
     | 'studio'
+    | 'locked'
     | 'sign in'
     | 'sign up'
     | 'sign out'
@@ -56,11 +57,12 @@ export const BIOS_OPTION_SCHEMA = z.enum([
     'local inst',
     'local',
     'public inst',
-    'private inst',
     'free inst',
     'free',
+    'private inst',
     'studio inst',
     'studio',
+    'locked',
     'sign in',
     'sign up',
     'sign out',

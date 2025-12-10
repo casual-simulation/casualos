@@ -79,7 +79,8 @@ function isPrivateInst(
     return (
         biosOption === 'private inst' ||
         biosOption === 'studio inst' ||
-        biosOption === 'studio'
+        biosOption === 'studio' ||
+        biosOption === 'locked'
     );
 }
 
