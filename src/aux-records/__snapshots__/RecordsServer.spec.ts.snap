@@ -5288,6 +5288,7 @@ Object {
                   "values": Array [
                     "enter join code",
                     "join inst",
+                    "temp",
                     "static inst",
                     "local inst",
                     "local",
@@ -5318,6 +5319,7 @@ Object {
                 "values": Array [
                   "enter join code",
                   "join inst",
+                  "temp",
                   "static inst",
                   "local inst",
                   "local",
@@ -5341,6 +5343,7 @@ Object {
                 "values": Array [
                   "enter join code",
                   "join inst",
+                  "temp",
                   "static inst",
                   "local inst",
                   "local",
@@ -9387,6 +9390,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                       "values": Array [
                         "enter join code",
                         "join inst",
+                        "temp",
                         "static inst",
                         "local inst",
                         "local",
@@ -9422,6 +9426,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                     "values": Array [
                       "enter join code",
                       "join inst",
+                      "temp",
                       "static inst",
                       "local inst",
                       "local",
@@ -9468,6 +9473,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                     "values": Array [
                       "enter join code",
                       "join inst",
+                      "temp",
                       "static inst",
                       "local inst",
                       "local",
@@ -15118,6 +15124,7 @@ Object {
                   "values": Array [
                     "enter join code",
                     "join inst",
+                    "temp",
                     "static inst",
                     "local inst",
                     "local",
@@ -15148,6 +15155,7 @@ Object {
                 "values": Array [
                   "enter join code",
                   "join inst",
+                  "temp",
                   "static inst",
                   "local inst",
                   "local",
@@ -15171,6 +15179,7 @@ Object {
                 "values": Array [
                   "enter join code",
                   "join inst",
+                  "temp",
                   "static inst",
                   "local inst",
                   "local",
@@ -19217,6 +19226,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                       "values": Array [
                         "enter join code",
                         "join inst",
+                        "temp",
                         "static inst",
                         "local inst",
                         "local",
@@ -19252,6 +19262,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                     "values": Array [
                       "enter join code",
                       "join inst",
+                      "temp",
                       "static inst",
                       "local inst",
                       "local",
@@ -19298,6 +19309,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                     "values": Array [
                       "enter join code",
                       "join inst",
+                      "temp",
                       "static inst",
                       "local inst",
                       "local",

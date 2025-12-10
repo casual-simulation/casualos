@@ -614,7 +614,7 @@ describe('RecordsManager', () => {
                 vm.origin = {
                     recordName: null,
                     inst: 'myInst',
-                    isStatic: true,
+                    kind: 'static',
                 };
 
                 records.handleEvents([
@@ -1298,7 +1298,7 @@ describe('RecordsManager', () => {
                 vm.origin = {
                     recordName: null,
                     inst: 'myInst',
-                    isStatic: true,
+                    kind: 'static',
                 };
 
                 records.handleEvents([
@@ -1751,7 +1751,7 @@ describe('RecordsManager', () => {
                 vm.origin = {
                     recordName: null,
                     inst: 'myInst',
-                    isStatic: true,
+                    kind: 'static',
                 };
 
                 records.handleEvents([
@@ -2133,7 +2133,7 @@ describe('RecordsManager', () => {
                 vm.origin = {
                     recordName: null,
                     inst: 'myInst',
-                    isStatic: true,
+                    kind: 'static',
                 };
 
                 records.handleEvents([
@@ -2469,7 +2469,7 @@ describe('RecordsManager', () => {
                 vm.origin = {
                     recordName: null,
                     inst: 'myInst',
-                    isStatic: true,
+                    kind: 'static',
                 };
 
                 records.handleEvents([
@@ -4473,7 +4473,7 @@ describe('RecordsManager', () => {
                 vm.origin = {
                     recordName: null,
                     inst: 'myInst',
-                    isStatic: true,
+                    kind: 'static',
                 };
 
                 records.handleEvents([
@@ -4826,7 +4826,7 @@ describe('RecordsManager', () => {
                 vm.origin = {
                     recordName: null,
                     inst: 'myInst',
-                    isStatic: true,
+                    kind: 'static',
                 };
 
                 records.handleEvents([getFile('myFileUrl', {}, 1)]);
@@ -5150,7 +5150,7 @@ describe('RecordsManager', () => {
                 vm.origin = {
                     recordName: null,
                     inst: 'myInst',
-                    isStatic: true,
+                    kind: 'static',
                 };
 
                 records.handleEvents([
@@ -5556,7 +5556,7 @@ describe('RecordsManager', () => {
                 vm.origin = {
                     recordName: null,
                     inst: 'myInst',
-                    isStatic: true,
+                    kind: 'static',
                 };
 
                 records.handleEvents([
@@ -5985,7 +5985,7 @@ describe('RecordsManager', () => {
                 vm.origin = {
                     recordName: null,
                     inst: 'myInst',
-                    isStatic: true,
+                    kind: 'static',
                 };
 
                 records.handleEvents([
@@ -6844,7 +6844,7 @@ describe('RecordsManager', () => {
                 vm.origin = {
                     recordName: null,
                     inst: 'myInst',
-                    isStatic: true,
+                    kind: 'static',
                 };
 
                 records.handleEvents([
@@ -6945,7 +6945,7 @@ describe('RecordsManager', () => {
                 vm.origin = {
                     recordName: null,
                     inst: 'myInst',
-                    isStatic: true,
+                    kind: 'static',
                 };
 
                 records.handleEvents([
@@ -7108,7 +7108,7 @@ describe('RecordsManager', () => {
                 vm.origin = {
                     recordName: null,
                     inst: 'myInst',
-                    isStatic: true,
+                    kind: 'static',
                 };
 
                 records.handleEvents([
@@ -8011,7 +8011,7 @@ describe('RecordsManager', () => {
                     vm.origin = {
                         recordName: null,
                         inst: 'myInst',
-                        isStatic: true,
+                        kind: 'static',
                     };
 
                     records.handleEvents([event]);
@@ -8406,7 +8406,7 @@ describe('RecordsManager', () => {
                 vm.origin = {
                     recordName: null,
                     inst: 'myInst',
-                    isStatic: true,
+                    kind: 'static',
                 };
 
                 records.handleEvents([
@@ -9283,7 +9283,7 @@ describe('RecordsManager', () => {
                 vm.origin = {
                     recordName: null,
                     inst: 'myInst',
-                    isStatic: true,
+                    kind: 'static',
                 };
 
                 records.handleEvents([
@@ -9816,7 +9816,7 @@ describe('RecordsManager', () => {
                 vm.origin = {
                     recordName: null,
                     inst: 'myInst',
-                    isStatic: true,
+                    kind: 'static',
                 };
 
                 records.handleEvents([
@@ -11173,7 +11173,7 @@ describe('RecordsManager', () => {
                 vm.origin = {
                     recordName: null,
                     inst: 'myInst',
-                    isStatic: true,
+                    kind: 'static',
                 };
 
                 const state: StoredAux = {
@@ -11932,7 +11932,7 @@ describe('RecordsManager', () => {
                 vm.origin = {
                     recordName: null,
                     inst: 'test',
-                    isStatic: true,
+                    kind: 'static',
                 };
 
                 records.handleEvents([
@@ -12088,7 +12088,7 @@ describe('RecordsManager', () => {
                 vm.origin = {
                     recordName: null,
                     inst: 'test',
-                    isStatic: true,
+                    kind: 'static',
                 };
 
                 records.handleEvents([
@@ -12236,7 +12236,7 @@ describe('RecordsManager', () => {
                 vm.origin = {
                     recordName: null,
                     inst: 'test',
-                    isStatic: true,
+                    kind: 'static',
                 };
 
                 records.handleEvents([
@@ -12518,7 +12518,7 @@ describe('RecordsManager', () => {
                 vm.origin = {
                     recordName: null,
                     inst: 'myInst',
-                    isStatic: true,
+                    kind: 'static',
                 };
 
                 records.handleEvents([listInstalledPackages({}, 1)]);
