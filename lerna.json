@@ -3,6 +3,6 @@
     "src/aux-server",
     "src/casualos-cli"
   ],
-  "version": "3.9.0-alpha.20106065291",
+  "version": "3.9.0-alpha.20110949914",
   "npmClient": "pnpm"
 }
