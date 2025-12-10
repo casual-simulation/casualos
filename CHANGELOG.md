@@ -73,6 +73,8 @@
     -   Set `serverInjectBootstrapper` to `true` on the web config in the server config.
 -   Added the ability to configure a custom favicon for server-based deployments.
     -   Use the `icons` property on the web config in the server config.
+-   Added the `locked` BIOS option as an alternative to `studio` and `private inst`.
+    -   `studio` remains the default, so if you want to use `locked`, you should configure a custom list of `allowedBiosOptions` in the web config.
 
 ### :bug: Bug Fixes
 
