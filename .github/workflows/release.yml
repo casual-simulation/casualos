@@ -53,6 +53,7 @@ jobs:
             - name: Publish Master NPM Packages
               if: ${{ github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/heads/release/') }}
               run: |
+                  npm whoami
                   echo "Publishing NPM Packages..."
                   ls -la
                   npx lerna publish from-package --yes --no-verify-access
@@ -65,9 +66,12 @@ jobs:
                   for i in {1..5}; do 
                       npm install --package-lock-only && break || sleep 5;
                   done
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
             - name: Publish Alpha NPM Packages
               if: ${{ github.ref != 'refs/heads/master' && !startsWith(github.ref, 'refs/heads/release/') }}
               run: |
+                  npm whoami
                   echo "Publishing NPM Packages..."
                   ls -la
                   npx lerna publish from-package --yes --no-verify-access --canary
@@ -80,6 +84,8 @@ jobs:
                   for i in {1..5}; do 
                       npm install --package-lock-only && break || sleep 5;
                   done
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
             - name: Build Docker
               run: |
                   echo "Building..."
