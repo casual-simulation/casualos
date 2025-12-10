@@ -43,9 +43,9 @@ export interface SimulationFactoryOptions {
     host?: string;
 
     /**
-     * Whether the simulation should be loaded as static.
+     * The kind of the simulation.
      */
-    isStatic?: boolean;
+    kind?: 'default' | 'static' | 'temp';
 }
 
 /**

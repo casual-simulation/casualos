@@ -25,9 +25,10 @@ import { z } from 'zod';
  * The possible BIOS options.
  *
  * - "enter join code" indicates that the user should be prompted to enter a join code.
+ * - "temp" indicates that a temporary instance should be created (no persistence).
  * - "static inst", "local inst", and "local" indicates that the instance should be loaded statically.
  * - "public inst", "free inst", and "free" indicates that the instance should be loaded from the public partition.
- * - "private inst", "studio inst", and "studio" indicates that the instance should be loaded from the private partition.
+ * - "private inst", "studio inst", "studio", and "locked" indicates that the instance should be loaded from the private partition.
  * - "sign in" indicates that the user should be prompted to sign in.
  * - "sign up" indicates that the user should be prompted to sign up.
  * - "sign out" indicates that the user should be logged out.
@@ -35,6 +36,7 @@ import { z } from 'zod';
 export type BiosOption =
     | 'enter join code'
     | 'join inst'
+    | 'temp'
     | 'static inst'
     | 'local inst'
     | 'local'
@@ -53,6 +55,7 @@ export type BiosOption =
 export const BIOS_OPTION_SCHEMA = z.enum([
     'enter join code',
     'join inst',
+    'temp',
     'static inst',
     'local inst',
     'local',

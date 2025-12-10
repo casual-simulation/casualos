@@ -38,6 +38,7 @@ import {
     REPORT_REASON_TEXT_FIELD,
     getFormErrors,
 } from '@casual-simulation/aux-common';
+import { isStatic, isTemp } from '@casual-simulation/aux-vm';
 
 @Component({
     components: {
@@ -197,12 +198,14 @@ export default class ReportInstDialog extends Vue {
         sub.add(
             sim.localEvents.subscribe(async (e) => {
                 if (e.type === 'report_inst') {
-                    if (sim.origin.isStatic) {
+                    if (isStatic(sim.origin.kind) || isTemp(sim.origin.kind)) {
                         if (hasValue(e.taskId)) {
                             sim.helper.transaction(
                                 asyncError(
                                     e.taskId,
-                                    new Error('Cannot report static insts')
+                                    new Error(
+                                        `Cannot report ${sim.origin.kind} insts`
+                                    )
                                 )
                             );
                         }

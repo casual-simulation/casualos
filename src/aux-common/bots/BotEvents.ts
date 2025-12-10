@@ -1261,6 +1261,13 @@ export interface InstConfig {
      * Only valid when specified on its own.
      */
     staticInst?: string;
+
+    /**
+     * The temporary inst that should be loaded.
+     *
+     * Only valid when specified on its own.
+     */
+    tempInst?: string;
 }
 
 /**

@@ -66,7 +66,6 @@ describe('SimulationWebhookEnvironment', () => {
                     {
                         recordName: null,
                         inst: null,
-                        isStatic: false,
                     },
                     vm
                 );
@@ -385,7 +384,6 @@ describe('SimulationWebhookEnvironment', () => {
                         {
                             recordName: null,
                             inst: null,
-                            isStatic: false,
                         },
                         vm
                     );

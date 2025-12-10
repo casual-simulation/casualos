@@ -135,6 +135,7 @@ import type {
     RevokePermissionResult,
     RevokeRoleResult,
 } from '@casual-simulation/aux-records';
+import { isStatic, isTemp } from './SimulationHelpers';
 
 /**
  * The list of headers that JavaScript applications are not allowed to set by themselves.
@@ -1804,12 +1805,12 @@ export class RecordsManager {
                 return;
             }
 
-            if (this._helper.origin.isStatic) {
+            if (isStatic(this._helper.origin) || isTemp(this._helper.origin)) {
                 if (hasValue(event.taskId)) {
                     this._helper.transaction(
                         asyncError(
                             event.taskId,
-                            'Unable to grant inst admin permission to static insts.'
+                            `Unable to grant inst admin permission to ${this._helper.origin.kind} insts.`
                         )
                     );
                 }
@@ -2546,9 +2547,8 @@ export class RecordsManager {
 
             const instances = this._getInstancesForRequest();
 
-            if (this._helper.origin?.isStatic) {
-                // static origins need to install packages via fetching the package
-
+            if (isStatic(this._helper.origin) || isTemp(this._helper.origin)) {
+                // static and temp origins need to install packages via fetching the package
                 const input: RecordsClientInputs['getPackageVersion'] = {
                     recordName: event.recordName,
                     address: event.address,
@@ -2702,7 +2702,8 @@ export class RecordsManager {
 
             if (
                 !hasValue(this._helper.origin) ||
-                this._helper.origin.isStatic
+                isStatic(this._helper.origin) ||
+                isTemp(this._helper.origin)
             ) {
                 console.warn(
                     `[RecordsManager] Unable to list packages for local insts.`
@@ -2746,7 +2747,10 @@ export class RecordsManager {
 
     private _getInstancesForRequest() {
         let instances: string[] = undefined;
-        if (hasValue(this._helper.origin) && !this._helper.origin.isStatic) {
+        if (
+            hasValue(this._helper.origin) &&
+            !(isStatic(this._helper.origin) || isTemp(this._helper.origin))
+        ) {
             instances = [
                 formatInstId(
                     this._helper.origin.recordName,

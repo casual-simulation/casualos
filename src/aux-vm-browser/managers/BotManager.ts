@@ -315,6 +315,53 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         return finalPartitions;
     }
 
+    static createTempPartitions(
+        id: string,
+        configBotId: string,
+        origin: SimulationOrigin,
+        config: AuxConfig['config'],
+        initialTempState: BotsState = {}
+    ): AuxPartitionConfig {
+        console.log('[BotManager] Using temp partitions');
+
+        const defaultPartitions = BotManager.createDefaultPartitions(
+            id,
+            configBotId,
+            origin,
+            config,
+            initialTempState
+        );
+
+        for (let space in defaultPartitions) {
+            if (defaultPartitions[space].type !== 'memory') {
+                defaultPartitions[space] = {
+                    type: 'memory',
+                    initialState: {},
+                    private: defaultPartitions[space].private,
+                };
+            }
+        }
+
+        let partitions: AuxPartitionConfig = {
+            shared: {
+                type: 'memory',
+                initialState: {},
+            },
+            [TEMPORARY_SHARED_PARTITION_ID]: {
+                type: 'memory',
+                initialState: {},
+            },
+            [REMOTE_TEMPORARY_SHARED_PARTITION_ID]: null,
+        };
+
+        const finalPartitions = Object.assign(
+            {},
+            defaultPartitions,
+            partitions
+        );
+        return finalPartitions;
+    }
+
     constructor(
         origin: SimulationOrigin,
         config: AuxConfig['config'],
@@ -443,7 +490,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
             {
                 recordName: null,
                 inst: null,
-                isStatic: !!this._origin.isStatic,
+                kind: this._origin.kind,
             },
             {
                 version: this._config.version,
