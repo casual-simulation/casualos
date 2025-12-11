@@ -221,6 +221,7 @@ export type RemoteBotActions =
     | ListInstUpdatesAction
     | GetInstStateFromUpdatesAction
     | CreateInitializationUpdateAction
+    | CreateInitializationUpdateFromPreviousUpdatesAction
     | ApplyUpdatesToInstAction
     | GetCurrentInstUpdateAction
     | InstallAuxAction;
@@ -1502,6 +1503,25 @@ export interface GetInstStateFromUpdatesAction extends Action {
  */
 export interface CreateInitializationUpdateAction extends Action {
     type: 'create_initialization_update';
+
+    /**
+     * The bots that should be encoded into the state update.
+     */
+    bots: Bot[];
+}
+
+/**
+ * Defines an event that is used to create an initialization update for a given list of bots and previous updates.
+ * @docname CreateInitializationUpdateFromPreviousUpdatesAction
+ */
+export interface CreateInitializationUpdateFromPreviousUpdatesAction
+    extends Action {
+    type: 'create_initialization_update_from_previous_updates';
+
+    /**
+     * The previous updates that should be included in the initialization update.
+     */
+    previousUpdates: InstUpdate[];
 
     /**
      * The bots that should be encoded into the state update.
@@ -5193,6 +5213,22 @@ export function createInitializationUpdate(
 ): CreateInitializationUpdateAction {
     return {
         type: 'create_initialization_update',
+        bots,
+    };
+}
+
+/**
+ * Creates a new CreateInitializationUpdateAction.
+ * @param bots The bots that should be encoded into the update.
+ * @param taskId The ID of the task.
+ */
+export function createInitializationUpdateFromPreviousUpdates(
+    previousUpdates: InstUpdate[],
+    bots: Bot[]
+): CreateInitializationUpdateFromPreviousUpdatesAction {
+    return {
+        type: 'create_initialization_update_from_previous_updates',
+        previousUpdates,
         bots,
     };
 }

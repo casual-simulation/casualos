@@ -287,6 +287,7 @@ import {
     ADD_BOT_LISTENER_SYMBOL,
     REMOVE_BOT_LISTENER_SYMBOL,
     trackConfigBotTags as calcTrackConfigBotTags,
+    createInitializationUpdateFromPreviousUpdates,
 } from '@casual-simulation/aux-common/bots';
 import type {
     AIChatOptions,
@@ -14716,18 +14717,83 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function createInitializationUpdate(
         bots: RuntimeBot[]
+    ): Promise<InstUpdate>;
+
+    /**
+     * Creates an inst update that, when applied in addition to the previous update(s), ensures the given bots are created or updated on this inst. Returns a promise that resolves with the inst update.
+     *
+     * Note that you can apply the same update multiple times and you will end up with only one version of the bots saved in the update. Additionally, future changes to the bots will be preserved even if the update is applied again.
+     *
+     * This feature makes inst updates useful when you want to ensure that an experience starts in an initial state but also able to change over time.
+     *
+     * Unlike {@link os.createInitializationUpdate}, this function creates an update that is linked to the previous update(s). This means that this update will overwrite the previous update(s) when applied to the same inst.
+     *
+     * @param previousUpdate The previous update or list of updates that this update should be based on and include.
+     * @param bots The bots that reflect the final state that should be achieved when this update is applied in addition to the previous update(s).
+     *
+     * @dochash actions/os/spaces
+     * @docname os.createInitializationUpdate
+     * @docid os.createInitializationUpdate-previousUpdate-bots
+     * @docgroup 10-updates
+     */
+    function createInitializationUpdate(
+        previousUpdate: InstUpdate | InstUpdate[],
+        bots: RuntimeBot[]
+    ): Promise<InstUpdate>;
+
+    /**
+     * Creates an inst update that, when applied in addition to the previous update(s), ensures the given bots are created or updated on this inst. Returns a promise that resolves with the inst update.
+     *
+     * Note that you can apply the same update multiple times and you will end up with only one version of the bots saved in the update. Additionally, future changes to the bots will be preserved even if the update is applied again.
+     *
+     * This feature makes inst updates useful when you want to ensure that an experience starts in an initial state but also able to change over time.
+     *
+     * Unlike {@link os.createInitializationUpdate}, this function creates an update that is linked to the previous update(s). This means that this update will overwrite the previous update(s) when applied to the same inst.
+     *
+     * @param previousUpdate The previous update or list of updates that this update should be based on and include.
+     * @param bots The bots that reflect the final state that should be achieved when this update is applied in addition to the previous update(s).
+     */
+    function createInitializationUpdate(
+        previousUpdateOrBots: InstUpdate | InstUpdate[] | RuntimeBot[],
+        bots?: RuntimeBot[]
     ): Promise<InstUpdate> {
-        const convertedBots = bots.map((b) =>
-            isRuntimeBot(b) ? createBot(b.id, b.tags.toJSON(), b.space) : b
-        );
-        const task = context.createTask(true, true);
-        const event = calcRemote(
-            calcCreateInitalizationUpdate(convertedBots),
-            undefined,
-            undefined,
-            task.taskId
-        );
-        return addAsyncAction(task, event);
+        if (arguments.length === 2) {
+            const convertedBots = (previousUpdateOrBots as RuntimeBot[]).map(
+                (b) =>
+                    isRuntimeBot(b)
+                        ? createBot(b.id, b.tags.toJSON(), b.space)
+                        : b
+            );
+            const task = context.createTask(true, true);
+            if (!Array.isArray(previousUpdateOrBots)) {
+                previousUpdateOrBots = [previousUpdateOrBots];
+            }
+            const event = calcRemote(
+                createInitializationUpdateFromPreviousUpdates(
+                    previousUpdateOrBots as InstUpdate[],
+                    convertedBots
+                ),
+                undefined,
+                undefined,
+                task.taskId
+            );
+            return addAsyncAction(task, event);
+        } else {
+            const convertedBots = (previousUpdateOrBots as RuntimeBot[]).map(
+                (b) =>
+                    isRuntimeBot(b)
+                        ? createBot(b.id, b.tags.toJSON(), b.space)
+                        : b
+            );
+            const task = context.createTask(true, true);
+            const event = calcRemote(
+                calcCreateInitalizationUpdate(convertedBots),
+                undefined,
+                undefined,
+                task.taskId
+            );
+            return addAsyncAction(task, event);
+        }
     }
 
     /**

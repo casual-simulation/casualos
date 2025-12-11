@@ -22,6 +22,7 @@ import type {
     AsyncAction,
     ShoutAction,
     InstallAuxAction,
+    CreateInitializationUpdateFromPreviousUpdatesAction,
 } from '../bots';
 import {
     isTagEdit,
@@ -84,6 +85,7 @@ import {
     YMapEvent,
     createAbsolutePositionFromRelativePosition,
     YTextEvent,
+    encodeStateAsUpdate,
 } from 'yjs';
 import { MemoryPartitionImpl } from './MemoryPartition';
 import {
@@ -374,6 +376,63 @@ export class RemoteYjsPartitionImpl
                                 botAdded(createBot(b.id, b.tags))
                             )
                         );
+                    } catch (err) {
+                        this._onEvents.next([asyncError(event.taskId, err)]);
+                    }
+                } else if (
+                    event.event.type ===
+                    'create_initialization_update_from_previous_updates'
+                ) {
+                    const action = <
+                        CreateInitializationUpdateFromPreviousUpdatesAction
+                    >event.event;
+                    try {
+                        let partition = new YjsPartitionImpl({
+                            type: 'yjs',
+                        });
+
+                        for (let { update } of action.previousUpdates) {
+                            const updateBytes = toByteArray(update);
+                            applyUpdate(partition.doc, updateBytes);
+                        }
+
+                        const allBotIds = new Set<string>(
+                            Object.keys(partition.state)
+                        );
+                        const actions: BotAction[] = [];
+                        for (let b of action.bots) {
+                            if (partition.state[b.id]) {
+                                actions.push(
+                                    botUpdated(b.id, {
+                                        tags: b.tags,
+                                    })
+                                );
+                                allBotIds.delete(b.id);
+                            } else {
+                                actions.push(botAdded(createBot(b.id, b.tags)));
+                                allBotIds.delete(b.id);
+                            }
+                        }
+
+                        for (let id of allBotIds) {
+                            actions.push(botRemoved(id));
+                        }
+
+                        partition.doc.on('update', (update: Uint8Array) => {
+                            let instUpdate: InstUpdate = {
+                                id: 0,
+                                timestamp: Date.now(),
+                                update: fromByteArray(
+                                    encodeStateAsUpdate(partition.doc)
+                                ),
+                            };
+
+                            this._onEvents.next([
+                                asyncResult(event.taskId, instUpdate, false),
+                            ]);
+                        });
+
+                        await partition.applyEvents(actions);
                     } catch (err) {
                         this._onEvents.next([asyncError(event.taskId, err)]);
                     }
