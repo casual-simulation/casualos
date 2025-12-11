@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-server",
-    "version": "3.8.1",
+    "version": "3.9.0",
     "description": "The repository for the AUX server project.",
     "main": "server/dist/main.js",
     "private": true,
@@ -88,7 +88,6 @@
         "@casual-simulation/vue-shortkey": "^3.2.7",
         "@casual-simulation/websocket": "^3.5.3",
         "@chenfengyuan/vue-qrcode": "^1.0.0",
-        "qrcode": "^1.5.4",
         "@ericblade/quagga2": "1.4.2",
         "@juggle/resize-observer": "2.3.0",
         "@libsql/linux-arm64-gnu": "^0.5.22",
@@ -160,6 +159,7 @@
         "preact": "10.19.6",
         "preact-render-to-string": "6.6.3",
         "prisma": "^6.14.0",
+        "qrcode": "^1.5.4",
         "redis": "4.6.10",
         "rxjs": "8.0.0-alpha.14",
         "seedrandom": "3.0.5",
