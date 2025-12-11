@@ -66,6 +66,11 @@ import {
     listDataRecordByMarker,
     grantRecordPermission,
     revokeRecordPermission,
+    recordStoreItem,
+    getStoreItem,
+    eraseStoreItem,
+    listStoreItems,
+    listStoreItemsByMarker,
     aiChatStream,
     aiHumeGetAccessToken,
     aiSloydGenerateModel,
@@ -118,6 +123,7 @@ describe('RecordsManager', () => {
         createPublicRecordKey: jest.fn(),
         provideSmsNumber: jest.fn(),
         getRecordKeyPolicy: jest.fn(),
+        logout: jest.fn(),
     };
     let customAuth: AuthHelperInterface;
     let customAuthMock = {
@@ -133,10 +139,22 @@ describe('RecordsManager', () => {
         protocol: RemoteCausalRepoProtocol
     ) => ConnectionClient;
     let sub: Subscription;
+    let fetch: jest.Mock<
+        Promise<{
+            status: number;
+            headers?: Headers;
+            json?: () => Promise<any>;
+            text?: () => Promise<string>;
+            body?: ReadableStream;
+        }>
+    >;
+
+    const originalFetch = globalThis.fetch;
 
     beforeEach(async () => {
         require('axios').__reset();
 
+        fetch = globalThis.fetch = jest.fn();
         actions = [];
         sub = new Subscription();
         helper = createHelper();
@@ -292,6 +310,10 @@ describe('RecordsManager', () => {
         );
     });
 
+    afterAll(() => {
+        globalThis.fetch = originalFetch;
+    });
+
     function createHelper() {
         vm = new TestAuxVM(null, userId);
         const helper = new BotHelper(vm);
@@ -384,9 +406,9 @@ describe('RecordsManager', () => {
                         address: 'myAddress',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should include the update and delete policies', async () => {
@@ -447,9 +469,9 @@ describe('RecordsManager', () => {
                         address: 'myAddress',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should include the markers', async () => {
@@ -508,9 +530,9 @@ describe('RecordsManager', () => {
                         address: 'myAddress',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should include the inst', async () => {
@@ -572,9 +594,9 @@ describe('RecordsManager', () => {
                         address: 'myAddress',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should not include the inst if it is static', async () => {
@@ -592,7 +614,7 @@ describe('RecordsManager', () => {
                 vm.origin = {
                     recordName: null,
                     inst: 'myInst',
-                    isStatic: true,
+                    kind: 'static',
                 };
 
                 records.handleEvents([
@@ -636,9 +658,9 @@ describe('RecordsManager', () => {
                         address: 'myAddress',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should support record names', async () => {
@@ -700,9 +722,9 @@ describe('RecordsManager', () => {
                         address: 'myAddress',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should support custom endpoints', async () => {
@@ -758,9 +780,9 @@ describe('RecordsManager', () => {
                         address: 'myAddress',
                     }),
                 ]);
-                expect(customAuthMock.isAuthenticated).toBeCalled();
-                expect(customAuthMock.authenticate).not.toBeCalled();
-                expect(customAuthMock.getAuthToken).toBeCalled();
+                expect(customAuthMock.isAuthenticated).toHaveBeenCalled();
+                expect(customAuthMock.authenticate).not.toHaveBeenCalled();
+                expect(customAuthMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should make a POST request to /api/v2/records/manual/data for manual records', async () => {
@@ -818,9 +840,9 @@ describe('RecordsManager', () => {
                         address: 'myAddress',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should support custom endpoints for manual records', async () => {
@@ -878,9 +900,9 @@ describe('RecordsManager', () => {
                         address: 'myAddress',
                     }),
                 ]);
-                expect(customAuthMock.isAuthenticated).toBeCalled();
-                expect(customAuthMock.authenticate).not.toBeCalled();
-                expect(customAuthMock.getAuthToken).toBeCalled();
+                expect(customAuthMock.isAuthenticated).toHaveBeenCalled();
+                expect(customAuthMock.authenticate).not.toHaveBeenCalled();
+                expect(customAuthMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should attempt to login if not authenticated', async () => {
@@ -918,9 +940,9 @@ describe('RecordsManager', () => {
                         address: 'myAddress',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should return a not_logged_in error if there is no token', async () => {
@@ -955,9 +977,9 @@ describe('RecordsManager', () => {
                         errorMessage: 'The user is not logged in.',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should ignore actions that require manual approval but are not approved', async () => {
@@ -992,9 +1014,9 @@ describe('RecordsManager', () => {
                 await waitAsync();
 
                 expect(vm.events).toEqual([]);
-                expect(authMock.isAuthenticated).not.toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).not.toBeCalled();
+                expect(authMock.isAuthenticated).not.toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).not.toHaveBeenCalled();
             });
 
             it('should not require login with subjectless keys', async () => {
@@ -1051,8 +1073,8 @@ describe('RecordsManager', () => {
                         headers: {},
                     },
                 ]);
-                expect(authMock.isAuthenticated).not.toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.isAuthenticated).not.toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
             });
 
             it('support manual records with subjectless keys', async () => {
@@ -1111,8 +1133,8 @@ describe('RecordsManager', () => {
                         headers: {},
                     },
                 ]);
-                expect(authMock.isAuthenticated).not.toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.isAuthenticated).not.toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
             });
         });
 
@@ -1207,7 +1229,7 @@ describe('RecordsManager', () => {
                 ]);
 
                 // should also not try to authenticate
-                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
             });
 
             it('should include the inst', async () => {
@@ -1276,7 +1298,7 @@ describe('RecordsManager', () => {
                 vm.origin = {
                     recordName: null,
                     inst: 'myInst',
-                    isStatic: true,
+                    kind: 'static',
                 };
 
                 records.handleEvents([
@@ -1729,7 +1751,7 @@ describe('RecordsManager', () => {
                 vm.origin = {
                     recordName: null,
                     inst: 'myInst',
-                    isStatic: true,
+                    kind: 'static',
                 };
 
                 records.handleEvents([
@@ -2111,7 +2133,7 @@ describe('RecordsManager', () => {
                 vm.origin = {
                     recordName: null,
                     inst: 'myInst',
-                    isStatic: true,
+                    kind: 'static',
                 };
 
                 records.handleEvents([
@@ -2372,9 +2394,9 @@ describe('RecordsManager', () => {
                         address: 'myAddress',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should include the inst', async () => {
@@ -2427,9 +2449,9 @@ describe('RecordsManager', () => {
                         address: 'myAddress',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should not include the inst if it is static', async () => {
@@ -2447,7 +2469,7 @@ describe('RecordsManager', () => {
                 vm.origin = {
                     recordName: null,
                     inst: 'myInst',
-                    isStatic: true,
+                    kind: 'static',
                 };
 
                 records.handleEvents([
@@ -2482,9 +2504,9 @@ describe('RecordsManager', () => {
                         address: 'myAddress',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should support record names', async () => {
@@ -2537,9 +2559,9 @@ describe('RecordsManager', () => {
                         address: 'myAddress',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should support custom endpoints', async () => {
@@ -2589,9 +2611,9 @@ describe('RecordsManager', () => {
                         address: 'myAddress',
                     }),
                 ]);
-                expect(customAuthMock.isAuthenticated).toBeCalled();
-                expect(customAuthMock.authenticate).not.toBeCalled();
-                expect(customAuthMock.getAuthToken).toBeCalled();
+                expect(customAuthMock.isAuthenticated).toHaveBeenCalled();
+                expect(customAuthMock.authenticate).not.toHaveBeenCalled();
+                expect(customAuthMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should make a DELETE request to /api/v2/records/manual/data for manual record data', async () => {
@@ -2637,9 +2659,9 @@ describe('RecordsManager', () => {
                         address: 'myAddress',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should support custom endpoints for manual record data', async () => {
@@ -2691,9 +2713,9 @@ describe('RecordsManager', () => {
                         address: 'myAddress',
                     }),
                 ]);
-                expect(customAuthMock.isAuthenticated).toBeCalled();
-                expect(customAuthMock.authenticate).not.toBeCalled();
-                expect(customAuthMock.getAuthToken).toBeCalled();
+                expect(customAuthMock.isAuthenticated).toHaveBeenCalled();
+                expect(customAuthMock.authenticate).not.toHaveBeenCalled();
+                expect(customAuthMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should fail if no recordsOrigin is set', async () => {
@@ -2745,9 +2767,9 @@ describe('RecordsManager', () => {
                 await waitAsync();
 
                 expect(vm.events).toEqual([]);
-                expect(authMock.isAuthenticated).not.toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).not.toBeCalled();
+                expect(authMock.isAuthenticated).not.toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).not.toHaveBeenCalled();
             });
 
             it('should attempt to login in not authenticated', async () => {
@@ -2792,9 +2814,9 @@ describe('RecordsManager', () => {
                         address: 'myAddress',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should return not_logged_in if there is no authToken', async () => {
@@ -2832,9 +2854,9 @@ describe('RecordsManager', () => {
                         errorMessage: 'The user is not logged in.',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should not require login with subjectless keys', async () => {
@@ -2881,8 +2903,8 @@ describe('RecordsManager', () => {
                         address: 'myAddress',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).not.toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.isAuthenticated).not.toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
             });
 
             it('should support manual records with subjectless keys', async () => {
@@ -2931,8 +2953,8 @@ describe('RecordsManager', () => {
                         address: 'myAddress',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).not.toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.isAuthenticated).not.toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
             });
         });
 
@@ -4224,9 +4246,9 @@ describe('RecordsManager', () => {
                     }),
                 ]);
 
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should return not_logged_in if there is no authToken', async () => {
@@ -4269,9 +4291,9 @@ describe('RecordsManager', () => {
                     }),
                 ]);
 
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should not login if using a subjectless token', async () => {
@@ -4346,8 +4368,8 @@ describe('RecordsManager', () => {
                             'b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).not.toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.isAuthenticated).not.toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
             });
 
             it('should include the inst', async () => {
@@ -4451,7 +4473,7 @@ describe('RecordsManager', () => {
                 vm.origin = {
                     recordName: null,
                     inst: 'myInst',
-                    isStatic: true,
+                    kind: 'static',
                 };
 
                 records.handleEvents([
@@ -4717,9 +4739,9 @@ describe('RecordsManager', () => {
                 await waitAsync();
 
                 expect(vm.events).toEqual([asyncResult(1, 'Hello, world!')]);
-                expect(authMock.isAuthenticated).not.toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).not.toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should include the inst', async () => {
@@ -4777,9 +4799,9 @@ describe('RecordsManager', () => {
                 await waitAsync();
 
                 expect(vm.events).toEqual([asyncResult(1, 'Hello, world!')]);
-                expect(authMock.isAuthenticated).not.toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).not.toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should not include the inst if it is static', async () => {
@@ -4804,7 +4826,7 @@ describe('RecordsManager', () => {
                 vm.origin = {
                     recordName: null,
                     inst: 'myInst',
-                    isStatic: true,
+                    kind: 'static',
                 };
 
                 records.handleEvents([getFile('myFileUrl', {}, 1)]);
@@ -4838,9 +4860,9 @@ describe('RecordsManager', () => {
                 await waitAsync();
 
                 expect(vm.events).toEqual([asyncResult(1, 'Hello, world!')]);
-                expect(authMock.isAuthenticated).not.toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).not.toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should support record names', async () => {
@@ -4898,9 +4920,9 @@ describe('RecordsManager', () => {
                 await waitAsync();
 
                 expect(vm.events).toEqual([asyncResult(1, 'Hello, world!')]);
-                expect(authMock.isAuthenticated).not.toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).not.toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should support custom endpoints', async () => {
@@ -4959,9 +4981,9 @@ describe('RecordsManager', () => {
                 await waitAsync();
 
                 expect(vm.events).toEqual([asyncResult(1, 'Hello, world!')]);
-                expect(authMock.isAuthenticated).not.toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).not.toBeCalled();
+                expect(authMock.isAuthenticated).not.toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).not.toHaveBeenCalled();
             });
 
             it('should not attempt to login if not authenticated', async () => {
@@ -5001,9 +5023,9 @@ describe('RecordsManager', () => {
                         errorMessage: 'The user is not logged in.',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).not.toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).not.toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
         });
 
@@ -5053,9 +5075,9 @@ describe('RecordsManager', () => {
                         fileName: 'myFile',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should include the inst', async () => {
@@ -5108,9 +5130,9 @@ describe('RecordsManager', () => {
                         fileName: 'myFile',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should not include the inst if it is static', async () => {
@@ -5128,7 +5150,7 @@ describe('RecordsManager', () => {
                 vm.origin = {
                     recordName: null,
                     inst: 'myInst',
-                    isStatic: true,
+                    kind: 'static',
                 };
 
                 records.handleEvents([
@@ -5163,9 +5185,9 @@ describe('RecordsManager', () => {
                         fileName: 'myFile',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should support record names', async () => {
@@ -5218,9 +5240,9 @@ describe('RecordsManager', () => {
                         fileName: 'myFile',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should support custom endpoints', async () => {
@@ -5269,9 +5291,9 @@ describe('RecordsManager', () => {
                         fileName: 'myFile',
                     }),
                 ]);
-                expect(customAuthMock.isAuthenticated).toBeCalled();
-                expect(customAuthMock.authenticate).not.toBeCalled();
-                expect(customAuthMock.getAuthToken).toBeCalled();
+                expect(customAuthMock.isAuthenticated).toHaveBeenCalled();
+                expect(customAuthMock.authenticate).not.toHaveBeenCalled();
+                expect(customAuthMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should attempt to login if not authenticated', async () => {
@@ -5316,9 +5338,9 @@ describe('RecordsManager', () => {
                         fileName: 'myFile',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should return not_logged_in if there is no authToken', async () => {
@@ -5356,9 +5378,9 @@ describe('RecordsManager', () => {
                         errorMessage: 'The user is not logged in.',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should support subjectless tokens', async () => {
@@ -5409,8 +5431,8 @@ describe('RecordsManager', () => {
                         fileName: 'myFile',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).not.toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.isAuthenticated).not.toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
             });
         });
 
@@ -5461,9 +5483,9 @@ describe('RecordsManager', () => {
                         eventName: 'testEvent',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should include the inst', async () => {
@@ -5514,9 +5536,9 @@ describe('RecordsManager', () => {
                         eventName: 'testEvent',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should not include the inst if it is static', async () => {
@@ -5534,7 +5556,7 @@ describe('RecordsManager', () => {
                 vm.origin = {
                     recordName: null,
                     inst: 'myInst',
-                    isStatic: true,
+                    kind: 'static',
                 };
 
                 records.handleEvents([
@@ -5567,9 +5589,9 @@ describe('RecordsManager', () => {
                         eventName: 'testEvent',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should support record names', async () => {
@@ -5620,9 +5642,9 @@ describe('RecordsManager', () => {
                         eventName: 'testEvent',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should support custom endpoints', async () => {
@@ -5673,9 +5695,9 @@ describe('RecordsManager', () => {
                         eventName: 'testEvent',
                     }),
                 ]);
-                expect(customAuthMock.isAuthenticated).toBeCalled();
-                expect(customAuthMock.authenticate).not.toBeCalled();
-                expect(customAuthMock.getAuthToken).toBeCalled();
+                expect(customAuthMock.isAuthenticated).toHaveBeenCalled();
+                expect(customAuthMock.authenticate).not.toHaveBeenCalled();
+                expect(customAuthMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should login if not authenticated', async () => {
@@ -5721,9 +5743,9 @@ describe('RecordsManager', () => {
                         eventName: 'testEvent',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should return not_logged_in if there is no authToken', async () => {
@@ -5761,9 +5783,9 @@ describe('RecordsManager', () => {
                         errorMessage: 'The user is not logged in.',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should support subjectless keys', async () => {
@@ -5815,8 +5837,8 @@ describe('RecordsManager', () => {
                         eventName: 'testEvent',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).not.toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.isAuthenticated).not.toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
             });
         });
 
@@ -5963,7 +5985,7 @@ describe('RecordsManager', () => {
                 vm.origin = {
                     recordName: null,
                     inst: 'myInst',
-                    isStatic: true,
+                    kind: 'static',
                 };
 
                 records.handleEvents([
@@ -6650,9 +6672,9 @@ describe('RecordsManager', () => {
                         success: true,
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
         });
 
@@ -6704,9 +6726,9 @@ describe('RecordsManager', () => {
                         success: true,
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
         });
 
@@ -6740,9 +6762,9 @@ describe('RecordsManager', () => {
                 await waitAsync();
 
                 expect(vm.events).toEqual([]);
-                expect(authMock.isAuthenticated).not.toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).not.toBeCalled();
+                expect(authMock.isAuthenticated).not.toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).not.toHaveBeenCalled();
             });
 
             it('should make a POST request to /api/v2/records/role/grant', async () => {
@@ -6795,9 +6817,9 @@ describe('RecordsManager', () => {
                         success: true,
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should return an error if the inst is static', async () => {
@@ -6822,7 +6844,7 @@ describe('RecordsManager', () => {
                 vm.origin = {
                     recordName: null,
                     inst: 'myInst',
-                    isStatic: true,
+                    kind: 'static',
                 };
 
                 records.handleEvents([
@@ -6843,9 +6865,9 @@ describe('RecordsManager', () => {
                         'Unable to grant inst admin permission to static insts.'
                     ),
                 ]);
-                expect(authMock.isAuthenticated).not.toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).not.toBeCalled();
+                expect(authMock.isAuthenticated).not.toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).not.toHaveBeenCalled();
             });
         });
 
@@ -6905,9 +6927,9 @@ describe('RecordsManager', () => {
                         success: true,
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should not include the inst if it is static', async () => {
@@ -6923,7 +6945,7 @@ describe('RecordsManager', () => {
                 vm.origin = {
                     recordName: null,
                     inst: 'myInst',
-                    isStatic: true,
+                    kind: 'static',
                 };
 
                 records.handleEvents([
@@ -6962,9 +6984,9 @@ describe('RecordsManager', () => {
                         success: true,
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should support instances', async () => {
@@ -7014,9 +7036,9 @@ describe('RecordsManager', () => {
                         success: true,
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
         });
 
@@ -7068,9 +7090,9 @@ describe('RecordsManager', () => {
                         success: true,
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should not include the inst if it is static', async () => {
@@ -7086,7 +7108,7 @@ describe('RecordsManager', () => {
                 vm.origin = {
                     recordName: null,
                     inst: 'myInst',
-                    isStatic: true,
+                    kind: 'static',
                 };
 
                 records.handleEvents([
@@ -7117,9 +7139,9 @@ describe('RecordsManager', () => {
                         success: true,
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should support instances', async () => {
@@ -7161,9 +7183,9 @@ describe('RecordsManager', () => {
                         success: true,
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
         });
 
@@ -7383,6 +7405,7 @@ describe('RecordsManager', () => {
                                     address: 'test',
                                     payload: {
                                         title: 'title',
+                                        body: 'body',
                                     },
                                     topic: 'topic',
                                 },
@@ -7670,6 +7693,194 @@ describe('RecordsManager', () => {
                         1
                     ),
                 ] as const,
+                [
+                    'recordContract',
+                    recordsCallProcedure(
+                        {
+                            recordContract: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    item: {
+                                        address: 'contractAddress',
+                                        holdingUser: 'holdingUserId',
+                                        markers: ['marker'],
+                                        rate: 100,
+                                        initialValue: 1000,
+                                        description: 'Test contract',
+                                    },
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'getContract',
+                    recordsCallProcedure(
+                        {
+                            getContract: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    address: 'address',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'listContracts',
+                    recordsCallProcedure(
+                        {
+                            listContracts: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    address: 'address',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'purchaseContract',
+                    recordsCallProcedure(
+                        {
+                            purchaseContract: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    contract: {
+                                        address: 'contractAddress',
+                                        currency: 'usd',
+                                        expectedCost: 1100,
+                                    },
+                                    returnUrl: 'https://example.com/return',
+                                    successUrl: 'https://example.com/success',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'getContractPricing',
+                    recordsCallProcedure(
+                        {
+                            getContractPricing: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    address: 'address',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'cancelContract',
+                    recordsCallProcedure(
+                        {
+                            cancelContract: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    address: 'address',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'invoiceContract',
+                    recordsCallProcedure(
+                        {
+                            invoiceContract: {
+                                input: {
+                                    contractId: 'contractId',
+                                    amount: 5000,
+                                    payoutDestination: 'stripe',
+                                    note: 'invoice note',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'payContractInvoice',
+                    recordsCallProcedure(
+                        {
+                            payContractInvoice: {
+                                input: {
+                                    invoiceId: 'invoiceId',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'listContractInvoices',
+                    recordsCallProcedure(
+                        {
+                            listContractInvoices: {
+                                input: {
+                                    contractId: 'contractId',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'cancelInvoice',
+                    recordsCallProcedure(
+                        {
+                            cancelInvoice: {
+                                input: {
+                                    invoiceId: 'invoiceId',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'payoutAccount',
+                    recordsCallProcedure(
+                        {
+                            payoutAccount: {
+                                input: {
+                                    destination: 'stripe',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'getBalances',
+                    recordsCallProcedure(
+                        {
+                            getBalances: {
+                                input: {},
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
             ];
 
             describe.each(allowedProcedures)('%s', (name, event) => {
@@ -7744,7 +7955,8 @@ describe('RecordsManager', () => {
                                 body: JSON.stringify({
                                     procedure: name,
                                     input: {
-                                        ...event.procedure[name]?.input,
+                                        ...(event.procedure[name]
+                                            ?.input as any),
                                         instances: ['/myInst'],
                                     },
                                 }),
@@ -7762,7 +7974,8 @@ describe('RecordsManager', () => {
                                     procedure: name,
                                     input: event.procedure[name]?.input,
                                     query: {
-                                        ...event.procedure[name]?.query,
+                                        ...(event.procedure[name]
+                                            ?.query as any),
                                         instances: ['/myInst'],
                                     },
                                 }),
@@ -7798,7 +8011,7 @@ describe('RecordsManager', () => {
                     vm.origin = {
                         recordName: null,
                         inst: 'myInst',
-                        isStatic: true,
+                        kind: 'static',
                     };
 
                     records.handleEvents([event]);
@@ -7830,7 +8043,8 @@ describe('RecordsManager', () => {
                                     procedure: name,
                                     input: event.procedure[name]?.input,
                                     query: {
-                                        ...event.procedure[name]?.query,
+                                        ...(event.procedure[name]
+                                            ?.query as any),
                                     },
                                 }),
                                 headers: expect.objectContaining({
@@ -7926,7 +8140,8 @@ describe('RecordsManager', () => {
                                     procedure: name,
                                     input: event.procedure[name]?.input,
                                     query: {
-                                        ...event.procedure[name]?.query,
+                                        ...(event.procedure[name]
+                                            ?.query as any),
                                     },
                                 }),
                                 headers: expect.objectContaining({
@@ -8019,9 +8234,9 @@ describe('RecordsManager', () => {
                         ],
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should support custom models', async () => {
@@ -8091,9 +8306,9 @@ describe('RecordsManager', () => {
                         ],
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should include the inst', async () => {
@@ -8166,9 +8381,9 @@ describe('RecordsManager', () => {
                         ],
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should not include the inst if it is static', async () => {
@@ -8191,7 +8406,7 @@ describe('RecordsManager', () => {
                 vm.origin = {
                     recordName: null,
                     inst: 'myInst',
-                    isStatic: true,
+                    kind: 'static',
                 };
 
                 records.handleEvents([
@@ -8241,9 +8456,9 @@ describe('RecordsManager', () => {
                         ],
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should support record names', async () => {
@@ -8316,9 +8531,9 @@ describe('RecordsManager', () => {
                         ],
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should support custom endpoints', async () => {
@@ -8387,9 +8602,9 @@ describe('RecordsManager', () => {
                         ],
                     }),
                 ]);
-                expect(customAuthMock.isAuthenticated).toBeCalled();
-                expect(customAuthMock.authenticate).not.toBeCalled();
-                expect(customAuthMock.getAuthToken).toBeCalled();
+                expect(customAuthMock.isAuthenticated).toHaveBeenCalled();
+                expect(customAuthMock.authenticate).not.toHaveBeenCalled();
+                expect(customAuthMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should attempt to login if not authenticated', async () => {
@@ -8457,9 +8672,9 @@ describe('RecordsManager', () => {
                         ],
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should return a not_logged_in error if there is no token', async () => {
@@ -8489,9 +8704,9 @@ describe('RecordsManager', () => {
                         errorMessage: 'The user is not logged in.',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
         });
 
@@ -8608,9 +8823,9 @@ describe('RecordsManager', () => {
                     }),
                     iterableComplete(1),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should make a websocket request', async () => {
@@ -8947,9 +9162,9 @@ describe('RecordsManager', () => {
                         thumbnailUrl: 'thumb-url',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should include the inst', async () => {
@@ -9035,9 +9250,9 @@ describe('RecordsManager', () => {
                         thumbnailUrl: 'thumb-url',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should not include the inst if it is static', async () => {
@@ -9068,7 +9283,7 @@ describe('RecordsManager', () => {
                 vm.origin = {
                     recordName: null,
                     inst: 'myInst',
-                    isStatic: true,
+                    kind: 'static',
                 };
 
                 records.handleEvents([
@@ -9123,9 +9338,9 @@ describe('RecordsManager', () => {
                         thumbnailUrl: 'thumb-url',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should support record names', async () => {
@@ -9211,9 +9426,9 @@ describe('RecordsManager', () => {
                         thumbnailUrl: 'thumb-url',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should support custom endpoints', async () => {
@@ -9300,9 +9515,9 @@ describe('RecordsManager', () => {
                         thumbnailUrl: 'thumb-url',
                     }),
                 ]);
-                expect(customAuthMock.isAuthenticated).toBeCalled();
-                expect(customAuthMock.authenticate).not.toBeCalled();
-                expect(customAuthMock.getAuthToken).toBeCalled();
+                expect(customAuthMock.isAuthenticated).toHaveBeenCalled();
+                expect(customAuthMock.authenticate).not.toHaveBeenCalled();
+                expect(customAuthMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should attempt to login if not authenticated', async () => {
@@ -9383,9 +9598,9 @@ describe('RecordsManager', () => {
                         thumbnailUrl: 'thumb-url',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should return a server_error if unable to retrieve the image after 10 attempts', async () => {
@@ -9428,9 +9643,9 @@ describe('RecordsManager', () => {
                         errorMessage: 'The request timed out.',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should return a not_logged_in error if there is no token', async () => {
@@ -9451,9 +9666,9 @@ describe('RecordsManager', () => {
                         errorMessage: 'The user is not logged in.',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
         });
 
@@ -9515,9 +9730,9 @@ describe('RecordsManager', () => {
                         ],
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should include the inst', async () => {
@@ -9578,9 +9793,9 @@ describe('RecordsManager', () => {
                         ],
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should not include the inst if it is static', async () => {
@@ -9601,7 +9816,7 @@ describe('RecordsManager', () => {
                 vm.origin = {
                     recordName: null,
                     inst: 'myInst',
-                    isStatic: true,
+                    kind: 'static',
                 };
 
                 records.handleEvents([
@@ -9641,9 +9856,9 @@ describe('RecordsManager', () => {
                         ],
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should support record names', async () => {
@@ -9704,9 +9919,9 @@ describe('RecordsManager', () => {
                         ],
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should support custom endpoints', async () => {
@@ -9763,9 +9978,9 @@ describe('RecordsManager', () => {
                         ],
                     }),
                 ]);
-                expect(customAuthMock.isAuthenticated).toBeCalled();
-                expect(customAuthMock.authenticate).not.toBeCalled();
-                expect(customAuthMock.getAuthToken).toBeCalled();
+                expect(customAuthMock.isAuthenticated).toHaveBeenCalled();
+                expect(customAuthMock.authenticate).not.toHaveBeenCalled();
+                expect(customAuthMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should attempt to login if not authenticated', async () => {
@@ -9821,9 +10036,9 @@ describe('RecordsManager', () => {
                         ],
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should return a not_logged_in error if there is no token', async () => {
@@ -9850,9 +10065,9 @@ describe('RecordsManager', () => {
                         errorMessage: 'The user is not logged in.',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should use websockets if they are supported', async () => {
@@ -10083,9 +10298,9 @@ describe('RecordsManager', () => {
                         accessToken: 'token',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should include the record name', async () => {
@@ -10130,9 +10345,9 @@ describe('RecordsManager', () => {
                         accessToken: 'token',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
         });
 
@@ -10215,9 +10430,9 @@ describe('RecordsManager', () => {
                         gltfJson: 'json',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
         });
 
@@ -10389,9 +10604,9 @@ describe('RecordsManager', () => {
                         ],
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should return a not_logged_in error if there is no token', async () => {
@@ -10410,9 +10625,9 @@ describe('RecordsManager', () => {
                         errorMessage: 'The user is not logged in.',
                     }),
                 ]);
-                expect(authMock.isAuthenticated).toBeCalled();
-                expect(authMock.authenticate).toBeCalled();
-                expect(authMock.getAuthToken).toBeCalled();
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should not include the inst', async () => {
@@ -10958,7 +11173,7 @@ describe('RecordsManager', () => {
                 vm.origin = {
                     recordName: null,
                     inst: 'myInst',
-                    isStatic: true,
+                    kind: 'static',
                 };
 
                 const state: StoredAux = {
@@ -11717,7 +11932,7 @@ describe('RecordsManager', () => {
                 vm.origin = {
                     recordName: null,
                     inst: 'test',
-                    isStatic: true,
+                    kind: 'static',
                 };
 
                 records.handleEvents([
@@ -11873,7 +12088,7 @@ describe('RecordsManager', () => {
                 vm.origin = {
                     recordName: null,
                     inst: 'test',
-                    isStatic: true,
+                    kind: 'static',
                 };
 
                 records.handleEvents([
@@ -12021,7 +12236,7 @@ describe('RecordsManager', () => {
                 vm.origin = {
                     recordName: null,
                     inst: 'test',
-                    isStatic: true,
+                    kind: 'static',
                 };
 
                 records.handleEvents([
@@ -12303,7 +12518,7 @@ describe('RecordsManager', () => {
                 vm.origin = {
                     recordName: null,
                     inst: 'myInst',
-                    isStatic: true,
+                    kind: 'static',
                 };
 
                 records.handleEvents([listInstalledPackages({}, 1)]);
@@ -12320,6 +12535,657 @@ describe('RecordsManager', () => {
                             'Listing packages is not supported for local insts.',
                     }),
                 ]);
+            });
+        });
+
+        describe('record_store_item', () => {
+            beforeEach(() => {
+                authMock.getRecordKeyPolicy.mockResolvedValue('subjectfull');
+                require('axios').__reset();
+            });
+
+            it('should request that the server record the item', async () => {
+                fetch.mockResolvedValueOnce({
+                    status: 200,
+                    json: async () => ({
+                        success: true,
+                    }),
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    recordStoreItem(
+                        'recordName',
+                        'myAddress',
+                        {
+                            name: 'item',
+                            description: 'description',
+                            cost: 100,
+                            currency: 'usd',
+                            imageUrls: [],
+                            roleName: 'roleName',
+                            roleGrantTimeMs: null,
+                            markers: ['publicRead'],
+                        },
+                        {},
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expectFetchCalledWith(
+                    'http://localhost:3002/api/v3/callProcedure',
+                    {
+                        method: 'POST',
+                        body: {
+                            input: {
+                                recordName: 'recordName',
+                                item: {
+                                    address: 'myAddress',
+                                    name: 'item',
+                                    description: 'description',
+                                    cost: 100,
+                                    currency: 'usd',
+                                    imageUrls: [],
+                                    roleName: 'roleName',
+                                    roleGrantTimeMs: null,
+                                    markers: ['publicRead'],
+                                },
+                            },
+                            procedure: 'recordPurchasableItem',
+                        },
+                        headers: expect.objectContaining({
+                            Authorization: 'Bearer authToken',
+                        }),
+                    }
+                );
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                    }),
+                ]);
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
+            });
+
+            it('should include the inst', async () => {
+                fetch.mockResolvedValueOnce({
+                    status: 200,
+                    json: async () => ({
+                        success: true,
+                    }),
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                vm.origin = {
+                    recordName: null,
+                    inst: 'myInst',
+                };
+
+                records.handleEvents([
+                    recordStoreItem(
+                        'recordName',
+                        'myAddress',
+                        {
+                            name: 'item',
+                            description: 'description',
+                            cost: 100,
+                            currency: 'usd',
+                            imageUrls: [],
+                            roleName: 'roleName',
+                            roleGrantTimeMs: null,
+                            markers: ['publicRead'],
+                        },
+                        {},
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expectFetchCalledWith(
+                    'http://localhost:3002/api/v3/callProcedure',
+                    {
+                        method: 'POST',
+                        body: {
+                            input: {
+                                recordName: 'recordName',
+                                item: {
+                                    address: 'myAddress',
+                                    name: 'item',
+                                    description: 'description',
+                                    cost: 100,
+                                    currency: 'usd',
+                                    imageUrls: [],
+                                    roleName: 'roleName',
+                                    roleGrantTimeMs: null,
+                                    markers: ['publicRead'],
+                                },
+                                instances: ['/myInst'],
+                            },
+                            procedure: 'recordPurchasableItem',
+                        },
+                        headers: expect.objectContaining({
+                            Authorization: 'Bearer authToken',
+                        }),
+                    }
+                );
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                    }),
+                ]);
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
+            });
+        });
+
+        describe('get_store_item', () => {
+            beforeEach(() => {
+                require('axios').__reset();
+            });
+
+            it('should request that the server get the item', async () => {
+                fetch.mockResolvedValueOnce({
+                    status: 200,
+                    json: async () => ({
+                        success: true,
+                        item: {
+                            name: 'item',
+                        },
+                    }),
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    getStoreItem('recordName', 'myAddress', {}, 1),
+                ]);
+
+                await waitAsync();
+
+                expectFetchCalledWith(
+                    'http://localhost:3002/api/v3/callProcedure',
+                    {
+                        method: 'POST',
+                        body: {
+                            input: {
+                                recordName: 'recordName',
+                                address: 'myAddress',
+                            },
+                            procedure: 'getPurchasableItem',
+                        },
+                        headers: expect.objectContaining({
+                            Authorization: 'Bearer authToken',
+                        }),
+                    }
+                );
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        item: {
+                            name: 'item',
+                        },
+                    }),
+                ]);
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
+            });
+
+            it('should include the inst', async () => {
+                fetch.mockResolvedValueOnce({
+                    status: 200,
+                    json: async () => ({
+                        success: true,
+                        item: {
+                            name: 'item',
+                        },
+                    }),
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                vm.origin = {
+                    recordName: null,
+                    inst: 'myInst',
+                };
+
+                records.handleEvents([
+                    getStoreItem('recordName', 'myAddress', {}, 1),
+                ]);
+
+                await waitAsync();
+
+                expectFetchCalledWith(
+                    'http://localhost:3002/api/v3/callProcedure',
+                    {
+                        method: 'POST',
+                        body: {
+                            input: {
+                                recordName: 'recordName',
+                                address: 'myAddress',
+                                instances: ['/myInst'],
+                            },
+                            procedure: 'getPurchasableItem',
+                        },
+                        headers: expect.objectContaining({
+                            Authorization: 'Bearer authToken',
+                        }),
+                    }
+                );
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        item: {
+                            name: 'item',
+                        },
+                    }),
+                ]);
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
+            });
+        });
+
+        describe('erase_store_item', () => {
+            beforeEach(() => {
+                require('axios').__reset();
+            });
+
+            it('should request that the server erase the item', async () => {
+                fetch.mockResolvedValueOnce({
+                    status: 200,
+                    json: async () => ({
+                        success: true,
+                    }),
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    eraseStoreItem('recordName', 'myAddress', {}, 1),
+                ]);
+
+                await waitAsync();
+
+                expectFetchCalledWith(
+                    'http://localhost:3002/api/v3/callProcedure',
+                    {
+                        method: 'POST',
+                        body: {
+                            input: {
+                                recordName: 'recordName',
+                                address: 'myAddress',
+                            },
+                            procedure: 'erasePurchasableItem',
+                        },
+                        headers: expect.objectContaining({
+                            Authorization: 'Bearer authToken',
+                        }),
+                    }
+                );
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                    }),
+                ]);
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
+            });
+
+            it('should include the inst', async () => {
+                fetch.mockResolvedValueOnce({
+                    status: 200,
+                    json: async () => ({
+                        success: true,
+                    }),
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                vm.origin = {
+                    recordName: null,
+                    inst: 'myInst',
+                };
+
+                records.handleEvents([
+                    eraseStoreItem('recordName', 'myAddress', {}, 1),
+                ]);
+
+                await waitAsync();
+
+                expectFetchCalledWith(
+                    'http://localhost:3002/api/v3/callProcedure',
+                    {
+                        method: 'POST',
+                        body: {
+                            input: {
+                                recordName: 'recordName',
+                                address: 'myAddress',
+                                instances: ['/myInst'],
+                            },
+                            procedure: 'erasePurchasableItem',
+                        },
+                        headers: expect.objectContaining({
+                            Authorization: 'Bearer authToken',
+                        }),
+                    }
+                );
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                    }),
+                ]);
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
+            });
+        });
+
+        describe('list_store_items', () => {
+            beforeEach(() => {
+                require('axios').__reset();
+            });
+
+            it('should request that the server list the items', async () => {
+                fetch.mockResolvedValueOnce({
+                    status: 200,
+                    json: async () => ({
+                        success: true,
+                        items: [
+                            {
+                                name: 'item1',
+                            },
+                            {
+                                name: 'item2',
+                            },
+                        ],
+                    }),
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    listStoreItems('recordName', 'myAddress', {}, 1),
+                ]);
+
+                await waitAsync();
+
+                expectFetchCalledWith(
+                    'http://localhost:3002/api/v3/callProcedure',
+                    {
+                        method: 'POST',
+                        body: {
+                            input: {
+                                recordName: 'recordName',
+                                address: 'myAddress',
+                            },
+                            procedure: 'listPurchasableItems',
+                        },
+                        headers: expect.objectContaining({
+                            Authorization: 'Bearer authToken',
+                        }),
+                    }
+                );
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        items: [
+                            {
+                                name: 'item1',
+                            },
+                            {
+                                name: 'item2',
+                            },
+                        ],
+                    }),
+                ]);
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
+            });
+
+            it('should include the inst', async () => {
+                fetch.mockResolvedValueOnce({
+                    status: 200,
+                    json: async () => ({
+                        success: true,
+                        items: [
+                            {
+                                name: 'item1',
+                            },
+                            {
+                                name: 'item2',
+                            },
+                        ],
+                    }),
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                vm.origin = {
+                    recordName: null,
+                    inst: 'myInst',
+                };
+
+                records.handleEvents([
+                    listStoreItems('recordName', 'myAddress', {}, 1),
+                ]);
+
+                await waitAsync();
+
+                expectFetchCalledWith(
+                    'http://localhost:3002/api/v3/callProcedure',
+                    {
+                        method: 'POST',
+                        body: {
+                            input: {
+                                recordName: 'recordName',
+                                address: 'myAddress',
+                                instances: ['/myInst'],
+                            },
+                            procedure: 'listPurchasableItems',
+                        },
+                        headers: expect.objectContaining({
+                            Authorization: 'Bearer authToken',
+                        }),
+                    }
+                );
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        items: [
+                            {
+                                name: 'item1',
+                            },
+                            {
+                                name: 'item2',
+                            },
+                        ],
+                    }),
+                ]);
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
+            });
+        });
+
+        describe('list_store_items_by_marker', () => {
+            beforeEach(() => {
+                require('axios').__reset();
+            });
+
+            it('should request that the server list the items', async () => {
+                fetch.mockResolvedValueOnce({
+                    status: 200,
+                    json: async () => ({
+                        success: true,
+                        items: [
+                            {
+                                name: 'item1',
+                            },
+                            {
+                                name: 'item2',
+                            },
+                        ],
+                    }),
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    listStoreItemsByMarker(
+                        'recordName',
+                        'marker',
+                        'myAddress',
+                        {},
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expectFetchCalledWith(
+                    'http://localhost:3002/api/v3/callProcedure',
+                    {
+                        method: 'POST',
+                        body: {
+                            input: {
+                                recordName: 'recordName',
+                                marker: 'marker',
+                                address: 'myAddress',
+                            },
+                            procedure: 'listPurchasableItems',
+                        },
+                        headers: expect.objectContaining({
+                            Authorization: 'Bearer authToken',
+                        }),
+                    }
+                );
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        items: [
+                            {
+                                name: 'item1',
+                            },
+                            {
+                                name: 'item2',
+                            },
+                        ],
+                    }),
+                ]);
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
+            });
+
+            it('should include the inst', async () => {
+                fetch.mockResolvedValueOnce({
+                    status: 200,
+                    json: async () => ({
+                        success: true,
+                        items: [
+                            {
+                                name: 'item1',
+                            },
+                            {
+                                name: 'item2',
+                            },
+                        ],
+                    }),
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                vm.origin = {
+                    recordName: null,
+                    inst: 'myInst',
+                };
+
+                records.handleEvents([
+                    listStoreItemsByMarker(
+                        'recordName',
+                        'marker',
+                        'myAddress',
+                        {},
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expectFetchCalledWith(
+                    'http://localhost:3002/api/v3/callProcedure',
+                    {
+                        method: 'POST',
+                        body: {
+                            input: {
+                                recordName: 'recordName',
+                                marker: 'marker',
+                                address: 'myAddress',
+                                instances: ['/myInst'],
+                            },
+                            procedure: 'listPurchasableItems',
+                        },
+                        headers: expect.objectContaining({
+                            Authorization: 'Bearer authToken',
+                        }),
+                    }
+                );
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        items: [
+                            {
+                                name: 'item1',
+                            },
+                            {
+                                name: 'item2',
+                            },
+                        ],
+                    }),
+                ]);
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
         });
 
@@ -12405,7 +13271,7 @@ describe('RecordsManager', () => {
                         }),
                     ]);
 
-                    expect(factory).toBeCalledWith(
+                    expect(factory).toHaveBeenCalledWith(
                         'https://localhost:321',
                         expect.any(Boolean)
                     );
@@ -12438,7 +13304,7 @@ describe('RecordsManager', () => {
                         }),
                     ]);
 
-                    expect(factory).not.toBeCalled();
+                    expect(factory).not.toHaveBeenCalled();
                 });
 
                 it('should attempt to use the endpoint provided in the event', async () => {
@@ -12476,7 +13342,7 @@ describe('RecordsManager', () => {
                         }),
                     ]);
 
-                    expect(factory).toBeCalledWith(
+                    expect(factory).toHaveBeenCalledWith(
                         'http://localhost:999',
                         expect.any(Boolean)
                     );
@@ -12532,3 +13398,21 @@ describe('RecordsManager', () => {
         });
     });
 });
+
+function expectFetchCalledWith(url: string, options: any) {
+    const m = globalThis.fetch as jest.Mock;
+    expect(m).toHaveBeenCalled();
+    expect(m.mock.calls[0][0]).toEqual(url);
+    const opt = m.mock.calls[0][1];
+
+    if (!opt) {
+        expect(opt).toEqual(options);
+    } else {
+        const { body, ...rest } = opt;
+        const json = body ? JSON.parse(body) : null;
+        expect({
+            ...rest,
+            body: json,
+        }).toEqual(options);
+    }
+}

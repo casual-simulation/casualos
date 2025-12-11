@@ -49,7 +49,7 @@ import {
 } from '@casual-simulation/crypto';
 import { toBase64String } from '@casual-simulation/aux-common';
 import { padStart } from 'es-toolkit/compat';
-import { allowAllFeatures } from './SubscriptionConfiguration';
+import { allowAllDefaultFeatures } from './SubscriptionConfiguration';
 import { MemoryStore } from './MemoryStore';
 import { DateTime } from 'luxon';
 import type { PrivoClientInterface } from './PrivoClient';
@@ -71,6 +71,7 @@ import type {
     PublicKeyCredentialRequestOptionsJSON,
 } from '@simplewebauthn/types';
 import type { UserLoginMetadata } from './AuthStore';
+import { createTestSubConfiguration } from './TestUtils';
 
 jest.mock('tweetnacl', () => {
     const originalModule = jest.requireActual('tweetnacl');
@@ -145,6 +146,8 @@ describe('AuthController', () => {
     let messenger: MemoryAuthMessenger;
     let controller: AuthController;
     let privoClient: PrivoClientInterface;
+    // let financialInterface: MemoryFinancialInterface;
+    // let financialController: FinancialController;
     let privoClientMock: jest.MockedObject<PrivoClientInterface>;
     let nowMock: jest.Mock<number>;
     let relyingParty: RelyingParty;
@@ -177,8 +180,8 @@ describe('AuthController', () => {
                 returnUrl: 'return_url',
                 tiers: {},
                 defaultFeatures: {
-                    user: allowAllFeatures(),
-                    studio: allowAllFeatures(),
+                    user: allowAllDefaultFeatures(),
+                    studio: allowAllDefaultFeatures(),
                 },
             },
         });
@@ -202,6 +205,9 @@ describe('AuthController', () => {
             id: 'example.com',
             origin: 'https://example.com',
         };
+
+        // financialInterface = new MemoryFinancialInterface();
+        // financialController = new FinancialController(financialInterface);
 
         controller = new AuthController(store, messenger, store, privoClient, [
             relyingParty,
@@ -7851,13 +7857,9 @@ describe('AuthController', () => {
 
     describe('getUserInfo()', () => {
         const userId = 'myid';
-        const requestId = 'requestId';
-        const sessionId = toBase64String('sessionId');
-        const code = 'code';
-
-        const sessionKey = formatV1SessionKey(userId, sessionId, code, 200);
 
         beforeEach(async () => {
+            // unwrap(await financialController.init());
             await store.saveUser({
                 id: userId,
                 email: 'email',
@@ -7868,26 +7870,38 @@ describe('AuthController', () => {
                 allSessionRevokeTimeMs: undefined,
                 currentLoginRequestId: undefined,
             });
+        });
 
-            await store.saveSession({
-                requestId,
-                sessionId,
-                secretHash: hashLowEntropyPasswordWithSalt(code, sessionId),
-                connectionSecret: code,
-                expireTimeMs: 1000,
-                grantedTimeMs: 999,
-                previousSessionId: null,
-                nextSessionId: null,
-                revokeTimeMs: null,
+        it('should return the info for the current user', async () => {
+            const result = await controller.getUserInfo({
                 userId,
-                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toEqual({
+                success: true,
+                userId: userId,
+                email: 'email',
+                phoneNumber: 'phonenumber',
+                name: 'Test',
+                avatarUrl: 'avatar url',
+                avatarPortraitUrl: 'avatar portrait url',
+                hasActiveSubscription: false,
+                subscriptionTier: null,
+                displayName: null,
+                privacyFeatures: {
+                    publishData: true,
+                    allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
+                },
+                role: 'none',
             });
         });
 
-        it('should return the info for the given user ID', async () => {
+        it('should return the info for the given user ID if it matches the current user', async () => {
             const result = await controller.getUserInfo({
                 userId,
-                sessionKey,
+                requestedUserId: userId,
             });
 
             expect(result).toEqual({
@@ -7931,7 +7945,6 @@ describe('AuthController', () => {
 
             const result = await controller.getUserInfo({
                 userId,
-                sessionKey,
             });
 
             expect(result).toEqual({
@@ -7955,12 +7968,134 @@ describe('AuthController', () => {
             });
         });
 
+        it('should include the contract features for the account', async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub.withTier('tier1').withContracts()
+                    )
+            );
+
+            await store.saveUser({
+                id: userId,
+                email: 'email',
+                phoneNumber: 'phonenumber',
+                name: 'Test',
+                avatarUrl: 'avatar url',
+                avatarPortraitUrl: 'avatar portrait url',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
+                privacyFeatures: {
+                    publishData: true,
+                    allowPublicData: false,
+                    allowAI: true,
+                    allowPublicInsts: true,
+                },
+            });
+
+            const result = await controller.getUserInfo({
+                userId,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                userId: userId,
+                email: 'email',
+                phoneNumber: 'phonenumber',
+                name: 'Test',
+                avatarUrl: 'avatar url',
+                avatarPortraitUrl: 'avatar portrait url',
+                hasActiveSubscription: true,
+                subscriptionTier: 'tier1',
+                displayName: null,
+                privacyFeatures: {
+                    publishData: true,
+                    allowPublicData: false,
+                    allowAI: true,
+                    allowPublicInsts: true,
+                },
+                role: 'none',
+                contractFeatures: {
+                    allowed: true,
+                    currencyLimits: {
+                        usd: {
+                            maxCost: 100000,
+                            minCost: 50,
+                        },
+                    },
+                },
+            });
+        });
+
+        // it('should include the financial info for the account', async () => {
+        //     const account = unwrap(
+        //         await financialController.createAccount(
+        //             AccountCodes.liabilities_user
+        //         )
+        //     );
+
+        //     unwrap(
+        //         await financialController.internalTransfer({
+        //             transfers: [
+        //                 {
+        //                     amount: 1000,
+        //                     code: TransferCodes.admin_credit,
+        //                     creditAccountId: account.id,
+        //                     debitAccountId: ACCOUNT_IDS.stripe_assets,
+        //                     currency: 'credits',
+        //                 },
+        //             ],
+        //         })
+        //     );
+
+        //     const user = await store.findUser(userId);
+        //     await store.saveUser({
+        //         ...user,
+        //         accountId: account.id,
+        //         stripeAccountId: 'stripeAccountId',
+        //         requestedRate: 123,
+        //         stripeAccountStatus: 'pending',
+        //         stripeAccountRequirementsStatus: 'incomplete',
+        //     });
+        //     const result = await controller.getUserInfo({
+        //         userId,
+        //     });
+
+        //     expect(result).toEqual({
+        //         success: true,
+        //         userId: userId,
+        //         email: 'email',
+        //         phoneNumber: 'phonenumber',
+        //         name: 'Test',
+        //         avatarUrl: 'avatar url',
+        //         avatarPortraitUrl: 'avatar portrait url',
+        //         hasActiveSubscription: false,
+        //         subscriptionTier: null,
+        //         displayName: null,
+        //         privacyFeatures: {
+        //             publishData: true,
+        //             allowPublicData: true,
+        //             allowAI: true,
+        //             allowPublicInsts: true,
+        //         },
+        //         role: 'none',
+        //         accountId: '1',
+        //         accountBalance: 1000,
+        //         accountCurrency: 'credits',
+        //         stripeAccountId: 'stripeAccountId',
+        //         requestedRate: 123,
+        //         stripeAccountStatus: 'pending',
+        //         stripeAccountRequirementsStatus: 'incomplete',
+        //     });
+        // });
+
         it('should work if there is no subscription config', async () => {
             store.subscriptionConfiguration = null;
 
             const result = await controller.getUserInfo({
                 userId,
-                sessionKey,
             });
 
             expect(result).toEqual({
@@ -7979,6 +8114,10 @@ describe('AuthController', () => {
                     allowPublicData: true,
                     allowAI: true,
                     allowPublicInsts: true,
+                },
+                contractFeatures: {
+                    allowed: true,
+                    currencyLimits: expect.any(Object),
                 },
                 role: 'none',
             });
@@ -8000,7 +8139,6 @@ describe('AuthController', () => {
 
             const result = await controller.getUserInfo({
                 userId,
-                sessionKey,
             });
 
             expect(result).toEqual({
@@ -8040,7 +8178,6 @@ describe('AuthController', () => {
 
             const result = await controller.getUserInfo({
                 userId,
-                sessionKey,
             });
 
             expect(result).toEqual({
@@ -8082,7 +8219,6 @@ describe('AuthController', () => {
 
             const result = await controller.getUserInfo({
                 userId,
-                sessionKey,
             });
 
             expect(result).toEqual({
@@ -8106,81 +8242,17 @@ describe('AuthController', () => {
             });
         });
 
-        it('should return a invalid_key response when the user ID doesnt match the given session key', async () => {
+        it('should return a not_authorized response when the current user doesnt match the given user', async () => {
             const result = await controller.getUserInfo({
                 userId: 'myOtherUser',
-                sessionKey,
+                requestedUserId: userId,
             });
 
             expect(result).toEqual({
                 success: false,
-                errorCode: 'invalid_key',
-                errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
             });
-        });
-
-        it('should return a invalid_key response given an invalid session key', async () => {
-            const result = await controller.getUserInfo({
-                userId,
-                sessionKey: formatV1SessionKey(
-                    userId,
-                    sessionId,
-                    'wrong session secret',
-                    1000
-                ),
-            });
-
-            expect(result).toEqual({
-                success: false,
-                errorCode: 'invalid_key',
-                errorMessage: INVALID_KEY_ERROR_MESSAGE,
-            });
-        });
-
-        describe('data validation', () => {
-            const invalidIdCases = [
-                ['null', null as any],
-                ['empty', ''],
-                ['number', 123],
-                ['boolean', false],
-                ['object', {}],
-                ['array', []],
-                ['undefined', undefined],
-            ];
-
-            it.each(invalidIdCases)(
-                'it should fail if given a %s userId',
-                async (desc, id) => {
-                    const result = await controller.getUserInfo({
-                        userId: id,
-                        sessionKey: 'key',
-                    });
-
-                    expect(result).toEqual({
-                        success: false,
-                        errorCode: 'unacceptable_user_id',
-                        errorMessage:
-                            'The given userId is invalid. It must be a string.',
-                    });
-                }
-            );
-
-            it.each(invalidIdCases)(
-                'it should fail if given a %s session key',
-                async (desc, id) => {
-                    const result = await controller.getUserInfo({
-                        userId: 'userId',
-                        sessionKey: id,
-                    });
-
-                    expect(result).toEqual({
-                        success: false,
-                        errorCode: 'unacceptable_session_key',
-                        errorMessage:
-                            'The given session key is invalid. It must be a string.',
-                    });
-                }
-            );
         });
 
         describe('privo', () => {
@@ -8261,7 +8333,6 @@ describe('AuthController', () => {
 
                 const result = await controller.getUserInfo({
                     userId,
-                    sessionKey,
                 });
 
                 expect(result).toEqual({
@@ -8332,7 +8403,6 @@ describe('AuthController', () => {
 
                 const result = await controller.getUserInfo({
                     userId,
-                    sessionKey,
                 });
 
                 expect(result).toEqual({
@@ -8431,7 +8501,6 @@ describe('AuthController', () => {
 
                 const result = await controller.getUserInfo({
                     userId,
-                    sessionKey,
                 });
 
                 expect(result).toEqual({
@@ -8530,7 +8599,6 @@ describe('AuthController', () => {
 
                 const result = await controller.getUserInfo({
                     userId,
-                    sessionKey,
                 });
 
                 expect(result).toEqual({
@@ -8579,13 +8647,6 @@ describe('AuthController', () => {
 
         describe('superUser', () => {
             const superUserId = 'superUserId';
-            const superUserSessionId = toBase64String('superUserSessionId');
-            const superUserSessionKey = formatV1SessionKey(
-                superUserId,
-                superUserSessionId,
-                code,
-                200
-            );
 
             beforeEach(async () => {
                 await store.saveUser({
@@ -8599,29 +8660,11 @@ describe('AuthController', () => {
                     currentLoginRequestId: undefined,
                     role: 'superUser',
                 });
-
-                await store.saveSession({
-                    requestId: null,
-                    sessionId: superUserSessionId,
-                    secretHash: hashLowEntropyPasswordWithSalt(
-                        code,
-                        superUserSessionId
-                    ),
-                    connectionSecret: code,
-                    expireTimeMs: 1000,
-                    grantedTimeMs: 999,
-                    previousSessionId: null,
-                    nextSessionId: null,
-                    revokeTimeMs: null,
-                    userId: superUserId,
-                    ipAddress: '127.0.0.1',
-                });
             });
 
             it('should include the role of the user', async () => {
                 const result = await controller.getUserInfo({
                     userId: superUserId,
-                    sessionKey: superUserSessionKey,
                 });
 
                 expect(result).toEqual({
@@ -8647,8 +8690,9 @@ describe('AuthController', () => {
 
             it('should allow super users to get other users info', async () => {
                 const result = await controller.getUserInfo({
-                    userId,
-                    sessionKey: superUserSessionKey,
+                    userId: superUserId,
+                    userRole: 'superUser',
+                    requestedUserId: userId,
                 });
 
                 expect(result).toEqual({

@@ -23,6 +23,8 @@ import {
     replaceEsbuildPlugin,
     replaceThreePlugin,
     replaceLodashPlugin,
+    replaceReactPlugin,
+    replaceJsxRuntimePlugin,
 } from '../../../script/build-helpers.mjs';
 import { GIT_HASH, GIT_TAG } from '../../../script/git-stats.mjs';
 import copy from 'esbuild-copy-static-files';
@@ -41,6 +43,7 @@ const serverExternals = [...getExternals(serverPackageJson), 'esbuild'];
 const auxWeb = path.resolve(auxServer, 'aux-web');
 const auxWebDist = path.resolve(auxWeb, 'dist');
 
+const auxPlayer = path.resolve(auxWeb, 'aux-player');
 const auxAuth = path.resolve(auxWeb, 'aux-auth');
 const auxAuthDist = path.resolve(auxAuth, 'dist');
 
@@ -58,6 +61,17 @@ const denoBootstrapScripts = path.resolve(denoVm, 'deno');
 
 const schema = path.resolve(auxBackend, 'schemas', 'auth.prisma');
 const generatedPrisma = path.resolve(auxBackend, 'prisma', 'generated');
+
+const tigerBeetleBin = path.resolve(
+    auxServerNodeModules,
+    'tigerbeetle-node',
+    'dist',
+    'bin'
+);
+const tigerBeetle_Linux_X86_64 = path.resolve(
+    tigerBeetleBin,
+    'x86_64-linux-gnu'
+);
 
 const typesensePath = path.resolve(
     auxServerNodeModules,
@@ -119,13 +133,22 @@ export function createConfigs(dev, version) {
                     ...developmentVariables,
                     ...configVariables,
                 },
-                external: ['deno-vm'],
+                external: ['deno-vm', 'tigerbeetle-node', 'express-http-proxy'],
                 minify: !dev,
                 plugins: [
                     replaceThreePlugin(),
                     replaceLodashPlugin(),
                     ImportGlobPlugin(),
+                    replaceReactPlugin(),
+                    replaceJsxRuntimePlugin(),
                 ],
+                jsx: 'automatic',
+                jsxImportSource: 'preact',
+                tsconfigRaw: `{
+                    "compilerOptions": {
+                        "experimentalDecorators": true
+                    }
+                }`,
             },
         ],
         [
@@ -142,6 +165,9 @@ export function createConfigs(dev, version) {
                     ...extraVariables,
                 },
                 plugins: [
+                    // These files need to be copied over for Prisma to work in AWS Lambda
+                    // They will be included in the serverless bundle automatically.
+                    // Because of the file location, we only need to copy them once for the Serverless build and not also for the websockets or webhooks build.
                     copy({
                         src: schema,
                         dest: path.resolve(
@@ -170,6 +196,17 @@ export function createConfigs(dev, version) {
                             'handlers',
                             'node_modules',
                             '@libsql'
+                        ),
+                        force: true,
+                        recursive: true,
+                    }),
+                    copy({
+                        src: path.resolve(tigerBeetle_Linux_X86_64),
+                        dest: path.resolve(
+                            serverlessDist,
+                            'handlers',
+                            'bin',
+                            'x86_64-linux-gnu'
                         ),
                         force: true,
                         recursive: true,

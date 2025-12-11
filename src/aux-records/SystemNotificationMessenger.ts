@@ -208,11 +208,10 @@ export type NotificationResourceActions =
 
 export const slackSchema = z.object({
     webhookUrl: z
-        .string()
+        .url()
         .describe(
             'The Slack webhook URL that should be used to send records notification messages.'
-        )
-        .url(),
+        ),
 });
 
 export type SlackOptions = z.infer<typeof slackSchema>;
@@ -235,35 +234,35 @@ export type TelegramOptions = z.infer<typeof telegramSchema>;
 export const notificationFilterSchema = z.object({
     resources: z
         .array(z.string())
+        .optional()
         .describe(
             'The resources that match the filter. If omitted, then all resources are matched.'
-        )
-        .optional(),
+        ),
     actions: z
         .array(z.string())
+        .optional()
         .describe(
             'The actions that match the filter. If omitted, then all actions are matched.'
-        )
-        .optional(),
+        ),
 });
 
 export const notificationsSchema = z.object({
     slack: slackSchema
+        .optional()
         .describe(
             'The Slack configuration that should be used for notifications. If omitted, then notifications will not be sent via Slack.'
-        )
-        .optional(),
+        ),
     telegram: telegramSchema
+        .optional()
         .describe(
             'The Telegram configuration that should be used for notifications. If omitted, then notifications will not be sent via Telegram.'
-        )
-        .optional(),
+        ),
     filter: notificationFilterSchema
+        .optional()
+        .prefault({})
         .describe(
             'The filter that should be used to determine which notifications should be sent. If omitted, then all are sent'
-        )
-        .optional()
-        .default({}),
+        ),
 });
 
 export type NotificationOptions = z.infer<typeof notificationsSchema>;

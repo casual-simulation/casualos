@@ -19,10 +19,12 @@ import type {
     GenericHttpRequest,
     GenericHttpResponse,
 } from '../http/GenericHttpInterface';
-import z from 'zod';
+import type z from 'zod';
+import * as _z from 'zod/v4/core';
 import type { KnownErrorCodes } from './ErrorCodes';
 import type { Span } from '@opentelemetry/api';
 import type { DenialReason } from '../common/DenialReason';
+import type { IsAny } from 'zod/v4/core/util.cjs';
 
 /**
  * Defines an interface for the context that an RPC call is made with.
@@ -47,6 +49,11 @@ export interface RPCContext {
      * The HTTP origin that the request was made from.
      */
     origin: string | null;
+
+    /**
+     * The URL that the request was made to.
+     */
+    url: URL | null;
 
     /**
      * The span that the RPC call is being made in.
@@ -79,16 +86,20 @@ export interface ProcedureOutputStream
 /**
  * Defines a basic interface for a single RPC call.
  */
-export interface Procedure<TInput, TOutput extends ProcedureOutput, TQuery> {
+export interface Procedure<
+    TSchema extends z.ZodType | void,
+    TOutput extends ProcedureOutput,
+    TQuery extends z.ZodType | void
+> {
     /**
      * The schema that should be used for the input into the RPC.
      */
-    schema: z.ZodType<TInput, z.ZodTypeDef, any>;
+    schema: TSchema;
 
     /**
      * The schema that should be used for the query parameters into the RPC.
      */
-    querySchema: z.ZodType<TQuery, z.ZodTypeDef, any> | null;
+    querySchema: TQuery;
 
     /**
      * The handler for the RPC.
@@ -98,9 +109,9 @@ export interface Procedure<TInput, TOutput extends ProcedureOutput, TQuery> {
      * @returns Returns a promise that resolves with the output of the RPC.
      */
     handler: (
-        input: TInput,
+        input: z.output<TSchema>,
         context: RPCContext,
-        query?: TQuery
+        query?: z.output<TQuery>
     ) => Promise<TOutput>;
 
     /**
@@ -135,6 +146,27 @@ export interface Procedure<TInput, TOutput extends ProcedureOutput, TQuery> {
          * The path for the HTTP route.
          */
         path: string;
+
+        /**
+         * The scope of the HTTP route.
+         */
+        scope?: 'player' | 'auth';
+    };
+
+    /**
+     * The view-specific configuration for the procedure.
+     */
+    view?: {
+        /**
+         * The scope of the view (e.g. player or auth).
+         */
+        scope: 'player' | 'auth';
+
+        /**
+         * The path for the view.
+         * If true, then the path will be treated as a default path.
+         */
+        path: string | true;
     };
 }
 
@@ -182,15 +214,48 @@ export type OnlyFirstArg<T> = T extends (input: infer U, ...args: any[]) => any
     : never;
 
 export type RemoteProcedures<T extends Procedures> = {
-    [K in keyof T]: OnlyFirstArg<T[K]['handler']>;
+    [K in keyof T]: (
+        input: ProcedureInputs<T>[K],
+        options?: CallProcedureOptions
+    ) => Promise<ProcedureOutputs<T>[K]>;
 };
 
+type IsVoid<T> = T extends void ? true : false;
+
+type IsUnknown<T> = IsAny<T> extends false
+    ? unknown extends T
+        ? true
+        : false
+    : false;
+
+export type ProcedureInput<T extends z.ZodType | void> = IsVoid<T> extends true
+    ? void
+    : IsUnknown<z.input<T>> extends true
+    ? z.input<T> | void
+    : z.input<T>;
+
+// const schema = z.unknown
+// const schema = z.object({
+//     userId: z.string().optional(),
+//     sessionId: z.string().optional(),
+//     sessionKey: z.string().optional(),
+// });
+
+// // type input = {
+// //     abc?: string
+// // };//z.input<typeof schema>;
+// type input = void;
+// type anyTest = IsAny<input>;
+// // type unknownTest = IsUnknownOrVoid<input>;
+// // type extendsTrue = unknownTest extends true ? true : false;
+// type Test = ProcedureInput<typeof schema>;
+
 export type ProcedureInputs<T extends Procedures> = {
-    [K in keyof T]: z.infer<T[K]['schema']>;
+    [K in keyof T]: ProcedureInput<T[K]['schema']>;
 };
 
 export type ProcedureQueries<T extends Procedures> = {
-    [K in keyof T]: z.infer<T[K]['querySchema']>;
+    [K in keyof T]: ProcedureInput<T[K]['querySchema']>;
 };
 
 export type ProcedureActions<T extends Procedures> = {
@@ -198,6 +263,17 @@ export type ProcedureActions<T extends Procedures> = {
         input: ProcedureInputs<T>[K];
         query?: ProcedureQueries<T>[K];
     };
+};
+
+export type ProcedureOutputs<T extends Procedures> = {
+    [K in keyof T]: T[K] extends Procedure<any, infer U, any> ? U : never;
+};
+export type SuccessfulOutputs<T extends Procedures> = {
+    [K in keyof T]: T[K] extends Procedure<any, infer U, any>
+        ? U extends { success: true }
+            ? U
+            : never
+        : never;
 };
 
 export interface ProcedureBuilder {
@@ -210,8 +286,20 @@ export interface ProcedureBuilder {
     /**
      * Configures the HTTP method and path for this RPC.
      * @param method The method that should be used for http requests to this RPC.
+     * @param scope The scope of the HTTP route.
      */
-    http(method: GenericHttpRequest['method'], path: string): this;
+    http(
+        method: GenericHttpRequest['method'],
+        path: string,
+        scope?: 'player' | 'auth'
+    ): this;
+
+    /**
+     * Configures the view for this RPC.
+     * @param scope The scope of the view (e.g. player or auth).
+     * @param path The path for the view. If true, then the path will be treated as a default path.
+     */
+    view(scope: 'player' | 'auth', path: string | true): this;
 }
 
 export interface InputlessProcedureBuilder extends ProcedureBuilder {
@@ -219,9 +307,9 @@ export interface InputlessProcedureBuilder extends ProcedureBuilder {
      * Configures the input schema for the RPC.
      * @param schema The schema that inputs should conform to.
      */
-    inputs<TInput, TQuery = any>(
-        schema: z.ZodType<TInput, z.ZodTypeDef, any>,
-        query?: z.ZodType<TQuery, z.ZodTypeDef, any>
+    inputs<TInput extends z.ZodType, TQuery extends z.ZodType>(
+        schema: TInput,
+        query?: TQuery
     ): OutputlessProcedureBuilder<TInput, TQuery>;
 
     /**
@@ -239,8 +327,10 @@ export interface InputlessProcedureBuilder extends ProcedureBuilder {
     ): Procedure<void, TOutput, void>;
 }
 
-export interface OutputlessProcedureBuilder<TInput, TQuery>
-    extends ProcedureBuilder {
+export interface OutputlessProcedureBuilder<
+    TInput extends z.ZodType | void,
+    TQuery extends z.ZodType | void
+> extends ProcedureBuilder {
     /**
      * Configures the handler for the RPC.
      * @param handler The handler.
@@ -248,9 +338,9 @@ export interface OutputlessProcedureBuilder<TInput, TQuery>
      */
     handler<TOutput extends ProcedureOutput>(
         handler: (
-            input: TInput,
+            input: z.output<TInput>,
             context: RPCContext,
-            query?: TQuery
+            query?: z.output<TQuery>
         ) => Promise<TOutput>,
         mapToResponse?: (
             output: TOutput,
@@ -270,26 +360,40 @@ class ProcBuilder
     implements OutputlessProcedureBuilder<any, any>, InputlessProcedureBuilder
 {
     private _allowedOrigins: Set<string> | true | 'account' | 'api' | undefined;
-    private _schema: z.ZodType<any, z.ZodTypeDef, any>;
-    private _querySchema: z.ZodType<any, z.ZodTypeDef, any>;
+    private _schema: z.ZodType;
+    private _querySchema: z.ZodType;
     private _http: Procedure<any, any, any>['http'];
+    private _view: Procedure<any, any, any>['view'];
 
     origins(allowedOrigins: Set<string> | true | 'account' | 'api'): this {
         this._allowedOrigins = allowedOrigins;
         return this;
     }
 
-    http(method: GenericHttpRequest['method'], path: string): this {
+    http(
+        method: GenericHttpRequest['method'],
+        path: string,
+        scope?: 'player' | 'auth'
+    ): this {
         this._http = {
             method: method,
             path: path,
+            scope: scope,
         };
         return this;
     }
 
-    inputs<TInput, TQuery = any>(
-        schema: z.ZodType<TInput, z.ZodTypeDef, any>,
-        query?: z.ZodType<TQuery, z.ZodTypeDef, any>
+    view(scope: 'player' | 'auth', path: string | true): this {
+        this._view = {
+            scope,
+            path,
+        };
+        return this;
+    }
+
+    inputs<TInput extends z.ZodType, TQuery extends z.ZodType>(
+        schema: TInput,
+        query?: TQuery
     ): OutputlessProcedureBuilder<TInput, TQuery> {
         this._schema = schema;
         this._querySchema = query;
@@ -324,6 +428,7 @@ class ProcBuilder
             mapToResponse,
             allowedOrigins: this._allowedOrigins,
             http: this._http,
+            view: this._view,
         };
     }
 }
@@ -509,92 +614,129 @@ export type SchemaMetadata =
  * Gets a serializable version of the schema metdata.
  * @param schema The schema to get metadata for.
  */
-export function getSchemaMetadata(schema: z.ZodType): SchemaMetadata {
-    if (schema instanceof z.ZodString) {
-        return { type: 'string', description: schema._def.description };
-    } else if (schema instanceof z.ZodBoolean) {
-        return { type: 'boolean', description: schema._def.description };
-    } else if (schema instanceof z.ZodNumber) {
-        return { type: 'number', description: schema._def.description };
-    } else if (schema instanceof z.ZodAny) {
-        return { type: 'any', description: schema._def.description };
-    } else if (schema instanceof z.ZodNull) {
-        return { type: 'null', description: schema._def.description };
-    } else if (schema instanceof z.ZodObject) {
+export function getSchemaMetadata(schema: _z.$ZodType): SchemaMetadata {
+    if (schema instanceof _z.$ZodPipe) {
+        return getSchemaMetadata(schema._zod.def.out);
+    } else if (schema instanceof _z.$ZodString) {
+        return { type: 'string', description: getDescription(schema) };
+    } else if (schema instanceof _z.$ZodBoolean) {
+        return { type: 'boolean', description: getDescription(schema) };
+    } else if (schema instanceof _z.$ZodNumber) {
+        return { type: 'number', description: getDescription(schema) };
+    } else if (
+        schema instanceof _z.$ZodAny ||
+        schema instanceof _z.$ZodUnknown
+    ) {
+        return { type: 'any', description: getDescription(schema) };
+    } else if (schema instanceof _z.$ZodNull) {
+        return { type: 'null', description: getDescription(schema) };
+    } else if (schema instanceof _z.$ZodObject) {
         const schemaMetadata: Record<string, SchemaMetadata> = {};
-        for (let key in schema.shape) {
-            schemaMetadata[key] = getSchemaMetadata(schema.shape[key]);
+        for (let key in schema._zod.def.shape) {
+            schemaMetadata[key] = getSchemaMetadata(schema._zod.def.shape[key]);
         }
         return {
             type: 'object',
             schema: schemaMetadata,
-            catchall: schema._def.catchall
-                ? getSchemaMetadata(schema._def.catchall)
+            catchall: schema._zod.def.catchall
+                ? getSchemaMetadata(schema._zod.def.catchall)
                 : undefined,
-            description: schema._def.description,
+            description: getDescription(schema),
         };
-    } else if (schema instanceof z.ZodArray) {
+    } else if (schema instanceof _z.$ZodArray) {
         return {
             type: 'array',
-            schema: getSchemaMetadata(schema._def.type),
-            maxLength: schema._def.maxLength?.value,
-            minLength: schema._def.minLength?.value,
-            exactLength: schema._def.exactLength?.value,
-            description: schema._def.description,
+            schema: getSchemaMetadata(schema._zod.def.element),
+            maxLength: schema._zod.def.checks?.find(
+                (c) => c instanceof _z.$ZodCheckMaxLength
+            )?._zod.def.maximum,
+            minLength: schema._zod.def.checks?.find(
+                (c) => c instanceof _z.$ZodCheckMinLength
+            )?._zod.def.minimum,
+            exactLength: schema._zod.def.checks?.find(
+                (c) => c instanceof _z.$ZodCheckLengthEquals
+            )?._zod.def.length,
+            description: getDescription(schema),
         };
-    } else if (schema instanceof z.ZodEnum) {
+    } else if (schema instanceof _z.$ZodEnum) {
         return {
             type: 'enum',
-            values: [...schema._def.values],
-            description: schema._def.description,
+            values: [...schema._zod.values] as string[],
+            description: getDescription(schema),
         };
-    } else if (schema instanceof z.ZodDate) {
-        return { type: 'date', description: schema._def.description };
-    } else if (schema instanceof z.ZodLiteral) {
+    } else if (schema instanceof _z.$ZodDate) {
+        return { type: 'date', description: getDescription(schema) };
+    } else if (schema instanceof _z.$ZodLiteral) {
         return {
             type: 'literal',
-            value: schema.value,
-            description: schema._def.description,
+            value: schema._zod.def.values[0],
+            description: getDescription(schema),
         };
-    } else if (schema instanceof z.ZodOptional) {
-        return { ...getSchemaMetadata(schema._def.innerType), optional: true };
-    } else if (schema instanceof z.ZodNullable) {
-        return { ...getSchemaMetadata(schema._def.innerType), nullable: true };
-    } else if (schema instanceof z.ZodDefault) {
+    } else if (schema instanceof _z.$ZodOptional) {
         return {
-            ...getSchemaMetadata(schema._def.innerType),
+            ...getSchemaMetadata(schema._zod.def.innerType),
+            optional: true,
+            description: getDescription(schema),
+        };
+    } else if (schema instanceof _z.$ZodNonOptional) {
+        return {
+            ...getSchemaMetadata(schema._zod.def.innerType),
+            optional: false,
+            description: getDescription(schema),
+        };
+    } else if (schema instanceof _z.$ZodNullable) {
+        return {
+            ...getSchemaMetadata(schema._zod.def.innerType),
+            nullable: true,
+            description: getDescription(schema),
+        };
+    } else if (
+        schema instanceof _z.$ZodPrefault ||
+        schema instanceof _z.$ZodDefault
+    ) {
+        return {
+            ...getSchemaMetadata(schema._zod.def.innerType),
             hasDefault: true,
-            defaultValue: schema._def.defaultValue(),
+            defaultValue: schema._zod.def.defaultValue,
+            description: getDescription(schema),
         };
-    } else if (schema instanceof z.ZodNever) {
+    } else if (schema instanceof _z.$ZodNever) {
         return undefined;
-    } else if (schema instanceof z.ZodEffects) {
-        return { ...getSchemaMetadata(schema._def.schema) };
-    } else if (schema instanceof z.ZodUnion) {
+    } else if (schema instanceof _z.$ZodDiscriminatedUnion) {
         return {
             type: 'union',
-            options: schema._def.options.map((o: any) => getSchemaMetadata(o)),
-            description: schema._def.description,
+            options: schema._zod.def.options.map((o: any) =>
+                getSchemaMetadata(o)
+            ),
+            discriminator: schema._zod.def.discriminator,
+            description: getDescription(schema),
         };
-    } else if (schema instanceof z.ZodDiscriminatedUnion) {
+    } else if (schema instanceof _z.$ZodUnion) {
         return {
             type: 'union',
-            options: schema._def.options.map((o: any) => getSchemaMetadata(o)),
-            discriminator: schema._def.discriminator,
-            description: schema._def.description,
+            options: schema._zod.def.options.map((o: any) =>
+                getSchemaMetadata(o)
+            ),
+            description: getDescription(schema),
         };
-    } else if (schema instanceof z.ZodRecord) {
+    } else if (schema instanceof _z.$ZodRecord) {
         return {
             type: 'record',
-            valueSchema: getSchemaMetadata(schema._def.valueType),
+            valueSchema: getSchemaMetadata(schema._zod.def.valueType),
+            description: getDescription(schema),
         };
-    } else if (schema instanceof z.ZodTuple) {
+    } else if (schema instanceof _z.$ZodTuple) {
         return {
             type: 'tuple',
-            items: schema._def.items.map((o: any) => getSchemaMetadata(o)),
+            items: schema._zod.def.items.map((o: any) => getSchemaMetadata(o)),
+            description: getDescription(schema),
         };
     } else {
         console.error('Unsupported schema type', schema);
         throw new Error(`Unsupported schema type: ${schema}`);
     }
+}
+
+function getDescription(schema: _z.$ZodType): string | undefined {
+    return _z.globalRegistry.get(schema)?.description;
 }

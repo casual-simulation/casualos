@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`serverConfigSchema should be able to parse a BrandPlayer-style config 1`] = `
 Object {
@@ -142,6 +142,33 @@ Object {
       "tls": false,
       "websocketConnectionNamespace": "/connections",
     },
+    "server": Object {
+      "backendPort": 3002,
+      "debug": false,
+      "enabled": false,
+      "frontendPort": 3000,
+      "webConfig": Object {
+        "ab1BootstrapURL": null,
+        "allowedBiosOptions": null,
+        "arcGisApiKey": null,
+        "authOrigin": null,
+        "automaticBiosOption": null,
+        "causalRepoConnectionProtocol": "websocket",
+        "collaborativeRepoLocalPersistence": true,
+        "debug": false,
+        "defaultBiosOption": null,
+        "disableCollaboration": null,
+        "enableDom": false,
+        "jitsiAppName": "vpaas-magic-cookie-332b53bd630448a18fcb3be9740f2caf",
+        "playerMode": "player",
+        "recordsOrigin": null,
+        "requirePrivoLogin": false,
+        "sharedPartitionsVersion": "v2",
+        "staticRepoLocalPersistence": true,
+        "vmOrigin": null,
+        "what3WordsApiKey": null,
+      },
+    },
     "ses": Object {
       "content": Object {
         "body": "Your casualos login code is: {{code}}",
@@ -196,6 +223,15 @@ Object {
           "comId": Object {
             "allowed": false,
           },
+          "contracts": Object {
+            "allowed": false,
+            "currencyLimits": Object {
+              "usd": Object {
+                "maxCost": 100000,
+                "minCost": 50,
+              },
+            },
+          },
           "data": Object {
             "allowed": false,
             "maxItemSizeInBytes": 500000,
@@ -229,6 +265,15 @@ Object {
           },
           "search": Object {
             "allowed": true,
+          },
+          "store": Object {
+            "allowed": false,
+            "currencyLimits": Object {
+              "usd": Object {
+                "maxCost": 100000,
+                "minCost": 50,
+              },
+            },
           },
           "webhooks": Object {
             "addStateTimeoutMs": 1000,
@@ -265,6 +310,15 @@ Object {
           "comId": Object {
             "allowed": false,
           },
+          "contracts": Object {
+            "allowed": false,
+            "currencyLimits": Object {
+              "usd": Object {
+                "maxCost": 100000,
+                "minCost": 50,
+              },
+            },
+          },
           "data": Object {
             "allowed": false,
             "maxItemSizeInBytes": 500000,
@@ -298,6 +352,15 @@ Object {
           },
           "search": Object {
             "allowed": true,
+          },
+          "store": Object {
+            "allowed": false,
+            "currencyLimits": Object {
+              "usd": Object {
+                "maxCost": 100000,
+                "minCost": 50,
+              },
+            },
           },
           "webhooks": Object {
             "addStateTimeoutMs": 1000,
@@ -505,6 +568,15 @@ Object {
             "comId": Object {
               "allowed": false,
             },
+            "contracts": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "data": Object {
               "allowed": true,
               "maxItemSizeInBytes": 500000,
@@ -549,6 +621,15 @@ Object {
             "search": Object {
               "allowed": true,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": false,
@@ -589,6 +670,15 @@ Object {
             },
             "comId": Object {
               "allowed": false,
+            },
+            "contracts": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "data": Object {
               "allowed": true,
@@ -637,6 +727,15 @@ Object {
             "search": Object {
               "allowed": true,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": false,
@@ -673,6 +772,15 @@ Object {
             },
             "comId": Object {
               "allowed": true,
+            },
+            "contracts": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "data": Object {
               "allowed": true,
@@ -725,6 +833,15 @@ Object {
             "search": Object {
               "allowed": true,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": true,
@@ -767,6 +884,15 @@ Object {
             },
             "comId": Object {
               "allowed": false,
+            },
+            "contracts": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "data": Object {
               "allowed": true,
@@ -815,6 +941,15 @@ Object {
             "search": Object {
               "allowed": true,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": false,
@@ -851,6 +986,15 @@ Object {
             },
             "comId": Object {
               "allowed": false,
+            },
+            "contracts": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "data": Object {
               "allowed": true,
@@ -903,6 +1047,15 @@ Object {
             "search": Object {
               "allowed": true,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": true,
@@ -945,6 +1098,15 @@ Object {
             },
             "comId": Object {
               "allowed": false,
+            },
+            "contracts": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "data": Object {
               "allowed": true,
@@ -993,6 +1155,15 @@ Object {
             "search": Object {
               "allowed": true,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": true,
@@ -1034,6 +1205,15 @@ Object {
             },
             "comId": Object {
               "allowed": false,
+            },
+            "contracts": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "data": Object {
               "allowed": true,
@@ -1079,6 +1259,15 @@ Object {
             "search": Object {
               "allowed": true,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": false,
@@ -1118,6 +1307,15 @@ Object {
             },
             "comId": Object {
               "allowed": false,
+            },
+            "contracts": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "data": Object {
               "allowed": true,
@@ -1163,6 +1361,15 @@ Object {
             "search": Object {
               "allowed": true,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": false,
@@ -1199,6 +1406,15 @@ Object {
             },
             "comId": Object {
               "allowed": false,
+            },
+            "contracts": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "data": Object {
               "allowed": true,
@@ -1251,6 +1467,15 @@ Object {
             "search": Object {
               "allowed": true,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": true,
@@ -1289,6 +1514,15 @@ Object {
             },
             "comId": Object {
               "allowed": false,
+            },
+            "contracts": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "data": Object {
               "allowed": true,
@@ -1336,6 +1570,15 @@ Object {
             },
             "search": Object {
               "allowed": true,
+            },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
@@ -1522,6 +1765,33 @@ Object {
       "tls": false,
       "websocketConnectionNamespace": "/connections",
     },
+    "server": Object {
+      "backendPort": 3002,
+      "debug": false,
+      "enabled": false,
+      "frontendPort": 3000,
+      "webConfig": Object {
+        "ab1BootstrapURL": null,
+        "allowedBiosOptions": null,
+        "arcGisApiKey": null,
+        "authOrigin": null,
+        "automaticBiosOption": null,
+        "causalRepoConnectionProtocol": "websocket",
+        "collaborativeRepoLocalPersistence": true,
+        "debug": false,
+        "defaultBiosOption": null,
+        "disableCollaboration": null,
+        "enableDom": false,
+        "jitsiAppName": "vpaas-magic-cookie-332b53bd630448a18fcb3be9740f2caf",
+        "playerMode": "player",
+        "recordsOrigin": null,
+        "requirePrivoLogin": false,
+        "sharedPartitionsVersion": "v2",
+        "staticRepoLocalPersistence": true,
+        "vmOrigin": null,
+        "what3WordsApiKey": null,
+      },
+    },
     "sloydai": Object {
       "clientId": "slodai-client-id",
       "clientSecret": "sloydai-client-secret",
@@ -1565,6 +1835,15 @@ Object {
           "comId": Object {
             "allowed": false,
           },
+          "contracts": Object {
+            "allowed": false,
+            "currencyLimits": Object {
+              "usd": Object {
+                "maxCost": 100000,
+                "minCost": 50,
+              },
+            },
+          },
           "data": Object {
             "allowed": false,
             "maxItemSizeInBytes": 500000,
@@ -1598,6 +1877,15 @@ Object {
           },
           "search": Object {
             "allowed": true,
+          },
+          "store": Object {
+            "allowed": false,
+            "currencyLimits": Object {
+              "usd": Object {
+                "maxCost": 100000,
+                "minCost": 50,
+              },
+            },
           },
           "webhooks": Object {
             "addStateTimeoutMs": 1000,
@@ -1636,6 +1924,15 @@ Object {
           },
           "comId": Object {
             "allowed": false,
+          },
+          "contracts": Object {
+            "allowed": false,
+            "currencyLimits": Object {
+              "usd": Object {
+                "maxCost": 100000,
+                "minCost": 50,
+              },
+            },
           },
           "data": Object {
             "allowed": true,
@@ -1683,6 +1980,15 @@ Object {
           },
           "search": Object {
             "allowed": true,
+          },
+          "store": Object {
+            "allowed": false,
+            "currencyLimits": Object {
+              "usd": Object {
+                "maxCost": 100000,
+                "minCost": 50,
+              },
+            },
           },
           "webhooks": Object {
             "addStateTimeoutMs": 1000,
@@ -1876,6 +2182,33 @@ Object {
       "tls": false,
       "websocketConnectionNamespace": "/connections",
     },
+    "server": Object {
+      "backendPort": 3002,
+      "debug": false,
+      "enabled": false,
+      "frontendPort": 3000,
+      "webConfig": Object {
+        "ab1BootstrapURL": null,
+        "allowedBiosOptions": null,
+        "arcGisApiKey": null,
+        "authOrigin": null,
+        "automaticBiosOption": null,
+        "causalRepoConnectionProtocol": "websocket",
+        "collaborativeRepoLocalPersistence": true,
+        "debug": false,
+        "defaultBiosOption": null,
+        "disableCollaboration": null,
+        "enableDom": false,
+        "jitsiAppName": "vpaas-magic-cookie-332b53bd630448a18fcb3be9740f2caf",
+        "playerMode": "player",
+        "recordsOrigin": null,
+        "requirePrivoLogin": false,
+        "sharedPartitionsVersion": "v2",
+        "staticRepoLocalPersistence": true,
+        "vmOrigin": null,
+        "what3WordsApiKey": null,
+      },
+    },
     "ses": Object {
       "content": Object {
         "body": "Your casualos login code is: {{code}}",
@@ -1930,6 +2263,15 @@ Object {
           "comId": Object {
             "allowed": false,
           },
+          "contracts": Object {
+            "allowed": false,
+            "currencyLimits": Object {
+              "usd": Object {
+                "maxCost": 100000,
+                "minCost": 50,
+              },
+            },
+          },
           "data": Object {
             "allowed": false,
             "maxItemSizeInBytes": 500000,
@@ -1963,6 +2305,15 @@ Object {
           },
           "search": Object {
             "allowed": true,
+          },
+          "store": Object {
+            "allowed": false,
+            "currencyLimits": Object {
+              "usd": Object {
+                "maxCost": 100000,
+                "minCost": 50,
+              },
+            },
           },
           "webhooks": Object {
             "addStateTimeoutMs": 1000,
@@ -1999,6 +2350,15 @@ Object {
           "comId": Object {
             "allowed": false,
           },
+          "contracts": Object {
+            "allowed": false,
+            "currencyLimits": Object {
+              "usd": Object {
+                "maxCost": 100000,
+                "minCost": 50,
+              },
+            },
+          },
           "data": Object {
             "allowed": false,
             "maxItemSizeInBytes": 500000,
@@ -2032,6 +2392,15 @@ Object {
           },
           "search": Object {
             "allowed": true,
+          },
+          "store": Object {
+            "allowed": false,
+            "currencyLimits": Object {
+              "usd": Object {
+                "maxCost": 100000,
+                "minCost": 50,
+              },
+            },
           },
           "webhooks": Object {
             "addStateTimeoutMs": 1000,
@@ -2239,6 +2608,15 @@ Object {
             "comId": Object {
               "allowed": false,
             },
+            "contracts": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "data": Object {
               "allowed": true,
               "maxItemSizeInBytes": 500000,
@@ -2283,6 +2661,15 @@ Object {
             "search": Object {
               "allowed": true,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": false,
@@ -2323,6 +2710,15 @@ Object {
             },
             "comId": Object {
               "allowed": false,
+            },
+            "contracts": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "data": Object {
               "allowed": true,
@@ -2371,6 +2767,15 @@ Object {
             "search": Object {
               "allowed": true,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": false,
@@ -2407,6 +2812,15 @@ Object {
             },
             "comId": Object {
               "allowed": true,
+            },
+            "contracts": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "data": Object {
               "allowed": true,
@@ -2459,6 +2873,15 @@ Object {
             "search": Object {
               "allowed": true,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": true,
@@ -2501,6 +2924,15 @@ Object {
             },
             "comId": Object {
               "allowed": false,
+            },
+            "contracts": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "data": Object {
               "allowed": true,
@@ -2549,6 +2981,15 @@ Object {
             "search": Object {
               "allowed": true,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": false,
@@ -2585,6 +3026,15 @@ Object {
             },
             "comId": Object {
               "allowed": false,
+            },
+            "contracts": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "data": Object {
               "allowed": true,
@@ -2637,6 +3087,15 @@ Object {
             "search": Object {
               "allowed": true,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": true,
@@ -2679,6 +3138,15 @@ Object {
             },
             "comId": Object {
               "allowed": false,
+            },
+            "contracts": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "data": Object {
               "allowed": true,
@@ -2727,6 +3195,15 @@ Object {
             "search": Object {
               "allowed": true,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": true,
@@ -2768,6 +3245,15 @@ Object {
             },
             "comId": Object {
               "allowed": false,
+            },
+            "contracts": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "data": Object {
               "allowed": true,
@@ -2813,6 +3299,15 @@ Object {
             "search": Object {
               "allowed": true,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": false,
@@ -2852,6 +3347,15 @@ Object {
             },
             "comId": Object {
               "allowed": false,
+            },
+            "contracts": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "data": Object {
               "allowed": true,
@@ -2897,6 +3401,15 @@ Object {
             "search": Object {
               "allowed": true,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": false,
@@ -2933,6 +3446,15 @@ Object {
             },
             "comId": Object {
               "allowed": false,
+            },
+            "contracts": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "data": Object {
               "allowed": true,
@@ -2985,6 +3507,15 @@ Object {
             "search": Object {
               "allowed": true,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": true,
@@ -3023,6 +3554,15 @@ Object {
             },
             "comId": Object {
               "allowed": false,
+            },
+            "contracts": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "data": Object {
               "allowed": true,
@@ -3070,6 +3610,15 @@ Object {
             },
             "search": Object {
               "allowed": true,
+            },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,

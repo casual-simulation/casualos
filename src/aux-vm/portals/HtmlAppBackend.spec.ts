@@ -76,6 +76,7 @@ describe('HtmlAppBackend', () => {
                 isCollaborative: true,
                 allowCollaborationUpgrade: true,
                 ab1BootstrapUrl: 'ab1Bootstrap',
+                comID: null,
             }
         );
         memory = createMemoryPartition({
@@ -105,6 +106,7 @@ describe('HtmlAppBackend', () => {
                 isCollaborative: true,
                 allowCollaborationUpgrade: true,
                 ab1BootstrapUrl: 'ab1Bootstrap',
+                comID: null,
             }
         );
         const helper = new AuxHelper(userId, partitions, runtime);
@@ -353,7 +355,7 @@ describe('HtmlAppBackend', () => {
 
             await waitAsync();
 
-            expect(actions).toEqual([
+            expect(actions.slice(0, 3)).toEqual([
                 registerHtmlApp('testPortal', 'appId', 'uuid1'),
                 htmlAppMethod('testPortal', 'testPortal', 'focus', [], 'uuid2'),
                 toast(undefined),

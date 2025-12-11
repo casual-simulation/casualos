@@ -61,6 +61,8 @@ export {
     replaceLodashPlugin,
     replaceModulePlugin,
     emptyModulePlugin,
+    replaceReactPlugin,
+    replaceJsxRuntimePlugin,
     paths,
 };
 
@@ -102,10 +104,15 @@ async function setupWatch(builds) {
             '**/package.json',
             '**/tsconfig.tsbuildinfo',
             '**/*.js',
+            '**/*.jsx',
             '**/*.js.map',
+            '**/*.jsx.map',
             '**/*.d.ts',
             '**/*.d.ts.map',
             '**/dist',
+            '**/vite.config.mts.timestamp-*',
+            '**/*.aux',
+            '**/*.db',
         ],
         ignoreInitial: true,
         followSymlinks: false,
@@ -295,6 +302,14 @@ function replaceThreePlugin() {
 
 function replaceLodashPlugin() {
     return replaceModulePlugin(/^lodash$/, 'es-toolkit/compat');
+}
+
+function replaceReactPlugin() {
+    return replaceModulePlugin(/^react$/, 'preact/compat');
+}
+
+function replaceJsxRuntimePlugin() {
+    return replaceModulePlugin(/^react\/jsx-runtime$/, 'preact/jsx-runtime');
 }
 
 function replaceModulePlugin(original, replacement) {

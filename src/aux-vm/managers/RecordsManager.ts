@@ -68,6 +68,11 @@ import type {
     ListRecordDataByMarkerAction,
     GrantRecordPermissionAction,
     RevokeRecordPermissionAction,
+    RecordStoreItemAction,
+    GetStoreItemAction,
+    EraseStoreItemAction,
+    ListStoreItemsAction,
+    ListStoreItemsByMarkerAction,
     AIChatStreamAction,
     AIHumeGetAccessTokenAction,
     AISloydGenerateModelAction,
@@ -130,6 +135,7 @@ import type {
     RevokePermissionResult,
     RevokeRoleResult,
 } from '@casual-simulation/aux-records';
+import { isStatic, isTemp } from './SimulationHelpers';
 
 /**
  * The list of headers that JavaScript applications are not allowed to set by themselves.
@@ -262,6 +268,20 @@ export class RecordsManager {
         ['listDatabases', false],
         ['getDatabase', true],
         ['queryDatabase', true],
+
+        // XP Contract Procedures
+        ['recordContract', true],
+        ['getContract', true],
+        ['listContracts', true],
+        ['getContractPricing', true],
+        ['purchaseContract', true],
+        ['cancelContract', true],
+        ['invoiceContract', true],
+        ['cancelInvoice', true],
+        ['listContractInvoices', true],
+        ['payContractInvoice', true],
+        ['payoutAccount', true],
+        ['getBalances', true],
     ]);
 
     /**
@@ -385,6 +405,16 @@ export class RecordsManager {
                 this._listUserStudios(event);
             } else if (event.type === 'get_records_endpoint') {
                 this._getRecordsEndpoint(event);
+            } else if (event.type === 'record_store_item') {
+                this._recordStoreItem(event);
+            } else if (event.type === 'get_store_item') {
+                this._getStoreItem(event);
+            } else if (event.type === 'erase_store_item') {
+                this._eraseStoreItem(event);
+            } else if (event.type === 'list_store_items') {
+                this._listStoreItems(event);
+            } else if (event.type === 'list_store_items_by_marker') {
+                this._listStoreItemsByMarker(event);
             } else if (event.type === 'records_call_procedure') {
                 this._recordsCallProcedure(event);
             } else if (event.type === 'record_package_version') {
@@ -514,6 +544,181 @@ export class RecordsManager {
                 endpoint: info.recordsOrigin,
             },
             query
+        );
+
+        if (hasValue(event.taskId)) {
+            this._helper.transaction(asyncResult(event.taskId, result));
+        }
+    }
+
+    private async _recordStoreItem(event: RecordStoreItemAction) {
+        const info = await this._resolveInfoForEvent(event, true);
+
+        if (info.error) {
+            return;
+        }
+
+        let instances: string[];
+        if (hasValue(this._helper.origin)) {
+            instances = [
+                formatInstId(
+                    this._helper.origin.recordName,
+                    this._helper.origin.inst
+                ),
+            ];
+        }
+
+        const result = await this._client.recordPurchasableItem(
+            {
+                recordName: event.recordName,
+                item: {
+                    ...event.item,
+                    address: event.address,
+                    markers: event.item.markers as [string, ...string[]],
+                },
+                instances,
+            },
+            {
+                endpoint: info.recordsOrigin,
+                headers: info.headers,
+            }
+        );
+
+        if (hasValue(event.taskId)) {
+            this._helper.transaction(asyncResult(event.taskId, result));
+        }
+    }
+
+    private async _getStoreItem(event: GetStoreItemAction) {
+        const info = await this._resolveInfoForEvent(event, false);
+
+        if (info.error) {
+            return;
+        }
+
+        let instances: string[];
+        if (hasValue(this._helper.origin)) {
+            instances = [
+                formatInstId(
+                    this._helper.origin.recordName,
+                    this._helper.origin.inst
+                ),
+            ];
+        }
+
+        const result = await this._client.getPurchasableItem(
+            {
+                recordName: event.recordName,
+                address: event.address,
+                instances,
+            },
+            {
+                endpoint: info.recordsOrigin,
+                headers: info.headers,
+            }
+        );
+
+        if (hasValue(event.taskId)) {
+            this._helper.transaction(asyncResult(event.taskId, result));
+        }
+    }
+
+    private async _eraseStoreItem(event: EraseStoreItemAction) {
+        const info = await this._resolveInfoForEvent(event, true);
+
+        if (info.error) {
+            return;
+        }
+
+        let instances: string[];
+        if (hasValue(this._helper.origin)) {
+            instances = [
+                formatInstId(
+                    this._helper.origin.recordName,
+                    this._helper.origin.inst
+                ),
+            ];
+        }
+
+        const result = await this._client.erasePurchasableItem(
+            {
+                recordName: event.recordName,
+                address: event.address,
+                instances,
+            },
+            {
+                endpoint: info.recordsOrigin,
+                headers: info.headers,
+            }
+        );
+
+        if (hasValue(event.taskId)) {
+            this._helper.transaction(asyncResult(event.taskId, result));
+        }
+    }
+
+    private async _listStoreItems(event: ListStoreItemsAction) {
+        const info = await this._resolveInfoForEvent(event, false);
+
+        if (info.error) {
+            return;
+        }
+
+        let instances: string[];
+        if (hasValue(this._helper.origin)) {
+            instances = [
+                formatInstId(
+                    this._helper.origin.recordName,
+                    this._helper.origin.inst
+                ),
+            ];
+        }
+
+        const result = await this._client.listPurchasableItems(
+            {
+                recordName: event.recordName,
+                address: event.address,
+                instances,
+            },
+            {
+                endpoint: info.recordsOrigin,
+                headers: info.headers,
+            }
+        );
+
+        if (hasValue(event.taskId)) {
+            this._helper.transaction(asyncResult(event.taskId, result));
+        }
+    }
+
+    private async _listStoreItemsByMarker(event: ListStoreItemsByMarkerAction) {
+        const info = await this._resolveInfoForEvent(event, false);
+
+        if (info.error) {
+            return;
+        }
+
+        let instances: string[];
+        if (hasValue(this._helper.origin)) {
+            instances = [
+                formatInstId(
+                    this._helper.origin.recordName,
+                    this._helper.origin.inst
+                ),
+            ];
+        }
+
+        const result = await this._client.listPurchasableItems(
+            {
+                recordName: event.recordName,
+                address: event.address,
+                marker: event.marker,
+                instances,
+            },
+            {
+                endpoint: info.recordsOrigin,
+                headers: info.headers,
+            }
         );
 
         if (hasValue(event.taskId)) {
@@ -1600,12 +1805,12 @@ export class RecordsManager {
                 return;
             }
 
-            if (this._helper.origin.isStatic) {
+            if (isStatic(this._helper.origin) || isTemp(this._helper.origin)) {
                 if (hasValue(event.taskId)) {
                     this._helper.transaction(
                         asyncError(
                             event.taskId,
-                            'Unable to grant inst admin permission to static insts.'
+                            `Unable to grant inst admin permission to ${this._helper.origin.kind} insts.`
                         )
                     );
                 }
@@ -2342,9 +2547,8 @@ export class RecordsManager {
 
             const instances = this._getInstancesForRequest();
 
-            if (this._helper.origin?.isStatic) {
-                // static origins need to install packages via fetching the package
-
+            if (isStatic(this._helper.origin) || isTemp(this._helper.origin)) {
+                // static and temp origins need to install packages via fetching the package
                 const input: RecordsClientInputs['getPackageVersion'] = {
                     recordName: event.recordName,
                     address: event.address,
@@ -2498,7 +2702,8 @@ export class RecordsManager {
 
             if (
                 !hasValue(this._helper.origin) ||
-                this._helper.origin.isStatic
+                isStatic(this._helper.origin) ||
+                isTemp(this._helper.origin)
             ) {
                 console.warn(
                     `[RecordsManager] Unable to list packages for local insts.`
@@ -2542,7 +2747,10 @@ export class RecordsManager {
 
     private _getInstancesForRequest() {
         let instances: string[] = undefined;
-        if (hasValue(this._helper.origin) && !this._helper.origin.isStatic) {
+        if (
+            hasValue(this._helper.origin) &&
+            !(isStatic(this._helper.origin) || isTemp(this._helper.origin))
+        ) {
             instances = [
                 formatInstId(
                     this._helper.origin.recordName,
@@ -2783,7 +2991,12 @@ export class RecordsManager {
             | AIHumeGetAccessTokenAction
             | AISloydGenerateModelAction
             | ListUserStudiosAction
-            | RecordsAction,
+            | RecordsAction
+            | RecordStoreItemAction
+            | GetStoreItemAction
+            | EraseStoreItemAction
+            | ListStoreItemsAction
+            | ListStoreItemsByMarkerAction,
         authenticateIfNotLoggedIn: boolean = true
     ): Promise<RecordsEndpointInfo> {
         let recordKeyPolicy: PublicRecordKeyPolicy = null;

@@ -442,7 +442,7 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
                 set: (val) => {
                     this.setAttribute('class', val);
                 },
-                get: () => this.getAttribute('style'),
+                get: () => this.getAttribute('class'),
             });
             Object.defineProperty(this.style, 'cssText', {
                 set: (val) => {

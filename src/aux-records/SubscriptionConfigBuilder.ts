@@ -26,6 +26,7 @@ import type {
     AISloydFeaturesConfiguration,
     APISubscription,
     DatabasesFeaturesConfiguration,
+    ContractFeaturesConfiguration,
     DataFeaturesConfiguration,
     EventFeaturesConfiguration,
     FeaturesConfiguration,
@@ -34,6 +35,7 @@ import type {
     NotificationFeaturesConfiguration,
     PackageFeaturesConfiguration,
     PublicInstsConfiguration,
+    PurchasableItemFeaturesConfiguration,
     RecordFeaturesConfiguration,
     SearchFeaturesConfiguration,
     StudioComIdFeaturesConfiguration,
@@ -42,7 +44,18 @@ import type {
     TiersConfiguration,
     WebhooksFeaturesConfiguration,
 } from './SubscriptionConfiguration';
-import { allowAllFeatures, denyAllFeatures } from './SubscriptionConfiguration';
+import {
+    storeFeaturesSchema,
+    contractFeaturesSchema,
+} from './SubscriptionConfiguration';
+import {
+    allowAllDefaultFeatures,
+    allowAllFeatures,
+    dataFeaturesSchema,
+    denyAllFeatures,
+    webhookFeaturesSchema,
+} from './SubscriptionConfiguration';
+import type z from 'zod';
 
 export class FeaturesBuilder {
     private _features: FeaturesConfiguration = denyAllFeatures();
@@ -50,7 +63,7 @@ export class FeaturesBuilder {
     constructor() {}
 
     withAllDefaultFeatures(): this {
-        this._features = merge(this._features, allowAllFeatures());
+        this._features = merge(this._features, allowAllDefaultFeatures());
         return this;
     }
 
@@ -62,9 +75,11 @@ export class FeaturesBuilder {
     }
 
     withData(features?: DataFeaturesConfiguration): this {
-        this._features.data = features ?? {
-            allowed: true,
-        };
+        this._features.data =
+            features ??
+            dataFeaturesSchema.parse({
+                allowed: true,
+            } satisfies z.input<typeof dataFeaturesSchema>);
         return this;
     }
 
@@ -220,9 +235,11 @@ export class FeaturesBuilder {
     }
 
     withWebhooks(features?: WebhooksFeaturesConfiguration): this {
-        this._features.webhooks = features ?? {
-            allowed: true,
-        };
+        this._features.webhooks =
+            features ??
+            webhookFeaturesSchema.parse({
+                allowed: true,
+            } satisfies z.input<typeof webhookFeaturesSchema>);
         return this;
     }
 
@@ -324,6 +341,56 @@ export class FeaturesBuilder {
         return this;
     }
 
+    withStore(features?: z.input<typeof storeFeaturesSchema>): this {
+        this._features.store = storeFeaturesSchema.parse(
+            features ?? {
+                allowed: true,
+            }
+        );
+        return this;
+    }
+
+    withStoreMaxItems(maxItems: number): this {
+        this._features.store.maxItems = maxItems;
+        return this;
+    }
+
+    withStoreCurrencyLimit(
+        currency: string,
+        limit: PurchasableItemFeaturesConfiguration['currencyLimits']['_']
+    ): this {
+        if (!this._features.store.currencyLimits) {
+            this._features.store.currencyLimits = {};
+        }
+        this._features.store.currencyLimits[currency] = limit;
+        return this;
+    }
+
+    withContracts(features?: z.input<typeof contractFeaturesSchema>): this {
+        this._features.contracts = contractFeaturesSchema.parse(
+            features ?? {
+                allowed: true,
+            }
+        );
+        return this;
+    }
+
+    withContractsMaxItems(maxItems: number): this {
+        this._features.contracts.maxItems = maxItems;
+        return this;
+    }
+
+    withContractsCurrencyLimit(
+        currency: string,
+        limit: ContractFeaturesConfiguration['currencyLimits']['_']
+    ): this {
+        if (!this._features.contracts.currencyLimits) {
+            this._features.contracts.currencyLimits = {};
+        }
+        this._features.contracts.currencyLimits[currency] = limit;
+        return this;
+    }
+
     get features() {
         return this._features;
     }
@@ -415,6 +482,7 @@ export class SubscriptionConfigBuilder {
             defaultFeatures: {
                 user: allowAllFeatures(),
                 studio: allowAllFeatures(),
+                defaultPeriodLength: { months: 1, days: 0 },
             },
         };
     }
@@ -434,6 +502,11 @@ export class SubscriptionConfigBuilder {
         this._config.defaultFeatures.studio = build(
             new FeaturesBuilder()
         ).features;
+        return this;
+    }
+
+    withDefaultPeriodLength(months: number = 1, days: number = 0): this {
+        this._config.defaultFeatures.defaultPeriodLength = { months, days };
         return this;
     }
 
@@ -520,21 +593,7 @@ export function apiSubscriptionBuilder(id: string): SubscriptionBuilder {
  * Gets a SubscriptionConfigBuilder that can be used to build asubscription configuration.
  */
 export function subscriptionConfigBuilder(): SubscriptionConfigBuilder {
-    const config = new SubscriptionConfigBuilder({
-        subscriptions: [],
-        checkoutConfig: {},
-        portalConfig: {},
-        webhookSecret: '',
-        successUrl: '',
-        cancelUrl: '',
-        returnUrl: '',
-        tiers: {},
-        defaultFeatures: {
-            user: allowAllFeatures(),
-            studio: allowAllFeatures(),
-        },
-    });
-
+    const config = new SubscriptionConfigBuilder();
     return config;
 }
 

@@ -30,11 +30,15 @@ import type {
     AuthUserAuthenticator,
     AuthUserAuthenticatorWithUser,
     AuthWebAuthnLoginRequest,
+    AuthCheckoutSession,
     ListSessionsDataResult,
     SaveNewUserResult,
+    UpdateCheckoutSessionRequest,
     UpdateSubscriptionInfoRequest,
     UpdateSubscriptionPeriodRequest,
     UserLoginMetadata,
+    PurchasedItem,
+    ActivationKey,
 } from './AuthStore';
 import type {
     ListStudioAssignmentFilters,
@@ -51,6 +55,8 @@ import type {
     StudioComIdRequest,
     LoomConfig,
     HumeConfig,
+    CustomDomain,
+    CustomDomainWithStudio,
 } from './RecordsStore';
 import { v4 as uuid } from 'uuid';
 import type {
@@ -111,6 +117,8 @@ import type {
     PrivacyFeatures,
     Entitlement,
     GrantedEntitlementScope,
+    WebConfig,
+    StoredAux,
 } from '@casual-simulation/aux-common';
 import type {
     AIChatMetrics,
@@ -132,7 +140,13 @@ import type {
     AIOpenAIRealtimeSubscriptionMetrics,
     AIOpenAIRealtimeMetrics,
 } from './MetricsStore';
-import type { ConfigurationStore } from './ConfigurationStore';
+import {
+    CONFIGURATION_SCHEMAS_MAP,
+    type ConfigurationInput,
+    type ConfigurationKey,
+    type ConfigurationOutput,
+    type ConfigurationStore,
+} from './ConfigurationStore';
 import type { SubscriptionConfiguration } from './SubscriptionConfiguration';
 import { DateTime } from 'luxon';
 import type {
@@ -163,11 +177,21 @@ import type {
     RecordsNotification,
 } from './SystemNotificationMessenger';
 import type { ModerationConfiguration } from './ModerationConfiguration';
+import type {
+    ExternalPayout,
+    FinancialAccount,
+    FinancialAccountFilter,
+    FinancialStore,
+    UniqueFinancialAccountFilter,
+} from './financial/FinancialStore';
+import type { PartialExcept } from './crud';
+import type { WebManifest } from '@casual-simulation/aux-common/common/WebManifest';
 
 export interface MemoryConfiguration {
     subscriptions: SubscriptionConfiguration;
     privo?: PrivoConfiguration;
     moderation?: ModerationConfiguration;
+    webConfig?: WebConfig;
 }
 
 export class MemoryStore
@@ -182,7 +206,8 @@ export class MemoryStore
         ConfigurationStore,
         InstRecordsStore,
         ModerationStore,
-        SystemNotificationMessenger
+        SystemNotificationMessenger,
+        FinancialStore
 {
     private _users: AuthUser[] = [];
     private _userAuthenticators: AuthUserAuthenticator[] = [];
@@ -193,6 +218,7 @@ export class MemoryStore
     private _subscriptions: AuthSubscription[] = [];
     private _periods: AuthSubscriptionPeriod[] = [];
     private _invoices: AuthInvoice[] = [];
+    private _checkoutSessions: AuthCheckoutSession[] = [];
 
     private _records: Record[] = [];
     private _recordKeys: RecordKey[] = [];
@@ -220,6 +246,9 @@ export class MemoryStore
     private _subscriptionConfiguration: SubscriptionConfiguration | null;
     private _privoConfiguration: PrivoConfiguration | null = null;
     private _moderationConfiguration: ModerationConfiguration | null = null;
+    private _webConfig: WebConfig | null = null;
+    private _playerWebManifest: WebManifest | null = null;
+    private _ab1Bootstrap: StoredAux | null = null;
     private _recordNotifications: RecordsNotification[] = [];
     private _comIdRequests: StudioComIdRequest[] = [];
 
@@ -231,9 +260,17 @@ export class MemoryStore
 
     private _loadedPackages: Map<string, LoadedPackage> = new Map();
 
+    private _financialAccounts: FinancialAccount[] = [];
+    private _customDomains: CustomDomain[] = [];
+
     get aiOpenAIRealtimeMetrics(): AIOpenAIRealtimeMetrics[] {
         return this._aiRealtimeMetrics;
     }
+
+    private _purchasedItems: PurchasedItem[] = [];
+    private _activationKeys: ActivationKey[] = [];
+
+    private _externalPayouts: ExternalPayout[] = [];
 
     // TODO: Support global permissions
     // private _globalPermissionAssignments: GlobalPermissionAssignment[] = [];
@@ -344,6 +381,30 @@ export class MemoryStore
         this._moderationConfiguration = value;
     }
 
+    get webConfig() {
+        return this._webConfig;
+    }
+
+    set webConfig(value: WebConfig | null) {
+        this._webConfig = value;
+    }
+
+    get playerWebManifest() {
+        return this._playerWebManifest;
+    }
+
+    set playerWebManifest(value: WebManifest | null) {
+        this._playerWebManifest = value;
+    }
+
+    get ab1Bootstrap() {
+        return this._ab1Bootstrap;
+    }
+
+    set ab1Bootstrap(value: StoredAux | null) {
+        this._ab1Bootstrap = value;
+    }
+
     get userInstReports() {
         return this._userInstReports;
     }
@@ -368,6 +429,30 @@ export class MemoryStore
         return this._grantedPackageEntitlements;
     }
 
+    get checkoutSessions() {
+        return this._checkoutSessions;
+    }
+
+    get purchasedItems() {
+        return this._purchasedItems;
+    }
+
+    get activationKeys() {
+        return this._activationKeys;
+    }
+
+    get financialAccounts() {
+        return this._financialAccounts;
+    }
+
+    get externalPayouts() {
+        return this._externalPayouts;
+    }
+
+    get customDomains() {
+        return this._customDomains;
+    }
+
     constructor(config: MemoryConfiguration) {
         this._subscriptionConfiguration = config.subscriptions;
         this._privoConfiguration = config.privo ?? null;
@@ -375,6 +460,257 @@ export class MemoryStore
         this.policies = {};
         this.roles = {};
         this.roleAssignments = {};
+    }
+
+    async setConfiguration<TKey extends ConfigurationKey>(
+        key: TKey,
+        value: ConfigurationInput<TKey> | null
+    ): Promise<void> {
+        const finalValue = value
+            ? CONFIGURATION_SCHEMAS_MAP[key].parse(value)
+            : null;
+        if (key === 'moderation') {
+            this._moderationConfiguration =
+                finalValue as ModerationConfiguration;
+        } else if (key === 'privo') {
+            this._privoConfiguration = finalValue as PrivoConfiguration;
+        } else if (key === 'subscriptions') {
+            this._subscriptionConfiguration =
+                finalValue as SubscriptionConfiguration;
+        } else if (key === 'web') {
+            this._webConfig = finalValue as WebConfig;
+        } else if (key === 'playerWebManifest') {
+            this._playerWebManifest = finalValue as WebManifest;
+        } else if (key === 'ab1Bootstrap') {
+            this._ab1Bootstrap = finalValue as StoredAux;
+        } else {
+            throw new Error('Unsupported configuration key: ' + key);
+        }
+    }
+
+    async getConfiguration<TKey extends ConfigurationKey>(
+        key: TKey,
+        defaultValue?: ConfigurationInput<TKey>
+    ): Promise<ConfigurationOutput<TKey> | null> {
+        if (key === 'moderation') {
+            return (this._moderationConfiguration ??
+                CONFIGURATION_SCHEMAS_MAP[key]
+                    .nullable()
+                    .parse(defaultValue ?? null)) as ConfigurationOutput<TKey>;
+        } else if (key === 'privo') {
+            return (this._privoConfiguration ??
+                CONFIGURATION_SCHEMAS_MAP[key]
+                    .nullable()
+                    .parse(defaultValue ?? null)) as ConfigurationOutput<TKey>;
+        } else if (key === 'subscriptions') {
+            return (this._subscriptionConfiguration ??
+                CONFIGURATION_SCHEMAS_MAP[key]
+                    .nullable()
+                    .parse(defaultValue ?? null)) as ConfigurationOutput<TKey>;
+        } else if (key === 'web') {
+            return (this._webConfig ??
+                CONFIGURATION_SCHEMAS_MAP[key]
+                    .nullable()
+                    .parse(defaultValue ?? null)) as ConfigurationOutput<TKey>;
+        } else if (key === 'playerWebManifest') {
+            return (this._playerWebManifest ??
+                CONFIGURATION_SCHEMAS_MAP[key]
+                    .nullable()
+                    .parse(defaultValue ?? null)) as ConfigurationOutput<TKey>;
+        } else if (key === 'ab1Bootstrap') {
+            return (this._ab1Bootstrap ?? null) as ConfigurationOutput<TKey>;
+        } else {
+            throw new Error('Unsupported configuration key: ' + key);
+        }
+    }
+
+    async saveCustomDomain(domain: CustomDomain): Promise<void> {
+        const existingIndex = this._customDomains.findIndex(
+            (d) => d.id === domain.id
+        );
+        if (existingIndex >= 0) {
+            this._customDomains[existingIndex] = domain;
+        } else {
+            this._customDomains.push(domain);
+        }
+    }
+
+    async deleteCustomDomain(domainId: string): Promise<void> {
+        this._customDomains = this._customDomains.filter(
+            (d) => d.id !== domainId
+        );
+    }
+
+    async listCustomDomainsByStudioId(
+        studioId: string
+    ): Promise<CustomDomain[]> {
+        return this._customDomains.filter((d) => d.studioId === studioId);
+    }
+
+    async getVerifiedCustomDomainByName(
+        domainName: string
+    ): Promise<CustomDomainWithStudio | null> {
+        const domain = this._customDomains.find(
+            (d) => d.domainName === domainName && d.verified === true
+        );
+
+        if (!domain) {
+            return null;
+        }
+
+        const studio = await this.getStudioById(domain.studioId);
+        if (!studio) {
+            return null;
+        }
+
+        return {
+            id: domain.id,
+            domainName: domain.domainName,
+            studioId: domain.studioId,
+            verificationKey: domain.verificationKey,
+            verified: domain.verified,
+            studio,
+        };
+    }
+
+    async getCustomDomainById(
+        domainId: string
+    ): Promise<CustomDomainWithStudio | null> {
+        const domain = this._customDomains.find((d) => d.id === domainId);
+        if (!domain) {
+            return null;
+        }
+
+        const studio = await this.getStudioById(domain.studioId);
+        if (!studio) {
+            return null;
+        }
+
+        return {
+            id: domain.id,
+            domainName: domain.domainName,
+            studioId: domain.studioId,
+            verificationKey: domain.verificationKey,
+            verified: domain.verified,
+            studio,
+        };
+    }
+
+    async markCustomDomainAsVerified(domainId: string): Promise<void> {
+        const index = this._customDomains.findIndex((d) => d.id === domainId);
+        if (index >= 0) {
+            this._customDomains[index] = {
+                ...this._customDomains[index],
+                verified: true,
+            };
+        }
+    }
+
+    async createExternalPayout(payout: ExternalPayout): Promise<void> {
+        const index = this._externalPayouts.findIndex(
+            (p) => p.id === payout.id
+        );
+        if (index === -1) {
+            this._externalPayouts.push(payout);
+        } else {
+            this._externalPayouts[index] = payout;
+        }
+    }
+
+    async markPayoutAsPosted(
+        payoutId: string,
+        postedTransferId: string,
+        postedAtMs: number
+    ): Promise<void> {
+        const index = this._externalPayouts.findIndex((p) => p.id === payoutId);
+        if (index >= 0) {
+            this._externalPayouts[index] = {
+                ...this._externalPayouts[index],
+                postedTransferId,
+                postedAtMs,
+            };
+        }
+    }
+
+    async markPayoutAsVoided(
+        payoutId: string,
+        voidedTransferId: string,
+        voidedAtMs: number
+    ): Promise<void> {
+        const index = this._externalPayouts.findIndex((p) => p.id === payoutId);
+        if (index >= 0) {
+            this._externalPayouts[index] = {
+                ...this._externalPayouts[index],
+                voidedTransferId,
+                voidedAtMs,
+            };
+        }
+    }
+
+    async updateExternalPayout(
+        payout: PartialExcept<ExternalPayout, 'id'>
+    ): Promise<void> {
+        const index = this._externalPayouts.findIndex(
+            (p) => p.id === payout.id
+        );
+        if (index >= 0) {
+            this._externalPayouts[index] = {
+                ...this._externalPayouts[index],
+                ...payout,
+            };
+        }
+    }
+
+    async getAccountById(id: string): Promise<FinancialAccount | null> {
+        return this._financialAccounts.find((a) => a.id === id) ?? null;
+    }
+
+    async getAccountByFilter(
+        filter: UniqueFinancialAccountFilter
+    ): Promise<FinancialAccount | null> {
+        if (filter.userId) {
+            return this._financialAccounts.find(
+                (a) => a.userId === filter.userId && a.ledger === filter.ledger
+            );
+        } else if (filter.studioId) {
+            return this._financialAccounts.find(
+                (a) =>
+                    a.studioId === filter.studioId && a.ledger === filter.ledger
+            );
+        } else if (filter.contractId) {
+            return this._financialAccounts.find(
+                (a) =>
+                    a.contractId === filter.contractId &&
+                    a.ledger === filter.ledger
+            );
+        }
+        return null;
+    }
+
+    async listAccounts(
+        filter: FinancialAccountFilter
+    ): Promise<FinancialAccount[]> {
+        return this._financialAccounts.filter((a) => {
+            if (filter.userId && a.userId !== filter.userId) {
+                return false;
+            }
+            if (filter.studioId && a.studioId !== filter.studioId) {
+                return false;
+            }
+            if (filter.contractId && a.contractId !== filter.contractId) {
+                return false;
+            }
+            if (filter.ledger && a.ledger !== filter.ledger) {
+                return false;
+            }
+            return true;
+        });
+    }
+
+    async createAccount(account: FinancialAccount): Promise<void> {
+        this._financialAccounts.push({
+            ...account,
+        });
     }
 
     init?(): Promise<void>;
@@ -388,6 +724,7 @@ export class MemoryStore
             subscriptions: cloneDeep(this._subscriptionConfiguration),
             privo: cloneDeep(this._privoConfiguration),
             moderation: cloneDeep(this._moderationConfiguration),
+            webConfig: cloneDeep(this._webConfig),
         });
 
         newStore._users = cloneDeep(this._users);
@@ -427,6 +764,7 @@ export class MemoryStore
         newStore._markerPermissionAssignments = cloneDeep(
             this._markerPermissionAssignments
         );
+        newStore._customDomains = cloneDeep(this._customDomains);
         newStore.maxAllowedInstSize = this.maxAllowedInstSize;
         newStore.roles = cloneDeep(this.roles);
         newStore.roleAssignments = cloneDeep(this.roleAssignments);
@@ -540,6 +878,14 @@ export class MemoryStore
 
     async getModerationConfig(): Promise<ModerationConfiguration | null> {
         return this._moderationConfiguration;
+    }
+
+    async getWebConfig(): Promise<WebConfig | null> {
+        return this._webConfig;
+    }
+
+    async getPlayerWebManifest(): Promise<WebManifest | null> {
+        return this._playerWebManifest;
     }
 
     async getRecordByName(name: string): Promise<Record> {
@@ -683,6 +1029,10 @@ export class MemoryStore
 
     async getStudioByStripeCustomerId(customerId: string): Promise<Studio> {
         return this._studios.find((s) => s.stripeCustomerId === customerId);
+    }
+
+    async getStudioByStripeAccountId(accountId: string): Promise<Studio> {
+        return this._studios.find((s) => s.stripeAccountId === accountId);
     }
 
     async listStudiosForUser(userId: string): Promise<StoreListedStudio[]> {
@@ -1356,6 +1706,13 @@ export class MemoryStore
         return user;
     }
 
+    async findUserByStripeAccountId(
+        accountId: string
+    ): Promise<AuthUser | null> {
+        const user = this._users.find((u) => u.stripeAccountId === accountId);
+        return user || null;
+    }
+
     async findUserByPrivoServiceId(serviceId: string): Promise<AuthUser> {
         const user = this._users.find((u) => u.privoServiceId === serviceId);
         return user;
@@ -1713,6 +2070,10 @@ export class MemoryStore
         return this._invoices.find((i) => i.id === id);
     }
 
+    async getInvoiceByStripeId(id: string): Promise<AuthInvoice> {
+        return this._invoices.find((i) => i.stripeInvoiceId === id);
+    }
+
     async updateSubscriptionInfo(
         request: UpdateSubscriptionInfoRequest
     ): Promise<void> {
@@ -1850,6 +2211,7 @@ export class MemoryStore
                 id: invoiceId,
                 periodId: periodId,
                 subscriptionId: subscription.id,
+                checkoutSessionId: null,
                 ...request.invoice,
             });
 
@@ -1900,6 +2262,7 @@ export class MemoryStore
                 id: invoiceId,
                 periodId: periodId,
                 subscriptionId: subscription.id,
+                checkoutSessionId: null,
                 ...request.invoice,
             });
 
@@ -1911,6 +2274,105 @@ export class MemoryStore
                 periodStartMs: request.currentPeriodStartMs,
             });
         }
+    }
+
+    async updateCheckoutSessionInfo(
+        request: UpdateCheckoutSessionRequest
+    ): Promise<void> {
+        let sessionIndex = this._checkoutSessions.findIndex(
+            (s) => s.id === request.id
+        );
+
+        let invoiceId: string = null;
+        if (request.invoice) {
+            let invoice = this._invoices.find(
+                (i) => i.stripeInvoiceId === request.invoice.stripeInvoiceId
+            );
+
+            if (!invoice) {
+                invoice = {
+                    id: uuid(),
+                    ...request.invoice,
+                    checkoutSessionId: request.id,
+                    subscriptionId: null,
+                    periodId: null,
+                };
+                await this.saveInvoice(invoice);
+                invoiceId = invoice.id;
+            } else {
+                invoice = {
+                    ...invoice,
+                    ...request.invoice,
+                    checkoutSessionId: request.id,
+                };
+                await this.saveInvoice(invoice);
+                invoiceId = invoice.id;
+            }
+        }
+
+        if (sessionIndex < 0) {
+            const session: AuthCheckoutSession = {
+                id: request.id,
+                paid: request.paid,
+                stripePaymentStatus: request.paymentStatus,
+                stripeStatus: request.status,
+                stripeCheckoutSessionId: request.stripeCheckoutSessionId,
+                fulfilledAtMs: request.fulfilledAtMs,
+                userId: request.userId,
+                invoiceId,
+                items: request.items,
+                transferIds: request.transferIds,
+                transfersPending: request.transfersPending,
+                transactionId: request.transactionId,
+                shouldBeAutomaticallyFulfilled:
+                    request.shouldBeAutomaticallyFulfilled,
+            };
+            this._checkoutSessions.push(session);
+        } else {
+            let session = this._checkoutSessions[sessionIndex];
+            session = {
+                ...session,
+                paid: request.paid,
+                stripePaymentStatus: request.paymentStatus,
+                stripeStatus: request.status,
+                stripeCheckoutSessionId: request.stripeCheckoutSessionId,
+                fulfilledAtMs: request.fulfilledAtMs,
+                userId: request.userId,
+                items: request.items,
+                transferIds: request.transferIds,
+                transfersPending: request.transfersPending,
+                transactionId: request.transactionId,
+                shouldBeAutomaticallyFulfilled:
+                    request.shouldBeAutomaticallyFulfilled,
+            };
+
+            if (request.invoice) {
+                session.invoiceId = invoiceId;
+            }
+
+            this._checkoutSessions[sessionIndex] = session;
+        }
+    }
+
+    async markCheckoutSessionFulfilled(
+        sessionId: string,
+        fulfilledAtMs: number
+    ): Promise<void> {
+        const index = this._checkoutSessions.findIndex(
+            (s) => s.id === sessionId
+        );
+        if (index >= 0) {
+            const session = this._checkoutSessions[index];
+            this._checkoutSessions[index] = {
+                ...session,
+                fulfilledAtMs,
+                transfersPending: false,
+            };
+        }
+    }
+
+    async getCheckoutSessionById(id: string): Promise<AuthCheckoutSession> {
+        return this._checkoutSessions.find((s) => s.id === id);
     }
 
     private _findUserIndex(id: string): number {
@@ -2680,14 +3142,14 @@ export class MemoryStore
                       m.userId === filter.ownerId &&
                       (!info.currentPeriodStartMs ||
                           (m.createdAtMs >= info.currentPeriodStartMs &&
-                              m.createdAtMs < info.currentPeriodEndMs))
+                              m.createdAtMs <= info.currentPeriodEndMs))
               )
             : this._aiChatMetrics.filter(
                   (m) =>
                       m.studioId === filter.studioId &&
                       (!info.currentPeriodStartMs ||
                           (m.createdAtMs >= info.currentPeriodStartMs &&
-                              m.createdAtMs < info.currentPeriodEndMs))
+                              m.createdAtMs <= info.currentPeriodEndMs))
               );
 
         let totalTokens = 0;
@@ -2753,10 +3215,6 @@ export class MemoryStore
         return await this._getSubscriptionInfo(recordName);
     }
 
-    async listRecordsForSubscriptionByRecordName(recordName: string) {
-        return await this._listRecordsForSubscription(recordName);
-    }
-
     async getSubscriptionAiSloydMetrics(
         filter: SubscriptionFilter
     ): Promise<AISloydSubscriptionMetrics> {
@@ -2767,14 +3225,14 @@ export class MemoryStore
                       m.userId === filter.ownerId &&
                       (!info.currentPeriodStartMs ||
                           (m.createdAtMs >= info.currentPeriodStartMs &&
-                              m.createdAtMs < info.currentPeriodEndMs))
+                              m.createdAtMs <= info.currentPeriodEndMs))
               )
             : this._aiSloydMetrics.filter(
                   (m) =>
                       m.studioId === filter.studioId &&
                       (!info.currentPeriodStartMs ||
                           (m.createdAtMs >= info.currentPeriodStartMs &&
-                              m.createdAtMs < info.currentPeriodEndMs))
+                              m.createdAtMs <= info.currentPeriodEndMs))
               );
 
         let totalModels = 0;
@@ -2822,14 +3280,14 @@ export class MemoryStore
                       m.userId === filter.ownerId &&
                       (!info.currentPeriodStartMs ||
                           (m.createdAtMs >= info.currentPeriodStartMs &&
-                              m.createdAtMs < info.currentPeriodEndMs))
+                              m.createdAtMs <= info.currentPeriodEndMs))
               )
             : this._aiRealtimeMetrics.filter(
                   (m) =>
                       m.studioId === filter.studioId &&
                       (!info.currentPeriodStartMs ||
                           (m.createdAtMs >= info.currentPeriodStartMs &&
-                              m.createdAtMs < info.currentPeriodEndMs))
+                              m.createdAtMs <= info.currentPeriodEndMs))
               );
 
         let totalModels = metrics.length;
@@ -2859,14 +3317,14 @@ export class MemoryStore
                       m.userId === filter.ownerId &&
                       (!info.currentPeriodStartMs ||
                           (m.createdAtMs >= info.currentPeriodStartMs &&
-                              m.createdAtMs < info.currentPeriodEndMs))
+                              m.createdAtMs <= info.currentPeriodEndMs))
               )
             : this._aiImageMetrics.filter(
                   (m) =>
                       m.studioId === filter.studioId &&
                       (!info.currentPeriodStartMs ||
                           (m.createdAtMs >= info.currentPeriodStartMs &&
-                              m.createdAtMs < info.currentPeriodEndMs))
+                              m.createdAtMs <= info.currentPeriodEndMs))
               );
 
         let totalPixels = 0;
@@ -2894,14 +3352,14 @@ export class MemoryStore
                       m.userId === filter.ownerId &&
                       (!info.currentPeriodStartMs ||
                           (m.createdAtMs >= info.currentPeriodStartMs &&
-                              m.createdAtMs < info.currentPeriodEndMs))
+                              m.createdAtMs <= info.currentPeriodEndMs))
               )
             : this._aiSkyboxMetrics.filter(
                   (m) =>
                       m.studioId === filter.studioId &&
                       (!info.currentPeriodStartMs ||
                           (m.createdAtMs >= info.currentPeriodStartMs &&
-                              m.createdAtMs < info.currentPeriodEndMs))
+                              m.createdAtMs <= info.currentPeriodEndMs))
               );
 
         let totalSkyboxes = 0;
@@ -2955,6 +3413,8 @@ export class MemoryStore
             currentPeriodStartMs: currentPeriodStart,
             currentPeriodEndMs: currentPeriodEnd,
             subscriptionType: filter.ownerId ? 'user' : 'studio',
+            stripeAccountId: null,
+            stripeAccountStatus: null,
         };
 
         if (filter.ownerId) {
@@ -2965,6 +3425,8 @@ export class MemoryStore
                 metrics.subscriptionId = user.subscriptionId;
                 metrics.currentPeriodEndMs = user.subscriptionPeriodEndMs;
                 metrics.currentPeriodStartMs = user.subscriptionPeriodStartMs;
+                metrics.stripeAccountId = user.stripeAccountId;
+                metrics.stripeAccountStatus = user.stripeAccountStatus;
             }
         } else if (filter.studioId) {
             const studio = await this.getStudioById(filter.studioId);
@@ -2974,10 +3436,16 @@ export class MemoryStore
                 metrics.subscriptionStatus = studio.subscriptionStatus;
                 metrics.currentPeriodEndMs = studio.subscriptionPeriodEndMs;
                 metrics.currentPeriodStartMs = studio.subscriptionPeriodStartMs;
+                metrics.stripeAccountId = studio.stripeAccountId;
+                metrics.stripeAccountStatus = studio.stripeAccountStatus;
             }
         }
 
         return metrics;
+    }
+
+    async listRecordsForSubscriptionByRecordName(recordName: string) {
+        return await this._listRecordsForSubscription(recordName);
     }
 
     private async _listRecordsForSubscription(recordName: string) {
@@ -3538,6 +4006,35 @@ export class MemoryStore
             }
         }
         return record;
+    }
+
+    async savePurchasedItem(item: PurchasedItem): Promise<void> {
+        const index = this._purchasedItems.findIndex((i) => i.id === item.id);
+        if (index >= 0) {
+            this._purchasedItems[index] = {
+                ...item,
+            };
+        } else {
+            this._purchasedItems.push({
+                ...item,
+            });
+        }
+    }
+
+    async createActivationKey(key: ActivationKey): Promise<void> {
+        this._activationKeys.push({
+            ...key,
+        });
+    }
+
+    async getActivationKeyById(id: string): Promise<ActivationKey> {
+        return this._activationKeys.find((k) => k.id === id);
+    }
+
+    async listPurchasedItemsByActivationKeyId(
+        keyId: string
+    ): Promise<PurchasedItem[]> {
+        return this._purchasedItems.filter((i) => i.activationKeyId === keyId);
     }
 }
 

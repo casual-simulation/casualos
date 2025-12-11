@@ -263,7 +263,7 @@ describe('AIController', () => {
                     },
                 ],
             });
-            expect(chatInterface.chat).toBeCalledWith({
+            expect(chatInterface.chat).toHaveBeenCalledWith({
                 model: 'test-model1',
                 messages: [
                     {
@@ -313,7 +313,7 @@ describe('AIController', () => {
                     },
                 ],
             });
-            expect(chatInterface2.chat).toBeCalledWith({
+            expect(chatInterface2.chat).toHaveBeenCalledWith({
                 model: 'test-model3',
                 messages: [
                     {
@@ -362,7 +362,7 @@ describe('AIController', () => {
                     },
                 ],
             });
-            expect(chatInterface.chat).toBeCalledWith({
+            expect(chatInterface.chat).toHaveBeenCalledWith({
                 model: 'default-model',
                 messages: [
                     {
@@ -394,7 +394,7 @@ describe('AIController', () => {
                 errorCode: 'invalid_model',
                 errorMessage: 'The given model is not allowed for chats.',
             });
-            expect(chatInterface.chat).not.toBeCalled();
+            expect(chatInterface.chat).not.toHaveBeenCalled();
         });
 
         it('should return an not_logged_in result if the given a null userId', async () => {
@@ -417,7 +417,7 @@ describe('AIController', () => {
                 errorMessage:
                     'The user must be logged in. Please provide a sessionKey or a recordKey.',
             });
-            expect(chatInterface.chat).not.toBeCalled();
+            expect(chatInterface.chat).not.toHaveBeenCalled();
         });
 
         it('should return an not_subscribed result if the given a null userSubscriptionTier', async () => {
@@ -441,7 +441,7 @@ describe('AIController', () => {
                     'The user must be subscribed in order to use this operation.',
                 allowedSubscriptionTiers: ['test-tier'],
             });
-            expect(chatInterface.chat).not.toBeCalled();
+            expect(chatInterface.chat).not.toHaveBeenCalled();
         });
 
         it('should return an invalid_subscription_tier result if the given a subscription tier that is not allowed', async () => {
@@ -466,7 +466,7 @@ describe('AIController', () => {
                 currentSubscriptionTier: 'wrong-tier',
                 allowedSubscriptionTiers: ['test-tier'],
             });
-            expect(chatInterface.chat).not.toBeCalled();
+            expect(chatInterface.chat).not.toHaveBeenCalled();
         });
 
         it('should work when the controller is configured to allow all subscription tiers and the user does not have a subscription', async () => {
@@ -540,7 +540,7 @@ describe('AIController', () => {
                     },
                 ],
             });
-            expect(chatInterface.chat).toBeCalledWith({
+            expect(chatInterface.chat).toHaveBeenCalledWith({
                 model: 'test-model1',
                 messages: [
                     {
@@ -625,7 +625,7 @@ describe('AIController', () => {
                     },
                 ],
             });
-            expect(chatInterface.chat).toBeCalledWith({
+            expect(chatInterface.chat).toHaveBeenCalledWith({
                 model: 'test-model1',
                 messages: [
                     {
@@ -641,7 +641,7 @@ describe('AIController', () => {
                 ownerId: userId,
             });
 
-            expect(metrics).toEqual({
+            expect(metrics).toMatchObject({
                 ownerId: userId,
                 subscriptionStatus: null,
                 subscriptionId: null,
@@ -652,7 +652,7 @@ describe('AIController', () => {
             });
         });
 
-        it('should use configure token ratio', async () => {
+        it('should use the configured token ratio', async () => {
             chatInterface.chat.mockReturnValueOnce(
                 Promise.resolve({
                     choices: [
@@ -689,7 +689,7 @@ describe('AIController', () => {
                     },
                 ],
             });
-            expect(chatInterface.chat).toBeCalledWith({
+            expect(chatInterface.chat).toHaveBeenCalledWith({
                 model: 'test-model-token-ratio',
                 messages: [
                     {
@@ -705,7 +705,7 @@ describe('AIController', () => {
                 ownerId: userId,
             });
 
-            expect(metrics).toEqual({
+            expect(metrics).toMatchObject({
                 ownerId: userId,
                 subscriptionStatus: null,
                 subscriptionId: null,
@@ -781,7 +781,7 @@ describe('AIController', () => {
                         },
                     ],
                 });
-                expect(chatInterface.chat).toBeCalled();
+                expect(chatInterface.chat).toHaveBeenCalled();
             });
 
             it('should return not_authorized when allowedModels does not include the model', async () => {
@@ -831,7 +831,7 @@ describe('AIController', () => {
                     errorMessage:
                         'The subscription does not permit the given model for AI Chat features.',
                 });
-                expect(chatInterface.chat).not.toBeCalled();
+                expect(chatInterface.chat).not.toHaveBeenCalled();
             });
 
             it('should return success when allowedModels includes the model', async () => {
@@ -898,7 +898,7 @@ describe('AIController', () => {
                         },
                     ],
                 });
-                expect(chatInterface.chat).toBeCalled();
+                expect(chatInterface.chat).toHaveBeenCalled();
             });
 
             it('should specify the maximum number of tokens allowed based on how many tokens the subscription has left in the period', async () => {
@@ -944,7 +944,7 @@ describe('AIController', () => {
                         },
                     ],
                 });
-                expect(chatInterface.chat).toBeCalledWith({
+                expect(chatInterface.chat).toHaveBeenCalledWith({
                     model: 'test-model1',
                     messages: [
                         {
@@ -1013,7 +1013,7 @@ describe('AIController', () => {
                         },
                     ],
                 });
-                expect(chatInterface.chat).toBeCalledWith({
+                expect(chatInterface.chat).toHaveBeenCalledWith({
                     model: 'test-model1',
                     messages: [
                         {
@@ -1078,7 +1078,7 @@ describe('AIController', () => {
                     errorMessage:
                         'The user has reached their limit for the current subscription period.',
                 });
-                expect(chatInterface.chat).not.toBeCalled();
+                expect(chatInterface.chat).not.toHaveBeenCalled();
 
                 const metrics = await store.getSubscriptionAiChatMetrics({
                     ownerId: userId,
@@ -1139,7 +1139,7 @@ describe('AIController', () => {
                     errorMessage:
                         'The subscription does not permit AI Chat features.',
                 });
-                expect(chatInterface.chat).not.toBeCalled();
+                expect(chatInterface.chat).not.toHaveBeenCalled();
             });
         });
 
@@ -1305,7 +1305,7 @@ describe('AIController', () => {
                     },
                 ],
             });
-            expect(chatInterface.chatStream).toBeCalledWith({
+            expect(chatInterface.chatStream).toHaveBeenCalledWith({
                 model: 'test-model1',
                 messages: [
                     {
@@ -1365,7 +1365,7 @@ describe('AIController', () => {
                     },
                 ],
             });
-            expect(chatInterface2.chatStream).toBeCalledWith({
+            expect(chatInterface2.chatStream).toHaveBeenCalledWith({
                 model: 'test-model3',
                 messages: [
                     {
@@ -1424,7 +1424,7 @@ describe('AIController', () => {
                     },
                 ],
             });
-            expect(chatInterface.chatStream).toBeCalledWith({
+            expect(chatInterface.chatStream).toHaveBeenCalledWith({
                 model: 'default-model',
                 messages: [
                     {
@@ -1461,7 +1461,7 @@ describe('AIController', () => {
                 },
                 states: [],
             });
-            expect(chatInterface.chatStream).not.toBeCalled();
+            expect(chatInterface.chatStream).not.toHaveBeenCalled();
         });
 
         it('should return an not_logged_in result if the given a null userId', async () => {
@@ -1489,7 +1489,7 @@ describe('AIController', () => {
                 },
                 states: [],
             });
-            expect(chatInterface.chatStream).not.toBeCalled();
+            expect(chatInterface.chatStream).not.toHaveBeenCalled();
         });
 
         it('should return an not_subscribed result if the given a null userSubscriptionTier', async () => {
@@ -1518,7 +1518,7 @@ describe('AIController', () => {
                 },
                 states: [],
             });
-            expect(chatInterface.chatStream).not.toBeCalled();
+            expect(chatInterface.chatStream).not.toHaveBeenCalled();
         });
 
         it('should return an invalid_subscription_tier result if the given a subscription tier that is not allowed', async () => {
@@ -1548,7 +1548,7 @@ describe('AIController', () => {
                 },
                 states: [],
             });
-            expect(chatInterface.chatStream).not.toBeCalled();
+            expect(chatInterface.chatStream).not.toHaveBeenCalled();
         });
 
         it('should work when the controller is configured to allow all subscription tiers and the user does not have a subscription', async () => {
@@ -1632,7 +1632,7 @@ describe('AIController', () => {
                     },
                 ],
             });
-            expect(chatInterface.chatStream).toBeCalledWith({
+            expect(chatInterface.chatStream).toHaveBeenCalledWith({
                 model: 'test-model1',
                 messages: [
                     {
@@ -1732,7 +1732,7 @@ describe('AIController', () => {
                     },
                 ],
             });
-            expect(chatInterface.chatStream).toBeCalledWith({
+            expect(chatInterface.chatStream).toHaveBeenCalledWith({
                 model: 'test-model1',
                 messages: [
                     {
@@ -1748,7 +1748,7 @@ describe('AIController', () => {
                 ownerId: userId,
             });
 
-            expect(metrics).toEqual({
+            expect(metrics).toMatchObject({
                 ownerId: userId,
                 subscriptionStatus: null,
                 subscriptionId: null,
@@ -1806,7 +1806,7 @@ describe('AIController', () => {
                     },
                 ],
             });
-            expect(chatInterface.chatStream).toBeCalledWith({
+            expect(chatInterface.chatStream).toHaveBeenCalledWith({
                 model: 'test-model-token-ratio',
                 messages: [
                     {
@@ -1822,7 +1822,7 @@ describe('AIController', () => {
                 ownerId: userId,
             });
 
-            expect(metrics).toEqual({
+            expect(metrics).toMatchObject({
                 ownerId: userId,
                 subscriptionStatus: null,
                 subscriptionId: null,
@@ -1920,7 +1920,7 @@ describe('AIController', () => {
                     errorMessage:
                         'The subscription does not permit the given model for AI Chat features.',
                 });
-                expect(chatInterface.chat).not.toBeCalled();
+                expect(chatInterface.chat).not.toHaveBeenCalled();
             });
 
             it('should return success when allowedModels includes the model', async () => {
@@ -1987,7 +1987,7 @@ describe('AIController', () => {
                         },
                     ],
                 });
-                expect(chatInterface.chat).toBeCalled();
+                expect(chatInterface.chat).toHaveBeenCalled();
             });
 
             it('should specify the maximum number of tokens allowed based on how many tokens the subscription has left in the period', async () => {
@@ -2043,7 +2043,7 @@ describe('AIController', () => {
                         },
                     ],
                 });
-                expect(chatInterface.chatStream).toBeCalledWith({
+                expect(chatInterface.chatStream).toHaveBeenCalledWith({
                     model: 'test-model1',
                     messages: [
                         {
@@ -2122,7 +2122,7 @@ describe('AIController', () => {
                         },
                     ],
                 });
-                expect(chatInterface.chatStream).toBeCalledWith({
+                expect(chatInterface.chatStream).toHaveBeenCalledWith({
                     model: 'test-model1',
                     messages: [
                         {
@@ -2194,7 +2194,7 @@ describe('AIController', () => {
                     },
                     states: [],
                 });
-                expect(chatInterface.chatStream).not.toBeCalled();
+                expect(chatInterface.chatStream).not.toHaveBeenCalled();
 
                 const metrics = await store.getSubscriptionAiChatMetrics({
                     ownerId: userId,
@@ -2262,7 +2262,7 @@ describe('AIController', () => {
                     },
                     states: [],
                 });
-                expect(chatInterface.chatStream).not.toBeCalled();
+                expect(chatInterface.chatStream).not.toHaveBeenCalled();
             });
         });
 
@@ -2788,15 +2788,17 @@ describe('AIController', () => {
                 success: true,
                 skyboxId: 'test-skybox-id',
             });
-            expect(generateSkyboxInterface.generateSkybox).toBeCalledWith({
-                prompt: 'test',
-            });
+            expect(generateSkyboxInterface.generateSkybox).toHaveBeenCalledWith(
+                {
+                    prompt: 'test',
+                }
+            );
 
             const metrics = await store.getSubscriptionAiSkyboxMetrics({
                 ownerId: userId,
             });
 
-            expect(metrics).toEqual({
+            expect(metrics).toMatchObject({
                 ownerId: userId,
                 subscriptionStatus: null,
                 subscriptionId: null,
@@ -2848,7 +2850,9 @@ describe('AIController', () => {
                 errorMessage:
                     'The user must be logged in. Please provide a sessionKey or a recordKey.',
             });
-            expect(generateSkyboxInterface.generateSkybox).not.toBeCalled();
+            expect(
+                generateSkyboxInterface.generateSkybox
+            ).not.toHaveBeenCalled();
         });
 
         it('should return a not_subscribed result if the given a null userSubscriptionTier', async () => {
@@ -2865,7 +2869,9 @@ describe('AIController', () => {
                     'The user must be subscribed in order to use this operation.',
                 allowedSubscriptionTiers: ['test-tier'],
             });
-            expect(generateSkyboxInterface.generateSkybox).not.toBeCalled();
+            expect(
+                generateSkyboxInterface.generateSkybox
+            ).not.toHaveBeenCalled();
         });
 
         it('should return an invalid_subscription_tier result if the given a subscription tier that is not allowed', async () => {
@@ -2883,7 +2889,9 @@ describe('AIController', () => {
                 currentSubscriptionTier: 'wrong-tier',
                 allowedSubscriptionTiers: ['test-tier'],
             });
-            expect(generateSkyboxInterface.generateSkybox).not.toBeCalled();
+            expect(
+                generateSkyboxInterface.generateSkybox
+            ).not.toHaveBeenCalled();
         });
 
         it('should work when the controller is configured to allow all subscription tiers and the user does not have a subscription', async () => {
@@ -2923,9 +2931,11 @@ describe('AIController', () => {
                 success: true,
                 skyboxId: 'test-skybox-id',
             });
-            expect(generateSkyboxInterface.generateSkybox).toBeCalledWith({
-                prompt: 'test',
-            });
+            expect(generateSkyboxInterface.generateSkybox).toHaveBeenCalledWith(
+                {
+                    prompt: 'test',
+                }
+            );
         });
 
         it('should return a not_authorized result if the user privacy features do not allow AI access', async () => {
@@ -3090,7 +3100,9 @@ describe('AIController', () => {
                     errorMessage:
                         'The subscription does not permit AI Skybox features.',
                 });
-                expect(generateSkyboxInterface.generateSkybox).not.toBeCalled();
+                expect(
+                    generateSkyboxInterface.generateSkybox
+                ).not.toHaveBeenCalled();
             });
 
             it('should reject the request if it would exceed the subscription period limits', async () => {
@@ -3119,7 +3131,9 @@ describe('AIController', () => {
                     errorMessage:
                         'The user has reached their limit for the current subscription period.',
                 });
-                expect(generateSkyboxInterface.generateSkybox).not.toBeCalled();
+                expect(
+                    generateSkyboxInterface.generateSkybox
+                ).not.toHaveBeenCalled();
             });
         });
     });
@@ -3147,7 +3161,7 @@ describe('AIController', () => {
                 fileUrl: 'test-file-url',
                 thumbnailUrl: 'test-thumbnail-url',
             });
-            expect(generateSkyboxInterface.getSkybox).toBeCalledWith(
+            expect(generateSkyboxInterface.getSkybox).toHaveBeenCalledWith(
                 'test-skybox-id'
             );
         });
@@ -3193,7 +3207,7 @@ describe('AIController', () => {
                 errorMessage:
                     'The user must be logged in. Please provide a sessionKey or a recordKey.',
             });
-            expect(generateSkyboxInterface.getSkybox).not.toBeCalled();
+            expect(generateSkyboxInterface.getSkybox).not.toHaveBeenCalled();
         });
 
         it('should return a not_subscribed result if the given a null userSubscriptionTier', async () => {
@@ -3210,7 +3224,7 @@ describe('AIController', () => {
                     'The user must be subscribed in order to use this operation.',
                 allowedSubscriptionTiers: ['test-tier'],
             });
-            expect(generateSkyboxInterface.getSkybox).not.toBeCalled();
+            expect(generateSkyboxInterface.getSkybox).not.toHaveBeenCalled();
         });
 
         it('should return an invalid_subscription_tier result if the given a subscription tier that is not allowed', async () => {
@@ -3228,7 +3242,7 @@ describe('AIController', () => {
                 currentSubscriptionTier: 'wrong-tier',
                 allowedSubscriptionTiers: ['test-tier'],
             });
-            expect(generateSkyboxInterface.getSkybox).not.toBeCalled();
+            expect(generateSkyboxInterface.getSkybox).not.toHaveBeenCalled();
         });
 
         it('should work when the controller is configured to allow all subscription tiers and the user does not have a subscription', async () => {
@@ -3272,7 +3286,7 @@ describe('AIController', () => {
                 fileUrl: 'test-file-url',
                 thumbnailUrl: 'test-thumbnail-url',
             });
-            expect(generateSkyboxInterface.getSkybox).toBeCalledWith(
+            expect(generateSkyboxInterface.getSkybox).toHaveBeenCalledWith(
                 'test-skybox-id'
             );
         });
@@ -3411,7 +3425,7 @@ describe('AIController', () => {
                     },
                 ],
             });
-            expect(generateImageInterface.generateImage).toBeCalledWith({
+            expect(generateImageInterface.generateImage).toHaveBeenCalledWith({
                 prompt: 'test',
                 model: 'openai',
                 width: 512,
@@ -3425,7 +3439,7 @@ describe('AIController', () => {
                 ownerId: userId,
             });
 
-            expect(metrics).toEqual({
+            expect(metrics).toMatchObject({
                 ownerId: userId,
                 subscriptionStatus: null,
                 subscriptionId: null,
@@ -3509,7 +3523,7 @@ describe('AIController', () => {
                     },
                 ],
             });
-            expect(otherInterface.generateImage).toBeCalledWith({
+            expect(otherInterface.generateImage).toHaveBeenCalledWith({
                 prompt: 'test',
                 model: 'otherModel',
                 width: 512,
@@ -3561,7 +3575,7 @@ describe('AIController', () => {
                 errorMessage:
                     'The user must be logged in. Please provide a sessionKey or a recordKey.',
             });
-            expect(generateImageInterface.generateImage).not.toBeCalled();
+            expect(generateImageInterface.generateImage).not.toHaveBeenCalled();
         });
 
         it('should return a not_subscribed result if the given a null userSubscriptionTier', async () => {
@@ -3578,7 +3592,7 @@ describe('AIController', () => {
                     'The user must be subscribed in order to use this operation.',
                 allowedSubscriptionTiers: ['test-tier'],
             });
-            expect(generateImageInterface.generateImage).not.toBeCalled();
+            expect(generateImageInterface.generateImage).not.toHaveBeenCalled();
         });
 
         it('should return an invalid_subscription_tier result if the given a subscription tier that is not allowed', async () => {
@@ -3596,7 +3610,7 @@ describe('AIController', () => {
                 currentSubscriptionTier: 'wrong-tier',
                 allowedSubscriptionTiers: ['test-tier'],
             });
-            expect(generateImageInterface.generateImage).not.toBeCalled();
+            expect(generateImageInterface.generateImage).not.toHaveBeenCalled();
         });
 
         it('should work when the controller is configured to allow all subscription tiers and the user does not have a subscription', async () => {
@@ -3660,7 +3674,7 @@ describe('AIController', () => {
                     },
                 ],
             });
-            expect(generateImageInterface.generateImage).toBeCalledWith({
+            expect(generateImageInterface.generateImage).toHaveBeenCalledWith({
                 prompt: 'test',
                 model: 'openai',
                 width: 512,
@@ -3847,7 +3861,9 @@ describe('AIController', () => {
                     errorMessage:
                         'The subscription does not permit AI Image features.',
                 });
-                expect(generateImageInterface.generateImage).not.toBeCalled();
+                expect(
+                    generateImageInterface.generateImage
+                ).not.toHaveBeenCalled();
             });
 
             it('should reject the request if it would exceed the subscription request limits', async () => {
@@ -3878,7 +3894,9 @@ describe('AIController', () => {
                     errorMessage:
                         'The request exceeds allowed subscription limits.',
                 });
-                expect(generateImageInterface.generateImage).not.toBeCalled();
+                expect(
+                    generateImageInterface.generateImage
+                ).not.toHaveBeenCalled();
             });
 
             it('should reject the request if it would exceed the subscription period limits', async () => {
@@ -3915,7 +3933,9 @@ describe('AIController', () => {
                     errorMessage:
                         'The user has reached their limit for the current subscription period.',
                 });
-                expect(generateImageInterface.generateImage).not.toBeCalled();
+                expect(
+                    generateImageInterface.generateImage
+                ).not.toHaveBeenCalled();
             });
         });
     });
@@ -5085,6 +5105,15 @@ describe('AIController', () => {
                             })
                     )
             );
+
+            realtimeInterface.createRealtimeSessionToken.mockResolvedValueOnce({
+                success: true,
+                sessionId: 'sessionId',
+                clientSecret: {
+                    value: 'secret',
+                    expiresAt: 999,
+                },
+            });
 
             await store.recordOpenAIRealtimeMetrics({
                 userId,

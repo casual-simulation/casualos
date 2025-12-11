@@ -1,5 +1,105 @@
 # CasualOS Changelog
 
+## V3.9.0
+
+#### Date: 12/11/2025
+
+### :rocket: Features
+
+-   Added support for basic xpExchange features
+    -   In order to access these features, users need to have the `contracts` features on their subscription.
+    -   Contracting & Invoicing
+        -   Contracts can be created (`xp.recordContract()`) and purchased (`xp.purchaseContract()`).
+        -   The user who creates the contract is the issuer, and has to specify (either by ID, email, or phone number) the holding user when creating the contract.
+        -   Anyone who has the `purchase` permission for the contract can purchase it.
+        -   Contracts can be purchased with credits, USD, or via a Stripe payment.
+        -   Once purchased, the contract is funded and can be invoiced by the holding user.
+        -   Invoices can be created for any amount less than or equal to the balance of the contract.
+        -   Once created, the issuing user can pay invoices.
+        -   Once an invoice is paid, the invoice amount will be transferred from the contract to the holding user.
+        -   Contracts can be cancelled, in which case they are refunded to an account owned the issuing user (not the purchasing user).
+    -   Credit grants
+        -   Subscriptions can be configured to grant a user a number of credits when purchased and renewed.
+        -   They can be configured to grant a flat rate or to match the invoice for the subscription.
+    -   Fees
+        -   Fees can be configured on a per-tier basis and are applied on top of the contract value.
+        -   As a result, a contract worth $1000 with a $5 fee would require $1005 to purchase.
+        -   Flat rate and percentage fees are supported.
+        -   Additionally, limits can be set to control the minimum and maximum contract values.
+        -   For example, users who have the `pro` tier could be charged a 5% premium of the total contract value.
+        -   The fee is determined by the owner of the record, which generally will map to the issuer (but not always).
+        -   As another example:
+            -   A studio could have the `lab` tier which charges a flat rate of $1 per contract.
+            -   Individual users could have the `innovator` tier, which gives them access to contracting features, but does not allow them to store contracts in their record(s) (max contracts = 0).
+            -   Users in the studio can issue and hold contracts in the studio record, which would apply the $1 fee per contract.
+    -   Payouts
+        -   Users who have USD in their account can "payout" this money.
+        -   This requires setting up their Stripe account and going through the Stripe onboarding procees.
+        -   Once setup, users can request a payout to stripe (`xp.payout()`).
+        -   Additionally, users can configure invoices to payout to stripe automatically.
+        -   Once in their stripe account, they can request a payout from Stripe or wait for the automatic payout to their bank account.
+        -   Users who haven't setup their Stripe account can invoice and accept invoice payments, and they will be able to perform xpExchange-related transactions, like purchasing additional contracts.
+            -   Currently, the only way to payout is via stripe or a manual cash payment initiated by an administrator.
+        -   Stripe payouts require that the xpExchange Stripe account has a balance that can cover the transfers.
+            -   If the balance is too low, then payouts will fail.
+            -   It is worth noting that Stripe payments aren't available in your account balance until they settle, which can take up to several days for credit/debit transactions.
+            -   Additionally, Stripe always has a fee for payments, which means that a $1000 contract will actually net around $950 in the xpExchange account balance.
+            -   For this reason, it is always recommended to ensure that contract fees are set high enough to cover Stripe processing fees and that the Stripe account is configured to automatically top up its balance.
+            -   Finally, CasualOS will not allow payouts larger than what has been taken in via Stripe. For example, if $1000 dollars of contracts were purchased via Stripe, then CasualOS will track that Stripe has $1000 dollars available. If users withdraw $500, then CasualOS will know that only $500 can be withdrawn from Stripe. This calculation however doesn't take into account Stripe fees.
+-   Added the `os.signOut()` function to sign out the current user
+    -   Returns a promise that resolves when the sign out request has been processed
+    -   Uses the auth helper's logout method to properly sign out the user
+-   Improved error logs to include the system tag of bots that errors occurred on.
+-   Added the `os.generateQRCode(code)` function to generate a QR code as a data URL that can be used in an img tag or as a bot's formAddress.
+-   Added the `minify-aux` command to the CLI.
+    -   This command takes a `.aux` file as input, and rewrites it to be [minified](<https://en.wikipedia.org/wiki/Minification_(programming)>).
+    -   This saves space and can help your `.aux` files load quicker, at the expense of readability.
+-   Added basic server side rendering.
+    -   Currently, this is used for injecting the web config so that CasualOS doesn't need to make a call to `/api/config` on initialization.
+-   Added initial support for custom domains for comID
+    -   Only supported on server deployments.
+    -   Studios with comID features can now register and verify custom domains.
+    -   Once registered, CasualOS will automatically adopt configuration values from the custom domain.
+-   Added support for configuring [PWA](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps) manifests
+    -   Only supported on server deployments.
+    -   If configured, then CasualOS will serve a [web application manifest](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Manifest) that enables PWA features like installation.
+    -   By default, PWA is disabled.
+    -   comIDs can configure their own PWA manifest if desired.
+-   Added support for `cameraPosition` for the mapPortalBot and miniMapPortalBot.
+-   Added the `cameraMapPosition` tag for the mapPortalBot and miniMapPortalBot.
+    -   Contains the longitude (x), latitude (y), and altitude (z) of the camera.
+-   Added the ability to automatically inject the bootstrap AUX from the server to reduce initialization time on the client.
+    -   Only supported on server deployments.
+    -   Set `serverInjectBootstrapper` to `true` on the web config in the server config.
+-   Added the ability to configure a custom favicon for server-based deployments.
+    -   Use the `icons` property on the web config in the server config.
+-   Added the `locked` BIOS option as an alternative to `studio` and `private inst`.
+    -   `studio` remains the default, so if you want to use `locked`, you should configure a custom list of `allowedBiosOptions` in the web config.
+-   Added support for for temporary instances.
+    -   Temporary instances aren't stored at all. This means that once you refresh, all the bot data will be lost.
+    -   You can use the `temp` bios option to generate a temporary inst.
+    -   You can also use the `tempInst` query parameter to load a temporary inst directly.
+    -   By default, the `temp` bios option is disabled and needs to be manually enabled.
+
+### :bug: Bug Fixes
+
+-   Various fixes to bot labels:
+    -   Fixed z-fighting that was common on floating labels in the map portal.
+    -   Fixed bug that would cause bots with empty floating labels to prevent the page from loading properly.
+    -   Fixed floating label positioning in the map portal.
+    -   Fixed floating label billboarding on bots with non-identity rotations.
+    -   Fixed floating label bot spacing to stay consistent between grid's of different scales.
+    -   Fixed floating label shape generation to be compatible with the map portal.
+    -   Fixed label transforms not being updated properly when switching between `labelPosition` types.
+    -   Fixed child bot decorators not being updated when a transformer bot changes scale.
+-   Fixed internal `DebugObjectManager` not rendering properly when in the map portal.
+-   Disabled double-click to zoom in the map portal.
+-   Fixed camera rotation in mapPortal continuing after releasing the right mouse button outside the browser window.
+-   Fixed camera rotation in mapPortal continuing after moving your finger off the screen.
+-   Fixed an issue where CasualOS would produce incorrect code when JSX elements were directly after return statements.
+-   Fixed the handling of `className` for custom apps when using SVG elements.
+-   Added "Close" buttons to login-related dialogs so that users can close them on mobile devices.
+
 ## V3.8.1
 
 #### Date: 11/5/2025

@@ -226,6 +226,7 @@ export class ProgressBarDecorator
 
         // Container
         this.container = new Group();
+        this.container.name = 'ProgressBar_Container';
 
         // , , less goes right
         this.container.position.set(0, 1.2, 0);
@@ -233,10 +234,12 @@ export class ProgressBarDecorator
         this.bot3D.display.add(this.container);
 
         this.meshBackground = createPlane(1);
+        this.meshBackground.name = 'ProgressBar_Background_Mesh';
         this.container.add(this.meshBackground);
 
         // Sprite Mesh if a sprite mesh is actually a plane geometrically
         this.mesh = createPlane(1);
+        this.mesh.name = 'ProgressBar_Mesh';
         this.container.add(this.mesh);
 
         this._updatePosition();

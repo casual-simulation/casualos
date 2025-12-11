@@ -197,6 +197,7 @@ describe('AuxRuntime', () => {
                 isCollaborative: true,
                 allowCollaborationUpgrade: true,
                 ab1BootstrapUrl: 'bootstrap',
+                comID: null,
             };
 
             if (type === 'interpreted') {
@@ -12266,13 +12267,13 @@ describe('AuxRuntime', () => {
 
                 jest.advanceTimersByTime(200);
 
-                expect(test).toBeCalledTimes(2);
+                expect(test).toHaveBeenCalledTimes(2);
 
                 runtime.unsubscribe();
 
                 jest.advanceTimersByTime(200);
 
-                expect(test).toBeCalledTimes(2);
+                expect(test).toHaveBeenCalledTimes(2);
             });
         });
 
@@ -14182,6 +14183,7 @@ describe('AuxRuntime', () => {
                 isCollaborative: true,
                 allowCollaborationUpgrade: true,
                 ab1BootstrapUrl: 'bootstrap',
+                comID: null,
             };
 
             interpreter = new Interpreter();
@@ -18650,6 +18652,7 @@ describe('original action tests', () => {
                 isCollaborative: true,
                 allowCollaborationUpgrade: true,
                 ab1BootstrapUrl: 'bootstrap',
+                comID: null,
             });
 
             expect(result.actions).toEqual([
@@ -18662,6 +18665,7 @@ describe('original action tests', () => {
                             isCollaborative: true,
                             allowCollaborationUpgrade: true,
                             ab1BootstrapUrl: 'bootstrap',
+                            comID: null,
                         },
                     },
                 }),
@@ -18693,6 +18697,7 @@ describe('original action tests', () => {
                             isCollaborative: null,
                             allowCollaborationUpgrade: null,
                             ab1BootstrapUrl: null,
+                            comID: null,
                         },
                     },
                 }),

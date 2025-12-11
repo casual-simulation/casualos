@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import type { DirectoryStore } from './DirectoryStore';
-import type { DirectoryClientConfig } from '../config';
+import type { DirectoryClientConfig } from './DirectoryConfig';
 import type { DirectoryClientSettings } from './DirectoryClientSettings';
 import { DEFAULT_PING_INTERVAL } from './DirectoryClientSettings';
 import { randomBytes } from 'crypto';

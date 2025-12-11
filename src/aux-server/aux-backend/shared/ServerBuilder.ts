@@ -42,6 +42,13 @@ import type {
     PrivoStore,
     PackageRecordsStore,
     PackageVersionRecordsStore,
+    FinancialInterface,
+    PurchasableItemRecordsStore,
+} from '@casual-simulation/aux-records';
+import {
+    DNSDomainNameValidator,
+    PurchasableItemRecordsController,
+    serverConfigSchema,
 } from '@casual-simulation/aux-records';
 import {
     AuthController,
@@ -146,13 +153,6 @@ import { PrismaModerationStore } from '../prisma/PrismaModerationStore';
 import type { ModerationConfiguration } from '@casual-simulation/aux-records/ModerationConfiguration';
 import { Rekognition } from '@aws-sdk/client-rekognition';
 import { Client as TypesenseClient } from 'typesense';
-
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import xpApiPlugins from '../../../../xpexchange/xp-api/*.server.plugin.ts';
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import casualWareApiPlugins from '../../../../extensions/casualos-casualware/casualware-api/*.server.plugin.ts';
 import { HumeInterface } from '@casual-simulation/aux-records/AIHumeInterface';
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { ConsoleSpanExporter } from '@opentelemetry/sdk-trace-node';
@@ -178,11 +178,13 @@ import { PrismaWebhookRecordsStore } from '../prisma/PrismaWebhookRecordsStore';
 import { AuxVMNode } from '@casual-simulation/aux-vm-node';
 import { MessageChannel, MessagePort } from 'deno-vm';
 import { LambdaWebhookEnvironment } from './webhooks/LambdaWebhookEnvironment';
+import type { WebConfig } from '@casual-simulation/aux-common';
 import { getConnectionId } from '@casual-simulation/aux-common';
 import { RemoteSimulationImpl } from '@casual-simulation/aux-vm-client';
 import type { AuxConfigParameters } from '@casual-simulation/aux-vm';
 import { WebPushImpl } from '../notifications/WebPushImpl';
 import { PrismaNotificationRecordsStore } from '../prisma/PrismaNotificationRecordsStore';
+import { createClient, id } from 'tigerbeetle-node';
 import { RemoteAuxChannel } from '@casual-simulation/aux-vm-client/vm/RemoteAuxChannel';
 import { OpenAIRealtimeInterface } from '@casual-simulation/aux-records/AIOpenAIRealtimeInterface';
 import { PrismaPackageRecordsStore } from '../prisma/PrismaPackageRecordsStore';
@@ -231,12 +233,30 @@ import {
     SqliteDatabaseInterface,
     TursoDatabaseInterface,
 } from '@casual-simulation/aux-records/database';
-import { SqliteDatabaseRecordsStore } from 'aux-backend/prisma/sqlite/SqliteDatabaseRecordsStore';
-import { PrismaDatabaseRecordsStore } from 'aux-backend/prisma/PrismaDatabaseRecordsStore';
+import path from 'node:path';
+import type { ViewTemplateRenderer } from '@casual-simulation/aux-records/ViewTemplateRenderer';
+import { SqliteDatabaseRecordsStore } from '../prisma/sqlite/SqliteDatabaseRecordsStore';
+import { PrismaDatabaseRecordsStore } from '../prisma/PrismaDatabaseRecordsStore';
+import type { FinancialStore } from '@casual-simulation/aux-records/financial';
+import {
+    FinancialController,
+    TigerBeetleFinancialInterface,
+} from '@casual-simulation/aux-records/financial';
+
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import xpApiPlugins from '../../../../xpexchange/xp-api/*.server.plugin.ts';
+import { PrismaPurchasableItemRecordsStore } from '../prisma/PrismaPurchasableItemsStore';
+import { SqliteFinancialStore } from '../prisma/sqlite/SqliteFinancialStore';
+import { PrismaFinancialStore } from '../prisma/PrismaFinancialStore';
+import { SqliteContractsRecordsStore } from '../prisma/sqlite/SqliteContractsRecordsStore';
+import { PrismaContractsRecordsStore } from '../prisma/PrismaContractsRecordsStore';
+import type { ContractRecordsStore } from '@casual-simulation/aux-records/contracts';
+import { ContractRecordsController } from '@casual-simulation/aux-records/contracts';
+import type z from 'zod';
 
 const automaticPlugins: ServerPlugin[] = [
     ...xpApiPlugins.map((p: any) => p.default),
-    ...casualWareApiPlugins.map((p: any) => p.default),
 ];
 
 export interface BuildReturn {
@@ -337,6 +357,13 @@ export class ServerBuilder implements SubscriptionLike {
     private _pushInterface: WebPushInterface;
     private _notificationsController: NotificationRecordsController;
 
+    private _financialInterface: FinancialInterface;
+    private _financialController: FinancialController;
+    private _financialStore: FinancialStore;
+
+    private _contractsStore: ContractRecordsStore;
+    private _contractsController: ContractRecordsController;
+
     private _subscriptionConfig: SubscriptionConfiguration | null = null;
     private _subscriptionController: SubscriptionController;
     private _stripe: StripeIntegration;
@@ -351,6 +378,10 @@ export class ServerBuilder implements SubscriptionLike {
     private _moderationStore: ModerationStore = null;
     private _moderationController: ModerationController;
     private _loomController: LoomController;
+
+    private _purchasableItemsStore: PurchasableItemRecordsStore | null = null;
+    private _purchasableItemsController: PurchasableItemRecordsController | null =
+        null;
 
     private _notificationMessenger: MultiNotificationMessenger;
 
@@ -368,6 +399,8 @@ export class ServerBuilder implements SubscriptionLike {
 
     private _rekognition: Rekognition | null = null;
     private _moderationJobProvider: ModerationJobProvider | null = null;
+
+    private _viewTemplateRenderer: ViewTemplateRenderer | null = null;
 
     private _allowedAccountOrigins: Set<string> = new Set([
         'http://localhost:3000',
@@ -421,7 +454,11 @@ export class ServerBuilder implements SubscriptionLike {
     private _databasesController: DatabaseRecordsController | null = null;
 
     constructor(options?: ServerConfig) {
-        this._options = options ?? {};
+        this._options =
+            options ??
+            serverConfigSchema.parse(
+                {} satisfies z.input<typeof serverConfigSchema>
+            );
         this._subscription = new Subscription();
     }
 
@@ -583,7 +620,7 @@ export class ServerBuilder implements SubscriptionLike {
     useMongoDB(
         options: Pick<
             ServerConfig,
-            'mongodb' | 'subscriptions' | 'moderation'
+            'mongodb' | 'subscriptions' | 'moderation' | 'server' | 'privo'
         > = this._options
     ): this {
         console.log('[ServerBuilder] Using MongoDB.');
@@ -632,6 +669,9 @@ export class ServerBuilder implements SubscriptionLike {
                             options.subscriptions as SubscriptionConfiguration,
                         moderation:
                             options.moderation as ModerationConfiguration,
+                        webConfig: options.server?.webConfig as WebConfig,
+                        privo: options.privo as PrivoConfiguration,
+                        playerWebManifest: options.server?.playerWebManifest,
                     },
                     configuration
                 );
@@ -679,7 +719,7 @@ export class ServerBuilder implements SubscriptionLike {
     usePrismaWithS3(
         options: Pick<
             ServerConfig,
-            'prisma' | 's3' | 'subscriptions' | 'moderation'
+            'prisma' | 's3' | 'subscriptions' | 'moderation' | 'server'
         > = this._options
     ): this {
         console.log('[ServerBuilder] Using Prisma with S3.');
@@ -713,7 +753,7 @@ export class ServerBuilder implements SubscriptionLike {
     private _usePrismaStores(
         options: Pick<
             ServerConfig,
-            'prisma' | 'subscriptions' | 'moderation'
+            'prisma' | 'subscriptions' | 'moderation' | 'server'
         > = this._options
     ) {
         const prismaClient = this._ensurePrisma(options);
@@ -762,6 +802,11 @@ export class ServerBuilder implements SubscriptionLike {
                 client,
                 metricsStore
             );
+            this._financialStore = new SqliteFinancialStore(client);
+            this._contractsStore = new SqliteContractsRecordsStore(
+                client,
+                metricsStore
+            );
         } else {
             const metricsStore = (this._metricsStore = new PrismaMetricsStore(
                 prismaClient,
@@ -801,6 +846,15 @@ export class ServerBuilder implements SubscriptionLike {
                 prismaClient,
                 metricsStore
             );
+            this._purchasableItemsStore = new PrismaPurchasableItemRecordsStore(
+                prismaClient,
+                metricsStore
+            );
+            this._financialStore = new PrismaFinancialStore(prismaClient);
+            this._contractsStore = new PrismaContractsRecordsStore(
+                prismaClient,
+                metricsStore
+            );
         }
 
         const filesLookup =
@@ -817,7 +871,7 @@ export class ServerBuilder implements SubscriptionLike {
     usePrismaWithMinio(
         options: Pick<
             ServerConfig,
-            'prisma' | 'minio' | 'subscriptions' | 'moderation'
+            'prisma' | 'minio' | 'subscriptions' | 'moderation' | 'server'
         > = this._options
     ): this {
         console.log('[ServerBuilder] Using Prisma with Minio.');
@@ -854,7 +908,7 @@ export class ServerBuilder implements SubscriptionLike {
     usePrismaWithMongoDBFileStore(
         options: Pick<
             ServerConfig,
-            'prisma' | 'mongodb' | 'subscriptions'
+            'prisma' | 'mongodb' | 'subscriptions' | 'server'
         > = this._options
     ): this {
         console.log('[ServerBuilder] Using Prisma with MongoDB File Store.');
@@ -1356,7 +1410,7 @@ export class ServerBuilder implements SubscriptionLike {
         }
         this._stripe = new StripeIntegration(
             new Stripe(options.stripe.secretKey, {
-                apiVersion: '2022-11-15',
+                apiVersion: '2025-09-30.clover',
             }),
             options.stripe.publishableKey,
             options.stripe.testClock
@@ -1435,6 +1489,88 @@ export class ServerBuilder implements SubscriptionLike {
             priority: 20,
             action: async () => {
                 await this._privoClient.init();
+            },
+        });
+
+        return this;
+    }
+
+    /**
+     * Configures the server to use tigerbeetle for financial transactions.
+     * @param options The options to use.
+     */
+    useTigerBeetle(
+        options: Pick<ServerConfig, 'tigerBeetle'> = this._options
+    ): this {
+        if (!options.tigerBeetle) {
+            console.warn(
+                '[ServerBuilder] TigerBeetle is explicitly disabled or lacks necessary config.'
+            );
+            return this;
+        }
+
+        console.log('[ServerBuilder] Using TigerBeetle Financial Interface.');
+
+        /**
+         * !!! TigerBeetle does not provide a way to check the status of server connections:
+         * * Because of this, misconfiguration can lead to an everlasting retry loop, which can be problematic and use resources unnecessarily.
+         * * To mitigate this, a timeout is set to race a method invocation which proves an established connection during server build.
+         * * If the connection is not proven established within the duration the timeout permits, the server will throw an error (and exit).
+         * * Disconnects (or any network errors) after the server is built will not be detected / handled by this mechanism;
+         *   it serves only to deter building the server with invalid connection parameters.
+         */
+        this._actions.push({
+            priority: 0,
+            action: async () => {
+                const client = createClient({
+                    cluster_id: options.tigerBeetle.clusterId,
+                    replica_addresses: options.tigerBeetle.replicaAddresses,
+                });
+
+                this._subscription.add(() => client.destroy());
+                // console.log(
+                //     '[ServerBuilder] Connecting to tigerbeetle server.'
+                // );
+                // try {
+                // await Promise.race([
+                //     client.lookupAccounts([0n]),
+                //     new Promise((_, rej) => {
+                //         setTimeout(() => {
+                //             rej(
+                //                 new Error(
+                //                     'Failed to connect to tigerbeetle server in time.'
+                //                 )
+                //             );
+                //         }, 3000);
+                //     }),
+                // ]);
+                console.log('[ServerBuilder] Connected to tigerbeetle server.');
+                this._financialInterface = new TigerBeetleFinancialInterface({
+                    client,
+                    id,
+                });
+                // } catch (e) {
+                //     this._financialInterface = null;
+                //     this._financialController = null;
+                //     this._financialStore = null;
+                //     client.destroy();
+                //     console.error(
+                //         '[ServerBuilder] Failed to connect to tigerbeetle server during server build, disabling financial interface.'
+                //     );
+                // }
+            },
+        });
+
+        this._initActions.push({
+            priority: 0,
+            action: async () => {
+                if (!this._financialController) {
+                    throw new Error(
+                        'Financial controller is not available when it should be.'
+                    );
+                }
+
+                await this._financialController.init();
             },
         });
 
@@ -1684,6 +1820,7 @@ export class ServerBuilder implements SubscriptionLike {
                 supportsDOM: false,
                 allowCollaborationUpgrade: false,
                 ab1BootstrapUrl: null,
+                comID: null,
             },
         };
 
@@ -1744,7 +1881,7 @@ export class ServerBuilder implements SubscriptionLike {
                         {
                             recordName: null,
                             inst: null,
-                            isStatic: false,
+                            kind: 'default',
                         },
                         vm
                     );
@@ -1879,6 +2016,11 @@ export class ServerBuilder implements SubscriptionLike {
         return this;
     }
 
+    useViewTemplateRenderer(renderer: ViewTemplateRenderer): this {
+        this._viewTemplateRenderer = renderer;
+        return this;
+    }
+
     async buildAsync(): Promise<BuildReturn> {
         const actions = sortBy(this._actions, (a) => a.priority);
 
@@ -1929,6 +2071,10 @@ export class ServerBuilder implements SubscriptionLike {
             throw new Error('A config store must be configured!');
         }
 
+        if (!this._financialInterface || !this._financialController) {
+            console.warn(`[ServerBuilder] Not using XP API.`);
+        }
+
         if (!this._rateLimitController) {
             console.log('[ServerBuilder] Not using rate limiting.');
         }
@@ -1951,6 +2097,7 @@ export class ServerBuilder implements SubscriptionLike {
             metrics: this._metricsStore,
             messenger: this._notificationMessenger,
             privo: this._privoClient ?? null,
+            domainNameValidator: new DNSDomainNameValidator(),
         });
         this._policyController = new PolicyController(
             this._authController,
@@ -1989,13 +2136,45 @@ export class ServerBuilder implements SubscriptionLike {
             policies: this._policyController,
         });
 
+        if (this._purchasableItemsStore) {
+            this._purchasableItemsController =
+                new PurchasableItemRecordsController({
+                    store: this._purchasableItemsStore,
+                    config: this._configStore,
+                    policies: this._policyController,
+                });
+        }
+
+        if (this._contractsStore) {
+            this._contractsController = new ContractRecordsController({
+                authStore: this._authStore,
+                config: this._configStore,
+                policies: this._policyController,
+                privo: this._privoClient,
+                store: this._contractsStore,
+            });
+        }
+
+        if (this._financialStore && this._financialInterface) {
+            this._financialController = new FinancialController(
+                this._financialInterface,
+                this._financialStore
+            );
+        }
+
         if (this._subscriptionConfig) {
             this._subscriptionController = new SubscriptionController(
                 this._stripe,
                 this._authController,
                 this._authStore,
                 this._recordsStore,
-                this._configStore
+                this._configStore,
+                this._policyController,
+                this._policyStore,
+                this._purchasableItemsStore,
+                this._financialController,
+                this._financialStore,
+                this._contractsStore
             );
         }
 
@@ -2121,6 +2300,9 @@ export class ServerBuilder implements SubscriptionLike {
             packageVersionController: this._packageVersionController,
             searchRecordsController: this._searchController,
             databaseRecordsController: this._databasesController,
+            contractRecordsController: this._contractsController,
+            purchasableItemsController: this._purchasableItemsController,
+            viewTemplateRenderer: this._viewTemplateRenderer,
         });
 
         const buildReturn: BuildReturn = {
@@ -2270,7 +2452,9 @@ export class ServerBuilder implements SubscriptionLike {
                 return Math.min(retries * 100, 3000);
             };
             if (options.url) {
-                redis = createRedisClient({
+                // The typecast is because TypeScript
+                // takes a while to typecheck all the generics in createRedisClient.
+                redis = <any>createRedisClient({
                     url: options.url,
                     socket: {
                         reconnectStrategy: retryStrategy,
@@ -2282,7 +2466,10 @@ export class ServerBuilder implements SubscriptionLike {
                         'Redis host must be provided if a URL is not specified.'
                     );
                 }
-                redis = createRedisClient({
+
+                // The typecast is because TypeScript
+                // takes a while to typecheck all the generics in createRedisClient.
+                redis = <any>createRedisClient({
                     socket: {
                         host: options.host,
                         port: options.port,
@@ -2309,6 +2496,23 @@ export class ServerBuilder implements SubscriptionLike {
     private _ensurePrisma(options: Pick<ServerConfig, 'prisma'>): PrismaClient {
         if (!this._prismaClient) {
             if (options.prisma.db === 'sqlite') {
+                function formatPath(p: string): string {
+                    const filePath = p.replace('file:', '');
+                    console.log(
+                        `[ServerBuilder] Using SQLite database at: ${filePath}`
+                    );
+                    return `file:${path.resolve(filePath)}`;
+                }
+
+                const prismaOptions = options.prisma.options as any;
+                if (prismaOptions?.datasources?.db?.url) {
+                    const dbUrl: string = prismaOptions.datasources.db.url;
+                    prismaOptions.datasources.db.url = formatPath(dbUrl);
+                } else if (prismaOptions?.datasourceUrl) {
+                    const dbUrl: string = prismaOptions.datasourceUrl;
+                    prismaOptions.datasourceUrl = formatPath(dbUrl);
+                }
+
                 this._prismaClient = new SqlitePrismaClient(
                     options.prisma.options as any
                 ) as any;
@@ -2402,7 +2606,7 @@ export class ServerBuilder implements SubscriptionLike {
         prismaClient: PrismaClient,
         options: Pick<
             ServerConfig,
-            'prisma' | 'subscriptions' | 'moderation' | 'privo'
+            'prisma' | 'subscriptions' | 'moderation' | 'privo' | 'server'
         >
     ): ConfigurationStore {
         let configStore: ConfigurationStore;
@@ -2412,6 +2616,8 @@ export class ServerBuilder implements SubscriptionLike {
                     options.subscriptions as SubscriptionConfiguration,
                 privo: options.privo as PrivoConfiguration,
                 moderation: options.moderation as ModerationConfiguration,
+                webConfig: options.server?.webConfig as WebConfig,
+                playerWebManifest: options.server?.playerWebManifest,
             });
         } else {
             configStore = new PrismaConfigurationStore(prismaClient, {
@@ -2419,10 +2625,15 @@ export class ServerBuilder implements SubscriptionLike {
                     options.subscriptions as SubscriptionConfiguration,
                 privo: options.privo as PrivoConfiguration,
                 moderation: options.moderation as ModerationConfiguration,
+                webConfig: options.server?.webConfig as WebConfig,
+                playerWebManifest: options.server?.playerWebManifest,
             });
         }
 
         if (this._multiCache && options.prisma.configurationCacheSeconds) {
+            console.log(
+                `[ServerBuilder] Caching configuration values for ${options.prisma.configurationCacheSeconds} seconds.`
+            );
             const cache = this._multiCache.getCache('config');
             return new CachingConfigStore(
                 configStore,
@@ -2430,6 +2641,7 @@ export class ServerBuilder implements SubscriptionLike {
                 options.prisma.configurationCacheSeconds
             );
         } else {
+            console.log(`[ServerBuilder] Not caching configuration values.`);
             return configStore;
         }
     }

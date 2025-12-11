@@ -92,3 +92,9 @@ export * from './packages';
 export * from './search';
 
 export * from './PrivoStore';
+
+export * from './purchasable-items';
+
+export type * from './TypeUtils';
+export * from './financial';
+export * from './dns';

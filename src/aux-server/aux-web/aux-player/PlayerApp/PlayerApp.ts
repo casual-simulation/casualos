@@ -71,7 +71,13 @@ import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
 import LoadApp from '../../shared/vue-components/LoadApp/LoadApp';
 import { tap } from 'rxjs/operators';
 import { merge } from 'es-toolkit/compat';
-import type { Simulation, LoginState } from '@casual-simulation/aux-vm';
+import {
+    type Simulation,
+    type LoginState,
+    type SimulationOrigin,
+    isStatic,
+    isTemp,
+} from '@casual-simulation/aux-vm';
 import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import type { SidebarItem } from '../../shared/vue-components/BaseGameView';
 import type { ConnectionInfo } from '@casual-simulation/aux-common';
@@ -122,6 +128,7 @@ import type { SubscribeToNotificationAction } from '@casual-simulation/aux-runti
 import { recordsCallProcedure } from '@casual-simulation/aux-runtime';
 import { getSimulationId } from '../../../shared/SimulationHelpers';
 import LoadingWidget from '../../shared/vue-components/LoadingWidget/LoadingWidget';
+import type { PushSubscriptionType } from '@casual-simulation/aux-records';
 
 let syntheticVoices = [] as SyntheticVoice[];
 
@@ -847,19 +854,27 @@ export default class PlayerApp extends Vue {
                     let simId: string;
                     let recordName: string = null;
                     let inst: string = null;
-                    let isStatic: boolean = false;
-                    if (e.config.staticInst) {
+                    let kind: SimulationOrigin['kind'] = 'default';
+                    if (e.config.tempInst) {
+                        simId = getSimulationId(
+                            null,
+                            e.config.tempInst,
+                            'temp'
+                        );
+                        inst = e.config.tempInst;
+                        kind = 'temp';
+                    } else if (e.config.staticInst) {
                         simId = getSimulationId(
                             null,
                             e.config.staticInst,
-                            true
+                            'static'
                         );
                         inst = e.config.staticInst;
-                        isStatic = true;
+                        kind = 'static';
                     } else {
                         recordName = e.config.owner ?? e.config.record ?? null;
                         inst = e.config.inst;
-                        isStatic = false;
+                        kind = 'default';
 
                         let recordInfo = appManager.getRecordName(recordName);
 
@@ -872,35 +887,43 @@ export default class PlayerApp extends Vue {
                         }
 
                         recordName = recordInfo.recordName;
-                        simId = getSimulationId(recordName, inst, false);
+                        simId = getSimulationId(recordName, inst, kind);
                     }
 
                     appManager.simulationManager.addSimulation(simId, {
                         recordName,
                         inst,
-                        isStatic,
+                        kind,
                     });
                 } else if (e.type === 'unload_server_config') {
                     let simId: string;
                     let recordName: string = null;
                     let inst: string = null;
-                    let isStatic: boolean = false;
-                    if (e.config.staticInst) {
+                    let kind: SimulationOrigin['kind'] = 'default';
+                    if (e.config.tempInst) {
+                        simId = getSimulationId(
+                            null,
+                            e.config.tempInst,
+                            'temp'
+                        );
+                        inst = e.config.tempInst;
+                        kind = 'temp';
+                    } else if (e.config.staticInst) {
                         simId = getSimulationId(
                             null,
                             e.config.staticInst,
-                            true
+                            'static'
                         );
                         inst = e.config.staticInst;
-                        isStatic = true;
+                        kind = 'static';
                     } else {
                         recordName = e.config.owner ?? e.config.record ?? null;
                         inst = e.config.inst;
-                        isStatic = false;
+                        kind = 'default';
 
                         const recordInfo = appManager.getRecordName(recordName);
                         recordName = recordInfo.recordName;
-                        simId = getSimulationId(recordName, inst, false);
+                        simId = getSimulationId(recordName, inst, kind);
                     }
 
                     appManager.simulationManager.removeSimulation(simId);
@@ -911,6 +934,45 @@ export default class PlayerApp extends Vue {
                         this._showQRCode(e.code);
                     } else {
                         this._hideQRCode();
+                    }
+                } else if (e.type === 'generate_qr_code') {
+                    try {
+                        const QRCode = await import('qrcode');
+                        const errorCorrectionLevel =
+                            e.options?.errorCorrectionLevel;
+                        const code = await QRCode.toDataURL(e.code, {
+                            errorCorrectionLevel:
+                                errorCorrectionLevel === 'high'
+                                    ? 'H'
+                                    : errorCorrectionLevel === 'medium'
+                                    ? 'M'
+                                    : errorCorrectionLevel === 'low'
+                                    ? 'L'
+                                    : errorCorrectionLevel === 'quartile'
+                                    ? 'Q'
+                                    : 'M',
+                            type: e.options?.imageFormat || 'image/png',
+                            width: e.options?.width,
+                            margin: e.options?.margin,
+                            scale: e.options?.scale,
+                            color: e.options?.color
+                                ? {
+                                      dark: e.options.color.dark,
+                                      light: e.options.color.light,
+                                  }
+                                : undefined,
+                            maskPattern: e.options?.maskPattern,
+                            version: e.options?.version,
+                        });
+
+                        simulation.helper.transaction(
+                            asyncResult(e.taskId, code)
+                        );
+                    } catch (ex) {
+                        console.error('Error generating QR code:', ex);
+                        simulation.helper.transaction(
+                            asyncError(e.taskId, ex.toString())
+                        );
                     }
                 } else if (e.type === 'show_barcode') {
                     if (e.open) {
@@ -1295,6 +1357,17 @@ export default class PlayerApp extends Vue {
                             asyncError(e.taskId, ex.toString())
                         );
                     }
+                } else if (e.type === 'sign_out') {
+                    try {
+                        await simulation.auth.primary.logout();
+                        simulation.helper.transaction(
+                            asyncResult(e.taskId, null, false)
+                        );
+                    } catch (ex) {
+                        simulation.helper.transaction(
+                            asyncError(e.taskId, ex.toString())
+                        );
+                    }
                 } else if (e.type === 'enable_pov') {
                     this.streamImu = e.enabled && e.imu;
                 } else if (e.type === 'convert_geolocation_to_w3w') {
@@ -1649,7 +1722,8 @@ export default class PlayerApp extends Vue {
                             input: {
                                 recordName: event.recordName,
                                 address: event.address,
-                                pushSubscription: sub.toJSON(),
+                                pushSubscription:
+                                    sub.toJSON() as PushSubscriptionType,
                             },
                         },
                     },
@@ -1985,7 +2059,10 @@ export default class PlayerApp extends Vue {
         if (primarySim) {
             if (hasValue(primarySim.origin.recordName)) {
                 document.title = `${primarySim.origin.recordName}/${primarySim.origin.inst}`;
-            } else if (primarySim.origin.isStatic) {
+            } else if (
+                isStatic(primarySim.origin.kind) ||
+                isTemp(primarySim.origin.kind)
+            ) {
                 document.title = primarySim.origin.inst;
             } else {
                 document.title = 'public/' + primarySim.origin.inst;

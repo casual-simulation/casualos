@@ -1,5 +1,7 @@
 *.js
+*.jsx
 *.js.map
+*.jsx.map
 *.d.ts
 !typings/**/*
 docs

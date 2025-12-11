@@ -32,7 +32,7 @@ describe('getInstParameters()', () => {
             inst: 'test',
             recordName: 'testRecord',
             owner: 'testRecord',
-            isStatic: false,
+            kind: 'default',
         });
     });
 
@@ -45,7 +45,7 @@ describe('getInstParameters()', () => {
             inst: 'test',
             recordName: 'testRecord',
             owner: null,
-            isStatic: false,
+            kind: 'default',
         });
     });
 
@@ -58,7 +58,7 @@ describe('getInstParameters()', () => {
             inst: ['test', 'abc'],
             recordName: 'testRecord',
             owner: null,
-            isStatic: false,
+            kind: 'default',
         });
     });
 
@@ -68,7 +68,7 @@ describe('getInstParameters()', () => {
             inst: 'test',
             recordName: null,
             owner: null,
-            isStatic: false,
+            kind: 'default',
         });
     });
 
@@ -78,7 +78,7 @@ describe('getInstParameters()', () => {
             inst: 'test',
             recordName: null,
             owner: null,
-            isStatic: false,
+            kind: 'default',
             story: true,
         });
     });
@@ -89,7 +89,7 @@ describe('getInstParameters()', () => {
             inst: 'test',
             recordName: null,
             owner: null,
-            isStatic: false,
+            kind: 'default',
             server: true,
         });
     });
@@ -100,7 +100,17 @@ describe('getInstParameters()', () => {
             inst: 'test',
             recordName: null,
             owner: null,
-            isStatic: true,
+            kind: 'static',
+        });
+    });
+
+    it('should support temp insts', () => {
+        const params = getInstParameters({ tempInst: 'test' });
+        expect(params).toEqual({
+            inst: 'test',
+            recordName: null,
+            owner: null,
+            kind: 'temp',
         });
     });
 
@@ -110,7 +120,7 @@ describe('getInstParameters()', () => {
             inst: 'test',
             recordName: null,
             owner: null,
-            isStatic: true,
+            kind: 'static',
         });
     });
 
@@ -123,7 +133,7 @@ describe('getInstParameters()', () => {
             inst: 'test',
             recordName: null,
             owner: null,
-            isStatic: false,
+            kind: 'default',
         });
     });
 
@@ -136,7 +146,7 @@ describe('getInstParameters()', () => {
             inst: 'test',
             recordName: null,
             owner: null,
-            isStatic: true,
+            kind: 'static',
         });
     });
 });

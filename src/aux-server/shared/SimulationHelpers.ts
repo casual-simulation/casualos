@@ -16,12 +16,18 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import {
+    isStatic,
+    isTemp,
+    type SimulationOrigin,
+} from '@casual-simulation/aux-vm';
+
 export function getSimulationId(
     recordName: string | null,
     inst: string,
-    isStatic: boolean
+    kind: SimulationOrigin['kind']
 ): string {
-    if (!isStatic) {
+    if (!isStatic(kind) && !isTemp(kind)) {
         return `${recordName ?? 'null'}/${inst}`;
     } else {
         return inst;

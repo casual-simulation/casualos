@@ -61,6 +61,8 @@ const ZOOM_SCALES = new Map<number, number>([
 ]);
 
 export class MapTile extends Object3D {
+    name = 'MapTile';
+
     private _provider: MapProvider;
     private _heightProvider: MapProvider | null;
     private _plane: Mesh;

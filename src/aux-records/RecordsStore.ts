@@ -18,6 +18,11 @@
 import { z } from 'zod';
 import type { ComIdConfig, ComIdPlayerConfig } from './ComIdConfig';
 import type { PublicRecordKeyPolicy } from '@casual-simulation/aux-common';
+import type {
+    StripeAccountStatus,
+    StripeRequirementsStatus,
+} from './StripeInterface';
+import type { WebManifest } from '@casual-simulation/aux-common/common/WebManifest';
 
 /**
  * Defines an interface for objects that can store records.
@@ -225,6 +230,54 @@ export interface RecordsStore {
      * @param config The config that should be updated for the studio.
      */
     updateStudioHumeConfig(studioId: string, config: HumeConfig): Promise<void>;
+
+    /**
+     * Gets the studio with the given stripe account ID. Returns null if no studio has that stripe account ID.
+     * @param accountId The ID of the stripe account.
+     */
+    getStudioByStripeAccountId(accountId: string): Promise<Studio | null>;
+
+    /**
+     * Saves the given custom domain to the store.
+     * @param domain The custom domain to save.
+     */
+    saveCustomDomain(domain: CustomDomain): Promise<void>;
+
+    /**
+     * Removes the custom domain with the given ID from the store.
+     * @param domainId The ID of the custom domain to remove.
+     */
+    deleteCustomDomain(domainId: string): Promise<void>;
+
+    /**
+     * Gets the custom domain with the given ID.
+     * @param domainId The ID of the custom domain.
+     */
+    getCustomDomainById(
+        domainId: string
+    ): Promise<CustomDomainWithStudio | null>;
+
+    /**
+     * Gets the list of custom domains for the given studio ID.
+     * @param studioId The ID of the studio.
+     */
+    listCustomDomainsByStudioId(studioId: string): Promise<CustomDomain[]>;
+
+    /**
+     * Gets the verified custom domain with the given domain name.
+     * Returns null if no verified custom domain with the given name exists.
+     *
+     * @param domainName The domain name.
+     */
+    getVerifiedCustomDomainByName(
+        domainName: string
+    ): Promise<CustomDomainWithStudio | null>;
+
+    /**
+     * Marks the custom domain with the given ID as verified.
+     * @param domainId The ID of the custom domain to mark as verified.
+     */
+    markCustomDomainAsVerified(domainId: string): Promise<void>;
 }
 
 export interface CountRecordsFilter {
@@ -318,6 +371,31 @@ export interface Studio {
     stripeCustomerId?: string;
 
     /**
+     * The ID of the stripe account for this studio.
+     */
+    stripeAccountId?: string | null;
+
+    /**
+     * The status of the stripe account requirements for this studio.
+     *
+     * If null, then the studio does not have a stripe account.
+     * If 'incomplete', then the studio has a stripe account but it is not fully set up.
+     * If 'complete', then the studio has a stripe account that is fully set up.
+     */
+    stripeAccountRequirementsStatus?: StripeRequirementsStatus;
+
+    /**
+     * The status of the stripe account that is associated with this studio.
+     *
+     * If null, then the studio does not have a stripe account.
+     * If 'active', then the stripe account has been approved and is active.
+     * If 'pending', then the stripe account is waiting approval.
+     * If 'rejected', then the stripe account was rejected.
+     * If 'disabled', then the stripe account was disabled but not because it was rejected.
+     */
+    stripeAccountStatus?: StripeAccountStatus;
+
+    /**
      * The current subscription status for this studio.
      */
     subscriptionStatus?: string;
@@ -359,6 +437,11 @@ export interface Studio {
     playerConfig?: ComIdPlayerConfig;
 
     /**
+     * The PWA web manifest that should be served for the player.
+     */
+    playerWebManifest?: WebManifest;
+
+    /**
      * The config for comId features.
      */
     comIdConfig?: ComIdConfig;
@@ -366,22 +449,20 @@ export interface Studio {
 
 export type LoomConfig = z.infer<typeof LOOM_CONFIG>;
 
-export const LOOM_CONFIG = z
-    .object({
-        appId: z.string().describe('The ID of the loom app.').max(100),
-        privateKey: z
-            .string()
-            .describe('The private key for the loom app.')
-            .max(100),
-    })
-    .describe('The configuration that can be used by studios to setup loom.');
+export const LOOM_CONFIG = z.object({
+    appId: z.string().max(100).describe('The ID of the loom app.'),
+    privateKey: z
+        .string()
+        .max(100)
+        .describe('The private key for the loom app.'),
+});
 
 export const HUME_CONFIG = z.object({
-    apiKey: z.string().describe('The API key for the Hume service.').max(100),
+    apiKey: z.string().max(100).describe('The API key for the Hume service.'),
     secretKey: z
         .string()
-        .describe('The secret key for the Hume service.')
-        .max(100),
+        .max(100)
+        .describe('The secret key for the Hume service.'),
 });
 
 export type HumeConfig = z.infer<typeof HUME_CONFIG>;
@@ -634,4 +715,46 @@ export interface StudioComIdRequest {
      * The unix timestamp in miliseconds when the request was last updated.
      */
     updatedAtMs: number;
+}
+
+/**
+ * Represents a custom domain that is associated with a studio.
+ *
+ * These domains may or may not be verified.
+ */
+export interface CustomDomain {
+    /**
+     * The ID of the custom domain.
+     */
+    id: string;
+
+    /**
+     * The domain name.
+     */
+    domainName: string;
+
+    /**
+     * The ID of the studio that the custom domain is associated with.
+     */
+    studioId: string;
+
+    /**
+     * The HMAC-SHA-256 verification key.
+     */
+    verificationKey: string;
+
+    /**
+     * Whether the custom domain has been verified.
+     * Null if not verified.
+     */
+    verified: true | null;
+}
+
+export type ListedCustomDomain = Pick<
+    CustomDomain,
+    'id' | 'domainName' | 'verified'
+>;
+
+export interface CustomDomainWithStudio extends CustomDomain {
+    studio: Studio;
 }

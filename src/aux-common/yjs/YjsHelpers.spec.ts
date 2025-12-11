@@ -27,6 +27,7 @@ import {
     createRelativePositionFromStateVector,
     getClock,
     getStateVector,
+    getTextChar,
 } from './YjsHelpers';
 
 describe('YjsHelpers', () => {
@@ -317,6 +318,34 @@ describe('YjsHelpers', () => {
                 '1': 6,
                 '2': 3,
             });
+        });
+    });
+
+    describe('getTextChar()', () => {
+        it('should get the correct character at the given index', () => {
+            const doc1 = new Doc();
+            const text1 = doc1.getText();
+            text1.insert(0, 'abcdef');
+            expect(getTextChar(text1, 0)).toBe('a');
+            expect(getTextChar(text1, 1)).toBe('b');
+            expect(getTextChar(text1, 2)).toBe('c');
+            expect(getTextChar(text1, 3)).toBe('d');
+            expect(getTextChar(text1, 4)).toBe('e');
+            expect(getTextChar(text1, 5)).toBe('f');
+            expect(getTextChar(text1, 6)).toBe(null);
+            expect(getTextChar(text1, -1)).toBe(null);
+        });
+
+        it('should support text that has deleted nodes', () => {
+            const doc1 = new Doc();
+            const text1 = doc1.getText();
+            text1.insert(0, 'abcdef');
+            text1.delete(2, 2);
+            expect(getTextChar(text1, 0)).toBe('a');
+            expect(getTextChar(text1, 1)).toBe('b');
+            expect(getTextChar(text1, 2)).toBe('e');
+            expect(getTextChar(text1, 3)).toBe('f');
+            expect(getTextChar(text1, 4)).toBe(null);
         });
     });
 });

@@ -34,7 +34,12 @@ import {
 } from './packages/version';
 import { FileRecordsController } from './FileRecordsController';
 import type { PublicRecordKeyPolicy } from '@casual-simulation/aux-common';
-import { parseSessionKey } from '@casual-simulation/aux-common';
+import { mapValuesDeep, parseSessionKey } from '@casual-simulation/aux-common';
+import type { FinancialInterface } from './financial';
+import { FinancialController, MemoryFinancialInterface } from './financial';
+import type { Account, Transfer } from 'tigerbeetle-node';
+import { v4 as uuidv4, parse } from 'uuid';
+import type { StripeInterface } from './StripeInterface';
 
 export type TestServices = ReturnType<typeof createTestControllers>;
 
@@ -46,10 +51,12 @@ export function createTestSubConfiguration(
     return buildSubscriptionConfig((config) =>
         build(
             config
-                .withCancelUrl('http://cancel-url')
-                .withReturnUrl('http://return-url')
-                .withSuccessUrl('http://success-url')
+                .withCancelUrl('https://cancel-url/')
+                .withReturnUrl('https://return-url/')
+                .withSuccessUrl('https://success-url/')
                 .withWebhookSecret('webhook-secret')
+                .withUserDefaultFeatures((f) => f.withAllDefaultFeatures())
+                .withStudioDefaultFeatures((f) => f.withAllDefaultFeatures())
         )
     );
 }
@@ -84,10 +91,11 @@ export function createTestPrivoConfiguration(): PrivoConfiguration {
 }
 
 export function createTestControllers(
-    config?: SubscriptionConfiguration | null
+    config?: SubscriptionConfiguration | null,
+    financialInterface?: FinancialInterface
 ) {
     const subConfig: SubscriptionConfiguration | null =
-        typeof config === 'undefined' ? createTestSubConfiguration() : null;
+        typeof config === 'undefined' ? createTestSubConfiguration() : config;
 
     const store = new MemoryStore({
         subscriptions: subConfig,
@@ -101,11 +109,17 @@ export function createTestControllers(
         metrics: store,
         messenger: store,
         privo: null,
+        domainNameValidator: null,
     });
     const packagesStore = new MemoryPackageRecordsStore(store);
     const packageVersionStore = new MemoryPackageVersionRecordsStore(
         store,
         packagesStore
+    );
+    financialInterface ??= new MemoryFinancialInterface();
+    const financialController = new FinancialController(
+        financialInterface,
+        store
     );
     const policies = new PolicyController(
         auth,
@@ -151,13 +165,23 @@ export function createTestControllers(
         packages,
         packageVersionStore,
         packageVersions,
+        financialController,
+        financialInterface,
     };
+}
+
+export interface TestUser {
+    emailAddress: string;
+    userId: string;
+    sessionKey: string;
+    connectionKey: string;
+    sessionId: string;
 }
 
 export async function createTestUser(
     { auth, authMessenger }: Pick<TestServices, 'auth' | 'authMessenger'>,
     emailAddress: string = 'test@example.com'
-) {
+): Promise<TestUser> {
     const loginRequest = await auth.requestLogin({
         address: emailAddress,
         addressType: 'email',
@@ -199,6 +223,14 @@ export async function createTestUser(
         sessionId,
     };
 }
+
+// export async function createTestXpUser(
+//     xpController: XpController,
+//     ...createTestUserParams: Parameters<typeof createTestUser>
+// ) {
+//     const authUser = await createTestUser(...createTestUserParams);
+//     return await xpController.getXpUser({ userId: authUser.userId });
+// }
 
 export async function createTestRecordKey(
     { records }: Pick<TestServices, 'records'>,
@@ -302,4 +334,83 @@ export function readableFromAsyncIterable<T>(
             controller.close();
         },
     });
+}
+
+export function mapBigInts(obj: Record<string, any>): Record<string, any> {
+    return mapValuesDeep(obj, (value) => {
+        if (typeof value === 'bigint') {
+            if (value > Number.MAX_SAFE_INTEGER) {
+                return Number.MAX_SAFE_INTEGER;
+            } else {
+                return Number(value);
+            }
+        }
+        return value;
+    });
+}
+
+export async function checkAccounts(
+    financialInterface: FinancialInterface,
+    accounts: Partial<Account>[]
+) {
+    const accountValues = await financialInterface.lookupAccounts(
+        accounts.map((a) => a.id)
+    );
+
+    expect(accountValues).toEqual(
+        accounts.map((a) => expect.objectContaining(a))
+    );
+
+    // for(let i = 0; i < accounts.length; i++) {
+    //     const expected = accounts[i];
+    //     const actual = accountValues[i];
+
+    //     expect(mapBigInts(actual)).toMatchObject(mapBigInts(expected));
+    // }
+}
+
+export function checkTransfers(
+    actual: Transfer[],
+    expected: Partial<Transfer>[]
+) {
+    expect(actual).toEqual(expected.map((t) => expect.objectContaining(t)));
+
+    // for(let i = 0; i < accounts.length; i++) {
+    //     const expected = accounts[i];
+    //     const actual = accountValues[i];
+
+    //     expect(mapBigInts(actual)).toMatchObject(mapBigInts(expected));
+    // }
+}
+
+export function randomBigInt() {
+    const uuid = uuidv4();
+    const uuidBytes = parse(uuid);
+    // get bigint from uuid bytes
+    return BigInt('0x' + Buffer.from(uuidBytes).toString('hex'));
+}
+
+/**
+ * Creates a new stripe interface mock.
+ */
+export function createStripeMock(): jest.Mocked<StripeInterface> {
+    return {
+        publishableKey: 'publishable_key',
+        getProductAndPriceInfo: jest.fn(),
+        listPricesForProduct: jest.fn(),
+        createCheckoutSession: jest.fn(),
+        createPortalSession: jest.fn(),
+        createCustomer: jest.fn(),
+        listActiveSubscriptionsForCustomer: jest.fn(),
+        constructWebhookEvent: jest.fn(),
+        getSubscriptionById: jest.fn(),
+        createAccountLink: jest.fn(),
+        createAccount: jest.fn(),
+        getAccountById: jest.fn(),
+        getCheckoutSessionById: jest.fn(),
+        createAccountSession: jest.fn(),
+        createLoginLink: jest.fn(),
+        createTransfer: jest.fn(),
+        getPaymentIntentById: jest.fn(),
+    };
 }

@@ -110,6 +110,8 @@ import { getPortalConfigBot } from '@casual-simulation/aux-vm-browser';
 import { MapPortalDimensionGroup3D } from '../scene/MapPortalDimensionGroup3D';
 import { MiniMapPortalDimensionGroup3D } from '../scene/MiniMapPortalDimensionGroup3D';
 import type { Block } from 'three-mesh-ui';
+import { MapSimulation3D } from '../scene/MapSimulation3D';
+import { MiniMapSimulation3D } from '../scene/MiniMapSimulation3D';
 
 export class PlayerInteractionManager extends BaseInteractionManager {
     // This overrides the base class Game.
@@ -790,7 +792,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                 (c) => c.rig === rig
             );
             const cameraWorld = new Vector3();
-            cameraWorld.setFromMatrixPosition(rig.mainCamera.matrixWorld);
+            rig.mainCamera.getWorldPosition(cameraWorld);
             const cameraForward = cameraForwardRay(rig.mainCamera);
             const cameraUp = cameraUpwardRay(rig.mainCamera);
             const { euler: cameraRotation, quaternion: cameraQuaternion } =
@@ -808,7 +810,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                 focusWorld = new Vector3();
             }
 
-            let update = {
+            let update: BotTags = {
                 [`cameraPositionX`]: cameraWorld.x,
                 [`cameraPositionY`]: cameraWorld.y,
                 [`cameraPositionZ`]: cameraWorld.z,
@@ -937,6 +939,24 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                 }
             }
 
+            if (sim instanceof MapSimulation3D) {
+                const view = sim.mapView;
+                if (view?.camera?.position) {
+                    update[`cameraMapPosition`] = formatBotVector({
+                        x: view.camera.position.longitude,
+                        y: view.camera.position.latitude,
+                        z: view.camera.position.z ?? 0,
+                    });
+                } else {
+                    update[`cameraMapPosition`] = null;
+                }
+
+                delete update[`cameraFocusX`];
+                delete update[`cameraFocusY`];
+                delete update[`cameraFocusZ`];
+                delete update[`cameraFocus`];
+            }
+
             // We have to postfix with "Portal" because the portal names are "gridPortal"
             // and "miniGridPortal" but are abbreviated to 'grid' and "mini".
             const portalBot = getPortalConfigBot(
@@ -982,7 +1002,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
 }
 
 function portalInfoForSim(sim: Simulation3D) {
-    let portal: 'grid' | 'miniGrid';
+    let portal: 'grid' | 'miniGrid' | 'map' | 'miniMap';
     let gridScale: number;
     if (sim instanceof PlayerPageSimulation3D) {
         portal = 'grid';
@@ -990,6 +1010,12 @@ function portalInfoForSim(sim: Simulation3D) {
     } else if (sim instanceof MiniSimulation3D) {
         portal = 'miniGrid';
         gridScale = sim.miniConfig.gridScale;
+    } else if (sim instanceof MiniMapSimulation3D) {
+        portal = 'miniMap';
+        gridScale = sim.mapConfig.gridScale;
+    } else if (sim instanceof MapSimulation3D) {
+        portal = 'map';
+        gridScale = sim.mapConfig.gridScale;
     }
     let inverseScale = 1 / gridScale;
 

@@ -34,6 +34,8 @@ import type EsriSceneView from 'esri/views/SceneView';
 import { MapPortalGrid3D, EARTH_RADIUS } from './MapPortalGrid3D';
 
 export abstract class MapSimulation3D extends PlayerSimulation3D {
+    name = 'MapSimulation3D';
+
     /**
      * The miniGridPortal dimension that this simulation is for.
      */

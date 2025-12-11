@@ -93,6 +93,7 @@ export class Input {
 
     // Internal pointer data.
     private _mouseData: MouseData;
+    private _forceReleasedButtons: Set<MouseButtonId> = new Set();
     private _touchData: TouchData[];
     private _controllerData: ControllerData[];
     private _keyData: Map<string, KeyData>;
@@ -1256,6 +1257,9 @@ export class Input {
             return;
         }
 
+        // Clear force-released flag when user explicitly presses button again
+        this._forceReleasedButtons.delete(event.button);
+
         if (Input.isEventForAnyElement(event, this.htmlElements)) {
             event.preventDefault();
         }
@@ -1343,7 +1347,19 @@ export class Input {
             this._mouseData.rightButtonState,
             this._mouseData.middleButtonState,
         ];
-        for (let buttonState of buttonStates) {
+
+        const buttonIds = [
+            MouseButtonId.Left,
+            MouseButtonId.Right,
+            MouseButtonId.Middle,
+        ];
+
+        for (let i = 0; i < buttonStates.length; i++) {
+            const buttonState = buttonStates[i];
+            if (buttonState.isHeldOnFrame(this.time.frameCount)) {
+                // Mark this button as force-released so we don't re-trigger it
+                this._forceReleasedButtons.add(buttonIds[i]);
+            }
             buttonState.setUpFrame(this.time.frameCount);
         }
         if (this.debugLevel >= 1) {
@@ -1381,8 +1397,18 @@ export class Input {
         const buttonStates: InputState[] = this._getMouseButtonStates(
             event.buttons
         );
+        const buttonIds = [];
+
+        // Map button bitmask to button IDs
+        if ((event.buttons & 1) === 1) buttonIds.push(MouseButtonId.Left);
+        if ((event.buttons & 2) === 2) buttonIds.push(MouseButtonId.Right);
+        if ((event.buttons & 4) === 4) buttonIds.push(MouseButtonId.Middle);
+
         let hadButtonDown = false;
-        for (let state of buttonStates) {
+        for (let i = 0; i < buttonStates.length; i++) {
+            const state = buttonStates[i];
+            const buttonId = buttonIds[i];
+
             let down = state.getDownFrame();
             let up = state.getUpFrame();
 

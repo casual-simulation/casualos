@@ -28,8 +28,11 @@ import {
 } from '@casual-simulation/crypto';
 import { randomBytes } from 'tweetnacl';
 import { fromByteArray } from 'base64-js';
-import { v4 as uuid } from 'uuid';
-import { createTestSubConfiguration } from './TestUtils';
+import { v4 as uuid, v7 as uuidv7 } from 'uuid';
+import {
+    createTestSubConfiguration,
+    createTestPrivoConfiguration,
+} from './TestUtils';
 import { MemoryStore } from './MemoryStore';
 import { buildSubscriptionConfig } from './SubscriptionConfigBuilder';
 import type { PrivoClientInterface } from './PrivoClient';
@@ -38,9 +41,23 @@ import {
     formatV2RecordKey,
     isRecordKey,
 } from '@casual-simulation/aux-common/records/RecordKeys';
+import type { StoredAux, Success } from '@casual-simulation/aux-common';
+import {
+    createBot,
+    failure,
+    isSuccess,
+    success,
+    tryParseJson,
+    WEB_CONFIG_SCHEMA,
+} from '@casual-simulation/aux-common';
+import type { DomainNameValidator } from './dns';
+import { WEB_MANIFEST_SCHEMA } from '@casual-simulation/aux-common/common/WebManifest';
+import type z from 'zod';
 
 const uuidMock: jest.Mock = <any>uuid;
+const uuidv7Mock: jest.Mock = <any>uuidv7;
 jest.mock('uuid');
+jest.mock('axios');
 
 console.error = jest.fn();
 console.log = jest.fn();
@@ -49,7 +66,13 @@ describe('RecordsController', () => {
     let manager: RecordsController;
     let store: MemoryStore;
 
+    let domainNameValidator: jest.Mocked<DomainNameValidator>;
+
     beforeEach(() => {
+        domainNameValidator = {
+            getVerificationDNSRecord: jest.fn(),
+            validateDomainName: jest.fn(),
+        };
         store = new MemoryStore({
             subscriptions: createTestSubConfiguration(),
         });
@@ -61,8 +84,33 @@ describe('RecordsController', () => {
             config: store,
             messenger: store,
             privo: null,
+            domainNameValidator,
         });
     });
+
+    beforeEach(() => {
+        require('axios').__reset();
+    });
+
+    function setResponse(response: any) {
+        require('axios').__setResponse(response);
+    }
+
+    function setNextResponse(response: any) {
+        require('axios').__setNextResponse(response);
+    }
+
+    function getLastPost() {
+        return require('axios').__getLastPost();
+    }
+
+    function getLastGet() {
+        return require('axios').__getLastGet();
+    }
+
+    function getRequests() {
+        return require('axios').__getRequests();
+    }
 
     describe('createPublicRecordKey()', () => {
         it('should return a value that contains the formatted record name and a random password', async () => {
@@ -2443,6 +2491,41 @@ describe('RecordsController', () => {
                 },
             });
         });
+        //     await store.updateStudio({
+        //         id: 'studioId',
+        //         displayName: 'studio',
+        //         subscriptionId: 'sub1',
+        //         subscriptionStatus: 'active',
+        //         comIdConfig: {
+        //             allowedStudioCreators: 'anyone',
+        //         },
+        //     });
+
+        //     const result = await manager.updateStudio({
+        //         userId: 'userId',
+        //         studio: {
+        //             id: 'studioId',
+        //             comIdConfig: {
+        //                 allowedStudioCreators: 'only-members',
+        //             },
+        //         },
+        //     });
+
+        //     expect(result).toEqual({
+        //         success: true,
+        //     });
+
+        //     const studio = await store.getStudioById('studioId');
+        //     expect(studio).toEqual({
+        //         id: 'studioId',
+        //         displayName: 'studio',
+        //         subscriptionId: 'sub1',
+        //         subscriptionStatus: 'active',
+        //         comIdConfig: {
+        //             allowedStudioCreators: 'only-members',
+        //         },
+        //     });
+        // });
 
         it('should be able to update the comId config', async () => {
             await store.updateStudio({
@@ -2692,6 +2775,12 @@ describe('RecordsController', () => {
                     humeFeatures: {
                         allowed: true,
                     },
+                    storeFeatures: {
+                        allowed: false,
+                        currencyLimits: expect.any(Object),
+                    },
+                    stripeAccountStatus: null,
+                    stripeRequirementsStatus: null,
                 },
             });
         });
@@ -2735,6 +2824,68 @@ describe('RecordsController', () => {
                     humeFeatures: {
                         allowed: true,
                     },
+                    storeFeatures: {
+                        allowed: false,
+                        currencyLimits: expect.any(Object),
+                    },
+                    stripeAccountStatus: null,
+                    stripeRequirementsStatus: null,
+                },
+            });
+        });
+
+        it('should include the configured store features', async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withStore()
+                            .withStoreMaxItems(100)
+                            .withStoreCurrencyLimit('usd', {
+                                minCost: 10,
+                                maxCost: 10000,
+                            })
+                    )
+            );
+
+            const result = await manager.getStudio('studioId', 'userId');
+
+            expect(result).toEqual({
+                success: true,
+                studio: {
+                    id: 'studioId',
+                    displayName: 'studio',
+                    logoUrl: 'https://example.com/logo.png',
+                    comId: 'comId1',
+                    comIdConfig: {
+                        allowedStudioCreators: 'anyone',
+                    },
+                    playerConfig: {
+                        ab1BootstrapURL: 'https://example.com/ab1',
+                    },
+                    comIdFeatures: {
+                        allowed: false,
+                    },
+                    loomFeatures: {
+                        allowed: false,
+                    },
+                    humeFeatures: {
+                        allowed: true,
+                    },
+                    storeFeatures: {
+                        allowed: true,
+                        maxItems: 100,
+                        currencyLimits: {
+                            usd: {
+                                maxCost: 10000,
+                                minCost: 10,
+                            },
+                        },
+                    },
+                    stripeAccountStatus: null,
+                    stripeRequirementsStatus: null,
                 },
             });
         });
@@ -2776,6 +2927,12 @@ describe('RecordsController', () => {
                     humeFeatures: {
                         allowed: true,
                     },
+                    storeFeatures: {
+                        allowed: false,
+                        currencyLimits: expect.any(Object),
+                    },
+                    stripeAccountStatus: null,
+                    stripeRequirementsStatus: null,
                 },
             });
         });
@@ -2795,7 +2952,6 @@ describe('RecordsController', () => {
                 appId: 'appId',
                 privateKey: 'privateKey',
             });
-
             const result = await manager.getStudio('studioId', 'userId');
 
             expect(result).toEqual({
@@ -2817,12 +2973,71 @@ describe('RecordsController', () => {
                     loomFeatures: {
                         allowed: true,
                     },
-                    humeFeatures: {
-                        allowed: true,
-                    },
                     loomConfig: {
                         appId: 'appId',
                     },
+                    humeFeatures: {
+                        allowed: true,
+                    },
+                    storeFeatures: {
+                        allowed: false,
+                        currencyLimits: expect.any(Object),
+                    },
+                    stripeAccountStatus: null,
+                    stripeRequirementsStatus: null,
+                },
+            });
+        });
+
+        it('should include the studio stripe account status', async () => {
+            await store.updateStudio({
+                id: 'studioId',
+                displayName: 'studio',
+                logoUrl: 'https://example.com/logo.png',
+                comId: 'comId1',
+                comIdConfig: {
+                    allowedStudioCreators: 'anyone',
+                },
+                playerConfig: {
+                    ab1BootstrapURL: 'https://example.com/ab1',
+                },
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                stripeAccountId: 'acct_123',
+                stripeAccountRequirementsStatus: 'incomplete',
+                stripeAccountStatus: 'pending',
+            });
+
+            const result = await manager.getStudio('studioId', 'userId');
+
+            expect(result).toEqual({
+                success: true,
+                studio: {
+                    id: 'studioId',
+                    displayName: 'studio',
+                    logoUrl: 'https://example.com/logo.png',
+                    comId: 'comId1',
+                    comIdConfig: {
+                        allowedStudioCreators: 'anyone',
+                    },
+                    playerConfig: {
+                        ab1BootstrapURL: 'https://example.com/ab1',
+                    },
+                    comIdFeatures: {
+                        allowed: false,
+                    },
+                    loomFeatures: {
+                        allowed: false,
+                    },
+                    humeFeatures: {
+                        allowed: true,
+                    },
+                    storeFeatures: {
+                        allowed: false,
+                        currencyLimits: expect.any(Object),
+                    },
+                    stripeAccountStatus: 'pending',
+                    stripeRequirementsStatus: 'incomplete',
                 },
             });
         });
@@ -2862,6 +3077,12 @@ describe('RecordsController', () => {
                     humeFeatures: {
                         allowed: true,
                     },
+                    storeFeatures: {
+                        allowed: false,
+                        currencyLimits: expect.any(Object),
+                    },
+                    stripeAccountStatus: null,
+                    stripeRequirementsStatus: null,
                 },
             });
         });
@@ -2909,6 +3130,12 @@ describe('RecordsController', () => {
                     humeConfig: {
                         apiKey: 'apiKey',
                     },
+                    storeFeatures: {
+                        allowed: false,
+                        currencyLimits: expect.any(Object),
+                    },
+                    stripeAccountStatus: null,
+                    stripeRequirementsStatus: null,
                 },
             });
         });
@@ -3568,6 +3795,7 @@ describe('RecordsController', () => {
                     config: store,
                     messenger: store,
                     privo,
+                    domainNameValidator,
                 });
 
                 await store.saveNewUser({
@@ -3957,6 +4185,7 @@ describe('RecordsController', () => {
                     config: store,
                     messenger: store,
                     privo,
+                    domainNameValidator,
                 });
             });
 
@@ -4896,6 +5125,1841 @@ describe('RecordsController', () => {
                     studioId: 'studioId',
                 },
             ]);
+        });
+    });
+
+    describe('getWebConfig()', () => {
+        it('should return the web config with subscriptionsSupported and studiosSupported set to true when subscription configuration exists', async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration();
+
+            const result = await manager.getWebConfig('example.com');
+
+            expect(result).toEqual(
+                success({
+                    version: 2,
+                    causalRepoConnectionProtocol: 'websocket',
+                    subscriptionsSupported: true,
+                    studiosSupported: true,
+                    requirePrivoLogin: false,
+                })
+            );
+        });
+
+        it('should return the web config with subscriptionsSupported and studiosSupported set to false when subscription configuration is null', async () => {
+            store.subscriptionConfiguration = null;
+
+            const result = await manager.getWebConfig('example.com');
+
+            expect(result).toEqual(
+                success({
+                    version: 2,
+                    causalRepoConnectionProtocol: 'websocket',
+                    subscriptionsSupported: false,
+                    studiosSupported: false,
+                    requirePrivoLogin: false,
+                })
+            );
+        });
+
+        it('should return the web config with requirePrivoLogin set to true when privo configuration exists', async () => {
+            store.privoConfiguration = createTestPrivoConfiguration();
+
+            const result = await manager.getWebConfig('example.com');
+
+            expect(result).toEqual(
+                success({
+                    version: 2,
+                    causalRepoConnectionProtocol: 'websocket',
+                    subscriptionsSupported: true,
+                    studiosSupported: true,
+                    requirePrivoLogin: true,
+                })
+            );
+        });
+
+        it('should return the web config with requirePrivoLogin set to false when privo configuration is null', async () => {
+            store.privoConfiguration = null;
+
+            const result = await manager.getWebConfig('example.com');
+
+            expect(result).toEqual(
+                success({
+                    version: 2,
+                    causalRepoConnectionProtocol: 'websocket',
+                    subscriptionsSupported: true,
+                    studiosSupported: true,
+                    requirePrivoLogin: false,
+                })
+            );
+        });
+
+        it('should merge the web config properties from the configuration store', async () => {
+            store.webConfig = {
+                version: 2,
+                causalRepoConnectionProtocol: 'apiary-aws',
+                vmOrigin: 'https://vm.example.com',
+                authOrigin: 'https://auth.example.com',
+            };
+
+            const result = await manager.getWebConfig('example.com');
+
+            expect(result).toEqual(
+                success({
+                    version: 2,
+                    causalRepoConnectionProtocol: 'apiary-aws',
+                    vmOrigin: 'https://vm.example.com',
+                    authOrigin: 'https://auth.example.com',
+                    subscriptionsSupported: true,
+                    studiosSupported: true,
+                    requirePrivoLogin: false,
+                })
+            );
+        });
+
+        it('should handle all configuration states correctly', async () => {
+            store.subscriptionConfiguration = null;
+            store.privoConfiguration = createTestPrivoConfiguration();
+            store.webConfig = {
+                version: 1,
+                causalRepoConnectionProtocol: 'websocket',
+                disableCollaboration: true,
+                jitsiAppName: 'my-jitsi-app',
+            };
+
+            const result = await manager.getWebConfig('example.com');
+
+            expect(result).toEqual(
+                success({
+                    version: 1,
+                    causalRepoConnectionProtocol: 'websocket',
+                    disableCollaboration: true,
+                    jitsiAppName: 'my-jitsi-app',
+                    subscriptionsSupported: false,
+                    studiosSupported: false,
+                    requirePrivoLogin: true,
+                })
+            );
+        });
+
+        it('should return default config when webConfig is null', async () => {
+            store.webConfig = null;
+            store.subscriptionConfiguration = null;
+            store.privoConfiguration = null;
+
+            const result = await manager.getWebConfig('example.com');
+
+            expect(result).toEqual(
+                success({
+                    version: 2,
+                    causalRepoConnectionProtocol: 'websocket',
+                    subscriptionsSupported: false,
+                    studiosSupported: false,
+                    requirePrivoLogin: false,
+                })
+            );
+        });
+
+        it('should handle partial web config properties', async () => {
+            store.webConfig = {
+                version: 2,
+                causalRepoConnectionProtocol: 'websocket',
+                playerMode: 'builder',
+                logoUrl: 'https://example.com/logo.png',
+                logoTitle: 'My App',
+            };
+
+            const result = await manager.getWebConfig('example.com');
+
+            expect(result).toEqual(
+                success({
+                    version: 2,
+                    causalRepoConnectionProtocol: 'websocket',
+                    playerMode: 'builder',
+                    logoUrl: 'https://example.com/logo.png',
+                    logoTitle: 'My App',
+                    subscriptionsSupported: true,
+                    studiosSupported: true,
+                    requirePrivoLogin: false,
+                })
+            );
+        });
+
+        it('should return the com ID config for custom domains', async () => {
+            store.webConfig = {
+                version: 2,
+                causalRepoConnectionProtocol: 'websocket',
+                playerMode: 'builder',
+                logoUrl: 'https://example.com/logo.png',
+                logoTitle: 'My App',
+            };
+
+            await store.addStudio({
+                id: 'studioId',
+                comId: 'customComId',
+                displayName: 'Studio',
+                logoUrl: 'https://studio.example.com/logo.png',
+                playerConfig: {
+                    arcGisApiKey: 'customArcGisKey',
+                },
+            });
+
+            await store.saveCustomDomain({
+                id: 'customDomainId',
+                domainName: 'custom.example.com',
+                studioId: 'studioId',
+                verificationKey: 'key',
+                verified: true,
+            });
+
+            const result = await manager.getWebConfig('custom.example.com');
+
+            expect(result).toEqual(
+                success({
+                    version: 2,
+                    causalRepoConnectionProtocol: 'websocket',
+                    playerMode: 'builder',
+                    logoUrl: 'https://studio.example.com/logo.png',
+                    logoTitle: 'Studio',
+                    subscriptionsSupported: true,
+                    studiosSupported: true,
+                    requirePrivoLogin: false,
+                    arcGisApiKey: 'customArcGisKey',
+                    comId: 'customComId',
+                })
+            );
+        });
+    });
+
+    describe('getAb1Bootstrap()', () => {
+        it('should fetch the AB1 bootstrap AUX from the given URL', async () => {
+            setResponse({
+                status: 200,
+                data: {
+                    version: 1,
+                    state: {
+                        test1: createBot('test1'),
+                        test2: createBot('test2'),
+                    },
+                } satisfies StoredAux,
+            });
+
+            const result = await manager.getAb1Bootstrap({
+                version: 2,
+                causalRepoConnectionProtocol: 'websocket',
+                ab1BootstrapURL: 'https://example.com/ab1.aux',
+            });
+
+            expect(isSuccess(result)).toBe(true);
+
+            const json = tryParseJson((result as Success<string>).value);
+
+            expect(json).toEqual({
+                success: true,
+                value: {
+                    version: 1,
+                    state: {
+                        test1: createBot('test1'),
+                        test2: createBot('test2'),
+                    },
+                } satisfies StoredAux,
+            });
+
+            expect(getLastGet()).toEqual([
+                'https://example.com/ab1.aux',
+                {
+                    validateStatus: expect.any(Function),
+                },
+            ]);
+        });
+
+        it('should load from the config store first', async () => {
+            store.ab1Bootstrap = {
+                version: 1,
+                state: {
+                    test1: createBot('test1'),
+                    test2: createBot('test2'),
+                },
+            };
+
+            setResponse({
+                status: 500,
+                data: 'Broken',
+            });
+
+            const result = await manager.getAb1Bootstrap({
+                version: 2,
+                causalRepoConnectionProtocol: 'websocket',
+                ab1BootstrapURL: 'https://example.com/ab1.aux',
+            });
+
+            expect(isSuccess(result)).toBe(true);
+
+            const json = tryParseJson((result as Success<string>).value);
+
+            expect(json).toEqual({
+                success: true,
+                value: {
+                    version: 1,
+                    state: {
+                        test1: createBot('test1'),
+                        test2: createBot('test2'),
+                    },
+                } satisfies StoredAux,
+            });
+
+            expect(getLastGet()).toEqual([]);
+        });
+
+        it('should store the bootstrapper in the config store', async () => {
+            setResponse({
+                status: 200,
+                data: {
+                    version: 1,
+                    state: {
+                        test1: createBot('test1'),
+                        test2: createBot('test2'),
+                    },
+                } satisfies StoredAux,
+            });
+
+            const result = await manager.getAb1Bootstrap({
+                version: 2,
+                causalRepoConnectionProtocol: 'websocket',
+                ab1BootstrapURL: 'https://example.com/ab1.aux',
+            });
+
+            expect(isSuccess(result)).toBe(true);
+
+            const json = tryParseJson((result as Success<string>).value);
+
+            expect(json).toEqual({
+                success: true,
+                value: {
+                    version: 1,
+                    state: {
+                        test1: createBot('test1'),
+                        test2: createBot('test2'),
+                    },
+                } satisfies StoredAux,
+            });
+
+            expect(store.ab1Bootstrap).toEqual({
+                version: 1,
+                state: {
+                    test1: createBot('test1'),
+                    test2: createBot('test2'),
+                },
+            });
+        });
+    });
+
+    describe('addCustomDomain()', () => {
+        let userId: string;
+        let studioId: string;
+
+        beforeEach(async () => {
+            userId = 'test-user';
+            studioId = 'test-studio';
+
+            await store.saveUser({
+                id: userId,
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await store.addStudio({
+                id: studioId,
+                displayName: 'Test Studio',
+                ownerStudioComId: null,
+                subscriptionPeriodStartMs: null,
+                subscriptionPeriodEndMs: null,
+                comId: 'test-comid',
+            });
+
+            await store.addStudioAssignment({
+                studioId: studioId,
+                userId: userId,
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+
+            uuidv7Mock.mockReturnValue('test-domain-id');
+
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.withStudioDefaultFeatures((f) =>
+                        f.withComId({
+                            allowed: true,
+                        })
+                    )
+            );
+        });
+
+        it('should create a custom domain and return verification DNS record', async () => {
+            domainNameValidator.getVerificationDNSRecord.mockResolvedValue(
+                success({
+                    recordType: 'TXT',
+                    value: 'verification-value',
+                    ttlSeconds: 300,
+                })
+            );
+
+            const result = await manager.addCustomDomain({
+                userId,
+                studioId,
+                domain: 'example.com',
+            });
+
+            expect(result).toEqual(
+                success({
+                    recordType: 'TXT',
+                    value: 'verification-value',
+                    ttlSeconds: 300,
+                })
+            );
+
+            const domains = await store.listCustomDomainsByStudioId(studioId);
+            expect(domains).toHaveLength(1);
+            expect(domains[0]).toMatchObject({
+                id: 'test-domain-id',
+                domainName: 'example.com',
+                studioId,
+                verificationKey: expect.any(String),
+                verified: null,
+            });
+
+            expect(
+                domainNameValidator.getVerificationDNSRecord
+            ).toHaveBeenCalledWith('example.com', domains[0].verificationKey);
+        });
+
+        it('should return not_supported if domainNameValidator is not configured', async () => {
+            manager = new RecordsController({
+                store,
+                auth: store,
+                metrics: store,
+                config: store,
+                messenger: store,
+                privo: null,
+                domainNameValidator: null,
+            });
+
+            const result = await manager.addCustomDomain({
+                userId,
+                studioId,
+                domain: 'example.com',
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'Custom domains are not supported on this server.',
+                })
+            );
+        });
+
+        it('should return studio_not_found if the studio does not exist', async () => {
+            const result = await manager.addCustomDomain({
+                userId,
+                studioId: 'nonexistent-studio',
+                domain: 'example.com',
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'studio_not_found',
+                    errorMessage: 'The given studio was not found.',
+                })
+            );
+        });
+
+        it('should return not_authorized if the user is not an admin of the studio', async () => {
+            const otherUserId = 'other-user';
+            await store.saveUser({
+                id: otherUserId,
+                email: 'other@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+            await store.addStudioAssignment({
+                role: 'member',
+                userId: otherUserId,
+                isPrimaryContact: false,
+                studioId: studioId,
+            });
+
+            const result = await manager.addCustomDomain({
+                userId: otherUserId,
+                studioId,
+                domain: 'example.com',
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this operation.',
+                })
+            );
+        });
+
+        it('should return not_authorized if comId features are not allowed', async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.withStudioDefaultFeatures((f) =>
+                        f.withComId({
+                            allowed: false,
+                        })
+                    )
+            );
+
+            const result = await manager.addCustomDomain({
+                userId,
+                studioId,
+                domain: 'example.com',
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'comId features are not allowed for this comId. Make sure you have an active subscription that provides comId features.',
+                })
+            );
+        });
+
+        it('should return subscription_limit_reached if the maximum number of domains has been reached', async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.withStudioDefaultFeatures((f) =>
+                        f.withComId({
+                            allowed: true,
+                            maxDomains: 1,
+                        })
+                    )
+            );
+
+            await store.saveCustomDomain({
+                id: 'existing-domain',
+                domainName: 'existing.com',
+                studioId,
+                verificationKey: 'existing-key',
+                verified: true,
+            });
+
+            const result = await manager.addCustomDomain({
+                userId,
+                studioId,
+                domain: 'example.com',
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'subscription_limit_reached',
+                    errorMessage:
+                        'The maximum number of custom domains allowed for your comId subscription has been reached.',
+                })
+            );
+        });
+
+        it('should allow adding a domain when maxDomains is undefined', async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.withStudioDefaultFeatures((f) =>
+                        f.withComId({
+                            allowed: true,
+                            maxDomains: undefined,
+                        })
+                    )
+            );
+
+            domainNameValidator.getVerificationDNSRecord.mockResolvedValue(
+                success({
+                    recordType: 'TXT',
+                    value: 'verification-value',
+                    ttlSeconds: 300,
+                })
+            );
+
+            // Add multiple domains to verify no limit is enforced
+            await store.saveCustomDomain({
+                id: 'domain-1',
+                domainName: 'domain1.com',
+                studioId,
+                verificationKey: 'key-1',
+                verified: true,
+            });
+
+            await store.saveCustomDomain({
+                id: 'domain-2',
+                domainName: 'domain2.com',
+                studioId,
+                verificationKey: 'key-2',
+                verified: true,
+            });
+
+            const result = await manager.addCustomDomain({
+                userId,
+                studioId,
+                domain: 'example.com',
+            });
+
+            expect(result).toEqual(
+                success({
+                    recordType: 'TXT',
+                    value: 'verification-value',
+                    ttlSeconds: 300,
+                })
+            );
+
+            const domains = await store.listCustomDomainsByStudioId(studioId);
+            expect(domains).toHaveLength(3);
+        });
+
+        it('should generate a unique verification key for each domain', async () => {
+            domainNameValidator.getVerificationDNSRecord.mockResolvedValue(
+                success({
+                    recordType: 'TXT',
+                    value: 'verification-value',
+                    ttlSeconds: 300,
+                })
+            );
+
+            uuidv7Mock.mockReturnValueOnce('domain-1');
+            await manager.addCustomDomain({
+                userId,
+                studioId,
+                domain: 'example1.com',
+            });
+
+            uuidv7Mock.mockReturnValueOnce('domain-2');
+            await manager.addCustomDomain({
+                userId,
+                studioId,
+                domain: 'example2.com',
+            });
+
+            const domains = await store.listCustomDomainsByStudioId(studioId);
+            expect(domains).toHaveLength(2);
+            expect(domains[0].verificationKey).not.toBe(
+                domains[1].verificationKey
+            );
+        });
+
+        it('should return failure if getVerificationDNSRecord returns an error', async () => {
+            domainNameValidator.getVerificationDNSRecord.mockResolvedValue(
+                failure({
+                    errorCode: 'invalid_request',
+                    errorMessage: 'Invalid domain name',
+                })
+            );
+
+            const result = await manager.addCustomDomain({
+                userId,
+                studioId,
+                domain: 'invalid..domain',
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'invalid_request',
+                    errorMessage: 'Invalid domain name',
+                })
+            );
+        });
+    });
+
+    describe('deleteCustomDomain()', () => {
+        let userId: string;
+        let studioId: string;
+        let domainId: string;
+
+        beforeEach(async () => {
+            userId = 'test-user';
+            studioId = 'test-studio';
+            domainId = 'test-domain-id';
+
+            await store.saveUser({
+                id: userId,
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await store.addStudio({
+                id: studioId,
+                displayName: 'Test Studio',
+                ownerStudioComId: null,
+                subscriptionPeriodStartMs: null,
+                subscriptionPeriodEndMs: null,
+                comId: 'test-comid',
+            });
+
+            await store.addStudioAssignment({
+                studioId: studioId,
+                userId: userId,
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+
+            await store.saveCustomDomain({
+                id: domainId,
+                domainName: 'example.com',
+                studioId,
+                verificationKey: 'verification-key',
+                verified: true,
+            });
+        });
+
+        it('should return not_supported if domainNameValidator is not configured', async () => {
+            manager = new RecordsController({
+                store,
+                auth: store,
+                metrics: store,
+                config: store,
+                messenger: store,
+                privo: null,
+                domainNameValidator: null,
+            });
+
+            const result = await manager.deleteCustomDomain({
+                userId,
+                customDomainId: domainId,
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'Custom domains are not supported on this server.',
+                })
+            );
+        });
+
+        it('should return not_found if the custom domain does not exist', async () => {
+            const result = await manager.deleteCustomDomain({
+                userId,
+                customDomainId: 'nonexistent-domain.com',
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_found',
+                    errorMessage: 'The given custom domain was not found.',
+                })
+            );
+        });
+
+        it('should return not_authorized if the user is not an admin of the studio', async () => {
+            const otherUserId = 'other-user';
+            await store.saveUser({
+                id: otherUserId,
+                email: 'other@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            const result = await manager.deleteCustomDomain({
+                userId: otherUserId,
+                customDomainId: domainId,
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this operation.',
+                })
+            );
+        });
+
+        it('should successfully delete a custom domain', async () => {
+            const result = await manager.deleteCustomDomain({
+                userId,
+                customDomainId: domainId,
+            });
+
+            expect(result).toEqual(success(undefined));
+
+            const domains = await store.listCustomDomainsByStudioId(studioId);
+            expect(domains).toHaveLength(0);
+        });
+
+        it('should work with users who have admin role in the studio', async () => {
+            const adminUserId = 'admin-user';
+            await store.saveUser({
+                id: adminUserId,
+                email: 'admin@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await store.addStudioAssignment({
+                studioId: studioId,
+                userId: adminUserId,
+                isPrimaryContact: false,
+                role: 'admin',
+            });
+
+            const result = await manager.deleteCustomDomain({
+                userId: adminUserId,
+                customDomainId: domainId,
+            });
+
+            expect(result).toEqual(success(undefined));
+        });
+
+        it('should not delete domains from other studios', async () => {
+            const otherStudioId = 'other-studio';
+            await store.addStudio({
+                id: otherStudioId,
+                displayName: 'Other Studio',
+                ownerStudioComId: null,
+                subscriptionPeriodStartMs: null,
+                subscriptionPeriodEndMs: null,
+                comId: 'other-comid',
+            });
+
+            await store.saveCustomDomain({
+                id: 'other-domain-id',
+                domainName: 'other.com',
+                studioId: otherStudioId,
+                verificationKey: 'other-key',
+                verified: true,
+            });
+
+            const result = await manager.deleteCustomDomain({
+                userId,
+                customDomainId: 'other-domain-id',
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this operation.',
+                })
+            );
+
+            // Verify the other domain still exists
+            const otherDomains = await store.listCustomDomainsByStudioId(
+                otherStudioId
+            );
+            expect(otherDomains).toHaveLength(1);
+        });
+
+        it('should delete the correct domain when multiple domains exist', async () => {
+            await store.saveCustomDomain({
+                id: 'domain-2',
+                domainName: 'example2.com',
+                studioId,
+                verificationKey: 'key-2',
+                verified: true,
+            });
+
+            await store.saveCustomDomain({
+                id: 'domain-3',
+                domainName: 'example3.com',
+                studioId,
+                verificationKey: 'key-3',
+                verified: true,
+            });
+
+            const result = await manager.deleteCustomDomain({
+                userId,
+                customDomainId: 'domain-2',
+            });
+
+            expect(result).toEqual(success(undefined));
+
+            const domains = await store.listCustomDomainsByStudioId(studioId);
+            expect(domains).toHaveLength(2);
+            expect(domains.map((d) => d.domainName)).toEqual([
+                'example.com',
+                'example3.com',
+            ]);
+        });
+    });
+
+    describe('listCustomDomains()', () => {
+        let userId: string;
+        let studioId: string;
+
+        beforeEach(async () => {
+            userId = 'test-user';
+            studioId = 'test-studio';
+
+            await store.saveUser({
+                id: userId,
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await store.addStudio({
+                id: studioId,
+                displayName: 'Test Studio',
+                ownerStudioComId: null,
+                subscriptionPeriodStartMs: null,
+                subscriptionPeriodEndMs: null,
+                comId: 'test-comid',
+            });
+
+            await store.addStudioAssignment({
+                studioId: studioId,
+                userId: userId,
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+        });
+
+        it('should return not_supported if domainNameValidator is not configured', async () => {
+            manager = new RecordsController({
+                store,
+                auth: store,
+                metrics: store,
+                config: store,
+                messenger: store,
+                privo: null,
+                domainNameValidator: null,
+            });
+
+            const result = await manager.listCustomDomains({
+                userId,
+                studioId,
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'Custom domains are not supported on this server.',
+                })
+            );
+        });
+
+        it('should return studio_not_found if the studio does not exist', async () => {
+            const result = await manager.listCustomDomains({
+                userId,
+                studioId: 'nonexistent-studio',
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'studio_not_found',
+                    errorMessage: 'The given studio was not found.',
+                })
+            );
+        });
+
+        it('should return not_authorized if the user is not an admin of the studio', async () => {
+            const otherUserId = 'other-user';
+            await store.saveUser({
+                id: otherUserId,
+                email: 'other@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            const result = await manager.listCustomDomains({
+                userId: otherUserId,
+                studioId,
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this operation.',
+                })
+            );
+        });
+
+        it('should return an empty list when no domains exist', async () => {
+            const result = await manager.listCustomDomains({
+                userId,
+                studioId,
+            });
+
+            expect(result).toEqual(
+                success({
+                    domains: [],
+                })
+            );
+        });
+
+        it('should return a list of domains for the studio', async () => {
+            await store.saveCustomDomain({
+                id: 'domain-1',
+                domainName: 'example1.com',
+                studioId,
+                verificationKey: 'key-1',
+                verified: true,
+            });
+
+            await store.saveCustomDomain({
+                id: 'domain-2',
+                domainName: 'example2.com',
+                studioId,
+                verificationKey: 'key-2',
+                verified: null,
+            });
+
+            const result = await manager.listCustomDomains({
+                userId,
+                studioId,
+            });
+
+            expect(result).toEqual(
+                success({
+                    domains: [
+                        {
+                            id: 'domain-1',
+                            domainName: 'example1.com',
+                            verified: true,
+                        },
+                        {
+                            id: 'domain-2',
+                            domainName: 'example2.com',
+                            verified: null,
+                        },
+                    ],
+                })
+            );
+        });
+
+        it('should only return domains for the specified studio', async () => {
+            const otherStudioId = 'other-studio';
+            await store.addStudio({
+                id: otherStudioId,
+                displayName: 'Other Studio',
+                ownerStudioComId: null,
+                subscriptionPeriodStartMs: null,
+                subscriptionPeriodEndMs: null,
+                comId: 'other-comid',
+            });
+
+            await store.saveCustomDomain({
+                id: 'domain-1',
+                domainName: 'example1.com',
+                studioId,
+                verificationKey: 'key-1',
+                verified: true,
+            });
+
+            await store.saveCustomDomain({
+                id: 'other-domain',
+                domainName: 'other.com',
+                studioId: otherStudioId,
+                verificationKey: 'other-key',
+                verified: true,
+            });
+
+            const result = await manager.listCustomDomains({
+                userId,
+                studioId,
+            });
+
+            expect(result).toEqual(
+                success({
+                    domains: [
+                        {
+                            id: 'domain-1',
+                            domainName: 'example1.com',
+                            verified: true,
+                        },
+                    ],
+                })
+            );
+        });
+
+        it('should work with users who have admin role in the studio', async () => {
+            const adminUserId = 'admin-user';
+            await store.saveUser({
+                id: adminUserId,
+                email: 'admin@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await store.addStudioAssignment({
+                studioId: studioId,
+                userId: adminUserId,
+                isPrimaryContact: false,
+                role: 'admin',
+            });
+
+            await store.saveCustomDomain({
+                id: 'domain-1',
+                domainName: 'example.com',
+                studioId,
+                verificationKey: 'key-1',
+                verified: true,
+            });
+
+            const result = await manager.listCustomDomains({
+                userId: adminUserId,
+                studioId,
+            });
+
+            expect(result).toEqual(
+                success({
+                    domains: [
+                        {
+                            id: 'domain-1',
+                            domainName: 'example.com',
+                            verified: true,
+                        },
+                    ],
+                })
+            );
+        });
+
+        it('should return domains with both verified and unverified status', async () => {
+            await store.saveCustomDomain({
+                id: 'domain-1',
+                domainName: 'verified1.com',
+                studioId,
+                verificationKey: 'key-1',
+                verified: true,
+            });
+
+            await store.saveCustomDomain({
+                id: 'domain-2',
+                domainName: 'unverified1.com',
+                studioId,
+                verificationKey: 'key-2',
+                verified: null,
+            });
+
+            await store.saveCustomDomain({
+                id: 'domain-3',
+                domainName: 'verified2.com',
+                studioId,
+                verificationKey: 'key-3',
+                verified: true,
+            });
+
+            await store.saveCustomDomain({
+                id: 'domain-4',
+                domainName: 'unverified2.com',
+                studioId,
+                verificationKey: 'key-4',
+                verified: null,
+            });
+
+            const result = await manager.listCustomDomains({
+                userId,
+                studioId,
+            });
+
+            expect(result).toEqual(
+                success({
+                    domains: [
+                        {
+                            id: 'domain-1',
+                            domainName: 'verified1.com',
+                            verified: true,
+                        },
+                        {
+                            id: 'domain-2',
+                            domainName: 'unverified1.com',
+                            verified: null,
+                        },
+                        {
+                            id: 'domain-3',
+                            domainName: 'verified2.com',
+                            verified: true,
+                        },
+                        {
+                            id: 'domain-4',
+                            domainName: 'unverified2.com',
+                            verified: null,
+                        },
+                    ],
+                })
+            );
+        });
+    });
+
+    describe('verifyCustomDomain()', () => {
+        let userId: string;
+        let studioId: string;
+        let domainId: string;
+
+        beforeEach(async () => {
+            userId = 'test-user';
+            studioId = 'test-studio';
+            domainId = 'test-domain-id';
+
+            await store.saveUser({
+                id: userId,
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await store.addStudio({
+                id: studioId,
+                displayName: 'Test Studio',
+                ownerStudioComId: null,
+                subscriptionPeriodStartMs: null,
+                subscriptionPeriodEndMs: null,
+                comId: 'test-comid',
+            });
+
+            await store.addStudioAssignment({
+                studioId: studioId,
+                userId: userId,
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+
+            await store.saveCustomDomain({
+                id: domainId,
+                domainName: 'example.com',
+                studioId,
+                verificationKey: 'verification-key',
+                verified: null,
+            });
+        });
+
+        it('should return not_supported if domainNameValidator is not configured', async () => {
+            manager = new RecordsController({
+                store,
+                auth: store,
+                metrics: store,
+                config: store,
+                messenger: store,
+                privo: null,
+                domainNameValidator: null,
+            });
+
+            const result = await manager.verifyCustomDomain({
+                userId,
+                customDomainId: domainId,
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'Custom domains are not supported on this server.',
+                })
+            );
+        });
+
+        it('should return not_found if the custom domain does not exist', async () => {
+            const result = await manager.verifyCustomDomain({
+                userId,
+                customDomainId: 'nonexistent-domain',
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_found',
+                    errorMessage: 'The given custom domain was not found.',
+                })
+            );
+        });
+
+        it('should return not_authorized if the user is not an admin of the studio', async () => {
+            const otherUserId = 'other-user';
+            await store.saveUser({
+                id: otherUserId,
+                email: 'other@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            const result = await manager.verifyCustomDomain({
+                userId: otherUserId,
+                customDomainId: domainId,
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this operation.',
+                })
+            );
+        });
+
+        it('should return failure if domain validation fails', async () => {
+            domainNameValidator.validateDomainName.mockResolvedValue(
+                failure({
+                    errorCode: 'invalid_request',
+                    errorMessage: 'DNS verification record not found.',
+                })
+            );
+
+            const result = await manager.verifyCustomDomain({
+                userId,
+                customDomainId: domainId,
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'invalid_request',
+                    errorMessage: 'DNS verification record not found.',
+                })
+            );
+
+            expect(domainNameValidator.validateDomainName).toHaveBeenCalledWith(
+                'example.com',
+                'verification-key'
+            );
+
+            // Verify domain was not marked as verified
+            const domain = await store.getCustomDomainById(domainId);
+            expect(domain?.verified).toBe(null);
+        });
+
+        it('should successfully verify a custom domain', async () => {
+            domainNameValidator.validateDomainName.mockResolvedValue(success());
+
+            const result = await manager.verifyCustomDomain({
+                userId,
+                customDomainId: domainId,
+            });
+
+            expect(result).toEqual(success());
+
+            expect(domainNameValidator.validateDomainName).toHaveBeenCalledWith(
+                'example.com',
+                'verification-key'
+            );
+
+            // Verify domain was marked as verified
+            const domain = await store.getCustomDomainById(domainId);
+            expect(domain?.verified).toBe(true);
+        });
+
+        it('should verify an already verified domain without error', async () => {
+            // First verification
+            domainNameValidator.validateDomainName.mockResolvedValue(success());
+
+            const firstResult = await manager.verifyCustomDomain({
+                userId,
+                customDomainId: domainId,
+            });
+
+            expect(firstResult).toEqual(success());
+
+            const domain1 = await store.getCustomDomainById(domainId);
+            expect(domain1?.verified).toBe(true);
+
+            // Second verification
+            const result = await manager.verifyCustomDomain({
+                userId,
+                customDomainId: domainId,
+            });
+
+            expect(result).toEqual(success());
+
+            const domain2 = await store.getCustomDomainById(domainId);
+            expect(domain2?.verified).toBe(true);
+        });
+
+        it('should not verify domains from other studios if the user does not have access', async () => {
+            const otherStudioId = 'other-studio';
+            const otherDomainId = 'other-domain-id';
+
+            await store.addStudio({
+                id: otherStudioId,
+                displayName: 'Other Studio',
+                ownerStudioComId: null,
+                subscriptionPeriodStartMs: null,
+                subscriptionPeriodEndMs: null,
+                comId: 'other-comid',
+            });
+
+            await store.saveCustomDomain({
+                id: otherDomainId,
+                domainName: 'other.com',
+                studioId: otherStudioId,
+                verificationKey: 'other-key',
+                verified: null,
+            });
+
+            // User is not admin of the other studio
+            const result = await manager.verifyCustomDomain({
+                userId,
+                customDomainId: otherDomainId,
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this operation.',
+                })
+            );
+
+            // Verify domain was not marked as verified
+            const domain = await store.getCustomDomainById(otherDomainId);
+            expect(domain?.verified).toBe(null);
+        });
+    });
+
+    describe('getPlayerWebManifest()', () => {
+        const studioId = 'studioId';
+
+        beforeEach(async () => {
+            store.playerWebManifest = WEB_MANIFEST_SCHEMA.parse({
+                name: 'Test',
+                short_name: 'Test',
+            } satisfies z.input<typeof WEB_MANIFEST_SCHEMA>);
+        });
+
+        it('should return the default web manifest there is no custom domain', async () => {
+            const result = await manager.getPlayerWebManifest('example.com');
+            expect(result).toEqual(success(store.playerWebManifest));
+        });
+
+        it('should return not_found if there is no configured web manifest', async () => {
+            store.playerWebManifest = null;
+
+            const result = await manager.getPlayerWebManifest('example.com');
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_found',
+                    errorMessage: 'No web manifest found.',
+                })
+            );
+        });
+
+        it('should return the custom domain web manifest if one is configured', async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub.withAllDefaultFeatures().withComId()
+                    )
+            );
+
+            const studioManifest = WEB_MANIFEST_SCHEMA.parse({
+                name: 'Custom Domain Test',
+                short_name: 'CD Test',
+            } satisfies z.input<typeof WEB_MANIFEST_SCHEMA>);
+            await store.addStudio({
+                id: studioId,
+                displayName: 'Test Studio',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                playerWebManifest: studioManifest,
+            });
+
+            await store.saveCustomDomain({
+                id: 'domain-1',
+                domainName: 'customdomain.com',
+                studioId,
+                verificationKey: 'key-1',
+                verified: true,
+            });
+
+            const result = await manager.getPlayerWebManifest(
+                'customdomain.com'
+            );
+            expect(result).toEqual(success(studioManifest));
+        });
+
+        it('should return the default web manifest if the studio does not have one configured', async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub.withAllDefaultFeatures().withComId()
+                    )
+            );
+
+            await store.addStudio({
+                id: studioId,
+                displayName: 'Test Studio',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            await store.saveCustomDomain({
+                id: 'domain-1',
+                domainName: 'customdomain.com',
+                studioId,
+                verificationKey: 'key-1',
+                verified: true,
+            });
+
+            const result = await manager.getPlayerWebManifest(
+                'customdomain.com'
+            );
+            expect(result).toEqual(success(store.playerWebManifest));
+        });
+    });
+
+    describe('getConfigurationValue()', () => {
+        it('should return not_authorized if the user is not a superUser', async () => {
+            const result = await manager.getConfigurationValue({
+                userRole: 'none',
+                key: 'subscriptions',
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this operation.',
+                })
+            );
+        });
+
+        it('should return not_authorized if the user role is null', async () => {
+            const result = await manager.getConfigurationValue({
+                userRole: null,
+                key: 'subscriptions',
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this operation.',
+                })
+            );
+        });
+
+        it('should return not_authorized if the user is a moderator', async () => {
+            const result = await manager.getConfigurationValue({
+                userRole: 'moderator',
+                key: 'subscriptions',
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this operation.',
+                })
+            );
+        });
+
+        it('should retrieve the subscriptions configuration if the user is a superUser', async () => {
+            const config = createTestSubConfiguration((config) =>
+                config.addSubscription('sub1', (sub) =>
+                    sub.withAllDefaultFeatures()
+                )
+            );
+            store.subscriptionConfiguration = config;
+
+            const result = await manager.getConfigurationValue({
+                userRole: 'superUser',
+                key: 'subscriptions',
+            });
+
+            expect(result).toEqual(success(config));
+        });
+
+        it('should retrieve the privo configuration if the user is a superUser', async () => {
+            const privoConfig = createTestPrivoConfiguration();
+            store.privoConfiguration = privoConfig;
+
+            const result = await manager.getConfigurationValue({
+                userRole: 'superUser',
+                key: 'privo',
+            });
+
+            expect(result).toEqual(success(privoConfig));
+        });
+
+        it('should retrieve the moderation configuration if the user is a superUser', async () => {
+            const moderationConfig = {
+                allowUnauthenticatedReports: true,
+            };
+            store.moderationConfiguration = moderationConfig;
+
+            const result = await manager.getConfigurationValue({
+                userRole: 'superUser',
+                key: 'moderation',
+            });
+
+            expect(result).toEqual(success(moderationConfig));
+        });
+
+        it('should retrieve the web configuration if the user is a superUser', async () => {
+            const webConfig = {
+                version: 2,
+                causalRepoConnectionProtocol: 'websocket',
+            } as const;
+            store.webConfig = webConfig;
+
+            const result = await manager.getConfigurationValue({
+                userRole: 'superUser',
+                key: 'web',
+            });
+
+            expect(result).toEqual(success(webConfig));
+        });
+
+        it('should retrieve the player web manifest if the user is a superUser', async () => {
+            const manifest = WEB_MANIFEST_SCHEMA.parse({
+                name: 'Test Player',
+                short_name: 'Test',
+            } satisfies z.input<typeof WEB_MANIFEST_SCHEMA>);
+            store.playerWebManifest = manifest;
+
+            const result = await manager.getConfigurationValue({
+                userRole: 'superUser',
+                key: 'playerWebManifest',
+            });
+
+            expect(result).toEqual(success(manifest));
+        });
+
+        it('should return null if the configuration value does not exist', async () => {
+            store.subscriptionConfiguration = null;
+
+            const result = await manager.getConfigurationValue({
+                userRole: 'superUser',
+                key: 'subscriptions',
+            });
+
+            expect(result).toEqual(success(null));
+        });
+
+        it('should work for system user role', async () => {
+            const config = createTestSubConfiguration((config) =>
+                config.addSubscription('sub1', (sub) =>
+                    sub.withAllDefaultFeatures()
+                )
+            );
+            store.subscriptionConfiguration = config;
+
+            const result = await manager.getConfigurationValue({
+                userRole: 'system',
+                key: 'subscriptions',
+            });
+
+            expect(result).toEqual(success(config));
+        });
+    });
+
+    describe('setConfigurationValue()', () => {
+        it('should return not_authorized if the user is not a superUser', async () => {
+            const config = createTestSubConfiguration((config) =>
+                config.addSubscription('sub1', (sub) =>
+                    sub.withAllDefaultFeatures()
+                )
+            );
+
+            const result = await manager.setConfigurationValue({
+                userRole: 'none',
+                key: 'subscriptions',
+                value: config,
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this operation.',
+                })
+            );
+
+            // Verify configuration was not set
+            expect(store.subscriptionConfiguration).not.toEqual(config);
+        });
+
+        it('should return not_authorized if the user role is null', async () => {
+            const config = createTestSubConfiguration((config) =>
+                config.addSubscription('sub1', (sub) =>
+                    sub.withAllDefaultFeatures()
+                )
+            );
+
+            const result = await manager.setConfigurationValue({
+                userRole: null,
+                key: 'subscriptions',
+                value: config,
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this operation.',
+                })
+            );
+        });
+
+        it('should return not_authorized if the user is a moderator', async () => {
+            const config = createTestSubConfiguration((config) =>
+                config.addSubscription('sub1', (sub) =>
+                    sub.withAllDefaultFeatures()
+                )
+            );
+
+            const result = await manager.setConfigurationValue({
+                userRole: 'moderator',
+                key: 'subscriptions',
+                value: config,
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this operation.',
+                })
+            );
+        });
+
+        it('should set the subscriptions configuration if the user is a superUser', async () => {
+            const config = createTestSubConfiguration((config) =>
+                config.addSubscription('sub1', (sub) =>
+                    sub.withAllDefaultFeatures()
+                )
+            );
+
+            const result = await manager.setConfigurationValue({
+                userRole: 'superUser',
+                key: 'subscriptions',
+                value: config,
+            });
+
+            expect(result).toEqual(success(undefined));
+            expect(store.subscriptionConfiguration).toEqual(config);
+        });
+
+        it('should set the privo configuration if the user is a superUser', async () => {
+            const privoConfig = createTestPrivoConfiguration();
+
+            const result = await manager.setConfigurationValue({
+                userRole: 'superUser',
+                key: 'privo',
+                value: privoConfig,
+            });
+
+            expect(result).toEqual(success(undefined));
+            expect(store.privoConfiguration).toEqual(privoConfig);
+        });
+
+        it('should set the moderation configuration if the user is a superUser', async () => {
+            const moderationConfig = {
+                allowUnauthenticatedReports: false,
+            };
+
+            const result = await manager.setConfigurationValue({
+                userRole: 'superUser',
+                key: 'moderation',
+                value: moderationConfig,
+            });
+
+            expect(result).toEqual(success(undefined));
+            expect(store.moderationConfiguration).toEqual(moderationConfig);
+        });
+
+        it('should set the web configuration if the user is a superUser', async () => {
+            const webConfig = WEB_CONFIG_SCHEMA.parse({
+                causalRepoConnectionProtocol: 'websocket',
+            } satisfies z.input<typeof WEB_CONFIG_SCHEMA>);
+
+            const result = await manager.setConfigurationValue({
+                userRole: 'superUser',
+                key: 'web',
+                value: webConfig,
+            });
+
+            expect(result).toEqual(success(undefined));
+            expect(store.webConfig).toEqual(webConfig);
+        });
+
+        it('should set the player web manifest if the user is a superUser', async () => {
+            const manifest = WEB_MANIFEST_SCHEMA.parse({
+                name: 'Test Player',
+                short_name: 'Test',
+            } satisfies z.input<typeof WEB_MANIFEST_SCHEMA>);
+
+            const result = await manager.setConfigurationValue({
+                userRole: 'superUser',
+                key: 'playerWebManifest',
+                value: manifest,
+            });
+
+            expect(result).toEqual(success(undefined));
+            expect(store.playerWebManifest).toEqual(manifest);
+        });
+
+        it('should update an existing configuration value', async () => {
+            const config1 = createTestSubConfiguration((config) =>
+                config.addSubscription('sub1', (sub) =>
+                    sub.withAllDefaultFeatures()
+                )
+            );
+            store.subscriptionConfiguration = config1;
+
+            const config2 = createTestSubConfiguration((config) =>
+                config
+                    .addSubscription('sub1', (sub) =>
+                        sub.withAllDefaultFeatures()
+                    )
+                    .addSubscription('sub2', (sub) =>
+                        sub.withAllDefaultFeatures()
+                    )
+            );
+
+            const result = await manager.setConfigurationValue({
+                userRole: 'superUser',
+                key: 'subscriptions',
+                value: config2,
+            });
+
+            expect(result).toEqual(success(undefined));
+            expect(store.subscriptionConfiguration).toEqual(config2);
+            expect(store.subscriptionConfiguration).not.toEqual(config1);
+        });
+
+        it('should work for system user role', async () => {
+            const config = createTestSubConfiguration((config) =>
+                config.addSubscription('sub1', (sub) =>
+                    sub.withAllDefaultFeatures()
+                )
+            );
+
+            const result = await manager.setConfigurationValue({
+                userRole: 'system',
+                key: 'subscriptions',
+                value: config,
+            });
+
+            expect(result).toEqual(success(undefined));
+            expect(store.subscriptionConfiguration).toEqual(config);
+        });
+
+        it('should allow setting configuration to null by clearing it', async () => {
+            const config = createTestSubConfiguration((config) =>
+                config.addSubscription('sub1', (sub) =>
+                    sub.withAllDefaultFeatures()
+                )
+            );
+            store.subscriptionConfiguration = config;
+
+            // Setting to null should clear the configuration
+            const result = await manager.setConfigurationValue({
+                userRole: 'superUser',
+                key: 'subscriptions',
+                value: null as any,
+            });
+
+            expect(result).toEqual(success(undefined));
         });
     });
 });

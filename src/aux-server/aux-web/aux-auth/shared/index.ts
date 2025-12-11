@@ -15,19 +15,55 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import type { RemoteCausalRepoProtocol } from '@casual-simulation/aux-common';
+import type {
+    RemoteCausalRepoProtocol,
+    CasualOSConfig,
+} from '@casual-simulation/aux-common';
+import { tryParseJson } from '@casual-simulation/aux-common';
 import { AuthManager } from './AuthManager';
 
 declare const API_ENDPOINT: string;
 declare const WEBSOCKET_ENDPOINT: string;
 declare const WEBSOCKET_PROTOCOL: RemoteCausalRepoProtocol;
+declare const ASSUME_STUDIOS_SUPPORTED: boolean;
+declare const ASSUME_SUBSCRIPTIONS_SUPPORTED: boolean;
 declare const GIT_TAG: string;
+declare const USE_PRIVO_LOGIN: boolean;
+declare const SUPPORT_URL: string;
+declare const ENABLE_SMS_AUTHENTICATION: boolean;
 
-const authManager = new AuthManager(
-    API_ENDPOINT,
-    WEBSOCKET_ENDPOINT,
-    WEBSOCKET_PROTOCOL,
-    GIT_TAG
+if (typeof (globalThis as any).USE_PRIVO_LOGIN === 'undefined') {
+    (globalThis as any).USE_PRIVO_LOGIN = false;
+}
+
+if (typeof (globalThis as any).SUPPORT_URL === 'undefined') {
+    (globalThis as any).SUPPORT_URL = null;
+}
+
+const injectedConfig = tryParseJson(
+    document.querySelector('script#casualos-web-config')?.innerHTML
 );
+let authManager: AuthManager;
+if (injectedConfig.success) {
+    const config: CasualOSConfig = injectedConfig.value;
+    authManager = new AuthManager(config, GIT_TAG);
+} else {
+    console.log(`[AuthManager] Use Privo Login: ${USE_PRIVO_LOGIN}`);
+
+    authManager = new AuthManager(
+        {
+            version: 2,
+            recordsOrigin: API_ENDPOINT,
+            causalRepoConnectionUrl: WEBSOCKET_ENDPOINT,
+            causalRepoConnectionProtocol: WEBSOCKET_PROTOCOL,
+            studiosSupported: ASSUME_STUDIOS_SUPPORTED,
+            subscriptionsSupported: ASSUME_SUBSCRIPTIONS_SUPPORTED,
+            requirePrivoLogin: USE_PRIVO_LOGIN ?? false,
+            supportUrl: SUPPORT_URL,
+            enableSmsAuthentication: ENABLE_SMS_AUTHENTICATION === true,
+        },
+        GIT_TAG
+    );
+}
 
 export { authManager };

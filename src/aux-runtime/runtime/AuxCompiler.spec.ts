@@ -448,7 +448,7 @@ describe('AuxCompiler', () => {
                 }
 
                 expect(func(3)).toBe(10);
-                expect(test).toBeCalledWith(context);
+                expect(test).toHaveBeenCalledWith(context);
 
                 if (interpreter) {
                     const interpretable = getInterpretableFunction(func);

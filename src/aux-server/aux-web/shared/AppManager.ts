@@ -34,13 +34,21 @@ import {
     isStoredVersion2,
 } from '@casual-simulation/aux-common';
 import { v4 as uuid } from 'uuid';
-import type { WebConfig } from '@casual-simulation/aux-common/common/WebConfig';
+import type {
+    CasualOSConfig,
+    WebConfig,
+} from '@casual-simulation/aux-common/common/WebConfig';
 import type {
     AuxConfig,
     SimulationOrigin,
     AuthHelperInterface,
 } from '@casual-simulation/aux-vm';
-import { SimulationManager } from '@casual-simulation/aux-vm';
+import {
+    isDefault,
+    isStatic,
+    isTemp,
+    SimulationManager,
+} from '@casual-simulation/aux-vm';
 import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import {
     AuthCoordinator,
@@ -49,6 +57,9 @@ import {
     SystemPortalCoordinator,
 } from '@casual-simulation/aux-vm-browser';
 import AuxVMImpl from '@casual-simulation/aux-vm-browser/vm/AuxVMImpl';
+import AuxNoVM, {
+    processPartitions as processNoVmPartitions,
+} from '@casual-simulation/aux-vm-browser/vm/AuxNoVM';
 import bootstrap from './ab1/ab-1.bootstrap.json';
 import { registerSW } from 'virtual:pwa-register';
 import { openIDB, getItem, getItems, putItem, deleteItem } from './IDB';
@@ -59,6 +70,7 @@ import type { GetPlayerConfigSuccess } from '@casual-simulation/aux-records';
 import { tryParseJson } from '@casual-simulation/aux-common';
 import type { AuxDevice } from '@casual-simulation/aux-runtime';
 import { getSimulationId } from '../../shared/SimulationHelpers';
+import type { AuxVM } from '@casual-simulation/aux-vm/vm';
 
 /**
  * Defines an interface that contains version information about the app.
@@ -105,6 +117,8 @@ const SAVE_CONFIG_TIMEOUT_MILISECONDS = 5000;
 
 const INIT_OFFLINE_TIMEOUT_MILISECONDS = 5000;
 
+const FETCH_CONFIG_TIMEOUT_MILISECONDS = 3000;
+
 const STATIC_INSTS_STORE = 'staticInsts';
 const INSTS_STORE = 'publicInsts';
 
@@ -127,6 +141,7 @@ export class AppManager {
     private _ab1BootstrapUrl: string;
     private _comId: string;
     private _comIdConfig: GetPlayerConfigSuccess;
+    private _ab1BootstrapAux: StoredAux;
 
     get loadingProgress(): Observable<ProgressMessage> {
         return this._progress;
@@ -150,7 +165,7 @@ export class AppManager {
     private _progress: BehaviorSubject<ProgressMessage>;
     private _updateAvailable: BehaviorSubject<boolean>;
     private _simulationManager: SimulationManager<BotManager>;
-    private _config: WebConfig;
+    private _config: CasualOSConfig;
     private _primaryPromise: Promise<BotManager>;
     private _registration: ServiceWorkerRegistration;
     private _systemPortal: SystemPortalCoordinator<BotManager>;
@@ -165,8 +180,7 @@ export class AppManager {
     private _simulationFactory: (
         id: string,
         origin: SimulationOrigin,
-        config: AuxConfig['config'],
-        isStatic: boolean
+        config: AuxConfig['config']
     ) => Promise<BotManager>;
 
     get systemPortal() {
@@ -176,10 +190,11 @@ export class AppManager {
     constructor() {
         this._progress = new BehaviorSubject<ProgressMessage>(null);
         this._updateAvailable = new BehaviorSubject<boolean>(false);
-        this._simulationFactory = async (id, origin, config, isStatic) => {
+        this._simulationFactory = async (id, origin, config) => {
             const configBotId = uuid();
 
-            if (isStatic && (await this.checkPendingCleanup(id))) {
+            const isStaticOrigin = isStatic(origin);
+            if (isStaticOrigin && (await this.checkPendingCleanup(id))) {
                 console.log(
                     `[AppManager] Executing pending cleanup for inst: ${id}`
                 );
@@ -200,6 +215,7 @@ export class AppManager {
 
                 throw new Error(`Static inst ${id} was deleted and cleaned up`);
             }
+
             let initialState: BotsState = undefined;
             if (import.meta.env.MODE === 'static') {
                 const injectedAux = document.querySelector(
@@ -220,7 +236,15 @@ export class AppManager {
                 config.staticRepoLocalPersistence = false;
             }
 
-            const partitions = isStatic
+            const partitions = isTemp(origin)
+                ? BotManager.createTempPartitions(
+                      id,
+                      configBotId,
+                      origin,
+                      config,
+                      initialState
+                  )
+                : isStaticOrigin
                 ? BotManager.createStaticPartitions(
                       id,
                       configBotId,
@@ -230,56 +254,81 @@ export class AppManager {
                   )
                 : BotManager.createPartitions(id, configBotId, origin, config);
 
-            const storedInst = this._db
-                ? await getItem<StoredInst>(
-                      this._db,
-                      isStatic ? STATIC_INSTS_STORE : INSTS_STORE,
-                      id
-                  )
-                : null;
-
             let relaxOrigin = false;
             let vmOrigin: string | null = config.vmOrigin;
-            if (isStatic && storedInst && vmOrigin !== storedInst.vmOrigin) {
-                console.log(
-                    `[AppManager] old static inst already exists for "${id}". Relaxing origin and using stored inst origin.`
-                );
-                relaxOrigin = true;
-                vmOrigin = storedInst.vmOrigin ?? location.origin;
+            let version = this.version;
+
+            if (!isTemp(origin)) {
+                const storedInst = this._db
+                    ? await getItem<StoredInst>(
+                          this._db,
+                          isStaticOrigin ? STATIC_INSTS_STORE : INSTS_STORE,
+                          id
+                      )
+                    : null;
+
+                if (storedInst) {
+                    version = storedInst.version;
+                }
+
+                if (
+                    isStaticOrigin &&
+                    storedInst &&
+                    vmOrigin !== storedInst.vmOrigin
+                ) {
+                    console.log(
+                        `[AppManager] old static inst already exists for "${id}". Relaxing origin and using stored inst origin.`
+                    );
+                    relaxOrigin = true;
+                    vmOrigin = storedInst.vmOrigin ?? location.origin;
+                }
             }
 
-            if (this._db) {
+            let vm: AuxVM;
+            const auxConfig: AuxConfig = {
+                configBotId: configBotId,
+                config: {
+                    ...config,
+                    vmOrigin,
+                },
+                partitions,
+            };
+
+            if (config.disableVM && config.enableDom) {
+                vmOrigin = location.origin;
+                const { BrowserAuxChannel } = await import(
+                    '@casual-simulation/aux-vm-browser/vm/BrowserAuxChannel'
+                );
+                const processedConfig = processNoVmPartitions(auxConfig);
+                const channel = new BrowserAuxChannel(
+                    location.origin,
+                    processedConfig
+                );
+                vm = new AuxNoVM(id, origin, auxConfig.configBotId, channel);
+            } else {
+                if (config.disableVM) {
+                    console.error(
+                        '[AppManager] Broken configuration! The VM can only be disabled (disableVM=true) when DOM features are also enabled (enableDom=true). Enabling VM to ensure that DOM features are disabled.'
+                    );
+                }
+                vm = new AuxVMImpl(id, origin, auxConfig, relaxOrigin);
+            }
+
+            if (this._db && !isTemp(origin)) {
                 putItem<StoredInst>(
                     this._db,
-                    isStatic ? STATIC_INSTS_STORE : INSTS_STORE,
+                    isStaticOrigin ? STATIC_INSTS_STORE : INSTS_STORE,
                     {
                         id: id,
                         origin,
-                        isStatic: isStatic,
+                        isStatic: isStaticOrigin,
                         vmOrigin: vmOrigin,
-                        version: storedInst ? storedInst.version : this.version,
+                        version: version,
                     }
                 );
             }
 
-            return new BotManager(
-                origin,
-                config,
-                new AuxVMImpl(
-                    id,
-                    origin,
-                    {
-                        configBotId: configBotId,
-                        config: {
-                            ...config,
-                            vmOrigin,
-                        },
-                        partitions,
-                    },
-                    relaxOrigin
-                ),
-                this._auth
-            );
+            return new BotManager(origin, config, vm, this._auth);
         };
         this._simulationManager = new SimulationManager(async (id, config) => {
             const params = new URLSearchParams(location.search);
@@ -288,12 +337,13 @@ export class AppManager {
             if (forceSignedScripts) {
                 console.log('[AppManager] Forcing signed scripts for ' + id);
             }
-            const { isStatic, ...origin } = config;
             return await this._simulationFactory(
                 id,
-                { ...origin, isStatic: !!isStatic },
-                this.createSimulationConfig({ forceSignedScripts, isStatic }),
-                isStatic
+                config,
+                this.createSimulationConfig({
+                    forceSignedScripts,
+                    origin: config,
+                })
             );
         });
         this._systemPortal = new SystemPortalCoordinator(
@@ -304,9 +354,9 @@ export class AppManager {
 
     createSimulationConfig(options: {
         forceSignedScripts: boolean;
-        isStatic: boolean;
+        origin: SimulationOrigin;
     }): AuxConfig['config'] {
-        const device = this._calculateDeviceConfig(options.isStatic);
+        const device = this._calculateDeviceConfig(options.origin);
         return {
             version: this.version.latestTaggedVersion,
             versionHash: this.version.gitCommit,
@@ -339,6 +389,7 @@ export class AppManager {
             comId: this._comId,
             enableDom: this._config.enableDom,
             debug: this._config.debug,
+            disableVM: this._config.disableVm,
         };
     }
 
@@ -372,8 +423,7 @@ export class AppManager {
         factory: (
             id: string,
             origin: SimulationOrigin,
-            config: AuxConfig['config'],
-            isStatic: boolean
+            config: AuxConfig['config']
         ) => Promise<BotManager>
     ) {
         this._simulationFactory = factory;
@@ -649,31 +699,47 @@ export class AppManager {
                 .catch(() => false);
         }
 
+        const injectedBootstrap = tryParseJson(
+            document.querySelector('script#casualos-ab1-bootstrap')?.innerHTML
+        );
+        let aux: StoredAux;
         let ab1Bootstrap: string;
+        if (injectedBootstrap.success) {
+            console.log('[AppManager] Using injected AB-1 AUX.');
+            aux = injectedBootstrap.value;
+        }
+
         if (hasValue(this._config.ab1BootstrapURL)) {
-            console.log('[AppManager] Using configured AB-1');
+            if (!aux) {
+                console.log('[AppManager] Using configured AB-1');
+            }
             ab1Bootstrap = this._config.ab1BootstrapURL;
         } else {
-            console.log('[AppManager] Using built-in AB-1');
+            if (!aux) {
+                console.log('[AppManager] Using built-in AB-1');
+            }
             ab1Bootstrap = new URL('ab1/prod/ab1.aux', location.href).href;
         }
 
         this._arSupported = arSupported;
         this._vrSupported = vrSupported;
         this._ab1BootstrapUrl = ab1Bootstrap;
+        this._ab1BootstrapAux = aux;
         this._domSupported = this._config.enableDom ?? false;
 
         console.log('[AppManager] AB-1 URL: ' + ab1Bootstrap);
     }
 
-    private _calculateDeviceConfig(isStatic: boolean): AuxDevice {
+    private _calculateDeviceConfig(origin: SimulationOrigin): AuxDevice {
         return {
             supportsAR: this._arSupported,
             supportsVR: this._vrSupported,
             supportsDOM: this._domSupported,
-            isCollaborative: !isStatic,
+            isCollaborative: isDefault(origin),
             allowCollaborationUpgrade: false,
             ab1BootstrapUrl: this._ab1BootstrapUrl,
+            ab1BootstrapAux: this._ab1BootstrapAux,
+            comID: this._comId,
         };
     }
 
@@ -694,6 +760,8 @@ export class AppManager {
             console.warn(
                 '[AppManager] Config not able to be fetched from the server or local storage.'
             );
+        } else {
+            console.log('[AppManager] Config loaded:', this._config);
         }
     }
 
@@ -707,6 +775,15 @@ export class AppManager {
     }
 
     private async _initComId() {
+        if (this._config.comId) {
+            this._comId = this._config.comId;
+            console.log('[AppManager] Using comId:', this._comId);
+        } else {
+            await this._initComIdFromUrl();
+        }
+    }
+
+    private async _initComIdFromUrl() {
         this._comId = this.getComIdFromUrl();
         if (this._comId) {
             console.log('[AppManager] Using comId:', this._comId);
@@ -785,10 +862,10 @@ export class AppManager {
     async setPrimarySimulation(
         recordName: string | null,
         inst: string,
-        isStatic: boolean
+        kind: SimulationOrigin['kind']
     ) {
         const timeBasis = Date.now();
-        const simulationId = getSimulationId(recordName, inst, isStatic);
+        const simulationId = getSimulationId(recordName, inst, kind);
         if (
             (this.simulationManager.primary &&
                 this.simulationManager.primary.id === simulationId) ||
@@ -801,7 +878,7 @@ export class AppManager {
             simulationId,
             recordName,
             inst,
-            isStatic
+            kind
         );
 
         this._primaryPromise.then((manager) => {
@@ -831,7 +908,7 @@ export class AppManager {
         id: string,
         recordName: string | null,
         inst: string,
-        isStatic: boolean
+        kind: SimulationOrigin['kind']
     ) {
         this._sendProgress('Requesting inst...', 0.1);
 
@@ -845,7 +922,7 @@ export class AppManager {
         await this.simulationManager.setPrimary(id, {
             recordName,
             inst,
-            isStatic,
+            kind,
         });
         this._primarySimulationAvailableSubject.next(true);
 
@@ -1132,15 +1209,23 @@ export class AppManager {
         }
     }
 
-    private async _getBaseConfig(): Promise<WebConfig> {
+    private async _getBaseConfig(): Promise<CasualOSConfig> {
         if (import.meta.env.MODE === 'static' || import.meta.env.SSR) {
             return {
                 version: null,
                 causalRepoConnectionProtocol: 'websocket',
                 disableCollaboration: true,
                 staticRepoLocalPersistence: true,
+                studiosSupported: false,
+                subscriptionsSupported: false,
             };
         } else {
+            const injectedConfig = tryParseJson(
+                document.querySelector('script#casualos-web-config')?.innerHTML
+            );
+            if (injectedConfig.success) {
+                return injectedConfig.value;
+            }
             const serverConfig = await this._fetchConfigFromServer();
             if (serverConfig) {
                 return serverConfig;
@@ -1150,9 +1235,12 @@ export class AppManager {
         }
     }
 
-    private async _fetchConfigFromServer(): Promise<WebConfig> {
+    private async _fetchConfigFromServer(): Promise<CasualOSConfig> {
         try {
-            const result = await Axios.get<WebConfig>(`/api/config`);
+            const result = await Axios.get<CasualOSConfig>(`/api/config`, {
+                timeout: FETCH_CONFIG_TIMEOUT_MILISECONDS,
+                timeoutErrorMessage: 'Fetch config request timed out',
+            });
             if (result.status === 200) {
                 return result.data;
             } else {
@@ -1197,12 +1285,12 @@ export class AppManager {
         }
     }
 
-    private async _fetchConfigFromLocalStorage(): Promise<WebConfig> {
+    private async _fetchConfigFromLocalStorage(): Promise<CasualOSConfig> {
         try {
             if (!this._db) {
                 return null;
             }
-            const val = await getItem<StoredValue<WebConfig>>(
+            const val = await getItem<StoredValue<CasualOSConfig>>(
                 this._db,
                 'keyval',
                 'config'

@@ -41,7 +41,9 @@ let folders = [
 
 let patterns = [
     `/**/*.js`,
+    `/**/*.jsx`,
     `/**/*.js.map`,
+    `/**/*.jsx.map`,
     `/**/*.ts.map`,
     `/**/*.d.ts`,
     `/*.tsbuildinfo`,
@@ -49,7 +51,11 @@ let patterns = [
 
 let negativePatterns = [`/typings/**/*`, `/node_modules/**/*`];
 
-let globs = [`${__dirname}/src/aux-server/aux-web/dist`];
+let globs = [
+    `${__dirname}/src/aux-server/aux-web/dist`,
+    `${__dirname}/src/aux-server/aux-web/aux-player/vite.config.mts.timestamp-*`,
+    `${__dirname}/src/aux-server/aux-web/aux-auth/vite.config.mts.timestamp-*`,
+];
 folders.forEach((f) => {
     patterns.forEach((p) => {
         globs.push(f + p);
@@ -78,7 +84,7 @@ task('generate-stub-projects', [], async function () {
     const { existsSync, writeFileSync, mkdirSync } = await import('fs');
 
     const projects = [
-        path.resolve(__dirname, 'xpexchange', 'xp-api', 'tsconfig.json'),
+        path.resolve(__dirname, 'xpexchange', 'tsconfig.json'),
         path.resolve(
             __dirname,
             'extensions',

@@ -16,6 +16,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import type { StoredAux } from '@casual-simulation/aux-common';
+
 export interface AuxDevice {
     /**
      * Whether the device supports augmented reality features.
@@ -50,4 +52,16 @@ export interface AuxDevice {
      * The URL that AB-1 should be bootstraped from.
      */
     ab1BootstrapUrl: string;
+
+    /**
+     * The stored aux that AB-1 should be bootstraped from.
+     */
+    ab1BootstrapAux?: StoredAux;
+
+    /**
+     * The comID that this inst was loaded from.
+     *
+     * Null if it was not loaded from a comID.
+     */
+    comID: string | null;
 }

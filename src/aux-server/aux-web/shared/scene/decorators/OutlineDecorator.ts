@@ -154,6 +154,7 @@ export class OutlineDecorator
         });
 
         this.mesh = new Mesh(outlineGeo, outlineMat);
+        this.mesh.name = 'Outline_Mesh';
         this.container.add(this.mesh);
     }
 

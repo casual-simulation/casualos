@@ -96,6 +96,7 @@ export class TestAuxVM implements AuxVM {
                 isCollaborative: true,
                 allowCollaborationUpgrade: true,
                 ab1BootstrapUrl: 'ab1Bootstrap',
+                comID: null,
             }
         );
         this._runtime.userId = configBotId;

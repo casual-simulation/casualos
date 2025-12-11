@@ -44,6 +44,9 @@ export async function createAuxPartition(
     services: AuxPartitionServices,
     ...factories: AuxPartitionFactory[]
 ): Promise<AuxPartition> {
+    if (config.type === 'injected') {
+        return config.partition;
+    }
     for (let factory of factories) {
         let result = await factory(config, services);
         if (result) {

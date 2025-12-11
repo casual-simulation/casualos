@@ -24,8 +24,14 @@ import type {
     StudioComIdRequest,
     LoomConfig,
     HumeConfig,
+    CustomDomain,
+    ListedCustomDomain,
+    CustomDomainWithStudio,
 } from './RecordsStore';
-
+import type {
+    StripeAccountStatus,
+    StripeRequirementsStatus,
+} from './StripeInterface';
 import {
     hashHighEntropyPasswordWithSalt,
     hashLowEntropyPasswordWithSalt,
@@ -41,11 +47,18 @@ import type {
 } from '@casual-simulation/aux-common/Errors';
 import type { ValidateSessionKeyFailure } from './AuthController';
 import type { AuthStore } from './AuthStore';
-import { v4 as uuid } from 'uuid';
+import { v4 as uuid, v7 as uuidv7 } from 'uuid';
 import type { MetricsStore, SubscriptionFilter } from './MetricsStore';
-import type { ConfigurationStore } from './ConfigurationStore';
+import {
+    AB1_BOOTSTRAP_KEY,
+    type ConfigurationInput,
+    type ConfigurationKey,
+    type ConfigurationOutput,
+    type ConfigurationStore,
+} from './ConfigurationStore';
 import type {
     AIHumeFeaturesConfiguration,
+    PurchasableItemFeaturesConfiguration,
     StudioComIdFeaturesConfiguration,
     StudioLoomFeaturesConfiguration,
 } from './SubscriptionConfiguration';
@@ -53,13 +66,29 @@ import {
     getComIdFeatures,
     getHumeAiFeatures,
     getLoomFeatures,
+    getPurchasableItemsFeatures,
     getSubscriptionFeatures,
     getSubscriptionTier,
+    storeFeaturesSchema,
 } from './SubscriptionConfiguration';
 import type { ComIdConfig, ComIdPlayerConfig } from './ComIdConfig';
 import { isActiveSubscription } from './Utils';
 import type { SystemNotificationMessenger } from './SystemNotificationMessenger';
-import { isSuperUserRole } from '@casual-simulation/aux-common';
+import type {
+    CasualOSConfig,
+    Result,
+    SimpleError,
+    StoredAux,
+    UserRole,
+    WebConfig,
+} from '@casual-simulation/aux-common';
+import {
+    failure,
+    isFailure,
+    isSuperUserRole,
+    success,
+    tryParseJson,
+} from '@casual-simulation/aux-common';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
 import type { PrivoClientInterface } from './PrivoClient';
@@ -69,6 +98,14 @@ import {
     formatV2RecordKey,
     parseRecordKey,
 } from '@casual-simulation/aux-common/records/RecordKeys';
+import type z from 'zod';
+import type {
+    DomainNameValidator,
+    DomainNameVerificationDNSRecord,
+} from './dns/DomainNameValidator';
+import type { WebManifest } from '@casual-simulation/aux-common/common/WebManifest';
+import axios from 'axios';
+import { STORED_AUX_SCHEMA } from './webhooks';
 
 const TRACE_NAME = 'RecordsController';
 
@@ -79,6 +116,7 @@ export interface RecordsControllerConfig {
     config: ConfigurationStore;
     messenger: SystemNotificationMessenger | null;
     privo: PrivoClientInterface | null;
+    domainNameValidator: DomainNameValidator | null;
 }
 
 /**
@@ -91,6 +129,7 @@ export class RecordsController {
     private _config: ConfigurationStore;
     private _messenger: SystemNotificationMessenger | null;
     private _privo: PrivoClientInterface | null;
+    private _domainNameValidator: DomainNameValidator | null;
 
     constructor(config: RecordsControllerConfig) {
         this._store = config.store;
@@ -99,6 +138,7 @@ export class RecordsController {
         this._config = config.config;
         this._messenger = config.messenger;
         this._privo = config.privo;
+        this._domainNameValidator = config.domainNameValidator;
     }
 
     /**
@@ -1207,9 +1247,10 @@ export class RecordsController {
                 };
             }
 
-            let features: StudioComIdFeaturesConfiguration = {
+            let comIdFeatures: StudioComIdFeaturesConfiguration = {
                 allowed: false,
             };
+            let storeFeatures: PurchasableItemFeaturesConfiguration;
             let loomFeatures: StudioLoomFeaturesConfiguration = {
                 allowed: false,
             };
@@ -1225,15 +1266,19 @@ export class RecordsController {
             ) {
                 const config =
                     await this._config.getSubscriptionConfiguration();
-                features = getComIdFeatures(
+                comIdFeatures = getComIdFeatures(
                     config,
                     studio.subscriptionStatus,
-                    studio.subscriptionId
+                    studio.subscriptionId,
+                    studio.subscriptionPeriodStartMs,
+                    studio.subscriptionPeriodEndMs
                 );
                 loomFeatures = getLoomFeatures(
                     config,
                     studio.subscriptionStatus,
-                    studio.subscriptionId
+                    studio.subscriptionId,
+                    studio.subscriptionPeriodStartMs,
+                    studio.subscriptionPeriodEndMs
                 );
 
                 if (loomFeatures.allowed) {
@@ -1246,7 +1291,9 @@ export class RecordsController {
                     config,
                     studio.subscriptionStatus,
                     studio.subscriptionId,
-                    'studio'
+                    'studio',
+                    studio.subscriptionPeriodStartMs,
+                    studio.subscriptionPeriodEndMs
                 );
 
                 if (humeFeatures.allowed) {
@@ -1254,6 +1301,19 @@ export class RecordsController {
                         studio.id
                     );
                 }
+
+                storeFeatures = getPurchasableItemsFeatures(
+                    config,
+                    studio.subscriptionStatus,
+                    studio.subscriptionId,
+                    'studio',
+                    studio.subscriptionPeriodStartMs,
+                    studio.subscriptionPeriodEndMs
+                );
+            } else {
+                storeFeatures = storeFeaturesSchema.parse({
+                    allowed: false,
+                } satisfies z.input<typeof storeFeaturesSchema>);
             }
 
             return {
@@ -1276,7 +1336,11 @@ export class RecordsController {
                               apiKey: humeConfig.apiKey,
                           }
                         : undefined,
-                    comIdFeatures: features,
+                    comIdFeatures: comIdFeatures,
+                    storeFeatures: storeFeatures,
+                    stripeAccountStatus: studio.stripeAccountStatus ?? null,
+                    stripeRequirementsStatus:
+                        studio.stripeAccountRequirementsStatus ?? null,
                     loomFeatures,
                     humeFeatures,
                 },
@@ -1296,6 +1360,257 @@ export class RecordsController {
                 errorMessage: 'A server error occurred.',
             };
         }
+    }
+
+    /**
+     * Attempts to add a custom domain to a studio.
+     * @param request The request to add the custom domain.
+     * @returns A result containing the verification DNS record or an error.
+     */
+    @traced(TRACE_NAME)
+    async addCustomDomain(
+        request: AddCustomDomainRequest
+    ): Promise<Result<DomainNameVerificationDNSRecord, SimpleError>> {
+        if (!this._domainNameValidator) {
+            return failure({
+                errorCode: 'not_supported',
+                errorMessage:
+                    'Custom domains are not supported on this server.',
+            });
+        }
+
+        const studio = await this._store.getStudioById(request.studioId);
+
+        if (!studio) {
+            return failure({
+                errorCode: 'studio_not_found',
+                errorMessage: 'The given studio was not found.',
+            });
+        }
+
+        const list = await this._store.listStudioAssignments(request.studioId, {
+            userId: request.userId,
+            role: 'admin',
+        });
+
+        if (list.length <= 0) {
+            return failure({
+                errorCode: 'not_authorized',
+                errorMessage:
+                    'You are not authorized to perform this operation.',
+            });
+        }
+
+        const config = await this._config.getSubscriptionConfiguration();
+        const features = getComIdFeatures(
+            config,
+            studio.subscriptionStatus,
+            studio.subscriptionId,
+            studio.subscriptionPeriodStartMs,
+            studio.subscriptionPeriodEndMs
+        );
+
+        if (!features.allowed) {
+            return failure({
+                errorCode: 'not_authorized',
+                errorMessage:
+                    'comId features are not allowed for this comId. Make sure you have an active subscription that provides comId features.',
+            });
+        }
+
+        if (typeof features.maxDomains === 'number') {
+            const domainCount = (
+                await this._store.listCustomDomainsByStudioId(request.studioId)
+            ).length;
+
+            if (domainCount >= features.maxDomains) {
+                return failure({
+                    errorCode: 'subscription_limit_reached',
+                    errorMessage:
+                        'The maximum number of custom domains allowed for your comId subscription has been reached.',
+                });
+            }
+        }
+
+        const verificationKey = fromByteArray(randomBytes(16));
+        const customDomain: CustomDomain = {
+            id: uuidv7(),
+            domainName: request.domain,
+            studioId: request.studioId,
+            verificationKey,
+            verified: null,
+        };
+
+        await this._store.saveCustomDomain(customDomain);
+
+        const verificationDnsRecord =
+            await this._domainNameValidator.getVerificationDNSRecord(
+                customDomain.domainName,
+                customDomain.verificationKey
+            );
+
+        return verificationDnsRecord;
+    }
+
+    /**
+     * Attempts to delete a custom domain.
+     * @param request The request to delete the custom domain.
+     * @returns A result indicating success or failure.
+     */
+    @traced(TRACE_NAME)
+    async deleteCustomDomain(
+        request: DeleteCustomDomainRequest
+    ): Promise<Result<void, SimpleError>> {
+        if (!this._domainNameValidator) {
+            return failure({
+                errorCode: 'not_supported',
+                errorMessage:
+                    'Custom domains are not supported on this server.',
+            });
+        }
+
+        const customDomain = await this._store.getCustomDomainById(
+            request.customDomainId
+        );
+
+        if (!customDomain) {
+            return failure({
+                errorCode: 'not_found',
+                errorMessage: 'The given custom domain was not found.',
+            });
+        }
+
+        const list = await this._store.listStudioAssignments(
+            customDomain.studioId,
+            {
+                userId: request.userId,
+                role: 'admin',
+            }
+        );
+
+        if (list.length <= 0) {
+            return failure({
+                errorCode: 'not_authorized',
+                errorMessage:
+                    'You are not authorized to perform this operation.',
+            });
+        }
+
+        await this._store.deleteCustomDomain(customDomain.id);
+
+        return success(undefined);
+    }
+
+    /**
+     * Lists all custom domains for a given studio.
+     * @param request The request to list custom domains.
+     * @returns A result containing the list of custom domains or an error.
+     */
+    @traced(TRACE_NAME)
+    async listCustomDomains(
+        request: ListCustomDomainsRequest
+    ): Promise<ListCustomDomainsResult> {
+        if (!this._domainNameValidator) {
+            return failure({
+                errorCode: 'not_supported',
+                errorMessage:
+                    'Custom domains are not supported on this server.',
+            });
+        }
+
+        const studio = await this._store.getStudioById(request.studioId);
+
+        if (!studio) {
+            return failure({
+                errorCode: 'studio_not_found',
+                errorMessage: 'The given studio was not found.',
+            });
+        }
+
+        const list = await this._store.listStudioAssignments(request.studioId, {
+            userId: request.userId,
+            role: 'admin',
+        });
+
+        if (list.length <= 0) {
+            return failure({
+                errorCode: 'not_authorized',
+                errorMessage:
+                    'You are not authorized to perform this operation.',
+            });
+        }
+
+        const domains = await this._store.listCustomDomainsByStudioId(
+            request.studioId
+        );
+
+        return success({
+            domains: domains.map(
+                (d) =>
+                    ({
+                        id: d.id,
+                        domainName: d.domainName,
+                        verified: d.verified,
+                    } satisfies ListedCustomDomain)
+            ),
+        });
+    }
+
+    /**
+     * Attempts to verify a custom domain.
+     * @param request The request to verify the custom domain.
+     */
+    @traced(TRACE_NAME)
+    async verifyCustomDomain(
+        request: VerifyCustomDomainRequest
+    ): Promise<Result<void, SimpleError>> {
+        if (!this._domainNameValidator) {
+            return failure({
+                errorCode: 'not_supported',
+                errorMessage:
+                    'Custom domains are not supported on this server.',
+            });
+        }
+
+        const customDomain = await this._store.getCustomDomainById(
+            request.customDomainId
+        );
+
+        if (!customDomain) {
+            return failure({
+                errorCode: 'not_found',
+                errorMessage: 'The given custom domain was not found.',
+            });
+        }
+
+        const list = await this._store.listStudioAssignments(
+            customDomain.studioId,
+            {
+                userId: request.userId,
+                role: 'admin',
+            }
+        );
+
+        if (list.length <= 0) {
+            return failure({
+                errorCode: 'not_authorized',
+                errorMessage:
+                    'You are not authorized to perform this operation.',
+            });
+        }
+
+        const result = await this._domainNameValidator.validateDomainName(
+            customDomain.domainName,
+            customDomain.verificationKey
+        );
+
+        if (isFailure(result)) {
+            return result;
+        }
+
+        await this._store.markCustomDomainAsVerified(customDomain.id);
+
+        return success();
     }
 
     /**
@@ -1337,6 +1652,196 @@ export class RecordsController {
                 errorMessage: 'A server error occurred.',
             };
         }
+    }
+
+    /**
+     * Gets the AB1 bootstrap script that should be injected into the web player.
+     * @param config The config for the web player.
+     * @returns
+     */
+    @traced(TRACE_NAME)
+    async getAb1Bootstrap(
+        config: WebConfig
+    ): Promise<Result<string, SimpleError>> {
+        const bootstrap = await this._config.getConfiguration(
+            AB1_BOOTSTRAP_KEY,
+            null
+        );
+
+        if (bootstrap) {
+            return success(JSON.stringify(bootstrap));
+        }
+
+        if (config.ab1BootstrapURL) {
+            // inject the AB1 bootstrap script
+            const result = await axios.get(config.ab1BootstrapURL, {
+                validateStatus: () => true,
+            });
+
+            if (result.status === 200) {
+                let json: any = null;
+                if (typeof result.data === 'string') {
+                    const parsed = tryParseJson(result.data);
+                    if (parsed.success) {
+                        json = parsed.value;
+                    } else {
+                        console.error(
+                            `[RecordsController] [getAb1Bootstrap] Failed to parse AB1 bootstrap script from URL as JSON: ${config.ab1BootstrapURL}`
+                        );
+                    }
+                } else if (typeof result.data === 'object') {
+                    json = result.data;
+                } else {
+                    console.error(
+                        `[RecordsController] [getAb1Bootstrap] Unexpected AB1 bootstrap script format from URL: ${config.ab1BootstrapURL}`
+                    );
+                }
+
+                let aux: StoredAux;
+                if (json) {
+                    const auxParse = STORED_AUX_SCHEMA.safeParse(json);
+                    if (auxParse.success) {
+                        aux = auxParse.data as StoredAux;
+                    } else {
+                        console.error(
+                            `[RecordsController] [getAb1Bootstrap] Failed to parse AB1 bootstrap script from URL: ${config.ab1BootstrapURL}`,
+                            auxParse.error
+                        );
+                    }
+                }
+
+                if (aux) {
+                    await this._config.setConfiguration(AB1_BOOTSTRAP_KEY, aux);
+                    return success(JSON.stringify(aux));
+                }
+            } else {
+                console.error(
+                    `[RecordsController] [getAb1Bootstrap] Failed to fetch AB1 bootstrap script from URL: ${config.ab1BootstrapURL}, status code: ${result.status}`,
+                    result.data
+                );
+            }
+        }
+
+        return failure({
+            errorCode: 'not_found',
+            errorMessage: 'No AB1 bootstrap script found.',
+        });
+    }
+
+    /**
+     * Attempts to get the web config.
+     *
+     * @param hostname The hostname that the request was made to.
+     */
+    @traced(TRACE_NAME)
+    async getWebConfig(
+        hostname: string
+    ): Promise<Result<CasualOSConfig, SimpleError>> {
+        // TODO: Merge into a single call to get all the configurations at once efficiently.
+        const [config, subscriptions, privo, customDomain] = await Promise.all([
+            this._config.getWebConfig(),
+            this._config.getSubscriptionConfiguration(),
+            this._config.getPrivoConfiguration(),
+            this._store.getVerifiedCustomDomainByName(hostname),
+        ]);
+
+        const webConfig = {
+            ...(config ?? {
+                version: 2,
+                causalRepoConnectionProtocol: 'websocket',
+            }),
+            ...(customDomain?.studio.playerConfig ?? {}),
+            studiosSupported: !!subscriptions,
+            subscriptionsSupported: !!subscriptions,
+            requirePrivoLogin: !!privo,
+            comId: customDomain?.studio.comId,
+        };
+
+        if (customDomain) {
+            webConfig.logoUrl =
+                customDomain.studio.logoUrl ?? webConfig.logoUrl;
+            webConfig.logoTitle =
+                customDomain.studio.displayName ??
+                customDomain.studio.comId ??
+                webConfig.logoTitle;
+        }
+
+        return success(webConfig);
+    }
+
+    /**
+     * Attempts to get the web manifest for the player.
+     * @param hostname The hostname that the request was made to.
+     */
+    @traced(TRACE_NAME)
+    async getPlayerWebManifest(
+        hostname: string
+    ): Promise<Result<WebManifest, SimpleError>> {
+        const customDomain = await this._store.getVerifiedCustomDomainByName(
+            hostname
+        );
+
+        if (customDomain?.studio.playerWebManifest) {
+            return success(customDomain.studio.playerWebManifest);
+        }
+
+        const manifest = await this._config.getPlayerWebManifest();
+
+        if (!manifest) {
+            return failure({
+                errorCode: 'not_found',
+                errorMessage: 'No web manifest found.',
+            });
+        }
+
+        return success(manifest);
+    }
+
+    /**
+     * Attempts to get a verified custom domain by its name.
+     * @param hostname The hostname of the custom domain.
+     */
+    @traced(TRACE_NAME)
+    async getVerifiedCustomDomainByName(
+        hostname: string
+    ): Promise<Result<CustomDomainWithStudio | null, SimpleError>> {
+        const customDomain = await this._store.getVerifiedCustomDomainByName(
+            hostname
+        );
+        return success(customDomain);
+    }
+
+    @traced(TRACE_NAME)
+    async getConfigurationValue(
+        request: GetConfigurationValueRequest
+    ): Promise<Result<ConfigurationOutput<ConfigurationKey>, SimpleError>> {
+        if (!isSuperUserRole(request.userRole)) {
+            return failure({
+                errorCode: 'not_authorized',
+                errorMessage:
+                    'You are not authorized to perform this operation.',
+            });
+        }
+
+        const value = await this._config.getConfiguration(request.key);
+        return success(value);
+    }
+
+    @traced(TRACE_NAME)
+    async setConfigurationValue(
+        request: SetConfigurationValueRequest
+    ): Promise<Result<void, SimpleError>> {
+        if (!isSuperUserRole(request.userRole)) {
+            return failure({
+                errorCode: 'not_authorized',
+                errorMessage:
+                    'You are not authorized to perform this operation.',
+            });
+        }
+
+        await this._config.setConfiguration(request.key, request.value);
+
+        return success();
     }
 
     /**
@@ -2367,6 +2872,12 @@ export interface UpdateStudioRequest {
         playerConfig?: ComIdPlayerConfig;
 
         /**
+         * The PWA web manifest that should be served for custom domains for the server.
+         * If omitted, then the web manifest will not be updated.
+         */
+        playerWebManifest?: WebManifest;
+
+        /**
          * The configuration for the studio's comId.
          * If omitted, then the comId configuration will not be updated.
          */
@@ -2469,6 +2980,21 @@ export interface StudioData {
      * The hume features that this studio has access to.
      */
     humeFeatures: AIHumeFeaturesConfiguration;
+
+    /**
+     * The store features that this studio has access to.
+     */
+    storeFeatures: PurchasableItemFeaturesConfiguration;
+
+    /**
+     * The status of the studio's stripe requirements.
+     */
+    stripeRequirementsStatus: StripeRequirementsStatus;
+
+    /**
+     * The status of the studio's stripe account.
+     */
+    stripeAccountStatus: StripeAccountStatus;
 }
 
 export interface GetStudioFailure {
@@ -2551,4 +3077,95 @@ export interface ComIdRequestFailure {
         | 'not_authorized'
         | ServerError;
     errorMessage: string;
+}
+
+export interface AddCustomDomainRequest {
+    /**
+     * The ID of the currently logged in user.
+     */
+    userId: string;
+
+    /**
+     * The role of the currently logged in user.
+     */
+    userRole?: UserRole;
+
+    /**
+     * The domain name.
+     */
+    domain: string;
+
+    /**
+     * The ID of the studio that the domain should be added to.
+     */
+    studioId: string;
+}
+
+export interface VerifyCustomDomainRequest {
+    /**
+     * The ID of the currently logged in user.
+     */
+    userId: string;
+
+    /**
+     * The role of the currently logged in user.
+     */
+    userRole?: UserRole;
+
+    /**
+     * The ID of the custom domain to verify.
+     */
+    customDomainId: string;
+}
+
+export interface DeleteCustomDomainRequest {
+    /**
+     * The ID of the currently logged in user.
+     */
+    userId: string;
+
+    /**
+     * The role of the currently logged in user.
+     */
+    userRole?: UserRole;
+
+    /**
+     * The ID of the custom domain to remove.
+     */
+    customDomainId: string;
+}
+
+export interface ListCustomDomainsRequest {
+    /**
+     * The ID of the currently logged in user.
+     */
+    userId: string;
+
+    /**
+     * The role of the currently logged in user.
+     */
+    userRole?: UserRole;
+
+    /**
+     * The ID of the studio to list custom domains for.
+     */
+    studioId: string;
+}
+
+export type ListCustomDomainsResult = Result<
+    {
+        domains: ListedCustomDomain[];
+    },
+    SimpleError
+>;
+
+export interface GetConfigurationValueRequest {
+    userRole: UserRole | null;
+    key: ConfigurationKey;
+}
+
+export interface SetConfigurationValueRequest {
+    userRole: UserRole | null;
+    key: ConfigurationKey;
+    value: ConfigurationInput<ConfigurationKey>;
 }

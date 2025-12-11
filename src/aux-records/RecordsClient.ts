@@ -19,13 +19,21 @@ import type {
     CallProcedureOptions,
     ProcedureActions,
     ProcedureInputs,
+    ProcedureOutputs,
     ProcedureQueries,
     RemoteProcedures,
+    SuccessfulOutputs,
 } from '@casual-simulation/aux-common';
 import type { RecordsServer } from './RecordsServer';
 
 export type RecordsClientType = RemoteProcedures<RecordsServer['procedures']>;
 export type RecordsClientInputs = ProcedureInputs<RecordsServer['procedures']>;
+export type RecordsClientOutputs = ProcedureOutputs<
+    RecordsServer['procedures']
+>;
+export type RecordsClientSuccessfulOutputs = SuccessfulOutputs<
+    RecordsServer['procedures']
+>;
 export type RecordsClientQueries = ProcedureQueries<
     RecordsServer['procedures']
 >;

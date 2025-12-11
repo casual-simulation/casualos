@@ -16,11 +16,13 @@
             content="black-translucent"
         />
         <link rel="shortcut icon" href="./shared/favicon.ico" />
+        <!--ssr-head-->
     </head>
 
     <body>
-        <div id="app"></div>
+        <div id="app"><!--ssr-app--></div>
         <div id="loading"></div>
+        <!--ssr-postApp-->
 
         <script type="module" src="./iframe/index.ts"></script>
     </body>

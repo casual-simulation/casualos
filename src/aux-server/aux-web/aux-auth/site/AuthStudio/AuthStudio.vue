@@ -180,6 +180,24 @@
                     <md-table-cell>hume.secretKey</md-table-cell>
                     <md-table-cell>{{ '(secret)' }}</md-table-cell>
                 </md-table-row>
+                <md-table-row v-if="allowStore" @click="updateStoreConfig()">
+                    <md-tooltip
+                        >The status of the Stripe account that is attached to this
+                        studio.</md-tooltip
+                    >
+                    <md-table-cell>store.account</md-table-cell>
+                    <md-table-cell>{{ stripeAccountStatus || '(not setup)' }}</md-table-cell>
+                </md-table-row>
+                <md-table-row v-if="allowStore" @click="updateStoreConfig()">
+                    <md-tooltip>The status of the requirements for the stripe account.</md-tooltip>
+                    <md-table-cell>store.requirements</md-table-cell>
+                    <md-table-cell>{{ stripeRequirementsStatus || '(not setup)' }}</md-table-cell>
+                </md-table-row>
+                <md-table-row v-if="allowComId" @click="openCustomDomains()">
+                    <md-tooltip>Manage custom domains for this comID. Click to manage.</md-tooltip>
+                    <md-table-cell>comID.customDomains</md-table-cell>
+                    <md-table-cell>{{ customDomainsCount }} domain(s)</md-table-cell>
+                </md-table-row>
             </md-table>
         </div>
 
@@ -479,6 +497,161 @@
                     </md-progress-spinner>
                     <span v-else>Save</span>
                 </md-button>
+            </md-dialog-actions>
+        </md-dialog>
+
+        <md-dialog :md-active.sync="showUpdateStoreConfig" @md-closed="cancelUpdateStudio()">
+            <md-dialog-title>Store</md-dialog-title>
+            <md-dialog-content>
+                <div v-if="!stripeAccountStatus">
+                    <p>Your store account is not setup.</p>
+                </div>
+                <div v-else-if="stripeAccountStatus === 'active'">
+                    <div v-if="stripeRequirementsStatus === 'complete'">
+                        <p>Your store account is active.</p>
+                    </div>
+                    <div v-else>
+                        <p>
+                            Your store account has been created, but we need some additional
+                            information before it can be fully activated.
+                        </p>
+                    </div>
+                </div>
+                <div v-else-if="stripeAccountStatus === 'pending'">
+                    <div v-if="stripeRequirementsStatus === 'complete'">
+                        <p>Your store account is awaiting approval.</p>
+                    </div>
+                    <div v-else>
+                        <p>
+                            Your store account has been created, but we need some additional
+                            information before it can be fully approved.
+                        </p>
+                    </div>
+                </div>
+                <div v-else-if="stripeAccountStatus === 'rejected'">
+                    <p>Your store account has been rejected.</p>
+                </div>
+                <div v-else-if="stripeAccountStatus === 'disabled'">
+                    <p>Your store account is disabled.</p>
+
+                    <div v-if="stripeRequirementsStatus === 'complete'"></div>
+                    <div v-else>
+                        <p>
+                            Your store account has been created, but we need some additional
+                            information before it can be fully activated.
+                        </p>
+                        <p>Click "Manage" below to provide the required information.</p>
+                    </div>
+                </div>
+            </md-dialog-content>
+            <md-dialog-actions>
+                <md-button class="md-primary" @click="manageStore()">
+                    <md-progress-spinner
+                        md-mode="indeterminate"
+                        :md-diameter="20"
+                        :md-stroke="2"
+                        v-if="isManagingStore"
+                    >
+                    </md-progress-spinner>
+                    <span v-else-if="!stripeAccountStatus">Setup</span>
+                    <span v-else>Manage</span>
+                </md-button>
+            </md-dialog-actions>
+        </md-dialog>
+
+        <md-dialog :md-active.sync="showCustomDomains" class="custom-domains-dialog">
+            <md-dialog-title>Custom Domains</md-dialog-title>
+            <md-dialog-content>
+                <div v-if="loadingDomains">
+                    <md-progress-spinner
+                        md-mode="indeterminate"
+                        :md-diameter="20"
+                        :md-stroke="2"
+                    ></md-progress-spinner>
+                    <p class="sr-only">Loading domains...</p>
+                </div>
+                <div v-else>
+                    <div v-if="customDomains.length === 0">
+                        <p>No custom domains configured.</p>
+                    </div>
+                    <md-table v-else>
+                        <md-table-row>
+                            <md-table-head>Domain Name</md-table-head>
+                            <md-table-head>Status</md-table-head>
+                            <md-table-head>Actions</md-table-head>
+                        </md-table-row>
+                        <md-table-row v-for="domain of customDomains" :key="domain.id">
+                            <md-table-cell>{{ domain.domainName }}</md-table-cell>
+                            <md-table-cell>
+                                <md-chip v-if="domain.verified" class="md-primary"
+                                    >Verified</md-chip
+                                >
+                                <md-chip v-else>Pending</md-chip>
+                            </md-table-cell>
+                            <md-table-cell>
+                                <md-button
+                                    v-if="!domain.verified"
+                                    class="md-icon-button"
+                                    @click="verifyDomain(domain)"
+                                    :disabled="verifyingDomain === domain.id"
+                                >
+                                    <md-icon>verified</md-icon>
+                                    <md-tooltip>Verify Domain</md-tooltip>
+                                </md-button>
+                                <md-button
+                                    class="md-icon-button"
+                                    @click="deleteDomain(domain)"
+                                    :disabled="deletingDomain === domain.id"
+                                >
+                                    <md-icon>delete</md-icon>
+                                    <md-tooltip>Delete Domain</md-tooltip>
+                                </md-button>
+                            </md-table-cell>
+                        </md-table-row>
+                    </md-table>
+
+                    <div class="add-domain-section">
+                        <h3>Add New Domain</h3>
+                        <md-field :class="newDomainFieldClass">
+                            <label>Domain Name</label>
+                            <md-input v-model="newDomainName" placeholder="example.com"></md-input>
+                            <span v-if="domainError" class="md-error">{{ domainError }}</span>
+                        </md-field>
+                        <md-button
+                            class="md-raised md-primary"
+                            @click="addDomain()"
+                            :disabled="addingDomain || !newDomainName"
+                        >
+                            <md-progress-spinner
+                                v-if="addingDomain"
+                                md-mode="indeterminate"
+                                :md-diameter="20"
+                                :md-stroke="2"
+                            ></md-progress-spinner>
+                            <span v-else>Add Domain</span>
+                        </md-button>
+                    </div>
+
+                    <div v-if="verificationRecord" class="verification-instructions">
+                        <h3>Verification Instructions</h3>
+                        <p>
+                            To verify your domain <strong>{{ newDomainName }}</strong
+                            >, add the following DNS record:
+                        </p>
+                        <div class="dns-record">
+                            <p><strong>Type:</strong> {{ verificationRecord.recordType }}</p>
+                            <p><strong>Value:</strong> {{ verificationRecord.value }}</p>
+                            <p><strong>TTL:</strong> {{ verificationRecord.ttlSeconds }} seconds</p>
+                        </div>
+                        <p>
+                            After adding the DNS record, click the verify button next to the domain
+                            to check verification status.
+                        </p>
+                    </div>
+                </div>
+            </md-dialog-content>
+            <md-dialog-actions>
+                <md-button @click="closeCustomDomains()">Close</md-button>
             </md-dialog-actions>
         </md-dialog>
     </div>

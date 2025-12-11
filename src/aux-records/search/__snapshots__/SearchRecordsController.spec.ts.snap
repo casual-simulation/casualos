@@ -1,0 +1,88 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`SEARCH_COLLECTION_SCHEMA should produce a consistent schema 1`] = `
+Object {
+  "catchall": Object {
+    "catchall": undefined,
+    "description": undefined,
+    "schema": Object {
+      "drop": Object {
+        "description": "When set to \`true\`, the field will be dropped from the collection if it is not present in the input. Default: \`false\`.",
+        "nullable": true,
+        "optional": true,
+        "type": "boolean",
+      },
+      "index": Object {
+        "description": "When set to \`false\`, the field will not be indexed in any in-memory index (e.g. search/sort/filter/facet). Default: \`true\`.",
+        "nullable": true,
+        "optional": true,
+        "type": "boolean",
+      },
+      "infix": Object {
+        "description": "When set to \`true\`, the field value can be infix-searched. Incurs significant memory overhead. Default: \`false\`.",
+        "nullable": true,
+        "optional": true,
+        "type": "boolean",
+      },
+      "locale": Object {
+        "description": "For configuring language specific tokenization, e.g. \`jp\` for Japanese. Default: \`en\` which also broadly supports most European languages.",
+        "nullable": true,
+        "optional": true,
+        "type": "string",
+      },
+      "optional": Object {
+        "description": "When set to \`true\`, the field can have empty, null or missing values. Default: \`false\`.",
+        "nullable": true,
+        "optional": true,
+        "type": "boolean",
+      },
+      "sort": Object {
+        "description": "When set to true, the field will be sortable. Default: \`true\` for numbers, \`false\` otherwise.",
+        "nullable": true,
+        "optional": true,
+        "type": "boolean",
+      },
+      "stem": Object {
+        "description": "When set to \`true\`, the field value will be stemmed. Default: \`false\`.",
+        "nullable": true,
+        "optional": true,
+        "type": "boolean",
+      },
+      "store": Object {
+        "description": "When set to \`false\`, the field value will not be stored on disk. Default: \`true\`.",
+        "nullable": true,
+        "optional": true,
+        "type": "boolean",
+      },
+      "type": Object {
+        "description": undefined,
+        "type": "enum",
+        "values": Array [
+          "string",
+          "string[]",
+          "int32",
+          "int32[]",
+          "int64",
+          "int64[]",
+          "float",
+          "float[]",
+          "bool",
+          "bool[]",
+          "geopoint",
+          "geopoint[]",
+          "geopolygon",
+          "object",
+          "object[]",
+          "string*",
+          "image",
+          "auto",
+        ],
+      },
+    },
+    "type": "object",
+  },
+  "description": undefined,
+  "schema": Object {},
+  "type": "object",
+}
+`;
