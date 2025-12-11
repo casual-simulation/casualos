@@ -128,8 +128,7 @@ export const IMPORT_META_FACTORY = '___importMeta';
 export const EXPORT_FACTORY = '___exportModule';
 
 /**
- * Defines a class that can compile scripts and formulas
- * into functions.
+ * Defines a class that can compile scripts into functions.
  */
 export class AuxCompiler {
     private _transpiler = new Transpiler({
