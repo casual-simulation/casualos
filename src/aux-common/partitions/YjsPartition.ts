@@ -24,7 +24,6 @@ import type {
     ApplyUpdatesToInstAction,
     GetCurrentInstUpdateAction,
     InstallAuxAction,
-    CreateInitializationUpdateFromPreviousUpdatesAction,
 } from '../bots';
 import {
     isTagEdit,
@@ -70,7 +69,6 @@ import type { Doc, Transaction, AbstractType, YEvent } from 'yjs';
 import {
     Text,
     Map,
-    applyUpdate,
     YMapEvent,
     createAbsolutePositionFromRelativePosition,
     YTextEvent,
@@ -83,12 +81,13 @@ import {
     getStateVector,
 } from '../yjs/YjsHelpers';
 import {
+    constructInitializationUpdate,
     ensureTagIsSerializable,
     getStateFromUpdates,
     supportsRemoteEvent,
 } from './PartitionUtils';
 import type { RemoteActions, VersionVector } from '../common';
-import { fromByteArray, toByteArray } from 'base64-js';
+import { fromByteArray } from 'base64-js';
 import { YjsSharedDocument } from '../documents/YjsSharedDocument';
 import { v4 as uuid } from 'uuid';
 
@@ -253,17 +252,9 @@ export class YjsPartitionImpl
                 } else if (event.event.type === 'get_inst_state_from_updates') {
                     const action = <GetInstStateFromUpdatesAction>event.event;
                     try {
-                        let partition = new YjsPartitionImpl({
-                            type: 'yjs',
-                        });
-
-                        for (let { update } of action.updates) {
-                            const updateBytes = toByteArray(update);
-                            applyUpdate(partition.doc, updateBytes);
-                        }
-
+                        const state = getStateFromUpdates(action);
                         this._onEvents.next([
-                            asyncResult(event.taskId, partition.state, false),
+                            asyncResult(event.taskId, state, false),
                         ]);
                     } catch (err) {
                         this._onEvents.next([asyncError(event.taskId, err)]);
@@ -275,84 +266,10 @@ export class YjsPartitionImpl
                         event.event
                     );
                     try {
-                        let partition = new YjsPartitionImpl({
-                            type: 'yjs',
-                        });
-
-                        partition.doc.on('update', (update: Uint8Array) => {
-                            let instUpdate: InstUpdate = {
-                                id: 0,
-                                timestamp: Date.now(),
-                                update: fromByteArray(update),
-                            };
-
-                            this._onEvents.next([
-                                asyncResult(event.taskId, instUpdate, false),
-                            ]);
-                        });
-
-                        await partition.applyEvents(
-                            action.bots.map((b) =>
-                                botAdded(createBot(b.id, b.tags))
-                            )
-                        );
-                    } catch (err) {
-                        this._onEvents.next([asyncError(event.taskId, err)]);
-                    }
-                } else if (
-                    event.event.type ===
-                    'create_initialization_update_from_previous_updates'
-                ) {
-                    const action = <
-                        CreateInitializationUpdateFromPreviousUpdatesAction
-                    >event.event;
-                    try {
-                        let partition = new YjsPartitionImpl({
-                            type: 'yjs',
-                        });
-
-                        for (let { update } of action.previousUpdates) {
-                            const updateBytes = toByteArray(update);
-                            applyUpdate(partition.doc, updateBytes);
-                        }
-
-                        const allBotIds = new Set<string>(
-                            Object.keys(partition.state)
-                        );
-                        const actions: BotAction[] = [];
-                        for (let b of action.bots) {
-                            if (partition.state[b.id]) {
-                                actions.push(
-                                    botUpdated(b.id, {
-                                        tags: b.tags,
-                                    })
-                                );
-                                allBotIds.delete(b.id);
-                            } else {
-                                actions.push(botAdded(createBot(b.id, b.tags)));
-                                allBotIds.delete(b.id);
-                            }
-                        }
-
-                        for (let id of allBotIds) {
-                            actions.push(botRemoved(id));
-                        }
-
-                        partition.doc.on('update', (update: Uint8Array) => {
-                            let instUpdate: InstUpdate = {
-                                id: 0,
-                                timestamp: Date.now(),
-                                update: fromByteArray(
-                                    encodeStateAsUpdate(partition.doc)
-                                ),
-                            };
-
-                            this._onEvents.next([
-                                asyncResult(event.taskId, instUpdate, false),
-                            ]);
-                        });
-
-                        await partition.applyEvents(actions);
+                        const update = constructInitializationUpdate(action);
+                        this._onEvents.next([
+                            asyncResult(event.taskId, update, false),
+                        ]);
                     } catch (err) {
                         this._onEvents.next([asyncError(event.taskId, err)]);
                     }

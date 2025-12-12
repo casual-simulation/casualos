@@ -287,7 +287,6 @@ import {
     ADD_BOT_LISTENER_SYMBOL,
     REMOVE_BOT_LISTENER_SYMBOL,
     trackConfigBotTags as calcTrackConfigBotTags,
-    createInitializationUpdateFromPreviousUpdates,
 } from '@casual-simulation/aux-common/bots';
 import type {
     AIChatOptions,
@@ -421,7 +420,10 @@ import {
     toHexString as utilToHexString,
     fromHexString as utilFromHexString,
 } from './Utils';
-import { convertToCopiableValue } from '@casual-simulation/aux-common/partitions/PartitionUtils';
+import {
+    constructInitializationUpdateFromPreviousUpdates,
+    convertToCopiableValue,
+} from '@casual-simulation/aux-common/partitions/PartitionUtils';
 import {
     sha256 as hashSha256,
     sha512 as hashSha512,
@@ -14758,26 +14760,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         bots?: RuntimeBot[]
     ): Promise<InstUpdate> {
         if (arguments.length === 2) {
-            const convertedBots = (previousUpdateOrBots as RuntimeBot[]).map(
-                (b) =>
-                    isRuntimeBot(b)
-                        ? createBot(b.id, b.tags.toJSON(), b.space)
-                        : b
+            const convertedBots = (bots as RuntimeBot[]).map((b) =>
+                isRuntimeBot(b) ? createBot(b.id, b.tags.toJSON(), b.space) : b
             );
-            const task = context.createTask(true, true);
             if (!Array.isArray(previousUpdateOrBots)) {
                 previousUpdateOrBots = [previousUpdateOrBots];
             }
-            const event = calcRemote(
-                createInitializationUpdateFromPreviousUpdates(
-                    previousUpdateOrBots as InstUpdate[],
-                    convertedBots
-                ),
-                undefined,
-                undefined,
-                task.taskId
+
+            const previousUpdates: InstUpdate[] =
+                previousUpdateOrBots as InstUpdate[];
+            const update = constructInitializationUpdateFromPreviousUpdates(
+                previousUpdates,
+                convertedBots
             );
-            return addAsyncAction(task, event);
+            return Promise.resolve(update);
         } else {
             const convertedBots = (previousUpdateOrBots as RuntimeBot[]).map(
                 (b) =>
