@@ -14733,6 +14733,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param previousUpdate The previous update or list of updates that this update should be based on and include.
      * @param bots The bots that reflect the final state that should be achieved when this update is applied in addition to the previous update(s).
      *
+     * @example Create an initialization update based on a previous update
+     * const update = await os.createInitializationUpdate(previousUpdate, [thisBot]);
+     * tags.savedUpdate = update;
+     *
+     * @example Create an initialization update based on multiple previous updates with all the bots in the home dimension
+     * const update = await os.createInitializationUpdate([update1, update2], getBots(inDimension('home')));
+     * tags.savedUpdate = update;
+     *
      * @dochash actions/os/spaces
      * @docname os.createInitializationUpdate
      * @docid os.createInitializationUpdate-previousUpdate-bots
