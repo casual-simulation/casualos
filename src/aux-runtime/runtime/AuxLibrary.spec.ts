@@ -261,9 +261,9 @@ import {
     createDummyRuntimeBot,
     testScriptBotInterface,
 } from './test/TestScriptBotFactory';
-import type {
-    RuntimeBatcher,
-    RuntimeInterpreterGeneratorProcessor,
+import {
+    type RuntimeBatcher,
+    type RuntimeInterpreterGeneratorProcessor,
 } from './RuntimeBot';
 import type { AuxVersion } from './AuxVersion';
 import type { AuxDevice } from './AuxDevice';
@@ -11457,6 +11457,64 @@ describe('AuxLibrary', () => {
 
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
+            });
+
+            describe('with previous updates', () => {
+                it('should create an update that gets to the given state from the previous updates', async () => {
+                    const bot3 = createDummyRuntimeBot('test3');
+
+                    bot1.tags.abc = 'def';
+                    bot2.tags.num = 123;
+
+                    const first = constructInitializationUpdate(
+                        createInitializationUpdate([bot1, bot2])
+                    );
+
+                    bot1.tags.abc = 'ghi';
+                    bot1.tags.val = true;
+
+                    bot3.tags.str = 'hello';
+
+                    const second =
+                        await library.api.os.createInitializationUpdate(
+                            [first],
+                            [bot1, bot3]
+                        );
+
+                    const bot4 = createDummyRuntimeBot('test4');
+                    bot1.tags.abc = 'xyz';
+                    bot3.tags.str = 'test';
+                    bot4.tags.num = 999;
+
+                    const third =
+                        await library.api.os.createInitializationUpdate(
+                            [first, second],
+                            [bot1, bot3, bot4]
+                        );
+
+                    expect(third).toEqual({
+                        id: 0,
+                        timestamp: expect.any(Number),
+                        update: expect.any(String),
+                    });
+
+                    const state = getStateFromUpdates(
+                        getInstStateFromUpdates([third])
+                    );
+
+                    expect(state).toEqual({
+                        test1: createBot('test1', {
+                            abc: 'xyz',
+                            val: true,
+                        }),
+                        test3: createBot('test3', {
+                            str: 'test',
+                        }),
+                        test4: createBot('test4', {
+                            num: 999,
+                        }),
+                    });
+                });
             });
         });
 
