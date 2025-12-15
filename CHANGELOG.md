@@ -11,6 +11,7 @@
         -   `previousUpdates` are the updates that the new initialization update should be based on.
         -   `bots` are the bots that the update should contain as the final state.
 -   Added [`zod`](https://zod.dev/) as an importable library for user scripts.
+-   Improved `os.installPackage()` to support upgrading and downgrading packages.
 
 ## V3.9.0
 
