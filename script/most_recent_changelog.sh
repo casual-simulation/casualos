@@ -25,4 +25,4 @@ CURRENT_VERSION_NOTES=$(echo "${CURRENT_VERSION_MARKUP}" | awk '
     f > 2 { print };
 ')
 
-printf "${CURRENT_VERSION_NOTES}"
+echo -n "${CURRENT_VERSION_NOTES}"

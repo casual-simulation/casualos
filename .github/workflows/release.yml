@@ -7,6 +7,11 @@ on:
             - staging
             - 'release/**'
 
+permissions:
+    id-token: write # Required for OIDC
+    contents: write
+    packages: write
+
 jobs:
     build:
         name: Build and Release
@@ -26,6 +31,8 @@ jobs:
               run: |
                   npm install -g node-gyp
                   npm prefix -g | % {npm config set node_gyp "$_\node_modules\node-gyp\bin\node-gyp.js"}
+            - name: Update npm
+              run: npm install -g npm@latest
             - name: NPM Install
               run: |
                   corepack enable

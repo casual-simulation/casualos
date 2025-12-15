@@ -1,8 +1,20 @@
 # CasualOS Changelog
 
-## V3.9.0
+## V3.10.0
 
 #### Date: TBD
+
+### :rocket: Features
+
+-   Improved `os.createInitializationUpdate()` to support creating initialization updates from previous initialization updates.
+    -   Added the `os.createInitializationUpdate(previousUpdates, bots)` overload.
+        -   `previousUpdates` are the updates that the new initialization update should be based on.
+        -   `bots` are the bots that the update should contain as the final state.
+-   Added [`zod`](https://zod.dev/) as an importable library for user scripts.
+
+## V3.9.0
+
+#### Date: 12/11/2025
 
 ### :rocket: Features
 
@@ -57,9 +69,29 @@
 -   Added basic server side rendering.
     -   Currently, this is used for injecting the web config so that CasualOS doesn't need to make a call to `/api/config` on initialization.
 -   Added initial support for custom domains for comID
-    -   Studios with comID features can now register and verify custom domains.
     -   Only supported on server deployments.
+    -   Studios with comID features can now register and verify custom domains.
     -   Once registered, CasualOS will automatically adopt configuration values from the custom domain.
+-   Added support for configuring [PWA](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps) manifests
+    -   Only supported on server deployments.
+    -   If configured, then CasualOS will serve a [web application manifest](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Manifest) that enables PWA features like installation.
+    -   By default, PWA is disabled.
+    -   comIDs can configure their own PWA manifest if desired.
+-   Added support for `cameraPosition` for the mapPortalBot and miniMapPortalBot.
+-   Added the `cameraMapPosition` tag for the mapPortalBot and miniMapPortalBot.
+    -   Contains the longitude (x), latitude (y), and altitude (z) of the camera.
+-   Added the ability to automatically inject the bootstrap AUX from the server to reduce initialization time on the client.
+    -   Only supported on server deployments.
+    -   Set `serverInjectBootstrapper` to `true` on the web config in the server config.
+-   Added the ability to configure a custom favicon for server-based deployments.
+    -   Use the `icons` property on the web config in the server config.
+-   Added the `locked` BIOS option as an alternative to `studio` and `private inst`.
+    -   `studio` remains the default, so if you want to use `locked`, you should configure a custom list of `allowedBiosOptions` in the web config.
+-   Added support for for temporary instances.
+    -   Temporary instances aren't stored at all. This means that once you refresh, all the bot data will be lost.
+    -   You can use the `temp` bios option to generate a temporary inst.
+    -   You can also use the `tempInst` query parameter to load a temporary inst directly.
+    -   By default, the `temp` bios option is disabled and needs to be manually enabled.
 
 ### :bug: Bug Fixes
 
@@ -78,6 +110,7 @@
 -   Fixed camera rotation in mapPortal continuing after moving your finger off the screen.
 -   Fixed an issue where CasualOS would produce incorrect code when JSX elements were directly after return statements.
 -   Fixed the handling of `className` for custom apps when using SVG elements.
+-   Added "Close" buttons to login-related dialogs so that users can close them on mobile devices.
 
 ## V3.8.1
 

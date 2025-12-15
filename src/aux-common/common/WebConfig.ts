@@ -25,9 +25,10 @@ import { z } from 'zod';
  * The possible BIOS options.
  *
  * - "enter join code" indicates that the user should be prompted to enter a join code.
+ * - "temp" indicates that a temporary instance should be created (no persistence).
  * - "static inst", "local inst", and "local" indicates that the instance should be loaded statically.
  * - "public inst", "free inst", and "free" indicates that the instance should be loaded from the public partition.
- * - "private inst", "studio inst", and "studio" indicates that the instance should be loaded from the private partition.
+ * - "private inst", "studio inst", "studio", and "locked" indicates that the instance should be loaded from the private partition.
  * - "sign in" indicates that the user should be prompted to sign in.
  * - "sign up" indicates that the user should be prompted to sign up.
  * - "sign out" indicates that the user should be logged out.
@@ -35,15 +36,17 @@ import { z } from 'zod';
 export type BiosOption =
     | 'enter join code'
     | 'join inst'
+    | 'temp'
     | 'static inst'
     | 'local inst'
     | 'local'
     | 'public inst'
-    | 'private inst'
     | 'free inst'
     | 'free'
+    | 'private inst'
     | 'studio inst'
     | 'studio'
+    | 'locked'
     | 'sign in'
     | 'sign up'
     | 'sign out'
@@ -52,15 +55,17 @@ export type BiosOption =
 export const BIOS_OPTION_SCHEMA = z.enum([
     'enter join code',
     'join inst',
+    'temp',
     'static inst',
     'local inst',
     'local',
     'public inst',
-    'private inst',
     'free inst',
     'free',
+    'private inst',
     'studio inst',
     'studio',
+    'locked',
     'sign in',
     'sign up',
     'sign out',
@@ -138,6 +143,11 @@ export interface WebConfig {
      * The URL that should be used to bootstrap AB1.
      */
     ab1BootstrapURL?: string | null;
+
+    /**
+     * Whether the server should inject the AB1 Bootstrap script via a script tag.
+     */
+    serverInjectBootstrapper?: boolean;
 
     /**
      * The API key that should be used for the ArcGIS mapping API.
@@ -234,6 +244,11 @@ export interface WebConfig {
      * Defaults to false.
      */
     enableSmsAuthentication?: boolean;
+
+    icons?: {
+        favicon?: string | null;
+        appleTouchIcon?: string | null;
+    };
 }
 
 /**
@@ -270,6 +285,7 @@ export const WEB_CONFIG_SCHEMA = z.object({
     recordsOrigin: z.string().min(1).max(128).nullable().optional(),
     disableCollaboration: z.boolean().nullable().optional(),
     ab1BootstrapURL: z.string().min(1).max(512).nullable().optional(),
+    serverInjectBootstrapper: z.boolean().nullable().optional(),
     arcGisApiKey: z.string().min(1).max(128).nullable().optional(),
     jitsiAppName: z.string().min(1).max(128).nullable().optional(),
     what3WordsApiKey: z.string().min(1).max(128).nullable().optional(),
@@ -283,9 +299,54 @@ export const WEB_CONFIG_SCHEMA = z.object({
 
     enableSmsAuthentication: z.boolean().nullable().optional(),
 
-    logoUrl: z.string().min(1).max(512).nullable().optional(),
-    logoBackgroundColor: z.string().min(1).max(32).nullable().optional(),
-    logoTitle: z.string().min(1).max(128).nullable().optional(),
+    logoUrl: z
+        .string()
+        .min(1)
+        .max(512)
+        .nullable()
+        .optional()
+        .describe('The URL of the logo to display in the loading screen.'),
+    logoBackgroundColor: z
+        .string()
+        .min(1)
+        .max(32)
+        .nullable()
+        .optional()
+        .describe(
+            'The background color of the logo to display in the loading screen. This is used to set the background color of the splash screen.'
+        ),
+    logoTitle: z
+        .string()
+        .min(1)
+        .max(128)
+        .nullable()
+        .optional()
+        .describe(
+            'The title text that accompanies the logo in the loading screen.'
+        ),
+
+    icons: z
+        .object({
+            favicon: z
+                .string()
+                .nonempty()
+                .nullable()
+                .optional()
+                .describe(
+                    'The favicon that should be served for the web client. If not specified, a default favicon will be used. Should be 48x48 px and utilize transparency.'
+                ),
+            appleTouchIcon: z
+                .string()
+                .nonempty()
+                .nullable()
+                .optional()
+                .describe(
+                    'The apple touch icon that should be used for the web client. If not specified, a default apple touch icon will be used. Should be 180x180 px and not use transparency (background should be a solid color).'
+                ),
+        })
+        .nullable()
+        .optional()
+        .describe('The set of icons that should be used for the web client.'),
 
     supportUrl: z.string().min(1).nullable().optional(),
 });

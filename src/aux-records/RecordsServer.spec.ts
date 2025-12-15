@@ -27,6 +27,7 @@ import type {
     GenericHttpRequest,
     GenericHttpResponse,
     UserRole,
+    WebConfig,
 } from '@casual-simulation/aux-common';
 import {
     DEFAULT_BRANCH_NAME,
@@ -41,6 +42,7 @@ import {
     SUBSCRIPTION_ID_NAMESPACE,
     success,
     unwrap,
+    WEB_CONFIG_SCHEMA,
 } from '@casual-simulation/aux-common';
 import type { RelyingParty } from './AuthController';
 import {
@@ -82,6 +84,7 @@ import {
     asyncIterable,
     createStripeMock,
     createTestControllers,
+    createTestPrivoConfiguration,
     createTestSubConfiguration,
     createTestUser,
     randomBigInt,
@@ -231,8 +234,10 @@ import {
     getWebSockerErrors,
     getWebsocketHttpResponse,
     getWebsocketHttpPartialResponses,
+    scoped,
 } from './HttpTestUtils';
 import type { DomainNameValidator } from './dns';
+import { WEB_MANIFEST_SCHEMA } from '@casual-simulation/aux-common/common/WebManifest';
 
 jest.setTimeout(10000); // 10 seconds
 
@@ -27476,6 +27481,720 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                 headers: apiCorsHeaders,
             });
         });
+    });
+
+    describe('GET /api/v2/site.webmanifest', () => {
+        beforeEach(async () => {
+            store.playerWebManifest = WEB_MANIFEST_SCHEMA.parse({
+                name: 'Test',
+                short_name: 'Test',
+            } satisfies z.input<typeof WEB_MANIFEST_SCHEMA>);
+        });
+
+        it('should return the default web manifest there is no custom domain', async () => {
+            const result = await server.handleHttpRequest(
+                scoped(
+                    'player',
+                    httpGet('/api/v2/site.webmanifest', apiHeaders)
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: store.playerWebManifest,
+                headers: {
+                    ...apiCorsHeaders,
+                    'content-type': 'application/manifest+json',
+                },
+            });
+        });
+
+        it('should work if the user isnt logged in', async () => {
+            delete apiHeaders['authorization'];
+            const result = await server.handleHttpRequest(
+                scoped(
+                    'player',
+                    httpGet('/api/v2/site.webmanifest', apiHeaders)
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: store.playerWebManifest,
+                headers: {
+                    ...apiCorsHeaders,
+                    'content-type': 'application/manifest+json',
+                },
+            });
+        });
+
+        it('should return 404 if there is no web manifest', async () => {
+            store.playerWebManifest = null;
+            const result = await server.handleHttpRequest(
+                scoped(
+                    'player',
+                    httpGet('/api/v2/site.webmanifest', apiHeaders)
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 404,
+                body: {
+                    success: false,
+                    errorCode: 'not_found',
+                    errorMessage: 'No web manifest found.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return the configured studio player web manifest', async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub.withAllDefaultFeatures().withComId()
+                    )
+            );
+
+            const studioManifest = WEB_MANIFEST_SCHEMA.parse({
+                name: 'Custom Domain Test',
+                short_name: 'CD Test',
+            } satisfies z.input<typeof WEB_MANIFEST_SCHEMA>);
+            await store.addStudio({
+                id: 'studioId',
+                displayName: 'Test Studio',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                playerWebManifest: studioManifest,
+            });
+
+            await store.saveCustomDomain({
+                id: 'domain-1',
+                domainName: 'customdomain.com',
+                studioId: 'studioId',
+                verificationKey: 'key-1',
+                verified: true,
+            });
+
+            const result = await server.handleHttpRequest(
+                scoped(
+                    'player',
+                    httpGet('/api/v2/site.webmanifest', {
+                        host: 'customdomain.com',
+                        origin: 'customdomain.com',
+                    })
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: studioManifest,
+                headers: {
+                    ...corsHeaders('customdomain.com'),
+                    'content-type': 'application/manifest+json',
+                },
+            });
+        });
+    });
+
+    describe('GET /api/v2/configuration', () => {
+        beforeEach(async () => {
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                role: 'superUser',
+            });
+        });
+
+        it('should return not_logged_in if no session key is provided', async () => {
+            delete authenticatedHeaders['authorization'];
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    '/api/v2/configuration?key=subscriptions',
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 401,
+                body: {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user is not logged in. A session key must be provided for this operation.',
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return not_authorized if the user is not a superUser', async () => {
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                role: 'none',
+            });
+
+            const getResult = await server.handleHttpRequest(
+                httpGet(
+                    '/api/v2/configuration?key=subscriptions',
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(getResult, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this operation.',
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should retrieve the subscriptions configuration for a superUser', async () => {
+            const config = createTestSubConfiguration((config) =>
+                config.addSubscription('sub1', (sub) =>
+                    sub.withAllDefaultFeatures()
+                )
+            );
+            store.subscriptionConfiguration = config;
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    '/api/v2/configuration?key=subscriptions',
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    ...config,
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should retrieve the privo configuration for a superUser', async () => {
+            const privoConfig = createTestPrivoConfiguration();
+            store.privoConfiguration = privoConfig;
+
+            const result = await server.handleHttpRequest(
+                httpGet('/api/v2/configuration?key=privo', authenticatedHeaders)
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    ...privoConfig,
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should retrieve the moderation configuration for a superUser', async () => {
+            const moderationConfig = {
+                allowUnauthenticatedReports: true,
+            };
+            store.moderationConfiguration = moderationConfig;
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    '/api/v2/configuration?key=moderation',
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    ...moderationConfig,
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should retrieve the web configuration for a superUser', async () => {
+            const webConfig = WEB_CONFIG_SCHEMA.parse({
+                causalRepoConnectionProtocol: 'websocket',
+            } satisfies z.input<typeof WEB_CONFIG_SCHEMA>);
+            store.webConfig = webConfig as WebConfig;
+
+            const result = await server.handleHttpRequest(
+                httpGet('/api/v2/configuration?key=web', authenticatedHeaders)
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    ...webConfig,
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should retrieve the player web manifest for a superUser', async () => {
+            const manifest = WEB_MANIFEST_SCHEMA.parse({
+                name: 'Test Player',
+                short_name: 'Test',
+            } satisfies z.input<typeof WEB_MANIFEST_SCHEMA>);
+            store.playerWebManifest = manifest;
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    '/api/v2/configuration?key=playerWebManifest',
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    ...manifest,
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return null if the configuration value does not exist', async () => {
+            store.subscriptionConfiguration = null;
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    '/api/v2/configuration?key=subscriptions',
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return unacceptable_request if the key parameter is missing', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet('/api/v2/configuration', authenticatedHeaders)
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage: expect.any(String),
+                    issues: expect.any(Array),
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return unacceptable_request if the key parameter is invalid', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    '/api/v2/configuration?key=invalidKey',
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage: expect.any(String),
+                    issues: expect.any(Array),
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testUrl('account', 'GET', '/api/v2/configuration?key=subscriptions');
+    });
+
+    describe('POST /api/v2/configuration', () => {
+        beforeEach(async () => {
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                role: 'superUser',
+            });
+        });
+
+        it('should return not_logged_in if no session key is provided', async () => {
+            const config = createTestSubConfiguration((config) =>
+                config.addSubscription('sub1', (sub) =>
+                    sub.withAllDefaultFeatures()
+                )
+            );
+
+            delete authenticatedHeaders['authorization'];
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/configuration',
+                    JSON.stringify({
+                        key: 'subscriptions',
+                        value: config,
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 401,
+                body: {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user is not logged in. A session key must be provided for this operation.',
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return not_authorized if the user is not a superUser', async () => {
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                role: 'none',
+            });
+
+            const config = createTestSubConfiguration((config) =>
+                config.addSubscription('sub1', (sub) =>
+                    sub.withAllDefaultFeatures()
+                )
+            );
+
+            const setResult = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/configuration',
+                    JSON.stringify({
+                        key: 'subscriptions',
+                        value: config,
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(setResult, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this operation.',
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should set the subscriptions configuration for a superUser', async () => {
+            store.subscriptionConfiguration = null;
+            const config = createTestSubConfiguration((config) =>
+                config.addSubscription('sub1', (sub) =>
+                    sub.withAllDefaultFeatures()
+                )
+            );
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/configuration',
+                    JSON.stringify({
+                        key: 'subscriptions',
+                        value: config,
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+
+            expect(store.subscriptionConfiguration).toEqual(config);
+        });
+
+        it('should set the privo configuration for a superUser', async () => {
+            store.privoConfiguration = null;
+            const privoConfig = createTestPrivoConfiguration();
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/configuration',
+                    JSON.stringify({
+                        key: 'privo',
+                        value: privoConfig,
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+
+            expect(store.privoConfiguration).toEqual(privoConfig);
+        });
+
+        it('should set the moderation configuration for a superUser', async () => {
+            store.moderationConfiguration = null;
+            const moderationConfig = {
+                allowUnauthenticatedReports: false,
+            };
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/configuration',
+                    JSON.stringify({
+                        key: 'moderation',
+                        value: moderationConfig,
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+
+            expect(store.moderationConfiguration).toEqual(moderationConfig);
+        });
+
+        it('should set the web configuration for a superUser', async () => {
+            store.webConfig = null;
+            const webConfig = {
+                version: 2,
+                causalRepoConnectionProtocol: 'websocket',
+            } as const;
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/configuration',
+                    JSON.stringify({
+                        key: 'web',
+                        value: webConfig,
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+
+            expect(store.webConfig).toEqual(WEB_CONFIG_SCHEMA.parse(webConfig));
+        });
+
+        it('should set the player web manifest for a superUser', async () => {
+            store.playerWebManifest = null;
+            const manifest = {
+                name: 'Test Player',
+                short_name: 'Test',
+            };
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/configuration',
+                    JSON.stringify({
+                        key: 'playerWebManifest',
+                        value: manifest,
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+
+            expect(store.playerWebManifest).toEqual(
+                WEB_MANIFEST_SCHEMA.parse(manifest)
+            );
+        });
+
+        it('should update an existing configuration value', async () => {
+            const config1 = createTestSubConfiguration((config) =>
+                config.addSubscription('sub1', (sub) =>
+                    sub.withAllDefaultFeatures()
+                )
+            );
+            store.subscriptionConfiguration = config1;
+
+            const config2 = createTestSubConfiguration((config) =>
+                config
+                    .addSubscription('sub1', (sub) =>
+                        sub.withAllDefaultFeatures()
+                    )
+                    .addSubscription('sub2', (sub) =>
+                        sub.withAllDefaultFeatures()
+                    )
+            );
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/configuration',
+                    JSON.stringify({
+                        key: 'subscriptions',
+                        value: config2,
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+
+            expect(store.subscriptionConfiguration).toEqual(config2);
+            expect(store.subscriptionConfiguration).not.toEqual(config1);
+        });
+
+        it('should return unacceptable_request if the key is missing', async () => {
+            const config = createTestSubConfiguration((config) =>
+                config.addSubscription('sub1', (sub) =>
+                    sub.withAllDefaultFeatures()
+                )
+            );
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/configuration',
+                    JSON.stringify({
+                        value: config,
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage: expect.any(String),
+                    issues: expect.any(Array),
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return unacceptable_request if the value is missing', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/configuration',
+                    JSON.stringify({
+                        key: 'subscriptions',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage: expect.any(String),
+                    issues: expect.any(Array),
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return unacceptable_request if the key is invalid', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/configuration',
+                    JSON.stringify({
+                        key: 'invalidKey',
+                        value: {},
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage: expect.any(String),
+                    issues: expect.any(Array),
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return unacceptable_request if the value does not match the schema', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/configuration',
+                    JSON.stringify({
+                        key: 'subscriptions',
+                        value: {
+                            invalid: 'data',
+                        },
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage: expect.any(String),
+                    issues: expect.any(Array),
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testUrl('account', 'POST', '/api/v2/configuration', () =>
+            JSON.stringify({
+                key: 'playerWebManifest',
+                value: {
+                    name: 'Test Player',
+                    short_name: 'Test',
+                },
+            })
+        );
     });
 
     describe('GET /api/v2/player/config', () => {

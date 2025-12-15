@@ -146,6 +146,7 @@ export default defineConfig(({ command, mode }) => ({
                               './aux-web/shared/public/import-map/rxjs-operators',
                           'es-toolkit':
                               './aux-web/shared/public/import-map/es-toolkit',
+                          zod: './aux-web/shared/public/import-map/zod',
                       },
         }),
         {

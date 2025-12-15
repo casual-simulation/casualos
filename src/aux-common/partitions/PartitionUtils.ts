@@ -16,9 +16,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import { fromByteArray, toByteArray } from 'base64-js';
-import { applyUpdate, mergeUpdates } from 'yjs';
+import { applyUpdate, encodeStateAsUpdate, mergeUpdates } from 'yjs';
 import type {
     Bot,
+    BotAction,
     BotsState,
     CreateInitializationUpdateAction,
     GetInstStateFromUpdatesAction,
@@ -26,6 +27,8 @@ import type {
 } from '../bots';
 import {
     botAdded,
+    botRemoved,
+    botUpdated,
     createBot,
     formatBotDate,
     formatBotRotation,
@@ -65,6 +68,57 @@ export function constructInitializationUpdate(
     partition.applyEvents(
         action.bots.map((b) => botAdded(createBot(b.id, b.tags)))
     );
+
+    return instUpdate;
+}
+
+/**
+ * Constructs an initialization update from the given previous updates and bots.
+ * @param previousUpdates The previous updates.
+ * @param bots The bots that represent the desired final state.
+ */
+export function constructInitializationUpdateFromPreviousUpdates(
+    previousUpdates: InstUpdate[],
+    bots: Bot[]
+): InstUpdate {
+    const partition = new YjsPartitionImpl({
+        type: 'yjs',
+    });
+
+    for (let { update } of previousUpdates) {
+        const updateBytes = toByteArray(update);
+        applyUpdate(partition.doc, updateBytes);
+    }
+
+    const allBotIds = new Set<string>(Object.keys(partition.state));
+    const actions: BotAction[] = [];
+    for (let b of bots) {
+        if (partition.state[b.id]) {
+            actions.push(
+                botUpdated(b.id, {
+                    tags: b.tags,
+                })
+            );
+        } else {
+            actions.push(botAdded(createBot(b.id, b.tags)));
+        }
+        allBotIds.delete(b.id);
+    }
+
+    for (let id of allBotIds) {
+        actions.push(botRemoved(id));
+    }
+
+    let instUpdate: InstUpdate;
+    partition.doc.on('update', (update: Uint8Array) => {
+        instUpdate = {
+            id: 0,
+            timestamp: Date.now(),
+            update: fromByteArray(encodeStateAsUpdate(partition.doc)),
+        };
+    });
+
+    partition.applyEvents(actions);
 
     return instUpdate;
 }

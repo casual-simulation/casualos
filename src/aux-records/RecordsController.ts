@@ -49,7 +49,13 @@ import type { ValidateSessionKeyFailure } from './AuthController';
 import type { AuthStore } from './AuthStore';
 import { v4 as uuid, v7 as uuidv7 } from 'uuid';
 import type { MetricsStore, SubscriptionFilter } from './MetricsStore';
-import type { ConfigurationStore } from './ConfigurationStore';
+import {
+    AB1_BOOTSTRAP_KEY,
+    type ConfigurationInput,
+    type ConfigurationKey,
+    type ConfigurationOutput,
+    type ConfigurationStore,
+} from './ConfigurationStore';
 import type {
     AIHumeFeaturesConfiguration,
     PurchasableItemFeaturesConfiguration,
@@ -72,13 +78,16 @@ import type {
     CasualOSConfig,
     Result,
     SimpleError,
+    StoredAux,
     UserRole,
+    WebConfig,
 } from '@casual-simulation/aux-common';
 import {
     failure,
     isFailure,
     isSuperUserRole,
     success,
+    tryParseJson,
 } from '@casual-simulation/aux-common';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
@@ -94,6 +103,9 @@ import type {
     DomainNameValidator,
     DomainNameVerificationDNSRecord,
 } from './dns/DomainNameValidator';
+import type { WebManifest } from '@casual-simulation/aux-common/common/WebManifest';
+import axios from 'axios';
+import { STORED_AUX_SCHEMA } from './webhooks';
 
 const TRACE_NAME = 'RecordsController';
 
@@ -1643,6 +1655,80 @@ export class RecordsController {
     }
 
     /**
+     * Gets the AB1 bootstrap script that should be injected into the web player.
+     * @param config The config for the web player.
+     * @returns
+     */
+    @traced(TRACE_NAME)
+    async getAb1Bootstrap(
+        config: WebConfig
+    ): Promise<Result<string, SimpleError>> {
+        const bootstrap = await this._config.getConfiguration(
+            AB1_BOOTSTRAP_KEY,
+            null
+        );
+
+        if (bootstrap) {
+            return success(JSON.stringify(bootstrap));
+        }
+
+        if (config.ab1BootstrapURL) {
+            // inject the AB1 bootstrap script
+            const result = await axios.get(config.ab1BootstrapURL, {
+                validateStatus: () => true,
+            });
+
+            if (result.status === 200) {
+                let json: any = null;
+                if (typeof result.data === 'string') {
+                    const parsed = tryParseJson(result.data);
+                    if (parsed.success) {
+                        json = parsed.value;
+                    } else {
+                        console.error(
+                            `[RecordsController] [getAb1Bootstrap] Failed to parse AB1 bootstrap script from URL as JSON: ${config.ab1BootstrapURL}`
+                        );
+                    }
+                } else if (typeof result.data === 'object') {
+                    json = result.data;
+                } else {
+                    console.error(
+                        `[RecordsController] [getAb1Bootstrap] Unexpected AB1 bootstrap script format from URL: ${config.ab1BootstrapURL}`
+                    );
+                }
+
+                let aux: StoredAux;
+                if (json) {
+                    const auxParse = STORED_AUX_SCHEMA.safeParse(json);
+                    if (auxParse.success) {
+                        aux = auxParse.data as StoredAux;
+                    } else {
+                        console.error(
+                            `[RecordsController] [getAb1Bootstrap] Failed to parse AB1 bootstrap script from URL: ${config.ab1BootstrapURL}`,
+                            auxParse.error
+                        );
+                    }
+                }
+
+                if (aux) {
+                    await this._config.setConfiguration(AB1_BOOTSTRAP_KEY, aux);
+                    return success(JSON.stringify(aux));
+                }
+            } else {
+                console.error(
+                    `[RecordsController] [getAb1Bootstrap] Failed to fetch AB1 bootstrap script from URL: ${config.ab1BootstrapURL}, status code: ${result.status}`,
+                    result.data
+                );
+            }
+        }
+
+        return failure({
+            errorCode: 'not_found',
+            errorMessage: 'No AB1 bootstrap script found.',
+        });
+    }
+
+    /**
      * Attempts to get the web config.
      *
      * @param hostname The hostname that the request was made to.
@@ -1684,9 +1770,38 @@ export class RecordsController {
     }
 
     /**
+     * Attempts to get the web manifest for the player.
+     * @param hostname The hostname that the request was made to.
+     */
+    @traced(TRACE_NAME)
+    async getPlayerWebManifest(
+        hostname: string
+    ): Promise<Result<WebManifest, SimpleError>> {
+        const customDomain = await this._store.getVerifiedCustomDomainByName(
+            hostname
+        );
+
+        if (customDomain?.studio.playerWebManifest) {
+            return success(customDomain.studio.playerWebManifest);
+        }
+
+        const manifest = await this._config.getPlayerWebManifest();
+
+        if (!manifest) {
+            return failure({
+                errorCode: 'not_found',
+                errorMessage: 'No web manifest found.',
+            });
+        }
+
+        return success(manifest);
+    }
+
+    /**
      * Attempts to get a verified custom domain by its name.
      * @param hostname The hostname of the custom domain.
      */
+    @traced(TRACE_NAME)
     async getVerifiedCustomDomainByName(
         hostname: string
     ): Promise<Result<CustomDomainWithStudio | null, SimpleError>> {
@@ -1694,6 +1809,39 @@ export class RecordsController {
             hostname
         );
         return success(customDomain);
+    }
+
+    @traced(TRACE_NAME)
+    async getConfigurationValue(
+        request: GetConfigurationValueRequest
+    ): Promise<Result<ConfigurationOutput<ConfigurationKey>, SimpleError>> {
+        if (!isSuperUserRole(request.userRole)) {
+            return failure({
+                errorCode: 'not_authorized',
+                errorMessage:
+                    'You are not authorized to perform this operation.',
+            });
+        }
+
+        const value = await this._config.getConfiguration(request.key);
+        return success(value);
+    }
+
+    @traced(TRACE_NAME)
+    async setConfigurationValue(
+        request: SetConfigurationValueRequest
+    ): Promise<Result<void, SimpleError>> {
+        if (!isSuperUserRole(request.userRole)) {
+            return failure({
+                errorCode: 'not_authorized',
+                errorMessage:
+                    'You are not authorized to perform this operation.',
+            });
+        }
+
+        await this._config.setConfiguration(request.key, request.value);
+
+        return success();
     }
 
     /**
@@ -2724,6 +2872,12 @@ export interface UpdateStudioRequest {
         playerConfig?: ComIdPlayerConfig;
 
         /**
+         * The PWA web manifest that should be served for custom domains for the server.
+         * If omitted, then the web manifest will not be updated.
+         */
+        playerWebManifest?: WebManifest;
+
+        /**
          * The configuration for the studio's comId.
          * If omitted, then the comId configuration will not be updated.
          */
@@ -3004,3 +3158,14 @@ export type ListCustomDomainsResult = Result<
     },
     SimpleError
 >;
+
+export interface GetConfigurationValueRequest {
+    userRole: UserRole | null;
+    key: ConfigurationKey;
+}
+
+export interface SetConfigurationValueRequest {
+    userRole: UserRole | null;
+    key: ConfigurationKey;
+    value: ConfigurationInput<ConfigurationKey>;
+}

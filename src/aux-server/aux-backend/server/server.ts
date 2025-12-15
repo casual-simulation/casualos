@@ -219,10 +219,6 @@ export class Server {
             frontend.use(this._config.server.drives.path, driveMiddleware);
         }
 
-        frontend.get('/api/*', (req, res) => {
-            res.sendStatus(404);
-        });
-
         const playerDist = path.resolve(
             __dirname,
             '..',
@@ -356,6 +352,10 @@ export class Server {
                 request: Request,
                 response: Response
             ): boolean {
+                if (request.path.startsWith('/api/')) {
+                    return false;
+                }
+
                 const result =
                     /@vite/g.test(request.path) ||
                     /@fs/g.test(request.path) ||

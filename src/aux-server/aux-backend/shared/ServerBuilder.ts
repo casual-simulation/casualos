@@ -671,6 +671,7 @@ export class ServerBuilder implements SubscriptionLike {
                             options.moderation as ModerationConfiguration,
                         webConfig: options.server?.webConfig as WebConfig,
                         privo: options.privo as PrivoConfiguration,
+                        playerWebManifest: options.server?.playerWebManifest,
                     },
                     configuration
                 );
@@ -1880,7 +1881,7 @@ export class ServerBuilder implements SubscriptionLike {
                         {
                             recordName: null,
                             inst: null,
-                            isStatic: false,
+                            kind: 'default',
                         },
                         vm
                     );
@@ -2616,6 +2617,7 @@ export class ServerBuilder implements SubscriptionLike {
                 privo: options.privo as PrivoConfiguration,
                 moderation: options.moderation as ModerationConfiguration,
                 webConfig: options.server?.webConfig as WebConfig,
+                playerWebManifest: options.server?.playerWebManifest,
             });
         } else {
             configStore = new PrismaConfigurationStore(prismaClient, {
@@ -2624,6 +2626,7 @@ export class ServerBuilder implements SubscriptionLike {
                 privo: options.privo as PrivoConfiguration,
                 moderation: options.moderation as ModerationConfiguration,
                 webConfig: options.server?.webConfig as WebConfig,
+                playerWebManifest: options.server?.playerWebManifest,
             });
         }
 

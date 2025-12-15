@@ -41,12 +41,23 @@ import {
     formatV2RecordKey,
     isRecordKey,
 } from '@casual-simulation/aux-common/records/RecordKeys';
-import { failure, success } from '@casual-simulation/aux-common';
+import type { StoredAux, Success } from '@casual-simulation/aux-common';
+import {
+    createBot,
+    failure,
+    isSuccess,
+    success,
+    tryParseJson,
+    WEB_CONFIG_SCHEMA,
+} from '@casual-simulation/aux-common';
 import type { DomainNameValidator } from './dns';
+import { WEB_MANIFEST_SCHEMA } from '@casual-simulation/aux-common/common/WebManifest';
+import type z from 'zod';
 
 const uuidMock: jest.Mock = <any>uuid;
 const uuidv7Mock: jest.Mock = <any>uuidv7;
 jest.mock('uuid');
+jest.mock('axios');
 
 console.error = jest.fn();
 console.log = jest.fn();
@@ -76,6 +87,30 @@ describe('RecordsController', () => {
             domainNameValidator,
         });
     });
+
+    beforeEach(() => {
+        require('axios').__reset();
+    });
+
+    function setResponse(response: any) {
+        require('axios').__setResponse(response);
+    }
+
+    function setNextResponse(response: any) {
+        require('axios').__setNextResponse(response);
+    }
+
+    function getLastPost() {
+        return require('axios').__getLastPost();
+    }
+
+    function getLastGet() {
+        return require('axios').__getLastGet();
+    }
+
+    function getRequests() {
+        return require('axios').__getRequests();
+    }
 
     describe('createPublicRecordKey()', () => {
         it('should return a value that contains the formatted record name and a random password', async () => {
@@ -5295,6 +5330,129 @@ describe('RecordsController', () => {
         });
     });
 
+    describe('getAb1Bootstrap()', () => {
+        it('should fetch the AB1 bootstrap AUX from the given URL', async () => {
+            setResponse({
+                status: 200,
+                data: {
+                    version: 1,
+                    state: {
+                        test1: createBot('test1'),
+                        test2: createBot('test2'),
+                    },
+                } satisfies StoredAux,
+            });
+
+            const result = await manager.getAb1Bootstrap({
+                version: 2,
+                causalRepoConnectionProtocol: 'websocket',
+                ab1BootstrapURL: 'https://example.com/ab1.aux',
+            });
+
+            expect(isSuccess(result)).toBe(true);
+
+            const json = tryParseJson((result as Success<string>).value);
+
+            expect(json).toEqual({
+                success: true,
+                value: {
+                    version: 1,
+                    state: {
+                        test1: createBot('test1'),
+                        test2: createBot('test2'),
+                    },
+                } satisfies StoredAux,
+            });
+
+            expect(getLastGet()).toEqual([
+                'https://example.com/ab1.aux',
+                {
+                    validateStatus: expect.any(Function),
+                },
+            ]);
+        });
+
+        it('should load from the config store first', async () => {
+            store.ab1Bootstrap = {
+                version: 1,
+                state: {
+                    test1: createBot('test1'),
+                    test2: createBot('test2'),
+                },
+            };
+
+            setResponse({
+                status: 500,
+                data: 'Broken',
+            });
+
+            const result = await manager.getAb1Bootstrap({
+                version: 2,
+                causalRepoConnectionProtocol: 'websocket',
+                ab1BootstrapURL: 'https://example.com/ab1.aux',
+            });
+
+            expect(isSuccess(result)).toBe(true);
+
+            const json = tryParseJson((result as Success<string>).value);
+
+            expect(json).toEqual({
+                success: true,
+                value: {
+                    version: 1,
+                    state: {
+                        test1: createBot('test1'),
+                        test2: createBot('test2'),
+                    },
+                } satisfies StoredAux,
+            });
+
+            expect(getLastGet()).toEqual([]);
+        });
+
+        it('should store the bootstrapper in the config store', async () => {
+            setResponse({
+                status: 200,
+                data: {
+                    version: 1,
+                    state: {
+                        test1: createBot('test1'),
+                        test2: createBot('test2'),
+                    },
+                } satisfies StoredAux,
+            });
+
+            const result = await manager.getAb1Bootstrap({
+                version: 2,
+                causalRepoConnectionProtocol: 'websocket',
+                ab1BootstrapURL: 'https://example.com/ab1.aux',
+            });
+
+            expect(isSuccess(result)).toBe(true);
+
+            const json = tryParseJson((result as Success<string>).value);
+
+            expect(json).toEqual({
+                success: true,
+                value: {
+                    version: 1,
+                    state: {
+                        test1: createBot('test1'),
+                        test2: createBot('test2'),
+                    },
+                } satisfies StoredAux,
+            });
+
+            expect(store.ab1Bootstrap).toEqual({
+                version: 1,
+                state: {
+                    test1: createBot('test1'),
+                    test2: createBot('test2'),
+                },
+            });
+        });
+    });
+
     describe('addCustomDomain()', () => {
         let userId: string;
         let studioId: string;
@@ -6354,6 +6512,454 @@ describe('RecordsController', () => {
             // Verify domain was not marked as verified
             const domain = await store.getCustomDomainById(otherDomainId);
             expect(domain?.verified).toBe(null);
+        });
+    });
+
+    describe('getPlayerWebManifest()', () => {
+        const studioId = 'studioId';
+
+        beforeEach(async () => {
+            store.playerWebManifest = WEB_MANIFEST_SCHEMA.parse({
+                name: 'Test',
+                short_name: 'Test',
+            } satisfies z.input<typeof WEB_MANIFEST_SCHEMA>);
+        });
+
+        it('should return the default web manifest there is no custom domain', async () => {
+            const result = await manager.getPlayerWebManifest('example.com');
+            expect(result).toEqual(success(store.playerWebManifest));
+        });
+
+        it('should return not_found if there is no configured web manifest', async () => {
+            store.playerWebManifest = null;
+
+            const result = await manager.getPlayerWebManifest('example.com');
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_found',
+                    errorMessage: 'No web manifest found.',
+                })
+            );
+        });
+
+        it('should return the custom domain web manifest if one is configured', async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub.withAllDefaultFeatures().withComId()
+                    )
+            );
+
+            const studioManifest = WEB_MANIFEST_SCHEMA.parse({
+                name: 'Custom Domain Test',
+                short_name: 'CD Test',
+            } satisfies z.input<typeof WEB_MANIFEST_SCHEMA>);
+            await store.addStudio({
+                id: studioId,
+                displayName: 'Test Studio',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                playerWebManifest: studioManifest,
+            });
+
+            await store.saveCustomDomain({
+                id: 'domain-1',
+                domainName: 'customdomain.com',
+                studioId,
+                verificationKey: 'key-1',
+                verified: true,
+            });
+
+            const result = await manager.getPlayerWebManifest(
+                'customdomain.com'
+            );
+            expect(result).toEqual(success(studioManifest));
+        });
+
+        it('should return the default web manifest if the studio does not have one configured', async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub.withAllDefaultFeatures().withComId()
+                    )
+            );
+
+            await store.addStudio({
+                id: studioId,
+                displayName: 'Test Studio',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            await store.saveCustomDomain({
+                id: 'domain-1',
+                domainName: 'customdomain.com',
+                studioId,
+                verificationKey: 'key-1',
+                verified: true,
+            });
+
+            const result = await manager.getPlayerWebManifest(
+                'customdomain.com'
+            );
+            expect(result).toEqual(success(store.playerWebManifest));
+        });
+    });
+
+    describe('getConfigurationValue()', () => {
+        it('should return not_authorized if the user is not a superUser', async () => {
+            const result = await manager.getConfigurationValue({
+                userRole: 'none',
+                key: 'subscriptions',
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this operation.',
+                })
+            );
+        });
+
+        it('should return not_authorized if the user role is null', async () => {
+            const result = await manager.getConfigurationValue({
+                userRole: null,
+                key: 'subscriptions',
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this operation.',
+                })
+            );
+        });
+
+        it('should return not_authorized if the user is a moderator', async () => {
+            const result = await manager.getConfigurationValue({
+                userRole: 'moderator',
+                key: 'subscriptions',
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this operation.',
+                })
+            );
+        });
+
+        it('should retrieve the subscriptions configuration if the user is a superUser', async () => {
+            const config = createTestSubConfiguration((config) =>
+                config.addSubscription('sub1', (sub) =>
+                    sub.withAllDefaultFeatures()
+                )
+            );
+            store.subscriptionConfiguration = config;
+
+            const result = await manager.getConfigurationValue({
+                userRole: 'superUser',
+                key: 'subscriptions',
+            });
+
+            expect(result).toEqual(success(config));
+        });
+
+        it('should retrieve the privo configuration if the user is a superUser', async () => {
+            const privoConfig = createTestPrivoConfiguration();
+            store.privoConfiguration = privoConfig;
+
+            const result = await manager.getConfigurationValue({
+                userRole: 'superUser',
+                key: 'privo',
+            });
+
+            expect(result).toEqual(success(privoConfig));
+        });
+
+        it('should retrieve the moderation configuration if the user is a superUser', async () => {
+            const moderationConfig = {
+                allowUnauthenticatedReports: true,
+            };
+            store.moderationConfiguration = moderationConfig;
+
+            const result = await manager.getConfigurationValue({
+                userRole: 'superUser',
+                key: 'moderation',
+            });
+
+            expect(result).toEqual(success(moderationConfig));
+        });
+
+        it('should retrieve the web configuration if the user is a superUser', async () => {
+            const webConfig = {
+                version: 2,
+                causalRepoConnectionProtocol: 'websocket',
+            } as const;
+            store.webConfig = webConfig;
+
+            const result = await manager.getConfigurationValue({
+                userRole: 'superUser',
+                key: 'web',
+            });
+
+            expect(result).toEqual(success(webConfig));
+        });
+
+        it('should retrieve the player web manifest if the user is a superUser', async () => {
+            const manifest = WEB_MANIFEST_SCHEMA.parse({
+                name: 'Test Player',
+                short_name: 'Test',
+            } satisfies z.input<typeof WEB_MANIFEST_SCHEMA>);
+            store.playerWebManifest = manifest;
+
+            const result = await manager.getConfigurationValue({
+                userRole: 'superUser',
+                key: 'playerWebManifest',
+            });
+
+            expect(result).toEqual(success(manifest));
+        });
+
+        it('should return null if the configuration value does not exist', async () => {
+            store.subscriptionConfiguration = null;
+
+            const result = await manager.getConfigurationValue({
+                userRole: 'superUser',
+                key: 'subscriptions',
+            });
+
+            expect(result).toEqual(success(null));
+        });
+
+        it('should work for system user role', async () => {
+            const config = createTestSubConfiguration((config) =>
+                config.addSubscription('sub1', (sub) =>
+                    sub.withAllDefaultFeatures()
+                )
+            );
+            store.subscriptionConfiguration = config;
+
+            const result = await manager.getConfigurationValue({
+                userRole: 'system',
+                key: 'subscriptions',
+            });
+
+            expect(result).toEqual(success(config));
+        });
+    });
+
+    describe('setConfigurationValue()', () => {
+        it('should return not_authorized if the user is not a superUser', async () => {
+            const config = createTestSubConfiguration((config) =>
+                config.addSubscription('sub1', (sub) =>
+                    sub.withAllDefaultFeatures()
+                )
+            );
+
+            const result = await manager.setConfigurationValue({
+                userRole: 'none',
+                key: 'subscriptions',
+                value: config,
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this operation.',
+                })
+            );
+
+            // Verify configuration was not set
+            expect(store.subscriptionConfiguration).not.toEqual(config);
+        });
+
+        it('should return not_authorized if the user role is null', async () => {
+            const config = createTestSubConfiguration((config) =>
+                config.addSubscription('sub1', (sub) =>
+                    sub.withAllDefaultFeatures()
+                )
+            );
+
+            const result = await manager.setConfigurationValue({
+                userRole: null,
+                key: 'subscriptions',
+                value: config,
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this operation.',
+                })
+            );
+        });
+
+        it('should return not_authorized if the user is a moderator', async () => {
+            const config = createTestSubConfiguration((config) =>
+                config.addSubscription('sub1', (sub) =>
+                    sub.withAllDefaultFeatures()
+                )
+            );
+
+            const result = await manager.setConfigurationValue({
+                userRole: 'moderator',
+                key: 'subscriptions',
+                value: config,
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this operation.',
+                })
+            );
+        });
+
+        it('should set the subscriptions configuration if the user is a superUser', async () => {
+            const config = createTestSubConfiguration((config) =>
+                config.addSubscription('sub1', (sub) =>
+                    sub.withAllDefaultFeatures()
+                )
+            );
+
+            const result = await manager.setConfigurationValue({
+                userRole: 'superUser',
+                key: 'subscriptions',
+                value: config,
+            });
+
+            expect(result).toEqual(success(undefined));
+            expect(store.subscriptionConfiguration).toEqual(config);
+        });
+
+        it('should set the privo configuration if the user is a superUser', async () => {
+            const privoConfig = createTestPrivoConfiguration();
+
+            const result = await manager.setConfigurationValue({
+                userRole: 'superUser',
+                key: 'privo',
+                value: privoConfig,
+            });
+
+            expect(result).toEqual(success(undefined));
+            expect(store.privoConfiguration).toEqual(privoConfig);
+        });
+
+        it('should set the moderation configuration if the user is a superUser', async () => {
+            const moderationConfig = {
+                allowUnauthenticatedReports: false,
+            };
+
+            const result = await manager.setConfigurationValue({
+                userRole: 'superUser',
+                key: 'moderation',
+                value: moderationConfig,
+            });
+
+            expect(result).toEqual(success(undefined));
+            expect(store.moderationConfiguration).toEqual(moderationConfig);
+        });
+
+        it('should set the web configuration if the user is a superUser', async () => {
+            const webConfig = WEB_CONFIG_SCHEMA.parse({
+                causalRepoConnectionProtocol: 'websocket',
+            } satisfies z.input<typeof WEB_CONFIG_SCHEMA>);
+
+            const result = await manager.setConfigurationValue({
+                userRole: 'superUser',
+                key: 'web',
+                value: webConfig,
+            });
+
+            expect(result).toEqual(success(undefined));
+            expect(store.webConfig).toEqual(webConfig);
+        });
+
+        it('should set the player web manifest if the user is a superUser', async () => {
+            const manifest = WEB_MANIFEST_SCHEMA.parse({
+                name: 'Test Player',
+                short_name: 'Test',
+            } satisfies z.input<typeof WEB_MANIFEST_SCHEMA>);
+
+            const result = await manager.setConfigurationValue({
+                userRole: 'superUser',
+                key: 'playerWebManifest',
+                value: manifest,
+            });
+
+            expect(result).toEqual(success(undefined));
+            expect(store.playerWebManifest).toEqual(manifest);
+        });
+
+        it('should update an existing configuration value', async () => {
+            const config1 = createTestSubConfiguration((config) =>
+                config.addSubscription('sub1', (sub) =>
+                    sub.withAllDefaultFeatures()
+                )
+            );
+            store.subscriptionConfiguration = config1;
+
+            const config2 = createTestSubConfiguration((config) =>
+                config
+                    .addSubscription('sub1', (sub) =>
+                        sub.withAllDefaultFeatures()
+                    )
+                    .addSubscription('sub2', (sub) =>
+                        sub.withAllDefaultFeatures()
+                    )
+            );
+
+            const result = await manager.setConfigurationValue({
+                userRole: 'superUser',
+                key: 'subscriptions',
+                value: config2,
+            });
+
+            expect(result).toEqual(success(undefined));
+            expect(store.subscriptionConfiguration).toEqual(config2);
+            expect(store.subscriptionConfiguration).not.toEqual(config1);
+        });
+
+        it('should work for system user role', async () => {
+            const config = createTestSubConfiguration((config) =>
+                config.addSubscription('sub1', (sub) =>
+                    sub.withAllDefaultFeatures()
+                )
+            );
+
+            const result = await manager.setConfigurationValue({
+                userRole: 'system',
+                key: 'subscriptions',
+                value: config,
+            });
+
+            expect(result).toEqual(success(undefined));
+            expect(store.subscriptionConfiguration).toEqual(config);
+        });
+
+        it('should allow setting configuration to null by clearing it', async () => {
+            const config = createTestSubConfiguration((config) =>
+                config.addSubscription('sub1', (sub) =>
+                    sub.withAllDefaultFeatures()
+                )
+            );
+            store.subscriptionConfiguration = config;
+
+            // Setting to null should clear the configuration
+            const result = await manager.setConfigurationValue({
+                userRole: 'superUser',
+                key: 'subscriptions',
+                value: null as any,
+            });
+
+            expect(result).toEqual(success(undefined));
         });
     });
 });

@@ -28,6 +28,17 @@ declare const WEBSOCKET_PROTOCOL: RemoteCausalRepoProtocol;
 declare const ASSUME_STUDIOS_SUPPORTED: boolean;
 declare const ASSUME_SUBSCRIPTIONS_SUPPORTED: boolean;
 declare const GIT_TAG: string;
+declare const USE_PRIVO_LOGIN: boolean;
+declare const SUPPORT_URL: string;
+declare const ENABLE_SMS_AUTHENTICATION: boolean;
+
+if (typeof (globalThis as any).USE_PRIVO_LOGIN === 'undefined') {
+    (globalThis as any).USE_PRIVO_LOGIN = false;
+}
+
+if (typeof (globalThis as any).SUPPORT_URL === 'undefined') {
+    (globalThis as any).SUPPORT_URL = null;
+}
 
 const injectedConfig = tryParseJson(
     document.querySelector('script#casualos-web-config')?.innerHTML
@@ -37,6 +48,8 @@ if (injectedConfig.success) {
     const config: CasualOSConfig = injectedConfig.value;
     authManager = new AuthManager(config, GIT_TAG);
 } else {
+    console.log(`[AuthManager] Use Privo Login: ${USE_PRIVO_LOGIN}`);
+
     authManager = new AuthManager(
         {
             version: 2,
@@ -45,6 +58,9 @@ if (injectedConfig.success) {
             causalRepoConnectionProtocol: WEBSOCKET_PROTOCOL,
             studiosSupported: ASSUME_STUDIOS_SUPPORTED,
             subscriptionsSupported: ASSUME_SUBSCRIPTIONS_SUPPORTED,
+            requirePrivoLogin: USE_PRIVO_LOGIN ?? false,
+            supportUrl: SUPPORT_URL,
+            enableSmsAuthentication: ENABLE_SMS_AUTHENTICATION === true,
         },
         GIT_TAG
     );

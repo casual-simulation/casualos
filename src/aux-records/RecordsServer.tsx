@@ -168,6 +168,11 @@ import type { ContractRecordsController } from './contracts/ContractRecordsContr
 import type { ViewParams, ViewTemplateRenderer } from './ViewTemplateRenderer';
 import type { JSX } from 'preact';
 import { omitBy } from 'es-toolkit';
+import { WEB_MANIFEST_SCHEMA } from '@casual-simulation/aux-common/common/WebManifest';
+import {
+    CONFIGURATION_KEYS,
+    CONFIGURATION_SCHEMAS,
+} from './ConfigurationStore';
 
 declare const GIT_TAG: string;
 declare const GIT_HASH: string;
@@ -616,6 +621,7 @@ export class RecordsServer {
                     );
 
                     const postApp: JSX.Element[] = [];
+                    const icons: JSX.Element[] = [];
 
                     if (isSuccess(config) && config.value) {
                         postApp.push(
@@ -627,9 +633,61 @@ export class RecordsServer {
                                 }}
                             />
                         );
+
+                        if (
+                            config.value.ab1BootstrapURL &&
+                            config.value.serverInjectBootstrapper
+                        ) {
+                            const result = await this._records.getAb1Bootstrap(
+                                config.value
+                            );
+                            if (isSuccess(result)) {
+                                postApp.push(
+                                    <script
+                                        type="text/aux"
+                                        id="casualos-ab1-bootstrap"
+                                        dangerouslySetInnerHTML={{
+                                            __html: result.value,
+                                        }}
+                                    />
+                                );
+                            }
+                        }
+
+                        if (config.value.icons) {
+                            if (config.value.icons.appleTouchIcon) {
+                                icons.push(
+                                    <link
+                                        rel="apple-touch-icon"
+                                        href={config.value.icons.appleTouchIcon}
+                                    />
+                                );
+                            }
+                            if (config.value.icons.favicon) {
+                                if (
+                                    config.value.icons.favicon.endsWith('.png')
+                                ) {
+                                    icons.push(
+                                        <link
+                                            rel="icon"
+                                            href={config.value.icons.favicon}
+                                            type="image/png"
+                                        />
+                                    );
+                                } else {
+                                    icons.push(
+                                        <link
+                                            rel="icon"
+                                            href={config.value.icons.favicon}
+                                        />
+                                    );
+                                }
+                            }
+                        }
                     }
 
                     const result = success<ViewParams>({
+                        icons: <>{icons}</>,
                         postApp: <>{postApp}</>,
                     });
 
@@ -4688,6 +4746,10 @@ export class RecordsServer {
                             'The configuration that can be used by studios to setup loom.'
                         ),
                         humeConfig: HUME_CONFIG.optional(),
+                        playerWebManifest:
+                            WEB_MANIFEST_SCHEMA.optional().describe(
+                                'The PWA web manifest that should be served for custom domains for the studio.'
+                            ),
                     })
                 )
                 .handler(
@@ -4700,6 +4762,7 @@ export class RecordsServer {
                             playerConfig,
                             loomConfig,
                             humeConfig,
+                            playerWebManifest,
                         },
                         context
                     ) => {
@@ -4725,6 +4788,7 @@ export class RecordsServer {
                                 playerConfig,
                                 loomConfig,
                                 humeConfig,
+                                playerWebManifest,
                             },
                         });
                         return result;
@@ -5135,6 +5199,31 @@ export class RecordsServer {
                     const result = await this._records.getWebConfig(null);
                     return genericResult(result);
                 }),
+
+            getPlayerWebManifest: procedure()
+                .origins(true)
+                .http('GET', '/api/v2/site.webmanifest', 'player')
+                .inputs(z.object({}))
+                .handler(
+                    async (_, context) => {
+                        const result = await this._records.getPlayerWebManifest(
+                            context.url.hostname
+                        );
+                        return genericResult(result);
+                    },
+                    async (result) => {
+                        if (result.success === true) {
+                            const { success, ...data } = result;
+                            return {
+                                body: JSON.stringify(data),
+                                headers: {
+                                    'content-type': 'application/manifest+json',
+                                },
+                            };
+                        }
+                        return {};
+                    }
+                ),
 
             getPlayerConfig: procedure()
                 .origins('api')
@@ -6413,6 +6502,70 @@ export class RecordsServer {
 
                     return result;
                 }),
+
+            getConfigurationValue: procedure()
+                .origins('account')
+                .http('GET', '/api/v2/configuration')
+                .inputs(
+                    z.object({
+                        key: z.enum(CONFIGURATION_KEYS),
+                    })
+                )
+                .handler(async ({ key }, context) => {
+                    const validation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (validation.success === false) {
+                        if (validation.errorCode === 'no_session_key') {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return validation;
+                    }
+
+                    const result = await this._records.getConfigurationValue({
+                        userRole: validation.role,
+                        key: key,
+                    });
+
+                    return genericResult(result);
+                }),
+
+            setConfigurationValue: procedure()
+                .origins('account')
+                .http('POST', '/api/v2/configuration')
+                .inputs(
+                    z.discriminatedUnion(
+                        'key',
+                        CONFIGURATION_SCHEMAS.map((s) =>
+                            z.object({
+                                key: z.literal(s.key),
+                                value: s.schema,
+                            })
+                        ) as unknown as [
+                            z.core.$ZodTypeDiscriminable,
+                            ...z.core.$ZodTypeDiscriminable[]
+                        ]
+                    )
+                )
+                .handler(async ({ key, value }, context) => {
+                    const validation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (validation.success === false) {
+                        if (validation.errorCode === 'no_session_key') {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return validation;
+                    }
+
+                    const result = await this._records.setConfigurationValue({
+                        userRole: validation.role,
+                        key,
+                        value,
+                    });
+
+                    return genericResult(result);
+                }),
         };
     }
 
@@ -6582,6 +6735,7 @@ export class RecordsServer {
             path: route.path,
             schema: procedure.schema,
             querySchema: procedure.querySchema,
+            scope: route.scope,
             name: name,
             handler: async (request, data, query) => {
                 const context: RPCContext = {

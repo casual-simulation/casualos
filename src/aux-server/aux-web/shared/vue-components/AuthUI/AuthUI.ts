@@ -23,7 +23,7 @@ import type {
 } from '@casual-simulation/aux-common';
 import { Subscription } from 'rxjs';
 import { appManager } from '../../../shared/AppManager';
-import type { LoginStatus } from '@casual-simulation/aux-vm';
+import { isStatic, isTemp, type LoginStatus } from '@casual-simulation/aux-vm';
 import FieldErrors from '../FieldErrors/FieldErrors';
 import type { FormError } from '@casual-simulation/aux-common';
 import { getFormErrors } from '@casual-simulation/aux-common';
@@ -134,7 +134,10 @@ export default class AuthUI extends Vue {
                         this._simId
                     );
                     if (sim) {
-                        if (!sim.origin.isStatic) {
+                        if (
+                            !isStatic(sim.origin.kind) &&
+                            !isTemp(sim.origin.kind)
+                        ) {
                             this.reportInstVisible = true;
                         }
                     }
@@ -300,6 +303,8 @@ export default class AuthUI extends Vue {
                     );
 
                 if (result.success === true) {
+                    this._simId = null;
+                    this._origin = null;
                     this.grantAccessErrors = [];
                     this.showGrantAccess = false;
                 } else {
