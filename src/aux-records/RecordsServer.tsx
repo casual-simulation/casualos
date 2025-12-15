@@ -2745,6 +2745,7 @@ export class RecordsServer {
                         inst: z.string().min(1),
                         branch: z.string().optional().nullable(),
                         instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        downgrade: z.boolean().optional().nullable(),
                         package: z.object({
                             recordName: RECORD_NAME_VALIDATION,
                             address: ADDRESS_VALIDATION,
@@ -2789,7 +2790,14 @@ export class RecordsServer {
                 )
                 .handler(
                     async (
-                        { recordName, inst, branch, package: pkg, instances },
+                        {
+                            recordName,
+                            inst,
+                            branch,
+                            package: pkg,
+                            instances,
+                            downgrade,
+                        },
                         context
                     ) => {
                         if (!this._websocketController) {
@@ -2815,6 +2823,7 @@ export class RecordsServer {
                                 branch,
                                 package: pkg as PackageVersionSpecifier,
                                 instances,
+                                downgrade,
                             });
 
                         return result;

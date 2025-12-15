@@ -2418,6 +2418,11 @@ Object {
             "optional": true,
             "type": "string",
           },
+          "downgrade": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "boolean",
+          },
           "inst": Object {
             "type": "string",
           },
@@ -12253,6 +12258,11 @@ Object {
             "nullable": true,
             "optional": true,
             "type": "string",
+          },
+          "downgrade": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "boolean",
           },
           "inst": Object {
             "type": "string",

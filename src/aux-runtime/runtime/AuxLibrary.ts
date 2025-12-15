@@ -314,6 +314,7 @@ import type {
     ListedChatModel,
     StoreItem,
     PurchasableItemReference,
+    InstallPackageOptions,
 } from './RecordsEvents';
 import {
     aiChat,
@@ -12579,7 +12580,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         recordName: string,
         address: string,
         key?: string | PackageRecordVersionKeySpecifier,
-        options: RecordActionOptions = {}
+        options: InstallPackageOptions = {}
     ): Promise<InstallPackageResult> {
         const task = context.createTask();
         const event = calcInstallPackage(

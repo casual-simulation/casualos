@@ -18,7 +18,30 @@
 
 import { hasValue } from '../bots';
 
-export interface VersionNumber {
+export interface SimpleVersionNumber {
+    /**
+     * The major version of the package.
+     */
+    major: number;
+
+    /**
+     * The minor version of the package.
+     */
+    minor: number;
+
+    /**
+     * The patch version of the package.
+     */
+    patch: number;
+
+    /**
+     * The pre-release version of the package.
+     * If empty or null, then this is a stable release.
+     */
+    tag: string | null;
+}
+
+export interface VersionNumber extends SimpleVersionNumber {
     version: string | null;
     major: number | null;
     minor: number | null;
@@ -91,4 +114,41 @@ export function formatVersionNumber(
     tag: string
 ): string {
     return `v${major}.${minor}.${patch}${tag ? `-${tag}` : ''}`;
+}
+
+/**
+ * Compares two version numbers.
+ *
+ * Returns -1 if the first version is less than the second,
+ * 1 if the first version is greater than the second,
+ * and 0 if they are equal.
+ * @param first The first version number.
+ * @param second The second version number.
+ */
+export function compareVersions(
+    first: SimpleVersionNumber,
+    second: SimpleVersionNumber
+): number {
+    if (first.major < second.major) {
+        return -1;
+    } else if (first.major > second.major) {
+        return 1;
+    } else if (first.minor < second.minor) {
+        return -1;
+    } else if (first.minor > second.minor) {
+        return 1;
+    } else if (first.patch < second.patch) {
+        return -1;
+    } else if (first.patch > second.patch) {
+        return 1;
+    } else if (first.tag === null && second.tag !== null) {
+        // tagless versions are newer than tagged versions
+        return 1;
+    } else if (first.tag !== null && second.tag === null) {
+        return -1;
+    } else if (first.tag !== null && second.tag !== null) {
+        return first.tag.localeCompare(second.tag);
+    } else {
+        return 0;
+    }
 }

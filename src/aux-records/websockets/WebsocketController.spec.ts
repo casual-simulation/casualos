@@ -9334,7 +9334,7 @@ describe('WebsocketController', () => {
                 ]);
             });
 
-            it('should do nothing if the package is already loaded', async () => {
+            it('should do nothing if the exact package version is already loaded', async () => {
                 uuidv7Mock.mockReturnValueOnce('packageId');
 
                 const result = await server.installPackage({
@@ -9439,6 +9439,479 @@ describe('WebsocketController', () => {
                         userId: userId,
                     },
                 ]);
+            });
+
+            it('should upgrade the package if a new version is installed', async () => {
+                await recordPackage(
+                    recordName,
+                    'upgradable',
+                    [PUBLIC_READ_MARKER],
+                    version(1),
+                    {
+                        version: 2,
+                        updates: [
+                            constructInitializationUpdate(
+                                createInitializationUpdate([
+                                    createBot('test', {
+                                        abc: 'def',
+                                        num: 123,
+                                    }),
+                                    createBot('test2', {
+                                        ghi: 'jfk',
+                                        value: true,
+                                    }),
+                                ])
+                            ),
+                        ],
+                    }
+                );
+
+                await recordPackage(
+                    recordName,
+                    'upgradable',
+                    [PUBLIC_READ_MARKER],
+                    version(2),
+                    {
+                        version: 2,
+                        updates: [
+                            constructInitializationUpdate(
+                                createInitializationUpdate([
+                                    createBot('test', {
+                                        num: 123,
+                                    }),
+                                    createBot('test3', {
+                                        ghi: 'jfk',
+                                    }),
+                                ])
+                            ),
+                        ],
+                    }
+                );
+
+                uuidv7Mock.mockReturnValueOnce('packageId');
+
+                const result = await server.installPackage({
+                    userId,
+                    userRole: 'none',
+                    recordName,
+                    inst,
+                    package: {
+                        recordName,
+                        address: 'upgradable',
+                        key: version(1),
+                    },
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    packageLoadId: 'packageId',
+                    package: {
+                        id: 'upgradable@1.0.0',
+                        packageId: 'upgradable',
+                        address: 'upgradable',
+                        key: version(1),
+                        entitlements: [],
+                        description: '',
+                        markers: [PUBLIC_READ_MARKER],
+                        createdAtMs: expect.any(Number),
+                        sha256: expect.any(String),
+                        auxSha256: expect.any(String),
+                        auxFileName: expect.any(String),
+                        createdFile: true,
+                        requiresReview: false,
+                        sizeInBytes: expect.any(Number),
+                        approved: true,
+                        approvalType: 'normal',
+                    },
+                });
+
+                const result2 = await server.installPackage({
+                    userId,
+                    userRole: 'none',
+                    recordName,
+                    inst,
+                    package: {
+                        recordName,
+                        address: 'upgradable',
+                        key: version(2),
+                    },
+                });
+
+                expect(result2).toEqual({
+                    success: true,
+                    packageLoadId: 'packageId',
+                    package: {
+                        id: 'upgradable@2.0.0',
+                        packageId: 'upgradable',
+                        address: 'upgradable',
+                        key: version(2),
+                        entitlements: [],
+                        description: '',
+                        markers: [PUBLIC_READ_MARKER],
+                        createdAtMs: expect.any(Number),
+                        sha256: expect.any(String),
+                        auxSha256: expect.any(String),
+                        auxFileName: expect.any(String),
+                        createdFile: true,
+                        requiresReview: false,
+                        sizeInBytes: expect.any(Number),
+                        approved: true,
+                        approvalType: 'normal',
+                    },
+                });
+
+                const updates = await instStore.getCurrentUpdates(
+                    recordName,
+                    inst,
+                    DEFAULT_BRANCH_NAME
+                );
+                expect(updates.updates).toEqual([
+                    expect.any(String),
+                    expect.any(String),
+                ]);
+
+                expect(
+                    await instStore.listLoadedPackages(recordName, inst)
+                ).toEqual([
+                    {
+                        id: 'packageId',
+                        recordName,
+                        inst,
+                        branch: DEFAULT_BRANCH_NAME,
+                        packageId: 'upgradable',
+                        packageVersionId: 'upgradable@2.0.0',
+                        userId: userId,
+                    },
+                ]);
+
+                const state = getStateFromUpdates(
+                    getInstStateFromUpdates(
+                        updates.updates.map((u, i) => ({
+                            id: i,
+                            timestamp: 0,
+                            update: u,
+                        }))
+                    )
+                );
+
+                expect(state).toEqual({
+                    test: createBot('test', {
+                        num: 123,
+                    }),
+                    test3: createBot('test3', {
+                        ghi: 'jfk',
+                    }),
+                });
+            });
+
+            it('should refuse to downgrade packages by default', async () => {
+                await recordPackage(
+                    recordName,
+                    'upgradable',
+                    [PUBLIC_READ_MARKER],
+                    version(1),
+                    {
+                        version: 2,
+                        updates: [
+                            constructInitializationUpdate(
+                                createInitializationUpdate([
+                                    createBot('test', {
+                                        abc: 'def',
+                                        num: 123,
+                                    }),
+                                    createBot('test2', {
+                                        ghi: 'jfk',
+                                        value: true,
+                                    }),
+                                ])
+                            ),
+                        ],
+                    }
+                );
+
+                await recordPackage(
+                    recordName,
+                    'upgradable',
+                    [PUBLIC_READ_MARKER],
+                    version(2),
+                    {
+                        version: 2,
+                        updates: [
+                            constructInitializationUpdate(
+                                createInitializationUpdate([
+                                    createBot('test', {
+                                        num: 123,
+                                    }),
+                                    createBot('test3', {
+                                        ghi: 'jfk',
+                                    }),
+                                ])
+                            ),
+                        ],
+                    }
+                );
+
+                uuidv7Mock.mockReturnValueOnce('packageId');
+
+                const result = await server.installPackage({
+                    userId,
+                    userRole: 'none',
+                    recordName,
+                    inst,
+                    package: {
+                        recordName,
+                        address: 'upgradable',
+                        key: version(2),
+                    },
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    packageLoadId: 'packageId',
+                    package: {
+                        id: 'upgradable@2.0.0',
+                        packageId: 'upgradable',
+                        address: 'upgradable',
+                        key: version(2),
+                        entitlements: [],
+                        description: '',
+                        markers: [PUBLIC_READ_MARKER],
+                        createdAtMs: expect.any(Number),
+                        sha256: expect.any(String),
+                        auxSha256: expect.any(String),
+                        auxFileName: expect.any(String),
+                        createdFile: true,
+                        requiresReview: false,
+                        sizeInBytes: expect.any(Number),
+                        approved: true,
+                        approvalType: 'normal',
+                    },
+                });
+
+                const result2 = await server.installPackage({
+                    userId,
+                    userRole: 'none',
+                    recordName,
+                    inst,
+                    package: {
+                        recordName,
+                        address: 'upgradable',
+                        key: version(1),
+                    },
+                });
+
+                expect(result2).toEqual({
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage:
+                        'Cannot install version 1.0.0 because a newer version (2.0.0) of this package is already installed. If you want to downgrade the package, you must set the downgrade option to true.',
+                });
+
+                const updates = await instStore.getCurrentUpdates(
+                    recordName,
+                    inst,
+                    DEFAULT_BRANCH_NAME
+                );
+                expect(updates.updates).toEqual([expect.any(String)]);
+
+                expect(
+                    await instStore.listLoadedPackages(recordName, inst)
+                ).toEqual([
+                    {
+                        id: 'packageId',
+                        recordName,
+                        inst,
+                        branch: DEFAULT_BRANCH_NAME,
+                        packageId: 'upgradable',
+                        packageVersionId: 'upgradable@2.0.0',
+                        userId: userId,
+                    },
+                ]);
+
+                const state = getStateFromUpdates(
+                    getInstStateFromUpdates(
+                        updates.updates.map((u, i) => ({
+                            id: i,
+                            timestamp: 0,
+                            update: u,
+                        }))
+                    )
+                );
+
+                expect(state).toEqual({
+                    test: createBot('test', {
+                        num: 123,
+                    }),
+                    test3: createBot('test3', {
+                        ghi: 'jfk',
+                    }),
+                });
+            });
+
+            it('should be able to downgrade if an old version is installed', async () => {
+                await recordPackage(
+                    recordName,
+                    'upgradable',
+                    [PUBLIC_READ_MARKER],
+                    version(1),
+                    {
+                        version: 2,
+                        updates: [
+                            constructInitializationUpdate(
+                                createInitializationUpdate([
+                                    createBot('test', {
+                                        abc: 'def',
+                                        num: 123,
+                                    }),
+                                    createBot('test2', {
+                                        ghi: 'jfk',
+                                        value: true,
+                                    }),
+                                ])
+                            ),
+                        ],
+                    }
+                );
+
+                await recordPackage(
+                    recordName,
+                    'upgradable',
+                    [PUBLIC_READ_MARKER],
+                    version(2),
+                    {
+                        version: 2,
+                        updates: [
+                            constructInitializationUpdate(
+                                createInitializationUpdate([
+                                    createBot('test', {
+                                        num: 123,
+                                    }),
+                                    createBot('test3', {
+                                        ghi: 'jfk',
+                                    }),
+                                ])
+                            ),
+                        ],
+                    }
+                );
+
+                uuidv7Mock.mockReturnValueOnce('packageId');
+
+                const result = await server.installPackage({
+                    userId,
+                    userRole: 'none',
+                    recordName,
+                    inst,
+                    package: {
+                        recordName,
+                        address: 'upgradable',
+                        key: version(2),
+                    },
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    packageLoadId: 'packageId',
+                    package: {
+                        id: 'upgradable@2.0.0',
+                        packageId: 'upgradable',
+                        address: 'upgradable',
+                        key: version(2),
+                        entitlements: [],
+                        description: '',
+                        markers: [PUBLIC_READ_MARKER],
+                        createdAtMs: expect.any(Number),
+                        sha256: expect.any(String),
+                        auxSha256: expect.any(String),
+                        auxFileName: expect.any(String),
+                        createdFile: true,
+                        requiresReview: false,
+                        sizeInBytes: expect.any(Number),
+                        approved: true,
+                        approvalType: 'normal',
+                    },
+                });
+
+                const result2 = await server.installPackage({
+                    userId,
+                    userRole: 'none',
+                    recordName,
+                    inst,
+                    package: {
+                        recordName,
+                        address: 'upgradable',
+                        key: version(1),
+                    },
+                    downgrade: true,
+                });
+
+                expect(result2).toEqual({
+                    success: true,
+                    packageLoadId: 'packageId',
+                    package: {
+                        id: 'upgradable@1.0.0',
+                        packageId: 'upgradable',
+                        address: 'upgradable',
+                        key: version(1),
+                        entitlements: [],
+                        description: '',
+                        markers: [PUBLIC_READ_MARKER],
+                        createdAtMs: expect.any(Number),
+                        sha256: expect.any(String),
+                        auxSha256: expect.any(String),
+                        auxFileName: expect.any(String),
+                        createdFile: true,
+                        requiresReview: false,
+                        sizeInBytes: expect.any(Number),
+                        approved: true,
+                        approvalType: 'normal',
+                    },
+                });
+
+                const updates = await instStore.getCurrentUpdates(
+                    recordName,
+                    inst,
+                    DEFAULT_BRANCH_NAME
+                );
+                expect(updates.updates).toEqual([
+                    expect.any(String),
+                    expect.any(String),
+                ]);
+
+                expect(
+                    await instStore.listLoadedPackages(recordName, inst)
+                ).toEqual([
+                    {
+                        id: 'packageId',
+                        recordName,
+                        inst,
+                        branch: DEFAULT_BRANCH_NAME,
+                        packageId: 'upgradable',
+                        packageVersionId: 'upgradable@1.0.0',
+                        userId: userId,
+                    },
+                ]);
+
+                const state = getStateFromUpdates(
+                    getInstStateFromUpdates(
+                        updates.updates.map((u, i) => ({
+                            id: i,
+                            timestamp: 0,
+                            update: u,
+                        }))
+                    )
+                );
+
+                expect(state).toEqual({
+                    test: createBot('test', {
+                        abc: 'def',
+                        num: 123,
+                    }),
+                    test2: createBot('test2', {
+                        ghi: 'jfk',
+                        value: true,
+                    }),
+                });
             });
 
             it('should be able to load multiple packages', async () => {

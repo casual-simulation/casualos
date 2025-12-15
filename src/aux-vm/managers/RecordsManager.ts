@@ -2658,6 +2658,7 @@ export class RecordsManager {
                             key: event.key,
                         },
                         instances,
+                        downgrade: event.options?.downgrade,
                     },
                     {
                         sessionKey: info.token,
