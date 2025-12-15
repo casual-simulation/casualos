@@ -68,10 +68,6 @@ export default defineConfig(({ command, mode }) => ({
                         __dirname,
                         'loading-oauth.html'
                     ),
-                    'cleanup-indexeddb': path.resolve(
-                        __dirname,
-                        'cleanup-indexeddb.html'
-                    ),
                 },
                 output: {
                     manualChunks: {
