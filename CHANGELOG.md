@@ -12,6 +12,10 @@
         -   `bots` are the bots that the update should contain as the final state.
 -   Added [`zod`](https://zod.dev/) as an importable library for user scripts.
 
+### :bug: Bug Fixes
+
+-   Fixed cross-origin IndexedDB and localStorage cleanup when deleting static instances. Previously, bot data persisted after deletion because it was stored at a different origin than the main application. The cleanup now uses an iframe-based approach that runs at the correct origin to properly delete all stored data.
+
 ## V3.9.0
 
 #### Date: 12/11/2025
