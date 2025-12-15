@@ -99,11 +99,10 @@ export function constructInitializationUpdateFromPreviousUpdates(
                     tags: b.tags,
                 })
             );
-            allBotIds.delete(b.id);
         } else {
             actions.push(botAdded(createBot(b.id, b.tags)));
-            allBotIds.delete(b.id);
         }
+        allBotIds.delete(b.id);
     }
 
     for (let id of allBotIds) {

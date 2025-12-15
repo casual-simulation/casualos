@@ -6,8 +6,8 @@
 
 ### :rocket: Features
 
--   Improved `os.createInitializationUpdate()` to support creating initalization updates from previous initalization updates.
-    -   The the `os.createInitializationUpdate(previousUpdates, bots)` overload.
+-   Improved `os.createInitializationUpdate()` to support creating initialization updates from previous initialization updates.
+    -   Added the `os.createInitializationUpdate(previousUpdates, bots)` overload.
         -   `previousUpdates` are the updates that the new initialization update should be based on.
         -   `bots` are the bots that the update should contain as the final state.
 
