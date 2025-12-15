@@ -2606,7 +2606,13 @@ export class RecordsManager {
                     const aux: StoredAux = fileResult.data;
 
                     await this._helper.transaction(
-                        remote(installAuxFile(aux, 'default'))
+                        remote(
+                            installAuxFile(
+                                aux,
+                                'default',
+                                result.item.packageId
+                            )
+                        )
                     );
 
                     if (hasValue(event.taskId)) {

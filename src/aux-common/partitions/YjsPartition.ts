@@ -85,6 +85,7 @@ import {
     ensureTagIsSerializable,
     getStateFromUpdates,
     supportsRemoteEvent,
+    updateToNewStateUpdate,
 } from './PartitionUtils';
 import type { RemoteActions, VersionVector } from '../common';
 import { fromByteArray } from 'base64-js';
@@ -119,6 +120,8 @@ export class YjsPartitionImpl
 
     private _remoteEvents: PartitionRemoteEvents | boolean;
     private _connectionId: string;
+
+    private _installedAuxes = new globalThis.Map<string, InstUpdate[]>();
 
     get onBotsAdded(): Observable<Bot[]> {
         return this._internalPartition.onBotsAdded;
@@ -328,7 +331,33 @@ export class YjsPartitionImpl
                             }
                         } else {
                             if (action.aux.version === 2) {
-                                this.applyStateUpdates(action.aux.updates);
+                                let installed = false;
+                                if (hasValue(action.source)) {
+                                    const previouslyInstalled =
+                                        this._installedAuxes.get(action.source);
+                                    if (hasValue(previouslyInstalled)) {
+                                        const combined = [
+                                            updateToNewStateUpdate(
+                                                previouslyInstalled,
+                                                action.aux.updates
+                                            ),
+                                        ];
+                                        this._installedAuxes.set(
+                                            action.source,
+                                            combined
+                                        );
+                                        this.applyStateUpdates(combined);
+                                        installed = true;
+                                    }
+                                }
+
+                                if (!installed) {
+                                    this._installedAuxes.set(
+                                        action.source,
+                                        action.aux.updates
+                                    );
+                                    this.applyStateUpdates(action.aux.updates);
+                                }
                             } else if (action.aux.version === 1) {
                                 this._applyEvents(
                                     Object.values(action.aux.state).map((b) =>

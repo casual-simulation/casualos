@@ -1623,6 +1623,108 @@ describe('RemoteYjsPartition', () => {
                             },
                         ]);
                     });
+
+                    it('should properly handle with version 2 auxes if it has a source', async () => {
+                        setupPartition({
+                            type: 'remote_yjs',
+                            recordName: recordName,
+                            inst: 'inst',
+                            branch: 'testBranch',
+                            host: 'testHost',
+                        });
+
+                        partition.connect();
+
+                        const events = [] as Action[];
+                        partition.onEvents.subscribe((e) => events.push(...e));
+
+                        const update = constructInitializationUpdate(
+                            createInitializationUpdate([
+                                createBot('installed1', {
+                                    abc: 'def',
+                                }),
+                                createBot('installed2', {
+                                    abc: 'ghi',
+                                }),
+                                createBot('installed3', {
+                                    deleted: true,
+                                }),
+                            ])
+                        );
+
+                        const state: StoredAux = {
+                            version: 2,
+                            updates: [update],
+                        };
+
+                        await waitAsync();
+
+                        await partition.sendRemoteEvents([
+                            remote(
+                                installAuxFile(state, 'default', 'source1'),
+                                undefined,
+                                undefined,
+                                'task1'
+                            ),
+                        ]);
+
+                        await waitAsync();
+
+                        expect(partition.state).toEqual({
+                            installed1: createBot('installed1', {
+                                abc: 'def',
+                            }),
+                            installed2: createBot('installed2', {
+                                abc: 'ghi',
+                            }),
+                            installed3: createBot('installed3', {
+                                deleted: true,
+                            }),
+                        });
+
+                        const update2 = constructInitializationUpdate(
+                            createInitializationUpdate([
+                                createBot('installed1', {
+                                    value: 1,
+                                }),
+                                createBot('installed2', {
+                                    test: true,
+                                }),
+                            ])
+                        );
+
+                        const state2: StoredAux = {
+                            version: 2,
+                            updates: [update2],
+                        };
+
+                        await waitAsync();
+
+                        await partition.sendRemoteEvents([
+                            remote(
+                                installAuxFile(state2, 'default', 'source1'),
+                                undefined,
+                                undefined,
+                                'task2'
+                            ),
+                        ]);
+
+                        await waitAsync();
+
+                        expect(partition.state).toEqual({
+                            installed1: createBot('installed1', {
+                                value: 1,
+                            }),
+                            installed2: createBot('installed2', {
+                                test: true,
+                            }),
+                        });
+
+                        expect(events).toEqual([
+                            asyncResult('task1', null, false),
+                            asyncResult('task2', null, false),
+                        ]);
+                    });
                 });
 
                 describe('rate_limit_exceeded', () => {
