@@ -34,6 +34,7 @@ import type {
     DeviceActionResult,
     DeviceActionError,
     Action,
+    SimpleVersionNumber,
 } from '../common';
 import { remoteError, remoteResult } from '../common';
 
@@ -6653,18 +6654,34 @@ export interface InstallAuxAction extends Action {
      * If specified and the mode is "copy", then the aux file will always be installed as a new install.
      */
     source?: string;
+
+    /**
+     * The version of the aux file being installed.
+     *
+     * Used to determine if the update is an upgrade or a downgrade.
+     */
+    version?: SimpleVersionNumber;
+
+    /**
+     * Whether to allow downgrading to older versions.
+     */
+    downgrade?: boolean;
 }
 
 export function installAuxFile(
     aux: StoredAux,
     mode: InstallAuxFileMode,
-    source?: string
+    source?: string,
+    version?: SimpleVersionNumber,
+    downgrade?: boolean
 ): InstallAuxAction {
     return {
         type: 'install_aux_file',
         aux,
         mode,
         source,
+        version,
+        downgrade,
     };
 }
 

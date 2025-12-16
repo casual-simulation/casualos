@@ -101,6 +101,19 @@ export function parseVersionNumber(
 }
 
 /**
+ * Formats the given version as a string.
+ * @param version The version.
+ */
+export function formatVersion(version: SimpleVersionNumber): string {
+    return formatVersionNumber(
+        version.major,
+        version.minor,
+        version.patch,
+        version.tag ?? ''
+    );
+}
+
+/**
  * Formats the given version number.
  * @param major The major version number.
  * @param minor The minor version number.

@@ -11987,7 +11987,8 @@ describe('RecordsManager', () => {
                                 },
                             },
                             'default',
-                            'public' // the packageId is used as the source
+                            'public', // the packageId is used as the source
+                            version(1)
                         )
                     ),
                     asyncResult(1, {
@@ -12143,7 +12144,8 @@ describe('RecordsManager', () => {
                                 },
                             },
                             'default',
-                            'public'
+                            'public',
+                            version(1)
                         )
                     ),
                     asyncResult(1, {

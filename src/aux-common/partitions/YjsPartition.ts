@@ -87,7 +87,13 @@ import {
     supportsRemoteEvent,
     updateToNewStateUpdate,
 } from './PartitionUtils';
-import type { RemoteActions, VersionVector } from '../common';
+import {
+    compareVersions,
+    formatVersion,
+    type RemoteActions,
+    type SimpleVersionNumber,
+    type VersionVector,
+} from '../common';
 import { fromByteArray } from 'base64-js';
 import { YjsSharedDocument } from '../documents/YjsSharedDocument';
 import { v4 as uuid } from 'uuid';
@@ -108,6 +114,11 @@ export function createYjsPartition(config: PartitionConfig): YjsPartition {
 type MapValue = Text | object | number | boolean;
 type TagsMap = Map<MapValue>;
 
+interface InstalledAux {
+    version: SimpleVersionNumber;
+    updates: InstUpdate[];
+}
+
 export class YjsPartitionImpl
     extends YjsSharedDocument
     implements YjsPartition
@@ -121,7 +132,7 @@ export class YjsPartitionImpl
     private _remoteEvents: PartitionRemoteEvents | boolean;
     private _connectionId: string;
 
-    private _installedAuxes = new globalThis.Map<string, InstUpdate[]>();
+    private _installedAuxes = new globalThis.Map<string, InstalledAux>();
 
     get onBotsAdded(): Observable<Bot[]> {
         return this._internalPartition.onBotsAdded;
@@ -336,15 +347,57 @@ export class YjsPartitionImpl
                                     const previouslyInstalled =
                                         this._installedAuxes.get(action.source);
                                     if (hasValue(previouslyInstalled)) {
+                                        if (
+                                            action.version &&
+                                            previouslyInstalled.version
+                                        ) {
+                                            if (
+                                                compareVersions(
+                                                    action.version,
+                                                    previouslyInstalled.version
+                                                ) < 0
+                                            ) {
+                                                if (!action.downgrade) {
+                                                    console.warn(
+                                                        `Attempted to downgrade ${
+                                                            action.source
+                                                        } aux file from version ${formatVersion(
+                                                            previouslyInstalled.version
+                                                        )} to ${formatVersion(
+                                                            action.version
+                                                        )} without downgrade flag. Skipping installation.`
+                                                    );
+                                                    this._onEvents.next([
+                                                        asyncError(
+                                                            event.taskId,
+                                                            new Error(
+                                                                `Cannot downgrade aux file ${
+                                                                    action.source
+                                                                } from version ${formatVersion(
+                                                                    previouslyInstalled.version
+                                                                )} to ${formatVersion(
+                                                                    action.version
+                                                                )} without downgrade flag.`
+                                                            )
+                                                        ),
+                                                    ]);
+                                                    continue;
+                                                }
+                                            }
+                                        }
+
                                         const combined = [
                                             updateToNewStateUpdate(
-                                                previouslyInstalled,
+                                                previouslyInstalled.updates,
                                                 action.aux.updates
                                             ),
                                         ];
                                         this._installedAuxes.set(
                                             action.source,
-                                            combined
+                                            {
+                                                version: action.version,
+                                                updates: combined,
+                                            }
                                         );
                                         this.applyStateUpdates(combined);
                                         installed = true;
@@ -352,10 +405,10 @@ export class YjsPartitionImpl
                                 }
 
                                 if (!installed) {
-                                    this._installedAuxes.set(
-                                        action.source,
-                                        action.aux.updates
-                                    );
+                                    this._installedAuxes.set(action.source, {
+                                        version: action.version,
+                                        updates: action.aux.updates,
+                                    });
                                     this.applyStateUpdates(action.aux.updates);
                                 }
                             } else if (action.aux.version === 1) {

@@ -2610,7 +2610,9 @@ export class RecordsManager {
                             installAuxFile(
                                 aux,
                                 'default',
-                                result.item.packageId
+                                result.item.packageId,
+                                result.item.key,
+                                event.options?.downgrade
                             )
                         )
                     );
