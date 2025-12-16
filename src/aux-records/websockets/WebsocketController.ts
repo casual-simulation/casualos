@@ -2436,6 +2436,8 @@ export class WebsocketController {
                       ),
                   ];
 
+        const branch = request.branch ?? DEFAULT_BRANCH_NAME;
+
         if (loadedPackage) {
             // Different version
             const existingPackageVersion =
@@ -2475,46 +2477,27 @@ export class WebsocketController {
                     }
                 }
 
-                const existingPackageData = await this._loadPackageVersion(
-                    userId,
-                    existingPackageVersion
+                const existingUpdates = await this._instStore.getCurrentUpdates(
+                    request.recordName,
+                    request.inst,
+                    branch
                 );
 
-                if (isFailure(existingPackageData)) {
-                    console.error(
-                        `[WebsocketController] [userId: ${userId}] Unable to load existing package data.`,
-                        existingPackageData
-                    );
-                    return genericResult(existingPackageData);
-                } else if (existingPackageData.value.version === 2) {
-                    // allow update
-                    console.log(
-                        `[WebsocketController] [userId: ${userId}] Updating package from version ${loadedPackage.packageVersionId} to ${p.item.id}.`
-                    );
-                    updates = [
-                        updateToNewStateUpdate(
-                            existingPackageData.value.updates,
-                            updates
-                        ),
-                    ];
-                } else {
-                    console.error(
-                        `[WebsocketController] [userId: ${userId}] Unable to update packages when the existing version is not 2.`,
-                        existingPackageData
-                    );
-                    return {
-                        success: false,
-                        errorCode: 'invalid_request',
-                        errorMessage:
-                            'Only packages installed from version 2 AUX packages can be updated to a different version.',
-                    };
-                }
+                updates = [
+                    updateToNewStateUpdate(
+                        existingUpdates.updates.map((u, i) => ({
+                            id: i,
+                            update: u,
+                            timestamp: 0,
+                        })),
+                        updates
+                    ),
+                ];
             }
         }
 
         const updateBase64 = updates.map((u) => u.update);
         const timestamps = updates.map((u) => u.timestamp);
-        const branch = request.branch ?? DEFAULT_BRANCH_NAME;
 
         const result = await this.addUserUpdates({
             userId: request.userId,
