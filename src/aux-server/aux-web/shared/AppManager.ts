@@ -71,6 +71,7 @@ import { tryParseJson } from '@casual-simulation/aux-common';
 import type { AuxDevice } from '@casual-simulation/aux-runtime';
 import { getSimulationId } from '../../shared/SimulationHelpers';
 import type { AuxVM } from '@casual-simulation/aux-vm/vm';
+import { getVMOrigin } from '@casual-simulation/aux-vm-browser/vm/AuxVMUtils';
 
 /**
  * Defines an interface that contains version information about the app.
@@ -955,7 +956,11 @@ export class AppManager {
             `[AppManager] Attempting to cleanup all databases for inst: ${inst}`
         );
 
-        const vmOrigin = this._config.vmOrigin || location.origin;
+        const vmOrigin = getVMOrigin(
+            this._config.vmOrigin,
+            location.origin,
+            inst
+        );
 
         if (vmOrigin === location.origin) {
             return await this._directCleanup(inst);
@@ -972,17 +977,18 @@ export class AppManager {
         vmOrigin: string
     ): Promise<boolean> {
         return new Promise((resolve, reject) => {
-            const cleanupUrl = `${vmOrigin}/cleanup-indexeddb.html?inst=${encodeURIComponent(
-                inst
-            )}`;
+            const cleanupUrl = new URL('/cleanup-indexeddb.html', vmOrigin);
+            cleanupUrl.searchParams.set('inst', inst);
 
-            console.log(`[AppManager] Loading cleanup iframe: ${cleanupUrl}`);
+            console.log(
+                `[AppManager] Loading cleanup iframe: ${cleanupUrl.href}`
+            );
 
             const iframe = document.createElement('iframe');
             iframe.style.display = 'none';
             iframe.style.width = '0';
             iframe.style.height = '0';
-            iframe.src = cleanupUrl;
+            iframe.src = cleanupUrl.href;
             iframe.sandbox = 'allow-scripts allow-same-origin';
 
             let timeoutId: NodeJS.Timeout;
@@ -997,9 +1003,9 @@ export class AppManager {
             };
 
             messageHandler = (event: MessageEvent) => {
-                if (event.origin !== vmOrigin) {
+                if (event.origin.toLowerCase() !== vmOrigin.toLowerCase()) {
                     console.warn(
-                        `[AppManager] Ignoring message from unexpected origin: ${event.origin}`
+                        `[AppManager] Ignoring message from unexpected origin: ${event.origin} (expected: ${vmOrigin})`
                     );
                     return;
                 }
