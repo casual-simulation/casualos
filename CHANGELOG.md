@@ -11,6 +11,9 @@
         -   `previousUpdates` are the updates that the new initialization update should be based on.
         -   `bots` are the bots that the update should contain as the final state.
 -   Added [`zod`](https://zod.dev/) as an importable library for user scripts.
+-   Added the ability to "login to a studio" via custom domains.
+    -   Users will recieve a new account when logging into CasualOS served through a custom domain that is scoped to the studio that owns the custom domain.
+    -   This provides an additional privacy boundary for users, helping ensure that data isn't automatically shared with custom domains simply by logging in.
 
 ### :bug: Bug Fixes
 
