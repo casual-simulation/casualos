@@ -53,10 +53,12 @@ export interface AuthStore {
      * Finds the user that represents the given address.
      * @param address The address.
      * @param addressType The type of the address.
+     * @param loginStudioId The ID of the studio that the user is logging into.
      */
     findUserByAddress(
         address: string,
-        addressType: AddressType
+        addressType: AddressType,
+        loginStudioId?: string | null
     ): Promise<AuthUser | null>;
 
     /**

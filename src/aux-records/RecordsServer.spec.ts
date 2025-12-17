@@ -613,6 +613,7 @@ describe('RecordsServer', () => {
             store,
             authMessenger,
             store,
+            store,
             privoClient,
             [relyingParty]
         );

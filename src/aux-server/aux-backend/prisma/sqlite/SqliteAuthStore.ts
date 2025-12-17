@@ -405,7 +405,8 @@ export class SqliteAuthStore implements AuthStore {
     @traced(TRACE_NAME)
     async findUserByAddress(
         address: string,
-        addressType: AddressType
+        addressType: AddressType,
+        loginStudioId: string | null = null
     ): Promise<AuthUser | null> {
         if (!address) {
             return null;
@@ -414,10 +415,16 @@ export class SqliteAuthStore implements AuthStore {
             where:
                 addressType === 'email'
                     ? {
-                          email: address,
+                          email_loginStudioId: {
+                              email: address,
+                              loginStudioId: loginStudioId,
+                          },
                       }
                     : {
-                          phoneNumber: address,
+                          phoneNumber_loginStudioId: {
+                              phoneNumber: address,
+                              loginStudioId: loginStudioId,
+                          },
                       },
         });
 
@@ -468,6 +475,7 @@ export class SqliteAuthStore implements AuthStore {
                 user.stripeAccountRequirementsStatus as string,
             stripeAccountStatus: user.stripeAccountStatus as string,
             requestedRate: user.requestedRate,
+            loginStudioId: user.loginStudioId,
 
             updatedAt: Date.now(),
         };
@@ -525,6 +533,14 @@ export class SqliteAuthStore implements AuthStore {
                 createData.currentLoginRequest = {
                     connect: {
                         requestId: user.currentLoginRequestId as string,
+                    },
+                };
+            }
+
+            if (user.loginStudioId) {
+                createData.loginStudio = {
+                    connect: {
+                        id: user.loginStudioId,
                     },
                 };
             }

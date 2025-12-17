@@ -97,6 +97,7 @@ import type {
     StripeAccountStatus,
     StripeRequirementsStatus,
 } from './StripeInterface';
+import type { RecordsStore } from './RecordsStore';
 
 const TRACE_NAME = 'AuthController';
 
@@ -203,6 +204,7 @@ export interface RelyingParty {
  */
 export class AuthController {
     private _store: AuthStore;
+    private _records: RecordsStore;
     private _messenger: AuthMessenger;
     private _config: ConfigurationStore;
     private _privoClient: PrivoClientInterface = null;
@@ -221,12 +223,14 @@ export class AuthController {
         authStore: AuthStore,
         messenger: AuthMessenger,
         configStore: ConfigurationStore,
+        recordsStore: RecordsStore,
         privoClient: PrivoClientInterface = null,
         relyingParties: RelyingParty[] = []
     ) {
         this._store = authStore;
         this._messenger = messenger;
         this._config = configStore;
+        this._records = recordsStore;
         this._privoClient = privoClient;
         this._webAuthNRelyingParties = relyingParties;
         this._privoEnabled = this._privoClient !== null;
@@ -438,6 +442,14 @@ export class AuthController {
             }
         }
 
+        if (request.loginStudioId && request.comId) {
+            return {
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'Cannot specify both loginStudioId and comId.',
+            };
+        }
+
         try {
             let newUser = false;
             const supported = await this._messenger.supportsAddressType(
@@ -454,9 +466,28 @@ export class AuthController {
                 };
             }
 
+            let loginStudioId = request.loginStudioId;
+
+            if (request.comId) {
+                const studio = await this._records.getStudioByComId(
+                    request.comId
+                );
+
+                if (!studio) {
+                    return {
+                        success: false,
+                        errorCode: 'not_found',
+                        errorMessage: 'The specified comID was not found.',
+                    };
+                }
+
+                loginStudioId = studio.id;
+            }
+
             let user = await this._store.findUserByAddress(
                 request.address,
-                request.addressType
+                request.addressType,
+                loginStudioId
             );
             if (!user) {
                 newUser = true;
@@ -472,6 +503,7 @@ export class AuthController {
                             : null,
                     allSessionRevokeTimeMs: null,
                     currentLoginRequestId: null,
+                    loginStudioId: loginStudioId,
                 };
 
                 if (
@@ -531,7 +563,8 @@ export class AuthController {
                     if (result.success === false) {
                         user = await this._store.findUserByAddress(
                             request.address,
-                            request.addressType
+                            request.addressType,
+                            loginStudioId
                         );
                         if (!user) {
                             console.log(
@@ -3628,6 +3661,18 @@ export interface LoginRequest {
      * The IP address that the login is from.
      */
     ipAddress: string;
+
+    /**
+     * The ID of the studio that the login is for.
+     *
+     * If null, then the user is logging into CasualOS proper.
+     */
+    loginStudioId?: string | null;
+
+    /**
+     * The ID of the comID that the login is for.
+     */
+    comId?: string | null;
 }
 
 export type LoginRequestResult = LoginRequestSuccess | LoginRequestFailure;
@@ -3677,8 +3722,10 @@ export interface LoginRequestFailure {
         | 'unacceptable_address'
         | 'unacceptable_address_type'
         | 'unacceptable_ip_address'
+        | 'unacceptable_request'
         | 'address_type_not_supported'
         | 'user_is_banned'
+        | 'not_found'
         | ServerError;
 
     /**
