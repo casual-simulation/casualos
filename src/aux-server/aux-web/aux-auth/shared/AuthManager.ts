@@ -701,9 +701,16 @@ export class AuthManager {
         address: string,
         addressType: AddressType
     ): Promise<LoginRequestResult> {
+        const comId = this.getComIdFromUrl();
+        let hostname: string;
+        if (typeof document !== 'undefined' && document.referrer) {
+            hostname = new URL(document.referrer).hostname;
+        }
         return this.client.requestLogin({
             address,
             addressType,
+            comId: comId ?? undefined,
+            hostname: hostname ?? undefined,
         });
     }
 

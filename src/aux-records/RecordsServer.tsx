@@ -1010,17 +1010,34 @@ export class RecordsServer {
                     z.object({
                         address: z.string(),
                         addressType: z.enum(['email', 'phone']),
+                        loginStudioId: z.string().nullable().optional(),
+                        comId: z.string().nullable().optional(),
+                        hostname: z.string().nullable().optional(),
                     })
                 )
-                .handler(async ({ address, addressType }, context) => {
-                    const result = await this._auth.requestLogin({
-                        address,
-                        addressType,
-                        ipAddress: context.ipAddress,
-                    });
+                .handler(
+                    async (
+                        {
+                            address,
+                            addressType,
+                            loginStudioId,
+                            comId,
+                            hostname,
+                        },
+                        context
+                    ) => {
+                        const result = await this._auth.requestLogin({
+                            address,
+                            addressType,
+                            ipAddress: context.ipAddress,
+                            loginStudioId,
+                            comId,
+                            hostname,
+                        });
 
-                    return result;
-                }),
+                        return result;
+                    }
+                ),
 
             requestPrivoLogin: procedure()
                 .origins('account')
