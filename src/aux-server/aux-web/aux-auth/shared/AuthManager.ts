@@ -542,11 +542,9 @@ export class AuthManager {
      * @returns The ID of the studio that the user is logging into. Always null if a comId is being used.
      */
     getLoginStudioIdFromUrl(): string {
-        if (!this.getComId()) {
-            const params = new URLSearchParams(location.search);
-            if (params.has('loginStudioId')) {
-                return params.get('loginStudioId');
-            }
+        const params = new URLSearchParams(location.search);
+        if (params.has('loginStudioId')) {
+            return params.get('loginStudioId');
         }
 
         return null;
@@ -750,13 +748,11 @@ export class AuthManager {
         address: string,
         addressType: AddressType
     ): Promise<LoginRequestResult> {
-        const comId = this.getComId();
         const loginStudioId = this.getLoginStudioIdFromUrl();
         const customDomain = this.getCustomDomain();
         return this.client.requestLogin({
             address,
             addressType,
-            comId: comId ?? undefined,
             loginStudioId: loginStudioId ?? undefined,
             customDomain: customDomain ?? undefined,
         });
