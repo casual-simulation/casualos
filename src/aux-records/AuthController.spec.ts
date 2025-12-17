@@ -1072,7 +1072,7 @@ describe('AuthController', () => {
                 address: 'test@example.com',
                 addressType: 'email',
                 ipAddress: '127.0.0.1',
-                hostname: 'mycustomdomain.example.com',
+                customDomain: 'mycustomdomain.example.com',
             });
 
             expect(response).toEqual({

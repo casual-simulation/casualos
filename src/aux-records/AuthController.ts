@@ -485,15 +485,15 @@ export class AuthController {
                     `[AuthController] [requestLogin] Logging into studio (${studio.id}) for comID: ${request.comId}.`
                 );
                 loginStudioId = studio.id;
-            } else if (request.hostname) {
+            } else if (request.customDomain) {
                 const customDomain =
                     await this._records.getVerifiedCustomDomainByName(
-                        request.hostname
+                        request.customDomain
                     );
 
                 if (customDomain) {
                     console.log(
-                        `[AuthController] [requestLogin] Logging into studio (${customDomain.studioId}) for custom domain: ${request.hostname}.`
+                        `[AuthController] [requestLogin] Logging into studio (${customDomain.studioId}) for custom domain: ${request.customDomain}.`
                     );
                     loginStudioId = customDomain.studioId;
                 }
@@ -3694,11 +3694,11 @@ export interface LoginRequest {
     comId?: string | null;
 
     /**
-     * The hostname that the login is for.
+     * The custom domain (i.e. hostname) that the login is for.
      *
      * If specified, then the hostname will be used to determine the studio/comID that the login is for.
      */
-    hostname?: string | null;
+    customDomain?: string | null;
 }
 
 export type LoginRequestResult = LoginRequestSuccess | LoginRequestFailure;

@@ -85,6 +85,7 @@ export class AuthManager {
     private _usePrivoLogin: boolean;
     private _supportUrl: string;
     private _enableSmsAuthentication: boolean;
+    private _config: CasualOSConfig;
 
     private _loginState: Subject<boolean>;
     private _apiEndpoint: string;
@@ -97,6 +98,7 @@ export class AuthManager {
     private _temporaryConnectionKey: string;
 
     constructor(config: CasualOSConfig, gitTag: string) {
+        this._config = config;
         this._apiEndpoint = config.recordsOrigin;
         this._websocketEndpoint = config.causalRepoConnectionUrl;
         this._websocketProtocol = config.causalRepoConnectionProtocol;
@@ -522,13 +524,60 @@ export class AuthManager {
         }
     }
 
-    getComIdFromUrl(): string {
+    /**
+     * Gets the comId from the URL or config.
+     * @returns The comID that is being used/accessed.
+     */
+    getComId(): string {
         const params = new URLSearchParams(location.search);
         if (params.has('comId') || params.has('comID')) {
             return params.get('comId') ?? params.get('comID');
         } else {
-            return null;
+            return this._config?.comId ?? null;
         }
+    }
+
+    /**
+     * Gets the studio ID that the user is logging into from the URL.
+     * @returns The ID of the studio that the user is logging into. Always null if a comId is being used.
+     */
+    getLoginStudioIdFromUrl(): string {
+        if (!this.getComId()) {
+            const params = new URLSearchParams(location.search);
+            if (params.has('loginStudioId')) {
+                return params.get('loginStudioId');
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Gets the custom domain that should be used (e.g. for login).
+     *
+     * Returns null if no custom domain is being used.
+     */
+    getCustomDomain(): string {
+        let hostname = this.getCustomDomainFromReferrer();
+        if (!hostname) {
+            const params = new URLSearchParams(location.search);
+            if (params.has('customDomain')) {
+                hostname = params.get('customDomain');
+            }
+        }
+
+        return hostname ?? null;
+    }
+
+    /**
+     * Gets the custom domain from the referrer.
+     */
+    getCustomDomainFromReferrer(): string {
+        let hostname: string;
+        if (typeof document !== 'undefined' && document.referrer) {
+            hostname = new URL(document.referrer).hostname;
+        }
+        return hostname ?? null;
     }
 
     getSessionKeyFromUrl(): string {
@@ -701,16 +750,15 @@ export class AuthManager {
         address: string,
         addressType: AddressType
     ): Promise<LoginRequestResult> {
-        const comId = this.getComIdFromUrl();
-        let hostname: string;
-        if (typeof document !== 'undefined' && document.referrer) {
-            hostname = new URL(document.referrer).hostname;
-        }
+        const comId = this.getComId();
+        const loginStudioId = this.getLoginStudioIdFromUrl();
+        const customDomain = this.getCustomDomain();
         return this.client.requestLogin({
             address,
             addressType,
             comId: comId ?? undefined,
-            hostname: hostname ?? undefined,
+            loginStudioId: loginStudioId ?? undefined,
+            customDomain: customDomain ?? undefined,
         });
     }
 

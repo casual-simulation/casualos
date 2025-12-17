@@ -394,6 +394,23 @@ export class AuthHandler implements AuxAuth {
                 authManager.currentConnectionKey
             );
         }
+
+        const comId = authManager.getComId();
+
+        if (comId) {
+            url.searchParams.set('comId', comId);
+        }
+
+        const loginStudioId = authManager.getLoginStudioIdFromUrl();
+        if (loginStudioId) {
+            url.searchParams.set('loginStudioId', loginStudioId);
+        }
+
+        const customDomain = authManager.getCustomDomainFromReferrer();
+        if (customDomain) {
+            url.searchParams.set('customDomain', customDomain);
+        }
+
         return url.href;
     }
 

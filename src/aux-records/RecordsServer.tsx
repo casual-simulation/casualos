@@ -1012,7 +1012,7 @@ export class RecordsServer {
                         addressType: z.enum(['email', 'phone']),
                         loginStudioId: z.string().nullable().optional(),
                         comId: z.string().nullable().optional(),
-                        hostname: z.string().nullable().optional(),
+                        customDomain: z.string().nullable().optional(),
                     })
                 )
                 .handler(
@@ -1022,7 +1022,7 @@ export class RecordsServer {
                             addressType,
                             loginStudioId,
                             comId,
-                            hostname,
+                            customDomain,
                         },
                         context
                     ) => {
@@ -1032,7 +1032,7 @@ export class RecordsServer {
                             ipAddress: context.ipAddress,
                             loginStudioId,
                             comId,
-                            hostname,
+                            customDomain,
                         });
 
                         return result;
