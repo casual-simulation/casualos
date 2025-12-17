@@ -29,6 +29,7 @@ import {
 } from '@casual-simulation/aux-common/bots';
 import {
     constructInitializationUpdate,
+    updateToNewStateUpdate,
     YjsPartitionImpl,
 } from '@casual-simulation/aux-common/partitions';
 import type { WebsocketMessenger } from './WebsocketMessenger';
@@ -84,6 +85,8 @@ import type {
     PublicUserInfo,
     KnownErrorCodes,
     UserRole,
+    Result,
+    SimpleError,
 } from '@casual-simulation/aux-common';
 import {
     PRIVATE_MARKER,
@@ -91,6 +94,11 @@ import {
     tryParseJson,
     parseRecordKey,
     PUBLIC_READ_MARKER,
+    failure,
+    isFailure,
+    genericResult,
+    success,
+    compareVersions,
 } from '@casual-simulation/aux-common';
 import { getMarkerResourcesForCreation } from '../PolicyController';
 import type { ZodIssue } from 'zod';
@@ -113,7 +121,10 @@ import type { AuthStore } from '../AuthStore';
 import { traced } from '../tracing/TracingDecorators';
 import { trace } from '@opentelemetry/api';
 import { SEMATTRS_ENDUSER_ID } from '@opentelemetry/semantic-conventions';
-import type { PackageRecordVersionWithMetadata } from '../packages/version';
+import type {
+    GetPackageVersionSuccess,
+    PackageRecordVersionWithMetadata,
+} from '../packages/version';
 import {
     formatVersionSpecifier,
     type PackageVersionRecordsController,
@@ -1101,7 +1112,7 @@ export class WebsocketController {
         request: AddUpdatesRequest
     ): Promise<AddInstUpdatesResult> {
         console.log(
-            `[CausalRepoServer] [namespace: ${request.recordName}/${request.inst}/${request.branch}, userId: ${request.userId}] Add Updates`
+            `[WebsocketController] [namespace: ${request.recordName}/${request.inst}/${request.branch}, userId: ${request.userId}] Add Updates`
         );
 
         if (request.updates) {
@@ -1134,7 +1145,7 @@ export class WebsocketController {
 
             if (!branch) {
                 console.log(
-                    `[CausalRepoServer] [namespace: ${request.recordName}/${request.inst}/${request.branch}, userId: ${request.userId}]  Branch not found!`
+                    `[WebsocketController] [namespace: ${request.recordName}/${request.inst}/${request.branch}, userId: ${request.userId}]  Branch not found!`
                 );
 
                 const instResult = await this._getOrCreateInst(
@@ -1289,7 +1300,7 @@ export class WebsocketController {
 
                 if (result.success === false) {
                     console.log(
-                        `[CausalRepoServer] [namespace: ${request.recordName}/${request.inst}/${request.branch}, userId: ${request.userId}]  Failed to add updates`,
+                        `[WebsocketController] [namespace: ${request.recordName}/${request.inst}/${request.branch}, userId: ${request.userId}]  Failed to add updates`,
                         result
                     );
                     if (result.errorCode === 'max_size_reached') {
@@ -2328,7 +2339,7 @@ export class WebsocketController {
         const userId = request.userId;
         const key = request.package.key ?? {};
         console.log(
-            `[CausalRepoServer] [namespace: ${request.recordName}/${
+            `[WebsocketController] [namespace: ${request.recordName}/${
                 request.inst
             }, ${userId}, package: ${request.package.recordName}/${
                 request.package.address
@@ -2345,14 +2356,14 @@ export class WebsocketController {
 
         if (p.success === false) {
             console.error(
-                `[CausalRepoServer] [userId: ${userId}] Unable to load package.`,
+                `[WebsocketController] [userId: ${userId}] Unable to load package.`,
                 p
             );
             return p;
         }
         if (p.auxFile.success === false) {
             console.error(
-                `[CausalRepoServer] [userId: ${userId}] Unable to load package file.`,
+                `[WebsocketController] [userId: ${userId}] Unable to load package file.`,
                 p.auxFile
             );
             return p.auxFile;
@@ -2366,15 +2377,18 @@ export class WebsocketController {
             p.item.packageId
         );
         if (loadedPackage) {
-            // Already loaded
-            console.log(
-                `[CausalRepoServer] [userId: ${userId}] Package already loaded.`
-            );
-            return {
-                success: true,
-                packageLoadId: loadedPackage.id,
-                package: p.item,
-            };
+            if (loadedPackage.packageVersionId === p.item.id) {
+                // Already loaded
+                console.log(
+                    `[WebsocketController] [userId: ${userId}] Package already loaded.`
+                );
+                return {
+                    success: true,
+                    packageLoadId: loadedPackage.id,
+                    package: p.item,
+                };
+            }
+            // try to install a different version
         }
 
         // check that the user and target inst has the ability to run the package
@@ -2403,71 +2417,87 @@ export class WebsocketController {
             return authorization;
         }
 
-        const fileResponse = await fetch(p.auxFile.requestUrl, {
-            method: p.auxFile.requestMethod,
-            headers: new Headers(p.auxFile.requestHeaders),
-        });
+        const packageData = await this._loadPackageVersion(userId, p);
 
-        if (fileResponse.status >= 300) {
-            console.error(
-                `[CausalRepoServer] [userId: ${userId}] Unable to load package file.`
-            );
-
-            // Failed
-            return {
-                success: false,
-                errorCode: 'invalid_file_data',
-                errorMessage: 'The package file could not be loaded.',
-            };
+        if (isFailure(packageData)) {
+            return genericResult(packageData);
         }
 
-        const json = await fileResponse.text();
-
-        const packageData = tryParseJson(json);
-
-        if (packageData.success === false) {
-            console.error(
-                `[CausalRepoServer] [userId: ${userId}] Unable to parse package file.`,
-                packageData
-            );
-            return {
-                success: false,
-                errorCode: 'invalid_file_data',
-                errorMessage:
-                    'The package file could not be parsed. It must be valid JSON.',
-            };
-        }
-
-        const parsed = STORED_AUX_SCHEMA.safeParse(packageData.value);
-        if (parsed.success === false) {
-            console.error(
-                `[CausalRepoServer] [userId: ${userId}] Unable to parse package file.`,
-                packageData
-            );
-            return {
-                success: false,
-                errorCode: 'invalid_file_data',
-                errorMessage: 'The package file could not be parsed.',
-                issues: parsed.error.issues,
-            };
-        }
-
-        const updates =
-            parsed.data.version === 2
-                ? parsed.data.updates.map((u) => u.update)
+        let updates =
+            packageData.value.version === 2
+                ? packageData.value.updates
                 : [
                       constructInitializationUpdate(
                           createInitializationUpdate(
-                              Object.values(parsed.data.state as BotsState)
+                              Object.values(
+                                  packageData.value.state as BotsState
+                              )
                           )
-                      ).update,
+                      ),
                   ];
-        const timestamps =
-            parsed.data.version === 2
-                ? parsed.data.updates.map((u) => u.timestamp)
-                : [0];
 
         const branch = request.branch ?? DEFAULT_BRANCH_NAME;
+
+        if (loadedPackage) {
+            // Different version
+            const existingPackageVersion =
+                await this._packageVersions.getItemById({
+                    packageVersionId: loadedPackage.packageVersionId,
+                    userId: userId,
+                    instances: request.instances,
+                });
+
+            if (existingPackageVersion.success === false) {
+                console.error(
+                    `[WebsocketController] [userId: ${userId}] Unable to get existing package version.`,
+                    existingPackageVersion
+                );
+                return existingPackageVersion;
+            } else {
+                if (
+                    compareVersions(
+                        p.item.key,
+                        existingPackageVersion.item.key
+                    ) <= 0
+                ) {
+                    if (!request.downgrade) {
+                        return {
+                            success: false,
+                            errorCode: 'invalid_request',
+                            errorMessage: `Cannot install version ${formatVersionSpecifier(
+                                p.item.key
+                            )} because a newer version (${formatVersionSpecifier(
+                                existingPackageVersion.item.key
+                            )}) of this package is already installed. If you want to downgrade the package, you must set the downgrade option to true.`,
+                        };
+                    } else {
+                        console.log(
+                            `[WebsocketController] [userId: ${userId}] Downgrading package from version ${loadedPackage.packageVersionId} to ${p.item.id}.`
+                        );
+                    }
+                }
+
+                const existingUpdates = await this._instStore.getCurrentUpdates(
+                    request.recordName,
+                    request.inst,
+                    branch
+                );
+
+                updates = [
+                    updateToNewStateUpdate(
+                        existingUpdates.updates.map((u, i) => ({
+                            id: i,
+                            update: u,
+                            timestamp: 0,
+                        })),
+                        updates
+                    ),
+                ];
+            }
+        }
+
+        const updateBase64 = updates.map((u) => u.update);
+        const timestamps = updates.map((u) => u.timestamp);
 
         const result = await this.addUserUpdates({
             userId: request.userId,
@@ -2475,7 +2505,7 @@ export class WebsocketController {
             recordName: request.recordName,
             inst: request.inst,
             branch,
-            updates: updates,
+            updates: updateBase64,
             timestamps: timestamps,
         });
 
@@ -2483,7 +2513,7 @@ export class WebsocketController {
             return result;
         }
 
-        const loadedPackageId = uuidv7();
+        const loadedPackageId = loadedPackage?.id ?? uuidv7();
         await loadedPackageStore.saveLoadedPackage({
             id: loadedPackageId,
             recordName: request.recordName,
@@ -2501,6 +2531,63 @@ export class WebsocketController {
             packageLoadId: loadedPackageId,
             package: p.item,
         };
+    }
+
+    private async _loadPackageVersion(
+        userId: string,
+        p: GetPackageVersionSuccess
+    ): Promise<Result<StoredAux, SimpleError>> {
+        if (p.auxFile.success === false) {
+            return failure(p.auxFile);
+        }
+
+        const fileResponse = await fetch(p.auxFile.requestUrl, {
+            method: p.auxFile.requestMethod,
+            headers: new Headers(p.auxFile.requestHeaders),
+        });
+
+        if (fileResponse.status >= 300) {
+            console.error(
+                `[WebsocketController] [userId: ${userId}] Unable to load package file.`
+            );
+
+            // Failed
+            return failure({
+                errorCode: 'invalid_file_data',
+                errorMessage: 'The package file could not be loaded.',
+            });
+        }
+
+        const json = await fileResponse.text();
+
+        const packageData = tryParseJson(json);
+
+        if (packageData.success === false) {
+            console.error(
+                `[WebsocketController] [userId: ${userId}] Unable to parse package file.`,
+                packageData
+            );
+            return failure({
+                errorCode: 'invalid_file_data',
+                errorMessage:
+                    'The package file could not be parsed. It must be valid JSON.',
+            });
+        }
+
+        const parsed = STORED_AUX_SCHEMA.safeParse(packageData.value);
+        if (parsed.success === false) {
+            console.error(
+                `[WebsocketController] [userId: ${userId}] Unable to parse package file.`,
+                packageData
+            );
+            return failure({
+                errorCode: 'invalid_file_data',
+                errorMessage: 'The package file could not be parsed.',
+                issues: parsed.error.issues,
+            });
+        }
+
+        return success(parsed.data as StoredAux);
     }
 
     @traced(TRACE_NAME)
@@ -3496,6 +3583,11 @@ export interface LoadPackageRequest {
      * The package that should be loaded.
      */
     package: PackageVersionSpecifier;
+
+    /**
+     * Whether to allow downgrading the package if a newer version is already installed.
+     */
+    downgrade?: boolean;
 
     /**
      * The list of instances that are currently loaded.

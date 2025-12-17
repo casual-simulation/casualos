@@ -3185,6 +3185,19 @@ export interface RecordActionOptions {
 }
 
 /**
+ * Defines an interface that represents the options for installing a package.
+ *
+ * @dochash types/records/extra
+ * @docname InstallPackageOptions
+ */
+export interface InstallPackageOptions extends RecordActionOptions {
+    /**
+     * Whether to downgrade the package if the installed version is newer than the requested version.
+     */
+    downgrade?: boolean;
+}
+
+/**
  * The possible types of subjects that can be affected by permissions.
  *
  * - "user" - The permission is for a user.
@@ -16779,6 +16792,7 @@ interface Os {
         recordName: string,
         address: string,
         key?: string | PackageRecordVersionKeySpecifier,
+        options?: InstallPackageOptions,
     ): Promise<InstallPackageResult>;
 
     /**

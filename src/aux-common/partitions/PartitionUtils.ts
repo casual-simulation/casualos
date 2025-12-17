@@ -93,10 +93,20 @@ export function constructInitializationUpdateFromPreviousUpdates(
     const allBotIds = new Set<string>(Object.keys(partition.state));
     const actions: BotAction[] = [];
     for (let b of bots) {
-        if (partition.state[b.id]) {
+        const oldBot = partition.state[b.id];
+        if (oldBot) {
+            let tags = { ...b.tags };
+
+            // Track deleted tags
+            for (let oldTag in oldBot.tags) {
+                if (!hasValue(tags[oldTag])) {
+                    tags[oldTag] = null;
+                }
+            }
+
             actions.push(
                 botUpdated(b.id, {
-                    tags: b.tags,
+                    tags,
                 })
             );
         } else {
@@ -121,6 +131,25 @@ export function constructInitializationUpdateFromPreviousUpdates(
     partition.applyEvents(actions);
 
     return instUpdate;
+}
+
+/**
+ * Constructs an initialization update that transitions from the previous update to the state contained in the new state update.
+ * @param previousUpdates The previous updates.
+ * @param newState The new state update.
+ */
+export function updateToNewStateUpdate(
+    previousUpdates: InstUpdate[],
+    newState: InstUpdate | InstUpdate[]
+): InstUpdate {
+    const state = getStateFromUpdates({
+        type: 'get_inst_state_from_updates',
+        updates: Array.isArray(newState) ? newState : [newState],
+    });
+    return constructInitializationUpdateFromPreviousUpdates(
+        previousUpdates,
+        Object.values(state)
+    );
 }
 
 /**
