@@ -199,7 +199,7 @@ Object {
             "optional": true,
             "type": "string",
           },
-          "hostname": Object {
+          "customDomain": Object {
             "nullable": true,
             "optional": true,
             "type": "string",
@@ -10050,7 +10050,7 @@ Object {
             "optional": true,
             "type": "string",
           },
-          "hostname": Object {
+          "customDomain": Object {
             "nullable": true,
             "optional": true,
             "type": "string",
