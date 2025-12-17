@@ -578,6 +578,15 @@ export interface AuthUser {
      * The user's connected stripe account status.
      */
     stripeAccountStatus?: StripeAccountStatus | null;
+
+    /**
+     * The Studio that this user logs into.
+     * Used to differentiate between users who belong to the primary instance and users who belong to a comId.
+     * Note that this does not grant any permissions to the studio. It only separates users via comId.
+     *
+     * If null, then the user does not log into a studio, but instead logs into CasualOS proper.
+     */
+    loginStudioId?: string | null;
 }
 
 export interface AuthUserAuthenticator {
