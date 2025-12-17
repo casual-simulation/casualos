@@ -89,7 +89,7 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         if (await this._redis.sIsMember(idsKey, loadedPackage.packageId)) {
             // Remove existing entries
             const packages = await this._redis.lRange(key, 0, -1);
-            let promises = [];
+            const promises: Promise<number>[] = [];
             for (let p of packages) {
                 const savedPackage = JSON.parse(p);
                 if (savedPackage.id === loadedPackage.id) {

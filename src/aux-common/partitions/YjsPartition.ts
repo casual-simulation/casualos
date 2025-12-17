@@ -405,10 +405,15 @@ export class YjsPartitionImpl
                                 }
 
                                 if (!installed) {
-                                    this._installedAuxes.set(action.source, {
-                                        version: action.version,
-                                        updates: action.aux.updates,
-                                    });
+                                    if (hasValue(action.source)) {
+                                        this._installedAuxes.set(
+                                            action.source,
+                                            {
+                                                version: action.version,
+                                                updates: action.aux.updates,
+                                            }
+                                        );
+                                    }
                                     this.applyStateUpdates(action.aux.updates);
                                 }
                             } else if (action.aux.version === 1) {
