@@ -446,7 +446,12 @@ export default class PlayerHome extends Vue {
                                 bios !== 'sign out'
                             ) {
                                 hasValidBiosOption = true;
-                                this.executeBiosOption(bios, null, null, null);
+                                const instId = this.executeBiosOption(
+                                    bios,
+                                    null,
+                                    null,
+                                    null
+                                );
                             }
                         }
                     }
