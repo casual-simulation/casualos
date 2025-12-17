@@ -422,6 +422,7 @@ export class PrismaAuthStore implements AuthStore {
                         equals: address,
                         mode: 'insensitive',
                     },
+                    loginStudioId: loginStudioId,
                 },
             });
         }

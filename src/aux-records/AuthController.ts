@@ -521,6 +521,10 @@ export class AuthController {
                     loginStudioId: loginStudioId,
                 };
 
+                console.log(
+                    `[AuthController] [requestLogin] Creating new user (${user.id}).`
+                );
+
                 if (
                     !(await this._validateAddress(
                         request.address,
