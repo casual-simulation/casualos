@@ -481,7 +481,22 @@ export class AuthController {
                     };
                 }
 
+                console.log(
+                    `[AuthController] [requestLogin] Logging into studio (${studio.id}) for comID: ${request.comId}.`
+                );
                 loginStudioId = studio.id;
+            } else if (request.hostname) {
+                const customDomain =
+                    await this._records.getVerifiedCustomDomainByName(
+                        request.hostname
+                    );
+
+                if (customDomain) {
+                    console.log(
+                        `[AuthController] [requestLogin] Logging into studio (${customDomain.studioId}) for custom domain: ${request.hostname}.`
+                    );
+                    loginStudioId = customDomain.studioId;
+                }
             }
 
             let user = await this._store.findUserByAddress(
@@ -3673,6 +3688,13 @@ export interface LoginRequest {
      * The ID of the comID that the login is for.
      */
     comId?: string | null;
+
+    /**
+     * The hostname that the login is for.
+     *
+     * If specified, then the hostname will be used to determine the studio/comID that the login is for.
+     */
+    hostname?: string | null;
 }
 
 export type LoginRequestResult = LoginRequestSuccess | LoginRequestFailure;

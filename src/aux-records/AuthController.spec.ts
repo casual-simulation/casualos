@@ -1038,6 +1038,99 @@ describe('AuthController', () => {
             expect(randomBytesMock).toHaveBeenCalledWith(4);
         });
 
+        it('should be able to login to a custom domain', async () => {
+            const studioId = 'studio1';
+            await store.addStudio({
+                id: studioId,
+                displayName: 'My Studio',
+            });
+
+            await store.saveCustomDomain({
+                id: 'customdomain',
+                domainName: 'mycustomdomain.example.com',
+                studioId: studioId,
+                verificationKey: 'verification',
+                verified: true,
+            });
+
+            await store.saveUser({
+                id: 'otheruser',
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
+            });
+
+            const salt = new Uint8Array([1, 2, 3]);
+            const code = new Uint8Array([4, 5, 6, 7]);
+
+            nowMock.mockReturnValue(100);
+            randomBytesMock.mockReturnValueOnce(salt).mockReturnValueOnce(code);
+            uuidMock.mockReturnValueOnce('uuid1');
+
+            const response = await controller.requestLogin({
+                address: 'test@example.com',
+                addressType: 'email',
+                ipAddress: '127.0.0.1',
+                hostname: 'mycustomdomain.example.com',
+            });
+
+            expect(response).toEqual({
+                success: true,
+                userId: 'uuid1',
+                requestId: fromByteArray(salt),
+                address: 'test@example.com',
+                addressType: 'email',
+                expireTimeMs: 100 + LOGIN_REQUEST_LIFETIME_MS,
+            });
+
+            expect(store.users).toEqual([
+                {
+                    id: 'otheruser',
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                },
+                {
+                    id: 'uuid1',
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    currentLoginRequestId: fromByteArray(salt),
+                    allSessionRevokeTimeMs: null,
+                    loginStudioId: studioId,
+                },
+            ]);
+
+            expect(store.loginRequests).toEqual([
+                {
+                    userId: 'uuid1',
+                    requestId: fromByteArray(salt),
+                    secretHash: hashLowEntropyPasswordWithSalt(
+                        codeNumber(code),
+                        fromByteArray(salt)
+                    ),
+                    requestTimeMs: 100,
+                    expireTimeMs: 100 + LOGIN_REQUEST_LIFETIME_MS,
+                    completedTimeMs: null,
+                    attemptCount: 0,
+                    address: 'test@example.com',
+                    addressType: 'email',
+                    ipAddress: '127.0.0.1',
+                },
+            ]);
+            expect(messenger.messages).toEqual([
+                {
+                    address: 'test@example.com',
+                    addressType: 'email',
+                    code: codeNumber(code),
+                },
+            ]);
+
+            expect(randomBytesMock).toHaveBeenCalledWith(
+                LOGIN_REQUEST_ID_BYTE_LENGTH
+            );
+            expect(randomBytesMock).toHaveBeenCalledWith(4);
+        });
+
         it('should fail if the given email is longer than 200 characters long', async () => {
             const salt = new Uint8Array([1, 2, 3]);
             const code = new Uint8Array([4, 5, 6, 7]);
