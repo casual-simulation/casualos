@@ -613,6 +613,122 @@ export class PackageVersionRecordsController {
     }
 
     /**
+     * Gets the item with the given ID from the given record.
+     * @param request The request to get the item.
+     */
+    @traced(TRACE_NAME)
+    async getItemById(
+        request: GetPackageVersionByIdRequest
+    ): Promise<GetPackageVersionResult> {
+        try {
+            const result = await this._store.getItemById(
+                request.packageVersionId
+            );
+
+            if (!result.item) {
+                return {
+                    success: false,
+                    errorCode: 'data_not_found',
+                    errorMessage: 'The item was not found.',
+                };
+            }
+
+            const baseRequest = {
+                recordKeyOrRecordName: result.recordName,
+                userId: request.userId,
+                instances: request.instances,
+            };
+
+            const context = await this._policies.constructAuthorizationContext(
+                baseRequest
+            );
+
+            if (context.success === false) {
+                return context;
+            }
+
+            const markers = result.parentMarkers;
+            const authorization =
+                await this._policies.authorizeUserAndInstances(
+                    context.context,
+                    {
+                        userId: request.userId,
+                        instances: request.instances,
+                        resourceKind: this._resourceKind,
+                        resourceId: result.item.address,
+                        action: 'read',
+                        markers: markers,
+                    }
+                );
+
+            if (authorization.success === false) {
+                return authorization;
+            }
+
+            const item: PackageRecordVersionWithMetadata = {
+                id: result.item.id,
+                address: result.item.address,
+                key: result.item.key,
+                auxFileName: result.item.auxFileName,
+                createdAtMs: result.item.createdAtMs,
+                auxSha256: result.item.auxSha256,
+                createdFile: result.item.createdFile,
+                entitlements: result.item.entitlements,
+                markers: result.item.markers,
+                description: result.item.description,
+                requiresReview: result.item.requiresReview,
+                sha256: result.item.sha256,
+                sizeInBytes: result.item.sizeInBytes,
+                packageId: result.packageId,
+                approved: true,
+                approvalType: 'normal',
+            };
+
+            if (item.requiresReview) {
+                let review = await this.store.getMostRecentPackageVersionReview(
+                    item.id
+                );
+
+                item.approved = review?.approved ?? false;
+                item.approvalType = review?.approvalType ?? null;
+            }
+
+            const auxFile = item.createdFile
+                ? await this.files.readFile(
+                      context.context.recordName,
+                      item.auxFileName,
+                      null,
+                      undefined,
+                      'system'
+                  )
+                : await this.files.readFile(
+                      context.context.recordName,
+                      item.auxFileName,
+                      context.context.userId
+                  );
+
+            return {
+                success: true,
+                item: item,
+                auxFile,
+            };
+        } catch (err) {
+            const span = trace.getActiveSpan();
+            if (err instanceof Error) {
+                span?.recordException(err);
+            }
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
+            console.error(`[${this._name}] Error getting item:`, err);
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
      * Deletes the item with the given address from the given record.
      * @param request The request.
      */
@@ -1065,4 +1181,21 @@ export interface ReviewPackageVersionFailure {
     success: false;
     errorCode: KnownErrorCodes;
     errorMessage: string;
+}
+
+export interface GetPackageVersionByIdRequest {
+    /**
+     * The ID of the package version record to get.
+     */
+    packageVersionId: string;
+
+    /**
+     * The ID of the user who is currently logged in.
+     */
+    userId: string;
+
+    /**
+     * The instances that the request is coming from.
+     */
+    instances: string[];
 }

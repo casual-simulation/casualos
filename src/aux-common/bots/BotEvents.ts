@@ -34,6 +34,7 @@ import type {
     DeviceActionResult,
     DeviceActionError,
     Action,
+    SimpleVersionNumber,
 } from '../common';
 import { remoteError, remoteResult } from '../common';
 
@@ -6642,16 +6643,45 @@ export interface InstallAuxAction extends Action {
      * - "copy" indicates that all the bots in the aux file should be given new IDs. This is useful if you want to be able to install an AUX multiple times in the same inst.
      */
     mode: InstallAuxFileMode;
+
+    /**
+     * The source of the aux file (e.g. package ID).
+     *
+     * Used to track bots installed from aux files so that updates can be seamless.
+     *
+     * If omitted, then the aux file will be treated as a one-off install.
+     * If specified and the mode is "default", then the aux file will be installed as an update if an aux from the same source was previously installed.
+     * If specified and the mode is "copy", then the aux file will always be installed as a new install.
+     */
+    source?: string;
+
+    /**
+     * The version of the aux file being installed.
+     *
+     * Used to determine if the update is an upgrade or a downgrade.
+     */
+    version?: SimpleVersionNumber;
+
+    /**
+     * Whether to allow downgrading to older versions.
+     */
+    downgrade?: boolean;
 }
 
 export function installAuxFile(
     aux: StoredAux,
-    mode: InstallAuxFileMode
+    mode: InstallAuxFileMode,
+    source?: string,
+    version?: SimpleVersionNumber,
+    downgrade?: boolean
 ): InstallAuxAction {
     return {
         type: 'install_aux_file',
         aux,
         mode,
+        source,
+        version,
+        downgrade,
     };
 }
 

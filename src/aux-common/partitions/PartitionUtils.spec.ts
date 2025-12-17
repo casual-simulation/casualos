@@ -37,6 +37,7 @@ import {
     getStateFromUpdates,
     mergeInstUpdates,
     supportsRemoteEvent,
+    updateToNewStateUpdate,
 } from './PartitionUtils';
 import { YjsPartitionImpl } from './YjsPartition';
 import { customDataTypeCases, waitAsync } from '../test/TestHelpers';
@@ -200,6 +201,51 @@ describe('constructInitializationUpdateFromPreviousUpdates()', () => {
         expect(validationPartition.state).toEqual({
             test1: createBot('test1', {
                 abc: 'ghi',
+                val: true,
+            }),
+            test3: createBot('test3', {
+                str: 'hello',
+            }),
+        });
+    });
+
+    it('should be able to delete tags', async () => {
+        const first = constructInitializationUpdate(
+            createInitializationUpdate([
+                createBot('test1', {
+                    abc: 'def',
+                }),
+                createBot('test2', {
+                    num: 123,
+                }),
+            ])
+        );
+
+        const update = constructInitializationUpdateFromPreviousUpdates(
+            [first],
+            [
+                createBot('test1', {
+                    val: true,
+                }),
+                createBot('test3', {
+                    str: 'hello',
+                }),
+            ]
+        );
+
+        expect(update).toEqual({
+            id: 0,
+            timestamp: expect.any(Number),
+            update: expect.any(String),
+        });
+
+        const validationPartition = new YjsPartitionImpl({
+            type: 'yjs',
+        });
+        applyUpdate(validationPartition.doc, toByteArray(update.update));
+
+        expect(validationPartition.state).toEqual({
+            test1: createBot('test1', {
                 val: true,
             }),
             test3: createBot('test3', {
@@ -656,6 +702,211 @@ describe('constructInitializationUpdateFromPreviousUpdates()', () => {
             }),
             test4: createBot('test4', {
                 num: 999,
+            }),
+        });
+    });
+});
+
+describe('updateToNewStateUpdate()', () => {
+    it('should support an empty updates list', async () => {
+        const newState = constructInitializationUpdate(
+            createInitializationUpdate([
+                createBot('test1', {
+                    abc: 'def',
+                }),
+                createBot('test2', {
+                    num: 123,
+                }),
+            ])
+        );
+
+        const update = updateToNewStateUpdate([], newState);
+
+        expect(update).toEqual({
+            id: 0,
+            timestamp: expect.any(Number),
+            update: expect.any(String),
+        });
+
+        const validationPartition = new YjsPartitionImpl({
+            type: 'yjs',
+        });
+        applyUpdate(validationPartition.doc, toByteArray(update.update));
+
+        expect(validationPartition.state).toEqual({
+            test1: createBot('test1', {
+                abc: 'def',
+            }),
+            test2: createBot('test2', {
+                num: 123,
+            }),
+        });
+    });
+
+    it('should be able to build on an update', async () => {
+        const first = constructInitializationUpdate(
+            createInitializationUpdate([
+                createBot('test1', {
+                    abc: 'def',
+                }),
+                createBot('test2', {
+                    num: 123,
+                }),
+            ])
+        );
+
+        const newState = constructInitializationUpdate(
+            createInitializationUpdate([
+                createBot('test1', {
+                    abc: 'ghi',
+                    val: true,
+                }),
+                createBot('test3', {
+                    str: 'hello',
+                }),
+            ])
+        );
+
+        const update = updateToNewStateUpdate([first], newState);
+
+        expect(update).toEqual({
+            id: 0,
+            timestamp: expect.any(Number),
+            update: expect.any(String),
+        });
+
+        const validationPartition = new YjsPartitionImpl({
+            type: 'yjs',
+        });
+        applyUpdate(validationPartition.doc, toByteArray(update.update));
+
+        expect(validationPartition.state).toEqual({
+            test1: createBot('test1', {
+                abc: 'ghi',
+                val: true,
+            }),
+            test3: createBot('test3', {
+                str: 'hello',
+            }),
+        });
+    });
+
+    it('should be able to delete tags', async () => {
+        const first = constructInitializationUpdate(
+            createInitializationUpdate([
+                createBot('test1', {
+                    abc: 'def',
+                }),
+                createBot('test2', {
+                    num: 123,
+                }),
+            ])
+        );
+
+        const newState = constructInitializationUpdate(
+            createInitializationUpdate([
+                createBot('test1', {
+                    val: true,
+                }),
+                createBot('test3', {
+                    str: 'hello',
+                }),
+            ])
+        );
+
+        const update = updateToNewStateUpdate([first], newState);
+
+        expect(update).toEqual({
+            id: 0,
+            timestamp: expect.any(Number),
+            update: expect.any(String),
+        });
+
+        const validationPartition = new YjsPartitionImpl({
+            type: 'yjs',
+        });
+        applyUpdate(validationPartition.doc, toByteArray(update.update));
+
+        expect(validationPartition.state).toEqual({
+            test1: createBot('test1', {
+                val: true,
+            }),
+            test3: createBot('test3', {
+                str: 'hello',
+            }),
+        });
+    });
+
+    it('should not interfere with other updates', async () => {
+        const first = constructInitializationUpdate(
+            createInitializationUpdate([
+                createBot('test1', {
+                    abc: 'def',
+                }),
+                createBot('test2', {
+                    num: 123,
+                }),
+            ])
+        );
+
+        const newState = constructInitializationUpdate(
+            createInitializationUpdate([
+                createBot('test1', {
+                    val: true,
+                }),
+                createBot('test3', {
+                    str: 'hello',
+                }),
+            ])
+        );
+
+        const update = updateToNewStateUpdate([first], newState);
+
+        expect(update).toEqual({
+            id: 0,
+            timestamp: expect.any(Number),
+            update: expect.any(String),
+        });
+
+        const validationPartition = new YjsPartitionImpl({
+            type: 'yjs',
+        });
+        applyUpdate(validationPartition.doc, toByteArray(first.update));
+
+        expect(validationPartition.state).toEqual({
+            test1: createBot('test1', {
+                abc: 'def',
+            }),
+            test2: createBot('test2', {
+                num: 123,
+            }),
+        });
+
+        await validationPartition.applyEvents([
+            botUpdated('test1', {
+                tags: {
+                    newTag: 555,
+                },
+            }),
+            botAdded(
+                createBot('test4', {
+                    anotherTag: 'value',
+                })
+            ),
+        ]);
+
+        applyUpdate(validationPartition.doc, toByteArray(update.update));
+
+        expect(validationPartition.state).toEqual({
+            test1: createBot('test1', {
+                val: true,
+                newTag: 555,
+            }),
+            test3: createBot('test3', {
+                str: 'hello',
+            }),
+            test4: createBot('test4', {
+                anotherTag: 'value',
             }),
         });
     });

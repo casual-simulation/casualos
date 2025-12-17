@@ -11,6 +11,8 @@
         -   `previousUpdates` are the updates that the new initialization update should be based on.
         -   `bots` are the bots that the update should contain as the final state.
 -   Added [`zod`](https://zod.dev/) as an importable library for user scripts.
+-   Improved `os.installPackage()` to support upgrading and downgrading packages.
+    -   When downgrading a package, the `downgrade` property on the `options` parameter object should be set to `true`. This is a safety feature to help prevent accidentally downgrading a package version.
 
 ### :bug: Bug Fixes
 
