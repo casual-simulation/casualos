@@ -194,6 +194,21 @@ Object {
               "phone",
             ],
           },
+          "comId": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "customDomain": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "loginStudioId": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
         },
         "type": "object",
       },
@@ -10045,6 +10060,21 @@ Object {
               "email",
               "phone",
             ],
+          },
+          "comId": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "customDomain": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "loginStudioId": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
           },
         },
         "type": "object",

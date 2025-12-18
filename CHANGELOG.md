@@ -16,6 +16,9 @@
 -   Added the `automaticBiosOptionInst` web config option.
     -   When set to an inst ID with the `automaticBiosOption`, CasualOS will automatically load the specified inst instead of generating a random one.
     -   inst IDs are formatted like this: `{recordName}/{inst}`. For public (free) or static (local) insts, omit the record name: `/{inst}`.
+-   Added the ability to "login to a studio" via custom domains.
+    -   Users will receive a new account when logging into CasualOS served through a custom domain that is scoped to the studio that owns the custom domain.
+    -   This provides an additional privacy boundary for users, helping ensure that data isn't automatically shared with custom domains simply by logging in.
 
 ### :bug: Bug Fixes
 
