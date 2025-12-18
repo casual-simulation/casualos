@@ -5341,6 +5341,11 @@ Object {
                   "delete inst",
                 ],
               },
+              "automaticBiosOptionInst": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
+              },
               "defaultBiosOption": Object {
                 "nullable": true,
                 "optional": true,
@@ -9447,6 +9452,12 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                       "sign out",
                       "delete inst",
                     ],
+                  },
+                  "automaticBiosOptionInst": Object {
+                    "description": "The instance ID to use when executing the automatic BIOS option. Should be formatted as \`{recordName/{instName}\`. For local/public insts, recordName can be omitted (e.g. \`/{instName}\`).",
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
                   },
                   "causalRepoConnectionProtocol": Object {
                     "defaultValue": "websocket",
@@ -15182,6 +15193,11 @@ Object {
                   "delete inst",
                 ],
               },
+              "automaticBiosOptionInst": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
+              },
               "defaultBiosOption": Object {
                 "nullable": true,
                 "optional": true,
@@ -19288,6 +19304,12 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                       "sign out",
                       "delete inst",
                     ],
+                  },
+                  "automaticBiosOptionInst": Object {
+                    "description": "The instance ID to use when executing the automatic BIOS option. Should be formatted as \`{recordName/{instName}\`. For local/public insts, recordName can be omitted (e.g. \`/{instName}\`).",
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
                   },
                   "causalRepoConnectionProtocol": Object {
                     "defaultValue": "websocket",
