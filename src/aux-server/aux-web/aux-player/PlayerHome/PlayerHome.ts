@@ -36,6 +36,7 @@ import {
     QUERY_FULL_HISTORY_TAGS,
     QUERY_PARTIAL_HISTORY_TAGS,
     getBotTheme,
+    parseInstId,
 } from '@casual-simulation/aux-common';
 import PlayerGameView from '../PlayerGameView/PlayerGameView';
 import {
@@ -446,10 +447,22 @@ export default class PlayerHome extends Vue {
                                 bios !== 'sign out'
                             ) {
                                 hasValidBiosOption = true;
-                                const instId = this.executeBiosOption(
+                                const instId =
+                                    appManager.config.automaticBiosOptionInst;
+                                let recordName: string = null;
+                                let inst: string = null;
+                                if (instId) {
+                                    const parsed = parseInstId(instId);
+                                    if (parsed) {
+                                        recordName = parsed.recordName;
+                                        inst = parsed.inst;
+                                    }
+                                }
+
+                                this.executeBiosOption(
                                     bios,
-                                    null,
-                                    null,
+                                    recordName,
+                                    inst,
                                     null
                                 );
                             }
@@ -558,9 +571,9 @@ export default class PlayerHome extends Vue {
         } else if (isStaticInst(option)) {
             this._loadStaticInst(inst);
         } else if (isPrivateInst(option)) {
-            this._loadPrivateInst();
+            this._loadPrivateInst(recordName, inst);
         } else if (isPublicInst(option)) {
-            this._loadPublicInst();
+            this._loadPublicInst(inst);
         } else if (isJoinCode(option)) {
             this._loadJoinCode(joinCode);
         } else if (option === 'delete inst') {
@@ -677,15 +690,11 @@ export default class PlayerHome extends Vue {
         this._setServer(null, inst, 'temp');
     }
 
-    private _loadPrivateInst() {
-        const userId =
-            appManager.auth.primary.currentLoginStatus.authData?.userId;
-
-        if (userId) {
+    private _loadPrivateInst(recordName?: string, inst?: string) {
+        if (recordName && inst) {
             const update: Dictionary<string | string[]> = {};
-            const inst = uniqueNamesGenerator(namesConfig);
 
-            update.owner = userId;
+            update.owner = recordName;
             update.inst = inst;
             update.bios = null;
 
@@ -695,13 +704,33 @@ export default class PlayerHome extends Vue {
                 this._updateQuery(update);
             }
 
-            this._setServer(userId, inst, 'default');
+            this._setServer(recordName, inst, 'default');
+        } else {
+            const userId =
+                appManager.auth.primary.currentLoginStatus.authData?.userId;
+
+            if (userId) {
+                const update: Dictionary<string | string[]> = {};
+                const inst = uniqueNamesGenerator(namesConfig);
+
+                update.owner = userId;
+                update.inst = inst;
+                update.bios = null;
+
+                this._addGridPortalToQuery(update);
+
+                if (Object.keys(update).length > 0) {
+                    this._updateQuery(update);
+                }
+
+                this._setServer(userId, inst, 'default');
+            }
         }
     }
 
-    private _loadPublicInst() {
+    private _loadPublicInst(inst?: string) {
         const update: Dictionary<string | string[]> = {};
-        const inst = uniqueNamesGenerator(namesConfig);
+        inst ??= uniqueNamesGenerator(namesConfig);
 
         update.owner = PUBLIC_OWNER;
         update.inst = inst;
