@@ -129,51 +129,6 @@ describe('AuthManager', () => {
             );
         });
 
-        it('should include the comID from the URL', async () => {
-            fetch.mockResolvedValueOnce({
-                status: 200,
-                json: async () =>
-                    ({
-                        success: true,
-                        userId: 'myuserid',
-                        requestId: 'myrequestid',
-                        address: 'myAddress',
-                        addressType: 'email',
-                        expireTimeMs: 1234,
-                    } as LoginRequestSuccess),
-            });
-
-            globalThis.location = {
-                search: new Map([['comId', 'myComId']]),
-            } as any;
-
-            const response = await manager.loginWithEmail('myAddress');
-
-            expect(response).toEqual({
-                success: true,
-                userId: 'myuserid',
-                requestId: 'myrequestid',
-                address: 'myAddress',
-                addressType: 'email',
-                expireTimeMs: 1234,
-            });
-            expect(fetch).toHaveBeenCalledWith(
-                'http://myendpoint.localhost/api/v3/callProcedure',
-                {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        procedure: 'requestLogin',
-                        input: {
-                            address: 'myAddress',
-                            addressType: 'email',
-                            comId: 'myComId',
-                        },
-                    }),
-                    headers: expect.objectContaining({}),
-                }
-            );
-        });
-
         it('should include the referrer hostname', async () => {
             fetch.mockResolvedValueOnce({
                 status: 200,
@@ -211,7 +166,7 @@ describe('AuthManager', () => {
                         input: {
                             address: 'myAddress',
                             addressType: 'email',
-                            hostname: 'myreferrer.example.com',
+                            customDomain: 'myreferrer.example.com',
                         },
                     }),
                     headers: expect.objectContaining({}),

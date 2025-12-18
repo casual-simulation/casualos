@@ -433,7 +433,7 @@ export class SqliteAuthStore implements AuthStore {
             const queryResult = !loginStudioId
                 ? await this._client.$queryRaw<
                       User[]
-                  >`SELECT * FROM "User" WHERE "email" COLLATE NOCASE = ${address} LIMIT 1;`
+                  >`SELECT * FROM "User" WHERE "email" COLLATE NOCASE = ${address} AND "loginStudioId" IS NULL LIMIT 1;`
                 : await this._client.$queryRaw<
                       User[]
                   >`SELECT * FROM "User" WHERE "email" COLLATE NOCASE = ${address} AND "loginStudioId" = ${loginStudioId} LIMIT 1;`;

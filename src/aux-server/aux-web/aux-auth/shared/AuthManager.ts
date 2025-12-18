@@ -539,7 +539,7 @@ export class AuthManager {
 
     /**
      * Gets the studio ID that the user is logging into from the URL.
-     * @returns The ID of the studio that the user is logging into. Always null if a comId is being used.
+     * @returns The ID of the studio that the user is logging into.
      */
     getLoginStudioIdFromUrl(): string {
         const params = new URLSearchParams(location.search);
