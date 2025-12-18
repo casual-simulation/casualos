@@ -405,7 +405,8 @@ export class SqliteAuthStore implements AuthStore {
     @traced(TRACE_NAME)
     async findUserByAddress(
         address: string,
-        addressType: AddressType
+        addressType: AddressType,
+        loginStudioId: string | null = null
     ): Promise<AuthUser | null> {
         if (!address) {
             return null;
@@ -414,18 +415,28 @@ export class SqliteAuthStore implements AuthStore {
             where:
                 addressType === 'email'
                     ? {
-                          email: address,
+                          email_loginStudioId: {
+                              email: address,
+                              loginStudioId: loginStudioId,
+                          },
                       }
                     : {
-                          phoneNumber: address,
+                          phoneNumber_loginStudioId: {
+                              phoneNumber: address,
+                              loginStudioId: loginStudioId,
+                          },
                       },
         });
 
         // If no exact match was found for email, then try to find a case-insensitive match.
         if (!user && addressType === 'email') {
-            const queryResult = await this._client.$queryRaw<
-                User[]
-            >`SELECT * FROM "User" WHERE "email" COLLATE NOCASE = ${address} LIMIT 1;`;
+            const queryResult = !loginStudioId
+                ? await this._client.$queryRaw<
+                      User[]
+                  >`SELECT * FROM "User" WHERE "email" COLLATE NOCASE = ${address} AND "loginStudioId" IS NULL LIMIT 1;`
+                : await this._client.$queryRaw<
+                      User[]
+                  >`SELECT * FROM "User" WHERE "email" COLLATE NOCASE = ${address} AND "loginStudioId" = ${loginStudioId} LIMIT 1;`;
 
             if (queryResult.length > 0) {
                 user = queryResult[0];
@@ -468,6 +479,7 @@ export class SqliteAuthStore implements AuthStore {
                 user.stripeAccountRequirementsStatus as string,
             stripeAccountStatus: user.stripeAccountStatus as string,
             requestedRate: user.requestedRate,
+            loginStudioId: user.loginStudioId,
 
             updatedAt: Date.now(),
         };
@@ -525,6 +537,14 @@ export class SqliteAuthStore implements AuthStore {
                 createData.currentLoginRequest = {
                     connect: {
                         requestId: user.currentLoginRequestId as string,
+                    },
+                };
+            }
+
+            if (user.loginStudioId) {
+                createData.loginStudio = {
+                    connect: {
+                        id: user.loginStudioId,
                     },
                 };
             }

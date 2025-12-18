@@ -2087,6 +2087,7 @@ export class ServerBuilder implements SubscriptionLike {
             this._authStore,
             this._authMessenger,
             this._configStore,
+            this._recordsStore,
             this._privoClient,
             this._relyingParties ?? []
         );

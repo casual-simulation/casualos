@@ -301,14 +301,47 @@ const router = new VueRouter({
 router.beforeEach((to, from, next) => {
     const fromComId = from.query?.comId ?? from.query?.comID;
     const toComId = to.query?.comId ?? to.query?.comID;
+    const fromCustomDomain = from.query?.customDomain;
+    const toCustomDomain = to.query?.customDomain;
+    const fromLoginStudioId = from.query?.loginStudioId;
+    const toLoginStudioId = to.query?.loginStudioId;
+    let changed = false;
+
     if (!toComId && fromComId) {
-        next({
+        changed = true;
+        to = {
             ...to,
             query: {
                 ...(to.query ?? {}),
                 comId: fromComId,
             },
-        });
+        };
+    }
+
+    if (!toCustomDomain && fromCustomDomain) {
+        changed = true;
+        to = {
+            ...to,
+            query: {
+                ...(to.query ?? {}),
+                customDomain: fromCustomDomain,
+            },
+        };
+    }
+
+    if (!toLoginStudioId && fromLoginStudioId) {
+        changed = true;
+        to = {
+            ...to,
+            query: {
+                ...(to.query ?? {}),
+                loginStudioId: fromLoginStudioId,
+            },
+        };
+    }
+
+    if (changed) {
+        next(to);
     } else {
         next();
     }
@@ -411,7 +444,7 @@ router.beforeEach(async (to, from, next) => {
                         '[index] Already logged in. Redirecting to home.'
                     );
 
-                    next({ name: 'home' });
+                    next({ name: 'home', query: to.query, hash: to.hash });
                 } else {
                     next();
                 }
@@ -424,7 +457,11 @@ router.beforeEach(async (to, from, next) => {
 
         if (!publicPages.has(to.name) && !loggedIn) {
             console.log('[index] Not Logged In and. Redirecting to Login.');
-            next({ name: 'login' });
+            next({
+                name: 'login',
+                query: { ...to.query, after: to.fullPath },
+                hash: to.hash,
+            });
             return;
         } else {
             next();

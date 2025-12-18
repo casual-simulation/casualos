@@ -25,7 +25,7 @@ import type { FormError } from '@casual-simulation/aux-common';
 import { getFormErrors } from '@casual-simulation/aux-common';
 import FieldErrors from '../../../shared/vue-components/FieldErrors/FieldErrors';
 
-const comId = authManager.getComIdFromUrl();
+const comId = authManager.getComId();
 document.title = comId ?? location.hostname;
 
 @Component({
@@ -142,7 +142,7 @@ export default class AuthApp extends Vue {
                 }
             });
 
-        this.comId = authManager.getComIdFromUrl();
+        this.comId = authManager.getComId();
         if (this.comId) {
             authManager.client
                 .getPlayerConfig({
@@ -174,7 +174,7 @@ export default class AuthApp extends Vue {
             this.errors = [];
             this.processing = true;
 
-            const comId = authManager.getComIdFromUrl();
+            const comId = authManager.getComId();
             const response = await authManager.client.createStudio({
                 displayName: this.studioName,
                 ownerStudioComId: comId,
@@ -260,7 +260,7 @@ export default class AuthApp extends Vue {
         console.log('[AuthApp] Loading studios...');
         this.loadingStudios = true;
         try {
-            const comId = authManager.getComIdFromUrl();
+            const comId = authManager.getComId();
             const result = await authManager.client.listStudios({
                 comId: comId ?? undefined,
             });
