@@ -40,6 +40,7 @@ export const COM_ID_PLAYER_CONFIG = WEB_CONFIG_SCHEMA.pick({
     allowedBiosOptions: true,
     arcGisApiKey: true,
     automaticBiosOption: true,
+    automaticBiosOptionInst: true,
     defaultBiosOption: true,
     jitsiAppName: true,
     what3WordsApiKey: true,

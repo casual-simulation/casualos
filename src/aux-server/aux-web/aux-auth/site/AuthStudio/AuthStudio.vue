@@ -144,6 +144,17 @@
                 </md-table-row>
                 <md-table-row v-if="allowComId" @click="updatePlayerConfig()">
                     <md-tooltip
+                        >The inst that should be automatically loaded when executing the automatic
+                        BIOS option. Has no effect if the automatic BIOS option is not
+                        set.</md-tooltip
+                    >
+                    <md-table-cell>comID.automaticBiosOptionInst</md-table-cell>
+                    <md-table-cell>{{
+                        originalAutomaticBiosOptionInst || '(default)'
+                    }}</md-table-cell>
+                </md-table-row>
+                <md-table-row v-if="allowComId" @click="updatePlayerConfig()">
+                    <md-tooltip
                         >The name of the Jitsi App that should be used for the
                         meetPortal.</md-tooltip
                     >
@@ -325,6 +336,24 @@
                     </md-select>
                     <span class="md-helper-text">The automatic BIOS option.</span>
                     <field-errors field="playerConfig.automaticBiosOption" :errors="errors" />
+                </md-field>
+                <md-field :class="automaticBiosOptionInstFieldClass">
+                    <label for="automaticBiosOptionInst">comID.automaticBiosOptionInst</label>
+                    <md-input
+                        id="automaticBiosOptionInst"
+                        v-model="automaticBiosOptionInst"
+                        type="text"
+                    ></md-input>
+                    <span class="md-helper-text">
+                        The inst that should be loaded when executing the automatic BIOS option. Has
+                        no effect if comID.automaticBiosOption is not set.
+                    </span>
+                    <span>
+                        The format should be <code>{recordName}/{instName}</code>. For
+                        local/public/free insts, recordName can be omitted (e.g.
+                        <code>/{instName}</code>).
+                    </span>
+                    <field-errors field="playerConfig.automaticBiosOptionInst" :errors="errors" />
                 </md-field>
                 <md-field :class="jitsiAppNameFieldClass">
                     <label for="jistiAppName">comID.jistiAppName</label>

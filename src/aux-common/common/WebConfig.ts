@@ -205,6 +205,13 @@ export interface WebConfig {
     automaticBiosOption?: BiosOption;
 
     /**
+     * The instance ID to use when executing the automatic BIOS option.
+     *
+     * Should be formatted as `{recordName/{instName}`. For local/public insts, recordName can be omitted (e.g. `/{instName}`).
+     */
+    automaticBiosOptionInst?: string | null;
+
+    /**
      * Whether full support for the DOM should be enabled.
      * This will run the VM without the web worker so that scripts have direct access to the iframe.
      * May not be supported in all environments.
@@ -294,6 +301,14 @@ export const WEB_CONFIG_SCHEMA = z.object({
     allowedBiosOptions: z.array(BIOS_OPTION_SCHEMA).nullable().optional(),
     defaultBiosOption: BIOS_OPTION_SCHEMA.nullable().optional(),
     automaticBiosOption: BIOS_OPTION_SCHEMA.nullable().optional(),
+    automaticBiosOptionInst: z
+        .string()
+        .nonempty()
+        .nullable()
+        .optional()
+        .describe(
+            'The instance ID to use when executing the automatic BIOS option. Should be formatted as `{recordName/{instName}`. For local/public insts, recordName can be omitted (e.g. `/{instName}`).'
+        ),
     enableDom: z.boolean().prefault(false),
     debug: z.boolean().prefault(false),
 
