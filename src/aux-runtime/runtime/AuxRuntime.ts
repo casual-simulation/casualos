@@ -3553,6 +3553,7 @@ export class AuxRuntime
         script: string,
         options: CompileOptions
     ): CompiledBotModule {
+        const startTime = performance.now();
         script = replaceMacros(script);
 
         let functionName: string;
@@ -3693,6 +3694,29 @@ export class AuxRuntime
             func.moduleFunc = moduleFunc;
         } else {
             func.moduleFunc = null;
+        }
+
+        if (this._globalContext) {
+            const endTime = performance.now();
+            const compileTime = endTime - startTime;
+            this._globalContext.addLoadTime('script_compile', compileTime);
+            this._globalContext.addLoadTime(
+                'script_transpile',
+                func.metadata.transpileTimeMs
+            );
+            this._globalContext.addLoadTime(
+                'script_engine_compile',
+                func.metadata.engineCompileTimeMs
+            );
+
+            if (compileTime >= 100) {
+                console.warn('[AuxRuntime] Slow script compile (>=100ms):', {
+                    botId: bot.id,
+                    tag: tag,
+                    system: bot.values['system'],
+                    compileTime: `${compileTime}ms`,
+                });
+            }
         }
 
         return func;

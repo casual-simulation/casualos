@@ -518,6 +518,8 @@ export class AuxCompiler {
             async,
             transpilerResult,
             constructedFunction,
+            transpileTimeMs,
+            engineCompileTimeMs,
         } = this._compileFunction(script, options || {});
 
         const scriptFunction = func;
@@ -532,6 +534,8 @@ export class AuxCompiler {
             constructedFunction,
             context: options?.context,
             isModule: transpilerResult.metadata.isModule,
+            transpileTimeMs,
+            engineCompileTimeMs,
         };
 
         if (options) {
@@ -816,6 +820,8 @@ export class AuxCompiler {
         transpilerResult: TranspilerResult;
         async: boolean;
         constructedFunction: ConstructedFunction;
+        transpileTimeMs: number;
+        engineCompileTimeMs: number;
     } {
         // Yes this code is super ugly.
         // Some day we will engineer this into a real
@@ -829,6 +835,7 @@ export class AuxCompiler {
         let transpilerLineOffset = 0;
         let scriptLineOffset = 0;
         let syntaxErrorLineOffset = 0;
+        const transpileStartTime = performance.now();
         try {
             if (isScript(script)) {
                 transpiled = this._parseScript(script);
@@ -931,6 +938,9 @@ export class AuxCompiler {
             functionCode = `async ` + functionCode;
         }
 
+        const transpileEndTime = performance.now();
+        const transpileTimeMs = transpileEndTime - transpileStartTime;
+
         try {
             if (options.interpreter) {
                 const finalCode = `${constantsCode}return ${functionCode};`;
@@ -938,6 +948,7 @@ export class AuxCompiler {
                 syntaxErrorLineOffset += 1;
                 scriptLineOffset += 1;
 
+                const engineCompileStartTime = performance.now();
                 const func = options.interpreter.createFunction(
                     'test',
                     finalCode,
@@ -968,6 +979,9 @@ export class AuxCompiler {
                     finalFunc = createInterpretableFunction(finalFunc);
                     finalFunc[INTERPRETER_OBJECT] = result[INTERPRETER_OBJECT];
                 }
+                const engineCompileEndTime = performance.now();
+                const engineCompileTimeMs =
+                    engineCompileEndTime - engineCompileStartTime;
 
                 return {
                     func: finalFunc,
@@ -976,10 +990,13 @@ export class AuxCompiler {
                     async,
                     transpilerResult: transpiled,
                     constructedFunction: func,
+                    transpileTimeMs,
+                    engineCompileTimeMs,
                 };
             } else {
                 const finalCode = `${withCodeStart}return function(constants, variables, context) { "use strict"; ${constantsCode}return ${functionCode}; }${withCodeEnd}`;
 
+                const engineCompileStartTime = performance.now();
                 let func = this._buildFunction(finalCode, options);
                 (<any>func)[COMPILED_SCRIPT_SYMBOL] = true;
 
@@ -996,6 +1013,9 @@ export class AuxCompiler {
                         );
                     }
                 }
+                const engineCompileEndTime = performance.now();
+                const engineCompileTimeMs =
+                    engineCompileEndTime - engineCompileStartTime;
 
                 return {
                     func,
@@ -1004,6 +1024,8 @@ export class AuxCompiler {
                     async,
                     transpilerResult: transpiled,
                     constructedFunction: null,
+                    transpileTimeMs,
+                    engineCompileTimeMs,
                 };
             }
         } catch (err) {
@@ -1178,6 +1200,16 @@ export interface AuxScriptMetadata {
      * The context that the function was created with.
      */
     context: any;
+
+    /**
+     * The number of miliseconds that it took to transpile the script.
+     */
+    transpileTimeMs: number;
+
+    /**
+     * The number of miliseconds that it took the engine to compile the script.
+     */
+    engineCompileTimeMs: number;
 }
 
 export interface CompiledBotModule extends BotModule, AuxCompiledScript {}

@@ -754,7 +754,7 @@ export class AppManager {
     }
 
     private async _initConfig() {
-        console.log('[AppManager] Fetching config...');
+        console.log('[AppManager] Init config...');
         this._config = await this._getBaseConfig();
         await this._saveBaseConfig();
         if (!this._config) {
