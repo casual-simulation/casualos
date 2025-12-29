@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-server",
-    "version": "3.9.0",
+    "version": "3.10.0",
     "description": "The repository for the AUX server project.",
     "main": "server/dist/main.js",
     "private": true,
@@ -156,6 +156,7 @@
         "minio": "8.0.1",
         "mongodb": "3.6.2",
         "pify": "5.0.0",
+        "posthog-js": "^1.310.2",
         "preact": "10.19.6",
         "preact-render-to-string": "6.6.3",
         "prisma": "^6.14.0",
@@ -184,8 +185,7 @@
         "web-push": "3.6.7",
         "ws": "8.18.0",
         "yjs": "13.6.8",
-        "zod": "4.1.12",
-        "posthog-js": "^1.310.2"
+        "zod": "4.1.12"
     },
     "devDependencies": {
         "@casual-simulation/aux-components": "^3.8.1",
