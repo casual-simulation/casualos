@@ -20,7 +20,6 @@ import fs from 'fs';
 import {
     paths,
     cleanDirectory,
-    replaceModulePlugin,
     emptyModulePlugin,
 } from '../../../script/build-helpers.mjs';
 import { GIT_HASH, GIT_TAG } from '../../../script/git-stats.mjs';
