@@ -50,7 +50,9 @@ export async function minifyAux(
     return transformAux(aux, {
         minify: true,
         target,
-        jsx: 'preserve',
+        jsx: 'transform',
+        jsxFactory: 'html.h',
+        jsxFragment: 'html.f',
         platform: 'browser',
     });
 }

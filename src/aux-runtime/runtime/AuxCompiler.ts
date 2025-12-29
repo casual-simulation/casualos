@@ -121,8 +121,8 @@ export function getInterpretableFunction<T extends Function>(obj: unknown): T {
         : null;
 }
 
-const JSX_FACTORY = 'html.h';
-const JSX_FRAGMENT_FACTORY = 'html.f';
+export const JSX_FACTORY = 'html.h';
+export const JSX_FRAGMENT_FACTORY = 'html.f';
 export const IMPORT_FACTORY = '___importModule';
 export const IMPORT_META_FACTORY = '___importMeta';
 export const EXPORT_FACTORY = '___exportModule';
