@@ -22,6 +22,8 @@
 -   Improved minification to pre-transform JSX.
     -   In AUXes with lots of JSX, the transpilation step to transform JSX into pure JS can take a long time.
     -   Performing this step during minification can greatly improve initial loading performance.
+-   Add support for [PostHog](https://posthog.com/).
+    -   Use the `VITE_POSTHOG_API_KEY` and `VITE_POSTHOG_HOST` environment variables during build time to configure.
 
 ### :bug: Bug Fixes
 
