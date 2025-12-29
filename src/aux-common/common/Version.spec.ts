@@ -15,7 +15,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { parseVersionNumber, formatVersionNumber } from './Version';
+import {
+    parseVersionNumber,
+    formatVersionNumber,
+    compareVersions,
+} from './Version';
 
 describe('parseVersionNumber()', () => {
     const cases = [
@@ -166,6 +170,43 @@ describe('formatVersionNumber()', () => {
                 alpha: expect.anything(),
                 version: formatted,
             });
+        }
+    );
+});
+
+describe('compareVersions()', () => {
+    const cases = [
+        ['equal', 'v1.2.3', 'v1.2.3', 0] as const,
+        ['equal with tag', 'v1.2.3-alpha', 'v1.2.3-alpha', 0] as const,
+        [
+            'equal with tag and number',
+            'v1.2.3-alpha.1',
+            'v1.2.3-alpha.1',
+            0,
+        ] as const,
+
+        ['major less than', 'v0.2.3', 'v1.2.3', -1] as const,
+        ['major greater than', 'v2.2.3', 'v1.2.3', 1] as const,
+
+        ['minor less than', 'v1.1.3', 'v1.2.3', -1] as const,
+        ['minor greater than', 'v1.3.3', 'v1.2.3', 1] as const,
+
+        ['patch less than', 'v1.2.1', 'v1.2.3', -1] as const,
+        ['patch greater than', 'v1.2.3', 'v1.2.1', 1] as const,
+
+        ['no tag vs tag', 'v1.2.3', 'v1.2.3-alpha', 1] as const,
+        ['tag vs no tag', 'v1.2.3-alpha', 'v1.2.3', -1] as const,
+
+        ['tag vs tag', 'v1.2.3-beta', 'v1.2.3-alpha', 1] as const,
+        ['tag vs tag reversed', 'v1.2.3-alpha', 'v1.2.3-beta', -1] as const,
+    ];
+
+    it.each(cases)(
+        'should compare %s',
+        (_desc, firstStr, secondStr, expected) => {
+            const first = parseVersionNumber(firstStr);
+            const second = parseVersionNumber(secondStr);
+            expect(compareVersions(first, second)).toEqual(expected);
         }
     );
 });

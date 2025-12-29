@@ -1010,17 +1010,34 @@ export class RecordsServer {
                     z.object({
                         address: z.string(),
                         addressType: z.enum(['email', 'phone']),
+                        loginStudioId: z.string().nullable().optional(),
+                        comId: z.string().nullable().optional(),
+                        customDomain: z.string().nullable().optional(),
                     })
                 )
-                .handler(async ({ address, addressType }, context) => {
-                    const result = await this._auth.requestLogin({
-                        address,
-                        addressType,
-                        ipAddress: context.ipAddress,
-                    });
+                .handler(
+                    async (
+                        {
+                            address,
+                            addressType,
+                            loginStudioId,
+                            comId,
+                            customDomain,
+                        },
+                        context
+                    ) => {
+                        const result = await this._auth.requestLogin({
+                            address,
+                            addressType,
+                            ipAddress: context.ipAddress,
+                            loginStudioId,
+                            comId,
+                            customDomain,
+                        });
 
-                    return result;
-                }),
+                        return result;
+                    }
+                ),
 
             requestPrivoLogin: procedure()
                 .origins('account')
@@ -2745,6 +2762,7 @@ export class RecordsServer {
                         inst: z.string().min(1),
                         branch: z.string().optional().nullable(),
                         instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        downgrade: z.boolean().optional().nullable(),
                         package: z.object({
                             recordName: RECORD_NAME_VALIDATION,
                             address: ADDRESS_VALIDATION,
@@ -2789,7 +2807,14 @@ export class RecordsServer {
                 )
                 .handler(
                     async (
-                        { recordName, inst, branch, package: pkg, instances },
+                        {
+                            recordName,
+                            inst,
+                            branch,
+                            package: pkg,
+                            instances,
+                            downgrade,
+                        },
                         context
                     ) => {
                         if (!this._websocketController) {
@@ -2815,6 +2840,7 @@ export class RecordsServer {
                                 branch,
                                 package: pkg as PackageVersionSpecifier,
                                 instances,
+                                downgrade,
                             });
 
                         return result;

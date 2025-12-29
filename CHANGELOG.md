@@ -1,5 +1,34 @@
 # CasualOS Changelog
 
+## V3.10.0
+
+#### Date: 12/29/2025
+
+### :rocket: Features
+
+-   Improved `os.createInitializationUpdate()` to support creating initialization updates from previous initialization updates.
+    -   Added the `os.createInitializationUpdate(previousUpdates, bots)` overload.
+        -   `previousUpdates` are the updates that the new initialization update should be based on.
+        -   `bots` are the bots that the update should contain as the final state.
+-   Added [`zod`](https://zod.dev/) as an importable library for user scripts.
+-   Improved `os.installPackage()` to support upgrading and downgrading packages.
+    -   When downgrading a package, the `downgrade` property on the `options` parameter object should be set to `true`. This is a safety feature to help prevent accidentally downgrading a package version.
+-   Added the `automaticBiosOptionInst` web config option.
+    -   When set to an inst ID with the `automaticBiosOption`, CasualOS will automatically load the specified inst instead of generating a random one.
+    -   inst IDs are formatted like this: `{recordName}/{inst}`. For public (free) or static (local) insts, omit the record name: `/{inst}`.
+-   Added the ability to "login to a studio" via custom domains.
+    -   Users will receive a new account when logging into CasualOS served through a custom domain that is scoped to the studio that owns the custom domain.
+    -   This provides an additional privacy boundary for users, helping ensure that data isn't automatically shared with custom domains simply by logging in.
+-   Improved minification to pre-transform JSX.
+    -   In AUXes with lots of JSX, the transpilation step to transform JSX into pure JS can take a long time.
+    -   Performing this step during minification can greatly improve initial loading performance.
+-   Add support for [PostHog](https://posthog.com/).
+    -   Use the `VITE_POSTHOG_API_KEY` and `VITE_POSTHOG_HOST` environment variables during build time to configure.
+
+### :bug: Bug Fixes
+
+-   Fixed cross-origin IndexedDB and localStorage cleanup when deleting static instances. Previously, bot data persisted after deletion because it was stored at a different origin than the main application. The cleanup now uses an iframe-based approach that runs at the correct origin to properly delete all stored data.
+
 ## V3.9.0
 
 #### Date: 12/11/2025

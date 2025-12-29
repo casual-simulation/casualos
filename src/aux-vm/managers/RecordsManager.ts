@@ -2606,7 +2606,15 @@ export class RecordsManager {
                     const aux: StoredAux = fileResult.data;
 
                     await this._helper.transaction(
-                        remote(installAuxFile(aux, 'default'))
+                        remote(
+                            installAuxFile(
+                                aux,
+                                'default',
+                                result.item.packageId,
+                                result.item.key,
+                                event.options?.downgrade
+                            )
+                        )
                     );
 
                     if (hasValue(event.taskId)) {
@@ -2652,6 +2660,7 @@ export class RecordsManager {
                             key: event.key,
                         },
                         instances,
+                        downgrade: event.options?.downgrade,
                     },
                     {
                         sessionKey: info.token,

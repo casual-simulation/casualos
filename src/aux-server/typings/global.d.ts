@@ -157,6 +157,14 @@ interface ImportMeta {
          * Whether the app is running on the server.
          */
         SSR: boolean;
+
+        /**
+         * Whether the app is running in development mode.
+         */
+        DEV?: boolean;
+
+        VITE_POSTHOG_API_KEY?: string;
+        VITE_POSTHOG_HOST?: string;
     };
 }
 

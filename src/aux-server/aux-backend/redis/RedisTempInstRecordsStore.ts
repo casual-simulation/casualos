@@ -86,13 +86,23 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
             loadedPackage.inst
         );
 
-        if (await this._redis.sIsMember(idsKey, loadedPackage.id)) {
-            return;
+        if (await this._redis.sIsMember(idsKey, loadedPackage.packageId)) {
+            // Remove existing entries
+            const packages = await this._redis.lRange(key, 0, -1);
+            let promises = [];
+            for (let p of packages) {
+                const savedPackage = JSON.parse(p);
+                if (savedPackage.id === loadedPackage.id) {
+                    promises.push(this._redis.lRem(key, 1, p));
+                }
+            }
+
+            await Promise.all(promises);
         }
 
         const multi = this._redis.multi();
 
-        multi.sAdd(idsKey, loadedPackage.id);
+        multi.sAdd(idsKey, loadedPackage.packageId);
         multi.lPush(key, JSON.stringify(loadedPackage));
 
         this._expireMulti(multi, idsKey, this._instDataExpirationMode);
@@ -117,17 +127,18 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         inst: string,
         packageId: string
     ): Promise<LoadedPackage | null> {
-        const key = this._getLoadedPackageIdsKey(recordName, inst);
-        const isLoaded = await this._redis.sIsMember(key, packageId);
+        const idsKey = this._getLoadedPackageIdsKey(recordName, inst);
+        const isLoaded = await this._redis.sIsMember(idsKey, packageId);
 
         if (!isLoaded) {
             return null;
         }
 
+        const key = this._getLoadedPackagesKey(recordName, inst);
         const packages = await this._redis.lRange(key, 0, -1);
         for (let p of packages) {
             const loadedPackage = JSON.parse(p);
-            if (loadedPackage.id === packageId) {
+            if (loadedPackage.packageId === packageId) {
                 return loadedPackage;
             }
         }

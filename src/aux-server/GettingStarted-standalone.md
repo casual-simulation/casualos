@@ -150,6 +150,13 @@ To configure MongoDB, use the following:
 -   `MONGO_USE_NEW_URL_PARSER` - Whether to use the [new MongoDB URL parser](https://stackoverflow.com/q/50448272/1832856). (Defaults to false)
 -   `MONGO_USE_UNIFIED_TOPOLOGY` - Whether to enable the new unified topology layer. (Defaults to false)
 
+#### PostHog Support
+
+To configure [PostHog](https://posthog.com/), use the following during build:
+
+-   `VITE_POSTHOG_API_KEY` - The PostHog API key that should be used.
+-   `VITE_POSTHOG_HOST` - The host that should be used to access the posthog API.
+
 #### Security
 
 Use the following environment variables to configure security options:

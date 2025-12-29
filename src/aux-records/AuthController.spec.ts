@@ -209,9 +209,14 @@ describe('AuthController', () => {
         // financialInterface = new MemoryFinancialInterface();
         // financialController = new FinancialController(financialInterface);
 
-        controller = new AuthController(store, messenger, store, privoClient, [
-            relyingParty,
-        ]);
+        controller = new AuthController(
+            store,
+            messenger,
+            store,
+            store,
+            privoClient,
+            [relyingParty]
+        );
 
         uuidMock.mockReset();
         randomBytesMock.mockReset();
@@ -475,362 +480,655 @@ describe('AuthController', () => {
     });
 
     describe('requestLogin()', () => {
-        const cases = [
+        const addressCases = [
             ['email', 'test@example.com'] as const,
             ['phone', '+15559321234'] as const,
         ];
+        const studioCases: [string, string | null][] = [
+            ['no studio', null] as const,
+            ['with studio', 'studio1'] as const,
+        ];
 
-        describe.each(cases)('%s', (type, address) => {
-            it('should save a new user and login request for the user', async () => {
-                const salt = new Uint8Array([1, 2, 3]);
-                const code = new Uint8Array([4, 5, 6, 7]);
-
-                nowMock.mockReturnValue(100);
-                randomBytesMock
-                    .mockReturnValueOnce(salt)
-                    .mockReturnValueOnce(code);
-                uuidMock.mockReturnValueOnce('uuid1');
-
-                const response = await controller.requestLogin({
-                    address: address,
-                    addressType: type,
-                    ipAddress: '127.0.0.1',
-                });
-
-                expect(response).toEqual({
-                    success: true,
-                    userId: 'uuid1',
-                    requestId: fromByteArray(salt),
-                    address: address,
-                    addressType: type,
-                    expireTimeMs: 100 + LOGIN_REQUEST_LIFETIME_MS,
-                });
-
-                if (type === 'email') {
-                    expect(store.users).toEqual([
-                        {
-                            id: 'uuid1',
-                            email: address,
-                            phoneNumber: null,
-                            currentLoginRequestId: fromByteArray(salt),
-                            allSessionRevokeTimeMs: null,
-                        },
-                    ]);
-                } else {
-                    expect(store.users).toEqual([
-                        {
-                            id: 'uuid1',
-                            email: null,
-                            phoneNumber: address,
-                            currentLoginRequestId: fromByteArray(salt),
-                            allSessionRevokeTimeMs: null,
-                        },
-                    ]);
+        describe.each(studioCases)('%s', (studioDesc, studioId) => {
+            beforeEach(async () => {
+                if (studioId) {
+                    await store.addStudio({
+                        id: studioId,
+                        displayName: 'My Studio',
+                    });
                 }
+            });
 
-                expect(store.loginRequests).toEqual([
-                    {
+            describe.each(addressCases)('%s', (type, address) => {
+                it('should save a new user and login request for the user', async () => {
+                    const salt = new Uint8Array([1, 2, 3]);
+                    const code = new Uint8Array([4, 5, 6, 7]);
+
+                    nowMock.mockReturnValue(100);
+                    randomBytesMock
+                        .mockReturnValueOnce(salt)
+                        .mockReturnValueOnce(code);
+                    uuidMock.mockReturnValueOnce('uuid1');
+
+                    const response = await controller.requestLogin({
+                        address: address,
+                        addressType: type,
+                        ipAddress: '127.0.0.1',
+                        loginStudioId: studioId,
+                    });
+
+                    expect(response).toEqual({
+                        success: true,
                         userId: 'uuid1',
                         requestId: fromByteArray(salt),
-                        secretHash: hashLowEntropyPasswordWithSalt(
-                            codeNumber(code),
-                            fromByteArray(salt)
-                        ),
-                        requestTimeMs: 100,
+                        address: address,
+                        addressType: type,
                         expireTimeMs: 100 + LOGIN_REQUEST_LIFETIME_MS,
-                        completedTimeMs: null,
-                        attemptCount: 0,
-                        address: address,
-                        addressType: type,
-                        ipAddress: '127.0.0.1',
-                    },
-                ]);
-                expect(messenger.messages).toEqual([
-                    {
-                        address: address,
-                        addressType: type,
-                        code: codeNumber(code),
-                    },
-                ]);
+                    });
 
-                expect(randomBytesMock).toHaveBeenCalledWith(
-                    LOGIN_REQUEST_ID_BYTE_LENGTH
-                );
-                expect(randomBytesMock).toHaveBeenCalledWith(4);
-            });
+                    if (type === 'email') {
+                        expect(store.users).toEqual([
+                            {
+                                id: 'uuid1',
+                                email: address,
+                                phoneNumber: null,
+                                currentLoginRequestId: fromByteArray(salt),
+                                allSessionRevokeTimeMs: null,
+                                loginStudioId: studioId,
+                            },
+                        ]);
+                    } else {
+                        expect(store.users).toEqual([
+                            {
+                                id: 'uuid1',
+                                email: null,
+                                phoneNumber: address,
+                                currentLoginRequestId: fromByteArray(salt),
+                                allSessionRevokeTimeMs: null,
+                                loginStudioId: studioId,
+                            },
+                        ]);
+                    }
 
-            it('should create a new login request for the existing user', async () => {
-                await store.saveUser({
-                    id: 'myid',
-                    email: type === 'email' ? address : null,
-                    phoneNumber: type === 'phone' ? address : null,
-                    allSessionRevokeTimeMs: undefined,
-                    currentLoginRequestId: undefined,
+                    expect(store.loginRequests).toEqual([
+                        {
+                            userId: 'uuid1',
+                            requestId: fromByteArray(salt),
+                            secretHash: hashLowEntropyPasswordWithSalt(
+                                codeNumber(code),
+                                fromByteArray(salt)
+                            ),
+                            requestTimeMs: 100,
+                            expireTimeMs: 100 + LOGIN_REQUEST_LIFETIME_MS,
+                            completedTimeMs: null,
+                            attemptCount: 0,
+                            address: address,
+                            addressType: type,
+                            ipAddress: '127.0.0.1',
+                        },
+                    ]);
+                    expect(messenger.messages).toEqual([
+                        {
+                            address: address,
+                            addressType: type,
+                            code: codeNumber(code),
+                        },
+                    ]);
+
+                    expect(randomBytesMock).toHaveBeenCalledWith(
+                        LOGIN_REQUEST_ID_BYTE_LENGTH
+                    );
+                    expect(randomBytesMock).toHaveBeenCalledWith(4);
                 });
 
-                const salt = new Uint8Array([1, 2, 3]);
-                const code = new Uint8Array([4, 5, 6, 7]);
-
-                nowMock.mockReturnValue(100);
-                randomBytesMock
-                    .mockReturnValueOnce(salt)
-                    .mockReturnValueOnce(code);
-                uuidMock.mockReturnValueOnce('uuid1');
-
-                const response = await controller.requestLogin({
-                    address: address,
-                    addressType: type,
-                    ipAddress: '127.0.0.1',
-                });
-
-                expect(response).toEqual({
-                    success: true,
-                    userId: 'myid',
-                    requestId: fromByteArray(salt),
-                    address: address,
-                    addressType: type,
-                    expireTimeMs: 100 + LOGIN_REQUEST_LIFETIME_MS,
-                });
-
-                expect(store.users).toEqual([
-                    {
+                it('should create a new login request for the existing user', async () => {
+                    await store.saveUser({
                         id: 'myid',
                         email: type === 'email' ? address : null,
                         phoneNumber: type === 'phone' ? address : null,
-                        currentLoginRequestId: fromByteArray(salt),
-                    },
-                ]);
+                        allSessionRevokeTimeMs: undefined,
+                        currentLoginRequestId: undefined,
+                        loginStudioId: studioId,
+                    });
 
-                expect(store.loginRequests).toEqual([
-                    {
+                    const salt = new Uint8Array([1, 2, 3]);
+                    const code = new Uint8Array([4, 5, 6, 7]);
+
+                    nowMock.mockReturnValue(100);
+                    randomBytesMock
+                        .mockReturnValueOnce(salt)
+                        .mockReturnValueOnce(code);
+                    uuidMock.mockReturnValueOnce('uuid1');
+
+                    const response = await controller.requestLogin({
+                        address: address,
+                        addressType: type,
+                        ipAddress: '127.0.0.1',
+                        loginStudioId: studioId,
+                    });
+
+                    expect(response).toEqual({
+                        success: true,
                         userId: 'myid',
                         requestId: fromByteArray(salt),
-                        secretHash: hashLowEntropyPasswordWithSalt(
-                            codeNumber(code),
-                            fromByteArray(salt)
-                        ),
-                        requestTimeMs: 100,
+                        address: address,
+                        addressType: type,
                         expireTimeMs: 100 + LOGIN_REQUEST_LIFETIME_MS,
-                        completedTimeMs: null,
-                        attemptCount: 0,
-                        address: address,
-                        addressType: type,
-                        ipAddress: '127.0.0.1',
-                    },
-                ]);
-                expect(messenger.messages).toEqual([
-                    {
-                        address: address,
-                        addressType: type,
-                        code: codeNumber(code),
-                    },
-                ]);
-
-                expect(randomBytesMock).toHaveBeenCalledWith(
-                    LOGIN_REQUEST_ID_BYTE_LENGTH
-                );
-                expect(randomBytesMock).toHaveBeenCalledWith(4);
-                expect(uuidMock).not.toHaveBeenCalled();
-            });
-
-            it('should create a new login request for the existing user even if the address is denied by a rule', async () => {
-                await store.saveUser({
-                    id: 'myid',
-                    email: type === 'email' ? address : null,
-                    phoneNumber: type === 'phone' ? address : null,
-                    allSessionRevokeTimeMs: undefined,
-                    currentLoginRequestId: undefined,
-                });
-
-                const salt = new Uint8Array([1, 2, 3]);
-                const code = new Uint8Array([4, 5, 6, 7]);
-
-                nowMock.mockReturnValue(100);
-                randomBytesMock
-                    .mockReturnValueOnce(salt)
-                    .mockReturnValueOnce(code);
-                uuidMock.mockReturnValueOnce('uuid1');
-
-                if (type === 'email') {
-                    store.emailRules.push({
-                        pattern: `^${address}$`,
-                        type: 'deny',
                     });
-                } else {
-                    store.smsRules.push({
-                        pattern: `^${address}$`,
-                        type: 'deny',
-                    });
-                }
 
-                const response = await controller.requestLogin({
-                    address: address,
-                    addressType: type,
-                    ipAddress: '127.0.0.1',
+                    expect(store.users).toEqual([
+                        {
+                            id: 'myid',
+                            email: type === 'email' ? address : null,
+                            phoneNumber: type === 'phone' ? address : null,
+                            currentLoginRequestId: fromByteArray(salt),
+                            loginStudioId: studioId,
+                        },
+                    ]);
+
+                    expect(store.loginRequests).toEqual([
+                        {
+                            userId: 'myid',
+                            requestId: fromByteArray(salt),
+                            secretHash: hashLowEntropyPasswordWithSalt(
+                                codeNumber(code),
+                                fromByteArray(salt)
+                            ),
+                            requestTimeMs: 100,
+                            expireTimeMs: 100 + LOGIN_REQUEST_LIFETIME_MS,
+                            completedTimeMs: null,
+                            attemptCount: 0,
+                            address: address,
+                            addressType: type,
+                            ipAddress: '127.0.0.1',
+                        },
+                    ]);
+                    expect(messenger.messages).toEqual([
+                        {
+                            address: address,
+                            addressType: type,
+                            code: codeNumber(code),
+                        },
+                    ]);
+
+                    expect(randomBytesMock).toHaveBeenCalledWith(
+                        LOGIN_REQUEST_ID_BYTE_LENGTH
+                    );
+                    expect(randomBytesMock).toHaveBeenCalledWith(4);
+                    expect(uuidMock).not.toHaveBeenCalled();
                 });
 
-                expect(response).toEqual({
-                    success: true,
-                    userId: 'myid',
-                    requestId: fromByteArray(salt),
-                    address: address,
-                    addressType: type,
-                    expireTimeMs: 100 + LOGIN_REQUEST_LIFETIME_MS,
-                });
-
-                expect(store.users).toEqual([
-                    {
+                it('should create a new login request for the existing user even if the address is denied by a rule', async () => {
+                    await store.saveUser({
                         id: 'myid',
                         email: type === 'email' ? address : null,
                         phoneNumber: type === 'phone' ? address : null,
-                        currentLoginRequestId: fromByteArray(salt),
-                    },
-                ]);
+                        allSessionRevokeTimeMs: undefined,
+                        currentLoginRequestId: undefined,
+                        loginStudioId: studioId,
+                    });
 
-                expect(store.loginRequests).toEqual([
-                    {
+                    const salt = new Uint8Array([1, 2, 3]);
+                    const code = new Uint8Array([4, 5, 6, 7]);
+
+                    nowMock.mockReturnValue(100);
+                    randomBytesMock
+                        .mockReturnValueOnce(salt)
+                        .mockReturnValueOnce(code);
+                    uuidMock.mockReturnValueOnce('uuid1');
+
+                    if (type === 'email') {
+                        store.emailRules.push({
+                            pattern: `^${address}$`,
+                            type: 'deny',
+                        });
+                    } else {
+                        store.smsRules.push({
+                            pattern: `^${address}$`,
+                            type: 'deny',
+                        });
+                    }
+
+                    const response = await controller.requestLogin({
+                        address: address,
+                        addressType: type,
+                        ipAddress: '127.0.0.1',
+                        loginStudioId: studioId,
+                    });
+
+                    expect(response).toEqual({
+                        success: true,
                         userId: 'myid',
                         requestId: fromByteArray(salt),
-                        secretHash: hashLowEntropyPasswordWithSalt(
-                            codeNumber(code),
-                            fromByteArray(salt)
-                        ),
-                        requestTimeMs: 100,
+                        address: address,
+                        addressType: type,
                         expireTimeMs: 100 + LOGIN_REQUEST_LIFETIME_MS,
-                        completedTimeMs: null,
-                        attemptCount: 0,
+                    });
+
+                    expect(store.users).toEqual([
+                        {
+                            id: 'myid',
+                            email: type === 'email' ? address : null,
+                            phoneNumber: type === 'phone' ? address : null,
+                            currentLoginRequestId: fromByteArray(salt),
+                            loginStudioId: studioId,
+                        },
+                    ]);
+
+                    expect(store.loginRequests).toEqual([
+                        {
+                            userId: 'myid',
+                            requestId: fromByteArray(salt),
+                            secretHash: hashLowEntropyPasswordWithSalt(
+                                codeNumber(code),
+                                fromByteArray(salt)
+                            ),
+                            requestTimeMs: 100,
+                            expireTimeMs: 100 + LOGIN_REQUEST_LIFETIME_MS,
+                            completedTimeMs: null,
+                            attemptCount: 0,
+                            address: address,
+                            addressType: type,
+                            ipAddress: '127.0.0.1',
+                        },
+                    ]);
+                    expect(messenger.messages).toEqual([
+                        {
+                            address: address,
+                            addressType: type,
+                            code: codeNumber(code),
+                        },
+                    ]);
+
+                    expect(randomBytesMock).toHaveBeenCalledWith(
+                        LOGIN_REQUEST_ID_BYTE_LENGTH
+                    );
+                    expect(randomBytesMock).toHaveBeenCalledWith(4);
+                    expect(uuidMock).not.toHaveBeenCalled();
+                });
+
+                it('should fail if the given address type is not supported by the messenger', async () => {
+                    const mockFn = (messenger.supportsAddressType = jest.fn());
+                    mockFn.mockReturnValue(false);
+
+                    const response = await controller.requestLogin({
                         address: address,
                         addressType: type,
                         ipAddress: '127.0.0.1',
-                    },
-                ]);
-                expect(messenger.messages).toEqual([
-                    {
+                        loginStudioId: studioId,
+                    });
+
+                    expect(response).toEqual({
+                        success: false,
+                        errorCode: 'address_type_not_supported',
+                        errorMessage:
+                            type === 'email'
+                                ? 'Email addresses are not supported.'
+                                : 'Phone numbers are not supported',
+                    });
+
+                    expect(store.users).toEqual([]);
+                    expect(store.loginRequests).toEqual([]);
+                    expect(messenger.messages).toEqual([]);
+
+                    expect(randomBytesMock).not.toHaveBeenCalled();
+                    expect(randomBytesMock).not.toHaveBeenCalled();
+                    expect(uuidMock).not.toHaveBeenCalled();
+                });
+
+                it('should fail if the given address is flagged as invalid by the messenger', async () => {
+                    const mockFn = (messenger.sendCode = jest.fn());
+                    mockFn.mockResolvedValue({
+                        success: false,
+                        errorCode: 'unacceptable_address',
+                        errorMessage: 'The address is invalid.',
+                    });
+
+                    const salt = new Uint8Array([1, 2, 3]);
+                    const code = new Uint8Array([4, 5, 6, 7]);
+
+                    nowMock.mockReturnValue(100);
+                    randomBytesMock
+                        .mockReturnValueOnce(salt)
+                        .mockReturnValueOnce(code);
+                    uuidMock.mockReturnValueOnce('uuid1');
+
+                    const response = await controller.requestLogin({
                         address: address,
                         addressType: type,
-                        code: codeNumber(code),
-                    },
-                ]);
+                        ipAddress: '127.0.0.1',
+                        loginStudioId: studioId,
+                    });
 
-                expect(randomBytesMock).toHaveBeenCalledWith(
-                    LOGIN_REQUEST_ID_BYTE_LENGTH
-                );
-                expect(randomBytesMock).toHaveBeenCalledWith(4);
-                expect(uuidMock).not.toHaveBeenCalled();
-            });
+                    expect(response).toEqual({
+                        success: false,
+                        errorCode: 'unacceptable_address',
+                        errorMessage: 'The address is invalid.',
+                    });
 
-            it('should fail if the given address type is not supported by the messenger', async () => {
-                const mockFn = (messenger.supportsAddressType = jest.fn());
-                mockFn.mockReturnValue(false);
+                    expect(store.users).toEqual([]);
+                    expect(store.loginRequests).toEqual([]);
+                    expect(messenger.messages).toEqual([]);
 
-                const response = await controller.requestLogin({
-                    address: address,
-                    addressType: type,
-                    ipAddress: '127.0.0.1',
+                    expect(randomBytesMock).toHaveBeenCalled();
+                    expect(randomBytesMock).toHaveBeenCalled();
+                    expect(uuidMock).toHaveBeenCalled();
                 });
 
-                expect(response).toEqual({
-                    success: false,
-                    errorCode: 'address_type_not_supported',
-                    errorMessage:
-                        type === 'email'
-                            ? 'Email addresses are not supported.'
-                            : 'Phone numbers are not supported',
-                });
-
-                expect(store.users).toEqual([]);
-                expect(store.loginRequests).toEqual([]);
-                expect(messenger.messages).toEqual([]);
-
-                expect(randomBytesMock).not.toHaveBeenCalled();
-                expect(randomBytesMock).not.toHaveBeenCalled();
-                expect(uuidMock).not.toHaveBeenCalled();
-            });
-
-            it('should fail if the given address is flagged as invalid by the messenger', async () => {
-                const mockFn = (messenger.sendCode = jest.fn());
-                mockFn.mockResolvedValue({
-                    success: false,
-                    errorCode: 'unacceptable_address',
-                    errorMessage: 'The address is invalid.',
-                });
-
-                const salt = new Uint8Array([1, 2, 3]);
-                const code = new Uint8Array([4, 5, 6, 7]);
-
-                nowMock.mockReturnValue(100);
-                randomBytesMock
-                    .mockReturnValueOnce(salt)
-                    .mockReturnValueOnce(code);
-                uuidMock.mockReturnValueOnce('uuid1');
-
-                const response = await controller.requestLogin({
-                    address: address,
-                    addressType: type,
-                    ipAddress: '127.0.0.1',
-                });
-
-                expect(response).toEqual({
-                    success: false,
-                    errorCode: 'unacceptable_address',
-                    errorMessage: 'The address is invalid.',
-                });
-
-                expect(store.users).toEqual([]);
-                expect(store.loginRequests).toEqual([]);
-                expect(messenger.messages).toEqual([]);
-
-                expect(randomBytesMock).toHaveBeenCalled();
-                expect(randomBytesMock).toHaveBeenCalled();
-                expect(uuidMock).toHaveBeenCalled();
-            });
-
-            it('should fail if the user is banned', async () => {
-                await store.saveUser({
-                    id: 'myid',
-                    email: type === 'email' ? address : null,
-                    phoneNumber: type === 'phone' ? address : null,
-                    allSessionRevokeTimeMs: undefined,
-                    currentLoginRequestId: undefined,
-                    banTimeMs: 1,
-                    banReason: 'terms_of_service_violation',
-                });
-
-                const salt = new Uint8Array([1, 2, 3]);
-                const code = new Uint8Array([4, 5, 6, 7]);
-
-                nowMock.mockReturnValue(100);
-                randomBytesMock
-                    .mockReturnValueOnce(salt)
-                    .mockReturnValueOnce(code);
-                uuidMock.mockReturnValueOnce('uuid1');
-
-                const response = await controller.requestLogin({
-                    address: address,
-                    addressType: type,
-                    ipAddress: '127.0.0.1',
-                });
-
-                expect(response).toEqual({
-                    success: false,
-                    errorCode: 'user_is_banned',
-                    errorMessage: 'The user has been banned.',
-                    banReason: 'terms_of_service_violation',
-                });
-
-                expect(store.users).toEqual([
-                    {
+                it('should fail if the user is banned', async () => {
+                    await store.saveUser({
                         id: 'myid',
                         email: type === 'email' ? address : null,
                         phoneNumber: type === 'phone' ? address : null,
+                        allSessionRevokeTimeMs: undefined,
+                        currentLoginRequestId: undefined,
                         banTimeMs: 1,
                         banReason: 'terms_of_service_violation',
-                    },
-                ]);
+                        loginStudioId: studioId,
+                    });
 
-                expect(store.loginRequests).toEqual([]);
-                expect(messenger.messages).toEqual([]);
+                    const salt = new Uint8Array([1, 2, 3]);
+                    const code = new Uint8Array([4, 5, 6, 7]);
+
+                    nowMock.mockReturnValue(100);
+                    randomBytesMock
+                        .mockReturnValueOnce(salt)
+                        .mockReturnValueOnce(code);
+                    uuidMock.mockReturnValueOnce('uuid1');
+
+                    const response = await controller.requestLogin({
+                        address: address,
+                        addressType: type,
+                        ipAddress: '127.0.0.1',
+                        loginStudioId: studioId,
+                    });
+
+                    expect(response).toEqual({
+                        success: false,
+                        errorCode: 'user_is_banned',
+                        errorMessage: 'The user has been banned.',
+                        banReason: 'terms_of_service_violation',
+                    });
+
+                    expect(store.users).toEqual([
+                        {
+                            id: 'myid',
+                            email: type === 'email' ? address : null,
+                            phoneNumber: type === 'phone' ? address : null,
+                            banTimeMs: 1,
+                            banReason: 'terms_of_service_violation',
+                            loginStudioId: studioId,
+                        },
+                    ]);
+
+                    expect(store.loginRequests).toEqual([]);
+                    expect(messenger.messages).toEqual([]);
+                });
             });
+        });
+
+        it('should create a new user when logging into a studio', async () => {
+            const studioId = 'studio1';
+            await store.addStudio({
+                id: studioId,
+                displayName: 'My Studio',
+            });
+
+            await store.saveUser({
+                id: 'otheruser',
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
+            });
+
+            const salt = new Uint8Array([1, 2, 3]);
+            const code = new Uint8Array([4, 5, 6, 7]);
+
+            nowMock.mockReturnValue(100);
+            randomBytesMock.mockReturnValueOnce(salt).mockReturnValueOnce(code);
+            uuidMock.mockReturnValueOnce('uuid1');
+
+            const response = await controller.requestLogin({
+                address: 'test@example.com',
+                addressType: 'email',
+                ipAddress: '127.0.0.1',
+                loginStudioId: studioId,
+            });
+
+            expect(response).toEqual({
+                success: true,
+                userId: 'uuid1',
+                requestId: fromByteArray(salt),
+                address: 'test@example.com',
+                addressType: 'email',
+                expireTimeMs: 100 + LOGIN_REQUEST_LIFETIME_MS,
+            });
+
+            expect(store.users).toEqual([
+                {
+                    id: 'otheruser',
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                },
+                {
+                    id: 'uuid1',
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    currentLoginRequestId: fromByteArray(salt),
+                    allSessionRevokeTimeMs: null,
+                    loginStudioId: studioId,
+                },
+            ]);
+
+            expect(store.loginRequests).toEqual([
+                {
+                    userId: 'uuid1',
+                    requestId: fromByteArray(salt),
+                    secretHash: hashLowEntropyPasswordWithSalt(
+                        codeNumber(code),
+                        fromByteArray(salt)
+                    ),
+                    requestTimeMs: 100,
+                    expireTimeMs: 100 + LOGIN_REQUEST_LIFETIME_MS,
+                    completedTimeMs: null,
+                    attemptCount: 0,
+                    address: 'test@example.com',
+                    addressType: 'email',
+                    ipAddress: '127.0.0.1',
+                },
+            ]);
+            expect(messenger.messages).toEqual([
+                {
+                    address: 'test@example.com',
+                    addressType: 'email',
+                    code: codeNumber(code),
+                },
+            ]);
+
+            expect(randomBytesMock).toHaveBeenCalledWith(
+                LOGIN_REQUEST_ID_BYTE_LENGTH
+            );
+            expect(randomBytesMock).toHaveBeenCalledWith(4);
+        });
+
+        it('should be able to login to a comID', async () => {
+            const studioId = 'studio1';
+            await store.addStudio({
+                id: studioId,
+                displayName: 'My Studio',
+                comId: 'test',
+            });
+
+            await store.saveUser({
+                id: 'otheruser',
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
+            });
+
+            const salt = new Uint8Array([1, 2, 3]);
+            const code = new Uint8Array([4, 5, 6, 7]);
+
+            nowMock.mockReturnValue(100);
+            randomBytesMock.mockReturnValueOnce(salt).mockReturnValueOnce(code);
+            uuidMock.mockReturnValueOnce('uuid1');
+
+            const response = await controller.requestLogin({
+                address: 'test@example.com',
+                addressType: 'email',
+                ipAddress: '127.0.0.1',
+                comId: 'test',
+            });
+
+            expect(response).toEqual({
+                success: true,
+                userId: 'uuid1',
+                requestId: fromByteArray(salt),
+                address: 'test@example.com',
+                addressType: 'email',
+                expireTimeMs: 100 + LOGIN_REQUEST_LIFETIME_MS,
+            });
+
+            expect(store.users).toEqual([
+                {
+                    id: 'otheruser',
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                },
+                {
+                    id: 'uuid1',
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    currentLoginRequestId: fromByteArray(salt),
+                    allSessionRevokeTimeMs: null,
+                    loginStudioId: studioId,
+                },
+            ]);
+
+            expect(store.loginRequests).toEqual([
+                {
+                    userId: 'uuid1',
+                    requestId: fromByteArray(salt),
+                    secretHash: hashLowEntropyPasswordWithSalt(
+                        codeNumber(code),
+                        fromByteArray(salt)
+                    ),
+                    requestTimeMs: 100,
+                    expireTimeMs: 100 + LOGIN_REQUEST_LIFETIME_MS,
+                    completedTimeMs: null,
+                    attemptCount: 0,
+                    address: 'test@example.com',
+                    addressType: 'email',
+                    ipAddress: '127.0.0.1',
+                },
+            ]);
+            expect(messenger.messages).toEqual([
+                {
+                    address: 'test@example.com',
+                    addressType: 'email',
+                    code: codeNumber(code),
+                },
+            ]);
+
+            expect(randomBytesMock).toHaveBeenCalledWith(
+                LOGIN_REQUEST_ID_BYTE_LENGTH
+            );
+            expect(randomBytesMock).toHaveBeenCalledWith(4);
+        });
+
+        it('should be able to login to a custom domain', async () => {
+            const studioId = 'studio1';
+            await store.addStudio({
+                id: studioId,
+                displayName: 'My Studio',
+            });
+
+            await store.saveCustomDomain({
+                id: 'customdomain',
+                domainName: 'mycustomdomain.example.com',
+                studioId: studioId,
+                verificationKey: 'verification',
+                verified: true,
+            });
+
+            await store.saveUser({
+                id: 'otheruser',
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
+            });
+
+            const salt = new Uint8Array([1, 2, 3]);
+            const code = new Uint8Array([4, 5, 6, 7]);
+
+            nowMock.mockReturnValue(100);
+            randomBytesMock.mockReturnValueOnce(salt).mockReturnValueOnce(code);
+            uuidMock.mockReturnValueOnce('uuid1');
+
+            const response = await controller.requestLogin({
+                address: 'test@example.com',
+                addressType: 'email',
+                ipAddress: '127.0.0.1',
+                customDomain: 'mycustomdomain.example.com',
+            });
+
+            expect(response).toEqual({
+                success: true,
+                userId: 'uuid1',
+                requestId: fromByteArray(salt),
+                address: 'test@example.com',
+                addressType: 'email',
+                expireTimeMs: 100 + LOGIN_REQUEST_LIFETIME_MS,
+            });
+
+            expect(store.users).toEqual([
+                {
+                    id: 'otheruser',
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                },
+                {
+                    id: 'uuid1',
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    currentLoginRequestId: fromByteArray(salt),
+                    allSessionRevokeTimeMs: null,
+                    loginStudioId: studioId,
+                },
+            ]);
+
+            expect(store.loginRequests).toEqual([
+                {
+                    userId: 'uuid1',
+                    requestId: fromByteArray(salt),
+                    secretHash: hashLowEntropyPasswordWithSalt(
+                        codeNumber(code),
+                        fromByteArray(salt)
+                    ),
+                    requestTimeMs: 100,
+                    expireTimeMs: 100 + LOGIN_REQUEST_LIFETIME_MS,
+                    completedTimeMs: null,
+                    attemptCount: 0,
+                    address: 'test@example.com',
+                    addressType: 'email',
+                    ipAddress: '127.0.0.1',
+                },
+            ]);
+            expect(messenger.messages).toEqual([
+                {
+                    address: 'test@example.com',
+                    addressType: 'email',
+                    code: codeNumber(code),
+                },
+            ]);
+
+            expect(randomBytesMock).toHaveBeenCalledWith(
+                LOGIN_REQUEST_ID_BYTE_LENGTH
+            );
+            expect(randomBytesMock).toHaveBeenCalledWith(4);
         });
 
         it('should fail if the given email is longer than 200 characters long', async () => {
@@ -1776,7 +2074,7 @@ describe('AuthController', () => {
         });
 
         it('should return not_supported when no privo client is configured', async () => {
-            controller = new AuthController(store, messenger, store);
+            controller = new AuthController(store, messenger, store, store);
 
             const result = await controller.requestPrivoSignUp({
                 parentEmail: 'parent@example.com',
@@ -1799,6 +2097,7 @@ describe('AuthController', () => {
             controller = new AuthController(
                 store,
                 messenger,
+                store,
                 store,
                 privoClient
             );
