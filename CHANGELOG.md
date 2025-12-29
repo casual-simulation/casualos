@@ -19,6 +19,9 @@
 -   Added the ability to "login to a studio" via custom domains.
     -   Users will receive a new account when logging into CasualOS served through a custom domain that is scoped to the studio that owns the custom domain.
     -   This provides an additional privacy boundary for users, helping ensure that data isn't automatically shared with custom domains simply by logging in.
+-   Improved minification to pre-transform JSX.
+    -   In AUXes with lots of JSX, the transpilation step to transform JSX into pure JS can take a long time.
+    -   Performing this step during minification can greatly improve initial loading performance.
 
 ### :bug: Bug Fixes
 
