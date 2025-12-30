@@ -99,30 +99,53 @@ export async function transformAux(
                 value: string,
                 prefix?: string
             ) => {
-                value = transpiler.transpile(value);
-                value = `async function __aux_tag_wrapper__(){\n${value}\n}`;
-                return esbuild
-                    .transform(value, {
-                        ...transformOptions,
-                        loader,
-                    })
-                    .then((result) => {
-                        const code = result.code.slice(
-                            'async function __aux_tag_wrapper__(){'.length,
-                            result.code.length - 2
-                        );
+                try {
+                    let transpiled = false;
+                    if (
+                        loader === 'js' ||
+                        loader === 'ts' ||
+                        loader === 'tsx' ||
+                        loader === 'jsx'
+                    ) {
+                        transpiled = true;
+                        value = transpiler.transpile(value);
+                        value = `async function __aux_tag_wrapper__(){\n${value}\n}`;
+                    }
+                    return esbuild
+                        .transform(value, {
+                            ...transformOptions,
+                            loader,
+                        })
+                        .then((result) => {
+                            let code = result.code;
+                            if (transpiled) {
+                                code = result.code.slice(
+                                    'async function __aux_tag_wrapper__(){'
+                                        .length,
+                                    result.code.length - 2
+                                );
+                            }
 
-                        bot.tags[tag] = prefix ? `${prefix}${code}` : code;
-                    })
-                    .catch((err) => {
-                        const system = bot.tags['system'];
-                        console.error(
-                            `Failed to transform tag ${tag} on bot ${botId}${
-                                system ? ` (system: ${system})` : ''
-                            }:`,
-                            err
-                        );
-                    });
+                            bot.tags[tag] = prefix ? `${prefix}${code}` : code;
+                        })
+                        .catch((err) => {
+                            const system = bot.tags['system'];
+                            console.error(
+                                `Failed to transform tag ${tag} on bot ${botId}${
+                                    system ? ` (system: ${system})` : ''
+                                }:`,
+                                err
+                            );
+                        });
+                } catch (err) {
+                    const system = bot.tags['system'];
+                    console.error(
+                        `Failed to transform tag ${tag} on bot ${botId}${
+                            system ? ` (system: ${system})` : ''
+                        }:`,
+                        err
+                    );
+                }
             };
 
             if (isScript(value)) {

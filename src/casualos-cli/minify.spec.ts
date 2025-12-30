@@ -21,241 +21,288 @@ import { createBot, isScript } from '@casual-simulation/aux-common';
 import { minifyAux } from './minify';
 
 describe('minify', () => {
-    it('should minify version 1 aux scripts', async () => {
-        const aux: StoredAuxVersion1 = {
-            version: 1,
-            state: {
-                test1: createBot('test1', {
-                    onClick: `@let abc = 1 + 1;
-                    const b = create({
-                        test: abc * 2
-                    });
-                    os.toast(b.id);
-                    `,
-                }),
-            },
-        };
+    describe('js', () => {
+        it('should minify version 1 aux scripts', async () => {
+            const aux: StoredAuxVersion1 = {
+                version: 1,
+                state: {
+                    test1: createBot('test1', {
+                        onClick: `@let abc = 1 + 1;
+                        const b = create({
+                            test: abc * 2
+                        });
+                        os.toast(b.id);
+                        `,
+                    }),
+                },
+            };
 
-        const minified = (await minifyAux(
-            aux,
-            'chrome100'
-        )) as StoredAuxVersion1;
+            const minified = (await minifyAux(
+                aux,
+                'chrome100'
+            )) as StoredAuxVersion1;
 
-        expect(minified.version).toBe(1);
-        expect(Object.keys(minified.state)).toEqual(['test1']);
+            expect(minified.version).toBe(1);
+            expect(Object.keys(minified.state)).toEqual(['test1']);
 
-        const bot = minified.state['test1'];
-        expect(isScript(bot.tags.onClick)).toBe(true);
-        expect(bot.tags.onClick !== aux.state.test1.tags.onClick).toBe(true);
-        expect(
-            bot.tags.onClick.length < aux.state.test1.tags.onClick.length
-        ).toBe(true);
-        expect(bot.tags.onClick.includes('create(')).toBe(true);
-        expect(bot.tags.onClick.includes('os.toast')).toBe(true);
+            const bot = minified.state['test1'];
+            expect(isScript(bot.tags.onClick)).toBe(true);
+            expect(bot.tags.onClick !== aux.state.test1.tags.onClick).toBe(
+                true
+            );
+            expect(
+                bot.tags.onClick.length < aux.state.test1.tags.onClick.length
+            ).toBe(true);
+            expect(bot.tags.onClick.includes('create(')).toBe(true);
+            expect(bot.tags.onClick.includes('os.toast')).toBe(true);
 
-        // Should not include an extra newline at the end
-        expect(bot.tags.onClick.endsWith('\n')).toBe(false);
+            // Should not include an extra newline at the end
+            expect(bot.tags.onClick.endsWith('\n')).toBe(false);
+        });
+
+        it('should support return statements', async () => {
+            const aux: StoredAuxVersion1 = {
+                version: 1,
+                state: {
+                    test1: createBot('test1', {
+                        onClick: `@let abc = 1 + 1;
+                        const b = create({
+                            test: abc * 2
+                        });
+                        os.toast(b.id);
+                        return b;
+                        `,
+                    }),
+                },
+            };
+
+            const minified = (await minifyAux(
+                aux,
+                'chrome100'
+            )) as StoredAuxVersion1;
+
+            expect(minified.version).toBe(1);
+            expect(Object.keys(minified.state)).toEqual(['test1']);
+
+            const bot = minified.state['test1'];
+            expect(isScript(bot.tags.onClick)).toBe(true);
+
+            expect(bot.tags.onClick !== aux.state.test1.tags.onClick).toBe(
+                true
+            );
+            expect(
+                bot.tags.onClick.length < aux.state.test1.tags.onClick.length
+            ).toBe(true);
+
+            expect(bot.tags.onClick.includes('create(')).toBe(true);
+            expect(bot.tags.onClick.includes('os.toast')).toBe(true);
+            expect(bot.tags.onClick.includes('return')).toBe(true);
+
+            // Should not include an extra newline at the end
+            expect(bot.tags.onClick.endsWith('\n')).toBe(false);
+        });
+
+        it('should support await statements', async () => {
+            const aux: StoredAuxVersion1 = {
+                version: 1,
+                state: {
+                    test1: createBot('test1', {
+                        onClick: `@let abc = 1 + 1;
+                        const b = create({
+                            test: abc * 2
+                        });
+                        await os.toast(b.id);
+                        `,
+                    }),
+                },
+            };
+
+            const minified = (await minifyAux(
+                aux,
+                'chrome100'
+            )) as StoredAuxVersion1;
+
+            expect(minified.version).toBe(1);
+            expect(Object.keys(minified.state)).toEqual(['test1']);
+
+            const bot = minified.state['test1'];
+            expect(isScript(bot.tags.onClick)).toBe(true);
+
+            expect(bot.tags.onClick !== aux.state.test1.tags.onClick).toBe(
+                true
+            );
+            expect(
+                bot.tags.onClick.length < aux.state.test1.tags.onClick.length
+            ).toBe(true);
+
+            expect(bot.tags.onClick.includes('create(')).toBe(true);
+            expect(bot.tags.onClick.includes('await os.toast')).toBe(true);
+
+            // Should not include an extra newline at the end
+            expect(bot.tags.onClick.endsWith('\n')).toBe(false);
+        });
+
+        it('should support await and return statements', async () => {
+            const aux: StoredAuxVersion1 = {
+                version: 1,
+                state: {
+                    test1: createBot('test1', {
+                        onClick: `@let abc = 1 + 1;
+                        const b = create({
+                            test: abc * 2
+                        });
+                        await os.toast(b.id);
+                        return b;
+                        `,
+                    }),
+                },
+            };
+
+            const minified = (await minifyAux(
+                aux,
+                'chrome100'
+            )) as StoredAuxVersion1;
+
+            expect(minified.version).toBe(1);
+            expect(Object.keys(minified.state)).toEqual(['test1']);
+
+            const bot = minified.state['test1'];
+            expect(isScript(bot.tags.onClick)).toBe(true);
+
+            expect(bot.tags.onClick !== aux.state.test1.tags.onClick).toBe(
+                true
+            );
+            expect(
+                bot.tags.onClick.length < aux.state.test1.tags.onClick.length
+            ).toBe(true);
+
+            expect(bot.tags.onClick.includes('create(')).toBe(true);
+            expect(bot.tags.onClick.includes('await os.toast')).toBe(true);
+            expect(bot.tags.onClick.includes('return')).toBe(true);
+
+            // Should not include an extra newline at the end
+            expect(bot.tags.onClick.endsWith('\n')).toBe(false);
+        });
+
+        it('should support import statements', async () => {
+            const aux: StoredAuxVersion1 = {
+                version: 1,
+                state: {
+                    test1: createBot('test1', {
+                        onClick: `@
+                        import func from "some-module";
+                        let abc = 1 + 1;
+                        const b = create({
+                            test: func(abc * 2)
+                        });
+                        await os.toast(b.id);
+                        `,
+                    }),
+                },
+            };
+
+            const minified = (await minifyAux(
+                aux,
+                'chrome100'
+            )) as StoredAuxVersion1;
+
+            expect(minified.version).toBe(1);
+            expect(Object.keys(minified.state)).toEqual(['test1']);
+
+            const bot = minified.state['test1'];
+            expect(isScript(bot.tags.onClick)).toBe(true);
+
+            expect(bot.tags.onClick !== aux.state.test1.tags.onClick).toBe(
+                true
+            );
+            expect(
+                bot.tags.onClick.length < aux.state.test1.tags.onClick.length
+            ).toBe(true);
+
+            expect(bot.tags.onClick.includes('__importModule(')).toBe(true);
+            expect(bot.tags.onClick.includes('create(')).toBe(true);
+            expect(bot.tags.onClick.includes('await os.toast')).toBe(true);
+
+            // Should not include an extra newline at the end
+            expect(bot.tags.onClick.endsWith('\n')).toBe(false);
+        });
+
+        it('should support import and return statements', async () => {
+            const aux: StoredAuxVersion1 = {
+                version: 1,
+                state: {
+                    test1: createBot('test1', {
+                        onClick: `@
+                        import func from "some-module";
+                        let abc = 1 + 1;
+                        const b = create({
+                            test: func(abc * 2)
+                        });
+                        await os.toast(b.id);
+                        return b;
+                        `,
+                    }),
+                },
+            };
+
+            const minified = (await minifyAux(
+                aux,
+                'chrome100'
+            )) as StoredAuxVersion1;
+
+            expect(minified.version).toBe(1);
+            expect(Object.keys(minified.state)).toEqual(['test1']);
+
+            const bot = minified.state['test1'];
+            expect(isScript(bot.tags.onClick)).toBe(true);
+
+            expect(bot.tags.onClick !== aux.state.test1.tags.onClick).toBe(
+                true
+            );
+            expect(
+                bot.tags.onClick.length < aux.state.test1.tags.onClick.length
+            ).toBe(true);
+
+            expect(bot.tags.onClick.includes('__importModule(')).toBe(true);
+            expect(bot.tags.onClick.includes('create(')).toBe(true);
+            expect(bot.tags.onClick.includes('await os.toast')).toBe(true);
+            expect(bot.tags.onClick.includes('return')).toBe(true);
+
+            // Should not include an extra newline at the end
+            expect(bot.tags.onClick.endsWith('\n')).toBe(false);
+        });
     });
 
-    it('should support return statements', async () => {
-        const aux: StoredAuxVersion1 = {
-            version: 1,
-            state: {
-                test1: createBot('test1', {
-                    onClick: `@let abc = 1 + 1;
-                    const b = create({
-                        test: abc * 2
-                    });
-                    os.toast(b.id);
-                    return b;
-                    `,
-                }),
-            },
-        };
+    describe('css', () => {
+        it('should minify css', async () => {
+            const aux: StoredAuxVersion1 = {
+                version: 1,
+                state: {
+                    test1: createBot('test1', {
+                        'abc.css': `.my-class {
+                            color: red;
+                            margin: 10px;   
+                        }`,
+                    }),
+                },
+            };
 
-        const minified = (await minifyAux(
-            aux,
-            'chrome100'
-        )) as StoredAuxVersion1;
+            const minified = (await minifyAux(
+                aux,
+                'chrome100'
+            )) as StoredAuxVersion1;
 
-        expect(minified.version).toBe(1);
-        expect(Object.keys(minified.state)).toEqual(['test1']);
+            expect(minified.version).toBe(1);
+            expect(Object.keys(minified.state)).toEqual(['test1']);
 
-        const bot = minified.state['test1'];
-        expect(isScript(bot.tags.onClick)).toBe(true);
-
-        expect(bot.tags.onClick !== aux.state.test1.tags.onClick).toBe(true);
-        expect(
-            bot.tags.onClick.length < aux.state.test1.tags.onClick.length
-        ).toBe(true);
-
-        expect(bot.tags.onClick.includes('create(')).toBe(true);
-        expect(bot.tags.onClick.includes('os.toast')).toBe(true);
-        expect(bot.tags.onClick.includes('return')).toBe(true);
-
-        // Should not include an extra newline at the end
-        expect(bot.tags.onClick.endsWith('\n')).toBe(false);
-    });
-
-    it('should support await statements', async () => {
-        const aux: StoredAuxVersion1 = {
-            version: 1,
-            state: {
-                test1: createBot('test1', {
-                    onClick: `@let abc = 1 + 1;
-                    const b = create({
-                        test: abc * 2
-                    });
-                    await os.toast(b.id);
-                    `,
-                }),
-            },
-        };
-
-        const minified = (await minifyAux(
-            aux,
-            'chrome100'
-        )) as StoredAuxVersion1;
-
-        expect(minified.version).toBe(1);
-        expect(Object.keys(minified.state)).toEqual(['test1']);
-
-        const bot = minified.state['test1'];
-        expect(isScript(bot.tags.onClick)).toBe(true);
-
-        expect(bot.tags.onClick !== aux.state.test1.tags.onClick).toBe(true);
-        expect(
-            bot.tags.onClick.length < aux.state.test1.tags.onClick.length
-        ).toBe(true);
-
-        expect(bot.tags.onClick.includes('create(')).toBe(true);
-        expect(bot.tags.onClick.includes('await os.toast')).toBe(true);
-
-        // Should not include an extra newline at the end
-        expect(bot.tags.onClick.endsWith('\n')).toBe(false);
-    });
-
-    it('should support await and return statements', async () => {
-        const aux: StoredAuxVersion1 = {
-            version: 1,
-            state: {
-                test1: createBot('test1', {
-                    onClick: `@let abc = 1 + 1;
-                    const b = create({
-                        test: abc * 2
-                    });
-                    await os.toast(b.id);
-                    return b;
-                    `,
-                }),
-            },
-        };
-
-        const minified = (await minifyAux(
-            aux,
-            'chrome100'
-        )) as StoredAuxVersion1;
-
-        expect(minified.version).toBe(1);
-        expect(Object.keys(minified.state)).toEqual(['test1']);
-
-        const bot = minified.state['test1'];
-        expect(isScript(bot.tags.onClick)).toBe(true);
-
-        expect(bot.tags.onClick !== aux.state.test1.tags.onClick).toBe(true);
-        expect(
-            bot.tags.onClick.length < aux.state.test1.tags.onClick.length
-        ).toBe(true);
-
-        expect(bot.tags.onClick.includes('create(')).toBe(true);
-        expect(bot.tags.onClick.includes('await os.toast')).toBe(true);
-        expect(bot.tags.onClick.includes('return')).toBe(true);
-
-        // Should not include an extra newline at the end
-        expect(bot.tags.onClick.endsWith('\n')).toBe(false);
-    });
-
-    it('should support import statements', async () => {
-        const aux: StoredAuxVersion1 = {
-            version: 1,
-            state: {
-                test1: createBot('test1', {
-                    onClick: `@
-                    import func from "some-module";
-                    let abc = 1 + 1;
-                    const b = create({
-                        test: func(abc * 2)
-                    });
-                    await os.toast(b.id);
-                    `,
-                }),
-            },
-        };
-
-        const minified = (await minifyAux(
-            aux,
-            'chrome100'
-        )) as StoredAuxVersion1;
-
-        expect(minified.version).toBe(1);
-        expect(Object.keys(minified.state)).toEqual(['test1']);
-
-        const bot = minified.state['test1'];
-        expect(isScript(bot.tags.onClick)).toBe(true);
-
-        expect(bot.tags.onClick !== aux.state.test1.tags.onClick).toBe(true);
-        expect(
-            bot.tags.onClick.length < aux.state.test1.tags.onClick.length
-        ).toBe(true);
-
-        expect(bot.tags.onClick.includes('__importModule(')).toBe(true);
-        expect(bot.tags.onClick.includes('create(')).toBe(true);
-        expect(bot.tags.onClick.includes('await os.toast')).toBe(true);
-
-        // Should not include an extra newline at the end
-        expect(bot.tags.onClick.endsWith('\n')).toBe(false);
-    });
-
-    it('should support import and return statements', async () => {
-        const aux: StoredAuxVersion1 = {
-            version: 1,
-            state: {
-                test1: createBot('test1', {
-                    onClick: `@
-                    import func from "some-module";
-                    let abc = 1 + 1;
-                    const b = create({
-                        test: func(abc * 2)
-                    });
-                    await os.toast(b.id);
-                    return b;
-                    `,
-                }),
-            },
-        };
-
-        const minified = (await minifyAux(
-            aux,
-            'chrome100'
-        )) as StoredAuxVersion1;
-
-        expect(minified.version).toBe(1);
-        expect(Object.keys(minified.state)).toEqual(['test1']);
-
-        const bot = minified.state['test1'];
-        expect(isScript(bot.tags.onClick)).toBe(true);
-
-        expect(bot.tags.onClick !== aux.state.test1.tags.onClick).toBe(true);
-        expect(
-            bot.tags.onClick.length < aux.state.test1.tags.onClick.length
-        ).toBe(true);
-
-        expect(bot.tags.onClick.includes('__importModule(')).toBe(true);
-        expect(bot.tags.onClick.includes('create(')).toBe(true);
-        expect(bot.tags.onClick.includes('await os.toast')).toBe(true);
-        expect(bot.tags.onClick.includes('return')).toBe(true);
-
-        // Should not include an extra newline at the end
-        expect(bot.tags.onClick.endsWith('\n')).toBe(false);
+            const bot = minified.state['test1'];
+            expect(
+                bot.tags['abc.css'] !== aux.state.test1.tags['abc.css']
+            ).toBe(true);
+            expect(
+                bot.tags['abc.css'].length <
+                    aux.state.test1.tags['abc.css'].length
+            ).toBe(true);
+        });
     });
 });

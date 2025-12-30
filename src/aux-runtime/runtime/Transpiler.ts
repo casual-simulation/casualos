@@ -593,6 +593,8 @@ export class Transpiler {
                     this._removeOptionalFromIdentifier(n, doc, text);
                 } else if (n.type.startsWith('TS')) {
                     this._removeNodeOrReplaceWithUndefined(n, doc, text);
+                } else if (n.type === 'CallExpression') {
+                    this._replaceCallExpression(n, parent, doc, text, metadata);
                 }
             }),
 
@@ -608,6 +610,25 @@ export class Transpiler {
                 ...TypeScriptVisistorKeys,
             },
         });
+    }
+
+    private _replaceCallExpression(
+        node: any,
+        parent: any,
+        doc: Doc,
+        text: Text,
+        metadata: TranspilerResult['metadata']
+    ): void {
+        const callee = node.callee;
+
+        if (callee.type === 'Identifier') {
+            if (
+                callee.name === this._importFactory ||
+                callee.name === this._exportFactory
+            ) {
+                metadata.isModule = true;
+            }
+        }
     }
 
     private _replaceImportDeclaration(

@@ -976,6 +976,14 @@ describe('Transpiler', () => {
                 expect(result.metadata.isModule).toBe(true);
             });
 
+            it('should mark the script as a module if the script calls the import factory', () => {
+                const result = transpiler.transpileWithMetadata(
+                    `importModule("test", importMeta);`
+                );
+
+                expect(result.metadata.isModule).toBe(true);
+            });
+
             it('should be able to compile default import statements', () => {
                 const result = transpiler.transpile(
                     `import testModule from "test";`
@@ -1134,6 +1142,13 @@ describe('Transpiler', () => {
             it('should mark the script as a module', () => {
                 const result = transpiler.transpileWithMetadata(
                     `const value = "test"; export { value };`
+                );
+                expect(result.metadata.isModule).toBe(true);
+            });
+
+            it('should mark scripts that call the export factory as modules', () => {
+                const result = transpiler.transpileWithMetadata(
+                    `const value = "test"; exports({ value, });`
                 );
                 expect(result.metadata.isModule).toBe(true);
             });
