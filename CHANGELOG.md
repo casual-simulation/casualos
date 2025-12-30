@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.10.1
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where CasualOS would improperly handle scripts with an export block immediately after a function export.
+
 ## V3.10.0
 
 #### Date: 12/29/2025
