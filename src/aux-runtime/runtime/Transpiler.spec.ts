@@ -69,6 +69,19 @@ describe('Transpiler', () => {
                     );
                 });
 
+                it('should not add a call to __energyCheck() if configured not to', () => {
+                    const transpilerNoEnergyCheck = new Transpiler({
+                        insertEnergyChecks: false,
+                    });
+
+                    const result = transpilerNoEnergyCheck.transpile(
+                        'while(true) { console.log("Hello"); }'
+                    );
+                    expect(result).toBe(
+                        'while(true) { console.log("Hello"); }'
+                    );
+                });
+
                 it('should add a call to __energyCheck() in inline while loops', () => {
                     const result = transpiler.transpile(
                         'while(true) console.log("Hello");'

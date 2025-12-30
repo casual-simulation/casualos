@@ -29,8 +29,16 @@ import {
     parseScript,
     tryParseJson,
 } from '@casual-simulation/aux-common';
+import {
+    JSX_FACTORY,
+    JSX_FRAGMENT_FACTORY,
+    IMPORT_FACTORY,
+    IMPORT_META_FACTORY,
+    EXPORT_FACTORY,
+} from '@casual-simulation/aux-runtime/runtime/AuxCompiler';
 import * as esbuild from 'esbuild';
 import { cloneDeep } from 'es-toolkit';
+import { Transpiler } from '@casual-simulation/aux-runtime';
 
 /**
  * Minifies the given aux object.
@@ -51,8 +59,8 @@ export async function minifyAux(
         minify: true,
         target,
         jsx: 'transform',
-        jsxFactory: 'html.h',
-        jsxFragment: 'html.f',
+        jsxFactory: JSX_FACTORY,
+        jsxFragment: JSX_FRAGMENT_FACTORY,
         platform: 'browser',
     });
 }
@@ -69,6 +77,15 @@ export async function transformAux(
 ): Promise<StoredAux> {
     const state = cloneDeep(getBotsStateFromStoredAux(aux));
 
+    const transpiler = new Transpiler({
+        jsxFactory: JSX_FACTORY,
+        jsxFragment: JSX_FRAGMENT_FACTORY,
+        importFactory: IMPORT_FACTORY,
+        importMetaFactory: IMPORT_META_FACTORY,
+        exportFactory: EXPORT_FACTORY,
+        insertEnergyChecks: false,
+    });
+
     let promises: Promise<any>[] = [];
 
     for (let botId in state) {
@@ -81,16 +98,21 @@ export async function transformAux(
                 loader: esbuild.TransformOptions['loader'],
                 value: string,
                 prefix?: string
-            ) =>
-                esbuild
+            ) => {
+                value = transpiler.transpile(value);
+                value = `async function __aux_tag_wrapper__(){\n${value}\n}`;
+                return esbuild
                     .transform(value, {
                         ...transformOptions,
                         loader,
                     })
                     .then((result) => {
-                        bot.tags[tag] = prefix
-                            ? `${prefix}${result.code}`
-                            : result.code;
+                        const code = result.code.slice(
+                            'async function __aux_tag_wrapper__(){'.length,
+                            result.code.length - 2
+                        );
+
+                        bot.tags[tag] = prefix ? `${prefix}${code}` : code;
                     })
                     .catch((err) => {
                         const system = bot.tags['system'];
@@ -101,6 +123,7 @@ export async function transformAux(
                             err
                         );
                     });
+            };
 
             if (isScript(value)) {
                 promises.push(transformTag('tsx', parseScript(value), '@'));

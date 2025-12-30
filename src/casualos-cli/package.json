@@ -35,8 +35,9 @@
         "access": "public"
     },
     "dependencies": {
-        "@casual-simulation/aux-common": "^3.8.1",
-        "@casual-simulation/aux-records": "^3.8.1",
+        "@casual-simulation/aux-common": "^3.10.0",
+        "@casual-simulation/aux-records": "^3.10.0",
+        "@casual-simulation/aux-runtime": "^3.10.0",
         "@octokit/app": "^15.1.0",
         "@octokit/auth-oauth-device": "^7.1.1",
         "@octokit/core": "^6.1.2",
