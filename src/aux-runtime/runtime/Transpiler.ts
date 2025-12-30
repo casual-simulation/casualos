@@ -930,7 +930,7 @@ export class Transpiler {
             text,
             version,
             node.start,
-            -1,
+            1,
             true
         );
 

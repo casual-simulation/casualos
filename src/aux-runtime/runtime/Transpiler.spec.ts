@@ -1311,6 +1311,42 @@ describe('Transpiler', () => {
                     `var abc=123\nawait exports({ abc, });\nasync function A(){}`
                 );
             });
+
+            it('should properly transpile function exports with an export statement immediately afterwards', () => {
+                const code = `const i = '';export function abc(e){}export{i};`;
+                const result = transpiler.transpile(code);
+
+                expect(result).toBe(
+                    `const i = '';function abc(e){}\nawait exports({ abc, });await exports({ i, });`
+                );
+            });
+
+            it('should properly transpile variable exports with an export statement immediately afterwards', () => {
+                const code = `const i = '';export let abc='def';export{i};`;
+                const result = transpiler.transpile(code);
+
+                expect(result).toBe(
+                    `const i = '';let abc='def';\nawait exports({ abc, });await exports({ i, });`
+                );
+            });
+
+            it('should properly transpile function exports with typescript definitions', () => {
+                const code = `const i: string = '';export function abc(e: string): string{}export{i};`;
+                const result = transpiler.transpile(code);
+
+                expect(result).toBe(
+                    `const i = '';function abc(e){}\nawait exports({ abc, });await exports({ i, });`
+                );
+            });
+
+            it('should properly transpile exports with exports immediately afterwards', () => {
+                const code = `const i = '';const b = 123;export{i};export{b};`;
+                const result = transpiler.transpile(code);
+
+                expect(result).toBe(
+                    `const i = '';const b = 123;await exports({ i, });await exports({ b, });`
+                );
+            });
         });
 
         it('should support return statements outside of functions', () => {
