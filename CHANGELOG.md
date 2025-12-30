@@ -4,6 +4,10 @@
 
 #### Date: TBD
 
+### :rocket: Features
+
+-   Improved minification to work for scripts which have import and return statements.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where CasualOS would improperly handle scripts with an export block immediately after a function export.
