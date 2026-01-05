@@ -17,8 +17,8 @@ datasource db {
 model User {
     id String @id
     name String?
-    email String? @unique
-    phoneNumber String? @unique
+    email String?
+    phoneNumber String?
     avatarPortraitUrl String?
     avatarUrl String?
     allSessionRevokeTime Decimal?
@@ -47,6 +47,13 @@ model User {
     allowPublicInsts Boolean?
 
     role String?
+
+    // The Studio that this user logs into.
+    // Used to differentiate between users who belong to the primary instance
+    // and users who belong to a comId.
+    // Note that this does not grant any permissions to the studio. It only separates users via comId.
+    loginStudioId String?
+    loginStudio Studio? @relation(fields: [loginStudioId], references: [id], onDelete: Cascade)
 
     stripeAccountId String? @unique
     stripeAccountRequirementsStatus String?
@@ -104,6 +111,9 @@ model User {
 
     createdAt Decimal
     updatedAt Decimal
+
+    @@unique([email, loginStudioId])
+    @@unique([phoneNumber, loginStudioId])
 }
 
 model UserAuthenticator {
@@ -310,6 +320,7 @@ model Studio {
     customDomains CustomDomain[]
 
     accounts FinancialAccount[]
+    users User[]
 
     childStudios Studio[] @relation("OwnerStudio")
     comIdRequests StudioComIdRequest[]

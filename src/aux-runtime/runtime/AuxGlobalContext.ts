@@ -401,6 +401,13 @@ export interface AuxGlobalContext {
     setLoadTime(key: string, ms: number): void;
 
     /**
+     * Adds the given time to the load times object.
+     * @param key The key that indicates what the time represents.
+     * @param ms The number of miliseconds.
+     */
+    addLoadTime(key: string, ms: number): void;
+
+    /**
      * Starts the animation loop for the context.
      */
     startAnimationLoop(): SubscriptionLike;
@@ -1343,6 +1350,10 @@ export class MemoryGlobalContext implements AuxGlobalContext {
 
     setLoadTime(key: string, ms: number): void {
         this._loadTimes[key] = ms;
+    }
+
+    addLoadTime(key: string, ms: number): void {
+        this._loadTimes[key] = (this._loadTimes[key] || 0) + ms;
     }
 
     startAnimationLoop(): SubscriptionLike {

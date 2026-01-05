@@ -119,6 +119,9 @@ export default class AuthStudio extends Vue {
     originalAutomaticBiosOption: BiosOption | 0 = null;
     automaticBiosOption: BiosOption = null;
 
+    originalAutomaticBiosOptionInst: string = null;
+    automaticBiosOptionInst: string = null;
+
     originalJitsiAppName: string = null;
     jitsiAppName: string = null;
 
@@ -219,6 +222,14 @@ export default class AuthStudio extends Vue {
     get automaticBiosOptionFieldClass() {
         return this.errors.some(
             (e) => e.for === 'playerConfig.automaticBiosOption'
+        )
+            ? 'md-invalid'
+            : '';
+    }
+
+    get automaticBiosOptionInstFieldClass() {
+        return this.errors.some(
+            (e) => e.for === 'playerConfig.automaticBiosOptionInst'
         )
             ? 'md-invalid'
             : '';
@@ -541,6 +552,18 @@ export default class AuthStudio extends Vue {
                 hasUpdate = true;
             }
 
+            if (
+                this.automaticBiosOptionInst !==
+                this.originalAutomaticBiosOptionInst
+            ) {
+                update.playerConfig = {
+                    ...(update.playerConfig || {}),
+                    automaticBiosOptionInst:
+                        this.automaticBiosOptionInst || null,
+                };
+                hasUpdate = true;
+            }
+
             if (this.jitsiAppName !== this.originalJitsiAppName) {
                 update.playerConfig = {
                     ...(update.playerConfig || {}),
@@ -608,6 +631,9 @@ export default class AuthStudio extends Vue {
                     this.defaultBiosOption || null;
                 this.originalAutomaticBiosOption = this.automaticBiosOption =
                     this.automaticBiosOption || null;
+                this.originalAutomaticBiosOptionInst =
+                    this.automaticBiosOptionInst =
+                        this.automaticBiosOptionInst || null;
                 this.originalJitsiAppName = this.jitsiAppName;
                 this.originalWhat3WordsApiKey = this.what3WordsApiKey;
                 this.originalLoomPublicAppId = this.loomPublicAppId;
@@ -685,6 +711,10 @@ export default class AuthStudio extends Vue {
                     result.studio.playerConfig?.defaultBiosOption ?? null;
                 this.originalAutomaticBiosOption = this.automaticBiosOption =
                     result.studio.playerConfig?.automaticBiosOption ?? null;
+                this.originalAutomaticBiosOptionInst =
+                    this.automaticBiosOptionInst =
+                        result.studio.playerConfig?.automaticBiosOptionInst ??
+                        null;
                 this.originalJitsiAppName = this.jitsiAppName =
                     result.studio.playerConfig?.jitsiAppName ?? null;
                 this.originalWhat3WordsApiKey = this.what3WordsApiKey =

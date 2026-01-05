@@ -247,8 +247,10 @@ export class Server {
 
         if (isProduction) {
             // Only allow non-html assets from being served by the static middleware
+            // Allow cleanup-indexeddb.html as static file
             const isAsset = (path: string) =>
-                /^[\w/\\\-_+:%.]+\.(?!html)\w+$/gi.test(path);
+                /^[\w/\\\-_+:%.]+\.(?!html)\w+$/gi.test(path) ||
+                path === '/cleanup-indexeddb.html';
             frontend.use(
                 conditional(
                     (req) => isAsset(req.path),
@@ -358,7 +360,8 @@ export class Server {
                     /@vite/g.test(request.path) ||
                     /@fs/g.test(request.path) ||
                     /@id/g.test(request.path) ||
-                    /^[\w/\\\-_+:%.]+\.(?!html)\w+$/gi.test(request.path);
+                    /^[\w/\\\-_+:%.]+\.(?!html)\w+$/gi.test(request.path) ||
+                    request.path === '/cleanup-indexeddb.html';
 
                 if (result) {
                     console.log(`[Proxy] Proxying request for ${request.path}`);

@@ -446,6 +446,19 @@ export interface RecordActionOptions {
 }
 
 /**
+ * Defines an interface that represents the options for installing a package.
+ *
+ * @dochash types/records/extra
+ * @docname InstallPackageOptions
+ */
+export interface InstallPackageOptions extends RecordActionOptions {
+    /**
+     * Whether to downgrade the package if the installed version is newer than the requested version.
+     */
+    downgrade?: boolean;
+}
+
+/**
  * Defines an interface that represents the base for actions that deal with records.
  */
 export interface RecordsAction extends AsyncAction {
@@ -912,7 +925,7 @@ export interface InstallPackageAction extends RecordsAction {
     /**
      * The options for the request.
      */
-    options: RecordActionOptions;
+    options: InstallPackageOptions;
 }
 
 export type InstallPackageResult =

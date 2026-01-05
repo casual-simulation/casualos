@@ -252,6 +252,12 @@ export interface TranspilerOptions {
      * The name of the function that should be called for ES Module exports.
      */
     exportFactory?: string;
+
+    /**
+     * Whether to insert energy checks into loops.
+     * Defaults to true.
+     */
+    insertEnergyChecks?: boolean;
 }
 
 /**
@@ -268,6 +274,7 @@ export class Transpiler {
     private _importMetaFactory: string;
     private _exportFactory: string;
     private _forceSync: boolean;
+    private _insertEnergyChecks: boolean;
     private _cache: LRUCache<string, TranspilerResult>;
 
     get forceSync() {
@@ -279,6 +286,7 @@ export class Transpiler {
     }
 
     constructor(options?: TranspilerOptions) {
+        this._insertEnergyChecks = options?.insertEnergyChecks ?? true;
         this._cache = new LRUCache<string, TranspilerResult>({
             max: 1000,
         });
@@ -585,6 +593,8 @@ export class Transpiler {
                     this._removeOptionalFromIdentifier(n, doc, text);
                 } else if (n.type.startsWith('TS')) {
                     this._removeNodeOrReplaceWithUndefined(n, doc, text);
+                } else if (n.type === 'CallExpression') {
+                    this._replaceCallExpression(n, parent, doc, text, metadata);
                 }
             }),
 
@@ -600,6 +610,25 @@ export class Transpiler {
                 ...TypeScriptVisistorKeys,
             },
         });
+    }
+
+    private _replaceCallExpression(
+        node: any,
+        parent: any,
+        doc: Doc,
+        text: Text,
+        metadata: TranspilerResult['metadata']
+    ): void {
+        const callee = node.callee;
+
+        if (callee.type === 'Identifier') {
+            if (
+                callee.name === this._importFactory ||
+                callee.name === this._exportFactory
+            ) {
+                metadata.isModule = true;
+            }
+        }
     }
 
     private _replaceImportDeclaration(
@@ -930,7 +959,7 @@ export class Transpiler {
             text,
             version,
             node.start,
-            -1,
+            1,
             true
         );
 
@@ -2053,6 +2082,10 @@ export class Transpiler {
         text: Text,
         statement: any
     ) {
+        if (!this._insertEnergyChecks) {
+            return;
+        }
+
         doc.clientID += 1;
         const version = { '0': getClock(doc, 0) };
         let startIndex: number;

@@ -69,6 +69,19 @@ describe('Transpiler', () => {
                     );
                 });
 
+                it('should not add a call to __energyCheck() if configured not to', () => {
+                    const transpilerNoEnergyCheck = new Transpiler({
+                        insertEnergyChecks: false,
+                    });
+
+                    const result = transpilerNoEnergyCheck.transpile(
+                        'while(true) { console.log("Hello"); }'
+                    );
+                    expect(result).toBe(
+                        'while(true) { console.log("Hello"); }'
+                    );
+                });
+
                 it('should add a call to __energyCheck() in inline while loops', () => {
                     const result = transpiler.transpile(
                         'while(true) console.log("Hello");'
@@ -963,6 +976,14 @@ describe('Transpiler', () => {
                 expect(result.metadata.isModule).toBe(true);
             });
 
+            it('should mark the script as a module if the script calls the import factory', () => {
+                const result = transpiler.transpileWithMetadata(
+                    `importModule("test", importMeta);`
+                );
+
+                expect(result.metadata.isModule).toBe(true);
+            });
+
             it('should be able to compile default import statements', () => {
                 const result = transpiler.transpile(
                     `import testModule from "test";`
@@ -1121,6 +1142,13 @@ describe('Transpiler', () => {
             it('should mark the script as a module', () => {
                 const result = transpiler.transpileWithMetadata(
                     `const value = "test"; export { value };`
+                );
+                expect(result.metadata.isModule).toBe(true);
+            });
+
+            it('should mark scripts that call the export factory as modules', () => {
+                const result = transpiler.transpileWithMetadata(
+                    `const value = "test"; exports({ value, });`
                 );
                 expect(result.metadata.isModule).toBe(true);
             });
@@ -1309,6 +1337,42 @@ describe('Transpiler', () => {
 
                 expect(result).toBe(
                     `var abc=123\nawait exports({ abc, });\nasync function A(){}`
+                );
+            });
+
+            it('should properly transpile function exports with an export statement immediately afterwards', () => {
+                const code = `const i = '';export function abc(e){}export{i};`;
+                const result = transpiler.transpile(code);
+
+                expect(result).toBe(
+                    `const i = '';function abc(e){}\nawait exports({ abc, });await exports({ i, });`
+                );
+            });
+
+            it('should properly transpile variable exports with an export statement immediately afterwards', () => {
+                const code = `const i = '';export let abc='def';export{i};`;
+                const result = transpiler.transpile(code);
+
+                expect(result).toBe(
+                    `const i = '';let abc='def';\nawait exports({ abc, });await exports({ i, });`
+                );
+            });
+
+            it('should properly transpile function exports with typescript definitions', () => {
+                const code = `const i: string = '';export function abc(e: string): string{}export{i};`;
+                const result = transpiler.transpile(code);
+
+                expect(result).toBe(
+                    `const i = '';function abc(e){}\nawait exports({ abc, });await exports({ i, });`
+                );
+            });
+
+            it('should properly transpile exports with exports immediately afterwards', () => {
+                const code = `const i = '';const b = 123;export{i};export{b};`;
+                const result = transpiler.transpile(code);
+
+                expect(result).toBe(
+                    `const i = '';const b = 123;await exports({ i, });await exports({ b, });`
                 );
             });
         });

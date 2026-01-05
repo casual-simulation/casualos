@@ -391,19 +391,22 @@ export class PrismaAuthStore implements AuthStore {
     @traced(TRACE_NAME)
     async findUserByAddress(
         address: string,
-        addressType: AddressType
+        addressType: AddressType,
+        loginStudioId: string | null = null
     ): Promise<AuthUser | null> {
         if (!address) {
             return null;
         }
-        let user = await this._client.user.findUnique({
+        let user = await this._client.user.findFirst({
             where:
                 addressType === 'email'
                     ? {
                           email: address,
+                          loginStudioId: loginStudioId ?? null,
                       }
                     : {
                           phoneNumber: address,
+                          loginStudioId: loginStudioId ?? null,
                       },
         });
 
@@ -415,6 +418,7 @@ export class PrismaAuthStore implements AuthStore {
                         equals: address,
                         mode: 'insensitive',
                     },
+                    loginStudioId: loginStudioId ?? null,
                 },
             });
         }
@@ -456,6 +460,7 @@ export class PrismaAuthStore implements AuthStore {
                 user.stripeAccountRequirementsStatus as string,
             stripeAccountStatus: user.stripeAccountStatus as string,
             requestedRate: user.requestedRate,
+            loginStudioId: user.loginStudioId as string,
         };
 
         await this._client.user.upsert({
@@ -512,6 +517,14 @@ export class PrismaAuthStore implements AuthStore {
                 createData.currentLoginRequest = {
                     connect: {
                         requestId: user.currentLoginRequestId as string,
+                    },
+                };
+            }
+
+            if (user.loginStudioId) {
+                createData.loginStudio = {
+                    connect: {
+                        id: user.loginStudioId,
                     },
                 };
             }

@@ -53,10 +53,12 @@ export interface AuthStore {
      * Finds the user that represents the given address.
      * @param address The address.
      * @param addressType The type of the address.
+     * @param loginStudioId The ID of the studio that the user is logging into.
      */
     findUserByAddress(
         address: string,
-        addressType: AddressType
+        addressType: AddressType,
+        loginStudioId?: string | null
     ): Promise<AuthUser | null>;
 
     /**
@@ -578,6 +580,15 @@ export interface AuthUser {
      * The user's connected stripe account status.
      */
     stripeAccountStatus?: StripeAccountStatus | null;
+
+    /**
+     * The Studio that this user logs into.
+     * Used to differentiate between users who belong to the primary instance and users who belong to a comId.
+     * Note that this does not grant any permissions to the studio. It only separates users via comId.
+     *
+     * If null, then the user does not log into a studio, but instead logs into CasualOS proper.
+     */
+    loginStudioId?: string | null;
 }
 
 export interface AuthUserAuthenticator {

@@ -16,9 +16,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import { fromByteArray, toByteArray } from 'base64-js';
-import { applyUpdate, mergeUpdates } from 'yjs';
+import { applyUpdate, encodeStateAsUpdate, mergeUpdates } from 'yjs';
 import type {
     Bot,
+    BotAction,
     BotsState,
     CreateInitializationUpdateAction,
     GetInstStateFromUpdatesAction,
@@ -26,6 +27,8 @@ import type {
 } from '../bots';
 import {
     botAdded,
+    botRemoved,
+    botUpdated,
     createBot,
     formatBotDate,
     formatBotRotation,
@@ -67,6 +70,86 @@ export function constructInitializationUpdate(
     );
 
     return instUpdate;
+}
+
+/**
+ * Constructs an initialization update from the given previous updates and bots.
+ * @param previousUpdates The previous updates.
+ * @param bots The bots that represent the desired final state.
+ */
+export function constructInitializationUpdateFromPreviousUpdates(
+    previousUpdates: InstUpdate[],
+    bots: Bot[]
+): InstUpdate {
+    const partition = new YjsPartitionImpl({
+        type: 'yjs',
+    });
+
+    for (let { update } of previousUpdates) {
+        const updateBytes = toByteArray(update);
+        applyUpdate(partition.doc, updateBytes);
+    }
+
+    const allBotIds = new Set<string>(Object.keys(partition.state));
+    const actions: BotAction[] = [];
+    for (let b of bots) {
+        const oldBot = partition.state[b.id];
+        if (oldBot) {
+            let tags = { ...b.tags };
+
+            // Track deleted tags
+            for (let oldTag in oldBot.tags) {
+                if (!hasValue(tags[oldTag])) {
+                    tags[oldTag] = null;
+                }
+            }
+
+            actions.push(
+                botUpdated(b.id, {
+                    tags,
+                })
+            );
+        } else {
+            actions.push(botAdded(createBot(b.id, b.tags)));
+        }
+        allBotIds.delete(b.id);
+    }
+
+    for (let id of allBotIds) {
+        actions.push(botRemoved(id));
+    }
+
+    let instUpdate: InstUpdate;
+    partition.doc.on('update', (update: Uint8Array) => {
+        instUpdate = {
+            id: 0,
+            timestamp: Date.now(),
+            update: fromByteArray(encodeStateAsUpdate(partition.doc)),
+        };
+    });
+
+    partition.applyEvents(actions);
+
+    return instUpdate;
+}
+
+/**
+ * Constructs an initialization update that transitions from the previous update to the state contained in the new state update.
+ * @param previousUpdates The previous updates.
+ * @param newState The new state update.
+ */
+export function updateToNewStateUpdate(
+    previousUpdates: InstUpdate[],
+    newState: InstUpdate | InstUpdate[]
+): InstUpdate {
+    const state = getStateFromUpdates({
+        type: 'get_inst_state_from_updates',
+        updates: Array.isArray(newState) ? newState : [newState],
+    });
+    return constructInitializationUpdateFromPreviousUpdates(
+        previousUpdates,
+        Object.values(state)
+    );
 }
 
 /**

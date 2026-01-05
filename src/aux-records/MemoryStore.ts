@@ -1653,8 +1653,10 @@ export class MemoryStore
     async saveNewUser(user: AuthUser): Promise<SaveNewUserResult> {
         let index = this._users.findIndex(
             (u) =>
-                (!!user.email && u.email === user.email) ||
-                (!!user.phoneNumber && u.phoneNumber === user.phoneNumber)
+                ((!!user.email && u.email === user.email) ||
+                    (!!user.phoneNumber &&
+                        u.phoneNumber === user.phoneNumber)) &&
+                (u.loginStudioId ?? null) === (user.loginStudioId ?? null)
         );
         if (index >= 0) {
             return {
@@ -1691,12 +1693,15 @@ export class MemoryStore
 
     async findUserByAddress(
         address: string,
-        addressType: AddressType
+        addressType: AddressType,
+        loginStudioId: string = null
     ): Promise<AuthUser> {
-        const user = this._users.find((u) =>
-            addressType === 'email'
-                ? u.email === address
-                : u.phoneNumber === address
+        const user = this._users.find(
+            (u) =>
+                (addressType === 'email'
+                    ? u.email === address
+                    : u.phoneNumber === address) &&
+                (u.loginStudioId ?? null) === (loginStudioId ?? null)
         );
         return user;
     }

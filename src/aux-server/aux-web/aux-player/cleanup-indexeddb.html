@@ -136,11 +136,63 @@
                     }
                 }
 
+                // Clean up localStorage keys that contain the inst name
+                let deletedLocalStorageKeys = [];
+                let failedLocalStorageKeys = [];
+
+                try {
+                    console.log(
+                        '[Cleanup] Checking localStorage for inst-related keys'
+                    );
+
+                    // Get all localStorage keys
+                    const keysToDelete = [];
+                    for (let i = 0; i < localStorage.length; i++) {
+                        const key = localStorage.key(i);
+                        if (key && key.includes(inst)) {
+                            keysToDelete.push(key);
+                        }
+                    }
+
+                    console.log(
+                        '[Cleanup] Found localStorage keys to delete:',
+                        keysToDelete
+                    );
+
+                    // Delete the keys
+                    for (const key of keysToDelete) {
+                        try {
+                            localStorage.removeItem(key);
+                            deletedLocalStorageKeys.push(key);
+                            console.log(
+                                '[Cleanup] Deleted localStorage key:',
+                                key
+                            );
+                        } catch (err) {
+                            console.error(
+                                '[Cleanup] Failed to delete localStorage key:',
+                                key,
+                                err
+                            );
+                            failedLocalStorageKeys.push(key);
+                        }
+                    }
+                } catch (err) {
+                    console.error(
+                        '[Cleanup] Error accessing localStorage:',
+                        err
+                    );
+                }
+
                 return {
                     inst: inst,
                     deletedDatabases: deletedDatabases,
                     failedDatabases: failedDatabases,
-                    success: deletedDatabases.length > 0,
+                    deletedLocalStorageKeys: deletedLocalStorageKeys,
+                    failedLocalStorageKeys: failedLocalStorageKeys,
+                    success:
+                        deletedDatabases.length > 0 ||
+                        deletedLocalStorageKeys.length > 0,
                 };
             }
 

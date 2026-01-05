@@ -69,7 +69,6 @@ import type { Doc, Transaction, AbstractType, YEvent } from 'yjs';
 import {
     Text,
     Map,
-    applyUpdate,
     YMapEvent,
     createAbsolutePositionFromRelativePosition,
     YTextEvent,
@@ -82,12 +81,20 @@ import {
     getStateVector,
 } from '../yjs/YjsHelpers';
 import {
+    constructInitializationUpdate,
     ensureTagIsSerializable,
     getStateFromUpdates,
     supportsRemoteEvent,
+    updateToNewStateUpdate,
 } from './PartitionUtils';
-import type { RemoteActions, VersionVector } from '../common';
-import { fromByteArray, toByteArray } from 'base64-js';
+import {
+    compareVersions,
+    formatVersion,
+    type RemoteActions,
+    type SimpleVersionNumber,
+    type VersionVector,
+} from '../common';
+import { fromByteArray } from 'base64-js';
 import { YjsSharedDocument } from '../documents/YjsSharedDocument';
 import { v4 as uuid } from 'uuid';
 
@@ -107,6 +114,11 @@ export function createYjsPartition(config: PartitionConfig): YjsPartition {
 type MapValue = Text | object | number | boolean;
 type TagsMap = Map<MapValue>;
 
+interface InstalledAux {
+    version: SimpleVersionNumber;
+    updates: InstUpdate[];
+}
+
 export class YjsPartitionImpl
     extends YjsSharedDocument
     implements YjsPartition
@@ -119,6 +131,8 @@ export class YjsPartitionImpl
 
     private _remoteEvents: PartitionRemoteEvents | boolean;
     private _connectionId: string;
+
+    private _installedAuxes = new globalThis.Map<string, InstalledAux>();
 
     get onBotsAdded(): Observable<Bot[]> {
         return this._internalPartition.onBotsAdded;
@@ -252,17 +266,9 @@ export class YjsPartitionImpl
                 } else if (event.event.type === 'get_inst_state_from_updates') {
                     const action = <GetInstStateFromUpdatesAction>event.event;
                     try {
-                        let partition = new YjsPartitionImpl({
-                            type: 'yjs',
-                        });
-
-                        for (let { update } of action.updates) {
-                            const updateBytes = toByteArray(update);
-                            applyUpdate(partition.doc, updateBytes);
-                        }
-
+                        const state = getStateFromUpdates(action);
                         this._onEvents.next([
-                            asyncResult(event.taskId, partition.state, false),
+                            asyncResult(event.taskId, state, false),
                         ]);
                     } catch (err) {
                         this._onEvents.next([asyncError(event.taskId, err)]);
@@ -274,27 +280,10 @@ export class YjsPartitionImpl
                         event.event
                     );
                     try {
-                        let partition = new YjsPartitionImpl({
-                            type: 'yjs',
-                        });
-
-                        partition.doc.on('update', (update: Uint8Array) => {
-                            let instUpdate: InstUpdate = {
-                                id: 0,
-                                timestamp: Date.now(),
-                                update: fromByteArray(update),
-                            };
-
-                            this._onEvents.next([
-                                asyncResult(event.taskId, instUpdate, false),
-                            ]);
-                        });
-
-                        await partition.applyEvents(
-                            action.bots.map((b) =>
-                                botAdded(createBot(b.id, b.tags))
-                            )
-                        );
+                        const update = constructInitializationUpdate(action);
+                        this._onEvents.next([
+                            asyncResult(event.taskId, update, false),
+                        ]);
                     } catch (err) {
                         this._onEvents.next([asyncError(event.taskId, err)]);
                     }
@@ -353,7 +342,75 @@ export class YjsPartitionImpl
                             }
                         } else {
                             if (action.aux.version === 2) {
-                                this.applyStateUpdates(action.aux.updates);
+                                let installed = false;
+                                if (hasValue(action.source)) {
+                                    const previouslyInstalled =
+                                        this._installedAuxes.get(action.source);
+                                    if (hasValue(previouslyInstalled)) {
+                                        if (
+                                            action.version &&
+                                            previouslyInstalled.version
+                                        ) {
+                                            if (
+                                                compareVersions(
+                                                    action.version,
+                                                    previouslyInstalled.version
+                                                ) < 0
+                                            ) {
+                                                if (!action.downgrade) {
+                                                    console.warn(
+                                                        `Attempted to downgrade ${
+                                                            action.source
+                                                        } aux file from version ${formatVersion(
+                                                            previouslyInstalled.version
+                                                        )} to ${formatVersion(
+                                                            action.version
+                                                        )} without downgrade flag. Skipping installation.`
+                                                    );
+                                                    this._onEvents.next([
+                                                        asyncError(
+                                                            event.taskId,
+                                                            new Error(
+                                                                `Cannot downgrade aux file ${
+                                                                    action.source
+                                                                } from version ${formatVersion(
+                                                                    previouslyInstalled.version
+                                                                )} to ${formatVersion(
+                                                                    action.version
+                                                                )} without downgrade flag.`
+                                                            )
+                                                        ),
+                                                    ]);
+                                                    continue;
+                                                }
+                                            }
+                                        }
+
+                                        const combined = [
+                                            updateToNewStateUpdate(
+                                                previouslyInstalled.updates,
+                                                action.aux.updates
+                                            ),
+                                        ];
+                                        this._installedAuxes.set(
+                                            action.source,
+                                            {
+                                                version: action.version,
+                                                updates: combined,
+                                            }
+                                        );
+                                        this.applyStateUpdates(combined);
+                                        installed = true;
+                                    }
+                                }
+
+                                if (!installed) {
+                                    this._installedAuxes.set(action.source, {
+                                        version: action.version,
+                                        updates: action.aux.updates,
+                                    });
+                                    this.applyStateUpdates(action.aux.updates);
+                                }
                             } else if (action.aux.version === 1) {
                                 this._applyEvents(
                                     Object.values(action.aux.state).map((b) =>

@@ -17,7 +17,11 @@
  */
 import path from 'path';
 import fs from 'fs';
-import { paths, cleanDirectory } from '../../../script/build-helpers.mjs';
+import {
+    paths,
+    cleanDirectory,
+    emptyModulePlugin,
+} from '../../../script/build-helpers.mjs';
 import { GIT_HASH, GIT_TAG } from '../../../script/git-stats.mjs';
 
 const src = path.resolve(paths.root, 'src');
@@ -56,7 +60,10 @@ export function createConfigs(dev, version) {
                 },
                 minify: false,
                 external: ['open', 'esbuild'],
-                plugins: [addNodeShebang()],
+                plugins: [
+                    emptyModulePlugin('tigerbeetle-node'),
+                    addNodeShebang(),
+                ],
             },
         ],
     ];

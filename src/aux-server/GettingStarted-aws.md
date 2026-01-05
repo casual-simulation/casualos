@@ -155,6 +155,13 @@ Use the following to configure the records system:
 -   `CODE_OF_CONDUCT`: The Markdown of the code of conduct that the sites should use.
 -   `SUPPORT_LINK`: The URL to the support website. If not provided, then no support URLs will be provided.
 
+#### PostHog Support
+
+To configure [PostHog](https://posthog.com/), use the following during build:
+
+-   `VITE_POSTHOG_API_KEY` - The PostHog API key that should be used.
+-   `VITE_POSTHOG_HOST` - The host that should be used to access the posthog API.
+
 #### Webhooks
 
 -   `WEBHOOK_LAMBDA_FUNCTION_NAME`: The name of the lambda function that should be called to process webhooks. Only used when `webhooks.environment.type` is set to `lambda` and `webhooks.environment.functionName` is omitted.

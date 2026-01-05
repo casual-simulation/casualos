@@ -194,6 +194,21 @@ Object {
               "phone",
             ],
           },
+          "comId": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "customDomain": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "loginStudioId": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
         },
         "type": "object",
       },
@@ -2417,6 +2432,11 @@ Object {
             "nullable": true,
             "optional": true,
             "type": "string",
+          },
+          "downgrade": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "boolean",
           },
           "inst": Object {
             "type": "string",
@@ -5335,6 +5355,11 @@ Object {
                   "sign out",
                   "delete inst",
                 ],
+              },
+              "automaticBiosOptionInst": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
               },
               "defaultBiosOption": Object {
                 "nullable": true,
@@ -9442,6 +9467,12 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                       "sign out",
                       "delete inst",
                     ],
+                  },
+                  "automaticBiosOptionInst": Object {
+                    "description": "The instance ID to use when executing the automatic BIOS option. Should be formatted as \`{recordName/{instName}\`. For local/public insts, recordName can be omitted (e.g. \`/{instName}\`).",
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
                   },
                   "causalRepoConnectionProtocol": Object {
                     "defaultValue": "websocket",
@@ -10030,6 +10061,21 @@ Object {
               "phone",
             ],
           },
+          "comId": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "customDomain": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "loginStudioId": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
         },
         "type": "object",
       },
@@ -12253,6 +12299,11 @@ Object {
             "nullable": true,
             "optional": true,
             "type": "string",
+          },
+          "downgrade": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "boolean",
           },
           "inst": Object {
             "type": "string",
@@ -15171,6 +15222,11 @@ Object {
                   "sign out",
                   "delete inst",
                 ],
+              },
+              "automaticBiosOptionInst": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
               },
               "defaultBiosOption": Object {
                 "nullable": true,
@@ -19278,6 +19334,12 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                       "sign out",
                       "delete inst",
                     ],
+                  },
+                  "automaticBiosOptionInst": Object {
+                    "description": "The instance ID to use when executing the automatic BIOS option. Should be formatted as \`{recordName/{instName}\`. For local/public insts, recordName can be omitted (e.g. \`/{instName}\`).",
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
                   },
                   "causalRepoConnectionProtocol": Object {
                     "defaultValue": "websocket",
