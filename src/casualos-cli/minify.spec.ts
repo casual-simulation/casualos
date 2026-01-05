@@ -100,6 +100,9 @@ describe('minify', () => {
 
             // Should not include an extra newline at the end
             expect(bot.tags.onClick.endsWith('\n')).toBe(false);
+
+            // Should add no parse directive
+            expect(bot.tags.onClick.startsWith('@"-parse";')).toBe(true);
         });
 
         it('should support await statements', async () => {
@@ -140,6 +143,9 @@ describe('minify', () => {
 
             // Should not include an extra newline at the end
             expect(bot.tags.onClick.endsWith('\n')).toBe(false);
+
+            // Should add directives
+            expect(bot.tags.onClick.startsWith('@"-parse async";')).toBe(true);
         });
 
         it('should support await and return statements', async () => {
@@ -182,6 +188,9 @@ describe('minify', () => {
 
             // Should not include an extra newline at the end
             expect(bot.tags.onClick.endsWith('\n')).toBe(false);
+
+            // Should add directives
+            expect(bot.tags.onClick.startsWith('@"-parse async";')).toBe(true);
         });
 
         it('should support import statements', async () => {
@@ -225,6 +234,11 @@ describe('minify', () => {
 
             // Should not include an extra newline at the end
             expect(bot.tags.onClick.endsWith('\n')).toBe(false);
+
+            // Should add directives
+            expect(bot.tags.onClick.startsWith('@"-parse async module";')).toBe(
+                true
+            );
         });
 
         it('should support import and return statements', async () => {
@@ -270,6 +284,11 @@ describe('minify', () => {
 
             // Should not include an extra newline at the end
             expect(bot.tags.onClick.endsWith('\n')).toBe(false);
+
+            // Should add directives
+            expect(bot.tags.onClick.startsWith('@"-parse async module";')).toBe(
+                true
+            );
         });
     });
 
