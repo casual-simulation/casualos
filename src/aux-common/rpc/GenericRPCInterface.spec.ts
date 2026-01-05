@@ -277,6 +277,7 @@ describe('getSchemaMetadata()', () => {
             },
         ],
         ['unknown', z.unknown(), { type: 'any' }],
+        ['big int', z.bigint(), { type: 'string' }],
     ] as const;
 
     it.each(cases)(
