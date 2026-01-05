@@ -24,6 +24,8 @@ import {
     replaceMacros,
     calculateOriginalLineLocation,
     calculateFinalLineLocation,
+    parseDirectives,
+    addDirectives,
 } from './Transpiler';
 import {
     calculateIndexFromLocation,
@@ -2180,6 +2182,101 @@ describe('Transpiler', () => {
                 );
             });
         });
+
+        describe('directives', () => {
+            it('should not parse the script if "-parse" is at the top', () => {
+                const transpiler = new Transpiler();
+
+                const result = transpiler.transpile(
+                    `"-parse";
+                    while(true) { console.log("Hello"); }
+                    `
+                );
+                expect(result).toBe(
+                    `"-parse";
+                    while(true) { console.log("Hello"); }
+                    `
+                );
+            });
+
+            it('should mark the script as async if "async" is at the top', () => {
+                const transpiler = new Transpiler();
+
+                const result = transpiler.transpileWithMetadata(
+                    `"async";
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    console.log("Hello");
+                    `
+                );
+
+                expect(result.code).toBe(
+                    `"async";
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    console.log("Hello");
+                    `
+                );
+                expect(result.metadata.isAsync).toBe(true);
+                expect(result.metadata.isModule).toBe(false);
+            });
+
+            it('should mark the script as a module if "module" is at the top', () => {
+                const transpiler = new Transpiler();
+
+                const result = transpiler.transpileWithMetadata(
+                    `"module";
+                    console.log("Hello");
+                    `
+                );
+
+                expect(result.code).toBe(
+                    `"module";
+                    console.log("Hello");
+                    `
+                );
+                expect(result.metadata.isModule).toBe(true);
+                expect(result.metadata.isAsync).toBe(false);
+            });
+
+            it('should mark the script as an async module if "async module" is at the top', () => {
+                const transpiler = new Transpiler();
+
+                const result = transpiler.transpileWithMetadata(
+                    `"async module";
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    console.log("Hello");
+                    `
+                );
+
+                expect(result.code).toBe(
+                    `"async module";
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    console.log("Hello");
+                    `
+                );
+                expect(result.metadata.isModule).toBe(true);
+                expect(result.metadata.isAsync).toBe(true);
+            });
+
+            it('should support no parse, async, and module directives all at once', () => {
+                const transpiler = new Transpiler();
+
+                const result = transpiler.transpileWithMetadata(
+                    `"-parse async module";
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    console.log("Hello");
+                    `
+                );
+
+                expect(result.code).toBe(
+                    `"-parse async module";
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    console.log("Hello");
+                    `
+                );
+                expect(result.metadata.isModule).toBe(true);
+                expect(result.metadata.isAsync).toBe(true);
+            });
+        });
     });
 
     describe('replaceMacros()', () => {
@@ -2378,5 +2475,129 @@ describe('calculateLocationFromIndex()', () => {
     it.each(locationCases)('%s', (desc, code, location, index) => {
         const result = calculateLocationFromIndex(code, index);
         expect(result).toEqual(location);
+    });
+});
+
+describe('parseDirectives()', () => {
+    const cases = [
+        [
+            '"-parse";',
+            {
+                noParse: true,
+                isAsync: false,
+                isModule: false,
+                startIndex: 0,
+                endIndex: 9,
+            },
+        ] as const,
+        [
+            '"async";',
+            {
+                noParse: false,
+                isAsync: true,
+                isModule: false,
+                startIndex: 0,
+                endIndex: 8,
+            },
+        ] as const,
+        [
+            '"module";',
+            {
+                noParse: false,
+                isAsync: false,
+                isModule: true,
+                startIndex: 0,
+                endIndex: 9,
+            },
+        ] as const,
+        [
+            '"module -parse";',
+            {
+                noParse: true,
+                isAsync: false,
+                isModule: true,
+                startIndex: 0,
+                endIndex: 16,
+            },
+        ] as const,
+        [
+            '"module async";',
+            {
+                noParse: false,
+                isAsync: true,
+                isModule: true,
+                startIndex: 0,
+                endIndex: 15,
+            },
+        ] as const,
+        [
+            '"module async -parse";',
+            {
+                noParse: true,
+                isAsync: true,
+                isModule: true,
+                startIndex: 0,
+                endIndex: 22,
+            },
+        ] as const,
+        [
+            '"module async -parse"; const abc = 123;',
+            {
+                noParse: true,
+                isAsync: true,
+                isModule: true,
+                startIndex: 0,
+                endIndex: 22,
+            },
+        ] as const,
+    ];
+
+    it.each(cases)('%s', (code, expected) => {
+        const result = parseDirectives(code);
+        expect(result).toEqual(expected);
+    });
+});
+
+describe('addDirectives()', () => {
+    const cases = [
+        [
+            '-parse',
+            { noParse: true, isAsync: false, isModule: false },
+            '"-parse";',
+        ] as const,
+        [
+            'async',
+            { noParse: false, isAsync: true, isModule: false },
+            '"async";',
+        ] as const,
+        [
+            'module',
+            { noParse: false, isAsync: false, isModule: true },
+            '"module";',
+        ] as const,
+        [
+            '-parse module',
+            { noParse: true, isAsync: false, isModule: true },
+            '"-parse module";',
+        ] as const,
+        [
+            '-parse async module',
+            { noParse: true, isAsync: true, isModule: true },
+            '"-parse async module";',
+        ] as const,
+    ];
+
+    it.each(cases)('%s', (desc, directives, expected) => {
+        const result = addDirectives('a', directives);
+        expect(result).toBe(expected + 'a');
+    });
+
+    it('should not add duplicate directives', () => {
+        const result = addDirectives('"-parse async module";a', {
+            noParse: true,
+            isAsync: true,
+            isModule: true,
+        });
+        expect(result).toBe('"-parse async module";a');
     });
 });
