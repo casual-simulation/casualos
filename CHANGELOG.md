@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.10.2
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Switch to using PNPM for publishing NPM packages.
+
 ## V3.10.1
 
 #### Date: 1/5/2026
