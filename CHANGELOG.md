@@ -11,6 +11,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where CasualOS would improperly handle scripts with an export block immediately after a function export.
+-   Fixed an issue where it was impossible to login via email or phone number.
 
 ## V3.10.0
 
