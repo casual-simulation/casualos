@@ -1729,11 +1729,14 @@ importers:
   src/casualos-cli:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.8.1
+        specifier: ^3.10.0
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^3.8.1
+        specifier: ^3.10.0
         version: link:../aux-records
+      '@casual-simulation/aux-runtime':
+        specifier: ^3.10.0
+        version: link:../aux-runtime
       '@octokit/app':
         specifier: ^15.1.0
         version: 15.1.6

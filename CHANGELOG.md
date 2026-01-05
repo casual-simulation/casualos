@@ -1,5 +1,18 @@
 # CasualOS Changelog
 
+## V3.10.1
+
+#### Date: 1/5/2026
+
+### :rocket: Features
+
+-   Improved minification to work for scripts which have import and return statements.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where CasualOS would improperly handle scripts with an export block immediately after a function export.
+-   Fixed an issue where it was impossible to login via email or phone number.
+
 ## V3.10.0
 
 #### Date: 12/29/2025

@@ -411,20 +411,16 @@ export class SqliteAuthStore implements AuthStore {
         if (!address) {
             return null;
         }
-        let user = await this._client.user.findUnique({
+        let user = await this._client.user.findFirst({
             where:
                 addressType === 'email'
                     ? {
-                          email_loginStudioId: {
-                              email: address,
-                              loginStudioId: loginStudioId,
-                          },
+                          email: address,
+                          loginStudioId: loginStudioId ?? null,
                       }
                     : {
-                          phoneNumber_loginStudioId: {
-                              phoneNumber: address,
-                              loginStudioId: loginStudioId,
-                          },
+                          phoneNumber: address,
+                          loginStudioId: loginStudioId ?? null,
                       },
         });
 
