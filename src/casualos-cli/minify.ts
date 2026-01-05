@@ -38,7 +38,8 @@ import {
 } from '@casual-simulation/aux-runtime/runtime/AuxCompiler';
 import * as esbuild from 'esbuild';
 import { cloneDeep } from 'es-toolkit';
-import { Transpiler } from '@casual-simulation/aux-runtime';
+import type { TranspilerDirectives } from '@casual-simulation/aux-runtime';
+import { addDirectives, Transpiler } from '@casual-simulation/aux-runtime';
 
 /**
  * Minifies the given aux object.
@@ -101,6 +102,7 @@ export async function transformAux(
             ) => {
                 try {
                     let transpiled = false;
+                    let directives: TranspilerDirectives;
                     if (
                         loader === 'js' ||
                         loader === 'ts' ||
@@ -108,7 +110,13 @@ export async function transformAux(
                         loader === 'jsx'
                     ) {
                         transpiled = true;
-                        value = transpiler.transpile(value);
+                        const result = transpiler.transpileWithMetadata(value);
+                        value = result.code;
+                        directives = {
+                            noParse: true,
+                            isAsync: result.metadata.isAsync,
+                            isModule: result.metadata.isModule,
+                        };
                         value = `async function __aux_tag_wrapper__(){\n${value}\n}`;
                     }
                     return esbuild
@@ -124,6 +132,10 @@ export async function transformAux(
                                         .length,
                                     result.code.length - 2
                                 );
+                            }
+
+                            if (directives) {
+                                code = addDirectives(code, directives);
                             }
 
                             bot.tags[tag] = prefix ? `${prefix}${code}` : code;

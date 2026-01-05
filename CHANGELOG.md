@@ -4,6 +4,10 @@
 
 #### Date: 1/5/2026
 
+### :rocket: Features
+
+-   Improved CasualOS to skip unneeded parsing and transpilation steps on minified code.
+
 ### :bug: Bug Fixes
 
 -   Switch to using PNPM for publishing NPM packages.
