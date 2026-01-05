@@ -11,5 +11,9 @@
     },
     "include": ["**/*.ts"],
     "exclude": ["node_modules", "lib", "**/*.spec.ts"],
-    "references": [{ "path": "../aux-records" }, { "path": "../aux-common" }]
+    "references": [
+        { "path": "../aux-records" },
+        { "path": "../aux-common" },
+        { "path": "../aux-runtime" }
+    ]
 }
