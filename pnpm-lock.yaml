@@ -1734,9 +1734,6 @@ importers:
       '@casual-simulation/aux-records':
         specifier: ^3.10.2
         version: link:../aux-records
-      '@casual-simulation/aux-runtime':
-        specifier: ^3.8.1
-        version: link:../aux-runtime
       '@octokit/app':
         specifier: ^15.1.0
         version: 15.1.6
@@ -20199,7 +20196,7 @@ snapshots:
       promise-all-reject-late: 1.0.1
       promise-call-limit: 3.0.2
       read-package-json-fast: 3.0.2
-      semver: 7.7.1
+      semver: 7.7.3
       ssri: 10.0.6
       treeverse: 3.0.0
       walk-up-path: 3.0.1
@@ -21458,7 +21455,7 @@ snapshots:
       '@opentelemetry/propagator-b3': 1.30.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/propagator-jaeger': 1.30.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/sdk-trace-base': 1.30.1(@opentelemetry/api@1.9.0)
-      semver: 7.7.1
+      semver: 7.7.3
 
   '@opentelemetry/semantic-conventions@1.25.1': {}
 
@@ -31435,7 +31432,7 @@ snapshots:
   normalize-package-data@6.0.2:
     dependencies:
       hosted-git-info: 7.0.2
-      semver: 7.7.1
+      semver: 7.7.3
       validate-npm-package-license: 3.0.4
 
   normalize-path@3.0.0: {}
