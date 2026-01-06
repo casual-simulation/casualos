@@ -7575,6 +7575,20 @@ describe('AuxRuntime', () => {
                 ).toMatchSnapshot();
             });
 
+            it('should support directives for listener scripts', async () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            test: '@"-parse"; return 5;',
+                        }),
+                    })
+                );
+                let result = await runtime.shout('test');
+
+                expect(result.results).toEqual([5]);
+            });
+
             describe('globalThis', () => {
                 it('should intercept changes to globalThis', async () => {
                     runtime.stateUpdated(
