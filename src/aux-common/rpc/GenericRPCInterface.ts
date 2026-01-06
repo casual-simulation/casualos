@@ -617,7 +617,10 @@ export type SchemaMetadata =
 export function getSchemaMetadata(schema: _z.$ZodType): SchemaMetadata {
     if (schema instanceof _z.$ZodPipe) {
         return getSchemaMetadata(schema._zod.def.out);
-    } else if (schema instanceof _z.$ZodString) {
+    } else if (
+        schema instanceof _z.$ZodString ||
+        schema instanceof _z.$ZodBigInt
+    ) {
         return { type: 'string', description: getDescription(schema) };
     } else if (schema instanceof _z.$ZodBoolean) {
         return { type: 'boolean', description: getDescription(schema) };

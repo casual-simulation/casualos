@@ -32,7 +32,7 @@ import {
     getClock,
     getTextChar,
 } from '@casual-simulation/aux-common/yjs/YjsHelpers';
-import type { VersionVector } from '@casual-simulation/aux-common';
+import { hasValue, type VersionVector } from '@casual-simulation/aux-common';
 import type { CodeLocation } from './TranspilerUtils';
 import {
     calculateIndexFromLocation,
@@ -377,13 +377,27 @@ export class Transpiler {
      * Transpiles the given code into ES6 JavaScript Code.
      */
     private _transpile(code: string): TranspilerResult {
+        const directives = parseDirectives(code);
+        if (directives.noParse) {
+            return {
+                code,
+                original: code,
+                metadata: {
+                    doc: null,
+                    text: null,
+                    isAsync: directives.isAsync,
+                    isModule: directives.isModule,
+                },
+            };
+        }
+
         const cached = this._cache.get(code);
         if (cached) {
             return cached;
         }
         const macroed = replaceMacros(code);
         const node = this._parse(macroed);
-        const isAsync = this._isAsyncNode(node);
+        const isAsync = directives.isAsync || this._isAsyncNode(node);
 
         // we create a YJS document to track
         // text changes. This lets us use a separate client ID for each change
@@ -400,7 +414,7 @@ export class Transpiler {
             doc,
             text,
             isAsync,
-            isModule: false,
+            isModule: directives.isModule,
         };
 
         this._replace(node, doc, text, metadata);
@@ -2233,12 +2247,12 @@ export interface TranspilerResult {
         /**
          * The document that was used to edit the code.
          */
-        doc: Doc;
+        doc: Doc | null;
 
         /**
          * The text structure that was used to edit the code.
          */
-        text: Text;
+        text: Text | null;
 
         /**
          * Whether the code is a module (contains import or export statements).
@@ -2308,4 +2322,90 @@ export function calculateFinalLineLocation(
     );
 
     return calculateLocationFromIndex(result.code, absolute.index);
+}
+
+export interface TranspilerDirectives {
+    noParse: boolean;
+    isAsync: boolean;
+    isModule: boolean;
+
+    startIndex?: number;
+    endIndex?: number;
+}
+
+/**
+ * Parses the transpiler directives that are present in the given code.
+ * @param code The code that the directives are in.
+ */
+export function parseDirectives(code: string): TranspilerDirectives {
+    const directives: TranspilerDirectives = {
+        noParse: false,
+        isAsync: false,
+        isModule: false,
+    };
+
+    if (code.charAt(0) !== '"') {
+        return directives;
+    }
+
+    let endQuoteIndex = -1;
+    for (let c = 1; c < 100; c++) {
+        if (code.charAt(c) === '"') {
+            endQuoteIndex = c;
+            break;
+        }
+    }
+
+    if (endQuoteIndex < 0) {
+        return directives;
+    }
+
+    directives.startIndex = 0;
+
+    // Directives are assumed to be terminated by a semicolon after the ending quote
+    directives.endIndex = endQuoteIndex + 2;
+
+    const directiveString = code.substring(1, endQuoteIndex);
+    const directiveParts = directiveString.split(' ');
+    for (let part of directiveParts) {
+        if (part === '-parse') {
+            directives.noParse = true;
+        } else if (part === 'async') {
+            directives.isAsync = true;
+        } else if (part === 'module') {
+            directives.isModule = true;
+        }
+    }
+    return directives;
+}
+
+/**
+ * Adds the given directives to the start of the given code.
+ * @param code The code to add the directives to.
+ * @param directives The directives to add.
+ */
+export function addDirectives(
+    code: string,
+    directives: TranspilerDirectives
+): string {
+    const existingDirectives = parseDirectives(code); // to avoid adding duplicates
+    if (
+        hasValue(existingDirectives.startIndex) &&
+        hasValue(existingDirectives.endIndex)
+    ) {
+        code = code.substring(existingDirectives.endIndex);
+    }
+
+    let directiveString = '"';
+    if (directives.noParse) {
+        directiveString += '-parse ';
+    }
+    if (directives.isAsync) {
+        directiveString += 'async ';
+    }
+    if (directives.isModule) {
+        directiveString += 'module ';
+    }
+    directiveString = directiveString.trim() + '";';
+    return directiveString + code;
 }

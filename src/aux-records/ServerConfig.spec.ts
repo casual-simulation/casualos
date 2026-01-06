@@ -15,6 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+import { getSchemaMetadata } from '@casual-simulation/aux-common';
 import { serverConfigSchema } from './ServerConfig';
 
 describe('serverConfigSchema', () => {
@@ -2260,5 +2261,10 @@ describe('serverConfigSchema', () => {
 
         expect(result.success).toBe(true);
         expect(result).toMatchSnapshot();
+    });
+
+    it('should be able to generate schema metadata', () => {
+        const meta = getSchemaMetadata(serverConfigSchema);
+        expect(meta).toBeTruthy();
     });
 });
