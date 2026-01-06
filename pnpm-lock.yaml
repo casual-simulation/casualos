@@ -1734,6 +1734,9 @@ importers:
       '@casual-simulation/aux-records':
         specifier: ^3.10.2
         version: link:../aux-records
+      '@casual-simulation/aux-runtime':
+        specifier: ^3.10.2
+        version: link:../aux-runtime
       '@octokit/app':
         specifier: ^15.1.0
         version: 15.1.6
