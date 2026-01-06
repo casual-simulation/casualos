@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-records",
-    "version": "3.8.1",
+    "version": "3.10.2",
     "description": "Helpers and managers used by the CasualOS records system.",
     "keywords": [],
     "author": "Casual Simulation, Inc.",
@@ -38,9 +38,9 @@
     },
     "dependencies": {
         "@anthropic-ai/sdk": "0.24.3",
-        "@casual-simulation/aux-common": "^3.8.1",
-        "@casual-simulation/crypto": "^3.5.0",
-        "@casual-simulation/fast-json-stable-stringify": "^3.5.0",
+        "@casual-simulation/aux-common": "^3.10.2",
+        "@casual-simulation/crypto": "^3.10.2",
+        "@casual-simulation/fast-json-stable-stringify": "^3.10.2",
         "@casual-simulation/rate-limit-redis": "^3.4.0",
         "@casual-simulation/timesync": "^3.7.0",
         "@google/generative-ai": "0.11.3",
@@ -61,13 +61,13 @@
         "mime": "2.4.6",
         "openai": "4.89.0",
         "openid-client": "5.6.1",
+        "preact": "10.19.6",
+        "preact-render-to-string": "6.6.3",
+        "tigerbeetle-node": "0.16.44",
         "tweetnacl": "1.0.3",
         "typesense": "2.1.0-13",
         "uuid": "10.0.0",
         "yjs": "13.6.8",
-        "zod": "4.1.12",
-        "tigerbeetle-node": "0.16.44",
-        "preact": "10.19.6",
-        "preact-render-to-string": "6.6.3"
+        "zod": "4.1.12"
     }
 }
