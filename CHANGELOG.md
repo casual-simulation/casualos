@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.10.3
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where listing subscriptions would not work unless TigerBeetle was configured.
+
 ## V3.10.2
 
 #### Date: 1/6/2026
