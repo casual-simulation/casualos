@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-records-aws",
-    "version": "3.10.2",
+    "version": "3.10.3-alpha.20787554310",
     "description": "AWS Store implementations for the CasualOS Records System.",
     "keywords": [],
     "author": "Casual Simulation, Inc.",
@@ -44,8 +44,8 @@
         "@aws-sdk/client-sesv2": "^3.620.1",
         "@aws-sdk/credential-providers": "^3.620.1",
         "@aws-sdk/types": "^3.609.0",
-        "@casual-simulation/aux-common": "^3.10.2",
-        "@casual-simulation/aux-records": "^3.10.2",
+        "@casual-simulation/aux-common": "^3.10.3-alpha.20787554310",
+        "@casual-simulation/aux-records": "^3.10.3-alpha.20787554310",
         "axios": "1.7.7",
         "uuid": "10.0.0"
     }
