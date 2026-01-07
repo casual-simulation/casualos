@@ -52,6 +52,7 @@ import type {
 import { allowAllFeatures } from './SubscriptionConfiguration';
 import type { Studio } from './RecordsStore';
 import type { MemoryStore } from './MemoryStore';
+import type { TestServices } from './TestUtils';
 import {
     checkAccounts,
     checkTransfers,
@@ -114,6 +115,8 @@ describe('SubscriptionController', () => {
     let tbClient: Client;
     let tbProcess: ChildProcess;
 
+    let services: TestServices;
+
     beforeAll(async () => {
         const { port, process } = await runTigerBeetle(
             'subscription-controller'
@@ -139,7 +142,7 @@ describe('SubscriptionController', () => {
             id: () => currentId++,
             idOffset: idOffset,
         });
-        const services = createTestControllers(
+        services = createTestControllers(
             {
                 subscriptions: [
                     {
@@ -287,6 +290,55 @@ describe('SubscriptionController', () => {
 
         describe('user', () => {
             it('should be able list subscriptions when the user has no customer ID', async () => {
+                const result = await controller.getSubscriptionStatus({
+                    sessionKey,
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    userId,
+                    publishableKey: 'publishable_key',
+                    subscriptions: [],
+                    purchasableSubscriptions: [
+                        {
+                            id: 'sub_1',
+                            name: 'Product 99',
+                            description: 'A product named 99.',
+                            featureList: [
+                                'Feature 1',
+                                'Feature 2',
+                                'Feature 3',
+                            ],
+                            prices: [
+                                {
+                                    id: 'default',
+                                    interval: 'month',
+                                    intervalLength: 1,
+                                    currency: 'usd',
+                                    cost: 100,
+                                },
+                            ],
+                        },
+                    ],
+                });
+            });
+
+            it('should work when there is no financial controller', async () => {
+                controller = new SubscriptionController(
+                    stripe,
+                    auth,
+                    store,
+                    store,
+                    store,
+                    services.policies,
+                    store,
+                    purchasableItemsStore,
+                    null,
+                    store,
+                    contractStore
+                );
+
                 const result = await controller.getSubscriptionStatus({
                     sessionKey,
                     userId,
@@ -1067,6 +1119,56 @@ describe('SubscriptionController', () => {
             });
 
             it('should be able list subscriptions when the studio has no customer ID', async () => {
+                const result = await controller.getSubscriptionStatus({
+                    sessionKey,
+                    studioId,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    userId,
+                    studioId,
+                    publishableKey: 'publishable_key',
+                    subscriptions: [],
+                    purchasableSubscriptions: [
+                        {
+                            id: 'sub_1',
+                            name: 'Product 99',
+                            description: 'A product named 99.',
+                            featureList: [
+                                'Feature 1',
+                                'Feature 2',
+                                'Feature 3',
+                            ],
+                            prices: [
+                                {
+                                    id: 'default',
+                                    interval: 'month',
+                                    intervalLength: 1,
+                                    currency: 'usd',
+                                    cost: 100,
+                                },
+                            ],
+                        },
+                    ],
+                });
+            });
+
+            it('should work when there is no financial controller', async () => {
+                controller = new SubscriptionController(
+                    stripe,
+                    auth,
+                    store,
+                    store,
+                    store,
+                    services.policies,
+                    store,
+                    purchasableItemsStore,
+                    null,
+                    store,
+                    contractStore
+                );
+
                 const result = await controller.getSubscriptionStatus({
                     sessionKey,
                     studioId,

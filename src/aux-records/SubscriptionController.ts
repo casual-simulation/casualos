@@ -261,12 +261,10 @@ export class SubscriptionController {
                 request.sessionKey
             );
 
-            let accountBalances: Result<AccountBalances, SimpleError> = success(
-                {
-                    usd: undefined,
-                    credits: undefined,
-                }
-            );
+            let accountBalances: Result<
+                AccountBalances | undefined,
+                SimpleError
+            > = success(undefined);
             let customerId: string;
             let role: 'user' | 'studio';
             if (keyResult.success === false) {
@@ -291,10 +289,12 @@ export class SubscriptionController {
                     customerId = user.stripeCustomerId;
                     role = 'user';
 
-                    accountBalances =
-                        await this._financialController.getAccountBalances({
-                            userId: request.userId,
-                        });
+                    if (this._financialController) {
+                        accountBalances =
+                            await this._financialController.getAccountBalances({
+                                userId: request.userId,
+                            });
+                    }
                 } else if (request.studioId) {
                     const assignments =
                         await this._recordsStore.listStudioAssignments(
@@ -325,10 +325,12 @@ export class SubscriptionController {
                     customerId = studio.stripeCustomerId;
                     role = 'studio';
 
-                    accountBalances =
-                        await this._financialController.getAccountBalances({
-                            studioId: request.studioId,
-                        });
+                    if (this._financialController) {
+                        accountBalances =
+                            await this._financialController.getAccountBalances({
+                                studioId: request.studioId,
+                            });
+                    }
                 }
             }
 
@@ -2704,6 +2706,13 @@ export class SubscriptionController {
     async invoiceContract(
         request: InvoiceContractRequest
     ): Promise<Result<{ invoiceId: string }, SimpleError>> {
+        if (!this._financialController) {
+            return failure({
+                errorCode: 'not_supported',
+                errorMessage: 'This operation is not supported.',
+            });
+        }
+
         if (request.amount <= 0) {
             return failure({
                 errorCode: 'invalid_request',
