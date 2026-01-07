@@ -1,5 +1,6 @@
 import path from 'path';
 import fs from 'fs';
+import type { BuildOptions } from 'vite';
 import { defineConfig, splitVendorChunkPlugin, mergeConfig } from 'vite';
 import vue from '@vitejs/plugin-vue2';
 import copy from 'rollup-plugin-copy';
@@ -43,6 +44,85 @@ const casualOsPackages = fs
 
 const policies = getPolicies(true);
 
+const importableLibraries = {
+    yjs: './aux-web/shared/public/import-map/yjs',
+    luxon: './aux-web/shared/public/import-map/luxon',
+    'preact/compat': './aux-web/shared/public/import-map/preact.compat',
+    'preact/jsx-runtime':
+        './aux-web/shared/public/import-map/preact.jsx-runtime',
+    preact: './aux-web/shared/public/import-map/preact',
+    three: './aux-web/shared/public/import-map/three',
+    'rxjs/operators': './aux-web/shared/public/import-map/rxjs-operators',
+    rxjs: './aux-web/shared/public/import-map/rxjs',
+    'es-toolkit': './aux-web/shared/public/import-map/es-toolkit',
+    zod: './aux-web/shared/public/import-map/zod',
+};
+
+// The chunks that we want to create.
+const nodeModuleChunks: { [key: string]: string[] } = {
+    // Libraries that should be in the default chunk (not split out).
+    default: ['@loomhq/record-sdk/dist/esm/is-supported'],
+
+    // Libraries to split into their own chunks.
+    // This is usually done to ensure that large libraries are loaded lazily when they are needed.
+    loom: ['@loomhq/record-sdk'],
+    tfjs: ['@teachablemachine/image', '@tensorflow/tfjs', 'long/'],
+    monaco: ['@casual-simulation/monaco-editor'],
+    livekit: ['livekit-client'],
+    barcode: ['jsbarcode', '@ericblade/quagga2'],
+    qrcode: ['qrcode', '@chenfengyuan/vue-qrcode'],
+    three: ['@casual-simulation/three'],
+    yjs: ['yjs', 'lib0'],
+    'preact-compat': ['preact/compat'],
+    'rxjs-operators': ['rxjs/dist/esm/internal/operators'],
+    rxjs: ['rxjs'],
+};
+
+for (let lib of Object.keys(importableLibraries)) {
+    const libName = lib.replace('/', '-');
+    if (!nodeModuleChunks[libName]) {
+        nodeModuleChunks[libName] = [lib];
+    } else {
+        nodeModuleChunks[libName].push(lib);
+    }
+}
+
+const auxPlayerChunks = {
+    barcode: ['VueBarcode', 'BarcodeScanner'],
+    monaco: [
+        'MonacoHelpers',
+        'MonacoLibs',
+        'public/monaco-editor',
+        'MonacoTagDiffEditor',
+        'MonacoDiffEditor',
+        'MonacoTagEditor',
+        'CodeToolsPortal',
+        'MonacoEditor',
+    ],
+    qrcode: ['QrcodeStream', 'public/vue-qrcode-reader', 'public/callforth'],
+    vendor: ['vue-shortkey', 'multi-streams-mixer'],
+};
+
+const auxRuntimeChunks = {
+    monaco: ['AuxLibraryDefinitions'],
+};
+
+function findChunk(id: string, chunks: { [key: string]: string[] }) {
+    for (let [key, libs] of Object.entries(nodeModuleChunks)) {
+        for (let lib of libs) {
+            if (id.includes(lib)) {
+                console.log('Chunking', id, '-->', key);
+                if (key === 'default') {
+                    return null;
+                }
+                return key;
+            }
+        }
+    }
+
+    return undefined;
+}
+
 export default defineConfig(({ command, mode }) => ({
     logLevel: 'info',
     cacheDir: path.resolve(
@@ -74,16 +154,38 @@ export default defineConfig(({ command, mode }) => ({
                     ),
                 },
                 output: {
-                    manualChunks: {
-                        'loom-supported': ['@loomhq/record-sdk/is-supported'],
-                        loom: ['@loomhq/record-sdk'],
-                        tfjs: ['@teachablemachine/image', '@tensorflow/tfjs'],
+                    manualChunks: function (id) {
+                        if (id.includes('node_modules')) {
+                            const c = findChunk(id, nodeModuleChunks);
+                            if (typeof c !== 'undefined') {
+                                return c;
+                            }
+                            return 'vendor';
+                        } else if (id.includes('aux-player')) {
+                            const c = findChunk(id, auxPlayerChunks);
+                            if (typeof c !== 'undefined') {
+                                return c;
+                            }
+                        } else if (id.includes('aux-runtime')) {
+                            const c = findChunk(id, auxRuntimeChunks);
+                            if (typeof c !== 'undefined') {
+                                return c;
+                            }
+                        }
+
+                        return null;
                     },
+                    onlyExplicitManualChunks: true,
                 },
             },
             sourcemap: true,
             target: ['chrome100', 'firefox100', 'safari14', 'ios14', 'edge100'],
-        },
+            modulePreload: {
+                resolveDependencies() {
+                    return [];
+                },
+            },
+        } satisfies BuildOptions,
         mode === 'static'
             ? {
                   rollupOptions: {
@@ -133,25 +235,7 @@ export default defineConfig(({ command, mode }) => ({
             svgoOptions: false,
         }),
         importMapPlugin({
-            imports:
-                mode === 'static'
-                    ? {}
-                    : {
-                          yjs: './aux-web/shared/public/import-map/yjs',
-                          luxon: './aux-web/shared/public/import-map/luxon',
-                          preact: './aux-web/shared/public/import-map/preact',
-                          'preact/compat':
-                              './aux-web/shared/public/import-map/preact.compat',
-                          'preact/jsx-runtime':
-                              './aux-web/shared/public/import-map/preact.jsx-runtime',
-                          three: './aux-web/shared/public/import-map/three',
-                          rxjs: './aux-web/shared/public/import-map/rxjs',
-                          'rxjs/operators':
-                              './aux-web/shared/public/import-map/rxjs-operators',
-                          'es-toolkit':
-                              './aux-web/shared/public/import-map/es-toolkit',
-                          zod: './aux-web/shared/public/import-map/zod',
-                      },
+            imports: mode === 'static' ? {} : importableLibraries,
         }),
         {
             ...copy({
