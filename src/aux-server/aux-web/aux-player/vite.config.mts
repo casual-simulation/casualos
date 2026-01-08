@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 import type { BuildOptions } from 'vite';
-import { defineConfig, splitVendorChunkPlugin, mergeConfig } from 'vite';
+import { defineConfig, mergeConfig } from 'vite';
 import vue from '@vitejs/plugin-vue2';
 import copy from 'rollup-plugin-copy';
 import { createSvgIconsPlugin } from 'vite-plugin-svg-icons';
