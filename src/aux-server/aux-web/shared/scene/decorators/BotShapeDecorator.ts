@@ -99,10 +99,8 @@ import {
     setLightPenumbra,
     setLightDecay,
     setLightGroundColor,
-    createMapPlane,
     createPlane,
-    defaultMapProvider,
-    getMapProvider,
+    createMapPlane,
 } from '../SceneUtils';
 import { FrustumHelper } from '../helpers/FrustumHelper';
 import { Axial, HexMesh } from '../hex';
@@ -121,9 +119,7 @@ import type { AnimationMixerHandle } from '../AnimationHelper';
 import type { AuxBotVisualizerFinder } from '../../AuxBotVisualizerFinder';
 import { LDrawLoader } from '../../public/ldraw-loader/LDrawLoader';
 import { MapView } from '../map/MapView';
-import { MapTilerProvider } from 'geo-three';
 import { CustomMapProvider } from '../map/CustomMapProvider';
-// import { LODConstant } from '../../public/geo-three/LODConstant';
 
 export const gltfPool = getGLTFPool('main');
 
@@ -142,6 +138,11 @@ interface CancellationToken {
 
 let ldrawLoader: LDrawLoader = null;
 let jsonObjectLoader: ObjectLoader = null;
+
+/**
+ * The default provider to use when none is specified
+ */
+export const defaultMapProvider = 'bingMaps';
 
 export class BotShapeDecorator
     extends AuxBot3DDecoratorBase
@@ -315,7 +316,6 @@ export class BotShapeDecorator
             this._updateMapLOD(calc);
             this._updateMapTags(calc);
             this._updateMapProvider(calc);
-            this._updateCustomMapProviderURL(calc);
         }
 
         if (this._iframe) {
@@ -891,7 +891,7 @@ export class BotShapeDecorator
         }
     }
 
-    private _updateMapTags(calc: BotCalculationContext) {
+    private async _updateMapTags(calc: BotCalculationContext) {
         if (!this._mapView) {
             return;
         }
@@ -910,6 +910,8 @@ export class BotShapeDecorator
                 'formMapHeightProviderAPIKey',
                 null
             );
+            const { MapTilerProvider } = await import('geo-three');
+
             if (
                 !(this._mapView.heightProvider instanceof MapTilerProvider) ||
                 this._mapView.heightProvider.apiKey !== mapTilerApiKey
@@ -1754,7 +1756,7 @@ export class BotShapeDecorator
         this._canHaveStroke = false;
     }
 
-    private _updateMapProvider(calc: BotCalculationContext) {
+    private async _updateMapProvider(calc: BotCalculationContext) {
         if (!this._mapView) {
             return;
         }
@@ -1779,6 +1781,7 @@ export class BotShapeDecorator
             this._mapProviderName !== providerName ||
             this._mapProviderApiKey !== apiKey
         ) {
+            const { getMapProvider } = await import('../MapUtils');
             const provider = getMapProvider(providerName, apiKey);
             this._mapView.setProvider(provider);
 
@@ -1789,7 +1792,7 @@ export class BotShapeDecorator
         }
     }
 
-    private _createMapPlane() {
+    private async _createMapPlane() {
         // Get the provider name from the tag
         const providerName = calculateStringTagValue(
             null,
@@ -1805,12 +1808,10 @@ export class BotShapeDecorator
             null
         );
 
-        this._mapView = createMapPlane(
-            new Vector3(0, 0, 0),
-            1,
-            providerName,
-            apiKey
-        );
+        const { getMapProvider } = await import('../MapUtils');
+        const provider = getMapProvider(providerName, apiKey);
+
+        this._mapView = createMapPlane(new Vector3(0, 0, 0), 1, provider);
 
         this.mesh = null;
         const colliderPlane = (this.collider = createPlane(1));
@@ -1829,20 +1830,6 @@ export class BotShapeDecorator
             this._mapLODLevel,
             coords.x, // lon
             coords.y // lat
-        );
-    }
-
-    private _updateCustomMapProviderURL(calc: BotCalculationContext) {
-        if (!this._mapView) {
-            return;
-        }
-
-        // Get custom URL template for tile provider (if any)
-        const customURL = calculateStringTagValue(
-            calc,
-            this.bot3D.bot,
-            'mapProviderURL',
-            null
         );
     }
 

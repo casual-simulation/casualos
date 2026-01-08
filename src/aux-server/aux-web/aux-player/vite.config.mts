@@ -71,6 +71,7 @@ const nodeModuleChunks: { [key: string]: string[] } = {
     livekit: ['livekit-client'],
     barcode: ['jsbarcode', '@ericblade/quagga2'],
     qrcode: ['qrcode', '@chenfengyuan/vue-qrcode'],
+    'geo-three': ['geo-three'],
     three: ['@casual-simulation/three'],
     yjs: ['yjs', 'lib0'],
     preact: ['preact'],
@@ -105,6 +106,7 @@ const auxPlayerChunks = {
 
 const sharedChunks = {
     vendor: ['NodeCryptoReplacement'],
+    'geo-three': ['MapUtils', 'scene/map/CustomMapProvider'],
 };
 
 const auxRuntimeChunks = {

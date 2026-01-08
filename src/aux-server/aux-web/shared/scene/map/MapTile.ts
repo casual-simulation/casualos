@@ -18,7 +18,7 @@
 import type { Material } from '@casual-simulation/three';
 import { Vector3 } from '@casual-simulation/three';
 import type { MapProvider } from 'geo-three';
-import { TextureUtils } from 'geo-three';
+import { TextureUtils } from '../../public/geo-three/TextureUtils';
 import {
     FrontSide,
     LinearFilter,
@@ -78,8 +78,15 @@ export class MapTile extends Object3D {
 
     private static _GRID_WIDTH = 256;
     private static _GRID_HEIGHT = 256;
-    private static _SEA_LEVEL_TEXTURE =
-        TextureUtils.createFillTexture('#000000');
+    private static _SEA_LEVEL_TEXTURE: Texture | null = null;
+
+    private static getSeaLevelTexture(): Texture {
+        if (!MapTile._SEA_LEVEL_TEXTURE) {
+            MapTile._SEA_LEVEL_TEXTURE =
+                TextureUtils.createFillTexture('#000000');
+        }
+        return MapTile._SEA_LEVEL_TEXTURE;
+    }
 
     private get _material(): THREE.MeshBasicMaterial {
         return this._plane.material as THREE.MeshBasicMaterial;
@@ -245,7 +252,7 @@ export class MapTile extends Object3D {
 
     static prepareMaterial(material: Material): Material {
         material.userData = {
-            heightMap: { value: MapTile._SEA_LEVEL_TEXTURE },
+            heightMap: { value: MapTile.getSeaLevelTexture() },
             heightScale: { value: 0.0 },
             heightOffset: { value: 0.0 },
         };
@@ -375,7 +382,7 @@ export class MapTile extends Object3D {
             this._material.userData.heightScale.value = 0.0;
             this._material.userData.heightOffset.value = 0.0;
             this._material.userData.heightMap.value =
-                MapTile._SEA_LEVEL_TEXTURE;
+                MapTile.getSeaLevelTexture();
             this._plane.frustumCulled = true;
         }
 
