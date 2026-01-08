@@ -57,6 +57,10 @@ import '@casual-simulation/aux-components/fonts/NotoSansKR/NotoSansKR.css';
 import '@casual-simulation/aux-components/SVGPolyfill';
 
 import { appManager, AppType } from '../shared/AppManager';
+
+// Start the initalization process before vue starts mounting
+appManager.init();
+
 import PlayerApp from './PlayerApp/PlayerApp';
 import PlayerHome from './PlayerHome/PlayerHome';
 import { setTheme } from '../shared/StyleHelpers';
