@@ -521,7 +521,9 @@ export class AppManager {
         return this._initPromise;
     }
 
-    private async _initCore() {
+    // We use generator functions that yield promises to avoid additional microtasks
+    // when chaining awaits. This helps us get more done in the same event loop tick.
+    private *_initFlow(): Generator<Promise<any>, void, any> {
         console.log('[AppManager] Starting init...');
         this._reportTime('Time to start', 'start');
         console.log(
@@ -529,21 +531,31 @@ export class AppManager {
             this.version.latestTaggedVersion,
             this.version.gitCommit
         );
-        await this._initIndexedDB();
         this._sendProgress('Running aux...', 0);
-        await this._initConfig();
+        yield* this._initConfig();
         this._reportTime('Time to config', 'config');
-        await Promise.all([
+        const promises = [
             this._loadDeviceInfo().then(() => {
                 this._reportTime('Time to device info', 'device_info');
             }),
-            this._initAuth().then(() => {
-                this._reportTime('Time to auth', 'auth');
-            }),
-        ]);
-        await this._initComId();
+        ];
+        // Do not need to wait on auth in order to proceed with init.
+        this._initAuth().then(() => {
+            this._reportTime('Time to auth', 'auth');
+        });
+        yield* this._initComId();
+        this._reportTime('Time to comId', 'init');
+        yield Promise.all(promises);
         this._reportTime('Time to init', 'init');
         this._sendProgress('Initialized.', 1, true);
+    }
+
+    private async _initCore() {
+        const gen = this._initFlow();
+        let value = gen.next();
+        while (!value.done) {
+            value = gen.next(await value.value);
+        }
     }
 
     private _reportTime(
@@ -650,11 +662,14 @@ export class AppManager {
         });
     }
 
-    private async _initIndexedDB() {
+    private async _initIndexedDB(): Promise<void> {
+        if (this._db) {
+            return;
+        }
         if (!this._initIndexedDBPromise) {
             this._initIndexedDBPromise = this._initIndexedDBCore();
         }
-        return this._initIndexedDBPromise;
+        await this._initIndexedDBPromise;
     }
 
     private async _initIndexedDBCore() {
@@ -684,7 +699,7 @@ export class AppManager {
     }
 
     private async _loadDeviceInfo() {
-        console.log('[AppManager] Initializing Device Config');
+        console.log('[AppManager] Loading device info...');
         const nav: any = navigator;
         let arSupported = false;
         if (nav.xr) {
@@ -753,10 +768,12 @@ export class AppManager {
         });
     }
 
-    private async _initConfig() {
+    private *_initConfig(): Generator<Promise<any>, void, any> {
         console.log('[AppManager] Init config...');
-        this._config = await this._getBaseConfig();
-        await this._saveBaseConfig();
+        this._config = yield this._getBaseConfig();
+
+        // Don't await when saving the config. It shouldn't be in the hot path.
+        this._saveBaseConfig(this._config);
         if (!this._config) {
             console.warn(
                 '[AppManager] Config not able to be fetched from the server or local storage.'
@@ -775,21 +792,21 @@ export class AppManager {
         }
     }
 
-    private async _initComId() {
+    private *_initComId(): Generator<Promise<any>, void, any> {
         if (this._config.comId) {
             this._comId = this._config.comId;
             console.log('[AppManager] Using comId:', this._comId);
         } else {
-            await this._initComIdFromUrl();
+            yield* this._initComIdFromUrl();
         }
     }
 
-    private async _initComIdFromUrl() {
+    private *_initComIdFromUrl(): Generator<Promise<any>, void, any> {
         this._comId = this.getComIdFromUrl();
         if (this._comId) {
             console.log('[AppManager] Using comId:', this._comId);
-            const config = await this._getComIdConfig();
-            this._saveComIdConfig(config.comId);
+            const config = yield this._getComIdConfig();
+            yield this._saveComIdConfig(config.comId);
             if (config && config.playerConfig) {
                 console.log(
                     '[AppManager] Updating player config with comId config',
@@ -1258,13 +1275,13 @@ export class AppManager {
         }
     }
 
-    private async _saveBaseConfig() {
+    private async _saveBaseConfig(config: CasualOSConfig) {
         try {
             const completed = await Promise.race([
                 new Promise<void>((resolve) =>
                     setTimeout(resolve, SAVE_CONFIG_TIMEOUT_MILISECONDS)
                 ).then(() => false),
-                this._saveBaseConfigCore().then(() => true),
+                this._saveBaseConfigCore(config).then(() => true),
             ]);
 
             if (!completed) {
@@ -1277,14 +1294,12 @@ export class AppManager {
         }
     }
 
-    private async _saveBaseConfigCore() {
-        if (!this._db) {
-            return;
-        }
-        if (this.config) {
+    private async _saveBaseConfigCore(config: CasualOSConfig) {
+        await this._initIndexedDB();
+        if (config) {
             await putItem(this._db, 'keyval', {
                 key: 'config',
-                value: this.config,
+                value: config,
             });
         } else {
             await deleteItem(this._db, 'keyval', 'config');
