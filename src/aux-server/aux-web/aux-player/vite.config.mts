@@ -75,6 +75,7 @@ const nodeModuleChunks: { [key: string]: string[] } = {
     yjs: ['yjs', 'lib0'],
     preact: ['preact'],
     rxjs: ['rxjs', 'rxjs/dist/esm/internal/operators'],
+    'vue-filepond': ['vue-filepond', 'filepond'],
 };
 
 for (let lib of Object.keys(importableLibraries)) {
