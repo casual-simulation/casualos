@@ -92,8 +92,6 @@ import BotChat from '../../shared/vue-components/BotChat/BotChat';
 import type { SimulationInfo } from '../../shared/RouterUtils';
 import { createSimulationInfo } from '../../shared/RouterUtils';
 import BotSheet from '../../shared/vue-components/BotSheet/BotSheet';
-import type { BotRenderer } from '../../shared/scene/BotRenderer';
-import { getRenderer } from '../../shared/scene/BotRenderer';
 import UploadFiles from '../../shared/vue-components/UploadFiles/UploadFiles';
 import ShowInputModal from '../../shared/vue-components/ShowInputModal/ShowInputModal';
 import ShowConfirmModal from '../../shared/vue-components/ShowConfirmModal/ShowConfirmModal';
@@ -359,8 +357,6 @@ export default class PlayerApp extends Vue {
 
     confirmDialogOptions: ConfirmDialogOptions = new ConfirmDialogOptions();
     alertDialogOptions: AlertDialogOptions = new AlertDialogOptions();
-
-    @Provide() botRenderer: BotRenderer = getRenderer();
 
     private _subs: SubscriptionLike[] = [];
     private _simulationSubs: Map<Simulation, SubscriptionLike[]> = new Map();
