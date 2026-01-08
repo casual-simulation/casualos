@@ -140,7 +140,6 @@ export default defineConfig(({ command, mode }) => ({
         {
             outDir: distDir,
             emptyOutDir: false,
-            minify: false,
             rollupOptions: {
                 input: {
                     main: path.resolve(__dirname, 'index.html'),
@@ -193,7 +192,6 @@ export default defineConfig(({ command, mode }) => ({
                         return null;
                     },
                     onlyExplicitManualChunks: true,
-                    minifyInternalExports: false,
                 },
             },
             sourcemap: true,
