@@ -73,9 +73,8 @@ const nodeModuleChunks: { [key: string]: string[] } = {
     qrcode: ['qrcode', '@chenfengyuan/vue-qrcode'],
     three: ['@casual-simulation/three'],
     yjs: ['yjs', 'lib0'],
-    'preact-compat': ['preact/compat'],
-    'rxjs-operators': ['rxjs/dist/esm/internal/operators'],
-    rxjs: ['rxjs'],
+    preact: ['preact'],
+    rxjs: ['rxjs', 'rxjs/dist/esm/internal/operators'],
 };
 
 for (let lib of Object.keys(importableLibraries)) {
@@ -103,15 +102,19 @@ const auxPlayerChunks = {
     vendor: ['vue-shortkey', 'multi-streams-mixer'],
 };
 
+const sharedChunks = {
+    vendor: ['NodeCryptoReplacement'],
+};
+
 const auxRuntimeChunks = {
     monaco: ['AuxLibraryDefinitions'],
 };
 
 function findChunk(id: string, chunks: { [key: string]: string[] }) {
-    for (let [key, libs] of Object.entries(nodeModuleChunks)) {
+    for (let [key, libs] of Object.entries(chunks)) {
         for (let lib of libs) {
             if (id.includes(lib)) {
-                console.log('Chunking', id, '-->', key);
+                // console.log('Chunking', id, '-->', key);
                 if (key === 'default') {
                     return null;
                 }
@@ -137,6 +140,7 @@ export default defineConfig(({ command, mode }) => ({
         {
             outDir: distDir,
             emptyOutDir: false,
+            minify: false,
             rollupOptions: {
                 input: {
                     main: path.resolve(__dirname, 'index.html'),
@@ -155,6 +159,13 @@ export default defineConfig(({ command, mode }) => ({
                 },
                 output: {
                     manualChunks: function (id) {
+                        if (
+                            id.includes('\0commonjsHelpers.js') ||
+                            id.includes('\0commonjs-dynamic-modules')
+                        ) {
+                            return 'commonjs';
+                        }
+
                         if (id.includes('node_modules')) {
                             const c = findChunk(id, nodeModuleChunks);
                             if (typeof c !== 'undefined') {
@@ -171,11 +182,18 @@ export default defineConfig(({ command, mode }) => ({
                             if (typeof c !== 'undefined') {
                                 return c;
                             }
+                        } else if (id.includes('shared')) {
+                            const c = findChunk(id, sharedChunks);
+                            if (typeof c !== 'undefined') {
+                                console.log('Chunking', id, '-->', c);
+                                return c;
+                            }
                         }
 
                         return null;
                     },
                     onlyExplicitManualChunks: true,
+                    minifyInternalExports: false,
                 },
             },
             sourcemap: true,
@@ -317,7 +335,7 @@ export default defineConfig(({ command, mode }) => ({
                           ...policies.files,
                       },
                   }),
-                  splitVendorChunkPlugin(),
+                  //   splitVendorChunkPlugin(),
               ]),
         ...(command === 'build'
             ? [generateDependencyGraphRollupPlugin(distDir), visualizer()]
@@ -384,6 +402,12 @@ export default defineConfig(({ command, mode }) => ({
             esbuild: 'esbuild-wasm',
             'monaco-editor': '@casual-simulation/monaco-editor',
             lodash: 'es-toolkit/compat',
+            crypto: path.resolve(
+                __dirname,
+                '..',
+                'shared',
+                'NodeCryptoReplacement.ts'
+            ),
 
             ...(mode === 'static'
                 ? {
@@ -503,5 +527,17 @@ export default defineConfig(({ command, mode }) => ({
                 quietDeps: true,
             },
         },
+    },
+    worker: {
+        rollupOptions: {
+            output: {
+                manualChunks: undefined,
+            },
+        },
+        plugins: () => [
+            visualizer({
+                filename: path.resolve('worker-stats.html'),
+            }),
+        ],
     },
 }));
