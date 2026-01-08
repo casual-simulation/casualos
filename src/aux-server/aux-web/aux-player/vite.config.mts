@@ -110,6 +110,8 @@ const auxRuntimeChunks = {
     monaco: ['AuxLibraryDefinitions'],
 };
 
+let workerCounter = 0;
+
 function findChunk(id: string, chunks: { [key: string]: string[] }) {
     for (let [key, libs] of Object.entries(chunks)) {
         for (let lib of libs) {
@@ -534,7 +536,7 @@ export default defineConfig(({ command, mode }) => ({
         },
         plugins: () => [
             visualizer({
-                filename: path.resolve('worker-stats.html'),
+                filename: path.resolve(`worker-stats-${workerCounter++}.html`),
             }),
         ],
     },
