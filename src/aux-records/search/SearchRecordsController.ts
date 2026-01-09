@@ -804,7 +804,7 @@ export const SEARCH_DOCUMENT_SCHEMA = z
     .object({
         recordName: RECORD_NAME_VALIDATION.optional().nullable(),
         address: ADDRESS_VALIDATION.optional().nullable(),
-        resourceKind: RESOURCE_KIND_VALIDATION.optional().nullable(),
+        resourceKind: RESOURCE_KIND_VALIDATION().optional().nullable(),
     })
     .catchall(
         z.union([

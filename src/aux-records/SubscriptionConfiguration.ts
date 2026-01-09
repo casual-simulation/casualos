@@ -25,7 +25,7 @@ type ZodConfigSchemaAssertion = HasType<
     SubscriptionConfiguration
 >;
 
-const getWebhookFeaturesSchema = memoize(() =>
+export const getWebhookFeaturesSchema = memoize(() =>
     z
         .object({
             allowed: z
@@ -118,7 +118,7 @@ const getWebhookFeaturesSchema = memoize(() =>
 
 export type WebhookFeaturesSchema = ReturnType<typeof getWebhookFeaturesSchema>;
 
-const getCurrencyLimitsSchema = memoize(() =>
+export const getCurrencyLimitsSchema = memoize(() =>
     z
         .object({})
         .catchall(
@@ -178,7 +178,7 @@ const getCurrencyLimitsSchema = memoize(() =>
 
 export type CurrencyLimitsSchema = ReturnType<typeof getCurrencyLimitsSchema>;
 
-const getStoreFeaturesSchema = memoize(() =>
+export const getStoreFeaturesSchema = memoize(() =>
     z
         .object({
             allowed: z
@@ -208,7 +208,7 @@ const getStoreFeaturesSchema = memoize(() =>
 
 export type StoreFeaturesSchema = ReturnType<typeof getStoreFeaturesSchema>;
 
-const getContractFeaturesSchema = memoize(() =>
+export const getContractFeaturesSchema = memoize(() =>
     z
         .object({
             allowed: z
@@ -240,7 +240,7 @@ export type ContractFeaturesSchema = ReturnType<
     typeof getContractFeaturesSchema
 >;
 
-const getDataFeaturesSchema = memoize(() =>
+export const getDataFeaturesSchema = memoize(() =>
     z.object({
         allowed: z
             .boolean()
@@ -296,7 +296,7 @@ const getDataFeaturesSchema = memoize(() =>
 
 export type DataFeaturesSchema = ReturnType<typeof getDataFeaturesSchema>;
 
-const getSubscriptionFeaturesSchema = memoize(() =>
+export const getSubscriptionFeaturesSchema = memoize(() =>
     z.object({
         records: z
             .object({
@@ -816,7 +816,7 @@ export type SubscriptionFeaturesSchema = ReturnType<
     typeof getSubscriptionFeaturesSchema
 >;
 
-const getSubscriptionConfigSchema = memoize(() =>
+export const getSubscriptionConfigSchema = memoize(() =>
     z.object({
         webhookSecret: z
             .string()

@@ -43,7 +43,7 @@ export interface DeviceAction extends Action {
 }
 export const deviceActionSchema = z.object({
     type: z.literal('device'),
-    connection: connectionInfoSchema,
+    connection: connectionInfoSchema(),
     event: z.any(),
     taskId: z.union([z.string(), z.number()]).optional(),
 });
@@ -210,7 +210,7 @@ export const deviceActionResultSchema = z.object({
     type: z.literal('device_result'),
     result: z.any(),
     taskId: z.union([z.string(), z.number()]).optional(),
-    connection: connectionInfoSchema,
+    connection: connectionInfoSchema(),
 });
 type ZodDeviceActionResult = z.infer<typeof deviceActionResultSchema>;
 type ZodDeviceActionResultAssertion = HasType<
@@ -243,7 +243,7 @@ export const deviceActionErrorSchema = z.object({
     type: z.literal('device_error'),
     error: z.any(),
     taskId: z.union([z.string(), z.number()]).optional(),
-    connection: connectionInfoSchema,
+    connection: connectionInfoSchema(),
 });
 type ZodDeviceActionError = z.infer<typeof deviceActionErrorSchema>;
 type ZodDeviceActionErrorAssertion = HasType<

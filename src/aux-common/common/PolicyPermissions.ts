@@ -773,7 +773,7 @@ export interface Permission {
 
 export const PERMISSION_VALIDATION = memoize(() =>
     z.object({
-        subjectType: SUBJECT_TYPE_VALIDATION,
+        subjectType: SUBJECT_TYPE_VALIDATION(),
         subjectId: z.string().min(1),
         resourceId: z.string().min(1).nullable().optional(),
         expireTimeMs: z.number().nullable(),
@@ -878,7 +878,7 @@ export const FILE_PERMISSION_VALIDATION = memoize(() =>
     PERMISSION_VALIDATION().extend({
         resourceKind: z.literal(FILE_RESOURCE_KIND),
         action: FILE_ACTION_KINDS_VALIDATION().nullable(),
-        options: FILE_PERMISSION_OPTIONS_VALIDATION,
+        options: FILE_PERMISSION_OPTIONS_VALIDATION(),
     })
 );
 type ZodFilePermission = z.infer<ReturnType<typeof FILE_PERMISSION_VALIDATION>>;

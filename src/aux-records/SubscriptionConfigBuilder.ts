@@ -51,8 +51,6 @@ import type {
 import {
     getStoreFeaturesSchema,
     getContractFeaturesSchema,
-} from './SubscriptionConfiguration';
-import {
     allowAllDefaultFeatures,
     allowAllFeatures,
     getDataFeaturesSchema,

@@ -15,6 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+import { memoize } from 'es-toolkit';
 import { z } from 'zod';
 
 export interface ConnectionInfo {
@@ -33,12 +34,14 @@ export interface ConnectionInfo {
      */
     userId: string | null;
 }
-export const connectionInfoSchema = z.object({
-    connectionId: z.string(),
-    sessionId: z.string(),
-    userId: z.string(),
-});
-type ZodConnectionInfo = z.infer<typeof connectionInfoSchema>;
+export const connectionInfoSchema = memoize(() =>
+    z.object({
+        connectionId: z.string(),
+        sessionId: z.string(),
+        userId: z.string(),
+    })
+);
+type ZodConnectionInfo = z.infer<ReturnType<typeof connectionInfoSchema>>;
 type ZodConnectionInfoAssertion = HasType<ZodConnectionInfo, ConnectionInfo>;
 
 export function connectionInfo(
