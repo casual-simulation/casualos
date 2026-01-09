@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import {
-    subscriptionConfigSchema,
+    getSubscriptionConfigSchema,
     type SubscriptionConfiguration,
 } from './SubscriptionConfiguration';
 import { privoSchema, type PrivoConfiguration } from './PrivoConfiguration';
@@ -80,7 +80,7 @@ export interface DefaultConfiguration {
 export const CONFIGURATION_SCHEMAS = [
     {
         key: SUBSCRIPTIONS_CONFIG_KEY,
-        schema: subscriptionConfigSchema,
+        schema: getSubscriptionConfigSchema(),
     } as const,
     { key: PRIVO_CONFIG_KEY, schema: privoSchema } as const,
     { key: MODERATION_CONFIG_KEY, schema: moderationSchema } as const,
@@ -93,7 +93,7 @@ export const CONFIGURATION_SCHEMAS = [
  * The schemas for the different configuration values.
  */
 export const CONFIGURATION_SCHEMAS_MAP = {
-    [SUBSCRIPTIONS_CONFIG_KEY]: subscriptionConfigSchema,
+    [SUBSCRIPTIONS_CONFIG_KEY]: getSubscriptionConfigSchema(),
     [PRIVO_CONFIG_KEY]: privoSchema,
     [MODERATION_CONFIG_KEY]: moderationSchema,
     [WEB_CONFIG_KEY]: WEB_CONFIG_SCHEMA,

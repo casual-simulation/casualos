@@ -18,7 +18,7 @@
 import { moderationSchema } from './ModerationConfiguration';
 import { notificationsSchema } from './SystemNotificationMessenger';
 import { privoSchema } from './PrivoConfiguration';
-import { subscriptionConfigSchema } from './SubscriptionConfiguration';
+import { getSubscriptionConfigSchema } from './SubscriptionConfiguration';
 import { z } from 'zod';
 import { WEB_CONFIG_SCHEMA } from '@casual-simulation/aux-common';
 import { WEB_MANIFEST_SCHEMA } from '@casual-simulation/aux-common/common/WebManifest';
@@ -1297,7 +1297,7 @@ Because repo/add_updates is a very common permission, we periodically cache perm
                 'Financial Interface configuration options for tigerbeetle. If omitted, then tigerbeetle will be disabled.'
             ),
 
-        subscriptions: subscriptionConfigSchema
+        subscriptions: getSubscriptionConfigSchema()
             .optional()
             .describe(
                 'The default subscription configuration. If omitted, then subscription features will be disabled.'
