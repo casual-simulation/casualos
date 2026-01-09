@@ -164,7 +164,10 @@ registerRoute(
 );
 
 registerRoute(
-    ({ url }) => /\/$/.test(url.pathname),
+    ({ url }) =>
+        /\/$/.test(url.pathname) &&
+        !url.searchParams.has('comId') &&
+        !url.searchParams.has('comID'),
     new StaleWhileRevalidate({
         cacheName: 'root',
         plugins: [
