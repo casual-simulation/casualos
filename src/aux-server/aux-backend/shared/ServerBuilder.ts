@@ -48,7 +48,7 @@ import type {
 import {
     DNSDomainNameValidator,
     PurchasableItemRecordsController,
-    serverConfigSchema,
+    getServerConfigSchema,
 } from '@casual-simulation/aux-records';
 import {
     AuthController,
@@ -454,6 +454,7 @@ export class ServerBuilder implements SubscriptionLike {
     private _databasesController: DatabaseRecordsController | null = null;
 
     constructor(options?: ServerConfig) {
+        const serverConfigSchema = getServerConfigSchema();
         this._options =
             options ??
             serverConfigSchema.parse(
