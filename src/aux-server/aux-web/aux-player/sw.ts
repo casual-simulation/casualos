@@ -162,3 +162,15 @@ registerRoute(
         ],
     })
 );
+
+registerRoute(
+    ({ url }) => /\/$/.test(url.pathname),
+    new StaleWhileRevalidate({
+        cacheName: 'root',
+        plugins: [
+            new ExpirationPlugin({
+                maxEntries: 1,
+            }),
+        ],
+    })
+);
