@@ -192,6 +192,10 @@ export function traced(
                         return ret;
                     }
                 } catch (err) {
+                    console.error(
+                        `[Trace] [${propertyKey}] Caught error:`,
+                        err
+                    );
                     errorCounter?.add(
                         1,
                         metricOptions.errorCounter?.attributes?.(args, err)
