@@ -15,6 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+import { memoize } from 'es-toolkit';
 import { z } from 'zod';
 
 /**
@@ -385,204 +386,241 @@ export type AvailablePermissions =
     | ContractPermission
     | InvoicePermission;
 
-export const SUBJECT_TYPE_VALIDATION = z.enum(['user', 'inst', 'role']);
+export const SUBJECT_TYPE_VALIDATION = memoize(() =>
+    z.enum(['user', 'inst', 'role'])
+);
 
-export const DATA_ACTION_KINDS_VALIDATION = z.enum([
-    READ_ACTION,
-    CREATE_ACTION,
-    UPDATE_ACTION,
-    DELETE_ACTION,
-    LIST_ACTION,
-]);
+export const DATA_ACTION_KINDS_VALIDATION = memoize(() =>
+    z.enum([
+        READ_ACTION,
+        CREATE_ACTION,
+        UPDATE_ACTION,
+        DELETE_ACTION,
+        LIST_ACTION,
+    ])
+);
 
-export const FILE_ACTION_KINDS_VALIDATION = z.enum([
-    READ_ACTION,
-    CREATE_ACTION,
-    UPDATE_ACTION,
-    DELETE_ACTION,
-    LIST_ACTION,
-]);
+export const FILE_ACTION_KINDS_VALIDATION = memoize(() =>
+    z.enum([
+        READ_ACTION,
+        CREATE_ACTION,
+        UPDATE_ACTION,
+        DELETE_ACTION,
+        LIST_ACTION,
+    ])
+);
 
-export const EVENT_ACTION_KINDS_VALIDATION = z.enum([
-    INCREMENT_ACTION,
-    COUNT_ACTION,
-    UPDATE_ACTION,
-    LIST_ACTION,
-]);
+export const EVENT_ACTION_KINDS_VALIDATION = memoize(() =>
+    z.enum([INCREMENT_ACTION, COUNT_ACTION, UPDATE_ACTION, LIST_ACTION])
+);
 
-export const MARKER_ACTION_KINDS_VALIDATION = z.enum([
-    ASSIGN_ACTION,
-    UNASSIGN_ACTION,
-    GRANT_PERMISSION_ACTION,
-    REVOKE_PERMISSION_ACTION,
-    READ_ACTION,
-]);
+export const MARKER_ACTION_KINDS_VALIDATION = memoize(() =>
+    z.enum([
+        ASSIGN_ACTION,
+        UNASSIGN_ACTION,
+        GRANT_PERMISSION_ACTION,
+        REVOKE_PERMISSION_ACTION,
+        READ_ACTION,
+    ])
+);
 
-export const ROLE_ACTION_KINDS_VALIDATION = z.enum([
-    GRANT_ACTION,
-    REVOKE_ACTION,
-    READ_ACTION,
-    UPDATE_ACTION,
-    LIST_ACTION,
-]);
+export const ROLE_ACTION_KINDS_VALIDATION = memoize(() =>
+    z.enum([
+        GRANT_ACTION,
+        REVOKE_ACTION,
+        READ_ACTION,
+        UPDATE_ACTION,
+        LIST_ACTION,
+    ])
+);
 
-export const INST_ACTION_KINDS_VALIDATION = z.enum([
-    CREATE_ACTION,
-    READ_ACTION,
-    UPDATE_ACTION,
-    UPDATE_DATA_ACTION,
-    DELETE_ACTION,
-    LIST_ACTION,
-    SEND_ACTION_ACTION,
-]);
+export const INST_ACTION_KINDS_VALIDATION = memoize(() =>
+    z.enum([
+        CREATE_ACTION,
+        READ_ACTION,
+        UPDATE_ACTION,
+        UPDATE_DATA_ACTION,
+        DELETE_ACTION,
+        LIST_ACTION,
+        SEND_ACTION_ACTION,
+    ])
+);
 
-export const LOOM_ACTION_KINDS_VALIDATION = z.enum([CREATE_ACTION]);
+export const LOOM_ACTION_KINDS_VALIDATION = memoize(() =>
+    z.enum([CREATE_ACTION])
+);
 
-export const SLOYD_ACTION_KINDS_VALIDATION = z.enum([CREATE_ACTION]);
+export const SLOYD_ACTION_KINDS_VALIDATION = memoize(() =>
+    z.enum([CREATE_ACTION])
+);
+export const HUME_ACTION_KINDS_VALIDATION = memoize(() =>
+    z.enum([CREATE_ACTION])
+);
+export const OPENAI_REALTIME_ACTION_KINDS_VALIDATION = memoize(() =>
+    z.enum([CREATE_ACTION])
+);
 
-export const HUME_ACTION_KINDS_VALIDATION = z.enum([CREATE_ACTION]);
+export const WEBHOOK_ACTION_KINDS_VALIDATION = memoize(() =>
+    z.enum([
+        CREATE_ACTION,
+        READ_ACTION,
+        UPDATE_ACTION,
+        DELETE_ACTION,
+        LIST_ACTION,
+        RUN_ACTION,
+    ])
+);
 
-export const OPENAI_REALTIME_ACTION_KINDS_VALIDATION = z.enum([CREATE_ACTION]);
+export const NOTIFICATION_ACTION_KINDS_VALIDATION = memoize(() =>
+    z.enum([
+        CREATE_ACTION,
+        READ_ACTION,
+        UPDATE_ACTION,
+        DELETE_ACTION,
+        LIST_ACTION,
+        SEND_ACTION,
+        SUBSCRIBE_ACTION,
+        UNSUBSCRIBE_ACTION,
+        LIST_SUBSCRIPTIONS_ACTION,
+    ])
+);
 
-export const WEBHOOK_ACTION_KINDS_VALIDATION = z.enum([
-    CREATE_ACTION,
-    READ_ACTION,
-    UPDATE_ACTION,
-    DELETE_ACTION,
-    LIST_ACTION,
-    RUN_ACTION,
-]);
+export const PACKAGE_ACTION_KINDS_VALIDATION = memoize(() =>
+    z.enum([
+        CREATE_ACTION,
+        READ_ACTION,
+        UPDATE_ACTION,
+        DELETE_ACTION,
+        LIST_ACTION,
+        RUN_ACTION,
+    ])
+);
 
-export const NOTIFICATION_ACTION_KINDS_VALIDATION = z.enum([
-    CREATE_ACTION,
-    READ_ACTION,
-    UPDATE_ACTION,
-    DELETE_ACTION,
-    LIST_ACTION,
-    SEND_ACTION,
-    SUBSCRIBE_ACTION,
-    UNSUBSCRIBE_ACTION,
-    LIST_SUBSCRIPTIONS_ACTION,
-]);
+export const PACKAGE_VERSION_ACTION_KINDS_VALIDATION = memoize(() =>
+    z.enum([
+        CREATE_ACTION,
+        READ_ACTION,
+        UPDATE_ACTION,
+        DELETE_ACTION,
+        LIST_ACTION,
+        RUN_ACTION,
+    ])
+);
 
-export const PACKAGE_ACTION_KINDS_VALIDATION = z.enum([
-    CREATE_ACTION,
-    READ_ACTION,
-    UPDATE_ACTION,
-    DELETE_ACTION,
-    LIST_ACTION,
-    RUN_ACTION,
-]);
+export const SEARCH_ACTION_KINDS_VALIDATION = memoize(() =>
+    z.enum([
+        CREATE_ACTION,
+        READ_ACTION,
+        UPDATE_ACTION,
+        DELETE_ACTION,
+        LIST_ACTION,
+    ])
+);
 
-export const PACKAGE_VERSION_ACTION_KINDS_VALIDATION = z.enum([
-    CREATE_ACTION,
-    READ_ACTION,
-    UPDATE_ACTION,
-    DELETE_ACTION,
-    LIST_ACTION,
-    RUN_ACTION,
-]);
+export const DATABASE_ACTION_KINDS_VALIDATION = memoize(() =>
+    z.enum([
+        CREATE_ACTION,
+        READ_ACTION,
+        UPDATE_ACTION,
+        DELETE_ACTION,
+        LIST_ACTION,
+    ])
+);
 
-export const SEARCH_ACTION_KINDS_VALIDATION = z.enum([
-    CREATE_ACTION,
-    READ_ACTION,
-    UPDATE_ACTION,
-    DELETE_ACTION,
-    LIST_ACTION,
-]);
+export const PURCHASABLE_ITEM_ACTION_KINDS_VALIDATION = memoize(() =>
+    z.enum([
+        CREATE_ACTION,
+        READ_ACTION,
+        UPDATE_ACTION,
+        DELETE_ACTION,
+        LIST_ACTION,
+        PURCHASE_ACTION,
+    ])
+);
 
-export const DATABASE_ACTION_KINDS_VALIDATION = z.enum([
-    CREATE_ACTION,
-    READ_ACTION,
-    UPDATE_ACTION,
-    DELETE_ACTION,
-    LIST_ACTION,
-]);
+export const CONTRACT_ACTION_KINDS_VALIDATION = memoize(() =>
+    z.enum([
+        CREATE_ACTION,
+        READ_ACTION,
+        UPDATE_ACTION,
+        DELETE_ACTION,
+        LIST_ACTION,
+        PURCHASE_ACTION,
+        CANCEL_ACTION,
+    ])
+);
 
-export const PURCHASABLE_ITEM_ACTION_KINDS_VALIDATION = z.enum([
-    CREATE_ACTION,
-    READ_ACTION,
-    UPDATE_ACTION,
-    DELETE_ACTION,
-    LIST_ACTION,
-    PURCHASE_ACTION,
-]);
+export const INVOICE_ACTION_KINDS_VALIDATION = memoize(() =>
+    z.enum([
+        CREATE_ACTION,
+        READ_ACTION,
+        UPDATE_ACTION,
+        DELETE_ACTION,
+        LIST_ACTION,
+        APPROVE_ACTION,
+        CANCEL_ACTION,
+    ])
+);
 
-export const CONTRACT_ACTION_KINDS_VALIDATION = z.enum([
-    CREATE_ACTION,
-    READ_ACTION,
-    UPDATE_ACTION,
-    DELETE_ACTION,
-    LIST_ACTION,
-    PURCHASE_ACTION,
-    CANCEL_ACTION,
-]);
+export const RESOURCE_KIND_VALIDATION = memoize(() =>
+    z.enum([
+        DATA_RESOURCE_KIND,
+        FILE_RESOURCE_KIND,
+        EVENT_RESOURCE_KIND,
+        MARKER_RESOURCE_KIND,
+        ROLE_RESOURCE_KIND,
+        INST_RESOURCE_KIND,
+        LOOM_RESOURCE_KIND,
+        SLOYD_RESOURCE_KIND,
+        HUME_RESOURCE_KIND,
+        OPENAI_REALTIME_RESOURCE_KIND,
+        WEBHOOK_RESOURCE_KIND,
+        NOTIFICATION_RESOURCE_KIND,
+        PACKAGE_RESOURCE_KIND,
+        PACKAGE_VERSION_RESOURCE_KIND,
+        SEARCH_RESOURCE_KIND,
+        DATABASE_RESOURCE_KIND,
+        PURCHASABLE_ITEM_RESOURCE_KIND,
+        CONTRACT_RESOURCE_KIND,
+        INVOICE_RESOURCE_KIND,
+    ])
+);
 
-export const INVOICE_ACTION_KINDS_VALIDATION = z.enum([
-    CREATE_ACTION,
-    READ_ACTION,
-    UPDATE_ACTION,
-    DELETE_ACTION,
-    LIST_ACTION,
-    APPROVE_ACTION,
-    CANCEL_ACTION,
-]);
+export const ACTION_KINDS_VALIDATION = memoize(() =>
+    z.enum([
+        CREATE_ACTION,
+        READ_ACTION,
+        UPDATE_ACTION,
+        UPDATE_DATA_ACTION,
+        DELETE_ACTION,
+        LIST_ACTION,
+        SEND_ACTION_ACTION,
 
-export const RESOURCE_KIND_VALIDATION = z.enum([
-    DATA_RESOURCE_KIND,
-    FILE_RESOURCE_KIND,
-    EVENT_RESOURCE_KIND,
-    MARKER_RESOURCE_KIND,
-    ROLE_RESOURCE_KIND,
-    INST_RESOURCE_KIND,
-    LOOM_RESOURCE_KIND,
-    SLOYD_RESOURCE_KIND,
-    HUME_RESOURCE_KIND,
-    OPENAI_REALTIME_RESOURCE_KIND,
-    WEBHOOK_RESOURCE_KIND,
-    NOTIFICATION_RESOURCE_KIND,
-    PACKAGE_RESOURCE_KIND,
-    PACKAGE_VERSION_RESOURCE_KIND,
-    SEARCH_RESOURCE_KIND,
-    DATABASE_RESOURCE_KIND,
-    PURCHASABLE_ITEM_RESOURCE_KIND,
-    CONTRACT_RESOURCE_KIND,
-    INVOICE_RESOURCE_KIND,
-]);
+        ASSIGN_ACTION,
+        UNASSIGN_ACTION,
 
-export const ACTION_KINDS_VALIDATION = z.enum([
-    CREATE_ACTION,
-    READ_ACTION,
-    UPDATE_ACTION,
-    UPDATE_DATA_ACTION,
-    DELETE_ACTION,
-    LIST_ACTION,
-    SEND_ACTION_ACTION,
+        GRANT_ACTION,
+        REVOKE_ACTION,
 
-    ASSIGN_ACTION,
-    UNASSIGN_ACTION,
+        INCREMENT_ACTION,
+        COUNT_ACTION,
 
-    GRANT_ACTION,
-    REVOKE_ACTION,
+        GRANT_PERMISSION_ACTION,
+        REVOKE_PERMISSION_ACTION,
 
-    INCREMENT_ACTION,
-    COUNT_ACTION,
+        RUN_ACTION,
 
-    GRANT_PERMISSION_ACTION,
-    REVOKE_PERMISSION_ACTION,
+        SEND_ACTION,
+        SUBSCRIBE_ACTION,
+        UNSUBSCRIBE_ACTION,
+        LIST_SUBSCRIPTIONS_ACTION,
 
-    RUN_ACTION,
+        PURCHASE_ACTION,
 
-    SEND_ACTION,
-    SUBSCRIBE_ACTION,
-    UNSUBSCRIBE_ACTION,
-    LIST_SUBSCRIPTIONS_ACTION,
-
-    PURCHASE_ACTION,
-
-    APPROVE_ACTION,
-    CANCEL_ACTION,
-]);
+        APPROVE_ACTION,
+        CANCEL_ACTION,
+    ])
+);
 
 /**
  * The scopes that can be used for requested entitlements.
@@ -663,26 +701,30 @@ export interface Entitlement {
     designatedRecords?: string[];
 }
 
-export const ENTITLEMENT_FEATURE_VALIDATION = z.enum([
-    'data',
-    'file',
-    'event',
-    'inst',
-    'notification',
-    'package',
-    'permissions',
-    'webhook',
-    'ai',
-    'search',
-    'database',
-]);
+export const ENTITLEMENT_FEATURE_VALIDATION = memoize(() =>
+    z.enum([
+        'data',
+        'file',
+        'event',
+        'inst',
+        'notification',
+        'package',
+        'permissions',
+        'webhook',
+        'ai',
+        'search',
+        'database',
+    ])
+);
 
-export const ENTITLEMENT_VALIDATION = z.object({
-    feature: ENTITLEMENT_FEATURE_VALIDATION,
-    scope: z.enum(['personal', 'owned', 'studio', 'shared', 'designated']),
-    designatedRecords: z.array(z.string()).optional(),
-});
-type ZodEntitlement = z.infer<typeof ENTITLEMENT_VALIDATION>;
+export const ENTITLEMENT_VALIDATION = memoize(() =>
+    z.object({
+        feature: ENTITLEMENT_FEATURE_VALIDATION(),
+        scope: z.enum(['personal', 'owned', 'studio', 'shared', 'designated']),
+        designatedRecords: z.array(z.string()).optional(),
+    })
+);
+type ZodEntitlement = z.infer<ReturnType<typeof ENTITLEMENT_VALIDATION>>;
 type ZodEntitlementAssertion = HasType<ZodEntitlement, Entitlement>;
 
 /**
@@ -729,15 +771,17 @@ export interface Permission {
     expireTimeMs: number | null;
 }
 
-export const PERMISSION_VALIDATION = z.object({
-    subjectType: SUBJECT_TYPE_VALIDATION,
-    subjectId: z.string().min(1),
-    resourceId: z.string().min(1).nullable().optional(),
-    expireTimeMs: z.number().nullable(),
-    marker: z.string().min(1).max(100).optional(),
-});
+export const PERMISSION_VALIDATION = memoize(() =>
+    z.object({
+        subjectType: SUBJECT_TYPE_VALIDATION,
+        subjectId: z.string().min(1),
+        resourceId: z.string().min(1).nullable().optional(),
+        expireTimeMs: z.number().nullable(),
+        marker: z.string().min(1).max(100).optional(),
+    })
+);
 
-type ZodPermission = z.infer<typeof PERMISSION_VALIDATION>;
+type ZodPermission = z.infer<ReturnType<typeof PERMISSION_VALIDATION>>;
 type ZodPermissionAssertion = HasType<ZodPermission, Permission>;
 
 /**
@@ -759,12 +803,14 @@ export interface DataPermission extends Permission {
     action: DataActionKinds | null;
 }
 
-export const DATA_PERMISSION_VALIDATION = PERMISSION_VALIDATION.extend({
-    resourceKind: z.literal(DATA_RESOURCE_KIND),
-    action: DATA_ACTION_KINDS_VALIDATION.nullable(),
-});
+export const DATA_PERMISSION_VALIDATION = memoize(() =>
+    PERMISSION_VALIDATION().extend({
+        resourceKind: z.literal(DATA_RESOURCE_KIND),
+        action: DATA_ACTION_KINDS_VALIDATION().nullable(),
+    })
+);
 
-type ZodDataPermission = z.infer<typeof DATA_PERMISSION_VALIDATION>;
+type ZodDataPermission = z.infer<ReturnType<typeof DATA_PERMISSION_VALIDATION>>;
 type ZodDataPermissionAssertion = HasType<ZodDataPermission, DataPermission>;
 
 /**
@@ -788,14 +834,16 @@ export interface FilePermissionOptions {
     allowedMimeTypes?: true | string[];
 }
 
-export const FILE_PERMISSION_OPTIONS_VALIDATION = z.object({
-    maxFileSizeInBytes: z.number().nonnegative().optional(),
-    allowedMimeTypes: z
-        .union([z.literal(true), z.array(z.string())])
-        .optional(),
-});
+export const FILE_PERMISSION_OPTIONS_VALIDATION = memoize(() =>
+    z.object({
+        maxFileSizeInBytes: z.number().nonnegative().optional(),
+        allowedMimeTypes: z
+            .union([z.literal(true), z.array(z.string())])
+            .optional(),
+    })
+);
 type ZodFilePermissionOptions = z.infer<
-    typeof FILE_PERMISSION_OPTIONS_VALIDATION
+    ReturnType<typeof FILE_PERMISSION_OPTIONS_VALIDATION>
 >;
 type ZodFilePermissionOptionsAssertion = HasType<
     ZodFilePermissionOptions,
@@ -826,12 +874,14 @@ export interface FilePermission extends Permission {
     options: FilePermissionOptions;
 }
 
-export const FILE_PERMISSION_VALIDATION = PERMISSION_VALIDATION.extend({
-    resourceKind: z.literal(FILE_RESOURCE_KIND),
-    action: FILE_ACTION_KINDS_VALIDATION.nullable(),
-    options: FILE_PERMISSION_OPTIONS_VALIDATION,
-});
-type ZodFilePermission = z.infer<typeof FILE_PERMISSION_VALIDATION>;
+export const FILE_PERMISSION_VALIDATION = memoize(() =>
+    PERMISSION_VALIDATION().extend({
+        resourceKind: z.literal(FILE_RESOURCE_KIND),
+        action: FILE_ACTION_KINDS_VALIDATION().nullable(),
+        options: FILE_PERMISSION_OPTIONS_VALIDATION,
+    })
+);
+type ZodFilePermission = z.infer<ReturnType<typeof FILE_PERMISSION_VALIDATION>>;
 type ZodFilePermissionAssertion = HasType<ZodFilePermission, FilePermission>;
 
 /**
@@ -853,12 +903,16 @@ export interface EventPermission extends Permission {
     action: EventActionKinds | null;
 }
 
-export const EVENT_PERMISSION_VALIDATION = PERMISSION_VALIDATION.extend({
-    resourceKind: z.literal(EVENT_RESOURCE_KIND),
-    resourceId: z.string().min(1).nullable(),
-    action: EVENT_ACTION_KINDS_VALIDATION.nullable(),
-});
-type ZodEventPermission = z.infer<typeof EVENT_PERMISSION_VALIDATION>;
+export const EVENT_PERMISSION_VALIDATION = memoize(() =>
+    PERMISSION_VALIDATION().extend({
+        resourceKind: z.literal(EVENT_RESOURCE_KIND),
+        resourceId: z.string().min(1).nullable(),
+        action: EVENT_ACTION_KINDS_VALIDATION().nullable(),
+    })
+);
+type ZodEventPermission = z.infer<
+    ReturnType<typeof EVENT_PERMISSION_VALIDATION>
+>;
 type ZodEventPermissionAssertion = HasType<ZodEventPermission, EventPermission>;
 
 /**
@@ -880,11 +934,15 @@ export interface MarkerPermission extends Permission {
     action: MarkerActionKinds | null;
 }
 
-export const MARKER_PERMISSION_VALIDATION = PERMISSION_VALIDATION.extend({
-    resourceKind: z.literal(MARKER_RESOURCE_KIND),
-    action: MARKER_ACTION_KINDS_VALIDATION.nullable(),
-});
-type ZodMarkerPermission = z.infer<typeof MARKER_PERMISSION_VALIDATION>;
+export const MARKER_PERMISSION_VALIDATION = memoize(() =>
+    PERMISSION_VALIDATION().extend({
+        resourceKind: z.literal(MARKER_RESOURCE_KIND),
+        action: MARKER_ACTION_KINDS_VALIDATION().nullable(),
+    })
+);
+type ZodMarkerPermission = z.infer<
+    ReturnType<typeof MARKER_PERMISSION_VALIDATION>
+>;
 type ZodMarkerPermissionAssertion = HasType<
     ZodMarkerPermission,
     MarkerPermission
@@ -904,11 +962,13 @@ export interface RolePermissionOptions {
     maxDurationMs?: number;
 }
 
-export const ROLE_PERMISSION_OPTIONS_VALIDATION = z.object({
-    maxDurationMs: z.number().optional(),
-});
+export const ROLE_PERMISSION_OPTIONS_VALIDATION = memoize(() =>
+    z.object({
+        maxDurationMs: z.number().optional(),
+    })
+);
 type ZodRolePermissionOptions = z.infer<
-    typeof ROLE_PERMISSION_OPTIONS_VALIDATION
+    ReturnType<typeof ROLE_PERMISSION_OPTIONS_VALIDATION>
 >;
 type ZodRolePermissionOptionsAssertion = HasType<
     ZodRolePermissionOptions,
@@ -945,12 +1005,14 @@ export interface RolePermission extends Permission {
     options: RolePermissionOptions;
 }
 
-export const ROLE_PERMISSION_VALIDATION = PERMISSION_VALIDATION.extend({
-    resourceKind: z.literal(ROLE_RESOURCE_KIND),
-    action: ROLE_ACTION_KINDS_VALIDATION.nullable(),
-    options: ROLE_PERMISSION_OPTIONS_VALIDATION,
-});
-type ZodRolePermission = z.infer<typeof ROLE_PERMISSION_VALIDATION>;
+export const ROLE_PERMISSION_VALIDATION = memoize(() =>
+    PERMISSION_VALIDATION().extend({
+        resourceKind: z.literal(ROLE_RESOURCE_KIND),
+        action: ROLE_ACTION_KINDS_VALIDATION().nullable(),
+        options: ROLE_PERMISSION_OPTIONS_VALIDATION(),
+    })
+);
+type ZodRolePermission = z.infer<ReturnType<typeof ROLE_PERMISSION_VALIDATION>>;
 type ZodRolePermissionAssertion = HasType<ZodRolePermission, RolePermission>;
 
 /**
@@ -977,11 +1039,13 @@ export interface InstPermission extends Permission {
      */
     action: InstActionKinds | null;
 }
-export const INST_PERMISSION_VALIDATION = PERMISSION_VALIDATION.extend({
-    resourceKind: z.literal(INST_RESOURCE_KIND),
-    action: INST_ACTION_KINDS_VALIDATION.nullable(),
-});
-type ZodInstPermission = z.infer<typeof INST_PERMISSION_VALIDATION>;
+export const INST_PERMISSION_VALIDATION = memoize(() =>
+    PERMISSION_VALIDATION().extend({
+        resourceKind: z.literal(INST_RESOURCE_KIND),
+        action: INST_ACTION_KINDS_VALIDATION().nullable(),
+    })
+);
+type ZodInstPermission = z.infer<ReturnType<typeof INST_PERMISSION_VALIDATION>>;
 type ZodInstPermissionAssertion = HasType<ZodInstPermission, InstPermission>;
 
 /**
@@ -1002,11 +1066,13 @@ export interface LoomPermission extends Permission {
      */
     action: LoomActionKinds | null;
 }
-export const LOOM_PERMISSION_VALIDATION = PERMISSION_VALIDATION.extend({
-    resourceKind: z.literal(LOOM_RESOURCE_KIND),
-    action: LOOM_ACTION_KINDS_VALIDATION.nullable(),
-});
-type ZodLoomPermission = z.infer<typeof LOOM_PERMISSION_VALIDATION>;
+export const LOOM_PERMISSION_VALIDATION = memoize(() =>
+    PERMISSION_VALIDATION().extend({
+        resourceKind: z.literal(LOOM_RESOURCE_KIND),
+        action: LOOM_ACTION_KINDS_VALIDATION().nullable(),
+    })
+);
+type ZodLoomPermission = z.infer<ReturnType<typeof LOOM_PERMISSION_VALIDATION>>;
 type ZodLoomPermissionAssertion = HasType<ZodLoomPermission, LoomPermission>;
 
 /**
@@ -1027,11 +1093,15 @@ export interface SloydPermission extends Permission {
      */
     action: SloydActionKinds | null;
 }
-export const SLOYD_PERMISSION_VALIDATION = PERMISSION_VALIDATION.extend({
-    resourceKind: z.literal(SLOYD_RESOURCE_KIND),
-    action: SLOYD_ACTION_KINDS_VALIDATION.nullable(),
-});
-type ZodSloydPermission = z.infer<typeof SLOYD_PERMISSION_VALIDATION>;
+export const SLOYD_PERMISSION_VALIDATION = memoize(() =>
+    PERMISSION_VALIDATION().extend({
+        resourceKind: z.literal(SLOYD_RESOURCE_KIND),
+        action: SLOYD_ACTION_KINDS_VALIDATION().nullable(),
+    })
+);
+type ZodSloydPermission = z.infer<
+    ReturnType<typeof SLOYD_PERMISSION_VALIDATION>
+>;
 type ZodSloydPermissionAssertion = HasType<ZodSloydPermission, SloydPermission>;
 
 /**
@@ -1052,11 +1122,13 @@ export interface HumePermission extends Permission {
      */
     action: HumeActionKinds | null;
 }
-export const HUME_PERMISSION_VALIDATION = PERMISSION_VALIDATION.extend({
-    resourceKind: z.literal(HUME_RESOURCE_KIND),
-    action: HUME_ACTION_KINDS_VALIDATION.nullable(),
-});
-type ZodHumePermission = z.infer<typeof HUME_PERMISSION_VALIDATION>;
+export const HUME_PERMISSION_VALIDATION = memoize(() =>
+    PERMISSION_VALIDATION().extend({
+        resourceKind: z.literal(HUME_RESOURCE_KIND),
+        action: HUME_ACTION_KINDS_VALIDATION().nullable(),
+    })
+);
+type ZodHumePermission = z.infer<ReturnType<typeof HUME_PERMISSION_VALIDATION>>;
 type ZodHumePermissionAssertion = HasType<ZodHumePermission, HumePermission>;
 
 /**
@@ -1077,13 +1149,14 @@ export interface OpenAIRealtimePermission extends Permission {
      */
     action: OpenAIRealtimeActionKinds | null;
 }
-export const OPENAI_REALTIME_PERMISSION_VALIDATION =
-    PERMISSION_VALIDATION.extend({
+export const OPENAI_REALTIME_PERMISSION_VALIDATION = memoize(() =>
+    PERMISSION_VALIDATION().extend({
         resourceKind: z.literal(OPENAI_REALTIME_RESOURCE_KIND),
-        action: OPENAI_REALTIME_ACTION_KINDS_VALIDATION.nullable(),
-    });
+        action: OPENAI_REALTIME_ACTION_KINDS_VALIDATION().nullable(),
+    })
+);
 type ZodOpenAIRealtimePermission = z.infer<
-    typeof OPENAI_REALTIME_PERMISSION_VALIDATION
+    ReturnType<typeof OPENAI_REALTIME_PERMISSION_VALIDATION>
 >;
 type ZodOpenAIRealtimePermissionAssertion = HasType<
     ZodOpenAIRealtimePermission,
@@ -1108,11 +1181,15 @@ export interface WebhookPermission extends Permission {
      */
     action: WebhookActionKinds | null;
 }
-export const WEBHOOK_PERMISSION_VALIDATION = PERMISSION_VALIDATION.extend({
-    resourceKind: z.literal(WEBHOOK_RESOURCE_KIND),
-    action: WEBHOOK_ACTION_KINDS_VALIDATION.nullable(),
-});
-type ZodWebhookPermission = z.infer<typeof WEBHOOK_PERMISSION_VALIDATION>;
+export const WEBHOOK_PERMISSION_VALIDATION = memoize(() =>
+    PERMISSION_VALIDATION().extend({
+        resourceKind: z.literal(WEBHOOK_RESOURCE_KIND),
+        action: WEBHOOK_ACTION_KINDS_VALIDATION().nullable(),
+    })
+);
+type ZodWebhookPermission = z.infer<
+    ReturnType<typeof WEBHOOK_PERMISSION_VALIDATION>
+>;
 type ZodWebhookPermissionAssertion = HasType<
     ZodWebhookPermission,
     WebhookPermission
@@ -1136,12 +1213,14 @@ export interface NotificationPermission extends Permission {
      */
     action: NotificationActionKinds | null;
 }
-export const NOTIFICATION_PERMISSION_VALIDATION = PERMISSION_VALIDATION.extend({
-    resourceKind: z.literal(NOTIFICATION_RESOURCE_KIND),
-    action: NOTIFICATION_ACTION_KINDS_VALIDATION.nullable(),
-});
+export const NOTIFICATION_PERMISSION_VALIDATION = memoize(() =>
+    PERMISSION_VALIDATION().extend({
+        resourceKind: z.literal(NOTIFICATION_RESOURCE_KIND),
+        action: NOTIFICATION_ACTION_KINDS_VALIDATION().nullable(),
+    })
+);
 type ZodNotificationPermission = z.infer<
-    typeof NOTIFICATION_PERMISSION_VALIDATION
+    ReturnType<typeof NOTIFICATION_PERMISSION_VALIDATION>
 >;
 type ZodNotificationPermissionAssertion = HasType<
     ZodNotificationPermission,
@@ -1166,11 +1245,15 @@ export interface PackagePermission extends Permission {
      */
     action: PackageActionKinds | null;
 }
-export const PACKAGE_PERMISSION_VALIDATION = PERMISSION_VALIDATION.extend({
-    resourceKind: z.literal(PACKAGE_RESOURCE_KIND),
-    action: PACKAGE_ACTION_KINDS_VALIDATION.nullable(),
-});
-type ZodPackagePermission = z.infer<typeof PACKAGE_PERMISSION_VALIDATION>;
+export const PACKAGE_PERMISSION_VALIDATION = memoize(() =>
+    PERMISSION_VALIDATION().extend({
+        resourceKind: z.literal(PACKAGE_RESOURCE_KIND),
+        action: PACKAGE_ACTION_KINDS_VALIDATION().nullable(),
+    })
+);
+type ZodPackagePermission = z.infer<
+    ReturnType<typeof PACKAGE_PERMISSION_VALIDATION>
+>;
 type ZodPackagePermissionAssertion = HasType<
     ZodPackagePermission,
     PackagePermission
@@ -1194,13 +1277,14 @@ export interface PackageVersionPermission extends Permission {
      */
     action: PackageVersionActionKinds | null;
 }
-export const PACKAGE_VERSION_PERMISSION_VALIDATION =
-    PERMISSION_VALIDATION.extend({
+export const PACKAGE_VERSION_PERMISSION_VALIDATION = memoize(() =>
+    PERMISSION_VALIDATION().extend({
         resourceKind: z.literal(PACKAGE_VERSION_RESOURCE_KIND),
-        action: PACKAGE_VERSION_ACTION_KINDS_VALIDATION.nullable(),
-    });
+        action: PACKAGE_VERSION_ACTION_KINDS_VALIDATION().nullable(),
+    })
+);
 type ZodPackageVersionPermission = z.infer<
-    typeof PACKAGE_VERSION_PERMISSION_VALIDATION
+    ReturnType<typeof PACKAGE_VERSION_PERMISSION_VALIDATION>
 >;
 type ZodPackageVersionPermissionAssertion = HasType<
     ZodPackageVersionPermission,
@@ -1225,11 +1309,15 @@ export interface SearchPermission extends Permission {
      */
     action: SearchActionKinds | null;
 }
-export const SEARCH_PERMISSION_VALIDATION = PERMISSION_VALIDATION.extend({
-    resourceKind: z.literal(SEARCH_RESOURCE_KIND),
-    action: SEARCH_ACTION_KINDS_VALIDATION.nullable(),
-});
-type ZodSearchPermission = z.infer<typeof SEARCH_PERMISSION_VALIDATION>;
+export const SEARCH_PERMISSION_VALIDATION = memoize(() =>
+    PERMISSION_VALIDATION().extend({
+        resourceKind: z.literal(SEARCH_RESOURCE_KIND),
+        action: SEARCH_ACTION_KINDS_VALIDATION().nullable(),
+    })
+);
+type ZodSearchPermission = z.infer<
+    ReturnType<typeof SEARCH_PERMISSION_VALIDATION>
+>;
 type ZodSearchPermissionAssertion = HasType<
     ZodSearchPermission,
     SearchPermission
@@ -1253,11 +1341,15 @@ export interface DatabasePermission extends Permission {
      */
     action: DatabaseActionKinds | null;
 }
-export const DATABASE_PERMISSION_VALIDATION = PERMISSION_VALIDATION.extend({
-    resourceKind: z.literal(DATABASE_RESOURCE_KIND),
-    action: DATABASE_ACTION_KINDS_VALIDATION.nullable(),
-});
-type ZodDatabasePermission = z.infer<typeof DATABASE_PERMISSION_VALIDATION>;
+export const DATABASE_PERMISSION_VALIDATION = memoize(() =>
+    PERMISSION_VALIDATION().extend({
+        resourceKind: z.literal(DATABASE_RESOURCE_KIND),
+        action: DATABASE_ACTION_KINDS_VALIDATION().nullable(),
+    })
+);
+type ZodDatabasePermission = z.infer<
+    ReturnType<typeof DATABASE_PERMISSION_VALIDATION>
+>;
 type ZodDatabasePermissionAssertion = HasType<
     ZodDatabasePermission,
     DatabasePermission
@@ -1283,13 +1375,14 @@ export interface PurchasableItemPermission extends Permission {
 
     action: PurchasableItemActionKinds | null;
 }
-export const PURCHASABLE_ITEM_PERMISSION_VALIDATION =
-    PERMISSION_VALIDATION.extend({
+export const PURCHASABLE_ITEM_PERMISSION_VALIDATION = memoize(() =>
+    PERMISSION_VALIDATION().extend({
         resourceKind: z.literal(PURCHASABLE_ITEM_RESOURCE_KIND),
-        action: PURCHASABLE_ITEM_ACTION_KINDS_VALIDATION.nullable(),
-    });
+        action: PURCHASABLE_ITEM_ACTION_KINDS_VALIDATION().nullable(),
+    })
+);
 type ZodPurchasableItemPermission = z.infer<
-    typeof PURCHASABLE_ITEM_PERMISSION_VALIDATION
+    ReturnType<typeof PURCHASABLE_ITEM_PERMISSION_VALIDATION>
 >;
 type ZodPurchasableItemPermissionAssertion = HasType<
     ZodPurchasableItemPermission,
@@ -1316,10 +1409,12 @@ export interface ContractPermission extends Permission {
 
     action: ContractActionKinds | null;
 }
-export const CONTRACT_PERMISSION_VALIDATION = PERMISSION_VALIDATION.extend({
-    resourceKind: z.literal(CONTRACT_RESOURCE_KIND),
-    action: CONTRACT_ACTION_KINDS_VALIDATION.nullable(),
-});
+export const CONTRACT_PERMISSION_VALIDATION = memoize(() =>
+    PERMISSION_VALIDATION().extend({
+        resourceKind: z.literal(CONTRACT_RESOURCE_KIND),
+        action: CONTRACT_ACTION_KINDS_VALIDATION().nullable(),
+    })
+);
 type ZodContractPermission = z.infer<typeof CONTRACT_PERMISSION_VALIDATION>;
 type ZodContractPermissionAssertion = HasType<
     ZodContractPermission,
@@ -1346,10 +1441,12 @@ export interface InvoicePermission extends Permission {
 
     action: InvoiceActionKinds | null;
 }
-export const INVOICE_PERMISSION_VALIDATION = PERMISSION_VALIDATION.extend({
-    resourceKind: z.literal(INVOICE_RESOURCE_KIND),
-    action: INVOICE_ACTION_KINDS_VALIDATION.nullable(),
-});
+export const INVOICE_PERMISSION_VALIDATION = memoize(() =>
+    PERMISSION_VALIDATION().extend({
+        resourceKind: z.literal(INVOICE_RESOURCE_KIND),
+        action: INVOICE_ACTION_KINDS_VALIDATION().nullable(),
+    })
+);
 type ZodInvoicePermission = z.infer<typeof INVOICE_PERMISSION_VALIDATION>;
 type ZodInvoicePermissionAssertion = HasType<
     ZodInvoicePermission,
@@ -1359,25 +1456,25 @@ type ZodInvoicePermissionAssertion = HasType<
 export const AVAILABLE_PERMISSIONS_VALIDATION = z.discriminatedUnion(
     'resourceKind',
     [
-        DATA_PERMISSION_VALIDATION,
-        FILE_PERMISSION_VALIDATION,
-        EVENT_PERMISSION_VALIDATION,
-        MARKER_PERMISSION_VALIDATION,
-        ROLE_PERMISSION_VALIDATION,
-        INST_PERMISSION_VALIDATION,
-        LOOM_PERMISSION_VALIDATION,
-        SLOYD_PERMISSION_VALIDATION,
-        HUME_PERMISSION_VALIDATION,
-        OPENAI_REALTIME_PERMISSION_VALIDATION,
-        WEBHOOK_PERMISSION_VALIDATION,
-        NOTIFICATION_PERMISSION_VALIDATION,
-        PACKAGE_PERMISSION_VALIDATION,
-        PACKAGE_VERSION_PERMISSION_VALIDATION,
-        SEARCH_PERMISSION_VALIDATION,
-        DATABASE_PERMISSION_VALIDATION,
-        PURCHASABLE_ITEM_PERMISSION_VALIDATION,
-        CONTRACT_PERMISSION_VALIDATION,
-        INVOICE_PERMISSION_VALIDATION,
+        DATA_PERMISSION_VALIDATION(),
+        FILE_PERMISSION_VALIDATION(),
+        EVENT_PERMISSION_VALIDATION(),
+        MARKER_PERMISSION_VALIDATION(),
+        ROLE_PERMISSION_VALIDATION(),
+        INST_PERMISSION_VALIDATION(),
+        LOOM_PERMISSION_VALIDATION(),
+        SLOYD_PERMISSION_VALIDATION(),
+        HUME_PERMISSION_VALIDATION(),
+        OPENAI_REALTIME_PERMISSION_VALIDATION(),
+        WEBHOOK_PERMISSION_VALIDATION(),
+        NOTIFICATION_PERMISSION_VALIDATION(),
+        PACKAGE_PERMISSION_VALIDATION(),
+        PACKAGE_VERSION_PERMISSION_VALIDATION(),
+        SEARCH_PERMISSION_VALIDATION(),
+        DATABASE_PERMISSION_VALIDATION(),
+        PURCHASABLE_ITEM_PERMISSION_VALIDATION(),
+        CONTRACT_PERMISSION_VALIDATION(),
+        INVOICE_PERMISSION_VALIDATION(),
     ]
 );
 
