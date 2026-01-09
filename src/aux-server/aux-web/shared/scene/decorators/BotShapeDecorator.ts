@@ -119,7 +119,6 @@ import type { AnimationMixerHandle } from '../AnimationHelper';
 import type { AuxBotVisualizerFinder } from '../../AuxBotVisualizerFinder';
 import { LDrawLoader } from '../../public/ldraw-loader/LDrawLoader';
 import { MapView } from '../map/MapView';
-import { CustomMapProvider } from '../map/CustomMapProvider';
 
 export const gltfPool = getGLTFPool('main');
 
@@ -498,13 +497,17 @@ export class BotShapeDecorator
         }
     }
 
-    private _updateCustomMapProviderForURL(url: string) {
+    private async _updateCustomMapProviderForURL(url: string) {
         // Parse the URL
         try {
             const urlObj = new URL(url);
             const pathParts = urlObj.pathname
                 .split('/')
                 .filter((p) => p.length > 0);
+
+            const { CustomMapProvider } = await import(
+                '../map/CustomMapProvider'
+            );
 
             // Identify URL pattern
             if (pathParts.length >= 3) {
