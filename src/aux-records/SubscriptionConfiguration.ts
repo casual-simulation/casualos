@@ -17,6 +17,7 @@
  */
 import { z } from 'zod';
 import { isActiveSubscription } from './Utils';
+import { memoize } from 'es-toolkit';
 
 type ZodConfigSchema = z.input<SubscriptionConfigSchema>;
 type ZodConfigSchemaAssertion = HasType<
@@ -24,7 +25,7 @@ type ZodConfigSchemaAssertion = HasType<
     SubscriptionConfiguration
 >;
 
-const constructWebhookFeaturesSchema = () =>
+const getWebhookFeaturesSchema = memoize(() =>
     z
         .object({
             allowed: z
@@ -112,17 +113,12 @@ const constructWebhookFeaturesSchema = () =>
         })
         .describe(
             'The configuration for webhook features. Defaults to not allowed.'
-        );
+        )
+);
 
-export type WebhookFeaturesSchema = ReturnType<
-    typeof constructWebhookFeaturesSchema
->;
+export type WebhookFeaturesSchema = ReturnType<typeof getWebhookFeaturesSchema>;
 
-let _webhookFeaturesSchema: WebhookFeaturesSchema | null = null;
-export const getWebhookFeaturesSchema = () =>
-    (_webhookFeaturesSchema ??= constructWebhookFeaturesSchema());
-
-const constructCurrencyLimitsSchema = () =>
+const getCurrencyLimitsSchema = memoize(() =>
     z
         .object({})
         .catchall(
@@ -177,17 +173,12 @@ const constructCurrencyLimitsSchema = () =>
         })
         .describe(
             'The limits for each currency that can be used for purchasable items. If a currency is not specified, then it is not allowed'
-        );
+        )
+);
 
-export type CurrencyLimitsSchema = ReturnType<
-    typeof constructCurrencyLimitsSchema
->;
+export type CurrencyLimitsSchema = ReturnType<typeof getCurrencyLimitsSchema>;
 
-let _currencyLimitsSchema: CurrencyLimitsSchema | null = null;
-export const getCurrencyLimitsSchema = () =>
-    (_currencyLimitsSchema ??= constructCurrencyLimitsSchema());
-
-const constructStoreFeaturesSchema = () =>
+const getStoreFeaturesSchema = memoize(() =>
     z
         .object({
             allowed: z
@@ -212,16 +203,12 @@ const constructStoreFeaturesSchema = () =>
         })
         .describe(
             'The configuration for purchasable items features for studios. Defaults to not allowed.'
-        );
+        )
+);
 
-export type StoreFeaturesSchema = ReturnType<
-    typeof constructStoreFeaturesSchema
->;
-let _storeFeaturesSchema: StoreFeaturesSchema | null = null;
-export const getStoreFeaturesSchema = () =>
-    (_storeFeaturesSchema ??= constructStoreFeaturesSchema());
+export type StoreFeaturesSchema = ReturnType<typeof getStoreFeaturesSchema>;
 
-const constructContractFeaturesSchema = () =>
+const getContractFeaturesSchema = memoize(() =>
     z
         .object({
             allowed: z
@@ -246,16 +233,14 @@ const constructContractFeaturesSchema = () =>
         })
         .describe(
             'The configuration for contract features. Defaults to not allowed'
-        );
+        )
+);
 
 export type ContractFeaturesSchema = ReturnType<
-    typeof constructContractFeaturesSchema
+    typeof getContractFeaturesSchema
 >;
-let _contractFeaturesSchema: ContractFeaturesSchema | null = null;
-export const getContractFeaturesSchema = () =>
-    (_contractFeaturesSchema ??= constructContractFeaturesSchema());
 
-const constructDataFeaturesSchema = () =>
+const getDataFeaturesSchema = memoize(() =>
     z.object({
         allowed: z
             .boolean()
@@ -306,14 +291,12 @@ const constructDataFeaturesSchema = () =>
             .describe(
                 'The number of credits that are charged for each write operation. If not specified, then there is no fee.'
             ),
-    });
+    })
+);
 
-export type DataFeaturesSchema = ReturnType<typeof constructDataFeaturesSchema>;
-let _dataFeaturesSchema: DataFeaturesSchema | null = null;
-export const getDataFeaturesSchema = () =>
-    (_dataFeaturesSchema ??= constructDataFeaturesSchema());
+export type DataFeaturesSchema = ReturnType<typeof getDataFeaturesSchema>;
 
-const constructSubscriptionFeaturesSchema = () =>
+const getSubscriptionFeaturesSchema = memoize(() =>
     z.object({
         records: z
             .object({
@@ -826,16 +809,14 @@ const constructSubscriptionFeaturesSchema = () =>
         store: getStoreFeaturesSchema(),
 
         contracts: getContractFeaturesSchema(),
-    });
+    })
+);
 
 export type SubscriptionFeaturesSchema = ReturnType<
-    typeof constructSubscriptionFeaturesSchema
+    typeof getSubscriptionFeaturesSchema
 >;
-let _subscriptionFeaturesSchema: SubscriptionFeaturesSchema | null = null;
-export const getSubscriptionFeaturesSchema = () =>
-    (_subscriptionFeaturesSchema ??= constructSubscriptionFeaturesSchema());
 
-const constructSubscriptionConfigSchema = () =>
+const getSubscriptionConfigSchema = memoize(() =>
     z.object({
         webhookSecret: z
             .string()
@@ -1033,14 +1014,12 @@ const constructSubscriptionConfigSchema = () =>
                     ),
             })
             .optional(),
-    });
+    })
+);
 
 export type SubscriptionConfigSchema = ReturnType<
-    typeof constructSubscriptionConfigSchema
+    typeof getSubscriptionConfigSchema
 >;
-let _subscriptionConfigSchema: SubscriptionConfigSchema | null = null;
-export const getSubscriptionConfigSchema = () =>
-    (_subscriptionConfigSchema ??= constructSubscriptionConfigSchema());
 
 export function parseSubscriptionConfig(
     config: any,
