@@ -20,8 +20,10 @@ import { importMapPlugin } from 'importmap-vite-plugin';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import { GIT_HASH, GIT_TAG } from '../../../../script/git-stats.mjs';
+import simpleAnalyticsPlugin from '../../plugins/simple-analytics-plugin';
 
 const ENABLE_DOM_ACCESS = process.env.ENABLE_DOM_ACCESS === 'true';
+const OMIT_SIMPLE_ANALYTICS = process.env.OMIT_SIMPLE_ANALYTICS === 'true';
 
 const distDir = path.resolve(__dirname, '..', 'dist');
 const webxrProfilesDir = path.posix.resolve(
@@ -343,6 +345,7 @@ export default defineConfig(({ command, mode }) => ({
         ...(command === 'build'
             ? [generateDependencyGraphRollupPlugin(distDir), visualizer()]
             : []),
+        ...(!OMIT_SIMPLE_ANALYTICS ? [simpleAnalyticsPlugin()] : []),
         process.argv.some((a) => a === '--ssl') ? basicSsl() : [],
     ],
     assetsInclude: ['**/*.gltf', '**/*.glb'],
