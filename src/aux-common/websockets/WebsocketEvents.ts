@@ -47,6 +47,7 @@ import {
     SUBJECT_TYPE_VALIDATION,
 } from '../common';
 import type { KnownErrorCodes } from '../rpc/ErrorCodes';
+import { memoize } from 'es-toolkit';
 
 /**
  * Defines a websocket event.
@@ -74,9 +75,9 @@ export enum WebsocketEventTypes {
     Error = 5,
 }
 
-export const websocketEventSchema = z
-    .tuple([z.enum(WebsocketEventTypes), z.number()])
-    .rest(z.any());
+export const websocketEventSchema = memoize(() =>
+    z.tuple([z.enum(WebsocketEventTypes), z.number()]).rest(z.any())
+);
 
 /**
  * Defines a websocket event that contains a message.
@@ -94,10 +95,9 @@ export type WebsocketUploadRequestEvent = [
     type: WebsocketEventTypes.UploadRequest,
     id: number
 ];
-export const websocketUploadRequestEventSchema = z.tuple([
-    z.literal(WebsocketEventTypes.UploadRequest),
-    z.number(),
-]);
+export const websocketUploadRequestEventSchema = memoize(() =>
+    z.tuple([z.literal(WebsocketEventTypes.UploadRequest), z.number()])
+);
 
 export interface UploadHttpHeaders {
     [key: string]: string;
@@ -113,13 +113,15 @@ export type WebsocketUploadResponseEvent = [
     uploadMethod: string,
     uploadHeaders: UploadHttpHeaders
 ];
-export const websocketUploadResponseEventSchema = z.tuple([
-    z.literal(WebsocketEventTypes.UploadResponse),
-    z.number(),
-    z.string(),
-    z.string(),
-    z.record(z.string(), z.string()),
-]);
+export const websocketUploadResponseEventSchema = memoize(() =>
+    z.tuple([
+        z.literal(WebsocketEventTypes.UploadResponse),
+        z.number(),
+        z.string(),
+        z.string(),
+        z.record(z.string(), z.string()),
+    ])
+);
 
 export type WebsocketErrorCode =
     | ServerError
@@ -182,12 +184,14 @@ export interface WebsocketErrorInfo {
      */
     reason?: DenialReason;
 }
-export const websocketErrorInfoSchema = z.object({
-    errorCode: z.string(),
-    errorMessage: z.string(),
-    issues: z.array(z.any()).optional(),
-    reason: z.any().optional(),
-});
+export const websocketErrorInfoSchema = memoize(() =>
+    z.object({
+        errorCode: z.string(),
+        errorMessage: z.string(),
+        issues: z.array(z.any()).optional(),
+        reason: z.any().optional(),
+    })
+);
 
 /**
  * Defines a websocket event that contains a response to an upload request.
@@ -197,11 +201,13 @@ export type WebsocketErrorEvent = [
     id: number,
     info: WebsocketErrorInfo
 ];
-export const websocketErrorEventSchema = z.tuple([
-    z.literal(WebsocketEventTypes.Error),
-    z.number(),
-    websocketErrorInfoSchema,
-]);
+export const websocketErrorEventSchema = memoize(() =>
+    z.tuple([
+        z.literal(WebsocketEventTypes.Error),
+        z.number(),
+        websocketErrorInfoSchema(),
+    ])
+);
 
 /**
  * Defines a websocket event that contains a request to download a large message.
@@ -213,13 +219,15 @@ export type WebsocketDownloadRequestEvent = [
     downloadMethod: string,
     downloadHeaders: UploadHttpHeaders
 ];
-export const websocketDownloadRequestEventSchema = z.tuple([
-    z.literal(WebsocketEventTypes.DownloadRequest),
-    z.number(),
-    z.string(),
-    z.string(),
-    z.record(z.string(), z.string()),
-]);
+export const websocketDownloadRequestEventSchema = memoize(() =>
+    z.tuple([
+        z.literal(WebsocketEventTypes.DownloadRequest),
+        z.number(),
+        z.string(),
+        z.string(),
+        z.record(z.string(), z.string()),
+    ])
+);
 
 export type WebsocketResponseMessage =
     | LoginResultMessage
@@ -270,12 +278,14 @@ export interface LoginMessage {
      */
     connectionId?: string;
 }
-export const loginMessageSchema = z.object({
-    type: z.literal('login'),
-    connectionToken: z.string().optional(),
-    connectionId: z.string().optional(),
-});
-type ZodLoginMessage = z.infer<typeof loginMessageSchema>;
+export const loginMessageSchema = memoize(() =>
+    z.object({
+        type: z.literal('login'),
+        connectionToken: z.string().optional(),
+        connectionId: z.string().optional(),
+    })
+);
+type ZodLoginMessage = z.infer<ReturnType<typeof loginMessageSchema>>;
 type ZodLoginMessageAssertion = HasType<ZodLoginMessage, LoginMessage>;
 
 /**
@@ -360,15 +370,19 @@ export interface WatchBranchMessage {
      */
     markers?: string[];
 }
-export const watchBranchMessageSchema = z.object({
-    type: z.literal('repo/watch_branch'),
-    recordName: z.string().nonempty().nullable(),
-    inst: z.string(),
-    branch: z.string(),
-    temporary: z.boolean().optional(),
-    markers: z.array(z.string()).optional(),
-});
-type ZodWatchBranchMessage = z.infer<typeof watchBranchMessageSchema>;
+export const watchBranchMessageSchema = memoize(() =>
+    z.object({
+        type: z.literal('repo/watch_branch'),
+        recordName: z.string().nonempty().nullable(),
+        inst: z.string(),
+        branch: z.string(),
+        temporary: z.boolean().optional(),
+        markers: z.array(z.string()).optional(),
+    })
+);
+type ZodWatchBranchMessage = z.infer<
+    ReturnType<typeof watchBranchMessageSchema>
+>;
 type ZodWatchBranchMessageAssertion = HasType<
     ZodWatchBranchMessage,
     WatchBranchMessage
@@ -457,13 +471,17 @@ export interface UnwatchBranchMessage {
      */
     branch: string;
 }
-export const unwatchBranchMessageSchema = z.object({
-    type: z.literal('repo/unwatch_branch'),
-    recordName: z.string().nonempty().nullable(),
-    inst: z.string(),
-    branch: z.string(),
-});
-type ZodUnwatchBranchMessage = z.infer<typeof unwatchBranchMessageSchema>;
+export const unwatchBranchMessageSchema = memoize(() =>
+    z.object({
+        type: z.literal('repo/unwatch_branch'),
+        recordName: z.string().nonempty().nullable(),
+        inst: z.string(),
+        branch: z.string(),
+    })
+);
+type ZodUnwatchBranchMessage = z.infer<
+    ReturnType<typeof unwatchBranchMessageSchema>
+>;
 type ZodUnwatchBranchMessageAssertion = HasType<
     ZodUnwatchBranchMessage,
     UnwatchBranchMessage
@@ -491,14 +509,16 @@ export interface WatchBranchDevicesMessage {
      */
     branch: string;
 }
-export const watchBranchDevicesMessageSchema = z.object({
-    type: z.literal('repo/watch_branch_devices'),
-    recordName: z.string().nonempty().nullable(),
-    inst: z.string(),
-    branch: z.string(),
-});
+export const watchBranchDevicesMessageSchema = memoize(() =>
+    z.object({
+        type: z.literal('repo/watch_branch_devices'),
+        recordName: z.string().nonempty().nullable(),
+        inst: z.string(),
+        branch: z.string(),
+    })
+);
 type ZodWatchBranchDevicesMessage = z.infer<
-    typeof watchBranchDevicesMessageSchema
+    ReturnType<typeof watchBranchDevicesMessageSchema>
 >;
 type ZodWatchBranchDevicesMessageAssertion = HasType<
     ZodWatchBranchDevicesMessage,
@@ -527,14 +547,16 @@ export interface UnwatchBranchDevicesMessage {
      */
     branch: string;
 }
-export const unwatchBranchDevicesMessageSchema = z.object({
-    type: z.literal('repo/unwatch_branch_devices'),
-    recordName: z.string().nonempty().nullable(),
-    inst: z.string(),
-    branch: z.string(),
-});
+export const unwatchBranchDevicesMessageSchema = memoize(() =>
+    z.object({
+        type: z.literal('repo/unwatch_branch_devices'),
+        recordName: z.string().nonempty().nullable(),
+        inst: z.string(),
+        branch: z.string(),
+    })
+);
 type ZodUnwatchBranchDevicesMessage = z.infer<
-    typeof unwatchBranchDevicesMessageSchema
+    ReturnType<typeof unwatchBranchDevicesMessageSchema>
 >;
 type ZodUnwatchBranchDevicesMessageAssertion = HasType<
     ZodUnwatchBranchDevicesMessage,
@@ -593,17 +615,19 @@ export interface AddUpdatesMessage {
      */
     timestamps?: number[];
 }
-export const addUpdatesMessageSchema = z.object({
-    type: z.literal('repo/add_updates'),
-    recordName: z.string().nonempty().nullable(),
-    inst: z.string(),
-    branch: z.string(),
-    updates: z.array(z.string()),
-    updateId: z.number().optional(),
-    initial: z.boolean().optional(),
-    timestamps: z.array(z.number()).optional(),
-});
-type ZodAddUpdatesMessage = z.infer<typeof addUpdatesMessageSchema>;
+export const addUpdatesMessageSchema = memoize(() =>
+    z.object({
+        type: z.literal('repo/add_updates'),
+        recordName: z.string().nonempty().nullable(),
+        inst: z.string(),
+        branch: z.string(),
+        updates: z.array(z.string()),
+        updateId: z.number().optional(),
+        initial: z.boolean().optional(),
+        timestamps: z.array(z.number()).optional(),
+    })
+);
+type ZodAddUpdatesMessage = z.infer<ReturnType<typeof addUpdatesMessageSchema>>;
 type ZodAddUpdatesMessageAssertion = HasType<
     ZodAddUpdatesMessage,
     AddUpdatesMessage
@@ -631,13 +655,15 @@ export interface GetUpdatesMessage {
      */
     branch: string;
 }
-export const getUpdatesMessageSchema = z.object({
-    type: z.literal('repo/get_updates'),
-    recordName: z.string().nonempty().nullable(),
-    inst: z.string(),
-    branch: z.string(),
-});
-type ZodGetUpdatesMessage = z.infer<typeof getUpdatesMessageSchema>;
+export const getUpdatesMessageSchema = memoize(() =>
+    z.object({
+        type: z.literal('repo/get_updates'),
+        recordName: z.string().nonempty().nullable(),
+        inst: z.string(),
+        branch: z.string(),
+    })
+);
+type ZodGetUpdatesMessage = z.infer<ReturnType<typeof getUpdatesMessageSchema>>;
 type ZodGetUpdatesMessageAssertion = HasType<
     ZodGetUpdatesMessage,
     GetUpdatesMessage
@@ -659,11 +685,13 @@ export interface WebsocketHttpRequestMessage {
      */
     request: Omit<GenericHttpRequest, 'ipAddress'>;
 }
-export const websocketHttpRequestMessageSchema = z.object({
-    type: z.literal('http_request'),
-    request: genericHttpRequestSchema,
-    id: z.number(),
-});
+export const websocketHttpRequestMessageSchema = memoize(() =>
+    z.object({
+        type: z.literal('http_request'),
+        request: genericHttpRequestSchema,
+        id: z.number(),
+    })
+);
 
 export interface WebsocketHttpResponseMessage {
     type: 'http_response';
@@ -749,19 +777,23 @@ export interface UpdatesReceivedMessage {
      */
     neededBranchSizeInBytes?: number;
 }
-export const updatesReceivedMessageSchema = z.object({
-    type: z.literal('repo/updates_received'),
-    recordName: z.string().nonempty().nullable(),
-    inst: z.string(),
-    branch: z.string(),
-    updateId: z.number(),
-    errorCode: z
-        .enum(['max_size_reached', 'record_not_found', 'inst_not_found'])
-        .optional(),
-    maxBranchSizeInBytes: z.number().optional(),
-    neededBranchSizeInBytes: z.number().optional(),
-});
-type ZodUpdatesReceivedMessage = z.infer<typeof updatesReceivedMessageSchema>;
+export const updatesReceivedMessageSchema = memoize(() =>
+    z.object({
+        type: z.literal('repo/updates_received'),
+        recordName: z.string().nonempty().nullable(),
+        inst: z.string(),
+        branch: z.string(),
+        updateId: z.number(),
+        errorCode: z
+            .enum(['max_size_reached', 'record_not_found', 'inst_not_found'])
+            .optional(),
+        maxBranchSizeInBytes: z.number().optional(),
+        neededBranchSizeInBytes: z.number().optional(),
+    })
+);
+type ZodUpdatesReceivedMessage = z.infer<
+    ReturnType<typeof updatesReceivedMessageSchema>
+>;
 type ZodUpdatesReceivedMessageAssertion = HasType<
     ZodUpdatesReceivedMessage,
     UpdatesReceivedMessage
@@ -813,14 +845,16 @@ export interface SendActionMessage {
      */
     action: RemoteAction | RemoteActionResult | RemoteActionError;
 }
-export const sendActionMessageSchema = z.object({
-    type: z.literal('repo/send_action'),
-    recordName: z.string().nonempty().nullable(),
-    inst: z.string(),
-    branch: z.string(),
-    action: remoteActionsSchema,
-});
-type ZodSendActionMessage = z.infer<typeof sendActionMessageSchema>;
+export const sendActionMessageSchema = memoize(() =>
+    z.object({
+        type: z.literal('repo/send_action'),
+        recordName: z.string().nonempty().nullable(),
+        inst: z.string(),
+        branch: z.string(),
+        action: remoteActionsSchema,
+    })
+);
+type ZodSendActionMessage = z.infer<ReturnType<typeof sendActionMessageSchema>>;
 type ZodSendActionMessageAssertion = HasType<
     ZodSendActionMessage,
     SendActionMessage
@@ -853,15 +887,17 @@ export interface ReceiveDeviceActionMessage {
      */
     action: DeviceAction | DeviceActionResult | DeviceActionError;
 }
-export const receiveDeviceActionMessageSchema = z.object({
-    type: z.literal('repo/receive_action'),
-    recordName: z.string().nonempty().nullable(),
-    inst: z.string(),
-    branch: z.string(),
-    action: deviceActionsSchema,
-});
+export const receiveDeviceActionMessageSchema = memoize(() =>
+    z.object({
+        type: z.literal('repo/receive_action'),
+        recordName: z.string().nonempty().nullable(),
+        inst: z.string(),
+        branch: z.string(),
+        action: deviceActionsSchema,
+    })
+);
 type ZodReceiveDeviceActionMessage = z.infer<
-    typeof receiveDeviceActionMessageSchema
+    ReturnType<typeof receiveDeviceActionMessageSchema>
 >;
 type ZodReceiveDeviceActionMessageAssertion = HasType<
     ZodReceiveDeviceActionMessage,
@@ -890,14 +926,16 @@ export interface ConnectedToBranchMessage {
      */
     connection: ConnectionInfo;
 }
-export const connectedToBranchMessageSchema = z.object({
-    type: z.literal('repo/connected_to_branch'),
-    broadcast: z.boolean(),
-    branch: watchBranchMessageSchema,
-    connection: connectionInfoSchema,
-});
+export const connectedToBranchMessageSchema = memoize(() =>
+    z.object({
+        type: z.literal('repo/connected_to_branch'),
+        broadcast: z.boolean(),
+        branch: watchBranchMessageSchema(),
+        connection: connectionInfoSchema(),
+    })
+);
 type ZodConnectedToBranchMessage = z.infer<
-    typeof connectedToBranchMessageSchema
+    ReturnType<typeof connectedToBranchMessageSchema>
 >;
 type ZodConnectedToBranchMessageAssertion = HasType<
     ZodConnectedToBranchMessage,
@@ -937,16 +975,18 @@ export interface DisconnectedFromBranchMessage {
      */
     connection: ConnectionInfo;
 }
-export const disconnectedFromBranchMessageSchema = z.object({
-    type: z.literal('repo/disconnected_from_branch'),
-    broadcast: z.boolean(),
-    recordName: z.string().nonempty().nullable(),
-    inst: z.string(),
-    branch: z.string(),
-    connection: connectionInfoSchema,
-});
+export const disconnectedFromBranchMessageSchema = memoize(() =>
+    z.object({
+        type: z.literal('repo/disconnected_from_branch'),
+        broadcast: z.boolean(),
+        recordName: z.string().nonempty().nullable(),
+        inst: z.string(),
+        branch: z.string(),
+        connection: connectionInfoSchema(),
+    })
+);
 type ZodDisconnectedFromBranchMessage = z.infer<
-    typeof disconnectedFromBranchMessageSchema
+    ReturnType<typeof disconnectedFromBranchMessageSchema>
 >;
 type ZodDisconnectedFromBranchMessageAssertion = HasType<
     ZodDisconnectedFromBranchMessage,
@@ -1107,14 +1147,18 @@ export interface ConnectionCountMessage {
      */
     count?: number;
 }
-export const connectionCountMessageSchema = z.object({
-    type: z.literal('repo/connection_count'),
-    recordName: z.string().nonempty().nullable(),
-    inst: z.string().nullable(),
-    branch: z.string().nullable(),
-    count: z.number().optional(),
-});
-type ZodConnectionCountMessage = z.infer<typeof connectionCountMessageSchema>;
+export const connectionCountMessageSchema = memoize(() =>
+    z.object({
+        type: z.literal('repo/connection_count'),
+        recordName: z.string().nonempty().nullable(),
+        inst: z.string().nullable(),
+        branch: z.string().nullable(),
+        count: z.number().optional(),
+    })
+);
+type ZodConnectionCountMessage = z.infer<
+    ReturnType<typeof connectionCountMessageSchema>
+>;
 type ZodConnectionCountMessageAssertion = HasType<
     ZodConnectionCountMessage,
     ConnectionCountMessage
@@ -1136,12 +1180,16 @@ export interface TimeSyncRequestMessage {
      */
     clientRequestTime: number;
 }
-export const timeSyncRequestMessageSchema = z.object({
-    type: z.literal('sync/time'),
-    id: z.number(),
-    clientRequestTime: z.number(),
-});
-type ZodTimeSyncRequestMessage = z.infer<typeof timeSyncRequestMessageSchema>;
+export const timeSyncRequestMessageSchema = memoize(() =>
+    z.object({
+        type: z.literal('sync/time'),
+        id: z.number(),
+        clientRequestTime: z.number(),
+    })
+);
+type ZodTimeSyncRequestMessage = z.infer<
+    ReturnType<typeof timeSyncRequestMessageSchema>
+>;
 type ZodTimeSyncRequestMessageAssertion = HasType<
     ZodTimeSyncRequestMessage,
     TimeSyncRequestMessage
@@ -1174,14 +1222,18 @@ export interface TimeSyncResponseMessage {
     serverTransmitTime: number;
 }
 
-export const timeSyncResponseMessageSchema = z.object({
-    type: z.literal('sync/time/response'),
-    id: z.number(),
-    clientRequestTime: z.number(),
-    serverReceiveTime: z.number(),
-    serverTransmitTime: z.number(),
-});
-type ZodTimeSyncResponseMessage = z.infer<typeof timeSyncResponseMessageSchema>;
+export const timeSyncResponseMessageSchema = memoize(() =>
+    z.object({
+        type: z.literal('sync/time/response'),
+        id: z.number(),
+        clientRequestTime: z.number(),
+        serverReceiveTime: z.number(),
+        serverTransmitTime: z.number(),
+    })
+);
+type ZodTimeSyncResponseMessage = z.infer<
+    ReturnType<typeof timeSyncResponseMessageSchema>
+>;
 type ZodTimeSyncResponseMessageAssertion = HasType<
     ZodTimeSyncResponseMessage,
     TimeSyncResponseMessage
@@ -1205,20 +1257,22 @@ export interface RequestMissingPermissionMessage {
      */
     user?: PublicUserInfo;
 }
-export const requestMissingPermissionMessageSchema = z.object({
-    type: z.literal('permission/request/missing'),
-    reason: z.object({
-        type: z.literal('missing_permission'),
-        recordName: z.string(),
-        resourceKind: RESOURCE_KIND_VALIDATION,
-        resourceId: z.string(),
-        action: ACTION_KINDS_VALIDATION,
-        subjectType: SUBJECT_TYPE_VALIDATION,
-        subjectId: z.string(),
-    }),
-});
+export const requestMissingPermissionMessageSchema = memoize(() =>
+    z.object({
+        type: z.literal('permission/request/missing'),
+        reason: z.object({
+            type: z.literal('missing_permission'),
+            recordName: z.string(),
+            resourceKind: RESOURCE_KIND_VALIDATION(),
+            resourceId: z.string(),
+            action: ACTION_KINDS_VALIDATION(),
+            subjectType: SUBJECT_TYPE_VALIDATION(),
+            subjectId: z.string(),
+        }),
+    })
+);
 type ZodRequestMissingPermissionMessage = z.infer<
-    typeof requestMissingPermissionMessageSchema
+    ReturnType<typeof requestMissingPermissionMessageSchema>
 >;
 type ZodRequestMissingPermissionMessageAssertion = HasType<
     ZodRequestMissingPermissionMessage,
@@ -1263,52 +1317,60 @@ export interface RequestMissingPermissionResponseFailureMessage {
      */
     connection?: ConnectionInfo;
 }
-export const requestMissingPermissionResponseMessageSchema = z.object({
-    type: z.literal('permission/request/missing/response'),
-    success: z.boolean(),
-    recordName: z.string(),
-    resourceKind: RESOURCE_KIND_VALIDATION,
-    resourceId: z.string(),
-    subjectType: SUBJECT_TYPE_VALIDATION,
-    subjectId: z.string(),
-    errorCode: z.string().optional(),
-    errorMessage: z.string().optional(),
-});
+export const requestMissingPermissionResponseMessageSchema = memoize(() =>
+    z.object({
+        type: z.literal('permission/request/missing/response'),
+        success: z.boolean(),
+        recordName: z.string(),
+        resourceKind: RESOURCE_KIND_VALIDATION(),
+        resourceId: z.string(),
+        subjectType: SUBJECT_TYPE_VALIDATION(),
+        subjectId: z.string(),
+        errorCode: z.string().optional(),
+        errorMessage: z.string().optional(),
+    })
+);
 
 export interface RateLimitExceededMessage {
     type: 'rate_limit_exceeded';
     retryAfter: number;
     totalHits: number;
 }
-export const rateLimitExceededMessageSchema = z.object({
-    type: z.literal('rate_limit_exceeded'),
-    retryAfter: z.number(),
-    totalHits: z.number(),
-});
+export const rateLimitExceededMessageSchema = memoize(() =>
+    z.object({
+        type: z.literal('rate_limit_exceeded'),
+        retryAfter: z.number(),
+        totalHits: z.number(),
+    })
+);
 type ZodRateLimitExceededMessage = z.infer<
-    typeof rateLimitExceededMessageSchema
+    ReturnType<typeof rateLimitExceededMessageSchema>
 >;
 type ZodRateLimitExceededMessageAssertion = HasType<
     ZodRateLimitExceededMessage,
     RateLimitExceededMessage
 >;
 
-export const websocketRequestMessageSchema = z.discriminatedUnion('type', [
-    loginMessageSchema,
-    watchBranchMessageSchema,
-    unwatchBranchMessageSchema,
-    addUpdatesMessageSchema,
-    sendActionMessageSchema,
-    watchBranchDevicesMessageSchema,
-    unwatchBranchDevicesMessageSchema,
-    connectionCountMessageSchema,
-    timeSyncRequestMessageSchema,
-    getUpdatesMessageSchema,
-    websocketHttpRequestMessageSchema,
-    requestMissingPermissionMessageSchema,
-    requestMissingPermissionResponseMessageSchema,
-]);
-type ZodWebsocketRequestMessage = z.infer<typeof websocketRequestMessageSchema>;
+export const websocketRequestMessageSchema = memoize(() =>
+    z.discriminatedUnion('type', [
+        loginMessageSchema(),
+        watchBranchMessageSchema(),
+        unwatchBranchMessageSchema(),
+        addUpdatesMessageSchema(),
+        sendActionMessageSchema(),
+        watchBranchDevicesMessageSchema(),
+        unwatchBranchDevicesMessageSchema(),
+        connectionCountMessageSchema(),
+        timeSyncRequestMessageSchema(),
+        getUpdatesMessageSchema(),
+        websocketHttpRequestMessageSchema(),
+        requestMissingPermissionMessageSchema(),
+        requestMissingPermissionResponseMessageSchema(),
+    ])
+);
+type ZodWebsocketRequestMessage = z.infer<
+    ReturnType<typeof websocketRequestMessageSchema>
+>;
 type ZodWebsocketRequestMessageAssertion = HasType<
     ZodWebsocketRequestMessage,
     WebsocketRequestMessage

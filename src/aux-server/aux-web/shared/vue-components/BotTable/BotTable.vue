@@ -88,18 +88,8 @@
 
                     <!-- Bots -->
                     <template v-for="bot in bots">
-                        <!-- deselect button -->
                         <!-- eslint-disable-next-line vue/no-v-for-template-key-on-child -->
-                        <div :key="`${bot.bot.id}-remove`" class="bot-cell remove-item">
-                            <mini-bot
-                                :bots="bot.bot"
-                                ref="tags"
-                                :allowCloning="true"
-                                :createMod="true"
-                                @click="botClicked(bot)"
-                            >
-                            </mini-bot>
-                        </div>
+                        <span :key="`${bot.bot.id}-empty`" class="bot-cell header"></span>
 
                         <!-- Bot ID -->
                         <bot-id

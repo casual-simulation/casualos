@@ -38,7 +38,7 @@
             <show-alert></show-alert>
 
             <md-dialog :md-active.sync="showQRCode" md-theme="default" class="qr-code-dialog">
-                <div class="qr-code-container">
+                <div class="qr-code-container" v-if="showQRCode">
                     <span>{{ getQRCode() }}</span>
                     <qr-code :value="getQRCode()" :options="{ width: 310 }" />
                 </div>
@@ -55,7 +55,7 @@
             </md-dialog>
 
             <md-dialog :md-active.sync="showBarcode" md-theme="default" class="barcode-dialog">
-                <div class="barcode-container">
+                <div class="barcode-container" v-if="showBarcode">
                     <barcode :value="getBarcode()" :format="getBarcodeFormat()" />
                 </div>
                 <md-dialog-actions>
@@ -76,7 +76,7 @@
                 class="qr-scanner-dialog"
                 @md-closed="onQrCodeScannerClosed()"
             >
-                <div class="qr-scanner-container">
+                <div class="qr-scanner-container" v-if="showQRScanner">
                     <h3>Scan a QR Code</h3>
                     <qrcode-stream
                         @decode="onQRCodeScanned"
@@ -99,7 +99,7 @@
                 class="barcode-scanner-dialog"
                 @md-closed="onBarcodeScannerClosed()"
             >
-                <div class="barcode-scanner-container">
+                <div class="barcode-scanner-container" v-if="showBarcodeScanner">
                     <h3>Scan a Barcode</h3>
                     <barcode-stream @decode="onBarcodeScanned" :camera="camera"></barcode-stream>
                 </div>

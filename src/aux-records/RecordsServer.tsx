@@ -2557,7 +2557,7 @@ export class RecordsServer {
                                     .max(128)
                                     .optional(),
                             }),
-                            entitlements: z.array(ENTITLEMENT_VALIDATION),
+                            entitlements: z.array(ENTITLEMENT_VALIDATION()),
                             description: z.string(),
                             markers: MARKERS_VALIDATION.optional(),
                         }),
@@ -3644,7 +3644,7 @@ export class RecordsServer {
                     z.object({
                         recordName: RECORD_NAME_VALIDATION,
                         marker: MARKER_VALIDATION.optional(),
-                        resourceKind: RESOURCE_KIND_VALIDATION.optional(),
+                        resourceKind: RESOURCE_KIND_VALIDATION().optional(),
                         resourceId: z
                             .string({
                                 error: (issue) =>
@@ -4007,7 +4007,7 @@ export class RecordsServer {
                         packageId: z.string().min(1).max(36),
                         userId: z.string().optional().nullable(),
                         recordName: RECORD_NAME_VALIDATION,
-                        feature: ENTITLEMENT_FEATURE_VALIDATION,
+                        feature: ENTITLEMENT_FEATURE_VALIDATION(),
                         scope: z.literal('designated'),
                         expireTimeMs: z.number().min(1),
                     })
@@ -7343,7 +7343,7 @@ export class RecordsServer {
                 return;
             }
 
-            const parseResult = websocketEventSchema.safeParse(
+            const parseResult = websocketEventSchema().safeParse(
                 jsonResult.value
             );
 
@@ -7407,7 +7407,8 @@ export class RecordsServer {
         message: WebsocketRequestMessage
     ) {
         const span = trace.getActiveSpan();
-        const messageResult = websocketRequestMessageSchema.safeParse(message);
+        const messageResult =
+            websocketRequestMessageSchema().safeParse(message);
 
         if (messageResult.success === false) {
             span?.setAttribute('request.messageType', 'invalid');

@@ -61,7 +61,7 @@ import type {
     CompleteOpenIDLoginSuccess,
 } from '@casual-simulation/aux-records';
 import {
-    serverConfigSchema,
+    getServerConfigSchema,
     STORED_AUX_SCHEMA,
 } from '@casual-simulation/aux-records';
 import { PassThrough } from 'node:stream';
@@ -415,6 +415,7 @@ program
     .option('-p, --pretty', 'Pretty print the output.')
     .description('Generate a server config for CasualOS.')
     .action(async () => {
+        const serverConfigSchema = getServerConfigSchema();
         const metadata = getSchemaMetadata(serverConfigSchema);
         const result = await askForInputs(metadata, 'serverConfig');
 
@@ -447,6 +448,7 @@ program
         }
 
         const parsed = JSON.parse(configJson);
+        const serverConfigSchema = getServerConfigSchema();
         const result = serverConfigSchema.safeParse(parsed);
         if (result.success == true) {
             console.log('Config is valid!');

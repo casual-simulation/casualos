@@ -16,9 +16,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import { getSchemaMetadata } from '@casual-simulation/aux-common';
-import { serverConfigSchema } from './ServerConfig';
+import { getServerConfigSchema } from './ServerConfig';
 
 describe('serverConfigSchema', () => {
+    const serverConfigSchema = getServerConfigSchema();
+
     it('should be able to parse a PublicOS-style config', () => {
         const config: any = {
             redis: {
