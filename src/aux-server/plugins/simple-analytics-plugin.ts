@@ -15,45 +15,33 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { memoize } from 'es-toolkit';
-import { z } from 'zod';
 
-export interface ConnectionInfo {
-    /**
-     * The ID of the connection.
-     */
-    connectionId: string;
+import type { Plugin } from 'vite';
 
-    /**
-     * The ID of the session.
-     */
-    sessionId: string | null;
+export interface Options {}
 
-    /**
-     * The ID of the user that is associated with the connection.
-     */
-    userId: string | null;
-}
-export const connectionInfoSchema = memoize(() =>
-    z.object({
-        connectionId: z.string(),
-        sessionId: z.string(),
-        userId: z.string(),
-    })
-);
-type ZodConnectionInfo = z.infer<ReturnType<typeof connectionInfoSchema>>;
-type ZodConnectionInfoAssertion = HasType<ZodConnectionInfo, ConnectionInfo>;
-
-export function connectionInfo(
-    userId: string,
-    sessionId: string,
-    connectionId: string
-): ConnectionInfo {
+/**
+ * A Vite plugin that injects Simple Analytics tracking code into the HTML.
+ */
+export default function simpleAnalyticsPlugin(options: Options = {}): Plugin {
     return {
-        userId,
-        sessionId,
-        connectionId,
+        name: 'simple-analytics',
+        transformIndexHtml(html) {
+            html.replace(
+                '<!--%analytics%-->',
+                `<script
+            async
+            defer
+            data-allow-params="pattern,ab,ask,inst"
+            src="https://scripts.simpleanalyticscdn.com/latest.js"
+        ></script>
+        <noscript
+            ><img
+                src="https://queue.simpleanalyticscdn.com/noscript.gif"
+                alt=""
+                referrerpolicy="no-referrer-when-downgrade"
+        /></noscript>`
+            );
+        },
     };
 }
-
-type HasType<T, Q extends T> = Q;

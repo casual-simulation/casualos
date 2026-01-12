@@ -43,17 +43,19 @@ import type {
     SubscriptionConfiguration,
     TiersConfiguration,
     WebhooksFeaturesConfiguration,
+    WebhookFeaturesSchema,
+    StoreFeaturesSchema,
+    ContractFeaturesSchema,
+    DataFeaturesSchema,
 } from './SubscriptionConfiguration';
 import {
-    storeFeaturesSchema,
-    contractFeaturesSchema,
-} from './SubscriptionConfiguration';
-import {
+    getStoreFeaturesSchema,
+    getContractFeaturesSchema,
     allowAllDefaultFeatures,
     allowAllFeatures,
-    dataFeaturesSchema,
+    getDataFeaturesSchema,
     denyAllFeatures,
-    webhookFeaturesSchema,
+    getWebhookFeaturesSchema,
 } from './SubscriptionConfiguration';
 import type z from 'zod';
 
@@ -77,9 +79,9 @@ export class FeaturesBuilder {
     withData(features?: DataFeaturesConfiguration): this {
         this._features.data =
             features ??
-            dataFeaturesSchema.parse({
+            getDataFeaturesSchema().parse({
                 allowed: true,
-            } satisfies z.input<typeof dataFeaturesSchema>);
+            } satisfies z.input<DataFeaturesSchema>);
         return this;
     }
 
@@ -237,9 +239,9 @@ export class FeaturesBuilder {
     withWebhooks(features?: WebhooksFeaturesConfiguration): this {
         this._features.webhooks =
             features ??
-            webhookFeaturesSchema.parse({
+            getWebhookFeaturesSchema().parse({
                 allowed: true,
-            } satisfies z.input<typeof webhookFeaturesSchema>);
+            } satisfies z.input<WebhookFeaturesSchema>);
         return this;
     }
 
@@ -341,8 +343,8 @@ export class FeaturesBuilder {
         return this;
     }
 
-    withStore(features?: z.input<typeof storeFeaturesSchema>): this {
-        this._features.store = storeFeaturesSchema.parse(
+    withStore(features?: z.input<StoreFeaturesSchema>): this {
+        this._features.store = getStoreFeaturesSchema().parse(
             features ?? {
                 allowed: true,
             }
@@ -366,8 +368,8 @@ export class FeaturesBuilder {
         return this;
     }
 
-    withContracts(features?: z.input<typeof contractFeaturesSchema>): this {
-        this._features.contracts = contractFeaturesSchema.parse(
+    withContracts(features?: z.input<ContractFeaturesSchema>): this {
+        this._features.contracts = getContractFeaturesSchema().parse(
             features ?? {
                 allowed: true,
             }

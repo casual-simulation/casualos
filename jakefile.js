@@ -55,6 +55,8 @@ let globs = [
     `${__dirname}/src/aux-server/aux-web/dist`,
     `${__dirname}/src/aux-server/aux-web/aux-player/vite.config.mts.timestamp-*`,
     `${__dirname}/src/aux-server/aux-web/aux-auth/vite.config.mts.timestamp-*`,
+    `${__dirname}/src/aux-server/stats.html`,
+    `${__dirname}/src/aux-server/worker-stats-*.html`,
 ];
 folders.forEach((f) => {
     patterns.forEach((p) => {

@@ -378,7 +378,15 @@ export class Server {
             backend.use(conditional(isViteOrAssetOrIndex, backendProxy));
 
             const getTemplateFromVite = async (url: string) => {
-                return await (await fetch(url)).text();
+                try {
+                    return await (await fetch(url)).text();
+                } catch (err) {
+                    console.error(
+                        '[Server] Error fetching template from Vite:',
+                        err
+                    );
+                    throw err;
+                }
             };
 
             const map = [
