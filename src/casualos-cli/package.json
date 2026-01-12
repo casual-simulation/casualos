@@ -1,6 +1,6 @@
 {
     "name": "casualos",
-    "version": "3.10.3",
+    "version": "3.10.4-alpha.20934784018",
     "description": "Command line interface for CasualOS.",
     "main": "./dist/index.js",
     "types": "index.d.ts",
@@ -35,9 +35,9 @@
         "access": "public"
     },
     "dependencies": {
-        "@casual-simulation/aux-common": "^3.10.3",
-        "@casual-simulation/aux-records": "^3.10.3",
-        "@casual-simulation/aux-runtime": "^3.10.3",
+        "@casual-simulation/aux-common": "^3.10.4-alpha.20934784018",
+        "@casual-simulation/aux-records": "^3.10.4-alpha.20934784018",
+        "@casual-simulation/aux-runtime": "^3.10.4-alpha.20934784018",
         "@octokit/app": "^15.1.0",
         "@octokit/auth-oauth-device": "^7.1.1",
         "@octokit/core": "^6.1.2",
