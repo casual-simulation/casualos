@@ -58,6 +58,7 @@ const importableLibraries = {
     rxjs: './aux-web/shared/public/import-map/rxjs',
     'es-toolkit': './aux-web/shared/public/import-map/es-toolkit',
     zod: './aux-web/shared/public/import-map/zod',
+    uuid: './aux-web/shared/public/import-map/uuid',
 };
 
 // The chunks that we want to create.
