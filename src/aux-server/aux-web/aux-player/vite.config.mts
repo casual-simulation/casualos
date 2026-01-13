@@ -109,6 +109,7 @@ const auxPlayerChunks = {
 const sharedChunks = {
     vendor: ['NodeCryptoReplacement'],
     'geo-three': ['MapUtils', 'scene/map/CustomMapProvider'],
+    three: ['three-legacy-gltf-loader', 'ldraw-loader'],
 };
 
 const auxRuntimeChunks = {
