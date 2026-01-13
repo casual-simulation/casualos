@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.10.5
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the confirmation dialog for deleting a bot would not appear.
+
 ## V3.10.4
 
 #### Date: 1/13/2026
