@@ -1,6 +1,7 @@
 import path from 'path';
 import fs from 'fs';
-import { defineConfig, splitVendorChunkPlugin, mergeConfig } from 'vite';
+import type { BuildOptions } from 'vite';
+import { defineConfig, mergeConfig } from 'vite';
 import vue from '@vitejs/plugin-vue2';
 import copy from 'rollup-plugin-copy';
 import { createSvgIconsPlugin } from 'vite-plugin-svg-icons';
@@ -19,8 +20,10 @@ import { importMapPlugin } from 'importmap-vite-plugin';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import { GIT_HASH, GIT_TAG } from '../../../../script/git-stats.mjs';
+import simpleAnalyticsPlugin from '../../plugins/simple-analytics-plugin';
 
 const ENABLE_DOM_ACCESS = process.env.ENABLE_DOM_ACCESS === 'true';
+const OMIT_SIMPLE_ANALYTICS = process.env.OMIT_SIMPLE_ANALYTICS === 'true';
 
 const distDir = path.resolve(__dirname, '..', 'dist');
 const webxrProfilesDir = path.posix.resolve(
@@ -42,6 +45,93 @@ const casualOsPackages = fs
     .map((folder) => `@casual-simulation/${folder}`);
 
 const policies = getPolicies(true);
+
+const importableLibraries = {
+    yjs: './aux-web/shared/public/import-map/yjs',
+    luxon: './aux-web/shared/public/import-map/luxon',
+    'preact/compat': './aux-web/shared/public/import-map/preact.compat',
+    'preact/jsx-runtime':
+        './aux-web/shared/public/import-map/preact.jsx-runtime',
+    preact: './aux-web/shared/public/import-map/preact',
+    three: './aux-web/shared/public/import-map/three',
+    'rxjs/operators': './aux-web/shared/public/import-map/rxjs-operators',
+    rxjs: './aux-web/shared/public/import-map/rxjs',
+    'es-toolkit': './aux-web/shared/public/import-map/es-toolkit',
+    zod: './aux-web/shared/public/import-map/zod',
+};
+
+// The chunks that we want to create.
+const nodeModuleChunks: { [key: string]: string[] } = {
+    // Libraries that should be in the default chunk (not split out).
+    default: ['@loomhq/record-sdk/dist/esm/is-supported'],
+
+    // Libraries to split into their own chunks.
+    // This is usually done to ensure that large libraries are loaded lazily when they are needed.
+    loom: ['@loomhq/record-sdk'],
+    tfjs: ['@teachablemachine/image', '@tensorflow/tfjs', 'long/'],
+    monaco: ['@casual-simulation/monaco-editor'],
+    livekit: ['livekit-client'],
+    barcode: ['jsbarcode', '@ericblade/quagga2'],
+    qrcode: ['qrcode', '@chenfengyuan/vue-qrcode'],
+    'geo-three': ['geo-three'],
+    three: ['@casual-simulation/three'],
+    yjs: ['yjs', 'lib0'],
+    preact: ['preact'],
+    rxjs: ['rxjs', 'rxjs/dist/esm/internal/operators'],
+    'vue-filepond': ['vue-filepond', 'filepond'],
+};
+
+for (let lib of Object.keys(importableLibraries)) {
+    const libName = lib.replace('/', '-');
+    if (!nodeModuleChunks[libName]) {
+        nodeModuleChunks[libName] = [lib];
+    } else {
+        nodeModuleChunks[libName].push(lib);
+    }
+}
+
+const auxPlayerChunks = {
+    barcode: ['VueBarcode', 'BarcodeScanner'],
+    monaco: [
+        'MonacoHelpers',
+        'MonacoLibs',
+        'public/monaco-editor',
+        'MonacoTagDiffEditor',
+        'MonacoDiffEditor',
+        'MonacoTagEditor',
+        'CodeToolsPortal',
+        'MonacoEditor',
+    ],
+    qrcode: ['QrcodeStream', 'public/vue-qrcode-reader', 'public/callforth'],
+    vendor: ['vue-shortkey', 'multi-streams-mixer'],
+};
+
+const sharedChunks = {
+    vendor: ['NodeCryptoReplacement'],
+    'geo-three': ['MapUtils', 'scene/map/CustomMapProvider'],
+};
+
+const auxRuntimeChunks = {
+    monaco: ['AuxLibraryDefinitions'],
+};
+
+let workerCounter = 0;
+
+function findChunk(id: string, chunks: { [key: string]: string[] }) {
+    for (let [key, libs] of Object.entries(chunks)) {
+        for (let lib of libs) {
+            if (id.includes(lib)) {
+                // console.log('Chunking', id, '-->', key);
+                if (key === 'default') {
+                    return null;
+                }
+                return key;
+            }
+        }
+    }
+
+    return undefined;
+}
 
 export default defineConfig(({ command, mode }) => ({
     logLevel: 'info',
@@ -74,16 +164,51 @@ export default defineConfig(({ command, mode }) => ({
                     ),
                 },
                 output: {
-                    manualChunks: {
-                        'loom-supported': ['@loomhq/record-sdk/is-supported'],
-                        loom: ['@loomhq/record-sdk'],
-                        tfjs: ['@teachablemachine/image', '@tensorflow/tfjs'],
+                    manualChunks: function (id) {
+                        if (
+                            id.includes('\0commonjsHelpers.js') ||
+                            id.includes('\0commonjs-dynamic-modules')
+                        ) {
+                            return 'commonjs';
+                        }
+
+                        if (id.includes('node_modules')) {
+                            const c = findChunk(id, nodeModuleChunks);
+                            if (typeof c !== 'undefined') {
+                                return c;
+                            }
+                            return 'vendor';
+                        } else if (id.includes('aux-player')) {
+                            const c = findChunk(id, auxPlayerChunks);
+                            if (typeof c !== 'undefined') {
+                                return c;
+                            }
+                        } else if (id.includes('aux-runtime')) {
+                            const c = findChunk(id, auxRuntimeChunks);
+                            if (typeof c !== 'undefined') {
+                                return c;
+                            }
+                        } else if (id.includes('shared')) {
+                            const c = findChunk(id, sharedChunks);
+                            if (typeof c !== 'undefined') {
+                                console.log('Chunking', id, '-->', c);
+                                return c;
+                            }
+                        }
+
+                        return null;
                     },
+                    onlyExplicitManualChunks: true,
                 },
             },
             sourcemap: true,
             target: ['chrome100', 'firefox100', 'safari14', 'ios14', 'edge100'],
-        },
+            modulePreload: {
+                resolveDependencies() {
+                    return [];
+                },
+            },
+        } satisfies BuildOptions,
         mode === 'static'
             ? {
                   rollupOptions: {
@@ -133,25 +258,7 @@ export default defineConfig(({ command, mode }) => ({
             svgoOptions: false,
         }),
         importMapPlugin({
-            imports:
-                mode === 'static'
-                    ? {}
-                    : {
-                          yjs: './aux-web/shared/public/import-map/yjs',
-                          luxon: './aux-web/shared/public/import-map/luxon',
-                          preact: './aux-web/shared/public/import-map/preact',
-                          'preact/compat':
-                              './aux-web/shared/public/import-map/preact.compat',
-                          'preact/jsx-runtime':
-                              './aux-web/shared/public/import-map/preact.jsx-runtime',
-                          three: './aux-web/shared/public/import-map/three',
-                          rxjs: './aux-web/shared/public/import-map/rxjs',
-                          'rxjs/operators':
-                              './aux-web/shared/public/import-map/rxjs-operators',
-                          'es-toolkit':
-                              './aux-web/shared/public/import-map/es-toolkit',
-                          zod: './aux-web/shared/public/import-map/zod',
-                      },
+            imports: mode === 'static' ? {} : importableLibraries,
         }),
         {
             ...copy({
@@ -233,11 +340,12 @@ export default defineConfig(({ command, mode }) => ({
                           ...policies.files,
                       },
                   }),
-                  splitVendorChunkPlugin(),
+                  //   splitVendorChunkPlugin(),
               ]),
         ...(command === 'build'
             ? [generateDependencyGraphRollupPlugin(distDir), visualizer()]
             : []),
+        ...(!OMIT_SIMPLE_ANALYTICS ? [simpleAnalyticsPlugin()] : []),
         process.argv.some((a) => a === '--ssl') ? basicSsl() : [],
     ],
     assetsInclude: ['**/*.gltf', '**/*.glb'],
@@ -300,6 +408,12 @@ export default defineConfig(({ command, mode }) => ({
             esbuild: 'esbuild-wasm',
             'monaco-editor': '@casual-simulation/monaco-editor',
             lodash: 'es-toolkit/compat',
+            crypto: path.resolve(
+                __dirname,
+                '..',
+                'shared',
+                'NodeCryptoReplacement.ts'
+            ),
 
             ...(mode === 'static'
                 ? {
@@ -419,5 +533,17 @@ export default defineConfig(({ command, mode }) => ({
                 quietDeps: true,
             },
         },
+    },
+    worker: {
+        rollupOptions: {
+            output: {
+                manualChunks: undefined,
+            },
+        },
+        plugins: () => [
+            visualizer({
+                filename: path.resolve(`worker-stats-${workerCounter++}.html`),
+            }),
+        ],
     },
 }));

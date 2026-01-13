@@ -1,5 +1,20 @@
 # CasualOS Changelog
 
+## V3.10.4
+
+#### Date: 1/13/2026
+
+### :rocket: Features
+
+-   Added a bunch of improvements for loading performance.
+    -   Added the ability to omit Simple Analytics during build.
+        -   Set the `OMIT_SIMPLE_ANALYTICS` environment variable to `true` during build.
+        -   This can slightly improve loading performance since Simple Analytics makes some network calls immediately on start, and this can delay other CasualOS network requests from completing.
+    -   Improved the CasualOS service worker to cache the index file.
+        -   For users who have already visited a CasualOS deployment, this allows their subsequent visits to skip the initial network roundtrip, slightly speeding up loading times.
+    -   Improved how CasualOS's front end is bundled to only load what is needed for initial loads.
+    -   Improved CasualOS's loading order to do more in parallel.
+
 ## V3.10.3
 
 #### Date: 1/7/2026

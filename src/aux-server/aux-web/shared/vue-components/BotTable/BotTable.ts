@@ -55,7 +55,6 @@ import { TreeView } from 'vue-json-tree-view';
 import { SvgIcon } from '@casual-simulation/aux-components';
 import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../AppManager';
-import BotTagMini from '../BotTagMini/BotTagMini';
 import TagValueEditor from '../TagValueEditor/TagValueEditor';
 import { sumBy } from 'es-toolkit/compat';
 import TagValueEditorWrapper from '../TagValueEditorWrapper/TagValueEditorWrapper';
@@ -86,7 +85,6 @@ export interface TableBot {
         'tag-editor': TagEditor,
         'tree-view': TreeView,
         'svg-icon': SvgIcon,
-        'mini-bot': BotTagMini,
         'tag-value-editor': TagValueEditor,
         'tag-value-editor-wrapper': TagValueEditorWrapper,
     },

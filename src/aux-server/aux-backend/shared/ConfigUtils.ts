@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import {
-    serverConfigSchema,
+    getServerConfigSchema,
     type ServerConfig,
 } from '@casual-simulation/aux-records';
 import { merge, tryParseJson } from '@casual-simulation/aux-common';
@@ -44,6 +44,7 @@ export function loadConfig(
         dynamicConfig
     );
 
+    const serverConfigSchema = getServerConfigSchema();
     const optionsResult = serverConfigSchema.safeParse(merged);
 
     if (optionsResult.success === false) {

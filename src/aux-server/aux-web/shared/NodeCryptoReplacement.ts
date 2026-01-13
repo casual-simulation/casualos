@@ -15,40 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import Vue from 'vue';
-import Component from 'vue-class-component';
-import { Prop } from 'vue-property-decorator';
-import MiniBot from '../MiniBot/MiniBot';
-import type { Bot } from '@casual-simulation/aux-common';
 
-@Component({
-    components: {
-        'mini-bot': MiniBot,
-    },
-})
-export default class BotTagMini extends Vue {
-    @Prop() tag: string;
-
-    /**
-     * Whether the tag is allowed to be dragged from the bot table into the world.
-     */
-    @Prop({ default: true })
-    allowCloning: boolean;
-
-    /**
-     * Whether the tag should create a mod when dragged.
-     */
-    @Prop({ default: false })
-    createMod: boolean;
-
-    @Prop()
-    bots: Bot;
-
-    click() {
-        this.$emit('click');
-    }
-
-    constructor() {
-        super();
-    }
-}
+// This module is used to provide a replacement for the Node.js 'crypto' module
+// in environments where it is not available, such as web browsers.
+export default {};

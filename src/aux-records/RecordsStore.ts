@@ -270,7 +270,7 @@ export interface RecordsStore {
      * @param domainName The domain name.
      */
     getVerifiedCustomDomainByName(
-        domainName: string
+        domainName: string | null
     ): Promise<CustomDomainWithStudio | null>;
 
     /**

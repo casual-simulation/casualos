@@ -105,7 +105,6 @@
                                             :key="bot.bot.id"
                                             class="search-area-bot"
                                         >
-                                            <mini-bot :bot="bot.bot"></mini-bot>
                                             <span class="search-area-bot-title">{{
                                                 bot.title
                                             }}</span>
@@ -206,9 +205,6 @@
                                         :class="{ selected: isDiffBotSelected(bot) }"
                                         @click="selectDiff(bot)"
                                     >
-                                        <mini-bot
-                                            :bot="bot.addedBot || bot.removedBot || bot.newBot"
-                                        ></mini-bot>
                                         <span>{{ bot.title }}</span>
                                         <diff-status
                                             :status="
@@ -255,7 +251,6 @@
                                             :class="{ selected: bot.bot.id === selectedBotId }"
                                             @click="selectBot(item.simulationId, bot)"
                                         >
-                                            <mini-bot :bot="bot.bot"></mini-bot>
                                             <span>{{ bot.title }}</span>
                                         </div>
                                     </div>

@@ -92,8 +92,6 @@ import BotChat from '../../shared/vue-components/BotChat/BotChat';
 import type { SimulationInfo } from '../../shared/RouterUtils';
 import { createSimulationInfo } from '../../shared/RouterUtils';
 import BotSheet from '../../shared/vue-components/BotSheet/BotSheet';
-import type { BotRenderer } from '../../shared/scene/BotRenderer';
-import { getRenderer } from '../../shared/scene/BotRenderer';
 import UploadFiles from '../../shared/vue-components/UploadFiles/UploadFiles';
 import ShowInputModal from '../../shared/vue-components/ShowInputModal/ShowInputModal';
 import ShowConfirmModal from '../../shared/vue-components/ShowConfirmModal/ShowConfirmModal';
@@ -120,9 +118,7 @@ import AuthUI from '../../shared/vue-components/AuthUI/AuthUI';
 import LoginUI from '../../shared/vue-components/LoginUI/LoginUI';
 import ReportInstDialog from '../../shared/vue-components/ReportInstDialog/ReportInstDialog';
 import EnableXRModal from '../../shared/vue-components/EnableXRModal/EnableXRModal';
-// import { oembed } from '@loomhq/loom-embed';
 import type { SDKResult as LoomSDKResult } from '@loomhq/record-sdk';
-// import { createInstance as createLoomInstance } from '@loomhq/record-sdk';
 import { isSupported as isLoomSupported } from '@loomhq/record-sdk/is-supported';
 import type { SubscribeToNotificationAction } from '@casual-simulation/aux-runtime';
 import { recordsCallProcedure } from '@casual-simulation/aux-runtime';
@@ -361,8 +357,6 @@ export default class PlayerApp extends Vue {
 
     confirmDialogOptions: ConfirmDialogOptions = new ConfirmDialogOptions();
     alertDialogOptions: AlertDialogOptions = new AlertDialogOptions();
-
-    @Provide() botRenderer: BotRenderer = getRenderer();
 
     private _subs: SubscriptionLike[] = [];
     private _simulationSubs: Map<Simulation, SubscriptionLike[]> = new Map();

@@ -72,7 +72,6 @@ import BotTag from '../BotTag/BotTag';
 import { mapValues, uniq } from 'es-toolkit/compat';
 // import Hotkey from '../Hotkey/Hotkey';
 import { onFocusSearch } from './SystemPortalHelpers';
-import MiniBot from '../MiniBot/MiniBot';
 import type {
     SystemPortalDiffArea,
     SystemPortalDiffBot,
@@ -105,7 +104,6 @@ import TagDiffEditor from '../TagDiffEditor/TagDiffEditor';
         'bot-tag': BotTag,
         'bot-id': BotID,
         // hotkey: Hotkey,
-        'mini-bot': MiniBot,
         'system-portal-tag': SystemPortalTag,
         'system-portal-diff-tag': SystemPortalDiffTag,
         'tag-editor': TagEditor,

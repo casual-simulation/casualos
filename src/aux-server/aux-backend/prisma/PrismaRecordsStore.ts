@@ -133,6 +133,9 @@ export class PrismaRecordsStore implements RecordsStore {
     async getVerifiedCustomDomainByName(
         domainName: string
     ): Promise<CustomDomainWithStudio | null> {
+        if (!domainName) {
+            return null;
+        }
         const domain = await this._client.customDomain.findUnique({
             where: {
                 domainName_verified: {

@@ -59,6 +59,7 @@ import {
 import type {
     AIHumeFeaturesConfiguration,
     PurchasableItemFeaturesConfiguration,
+    StoreFeaturesSchema,
     StudioComIdFeaturesConfiguration,
     StudioLoomFeaturesConfiguration,
 } from './SubscriptionConfiguration';
@@ -69,7 +70,7 @@ import {
     getPurchasableItemsFeatures,
     getSubscriptionFeatures,
     getSubscriptionTier,
-    storeFeaturesSchema,
+    getStoreFeaturesSchema,
 } from './SubscriptionConfiguration';
 import type { ComIdConfig, ComIdPlayerConfig } from './ComIdConfig';
 import { isActiveSubscription } from './Utils';
@@ -1311,9 +1312,9 @@ export class RecordsController {
                     studio.subscriptionPeriodEndMs
                 );
             } else {
-                storeFeatures = storeFeaturesSchema.parse({
+                storeFeatures = getStoreFeaturesSchema().parse({
                     allowed: false,
-                } satisfies z.input<typeof storeFeaturesSchema>);
+                } satisfies z.input<StoreFeaturesSchema>);
             }
 
             return {
