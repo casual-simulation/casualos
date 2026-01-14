@@ -1,8 +1,18 @@
 # CasualOS Changelog
 
+## V3.10.5
+
+#### Date: 1/14/2026
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the confirmation dialog for deleting a bot would not appear.
+-   Fixed an issue where custom apps would be hidden after logging in with an email address.
+-   Fixed an issue where the camera could run into weird clipping issues if the camera type was changed at the same time as calling `os.focusOn()` with a rotation.
+
 ## V3.10.4
 
-#### Date: 1/12/2026
+#### Date: 1/13/2026
 
 ### :rocket: Features
 

@@ -80,11 +80,13 @@ export default class HandleLoginMetadata extends Vue {
     onCloseWebAuthn() {
         this.showRegisterWebAuthn = false;
         this._resolve();
+        this.$emit('close');
     }
 
     onClosePushSubscription() {
         this.showRegisterPushSubscription = false;
         this._resolve();
+        this.$emit('close');
     }
 
     private async _showRegisterWebAuthn() {
