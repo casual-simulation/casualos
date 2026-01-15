@@ -500,6 +500,10 @@ export function watchSimulation(
 
 /**
  * Configures TypeScript type checking in the Monaco editor.
+ *
+ * By default, semantic validation is disabled (noSemanticValidation: true) to reduce
+ * visual noise in the editor. Syntax validation remains enabled by default.
+ *
  * @param options The configuration options for type checking.
  */
 export function configureMonacoTypeChecking(options: {
