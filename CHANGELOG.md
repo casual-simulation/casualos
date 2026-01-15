@@ -4,6 +4,10 @@
 
 #### Date: TBD
 
+### :rocket: Features
+
+-   Added `os.configureTypeChecking()` to allow enabling/disabling TypeScript type checking in the Monaco editor.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where the confirmation dialog for deleting a bot would not appear.
