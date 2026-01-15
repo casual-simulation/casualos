@@ -506,20 +506,16 @@ export function configureMonacoTypeChecking(options: {
     noSemanticValidation?: boolean;
     noSyntaxValidation?: boolean;
 }) {
-    const jsOptions = {
-        noSemanticValidation: options.noSemanticValidation ?? true,
-        noSyntaxValidation: options.noSyntaxValidation ?? false,
-    };
-    const tsOptions = {
+    const diagnosticOptions = {
         noSemanticValidation: options.noSemanticValidation ?? true,
         noSyntaxValidation: options.noSyntaxValidation ?? false,
     };
 
     monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions(
-        jsOptions
+        diagnosticOptions
     );
     monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions(
-        tsOptions
+        diagnosticOptions
     );
 }
 

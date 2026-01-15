@@ -6271,13 +6271,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     *Retrieves a list of issues for the script stored under the specified tag.
+     * Retrieves a list of issues for the script stored under the specified tag.
      *
-     *The getScriptIssues function takes in a bot instance and a tag of that bot, then analyzes
-     *the script associated with the given tag. It gathers all issues that have been
-     *raised, including syntax errors, semantic inconsistencies, and suggestions for
-     *improvement. This function helps in identifying and addressing potential problems
-     *in the script.
+     * The getScriptIssues function takes in a bot instance and a tag of that bot, then analyzes
+     * the script associated with the given tag. It gathers all issues that have been
+     * raised, including syntax errors, semantic inconsistencies, and suggestions for
+     * improvement. This function helps in identifying and addressing potential problems
+     * in the script.
      *
      * @param bot the bot to get the script issues for.
      * @param tag the tag of the bot to get the script issues for.
