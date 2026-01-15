@@ -85,7 +85,6 @@ import type { ConnectionInfo } from '@casual-simulation/aux-common';
 import Console from '../../shared/vue-components/Console/Console';
 import { recordMessage } from '../../shared/Console';
 import { createStaticHtml, sendWebhook } from '../../../shared/WebhookUtils';
-import { configureMonacoTypeChecking } from '../../../shared/MonacoHelpers';
 import HtmlModal from '../../shared/vue-components/HtmlModal/HtmlModal';
 import ClipboardModal from '../../shared/vue-components/ClipboardModal/ClipboardModal';
 import UploadServerModal from '../../shared/vue-components/UploadServerModal/UploadServerModal';
@@ -1802,6 +1801,9 @@ export default class PlayerApp extends Vue {
         simulation: BrowserSimulation
     ) {
         try {
+            const { configureMonacoTypeChecking } = await import(
+                '../../shared/MonacoHelpers'
+            );
             if (e.options?.editorDiagnosticOptions) {
                 configureMonacoTypeChecking(e.options.editorDiagnosticOptions);
             }
