@@ -498,6 +498,31 @@ export function watchSimulation(
     return sub;
 }
 
+/**
+ * Configures TypeScript type checking in the Monaco editor.
+ * @param options The configuration options for type checking.
+ */
+export function configureMonacoTypeChecking(options: {
+    noSemanticValidation?: boolean;
+    noSyntaxValidation?: boolean;
+}) {
+    const jsOptions = {
+        noSemanticValidation: options.noSemanticValidation ?? true,
+        noSyntaxValidation: options.noSyntaxValidation ?? false,
+    };
+    const tsOptions = {
+        noSemanticValidation: options.noSemanticValidation ?? true,
+        noSyntaxValidation: options.noSyntaxValidation ?? false,
+    };
+
+    monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions(
+        jsOptions
+    );
+    monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions(
+        tsOptions
+    );
+}
+
 function registerCodeLensForLanguage(
     simulation: Simulation,
     language: string,

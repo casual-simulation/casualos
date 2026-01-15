@@ -120,6 +120,7 @@ import type {
     RemoveBotMapLayerAction,
     TrackConfigBotTagsAction,
     GenerateQRCodeOptions,
+    ConfigureTypeCheckingOptions,
 } from '@casual-simulation/aux-common/bots';
 import {
     hasValue,
@@ -128,6 +129,7 @@ import {
     BOT_SPACE_TAG,
     toast as toastMessage,
     getScriptIssues as scriptIssues,
+    configureTypeChecking as calcConfigureTypeChecking,
     tip as tipMessage,
     hideTips as hideTipMessages,
     showJoinCode as calcShowJoinCode,
@@ -3572,6 +3574,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
                 sleep,
                 toast,
+                configureTypeChecking,
                 getScriptIssues,
                 tip,
                 hideTips,
@@ -6229,6 +6232,42 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return addAction(
             toastMessage(convertToCopiableValue(message), duration)
         );
+    }
+
+    /**
+     * Configures TypeScript type checking in the Monaco editor.
+     *
+     * This function allows you to enable or disable TypeScript semantic and syntax validation
+     * in the code editor. By default, type checking is disabled to reduce visual noise.
+     *
+     * @param options the configuration options for type checking.
+     *
+     * @example Enable TypeScript type checking
+     * await os.configureTypeChecking({
+     *     editorDiagnosticOptions: {
+     *         noSemanticValidation: false,
+     *         noSyntaxValidation: false
+     *     }
+     * });
+     *
+     * @example Disable TypeScript type checking
+     * await os.configureTypeChecking({
+     *     editorDiagnosticOptions: {
+     *         noSemanticValidation: true,
+     *         noSyntaxValidation: false
+     *     }
+     * });
+     *
+     * @dochash actions/os/system
+     * @docname os.configureTypeChecking
+     */
+    function configureTypeChecking(
+        options: ConfigureTypeCheckingOptions
+    ): Promise<void> {
+        const task = context.createTask();
+        const action = calcConfigureTypeChecking(options, task.taskId);
+
+        return addAsyncAction(task, action);
     }
 
     /**

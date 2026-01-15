@@ -215,7 +215,8 @@ export type AsyncActions =
     | AddMapLayerAction
     | RemoveMapLayerAction
     | HideLoadingScreenAction
-    | GenerateQRCodeAction;
+    | GenerateQRCodeAction
+    | ConfigureTypeCheckingAction;
 
 export type RemoteBotActions =
     | GetRemoteCountAction
@@ -517,6 +518,44 @@ export interface ShowHtmlAction extends Action {
 export interface HideHtmlAction extends Action {
     type: 'show_html';
     visible: false;
+}
+
+/**
+ * The options for configuring TypeScript type checking in the Monaco editor.
+ * @dochash types/os/system
+ * @docname ConfigureTypeCheckingOptions
+ */
+export interface ConfigureTypeCheckingOptions {
+    /**
+     * Options for the Monaco editor's TypeScript diagnostic settings.
+     */
+    editorDiagnosticOptions?: {
+        /**
+         * Whether to disable semantic validation (type checking).
+         * When true, TypeScript semantic errors will not be shown.
+         */
+        noSemanticValidation?: boolean;
+
+        /**
+         * Whether to disable syntax validation.
+         * When true, TypeScript syntax errors will not be shown.
+         */
+        noSyntaxValidation?: boolean;
+    };
+}
+
+/**
+ * An event that is used to configure TypeScript type checking in the Monaco editor.
+ * @dochash types/os/system
+ * @docname ConfigureTypeCheckingAction
+ */
+export interface ConfigureTypeCheckingAction extends AsyncAction {
+    type: 'configure_type_checking';
+
+    /**
+     * The configuration options for type checking.
+     */
+    options: ConfigureTypeCheckingOptions;
 }
 
 /**
@@ -4520,6 +4559,22 @@ export function toast(
         type: 'show_toast',
         message: message,
         duration: 2000,
+    };
+}
+
+/**
+ * Creates a new ConfigureTypeCheckingAction.
+ * @param options The configuration options for type checking.
+ * @param taskId The ID of the async task.
+ */
+export function configureTypeChecking(
+    options: ConfigureTypeCheckingOptions,
+    taskId?: string | number
+): ConfigureTypeCheckingAction {
+    return {
+        type: 'configure_type_checking',
+        options,
+        taskId,
     };
 }
 

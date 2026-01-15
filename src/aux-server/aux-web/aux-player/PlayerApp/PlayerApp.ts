@@ -34,6 +34,7 @@ import type {
     WatchLoomAction,
     GetLoomMetadataAction,
     GetScriptIssuesAction,
+    ConfigureTypeCheckingAction,
 } from '@casual-simulation/aux-common';
 import {
     ON_QR_CODE_SCANNER_CLOSED_ACTION_NAME,
@@ -84,6 +85,7 @@ import type { ConnectionInfo } from '@casual-simulation/aux-common';
 import Console from '../../shared/vue-components/Console/Console';
 import { recordMessage } from '../../shared/Console';
 import { createStaticHtml, sendWebhook } from '../../../shared/WebhookUtils';
+import { configureMonacoTypeChecking } from '../../../shared/MonacoHelpers';
 import HtmlModal from '../../shared/vue-components/HtmlModal/HtmlModal';
 import ClipboardModal from '../../shared/vue-components/ClipboardModal/ClipboardModal';
 import UploadServerModal from '../../shared/vue-components/UploadServerModal/UploadServerModal';
@@ -1440,6 +1442,8 @@ export default class PlayerApp extends Vue {
                     this._getLoomMetadata(e, simulation);
                 } else if (e.type === 'get_script_issues') {
                     this._getScriptIssues(e, simulation);
+                } else if (e.type === 'configure_type_checking') {
+                    this._configureTypeChecking(e, simulation);
                 } else if (e.type === 'subscribe_to_notification') {
                     this._subscribeToNotification(e, simulation);
                 }
@@ -1790,6 +1794,26 @@ export default class PlayerApp extends Vue {
                 );
             }
             console.log('Error fetching issues:', ex);
+        }
+    }
+
+    private async _configureTypeChecking(
+        e: ConfigureTypeCheckingAction,
+        simulation: BrowserSimulation
+    ) {
+        try {
+            if (e.options?.editorDiagnosticOptions) {
+                configureMonacoTypeChecking(e.options.editorDiagnosticOptions);
+            }
+
+            simulation.helper.transaction(asyncResult(e.taskId, null));
+        } catch (ex) {
+            if (hasValue(e.taskId)) {
+                simulation.helper.transaction(
+                    asyncError(e.taskId, ex.toString())
+                );
+            }
+            console.log('Error configuring type checking:', ex);
         }
     }
 
