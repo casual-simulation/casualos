@@ -75,20 +75,11 @@ const nodeModuleChunks: { [key: string]: string[] } = {
     barcode: ['jsbarcode', '@ericblade/quagga2'],
     qrcode: ['qrcode', '@chenfengyuan/vue-qrcode'],
     'geo-three': ['geo-three'],
-    three: ['@casual-simulation/three', 'troika', 'webgl-sdf-generator'],
+    three: ['@casual-simulation/three'],
     yjs: ['yjs', 'lib0'],
     preact: ['preact'],
     rxjs: ['rxjs', 'rxjs/dist/esm/internal/operators'],
     'vue-filepond': ['vue-filepond', 'filepond'],
-
-    'vendor-vm': [
-        'acorn',
-        'estraverse',
-        'astring',
-        'scrypt-js',
-        'hash.js',
-        'tweetnacl',
-    ],
 };
 
 for (let lib of Object.keys(importableLibraries)) {
@@ -100,73 +91,30 @@ for (let lib of Object.keys(importableLibraries)) {
     }
 }
 
-const chunks: { [key: string]: { [key: string]: string[] } } = {
-    'aux-player': {
-        barcode: ['VueBarcode', 'BarcodeScanner'],
-        monaco: [
-            'MonacoHelpers',
-            'MonacoLibs',
-            'public/monaco-editor',
-            'MonacoTagDiffEditor',
-            'MonacoDiffEditor',
-            'MonacoTagEditor',
-            'CodeToolsPortal',
-            'MonacoEditor',
-        ],
-        qrcode: [
-            'QrcodeStream',
-            'public/vue-qrcode-reader',
-            'public/callforth',
-        ],
-        'vendor-player': ['vue-shortkey', 'multi-streams-mixer'],
-    },
-    shared: {
-        'vendor-shared': ['NodeCryptoReplacement'],
-        'geo-three': ['MapUtils', 'scene/map/CustomMapProvider'],
-        three: ['three-legacy-gltf-loader', 'ldraw-loader'],
-    },
-    'aux-runtime': {
-        monaco: ['AuxLibraryDefinitions'],
-        runtime: ['aux-runtime', 'ProxyClientPartition'],
-        default: ['LocalStoragePartition'],
-    },
-    'aux-common': {
-        runtime: ['aux-common/partitions', 'aux-common/bots/StoredAux'],
-        common: ['aux-common'],
-    },
-    'aux-vm': {
-        runtime: [
-            'aux-vm/vm',
-            'HtmlAppBackend',
-            'CustomAppHelper',
-            'aux-vm-client/vm',
-        ],
-    },
-    undom: {
-        runtime: ['undom'],
-    },
-    crypto: {
-        runtime: ['crypto'],
-    },
-    'js-interpreter': {
-        common: ['InterpreterUtils'],
-        runtime: ['js-interpreter'],
-    },
-    timesync: {
-        runtime: ['timesync'],
-    },
-    'fast-json-stable-stringify': {
-        common: ['fast-json-stable-stringify'],
-    },
-    websocket: {
-        common: ['websocket'],
-    },
-    chalk: {
-        'vendor-vm': ['chalk'],
-    },
-    expect: {
-        'vendor-vm': ['expect'],
-    },
+const auxPlayerChunks = {
+    barcode: ['VueBarcode', 'BarcodeScanner'],
+    monaco: [
+        'MonacoHelpers',
+        'MonacoLibs',
+        'public/monaco-editor',
+        'MonacoTagDiffEditor',
+        'MonacoDiffEditor',
+        'MonacoTagEditor',
+        'CodeToolsPortal',
+        'MonacoEditor',
+    ],
+    qrcode: ['QrcodeStream', 'public/vue-qrcode-reader', 'public/callforth'],
+    vendor: ['vue-shortkey', 'multi-streams-mixer'],
+};
+
+const sharedChunks = {
+    vendor: ['NodeCryptoReplacement'],
+    'geo-three': ['MapUtils', 'scene/map/CustomMapProvider'],
+    three: ['three-legacy-gltf-loader', 'ldraw-loader'],
+};
+
+const auxRuntimeChunks = {
+    monaco: ['AuxLibraryDefinitions'],
 };
 
 let workerCounter = 0;
@@ -231,15 +179,22 @@ export default defineConfig(({ command, mode }) => ({
                             if (typeof c !== 'undefined') {
                                 return c;
                             }
-                            return 'vendor-shared';
-                        } else {
-                            for (let chunk in chunks) {
-                                if (id.includes(chunk)) {
-                                    const c = findChunk(id, chunks[chunk]);
-                                    if (typeof c !== 'undefined') {
-                                        return c;
-                                    }
-                                }
+                            return 'vendor';
+                        } else if (id.includes('aux-player')) {
+                            const c = findChunk(id, auxPlayerChunks);
+                            if (typeof c !== 'undefined') {
+                                return c;
+                            }
+                        } else if (id.includes('aux-runtime')) {
+                            const c = findChunk(id, auxRuntimeChunks);
+                            if (typeof c !== 'undefined') {
+                                return c;
+                            }
+                        } else if (id.includes('shared')) {
+                            const c = findChunk(id, sharedChunks);
+                            if (typeof c !== 'undefined') {
+                                console.log('Chunking', id, '-->', c);
+                                return c;
                             }
                         }
 
