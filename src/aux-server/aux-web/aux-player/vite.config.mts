@@ -80,6 +80,7 @@ const nodeModuleChunks: { [key: string]: string[] } = {
     preact: ['preact'],
     rxjs: ['rxjs', 'rxjs/dist/esm/internal/operators'],
     'vue-filepond': ['vue-filepond', 'filepond'],
+    'vue-color': ['vue-color'],
 };
 
 for (let lib of Object.keys(importableLibraries)) {
