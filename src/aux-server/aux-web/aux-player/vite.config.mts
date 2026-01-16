@@ -75,7 +75,7 @@ const nodeModuleChunks: { [key: string]: string[] } = {
     barcode: ['jsbarcode', '@ericblade/quagga2'],
     qrcode: ['qrcode', '@chenfengyuan/vue-qrcode'],
     'geo-three': ['geo-three'],
-    three: ['@casual-simulation/three'],
+    three: ['@casual-simulation/three', 'troika', 'webgl-sdf-generator'],
     yjs: ['yjs', 'lib0'],
     preact: ['preact'],
     rxjs: ['rxjs', 'rxjs/dist/esm/internal/operators'],
