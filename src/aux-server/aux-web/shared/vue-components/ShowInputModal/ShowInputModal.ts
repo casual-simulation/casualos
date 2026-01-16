@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import Vue from 'vue';
+import Vue, { defineAsyncComponent } from 'vue';
 import Component from 'vue-class-component';
 import { Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
@@ -35,14 +35,23 @@ import {
     calculateFormattedBotValue,
     asyncResult,
 } from '@casual-simulation/aux-common';
-import { Swatches, Chrome, Compact } from 'vue-color';
 import { getCurrentTheme } from '../../StyleHelpers';
+
+const AsyncSwatches = defineAsyncComponent(
+    async () => (await import('vue-color')).Swatches
+);
+const AsyncChrome = defineAsyncComponent(
+    async () => (await import('vue-color')).Chrome
+);
+const AsyncCompact = defineAsyncComponent(
+    async () => (await import('vue-color')).Compact
+);
 
 @Component({
     components: {
-        'color-picker-swatches': Swatches,
-        'color-picker-advanced': Chrome,
-        'color-picker-basic': Compact,
+        'color-picker-swatches': AsyncSwatches,
+        'color-picker-advanced': AsyncChrome,
+        'color-picker-basic': AsyncCompact,
     },
 })
 export default class ShowInputModal extends Vue {
