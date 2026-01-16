@@ -64,7 +64,10 @@ const importableLibraries = {
 // The chunks that we want to create.
 const nodeModuleChunks: { [key: string]: string[] } = {
     // Libraries that should be in the default chunk (not split out).
-    default: ['@loomhq/record-sdk/dist/esm/is-supported'],
+    default: [
+        '@loomhq/record-sdk/dist/esm/is-supported',
+        'filepond/dist/filepond.min.css',
+    ],
 
     // Libraries to split into their own chunks.
     // This is usually done to ensure that large libraries are loaded lazily when they are needed.
