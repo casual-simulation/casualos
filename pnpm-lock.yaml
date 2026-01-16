@@ -7,6 +7,7 @@ settings:
 overrides:
   loader-utils@>1.0.0 < 2: 1.4.2
   micromatch: 4.0.5
+  seedrandom: 3.0.5
 
 patchedDependencies:
   '@mdx-js/mdx@3.0.0':
@@ -6052,7 +6053,7 @@ packages:
     resolution: {integrity: sha512-11t7Q+ikseduJgkd9iSeRrtor1aA3o5PVCFhC5yYvR3JLO55ic1+4Ryo0EJfhRoismS6zBUJrpzX4K0zlLbIfw==}
     peerDependencies:
       '@tensorflow/tfjs-core': 4.2.0
-      seedrandom: ^3.0.5
+      seedrandom: 3.0.5
 
   '@tensorflow/tfjs-layers@4.2.0':
     resolution: {integrity: sha512-SO0KTmCFOjrW+PlP9nKYXz07XGFq6uE7am9yH2bRaRPWpEeaKT/+k0C9vFMxI/GzRwY8AK4sLe4U+jE1mhYxGw==}
@@ -14190,9 +14191,6 @@ packages:
 
   secure-compare@3.0.1:
     resolution: {integrity: sha512-AckIIV90rPDcBcglUwXPF3kg0P0qmPsPXAj6BBEENQE1p5yA1xfmDJzfi1Tappj37Pv2mVbKpL3Z1T+Nn7k1Qw==}
-
-  seedrandom@2.4.4:
-    resolution: {integrity: sha512-9A+PDmgm+2du77B5i0Ip2cxOqqHjgNxnBgglxLcX78A2D6c2rTo61z4jnVABpF4cKeDMDG+cmXXvdnqse2VqMA==}
 
   seedrandom@3.0.5:
     resolution: {integrity: sha512-8OwmbklUNzwezjGInmZ+2clQmExQPvomqjL7LFqOYqtmuxRgQYqOD3mHaU+MvZn5FLUeVxVfQjwLZW/n/JFuqg==}
@@ -22687,7 +22685,7 @@ snapshots:
     dependencies:
       '@tensorflow/tfjs': 4.2.0(encoding@0.1.13)(seedrandom@3.0.5)
       autobind-decorator: 2.4.0
-      seedrandom: 2.4.4
+      seedrandom: 3.0.5
 
   '@tensorflow/tfjs-backend-cpu@4.2.0(@tensorflow/tfjs-core@4.2.0(encoding@0.1.13))':
     dependencies:
@@ -33581,8 +33579,6 @@ snapshots:
       kind-of: 6.0.3
 
   secure-compare@3.0.1: {}
-
-  seedrandom@2.4.4: {}
 
   seedrandom@3.0.5: {}
 

@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import Vue from 'vue';
+import Vue, { defineAsyncComponent } from 'vue';
 import Component from 'vue-class-component';
 import { appManager } from '../../AppManager';
 import type { Simulation } from '@casual-simulation/aux-vm';
@@ -25,8 +25,8 @@ import 'filepond/dist/filepond.min.css';
 import { asyncError, asyncResult } from '@casual-simulation/aux-common';
 import { getFileData } from '../../DownloadHelpers';
 
-const BotPondAsync = () => ({
-    component: import('vue-filepond').then((m) => m.default()),
+const BotPondAsync = defineAsyncComponent({
+    loader: () => import('vue-filepond').then((m) => m.default()),
     timeout: 1000 * 60 * 5, // 5 minutes
 });
 

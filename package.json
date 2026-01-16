@@ -209,7 +209,8 @@
     "pnpm": {
         "overrides": {
             "loader-utils@>1.0.0 < 2": "1.4.2",
-            "micromatch": "4.0.5"
+            "micromatch": "4.0.5",
+            "seedrandom": "3.0.5"
         },
         "patchedDependencies": {
             "@mdx-js/mdx@3.0.0": "patches/@mdx-js/mdx@3.0.0.patch",

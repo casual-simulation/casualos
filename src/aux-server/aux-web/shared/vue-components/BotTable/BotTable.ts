@@ -51,7 +51,6 @@ import TagEditor from '../TagEditor/TagEditor';
 import AlertDialogOptions from '../../AlertDialogOptions';
 import BotTag from '../BotTag/BotTag';
 import BotID from '../BotID/BotID';
-import { TreeView } from 'vue-json-tree-view';
 import { SvgIcon } from '@casual-simulation/aux-components';
 import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../AppManager';
@@ -59,7 +58,6 @@ import TagValueEditor from '../TagValueEditor/TagValueEditor';
 import { sumBy } from 'es-toolkit/compat';
 import TagValueEditorWrapper from '../TagValueEditorWrapper/TagValueEditorWrapper';
 import { getModelUriFromId } from '../../MonacoUtils';
-// import {} from 'vue-material/dist/'
 import type monaco from '@casual-simulation/monaco-editor';
 import { getActiveTheme } from '../utils';
 import type { Simulation } from '@casual-simulation/aux-vm';
@@ -83,7 +81,6 @@ export interface TableBot {
         'bot-id': BotID,
         'bot-tag': BotTag,
         'tag-editor': TagEditor,
-        'tree-view': TreeView,
         'svg-icon': SvgIcon,
         'tag-value-editor': TagValueEditor,
         'tag-value-editor-wrapper': TagValueEditorWrapper,
