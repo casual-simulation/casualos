@@ -362,11 +362,6 @@ export default defineConfig(({ command, mode }) => ({
     resolve: {
         extensions: ['.vue', '.ts', '.mjs', '.js', '.tsx', '.jsx', '.json'],
         alias: {
-            'vue-json-tree-view': path.resolve(
-                __dirname,
-                '..',
-                'shared/public/VueJsonTreeView/index.ts'
-            ),
             'three-legacy-gltf-loader': path.resolve(
                 __dirname,
                 '..',
