@@ -45,6 +45,7 @@ import type {
 } from '@casual-simulation/aux-common/bots';
 import {
     toast,
+    configureTypeChecking,
     showJoinCode,
     requestFullscreen,
     exitFullscreen,
@@ -3802,6 +3803,72 @@ describe('AuxLibrary', () => {
 
                 expect(action).toEqual(toast('hello, world!', 5));
                 expect(context.actions).toEqual([toast('hello, world!', 5)]);
+            });
+        });
+
+        describe('os.configureTypeChecking()', () => {
+            it('should emit a ConfigureTypeCheckingAction', async () => {
+                const options = {
+                    editorDiagnosticOptions: {
+                        noSemanticValidation: false,
+                        noSyntaxValidation: false,
+                    },
+                };
+
+                const promise = library.api.os.configureTypeChecking(options);
+                const expected = configureTypeChecking(
+                    options,
+                    context.tasks.size
+                );
+
+                expect(context.actions).toEqual([expected]);
+
+                await Promise.resolve();
+            });
+
+            it('should support enabling type checking', async () => {
+                const options = {
+                    editorDiagnosticOptions: {
+                        noSemanticValidation: false,
+                        noSyntaxValidation: false,
+                    },
+                };
+
+                const promise = library.api.os.configureTypeChecking(options);
+
+                expect(context.actions).toEqual([
+                    configureTypeChecking(options, context.tasks.size),
+                ]);
+            });
+
+            it('should support disabling type checking', async () => {
+                const options = {
+                    editorDiagnosticOptions: {
+                        noSemanticValidation: true,
+                        noSyntaxValidation: false,
+                    },
+                };
+
+                const promise = library.api.os.configureTypeChecking(options);
+
+                expect(context.actions).toEqual([
+                    configureTypeChecking(options, context.tasks.size),
+                ]);
+            });
+
+            it('should support disabling syntax validation', async () => {
+                const options = {
+                    editorDiagnosticOptions: {
+                        noSemanticValidation: true,
+                        noSyntaxValidation: true,
+                    },
+                };
+
+                const promise = library.api.os.configureTypeChecking(options);
+
+                expect(context.actions).toEqual([
+                    configureTypeChecking(options, context.tasks.size),
+                ]);
             });
         });
 

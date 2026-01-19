@@ -58,12 +58,16 @@ const importableLibraries = {
     rxjs: './aux-web/shared/public/import-map/rxjs',
     'es-toolkit': './aux-web/shared/public/import-map/es-toolkit',
     zod: './aux-web/shared/public/import-map/zod',
+    uuid: './aux-web/shared/public/import-map/uuid',
 };
 
 // The chunks that we want to create.
 const nodeModuleChunks: { [key: string]: string[] } = {
     // Libraries that should be in the default chunk (not split out).
-    default: ['@loomhq/record-sdk/dist/esm/is-supported'],
+    default: [
+        '@loomhq/record-sdk/dist/esm/is-supported',
+        'filepond/dist/filepond.min.css',
+    ],
 
     // Libraries to split into their own chunks.
     // This is usually done to ensure that large libraries are loaded lazily when they are needed.
@@ -74,11 +78,12 @@ const nodeModuleChunks: { [key: string]: string[] } = {
     barcode: ['jsbarcode', '@ericblade/quagga2'],
     qrcode: ['qrcode', '@chenfengyuan/vue-qrcode'],
     'geo-three': ['geo-three'],
-    three: ['@casual-simulation/three'],
+    three: ['@casual-simulation/three', 'troika', 'webgl-sdf-generator'],
     yjs: ['yjs', 'lib0'],
     preact: ['preact'],
     rxjs: ['rxjs', 'rxjs/dist/esm/internal/operators'],
     'vue-filepond': ['vue-filepond', 'filepond'],
+    'vue-color': ['vue-color'],
 };
 
 for (let lib of Object.keys(importableLibraries)) {
@@ -109,6 +114,7 @@ const auxPlayerChunks = {
 const sharedChunks = {
     vendor: ['NodeCryptoReplacement'],
     'geo-three': ['MapUtils', 'scene/map/CustomMapProvider'],
+    three: ['three-legacy-gltf-loader', 'ldraw-loader'],
 };
 
 const auxRuntimeChunks = {
@@ -360,11 +366,6 @@ export default defineConfig(({ command, mode }) => ({
     resolve: {
         extensions: ['.vue', '.ts', '.mjs', '.js', '.tsx', '.jsx', '.json'],
         alias: {
-            'vue-json-tree-view': path.resolve(
-                __dirname,
-                '..',
-                'shared/public/VueJsonTreeView/index.ts'
-            ),
             'three-legacy-gltf-loader': path.resolve(
                 __dirname,
                 '..',

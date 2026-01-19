@@ -1491,6 +1491,10 @@ export class CameraControls {
             // Update current distance trackers
             this.currentDistX = this.target.x;
             this.currentDistY = this.target.y;
+        } else {
+            // preserve the radius during a set rotation
+            const offsetSpherical = new Spherical().setFromVector3(offset);
+            this.spherical.radius = offsetSpherical.radius;
         }
         this._setRot = false;
 
