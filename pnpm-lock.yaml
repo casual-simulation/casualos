@@ -1073,6 +1073,9 @@ importers:
       '@casual-simulation/engine262':
         specifier: 0.0.1-4de2170374e22761996e46eb1362f4496ee57f8f
         version: 0.0.1-4de2170374e22761996e46eb1362f4496ee57f8f
+      '@casual-simulation/expect':
+        specifier: ^3.10.3
+        version: link:../expect
       '@casual-simulation/fast-json-stable-stringify':
         specifier: ^3.10.3
         version: link:../fast-json-stable-stringify

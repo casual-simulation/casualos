@@ -59,6 +59,7 @@ const importableLibraries = {
     'es-toolkit': './aux-web/shared/public/import-map/es-toolkit',
     zod: './aux-web/shared/public/import-map/zod',
     uuid: './aux-web/shared/public/import-map/uuid',
+    expect: './aux-web/shared/public/import-map/expect',
 };
 
 // The chunks that we want to create.

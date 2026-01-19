@@ -87,6 +87,7 @@
         "@casual-simulation/tunnel": "^3.5.0",
         "@casual-simulation/vue-shortkey": "^3.2.7",
         "@casual-simulation/websocket": "^3.10.3",
+        "@casual-simulation/expect": "^3.10.3",
         "@chenfengyuan/vue-qrcode": "^1.0.0",
         "@ericblade/quagga2": "1.4.2",
         "@juggle/resize-observer": "2.3.0",
