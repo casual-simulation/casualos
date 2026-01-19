@@ -14232,6 +14232,30 @@ interface Ai {
     };
 }
 
+/**
+ * The options for configuring TypeScript type checking in the Monaco editor.
+ * @dochash types/os/system
+ * @docname ConfigureTypeCheckingOptions
+ */
+export interface ConfigureTypeCheckingOptions {
+    /**
+     * Options for the Monaco editor's TypeScript diagnostic settings.
+     */
+    editorDiagnosticOptions?: {
+        /**
+         * Whether to disable semantic validation (type checking).
+         * When true, TypeScript semantic errors will not be shown.
+         */
+        noSemanticValidation?: boolean;
+
+        /**
+         * Whether to disable syntax validation.
+         * When true, TypeScript syntax errors will not be shown.
+         */
+        noSyntaxValidation?: boolean;
+    };
+}
+
 interface Os {
 
     /**
@@ -14594,6 +14618,37 @@ interface Os {
         message: string | number | boolean | object | Array<any> | null,
         duration?: number
     ): ShowToastAction;
+
+    /**
+     * Configures TypeScript type checking in the Monaco editor.
+     *
+     * This function allows you to enable or disable TypeScript semantic and syntax validation
+     * in the code editor. By default, type checking is disabled to reduce visual noise.
+     *
+     * @param options the configuration options for type checking.
+     *
+     * @example Enable TypeScript type checking
+     * await os.configureTypeChecking({
+     *     editorDiagnosticOptions: {
+     *         noSemanticValidation: false,
+     *         noSyntaxValidation: false
+     *     }
+     * });
+     *
+     * @example Disable TypeScript type checking
+     * await os.configureTypeChecking({
+     *     editorDiagnosticOptions: {
+     *         noSemanticValidation: true,
+     *         noSyntaxValidation: false
+     *     }
+     * });
+     *
+     * @dochash actions/os/system
+     * @docname os.configureTypeChecking
+     */
+    configureTypeChecking(
+        options: ConfigureTypeCheckingOptions
+    ): Promise<void>;
 
     /**
      * Shows a tooltip message to the user.

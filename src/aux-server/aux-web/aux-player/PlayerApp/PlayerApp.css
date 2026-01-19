@@ -195,7 +195,7 @@
     z-index: 20;
 }
 
-.confirm-dialog {
+.md-dialog.confirm-dialog {
     z-index: 20;
 }
 
