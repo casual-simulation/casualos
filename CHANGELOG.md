@@ -4,6 +4,20 @@
 
 #### Date: TBD
 
+### :boom: Breaking Changes
+
+-   Moved `expect()` to an importable library.
+
+    -   To continue to use the `expect()` function, you must import it from the `"expect"` library:
+
+        ```typescript
+        import expect from 'expect'; // Add this line
+
+        expect(true).toBe(true);
+        ```
+
+-   Removed `assertEqual()`.
+
 ### :rocket: Features
 
 -   Added `os.configureTypeChecking()` to allow enabling/disabling TypeScript type checking in the Monaco editor.
