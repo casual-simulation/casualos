@@ -1,5 +1,5 @@
 import expect, { iterableEquality } from '@casual-simulation/expect';
-import type { Tester } from '../../../../../expect';
+import type { Tester } from '@casual-simulation/expect';
 import type { Bot } from '@casual-simulation/aux-common';
 import { GET_TAG_MASKS_SYMBOL, isRuntimeBot } from '@casual-simulation/aux-common';
 import { cloneDeep } from 'es-toolkit';
