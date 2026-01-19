@@ -17,7 +17,7 @@ iframe.auth-helper-iframe {
 }
 
 .md-datepicker-dialog {
-    z-index: 21;
+    z-index: 21 !important;
 }
 
 .md-datepicker.md-field.md-theme-dark > .md-icon:after {
