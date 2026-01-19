@@ -1,8 +1,8 @@
 # CasualOS Changelog
 
-## V3.10.5
+## V4.0.0
 
-#### Date: 1/19/2026
+#### Date: TBD
 
 ### :boom: Breaking Changes
 
@@ -17,6 +17,10 @@
         ```
 
 -   Removed `assertEqual()`.
+
+## V3.10.5
+
+#### Date: 1/19/2026
 
 ### :rocket: Features
 
