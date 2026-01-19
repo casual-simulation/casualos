@@ -88,4 +88,4 @@ export * from '@casual-simulation/expect';
 export default expect;
 
 // Export the URL for the import map
-export const url = import.meta.url
+export const url = import.meta.url;
