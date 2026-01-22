@@ -1201,6 +1201,65 @@ describe('RecordsServer', () => {
                         'Content-Type': 'text/html; charset=utf-8',
                     });
                 });
+
+                it('should include a Content Security Policy meta tag', async () => {
+                    store.webConfig = {
+                        causalRepoConnectionProtocol: 'websocket',
+                        version: 2,
+                        logoTitle: 'Test Logo',
+                        logoUrl: 'https://example.com/logo.png',
+                        recordsOrigin: 'https://records-origin.com',
+                    };
+
+                    const result = await server.handleHttpRequest(
+                        scoped('auth', httpGet(path, defaultHeaders))
+                    );
+
+                    expect(result.statusCode).toBe(200);
+
+                    const body = result.body as string;
+                    const dom = new JSDOM(body);
+
+                    const meta = dom.window.document.querySelector(
+                        'head meta[name="Content-Security-Policy"]'
+                    );
+
+                    expect(
+                        meta?.attributes.getNamedItem('content')?.value
+                    ).toBe(
+                        `default-src 'self' https://js.stripe.com; img-src 'self' https://*; style-src 'self' 'unsafe-inline'; frame-src https://js.stripe.com; child-src https://*; connect-src 'self'  https://scripts.simpleanalyticscdn.com http://localhost:9000 *.s3.amazonaws.com https://records-origin.com; script-src 'self' https://js.stripe.com https://scripts.simpleanalyticscdn.com 'unsafe-inline';`
+                    );
+                });
+
+                it('should include unsafe-eval if in debug mode', async () => {
+                    store.webConfig = {
+                        causalRepoConnectionProtocol: 'websocket',
+                        version: 2,
+                        logoTitle: 'Test Logo',
+                        logoUrl: 'https://example.com/logo.png',
+                        recordsOrigin: 'https://records-origin.com',
+                        debug: true,
+                    };
+
+                    const result = await server.handleHttpRequest(
+                        scoped('auth', httpGet(path, defaultHeaders))
+                    );
+
+                    expect(result.statusCode).toBe(200);
+
+                    const body = result.body as string;
+                    const dom = new JSDOM(body);
+
+                    const meta = dom.window.document.querySelector(
+                        'head meta[name="Content-Security-Policy"]'
+                    );
+
+                    expect(
+                        meta?.attributes.getNamedItem('content')?.value
+                    ).toBe(
+                        `default-src 'self' https://js.stripe.com; img-src 'self' https://*; style-src 'self' 'unsafe-inline'; frame-src https://js.stripe.com; child-src https://*; connect-src 'self'  https://scripts.simpleanalyticscdn.com http://localhost:9000 *.s3.amazonaws.com https://records-origin.com; script-src 'self' https://js.stripe.com https://scripts.simpleanalyticscdn.com 'unsafe-inline' 'unsafe-eval';`
+                    );
+                });
             });
 
             describe('GET /iframe.html', () => {
