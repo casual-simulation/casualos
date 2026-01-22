@@ -1,5 +1,14 @@
 # CasualOS Changelog
 
+## V3.10.6
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed another CSS order issue where placeholders in input menu bots would be incorrectly positioned when focused.
+-   Fixed an issue where it was impossible to update user metadata for deployments which used a separate domain for the API from the auth frontend due to CORS errors.
+
 ## V3.10.5
 
 #### Date: 1/19/2026
