@@ -38,7 +38,7 @@ import {
     calculateIndexFromLocation,
     calculateLocationFromIndex,
 } from './TranspilerUtils';
-import { tsPlugin } from 'acorn-typescript';
+import { tsPlugin } from '@sveltejs/acorn-typescript';
 
 /**
  * The symbol that is used in script dependencies to represent any argument.
