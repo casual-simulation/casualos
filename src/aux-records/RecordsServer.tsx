@@ -7649,14 +7649,17 @@ export class RecordsServer {
     private async _handleOptions(
         request: GenericHttpRequest
     ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedApiOrigins)) {
+        if (
+            !validateOrigin(request, this._allowedApiOrigins) &&
+            !validateOrigin(request, this._allowedAccountOrigins)
+        ) {
             return returnResult(INVALID_ORIGIN_RESULT);
         }
 
         return {
             statusCode: 204,
             headers: {
-                'Access-Control-Allow-Methods': 'POST, OPTIONS',
+                'Access-Control-Allow-Methods': 'POST, PUT, OPTIONS',
                 'Access-Control-Allow-Headers': 'Content-Type, Authorization',
             },
         };
