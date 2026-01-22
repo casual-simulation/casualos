@@ -4,6 +4,11 @@
 
 #### Date: TBD
 
+### :rocket: Features
+
+-   Added the ability to omit Content Security Policy directives during build.
+    -   Set the `OMIT_BUILD_CSP` environment variable to `"true"` during build to omit them.
+
 ### :bug: Bug Fixes
 
 -   Fixed another CSS order issue where placeholders in input menu bots would be incorrectly positioned when focused.
