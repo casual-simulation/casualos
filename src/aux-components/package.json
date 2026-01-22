@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-components",
-    "version": "3.10.5",
+    "version": "3.10.6-alpha.21264937213",
     "description": "Common library for AUX Vue components and Misc",
     "main": "index.js",
     "types": "index.d.ts",
@@ -33,12 +33,12 @@
         "access": "public"
     },
     "dependencies": {
-        "@casual-simulation/aux-common": "^3.10.5",
-        "@casual-simulation/aux-vm": "^3.10.5",
-        "@casual-simulation/aux-vm-browser": "^3.10.5",
-        "@casual-simulation/aux-vm-client": "^3.10.5",
-        "@casual-simulation/aux-vm-deno": "^3.10.5",
-        "@casual-simulation/aux-vm-node": "^3.10.5",
+        "@casual-simulation/aux-common": "^3.10.6-alpha.21264937213",
+        "@casual-simulation/aux-vm": "^3.10.6-alpha.21264937213",
+        "@casual-simulation/aux-vm-browser": "^3.10.6-alpha.21264937213",
+        "@casual-simulation/aux-vm-client": "^3.10.6-alpha.21264937213",
+        "@casual-simulation/aux-vm-deno": "^3.10.6-alpha.21264937213",
+        "@casual-simulation/aux-vm-node": "^3.10.6-alpha.21264937213",
         "@casual-simulation/crypto": "^3.10.3",
         "@casual-simulation/crypto-browser": "^3.10.3",
         "@casual-simulation/crypto-node": "^3.10.3",
