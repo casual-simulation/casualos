@@ -752,6 +752,7 @@ export class RecordsServer {
                         context.url.hostname
                     );
                     const postApp: JSX.Element[] = [];
+                    const head: JSX.Element[] = [];
 
                     if (isSuccess(config) && config.value) {
                         postApp.push(
@@ -763,9 +764,26 @@ export class RecordsServer {
                                 }}
                             />
                         );
+
+                        let csp = `default-src 'self'; child-src https://*; connect-src 'self' `;
+                        if (config.value.recordsOrigin) {
+                            csp += `${config.value.recordsOrigin};`;
+                        }
+
+                        if (config.value.debug) {
+                            csp += ` script-src 'self' 'unsafe-eval';`;
+                        }
+
+                        head.push(
+                            <meta
+                                name="Content-Security-Policy"
+                                content={csp}
+                            />
+                        );
                     }
 
                     const result = success<ViewParams>({
+                        head: <>{head}</>,
                         postApp: <>{postApp}</>,
                     });
 
