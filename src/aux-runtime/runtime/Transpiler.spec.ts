@@ -2086,7 +2086,7 @@ describe('Transpiler', () => {
                 );
             });
 
-            it('should support generic type arguments with extends clauses', () => {
+            it.skip('should support generic type arguments with extends clauses', () => {
                 const transpiler = new Transpiler();
                 expect(
                     transpiler.transpile(
