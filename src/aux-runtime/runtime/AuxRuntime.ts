@@ -2072,7 +2072,7 @@ export class AuxRuntime
                         promise,
                         watchers,
                         (watcher) => {
-                            const generator = watcher.handler();
+                            const generator = watcher.handler(null, [], bot);
                             if (isGenerator(generator)) {
                                 return this._processGenerator(generator);
                             }
@@ -2163,7 +2163,12 @@ export class AuxRuntime
                             promise,
                             watchers,
                             (watcher) => {
-                                const generator = watcher.handler();
+                                const bot = this._getRuntimeBot(update.bot.id);
+                                const generator = watcher.handler(
+                                    bot,
+                                    update.tags,
+                                    update.bot.id
+                                );
                                 if (isGenerator(generator)) {
                                     return this._processGenerator(generator);
                                 }

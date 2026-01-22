@@ -1491,6 +1491,58 @@ describe('RecordsServer', () => {
         );
     });
 
+    describe('OPTIONS /api/{userId}/metadata', () => {
+        it('should return the correct CORS headers', async () => {
+            const result = await server.handleHttpRequest(
+                httpRequest(
+                    'OPTIONS',
+                    `/api/{userId:${userId}}/metadata`,
+                    null,
+                    {
+                        'access-control-request-method': 'PUT',
+                        'access-control-request-headers': 'Content-Type',
+                        origin: apiOrigin,
+                    }
+                )
+            );
+
+            expect(result).toEqual({
+                statusCode: 204,
+                headers: {
+                    ...corsHeaders(apiOrigin),
+                    'Access-Control-Allow-Methods': 'POST, PUT, OPTIONS',
+                    'Access-Control-Allow-Headers':
+                        'Content-Type, Authorization',
+                },
+            });
+        });
+
+        it('should work with an account origin', async () => {
+            const result = await server.handleHttpRequest(
+                httpRequest(
+                    'OPTIONS',
+                    `/api/{userId:${userId}}/metadata`,
+                    null,
+                    {
+                        'access-control-request-method': 'PUT',
+                        'access-control-request-headers': 'Content-Type',
+                        origin: accountOrigin,
+                    }
+                )
+            );
+
+            expect(result).toEqual({
+                statusCode: 204,
+                headers: {
+                    ...corsHeaders(accountOrigin),
+                    'Access-Control-Allow-Methods': 'POST, PUT, OPTIONS',
+                    'Access-Control-Allow-Headers':
+                        'Content-Type, Authorization',
+                },
+            });
+        });
+    });
+
     describe('GET /api/v2/balances', () => {
         beforeEach(async () => {
             await financialController.init();

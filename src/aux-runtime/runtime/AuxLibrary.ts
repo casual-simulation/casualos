@@ -3429,6 +3429,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             _destroy,
             destroy: createInterpretableFunction(destroy),
 
+            _watchBot,
+
             _changeState,
             changeState: createInterpretableFunction(changeState),
             getLink: createBotLinkApi,
@@ -4232,26 +4234,34 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return (options: TagSpecificApiOptions) =>
             function (
                 bot: (Bot | string)[] | Bot | string,
-                handler: () => void | Generator<
+                handler: (
+                    bot: Bot,
+                    changedTags: string[],
+                    botId: string
+                ) => void | Generator<
                     InterpreterStop,
                     any,
                     InterpreterContinuation
                 >
             ) {
-                let id = timerId++;
-                let botIds = Array.isArray(bot)
+                const id = timerId++;
+                const botIds = Array.isArray(bot)
                     ? bot.map((b) => getID(b))
                     : [getID(bot)];
-                const finalHandler = () => {
+                const finalHandler = (
+                    bot: Bot,
+                    changedTags: string[],
+                    botId: string
+                ) => {
                     try {
-                        let result = handler();
+                        const result = handler(bot, changedTags, botId);
                         return wrapGenerator(result);
                     } catch (err) {
                         context.enqueueError(err);
                     }
                 };
 
-                for (let botId of botIds) {
+                for (const botId of botIds) {
                     context.recordBotTimer(options.bot.id, {
                         type: 'watch_bot',
                         timerId: id,
@@ -4262,6 +4272,41 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 }
                 return id;
             };
+    }
+
+    /**
+     * Watches the given bot(s) for changes and calls the given handler function whenever a tag on the bot changes or when the bot is destroyed.
+     *
+     * @param bot The bot or array of bots (or bot IDs) that should be watched for changes.
+     *
+     * @param handler The function that should be called whenever a tag on the bot changes.
+     * The function is called with three arguments: the bot that changed, an array of tag names that changed on the bot, and the ID of the bot.
+     * If the bot is destroyed, then the first argument will be `null` and the second argument will be an empty array.
+     *
+     * @returns The ID of the watcher that was created. This ID can be used to clear the watcher using {@link clearWatchBot}.
+     *
+     * @example Watch this bot for changes
+     * let unwatch = watchBot(thisBot, (bot, changedTags) => {
+     *   if (!bot) return; // Bot was destroyed
+     *   os.toast("The bot (" + bot.id.slice(0, 6) + ") changed! Changed tags: " + changedTags.join(", "));
+     * });
+     *
+     * @example Watch multiple bots for changes
+     * let unwatch = watchBot(getBots('color', 'red'), (bot, changedTags) => {
+     *   if (!bot) return; // Bot was destroyed
+     *   os.toast("A red bot (" + bot.id.slice(0, 6) + ") changed! Changed tags: " + changedTags.join(", "));
+     * });
+     *
+     * @dochash actions/data
+     * @docgroup 01-data-actions
+     * @docname watchBot
+     * @docid watchBot
+     */
+    function _watchBot(
+        bot: (Bot | string)[] | Bot | string,
+        handler: (bot: Bot, changedTags: string[], botId: string) => void
+    ): RuntimeBot | RuntimeBot[] {
+        return null;
     }
 
     function wrapGenerator(
@@ -4339,6 +4384,24 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
     }
 
+    /**
+     * Clears the watcher created by {@link watchBot}.
+     *
+     * @param id The ID of the watcher to clear.
+     *
+     * @example Clear a bot watcher
+     * let unwatch = watchBot(thisBot, (bot, changedTags) => {
+     *   os.toast("The bot (" + bot.id.slice(0, 6) + ") changed! Changed tags: " + changedTags.join(", "));
+     * });
+     *
+     * // When you want to clear it
+     * clearWatchBot(unwatch);
+     *
+     * @dochash actions/data
+     * @docgroup 01-data-actions
+     * @docname clearWatchBot
+     * @docid clearWatchBot
+     */
     function clearWatchBot(id: number) {
         context.cancelAndRemoveTimers(id, 'watch_bot');
     }

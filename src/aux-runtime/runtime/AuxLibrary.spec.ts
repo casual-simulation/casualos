@@ -15862,6 +15862,31 @@ describe('AuxLibrary', () => {
                 );
             });
 
+            it('should be able to override the space tag of a bot', () => {
+                const other = createDummyRuntimeBot('other', {}, 'local');
+                addToContext(context, other);
+
+                other.tags.abc = 'def';
+                other.tags.num = 1;
+
+                uuidMock.mockReturnValue('uuid');
+                const bot = handleResult(
+                    create(tagContext)(other, {
+                        space: 'shared',
+                    })
+                );
+                expect(bot).toEqual(
+                    createDummyRuntimeBot(
+                        'uuid',
+                        {
+                            abc: 'def',
+                            num: 1,
+                        },
+                        'shared'
+                    )
+                );
+            });
+
             it('should error when setting a bot to a tag', () => {
                 const other = createDummyRuntimeBot('other');
                 addToContext(context, other);
@@ -19231,7 +19256,7 @@ describe('AuxLibrary', () => {
             );
 
             const timer = context.getBotTimers(bot1.id)[0] as WatchBotTimer;
-            timer.handler();
+            timer.handler(bot1, [], bot1.id);
 
             expect(fn).toHaveBeenCalledTimes(1);
         });
@@ -19321,7 +19346,7 @@ describe('AuxLibrary', () => {
 
             const timer = context.getBotTimers(bot1.id)[0] as WatchBotTimer;
 
-            const result = timer.handler();
+            const result = timer.handler(bot1, ['tag1', 'tag2'], bot1.id);
 
             expect(result).toBeUndefined();
             expect(context.dequeueErrors()).toEqual([new Error('abc')]);
@@ -19351,7 +19376,11 @@ describe('AuxLibrary', () => {
                 },
             ]);
 
-            const result = (timers[0] as WatchBotTimer).handler();
+            const result = (timers[0] as WatchBotTimer).handler(
+                bot1,
+                ['tag1', 'tag2'],
+                bot1.id
+            );
 
             expect(isGenerator(result)).toBe(true);
 
@@ -19387,11 +19416,11 @@ describe('AuxLibrary', () => {
                 },
             ]);
 
-            const result = (timers[0] as WatchBotTimer).handler() as Generator<
-                any,
-                any,
-                any
-            >;
+            const result = (timers[0] as WatchBotTimer).handler(
+                bot1,
+                ['tag1', 'tag2'],
+                bot1.id
+            ) as Generator<any, any, any>;
 
             expect(isGenerator(result)).toBe(true);
 
