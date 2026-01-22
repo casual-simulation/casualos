@@ -18285,7 +18285,7 @@ describe('RecordsServer', () => {
                 body: undefined,
                 headers: {
                     'Access-Control-Allow-Origin': apiHeaders['origin'],
-                    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+                    'Access-Control-Allow-Methods': 'POST, PUT, OPTIONS',
                     'Access-Control-Allow-Headers':
                         'Content-Type, Authorization',
                 },
