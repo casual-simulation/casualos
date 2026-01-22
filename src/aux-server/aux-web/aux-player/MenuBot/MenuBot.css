@@ -116,7 +116,7 @@
 /* .md-field.md-has-textarea */
 
 .menu-bot .md-field label,
-.menu-bot .md-field.md-focused label {
+.menu-bot .md-field.menu-input.md-focused label {
     top: 5px;
 }
 
