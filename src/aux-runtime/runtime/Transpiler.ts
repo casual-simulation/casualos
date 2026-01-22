@@ -290,7 +290,11 @@ export class Transpiler {
         this._cache = new LRUCache<string, TranspilerResult>({
             max: 1000,
         });
-        this._parser = Acorn.Parser.extend(tsPlugin() as any);
+        this._parser = Acorn.Parser.extend(
+            tsPlugin({
+                jsx: true,
+            }) as any
+        );
 
         (this._parser.prototype as any).parseReturnStatement = function (
             node: any
