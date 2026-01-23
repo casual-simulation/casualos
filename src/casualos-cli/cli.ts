@@ -18,6 +18,7 @@
 import prompts from 'prompts';
 import { Command } from 'commander';
 import type { RecordsClient } from '@casual-simulation/aux-records/RecordsClient';
+import mime from 'mime';
 
 /* eslint-disable casualos/no-non-type-imports */
 import { createRecordsClient } from '@casual-simulation/aux-records/RecordsClient';
@@ -76,6 +77,14 @@ import { mkdir, readdir, stat, writeFile } from 'node:fs/promises';
 import { v4 as uuid } from 'uuid';
 import fastJsonStableStringify from '../fast-json-stable-stringify';
 import { minifyAux } from './minify';
+import {
+    resolveRecordFileInfo,
+    uploadFile,
+} from '@casual-simulation/aux-vm/managers/RecordsManager';
+
+mime.define({
+    'application/json': ['aux'],
+});
 
 const REFRESH_LIFETIME_MS = 1000 * 60 * 60 * 24 * 7; // 1 week
 
@@ -456,6 +465,95 @@ program
             console.error('Config is invalid:');
             console.error(result.error.toString());
             process.exit(1);
+        }
+    });
+
+program
+    .command('upload-file')
+    .option(
+        '-r, --record <record>',
+        'The record or record key to upload the file to.'
+    )
+    .option('-f, --file <file>', 'The file to upload.')
+    .option('--json <json>', 'The JSON content of the file to upload.')
+    .option('--text <text>', 'The text content of the file to upload.')
+    .option(
+        '-m, --markers <...markers>',
+        'The markers to associate with the file.'
+    )
+    .option('-d, --description <description>', 'The description of the file.')
+    .option(
+        '-k, --key <key>',
+        'The session key to use for the session. If omitted, then the current session key will be used.'
+    )
+    .description('Upload a file record to CasualOS.')
+    .action(async (options) => {
+        if (!options.record) {
+            console.error('Record key is required.');
+            process.exit(1);
+        } else if (!options.json && !options.text && !options.file) {
+            console.error('One of --json, --text, or --file is required.');
+            process.exit(1);
+        }
+
+        const opts = program.optsWithGlobals();
+        const endpoint = await getEndpoint(opts.endpoint);
+        const client = await getClient(
+            endpoint,
+            opts.key ?? (await getOrRefreshSessionKey(endpoint))
+        );
+
+        let data: Uint8Array;
+        let mimeType: string;
+        if (options.file) {
+            const fullPath = path.resolve(options.file);
+            data = await readFile(fullPath);
+            mimeType = mime.getType(fullPath);
+        } else if (options.json) {
+            data = new TextEncoder().encode(options.json);
+            mimeType = 'application/json';
+        } else if (options.text) {
+            data = new TextEncoder().encode(options.text);
+            mimeType = 'text/plain';
+        }
+
+        const result = await resolveRecordFileInfo(data, mimeType);
+
+        if (result.success === false) {
+            console.error(
+                `Could not resolve file info (${result.errorCode}): ${result.errorMessage}`
+            );
+            process.exit(1);
+        } else {
+            console.log('Uploading file...');
+            const recordFileResult = await client.recordFile({
+                recordKey: options.record,
+                fileByteLength: result.byteLength,
+                fileMimeType: result.mimeType,
+                fileSha256Hex: result.hash,
+                fileDescription: options.description || undefined,
+                markers: options.markers || undefined,
+            });
+            if (recordFileResult.success === false) {
+                console.error(
+                    `Could not create record file (${recordFileResult.errorCode}): ${recordFileResult.errorMessage}`
+                );
+                process.exit(1);
+            }
+
+            const uploadResult = await uploadFile(
+                recordFileResult,
+                result.data,
+                result.hash
+            );
+
+            if (uploadResult.success === false) {
+                console.error(
+                    `Could not upload file (${uploadResult.errorCode}): ${uploadResult.errorMessage}`
+                );
+                process.exit(1);
+            }
+            console.log('File uploaded successfully!');
         }
     });
 
