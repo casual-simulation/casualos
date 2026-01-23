@@ -15862,6 +15862,31 @@ describe('AuxLibrary', () => {
                 );
             });
 
+            it('should be able to override the space tag of a bot', () => {
+                const other = createDummyRuntimeBot('other', {}, 'local');
+                addToContext(context, other);
+
+                other.tags.abc = 'def';
+                other.tags.num = 1;
+
+                uuidMock.mockReturnValue('uuid');
+                const bot = handleResult(
+                    create(tagContext)(other, {
+                        space: 'shared',
+                    })
+                );
+                expect(bot).toEqual(
+                    createDummyRuntimeBot(
+                        'uuid',
+                        {
+                            abc: 'def',
+                            num: 1,
+                        },
+                        'shared'
+                    )
+                );
+            });
+
             it('should error when setting a bot to a tag', () => {
                 const other = createDummyRuntimeBot('other');
                 addToContext(context, other);

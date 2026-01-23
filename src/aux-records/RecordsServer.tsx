@@ -724,6 +724,7 @@ export class RecordsServer {
                         context.url.hostname
                     );
                     const postApp: JSX.Element[] = [];
+                    const head: JSX.Element[] = [];
 
                     if (isSuccess(config) && config.value) {
                         postApp.push(
@@ -735,9 +736,32 @@ export class RecordsServer {
                                 }}
                             />
                         );
+
+                        let csp = `default-src 'self' https://js.stripe.com; img-src 'self' https://*; style-src 'self' 'unsafe-inline'; frame-src https://js.stripe.com; child-src https://*; connect-src 'self'  https://scripts.simpleanalyticscdn.com http://localhost:9000 *.s3.amazonaws.com`;
+                        if (config.value.recordsOrigin) {
+                            csp += ` ${config.value.recordsOrigin};`;
+                        } else {
+                            csp += ';';
+                        }
+
+                        csp += ` script-src 'self' https://js.stripe.com https://scripts.simpleanalyticscdn.com 'unsafe-inline'`;
+
+                        if (config.value.debug) {
+                            csp += ` 'unsafe-eval';`;
+                        } else {
+                            csp += ';';
+                        }
+
+                        head.push(
+                            <meta
+                                name="Content-Security-Policy"
+                                content={csp}
+                            />
+                        );
                     }
 
                     const result = success<ViewParams>({
+                        head: <>{head}</>,
                         postApp: <>{postApp}</>,
                     });
 
@@ -752,6 +776,7 @@ export class RecordsServer {
                         context.url.hostname
                     );
                     const postApp: JSX.Element[] = [];
+                    const head: JSX.Element[] = [];
 
                     if (isSuccess(config) && config.value) {
                         postApp.push(
@@ -763,9 +788,26 @@ export class RecordsServer {
                                 }}
                             />
                         );
+
+                        let csp = `default-src 'self'; child-src https://*; connect-src 'self' `;
+                        if (config.value.recordsOrigin) {
+                            csp += `${config.value.recordsOrigin};`;
+                        }
+
+                        if (config.value.debug) {
+                            csp += ` script-src 'self' 'unsafe-eval';`;
+                        }
+
+                        head.push(
+                            <meta
+                                name="Content-Security-Policy"
+                                content={csp}
+                            />
+                        );
                     }
 
                     const result = success<ViewParams>({
+                        head: <>{head}</>,
                         postApp: <>{postApp}</>,
                     });
 
@@ -7649,14 +7691,17 @@ export class RecordsServer {
     private async _handleOptions(
         request: GenericHttpRequest
     ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedApiOrigins)) {
+        if (
+            !validateOrigin(request, this._allowedApiOrigins) &&
+            !validateOrigin(request, this._allowedAccountOrigins)
+        ) {
             return returnResult(INVALID_ORIGIN_RESULT);
         }
 
         return {
             statusCode: 204,
             headers: {
-                'Access-Control-Allow-Methods': 'POST, OPTIONS',
+                'Access-Control-Allow-Methods': 'POST, PUT, OPTIONS',
                 'Access-Control-Allow-Headers': 'Content-Type, Authorization',
             },
         };
