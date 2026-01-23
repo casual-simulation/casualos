@@ -63,6 +63,7 @@ import type {
     CompleteOpenIDLoginSuccess,
 } from '@casual-simulation/aux-records';
 import {
+    formatVersionSpecifier,
     getServerConfigSchema,
     STORED_AUX_SCHEMA,
 } from '@casual-simulation/aux-records';
@@ -645,7 +646,7 @@ program
 
         const key = parseVersionNumber(options.version);
 
-        if (!key?.major) {
+        if (typeof key?.major !== 'number') {
             console.error(
                 'Invalid version provided. Must be in the format X.Y.Z'
             );
@@ -673,7 +674,8 @@ program
                         fileSha256Hex: result.hash,
                         fileDescription: options.description || undefined,
                     },
-                    description: options.description || undefined,
+                    description:
+                        options.description || formatVersionSpecifier(key),
                     markers: options.markers || undefined,
                     entitlements: [],
                 },
@@ -681,7 +683,8 @@ program
 
             if (recordPackageResult.success === false) {
                 console.error(
-                    `Could not create record package (${recordPackageResult.errorCode}): ${recordPackageResult.errorMessage}`
+                    `Could not create record package (${recordPackageResult.errorCode}): ${recordPackageResult.errorMessage}`,
+                    recordPackageResult
                 );
                 process.exit(1);
             }
