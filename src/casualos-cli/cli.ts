@@ -50,6 +50,7 @@ import {
     merge,
     NUMBER_TAG_PREFIX,
     parseSessionKey,
+    parseVersionNumber,
     ROTATION_TAG_PREFIX,
     STRING_TAG_PREFIX,
     tryParseJson,
@@ -489,7 +490,7 @@ program
     .description('Upload a file record to CasualOS.')
     .action(async (options) => {
         if (!options.record) {
-            console.error('Record key is required.');
+            console.error('Record name or key is required.');
             process.exit(1);
         } else if (!options.json && !options.text && !options.file) {
             console.error('One of --json, --text, or --file is required.');
@@ -515,6 +516,9 @@ program
         } else if (options.text) {
             data = new TextEncoder().encode(options.text);
             mimeType = 'text/plain';
+        } else {
+            console.error('One of --json, --text, or --file is required.');
+            process.exit(1);
         }
 
         const result = await resolveRecordFileInfo(data, mimeType);
@@ -554,6 +558,128 @@ program
                 process.exit(1);
             }
             console.log('File uploaded successfully!');
+        }
+    });
+
+program
+    .command('upload-package')
+    .option('-r, --record <record>', 'The record to upload the package to.')
+    .option('-a, --address <address>', 'The address to upload the package to.')
+    .option(
+        '-v, --version <version>',
+        'The version to upload. Must be in the format X.Y.Z'
+    )
+    .option('-f, --file <file>', 'The file to upload.')
+    .option('--json <json>', 'The JSON content of the file to upload.')
+    .option(
+        '-m, --markers <...markers>',
+        'The markers to associate with the package.'
+    )
+    .option('-d, --description <description>', 'The description of the file.')
+    .option(
+        '-e, --entitlements <...entitlements>',
+        'The entitlements for the package.'
+    )
+    .option(
+        '-k, --key <key>',
+        'The session key to use for the session. If omitted, then the current session key will be used.'
+    )
+    .description('Upload a package to CasualOS.')
+    .action(async (options) => {
+        if (!options.record) {
+            console.error('Record name or key is required.');
+            process.exit(1);
+        } else if (!options.address) {
+            console.error('Address is required.');
+            process.exit(1);
+        } else if (!options.version) {
+            console.error('Version is required.');
+            process.exit(1);
+        } else if (!options.json && !options.file) {
+            console.error('One of --json or --file is required.');
+            process.exit(1);
+        }
+
+        const opts = program.optsWithGlobals();
+        const endpoint = await getEndpoint(opts.endpoint);
+        const client = await getClient(
+            endpoint,
+            opts.key ?? (await getOrRefreshSessionKey(endpoint))
+        );
+
+        let data: Uint8Array;
+        let mimeType: string;
+        if (options.file) {
+            const fullPath = path.resolve(options.file);
+            data = await readFile(fullPath);
+            mimeType = mime.getType(fullPath);
+            if (mimeType !== 'application/json') {
+                console.error('Only .aux or .json files are supported.');
+                process.exit(1);
+            }
+        } else if (options.json) {
+            data = new TextEncoder().encode(options.json);
+            mimeType = 'application/json';
+        } else {
+            console.error('One of --json or --file is required.');
+            process.exit(1);
+        }
+
+        const key = parseVersionNumber(options.version);
+
+        if (!key?.major) {
+            console.error(
+                'Invalid version provided. Must be in the format X.Y.Z'
+            );
+            process.exit(1);
+        }
+
+        const result = await resolveRecordFileInfo(data, mimeType);
+
+        if (result.success === false) {
+            console.error(
+                `Could not resolve file info (${result.errorCode}): ${result.errorMessage}`
+            );
+            process.exit(1);
+        } else {
+            console.log('Uploading package...');
+            const recordPackageResult = await client.recordPackageVersion({
+                recordName: options.record,
+                item: {
+                    address: options.address,
+                    key: key,
+                    auxFileRequest: {
+                        fileByteLength: result.byteLength,
+                        fileMimeType: result.mimeType,
+                        fileSha256Hex: result.hash,
+                        fileDescription: options.description || undefined,
+                    },
+                    description: options.description || undefined,
+                    markers: options.markers || undefined,
+                    entitlements: [],
+                },
+            });
+
+            if (recordPackageResult.success === false) {
+                console.error(
+                    `Could not create record package (${recordPackageResult.errorCode}): ${recordPackageResult.errorMessage}`
+                );
+                process.exit(1);
+            }
+
+            const uploadResult = await uploadFile(
+                recordPackageResult.auxFileResult,
+                result.data,
+                result.hash
+            );
+
+            if (uploadResult.success === false) {
+                console.error(
+                    `Could not upload package (${uploadResult.errorCode}): ${uploadResult.errorMessage}`
+                );
+                process.exit(1);
+            }
+            console.log('Package uploaded successfully!');
         }
     });
 
