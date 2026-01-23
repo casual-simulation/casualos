@@ -27,7 +27,7 @@ export default function simpleAnalyticsPlugin(options: Options = {}): Plugin {
     return {
         name: 'simple-analytics',
         transformIndexHtml(html) {
-            html.replace(
+            return html.replace(
                 '<!--%analytics%-->',
                 `<script
             async
