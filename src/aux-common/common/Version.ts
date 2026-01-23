@@ -68,7 +68,7 @@ export function parseVersionNumber(
         };
     }
     const versionRegex = /^v?(\d+)\.(\d+)\.(\d+)((:|-)\w+\.?\d*)*$/i;
-    const result = versionRegex.exec(version);
+    const result = versionRegex.exec(version.trim());
     if (!result) {
         return {
             version: null,
