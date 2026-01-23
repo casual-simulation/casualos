@@ -475,7 +475,7 @@ program
     .command('upload-file')
     .option(
         '-r, --record <record>',
-        'The record or record key to upload the file to.'
+        'The record or record key to upload the file to. Use {userId} to use your personal record.'
     )
     .option('-f, --file <file>', 'The file to upload.')
     .option('--json <json>', 'The JSON content of the file to upload.')
@@ -501,10 +501,10 @@ program
 
         const opts = program.optsWithGlobals();
         const endpoint = await getEndpoint(opts.endpoint);
-        const client = await getClient(
-            endpoint,
-            opts.key ?? (await getOrRefreshSessionKey(endpoint))
-        );
+        const sessionKey = opts.key ?? (await getOrRefreshSessionKey(endpoint));
+        const parsedSessionKey = parseSessionKey(sessionKey);
+        const userId = parsedSessionKey?.[0] ?? '';
+        const client = await getClient(endpoint, sessionKey);
 
         let data: Uint8Array;
         let mimeType: string;
@@ -523,6 +523,7 @@ program
             process.exit(1);
         }
 
+        const record = options.record.replace('{userId}', userId);
         const result = await resolveRecordFileInfo(data, mimeType);
 
         if (result.success === false) {
@@ -533,39 +534,54 @@ program
         } else {
             console.log('Uploading file...');
             const recordFileResult = await client.recordFile({
-                recordKey: options.record,
+                recordKey: record,
                 fileByteLength: result.byteLength,
                 fileMimeType: result.mimeType,
                 fileSha256Hex: result.hash,
                 fileDescription: options.description || undefined,
                 markers: options.markers || undefined,
             });
+            let url: string;
+
             if (recordFileResult.success === false) {
-                console.error(
-                    `Could not create record file (${recordFileResult.errorCode}): ${recordFileResult.errorMessage}`
+                if (recordFileResult.errorCode === 'file_already_exists') {
+                    url = recordFileResult.existingFileUrl;
+                } else {
+                    console.error(
+                        `Could not create record file (${recordFileResult.errorCode}): ${recordFileResult.errorMessage}`
+                    );
+                    process.exit(1);
+                }
+            } else {
+                const uploadResult = await uploadFile(
+                    recordFileResult,
+                    result.data,
+                    result.hash
                 );
-                process.exit(1);
+
+                if (uploadResult.success === false) {
+                    console.error(
+                        `Could not upload file (${uploadResult.errorCode}): ${uploadResult.errorMessage}`
+                    );
+                    process.exit(1);
+                }
+                url = uploadResult.url;
             }
 
-            const uploadResult = await uploadFile(
-                recordFileResult,
-                result.data,
-                result.hash
-            );
-
-            if (uploadResult.success === false) {
-                console.error(
-                    `Could not upload file (${uploadResult.errorCode}): ${uploadResult.errorMessage}`
-                );
-                process.exit(1);
-            }
             console.log('File uploaded successfully!');
+            console.log('URL:', url);
+            console.log('SHA256:', result.hash);
+            console.log('Size:', result.byteLength, 'bytes');
+            console.log('MIME TYPE:', result.mimeType);
         }
     });
 
 program
     .command('upload-package')
-    .option('-r, --record <record>', 'The record to upload the package to.')
+    .option(
+        '-r, --record <record>',
+        'The record or record key to upload the package to. Use {userId} to use your personal record.'
+    )
     .option('-a, --address <address>', 'The address to upload the package to.')
     .option(
         '-v, --version <version>',
@@ -604,10 +620,10 @@ program
 
         const opts = program.optsWithGlobals();
         const endpoint = await getEndpoint(opts.endpoint);
-        const client = await getClient(
-            endpoint,
-            opts.key ?? (await getOrRefreshSessionKey(endpoint))
-        );
+        const sessionKey = opts.key ?? (await getOrRefreshSessionKey(endpoint));
+        const parsedSessionKey = parseSessionKey(sessionKey);
+        const userId = parsedSessionKey?.[0] ?? '';
+        const client = await getClient(endpoint, sessionKey);
 
         let data: Uint8Array;
         let mimeType: string;
@@ -636,6 +652,7 @@ program
             process.exit(1);
         }
 
+        const record = options.record.replace('{userId}', userId);
         const result = await resolveRecordFileInfo(data, mimeType);
 
         if (result.success === false) {
@@ -646,7 +663,7 @@ program
         } else {
             console.log('Uploading package...');
             const recordPackageResult = await client.recordPackageVersion({
-                recordName: options.record,
+                recordName: record,
                 item: {
                     address: options.address,
                     key: key,
@@ -1490,6 +1507,7 @@ async function getClient(endpoint: string, key: string) {
     if (key) {
         client.sessionKey = key;
     }
+    Object.assign(client.headers, getHeaders(client));
     return client;
 }
 
