@@ -2086,13 +2086,20 @@ describe('Transpiler', () => {
                 );
             });
 
-            it.skip('should support generic type arguments with extends clauses', () => {
+            it('should support generic type arguments with extends clauses', () => {
                 const transpiler = new Transpiler();
+
                 expect(
                     transpiler.transpile(
-                        `export class Test<T, B> extends A<T> {}`
+                        `class Test<X, Y, Z> extends A<X, Y, Z> {}`
                     )
-                ).toBe(`class Test extends A {}\nawait exports({ Test, });`);
+                ).toBe(`class Test extends A {}`);
+
+                expect(
+                    transpiler.transpile(
+                        `let myClass = class Test<X, Y, Z> extends A<X, Y, Z> {}`
+                    )
+                ).toBe(`let myClass = class Test extends A {}`);
             });
 
             it('should remove the abstract keyword from classes', () => {

@@ -169,11 +169,13 @@ export const TypeScriptVisistorKeys: { [nodeType: string]: string[] } = {
         ...VisitorKeys.ClassDeclaration,
         'implements',
         'typeParameters',
+        'superTypeParameters',
     ],
     ClassExpression: [
         ...VisitorKeys.ClassExpression,
         'implements',
         'typeParameters',
+        'superTypeParameters',
     ],
     VariableDeclarator: [...VisitorKeys.VariableDeclarator, 'typeAnnotation'],
     FunctionDeclaration: [
