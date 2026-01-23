@@ -44,7 +44,6 @@ export class LoadingHelper<T> {
         if (!this._currentRequest) {
             this._currentRequest = this._loadPage(page, pageSize).then(
                 (result) => {
-                    console.log('done');
                     this._currentRequest = null;
                     return result;
                 },
