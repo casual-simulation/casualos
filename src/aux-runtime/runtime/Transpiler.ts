@@ -38,7 +38,7 @@ import {
     calculateIndexFromLocation,
     calculateLocationFromIndex,
 } from './TranspilerUtils';
-import { tsPlugin } from 'acorn-typescript';
+import { tsPlugin } from '@sveltejs/acorn-typescript';
 
 /**
  * The symbol that is used in script dependencies to represent any argument.
@@ -169,11 +169,13 @@ export const TypeScriptVisistorKeys: { [nodeType: string]: string[] } = {
         ...VisitorKeys.ClassDeclaration,
         'implements',
         'typeParameters',
+        'superTypeParameters',
     ],
     ClassExpression: [
         ...VisitorKeys.ClassExpression,
         'implements',
         'typeParameters',
+        'superTypeParameters',
     ],
     VariableDeclarator: [...VisitorKeys.VariableDeclarator, 'typeAnnotation'],
     FunctionDeclaration: [
@@ -290,7 +292,11 @@ export class Transpiler {
         this._cache = new LRUCache<string, TranspilerResult>({
             max: 1000,
         });
-        this._parser = Acorn.Parser.extend(tsPlugin() as any);
+        this._parser = Acorn.Parser.extend(
+            tsPlugin({
+                jsx: true,
+            }) as any
+        );
 
         (this._parser.prototype as any).parseReturnStatement = function (
             node: any
