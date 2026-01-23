@@ -18,7 +18,7 @@
 import prompts from 'prompts';
 import { Command } from 'commander';
 import type { RecordsClient } from '@casual-simulation/aux-records/RecordsClient';
-import mime from 'mime';
+import { Mime } from 'mime';
 
 /* eslint-disable casualos/no-non-type-imports */
 import { createRecordsClient } from '@casual-simulation/aux-records/RecordsClient';
@@ -82,9 +82,11 @@ import {
     resolveRecordFileInfo,
     uploadFile,
 } from '@casual-simulation/aux-vm/managers/RecordsManager';
+import standardMimeTypes from 'mime/types/standard.js';
+import otherMimeTypes from 'mime/types/other.js';
 
-mime.define({
-    'application/json': ['aux'],
+const mime = new Mime(standardMimeTypes, otherMimeTypes, {
+    'application/json': ['aux', 'json'],
 });
 
 const REFRESH_LIFETIME_MS = 1000 * 60 * 60 * 24 * 7; // 1 week
