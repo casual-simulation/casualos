@@ -40,7 +40,29 @@ export class LoadingHelper<T> {
         this.count = 0;
     }
 
+    /**
+     * Checks if the given controller is still the current one and not aborted.
+     * @param controller The controller to check.
+     * @returns True if the operation should continue, false if it should be cancelled.
+     */
+    private _isCurrentController(controller: AbortController): boolean {
+        return (
+            controller === this._abortController && !controller.signal.aborted
+        );
+    }
+
     loadPage(page: number, pageSize: number): Promise<TablePage<T>> {
+        const executeLoad = async () => {
+            try {
+                const result = await this._loadPage(page, pageSize);
+                console.log('done');
+                return result;
+            } finally {
+                // Clear current request on completion (success or failure)
+                this._currentRequest = null;
+            }
+        };
+
         if (!this._currentRequest) {
             this._currentRequest = this._loadPage(page, pageSize).then(
                 (result) => {
@@ -54,24 +76,32 @@ export class LoadingHelper<T> {
             );
             return this._currentRequest;
         } else {
-            this._currentRequest = this._currentRequest.then(() => {
-                return this._loadPage(page, pageSize);
-            });
-            return this._currentRequest;
+            this._currentRequest = this._currentRequest
+                .catch(() => null) // Ignore previous request errors
+                .then(() => executeLoad());
         }
+        return this._currentRequest;
     }
 
     private async _loadPage(
         page: number,
         pageSize: number
     ): Promise<TablePage<T>> {
-        if (this._abortController.signal.aborted) {
-            throw new Error('LoadingHelper has been cancelled');
+        // Capture the controller at the start of this operation
+        const controller = this._abortController;
+
+        if (!this._isCurrentController(controller)) {
+            return null;
         }
 
         let index = (page - 1) * pageSize;
         if (index >= this.items.length) {
-            if (await this._loadMoreItems()) {
+            if (await this._loadMoreItems(controller)) {
+                // Check if still current after the await
+                if (!this._isCurrentController(controller)) {
+                    return null;
+                }
+
                 const items = this.items.slice(index, index + pageSize);
                 return {
                     mdCount: this.count,
@@ -94,25 +124,29 @@ export class LoadingHelper<T> {
         };
     }
 
-    private async _loadMoreItems(): Promise<boolean> {
-        if (this._abortController.signal.aborted) {
-            throw new Error('LoadingHelper has been cancelled');
+    private async _loadMoreItems(
+        controller: AbortController
+    ): Promise<boolean> {
+        if (!this._isCurrentController(controller)) {
+            return false;
         }
 
         try {
             const lastItem = this.items[this.items.length - 1];
             let results = await this._makeRequest(lastItem);
 
-            if (this._abortController.signal.aborted) {
-                throw new Error('LoadingHelper has been cancelled');
+            // Check if still current after the await
+            if (!this._isCurrentController(controller)) {
+                return false;
             }
 
             this.items = this.items.concat(results.items);
             this.count = results.totalCount;
             return results.items.length > 0;
         } catch (err) {
-            if (this._abortController.signal.aborted) {
-                throw new Error('LoadingHelper has been cancelled');
+            // Check if still current in case the error was due to cancellation
+            if (!this._isCurrentController(controller)) {
+                return false;
             }
             console.error(err);
             return false;
