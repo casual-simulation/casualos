@@ -47,6 +47,7 @@ export type RecordsClientActions = ProcedureActions<
 export class RecordsClient {
     private _endpoint: string;
     private _sessionKey: string;
+    private _headers: Record<string, string> = {};
 
     get sessionKey() {
         return this._sessionKey;
@@ -54,6 +55,13 @@ export class RecordsClient {
 
     set sessionKey(value: string) {
         this._sessionKey = value;
+    }
+
+    /**
+     * The additional headers that will be sent with each request.
+     */
+    get headers() {
+        return this._headers;
     }
 
     get endpoint() {
@@ -99,6 +107,7 @@ export class RecordsClient {
                 headers: {
                     'Content-Type': 'application/json;charset=UTF-8',
                     Accept: 'application/json,application/x-ndjson',
+                    ...this._headers,
                     ...(options?.headers ?? {}),
                     ...this._authenticationHeaders(options),
                 },
