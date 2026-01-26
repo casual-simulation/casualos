@@ -10724,7 +10724,9 @@ describe('AuxRuntime', () => {
                             test1: createBot('test1', {
                                 create: `@
                                 let b = create({ space: 'delayed', value: 123 });
-                                expect(b).toBe(null);
+                                if (b) {
+                                  throw new Error('Bot was created immediately');
+                                }
                             `,
                             }),
                         })
@@ -10756,7 +10758,9 @@ describe('AuxRuntime', () => {
                                 let b1 = getBot('id', 'test2');
                                 destroy('test2');
                                 let b2 = getBot('id', 'test2');
-                                expect(b1).toEqual(b2);
+                                if (b1 !== b2) {
+                                    throw new Error('Bot was deleted immediately');
+                                }
                             `,
                             }),
                             test2: createBot(

@@ -1,8 +1,22 @@
 # CasualOS Changelog
 
-## V3.10.6
+## V4.0.0
 
 #### Date: TBD
+
+### :boom: Breaking Changes
+
+-   Moved `expect()` to an importable library.
+
+    -   To continue to use the `expect()` function, you must import it from the `"expect"` library:
+
+        ```typescript
+        import expect from 'expect'; // Add this line
+
+        expect(true).toBe(true);
+        ```
+
+-   Removed `assertEqual()`.
 
 ### :rocket: Features
 
