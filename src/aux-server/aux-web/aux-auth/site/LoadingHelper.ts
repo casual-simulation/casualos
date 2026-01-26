@@ -77,7 +77,7 @@ export class LoadingHelper<T> {
             return this._currentRequest;
         } else {
             this._currentRequest = this._currentRequest
-                .catch(() => null) // Ignore previous request errors
+                .catch((error): null => null) // Ignore previous request errors
                 .then(() => executeLoad());
         }
         return this._currentRequest;
