@@ -135,6 +135,7 @@ import {
     showJoinCode as calcShowJoinCode,
     requestFullscreen,
     exitFullscreen,
+    promptToInstallPWA as calcPromptToInstallPWA,
     html as htmlMessage,
     hideHtml as hideHtmlMessage,
     setClipboard as calcSetClipboard,
@@ -3499,6 +3500,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 showJoinCode,
                 requestFullscreenMode,
                 exitFullscreenMode,
+                promptToInstallPWA,
 
                 hideLoadingScreen,
 
@@ -6367,6 +6369,44 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function exitFullscreenMode(): ExitFullscreenAction {
         return addAction(exitFullscreen());
+    }
+
+    /**
+     * Prompts the user to install the Progressive Web App (PWA).
+     *
+     * Returns a promise that resolves with an object containing the user's choice and platform information when they respond to the prompt. Rejects with an error if the feature is not supported (for example, on iOS devices).
+     *
+     * The returned object contains:
+     * - `outcome`: Either "accepted" or "dismissed" based on the user's choice
+     * - `platform`: The platform identifier (empty string if not provided)
+     *
+     * Note that this feature may not be available on all platforms and browsers. In particular:
+     * - iOS Safari does not support the PWA installation prompt
+     * - The prompt can only be triggered in response to user interaction
+     * - The prompt will only be shown if the app meets PWA installability criteria
+     *
+     * @example Prompt the user to install the PWA.
+     * try {
+     *     const result = await os.promptToInstallPWA();
+     *     if (result.outcome === 'accepted') {
+     *         os.toast("Thanks for installing!");
+     *     } else {
+     *         os.toast("Maybe next time!");
+     *     }
+     * } catch (error) {
+     *     os.toast("PWA installation is not available: " + error.message);
+     * }
+     *
+     * @dochash actions/os/system
+     * @docname os.promptToInstallPWA
+     */
+    function promptToInstallPWA(): Promise<{
+        outcome: 'accepted' | 'dismissed';
+        platform: string;
+    }> {
+        const task = context.createTask();
+        const event = calcPromptToInstallPWA(task.taskId);
+        return addAsyncAction(task, event);
     }
 
     /**
