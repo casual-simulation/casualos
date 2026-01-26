@@ -6492,7 +6492,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Prompts the user to install the Progressive Web App (PWA).
      *
-     * Returns a promise that resolves once the prompt is shown. Rejects with an error if the feature is not supported (for example, on iOS devices).
+     * Returns a promise that resolves with the user's choice when they respond to the prompt. Rejects with an error if the feature is not supported (for example, on iOS devices).
+     *
+     * The returned object contains:
+     * - `outcome`: Either "accepted" or "dismissed" based on the user's choice
+     * - `platform`: The platform identifier (empty string if not provided)
      *
      * Note that this feature may not be available on all platforms and browsers. In particular:
      * - iOS Safari does not support the PWA installation prompt
@@ -6501,8 +6505,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @example Prompt the user to install the PWA.
      * try {
-     *     await os.promptToInstallPWA();
-     *     os.toast("Installation prompt shown!");
+     *     const result = await os.promptToInstallPWA();
+     *     if (result.outcome === 'accepted') {
+     *         os.toast("Thanks for installing!");
+     *     } else {
+     *         os.toast("Maybe next time!");
+     *     }
      * } catch (error) {
      *     os.toast("PWA installation is not available: " + error.message);
      * }
@@ -6510,7 +6518,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @dochash actions/os/system
      * @docname os.promptToInstallPWA
      */
-    function promptToInstallPWA(): Promise<void> {
+    function promptToInstallPWA(): Promise<{
+        outcome: string;
+        platform: string;
+    }> {
         const task = context.createTask();
         const event = calcPromptToInstallPWA(task.taskId);
         return addAsyncAction(task, event);
