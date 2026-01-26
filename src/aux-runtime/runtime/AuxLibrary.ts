@@ -6492,7 +6492,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Prompts the user to install the Progressive Web App (PWA).
      *
-     * Returns a promise that resolves with the user's choice when they respond to the prompt. Rejects with an error if the feature is not supported (for example, on iOS devices).
+     * Returns a promise that resolves with an object containing the user's choice and platform information when they respond to the prompt. Rejects with an error if the feature is not supported (for example, on iOS devices).
      *
      * The returned object contains:
      * - `outcome`: Either "accepted" or "dismissed" based on the user's choice

@@ -1073,10 +1073,12 @@ export default class PlayerApp extends Vue {
                 } else if (e.type === 'prompt_to_install_pwa') {
                     if (this._deferredPWAPrompt) {
                         // Show the install prompt
-                        this._deferredPWAPrompt.prompt();
-
-                        // Wait for the user to respond to the prompt
-                        this._deferredPWAPrompt.userChoice
+                        this._deferredPWAPrompt
+                            .prompt()
+                            .then(() => {
+                                // Wait for the user to respond to the prompt
+                                return this._deferredPWAPrompt.userChoice;
+                            })
                             .then(
                                 (choiceResult: {
                                     outcome: 'accepted' | 'dismissed';
