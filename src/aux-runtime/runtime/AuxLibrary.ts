@@ -6519,7 +6519,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @docname os.promptToInstallPWA
      */
     function promptToInstallPWA(): Promise<{
-        outcome: string;
+        outcome: 'accepted' | 'dismissed';
         platform: string;
     }> {
         const task = context.createTask();

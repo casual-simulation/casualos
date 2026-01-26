@@ -149,6 +149,14 @@ declare function sa_event(
 ): void;
 declare function sa_event(name: string, callback: () => void): void;
 
+interface BeforeInstallPromptEvent extends Event {
+    prompt(): Promise<void>;
+    userChoice: Promise<{
+        outcome: 'accepted' | 'dismissed';
+        platform: string;
+    }>;
+}
+
 const QRCodeAsync = () => ({
     component: import('@chenfengyuan/vue-qrcode'),
     loading: LoadingWidget,
@@ -370,7 +378,7 @@ export default class PlayerApp extends Vue {
     private _notAuthorizedSimulationId: string;
     showChangeLogin: boolean = false;
     private _isLoggingIn: boolean = false;
-    private _deferredPWAPrompt: any = null;
+    private _deferredPWAPrompt: BeforeInstallPromptEvent | null = null;
 
     showNotificationPermissionDialog: boolean = false;
     showNotificationPermissionMessage: string =
@@ -533,7 +541,7 @@ export default class PlayerApp extends Vue {
             // Prevent the mini-infobar from appearing on mobile
             e.preventDefault();
             // Store the event so it can be triggered later
-            this._deferredPWAPrompt = e;
+            this._deferredPWAPrompt = e as BeforeInstallPromptEvent;
         });
     }
 
@@ -1069,17 +1077,22 @@ export default class PlayerApp extends Vue {
 
                         // Wait for the user to respond to the prompt
                         this._deferredPWAPrompt.userChoice
-                            .then((choiceResult: any) => {
-                                // Clear the deferred prompt since it can only be used once
-                                this._deferredPWAPrompt = null;
-                                simulation.helper.transaction(
-                                    asyncResult(e.taskId, {
-                                        outcome: choiceResult.outcome,
-                                        platform: choiceResult.platform,
-                                    })
-                                );
-                            })
-                            .catch((err: any) => {
+                            .then(
+                                (choiceResult: {
+                                    outcome: 'accepted' | 'dismissed';
+                                    platform: string;
+                                }) => {
+                                    // Clear the deferred prompt since it can only be used once
+                                    this._deferredPWAPrompt = null;
+                                    simulation.helper.transaction(
+                                        asyncResult(e.taskId, {
+                                            outcome: choiceResult.outcome,
+                                            platform: choiceResult.platform,
+                                        })
+                                    );
+                                }
+                            )
+                            .catch((err: Error) => {
                                 this._deferredPWAPrompt = null;
                                 simulation.helper.transaction(
                                     asyncError(e.taskId, err.toString())
