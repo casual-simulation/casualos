@@ -1,5 +1,38 @@
 # CasualOS Changelog
 
+## V4.0.0
+
+#### Date: 1/26/2026
+
+### :boom: Breaking Changes
+
+-   Moved `expect()` to an importable library.
+
+    -   To continue to use the `expect()` function, you must import it from the `"expect"` library:
+
+        ```typescript
+        import expect from 'expect'; // Add this line
+
+        expect(true).toBe(true);
+        ```
+
+-   Removed `assertEqual()`.
+
+### :rocket: Features
+
+-   Added the ability to omit Content Security Policy directives during build.
+    -   Set the `OMIT_BUILD_CSP` environment variable to `"true"` during build to omit them.
+-   Add CLI commands for uploading files and packages.
+-   Added `os.promptToInstallPWA()` to allow prompting users to install the Progressive Web App (PWA).
+    -   Returns a promise that resolves once the prompt is shown.
+    -   Rejects with an error if not supported (e.g., on iOS devices).
+
+### :bug: Bug Fixes
+
+-   Fixed another CSS order issue where placeholders in input menu bots would be incorrectly positioned when focused.
+-   Fixed an issue where it was impossible to update user metadata for deployments which used a separate domain for the API from the auth frontend due to CORS errors.
+-   Fixed an issue where type parameters given to super classes (in the extends clause of a class declaration) weren't supported.
+
 ## V3.10.5
 
 #### Date: 1/19/2026

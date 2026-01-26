@@ -51,6 +51,8 @@ jobs:
             - name: Build
               run: |
                   npm run build
+              env:
+                  OMIT_BUILD_CSP: 'true'
             - name: Publish Master NPM Packages
               if: ${{ github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/heads/release/') }}
               run: |

@@ -88,6 +88,9 @@ export default class AuthRecordsWebhooks extends Vue {
 
     private _reset() {
         this.selectedItem = null;
+        if (this._helper) {
+            this._helper.cancel();
+        }
         this._helper = new LoadingHelper(async (lastItem) => {
             const result = await authManager.client.listWebhooks({
                 recordName: this.recordName,

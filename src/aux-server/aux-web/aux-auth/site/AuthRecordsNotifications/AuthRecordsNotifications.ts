@@ -78,6 +78,9 @@ export default class AuthRecordsNotifications extends Vue {
 
     private _reset() {
         this.selectedItem = null;
+        if (this._helper) {
+            this._helper.cancel();
+        }
         this._helper = new LoadingHelper(async (lastItem) => {
             const result = await authManager.client.listNotifications({
                 recordName: this.recordName,
