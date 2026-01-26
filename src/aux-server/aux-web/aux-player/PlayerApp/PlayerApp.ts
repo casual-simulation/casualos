@@ -1072,7 +1072,7 @@ export default class PlayerApp extends Vue {
                             .then((choiceResult: any) => {
                                 // Clear the deferred prompt since it can only be used once
                                 this._deferredPWAPrompt = null;
-                                sim.helper.transaction(
+                                simulation.helper.transaction(
                                     asyncResult(e.taskId, {
                                         outcome: choiceResult.outcome,
                                         platform: choiceResult.platform,
@@ -1081,13 +1081,13 @@ export default class PlayerApp extends Vue {
                             })
                             .catch((err: any) => {
                                 this._deferredPWAPrompt = null;
-                                sim.helper.transaction(
+                                simulation.helper.transaction(
                                     asyncError(e.taskId, err.toString())
                                 );
                             });
                     } else {
                         // PWA installation not available
-                        sim.helper.transaction(
+                        simulation.helper.transaction(
                             asyncError(
                                 e.taskId,
                                 'PWA installation prompt is not available. This feature may not be supported on this platform or the app may not meet PWA installability criteria.'
