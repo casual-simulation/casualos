@@ -52,6 +52,9 @@ export default class AuthUserNotifications extends Vue {
     }
 
     private _reset() {
+        if (this._subscriptionsHelper) {
+            this._subscriptionsHelper.cancel();
+        }
         this._subscriptionsHelper = new LoadingHelper(async (lastItem) => {
             const result =
                 await authManager.client.listUserNotificationSubscriptions({});

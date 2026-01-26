@@ -67,6 +67,9 @@ export default class AuthRecordsRoles extends Vue {
     }
 
     private _reset() {
+        if (this._helper) {
+            this._helper.cancel();
+        }
         this._helper = new LoadingHelper(async (lastItem) => {
             const result = await authManager.client.listRoleAssignments({
                 recordName: this.recordName,

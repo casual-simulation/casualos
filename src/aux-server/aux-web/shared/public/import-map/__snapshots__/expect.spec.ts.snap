@@ -1,0 +1,59 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`expect() toBe() should throw an error if the bots are not the same 1`] = `
+"expect(received).toBe(expected) // Object.is equality
+
+If it should pass with deep equality, replace \\"toBe\\" with \\"toStrictEqual\\"
+
+Expected: {\\"id\\": \\"test1\\", \\"tags\\": {}}
+Received: serializes to the same string"
+`;
+
+exports[`expect() toEqual() should throw when bots have different IDs 1`] = `
+"expect(received).toEqual(expected) // deep equality
+
+- Expected  - 1
++ Received  + 1
+
+  Object {
+-   \\"id\\": \\"test2\\",
++   \\"id\\": \\"test1\\",
+    \\"space\\": undefined,
+    \\"tags\\": Object {},
+  }"
+`;
+
+exports[`expect() toEqual() should throw when bots have different tags 1`] = `
+"expect(received).toEqual(expected) // deep equality
+
+- Expected  - 1
++ Received  + 3
+
+  Object {
+    \\"id\\": \\"test1\\",
+    \\"space\\": undefined,
+-   \\"tags\\": Object {},
++   \\"tags\\": Object {
++     \\"abc\\": \\"def\\",
++   },
+  }"
+`;
+
+exports[`expect() toEqual() should throw when bots have the same tag mask but in a different space 1`] = `
+"expect(received).toEqual(expected) // deep equality
+
+- Expected  - 1
++ Received  + 1
+
+@@ -1,9 +1,9 @@
+  Object {
+    \\"id\\": \\"test1\\",
+    \\"masks\\": Object {
+-     \\"local\\": Object {
++     \\"tempLocal\\": Object {
+        \\"abc\\": \\"def\\",
+      },
+    },
+    \\"space\\": undefined,
+    \\"tags\\": Object {},"
+`;

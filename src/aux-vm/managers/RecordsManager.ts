@@ -1032,7 +1032,7 @@ export class RecordsManager {
 
             console.log('[RecordsManager] Recording file...', event);
 
-            const fileInfo = await this._resolveRecordFileInfo(
+            const fileInfo = await resolveRecordFileInfo(
                 event.data,
                 event.mimeType
             );
@@ -1070,11 +1070,7 @@ export class RecordsManager {
                 }
             );
 
-            const uploadResult = await this._uploadFile(
-                result.data,
-                data,
-                hash
-            );
+            const uploadResult = await uploadFile(result.data, data, hash);
 
             if (hasValue(event.taskId)) {
                 this._helper.transaction(
@@ -1089,179 +1085,6 @@ export class RecordsManager {
                 );
             }
         }
-    }
-
-    private async _uploadFile(
-        result: RecordFileResult,
-        data: any,
-        hash: string
-    ): Promise<FileRecordedResult> {
-        if (result.success === false) {
-            return result;
-        }
-        const method = result.uploadMethod;
-        const url = result.uploadUrl;
-        const headers = { ...result.uploadHeaders };
-
-        for (let name of UNSAFE_HEADERS) {
-            delete headers[name];
-        }
-
-        const uploadResult = await axios.request({
-            ...this._axiosOptions,
-            method: method.toLowerCase() as any,
-            url: url,
-            headers: headers,
-            data: data,
-        });
-
-        if (uploadResult.status >= 200 && uploadResult.status < 300) {
-            console.log('[RecordsManager] File recorded!');
-
-            return {
-                success: true,
-                url: url,
-                sha256Hash: hash,
-            };
-            // if (hasValue(event.taskId)) {
-
-            //     this._helper.transaction(
-            //         asyncResult(event.taskId, {
-            //             success: true,
-            //             url: url,
-            //             sha256Hash: hash,
-            //         } as FileRecordedResult)
-            //     );
-            // }
-        } else {
-            console.error('[RecordsManager] File upload failed!', uploadResult);
-            return {
-                success: false,
-                errorCode: 'upload_failed',
-                errorMessage: 'The file upload failed.',
-            };
-            // if (hasValue(event.taskId)) {
-            //     this._helper.transaction(
-            //         asyncResult(event.taskId, {
-            //             success: false,
-            //             errorCode: 'upload_failed',
-            //             errorMessage: 'The file upload failed.',
-            //         } as FileRecordedResult)
-            //     );
-            // }
-        }
-    }
-
-    private async _resolveRecordFileInfo(
-        eventData: any,
-        eventMimeType: string
-    ): Promise<
-        | RecordFileFailure
-        | {
-              success: true;
-              byteLength: number;
-              hash: string;
-              mimeType: string;
-              data: any;
-          }
-    > {
-        let byteLength: number;
-        let hash: string;
-        let mimeType: string;
-        let data: any;
-
-        if (typeof eventData === 'function') {
-            // if (hasValue(event.taskId)) {
-            //     this._helper.transaction(
-            //         asyncResult(event.taskId, {
-            //             success: false,
-            //             errorCode: 'invalid_file_data',
-            //             errorMessage:
-            //                 'Function instances cannot be stored in files.',
-            //         } as RecordFileResult)
-            //     );
-            // }
-            return {
-                success: false,
-                errorCode: 'invalid_file_data',
-                errorMessage: 'Function instances cannot be stored in files.',
-            };
-        } else if (typeof eventData === 'undefined' || eventData === null) {
-            return {
-                success: false,
-                errorCode: 'invalid_file_data',
-                errorMessage:
-                    'Null or undefined values cannot be stored in files.',
-            };
-        } else if (
-            typeof eventData === 'string' ||
-            typeof eventData === 'number' ||
-            typeof eventData === 'boolean'
-        ) {
-            const encoder = new TextEncoder();
-            data = encoder.encode(eventData.toString());
-            byteLength = data.byteLength;
-            mimeType = eventMimeType || 'text/plain';
-            hash = getHash(data);
-        } else if (typeof eventData === 'object') {
-            if (eventData instanceof Blob) {
-                const buffer = await eventData.arrayBuffer();
-                data = new Uint8Array(buffer);
-                byteLength = data.byteLength;
-                mimeType =
-                    eventMimeType ||
-                    eventData.type ||
-                    'application/octet-stream';
-                hash = getHash(data);
-            } else if (eventData instanceof ArrayBuffer) {
-                data = new Uint8Array(eventData);
-                byteLength = data.byteLength;
-                mimeType = eventMimeType || 'application/octet-stream';
-                hash = getHash(data);
-            } else if (ArrayBuffer.isView(eventData)) {
-                data = new Uint8Array(eventData.buffer);
-                byteLength = data.byteLength;
-                mimeType = eventMimeType || 'application/octet-stream';
-                hash = getHash(data);
-            } else {
-                const obj = eventData;
-                if (
-                    'data' in obj &&
-                    'mimeType' in obj &&
-                    (obj.data instanceof ArrayBuffer ||
-                        typeof obj.data === 'string') &&
-                    typeof obj.mimeType === 'string'
-                ) {
-                    if (typeof obj.data === 'string') {
-                        data = new TextEncoder().encode(obj.data);
-                    } else {
-                        data = new Uint8Array(obj.data);
-                    }
-                    byteLength = data.byteLength;
-                    mimeType =
-                        eventMimeType ||
-                        obj.mimeType ||
-                        (typeof obj.data === 'string'
-                            ? 'text/plain'
-                            : 'application/octet-stream');
-                    hash = getHash(data);
-                } else {
-                    let json = stringify(eventData);
-                    data = new TextEncoder().encode(json);
-                    byteLength = data.byteLength;
-                    mimeType = eventMimeType || 'application/json';
-                    hash = getHash(data);
-                }
-            }
-        }
-
-        return {
-            success: true,
-            byteLength,
-            hash,
-            mimeType,
-            data,
-        };
     }
 
     private async _getFile(event: GetFileAction) {
@@ -2443,7 +2266,7 @@ export class RecordsManager {
                 return;
             }
 
-            const fileInfo = await this._resolveRecordFileInfo(
+            const fileInfo = await resolveRecordFileInfo(
                 event.request.state,
                 'application/json'
             );
@@ -2499,7 +2322,7 @@ export class RecordsManager {
                 return;
             }
 
-            const uploadResult = await this._uploadFile(
+            const uploadResult = await uploadFile(
                 result.auxFileResult,
                 data,
                 hash
@@ -3200,4 +3023,161 @@ function wait(seconds: number): Promise<void> {
             resolve();
         }, seconds * 1000);
     });
+}
+
+/**
+ * Resolves the information needed to upload a record file from the given data and mime type.
+ * @param eventData The data that should be stored in the file. Can be a string, Blob, ArrayBuffer, TypedArray, or an object.
+ * @param eventMimeType The mime type that the recorded file should have. Optional. Will be inferred if not provided.
+ * @returns The resolved record file information or a failure and the reason for the failure.
+ */
+export async function resolveRecordFileInfo(
+    eventData: any,
+    eventMimeType?: string | null | undefined
+): Promise<
+    | RecordFileFailure
+    | {
+          success: true;
+          byteLength: number;
+          hash: string;
+          mimeType: string;
+          data: any;
+      }
+> {
+    let byteLength: number;
+    let hash: string;
+    let mimeType: string;
+    let data: any;
+
+    if (typeof eventData === 'function') {
+        return {
+            success: false,
+            errorCode: 'invalid_file_data',
+            errorMessage: 'Function instances cannot be stored in files.',
+        };
+    } else if (typeof eventData === 'undefined' || eventData === null) {
+        return {
+            success: false,
+            errorCode: 'invalid_file_data',
+            errorMessage: 'Null or undefined values cannot be stored in files.',
+        };
+    } else if (
+        typeof eventData === 'string' ||
+        typeof eventData === 'number' ||
+        typeof eventData === 'boolean'
+    ) {
+        const encoder = new TextEncoder();
+        data = encoder.encode(eventData.toString());
+        byteLength = data.byteLength;
+        mimeType = eventMimeType || 'text/plain';
+        hash = getHash(data);
+    } else if (typeof eventData === 'object') {
+        if (eventData instanceof Blob) {
+            const buffer = await eventData.arrayBuffer();
+            data = new Uint8Array(buffer);
+            byteLength = data.byteLength;
+            mimeType =
+                eventMimeType || eventData.type || 'application/octet-stream';
+            hash = getHash(data);
+        } else if (eventData instanceof ArrayBuffer) {
+            data = new Uint8Array(eventData);
+            byteLength = data.byteLength;
+            mimeType = eventMimeType || 'application/octet-stream';
+            hash = getHash(data);
+        } else if (ArrayBuffer.isView(eventData)) {
+            data = new Uint8Array(eventData.buffer);
+            byteLength = data.byteLength;
+            mimeType = eventMimeType || 'application/octet-stream';
+            hash = getHash(data);
+        } else {
+            const obj = eventData;
+            if (
+                'data' in obj &&
+                'mimeType' in obj &&
+                (obj.data instanceof ArrayBuffer ||
+                    typeof obj.data === 'string') &&
+                typeof obj.mimeType === 'string'
+            ) {
+                if (typeof obj.data === 'string') {
+                    data = new TextEncoder().encode(obj.data);
+                } else {
+                    data = new Uint8Array(obj.data);
+                }
+                byteLength = data.byteLength;
+                mimeType =
+                    eventMimeType ||
+                    obj.mimeType ||
+                    (typeof obj.data === 'string'
+                        ? 'text/plain'
+                        : 'application/octet-stream');
+                hash = getHash(data);
+            } else {
+                let json = stringify(eventData);
+                data = new TextEncoder().encode(json);
+                byteLength = data.byteLength;
+                mimeType = eventMimeType || 'application/json';
+                hash = getHash(data);
+            }
+        }
+    }
+
+    return {
+        success: true,
+        byteLength,
+        hash,
+        mimeType,
+        data,
+    };
+}
+
+/**
+ * Attempts to upload the given data to the server based on the given record file result.
+ * @param result The record file result that describes how to upload the file.
+ * @param data The data that should be uploaded.
+ * @param hash The hash of the data that should be uploaded.
+ * @returns A promise that resolves with the result of the upload.
+ */
+export async function uploadFile(
+    result: RecordFileResult,
+    data: any,
+    hash: string,
+    axiosOptions: AxiosRequestConfig = {}
+): Promise<FileRecordedResult> {
+    if (result.success === false) {
+        return result;
+    }
+    const method = result.uploadMethod;
+    const url = result.uploadUrl;
+    const headers = { ...result.uploadHeaders };
+
+    for (let name of UNSAFE_HEADERS) {
+        delete headers[name];
+    }
+
+    const uploadResult = await axios.request({
+        ...axiosOptions,
+        validateStatus: (status) => {
+            return status < 500;
+        },
+        method: method.toLowerCase() as any,
+        url: url,
+        headers: headers,
+        data: data,
+    });
+
+    if (uploadResult.status >= 200 && uploadResult.status < 300) {
+        console.log('[RecordsManager] File recorded!');
+        return {
+            success: true,
+            url: url,
+            sha256Hash: hash,
+        };
+    } else {
+        console.error('[RecordsManager] File upload failed!', uploadResult);
+        return {
+            success: false,
+            errorCode: 'upload_failed',
+            errorMessage: 'The file upload failed.',
+        };
+    }
 }

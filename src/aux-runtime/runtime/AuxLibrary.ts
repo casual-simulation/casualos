@@ -135,6 +135,7 @@ import {
     showJoinCode as calcShowJoinCode,
     requestFullscreen,
     exitFullscreen,
+    promptToInstallPWA as calcPromptToInstallPWA,
     html as htmlMessage,
     hideHtml as hideHtmlMessage,
     setClipboard as calcSetClipboard,
@@ -470,8 +471,6 @@ import {
 import { Fragment, h } from 'preact';
 import htm from 'htm';
 import { fromByteArray, toByteArray } from 'base64-js';
-import type { Tester } from '@casual-simulation/expect';
-import expect, { iterableEquality } from '@casual-simulation/expect';
 import {
     parseRecordKey,
     isRecordKey as calcIsRecordKey,
@@ -2839,86 +2838,6 @@ export interface GetRoomRemoteOptionsFailure {
     remoteId: string;
 }
 
-const botsEquality: Tester = function (first: unknown, second: unknown) {
-    if (isRuntimeBot(first) && isRuntimeBot(second)) {
-        expect(getBotSnapshot(first)).toEqual(getBotSnapshot(second));
-        return true;
-    }
-    return undefined;
-};
-
-expect.extend({
-    toEqual(received: unknown, expected: unknown) {
-        // Copied from https://github.com/facebook/jest/blob/7bb400c373a6f90ba956dd25fe24ee4d4788f41e/packages/expect/src/matchers.ts#L580
-        // Added the testBots matcher to make testing against bots easier.
-        const matcherName = 'toEqual';
-        const options = {
-            comment: 'deep equality',
-            isNot: this.isNot,
-            promise: this.promise,
-        };
-
-        const pass = this.equals(received, expected, [
-            botsEquality,
-            iterableEquality,
-        ]);
-
-        const message = pass
-            ? () =>
-                  this.utils.matcherHint(
-                      matcherName,
-                      undefined,
-                      undefined,
-                      options
-                  ) +
-                  '\n\n' +
-                  `Expected: not ${this.utils.printExpected(expected)}\n` +
-                  (this.utils.stringify(expected) !==
-                  this.utils.stringify(received)
-                      ? `Received:     ${this.utils.printReceived(received)}`
-                      : '')
-            : () =>
-                  this.utils.matcherHint(
-                      matcherName,
-                      undefined,
-                      undefined,
-                      options
-                  ) +
-                  '\n\n' +
-                  this.utils.printDiffOrStringify(
-                      expected,
-                      received,
-                      'Expected',
-                      'Received',
-                      this.expand !== false
-                  );
-
-        // Passing the actual and expected objects so that a custom reporter
-        // could access them, for example in order to display a custom visual diff,
-        // or create a different error message
-        return { actual: received, expected, message, name: matcherName, pass };
-    },
-});
-
-function getBotSnapshot(bot: Bot) {
-    let b = {
-        id: bot.id,
-        space: bot.space,
-        tags:
-            typeof bot.tags.toJSON === 'function'
-                ? bot.tags.toJSON()
-                : bot.tags,
-    } as Bot;
-
-    let masks = isRuntimeBot(bot)
-        ? bot[GET_TAG_MASKS_SYMBOL]()
-        : cloneDeep(bot.masks ?? {});
-    if (Object.keys(masks).length > 0) {
-        b.masks = masks;
-    }
-    return b;
-}
-
 /**
  * Defines an interface that represents the set of additional options that can be provided when recording a file.
  */
@@ -3518,8 +3437,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             clearWatchBot,
             clearWatchPortal,
             assert,
-            assertEqual,
-            expect,
 
             html,
 
@@ -3583,6 +3500,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 showJoinCode,
                 requestFullscreenMode,
                 exitFullscreenMode,
+                promptToInstallPWA,
 
                 hideLoadingScreen,
 
@@ -4433,40 +4351,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 throw new Error('Assertion failed.');
             }
         }
-    }
-
-    function getAssertionValue(value: any) {
-        if (value instanceof Error) {
-            return value.toString();
-        }
-        return value;
-    }
-
-    /**
-     * Verifies that the given values are equal to each other.
-     * If they are not, then an error is thrown.
-     * This function is useful for automated testing since tests should ideally throw an error if the test fails.
-     * It can also be useful to make sure that some important code is only run if a precondition is met.
-     *
-     * @param first The first value to test.
-     * @param second The second value to test.
-     *
-     * @example Assert that the tag color is "blue"
-     * assertEqual(tags.color, "blue");
-     *
-     * @example Assert that the bot contains some specific tag values
-     * assertEqual(tags, {
-     *     color: "blue",
-     *     home: true,
-     *     homeX: 0,
-     *     homeY: 0
-     * });
-     *
-     * @dochash actions/debuggers
-     * @docname assertEqual
-     */
-    function assertEqual(first: any, second: any) {
-        expect(first).toEqual(second);
     }
 
     /**
@@ -6485,6 +6369,44 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function exitFullscreenMode(): ExitFullscreenAction {
         return addAction(exitFullscreen());
+    }
+
+    /**
+     * Prompts the user to install the Progressive Web App (PWA).
+     *
+     * Returns a promise that resolves with an object containing the user's choice and platform information when they respond to the prompt. Rejects with an error if the feature is not supported (for example, on iOS devices).
+     *
+     * The returned object contains:
+     * - `outcome`: Either "accepted" or "dismissed" based on the user's choice
+     * - `platform`: The platform identifier (empty string if not provided)
+     *
+     * Note that this feature may not be available on all platforms and browsers. In particular:
+     * - iOS Safari does not support the PWA installation prompt
+     * - The prompt can only be triggered in response to user interaction
+     * - The prompt will only be shown if the app meets PWA installability criteria
+     *
+     * @example Prompt the user to install the PWA.
+     * try {
+     *     const result = await os.promptToInstallPWA();
+     *     if (result.outcome === 'accepted') {
+     *         os.toast("Thanks for installing!");
+     *     } else {
+     *         os.toast("Maybe next time!");
+     *     }
+     * } catch (error) {
+     *     os.toast("PWA installation is not available: " + error.message);
+     * }
+     *
+     * @dochash actions/os/system
+     * @docname os.promptToInstallPWA
+     */
+    function promptToInstallPWA(): Promise<{
+        outcome: 'accepted' | 'dismissed';
+        platform: string;
+    }> {
+        const task = context.createTask();
+        const event = calcPromptToInstallPWA(task.taskId);
+        return addAsyncAction(task, event);
     }
 
     /**
@@ -17043,6 +16965,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * If null is provided, then a seed will be chosen in a somewhat unpredictable manner.
      *
      * @example Set the random seed for math.random() and math.randomInt().
+     * import expect from 'expect';
+     *
      * math.setRandomSeed(123);
      *
      * expect(math.randomInt(0, 10)).toBe(9);

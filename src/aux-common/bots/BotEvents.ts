@@ -216,7 +216,8 @@ export type AsyncActions =
     | RemoveMapLayerAction
     | HideLoadingScreenAction
     | GenerateQRCodeAction
-    | ConfigureTypeCheckingAction;
+    | ConfigureTypeCheckingAction
+    | PromptToInstallPWAAction;
 
 export type RemoteBotActions =
     | GetRemoteCountAction
@@ -2493,6 +2494,17 @@ export interface RequestFullscreenAction {
  */
 export interface ExitFullscreenAction {
     type: 'exit_fullscreen_mode';
+}
+
+/**
+ * Defines an event that prompts the user to install the Progressive Web App (PWA).
+ * This can be denied by the user or may not be supported on some platforms (like iOS).
+ *
+ * @dochash types/os/system
+ * @docname PromptToInstallPWAAction
+ */
+export interface PromptToInstallPWAAction extends AsyncAction {
+    type: 'prompt_to_install_pwa';
 }
 
 /**
@@ -5533,6 +5545,19 @@ export function requestFullscreen(): RequestFullscreenAction {
 export function exitFullscreen(): ExitFullscreenAction {
     return {
         type: 'exit_fullscreen_mode',
+    };
+}
+
+/**
+ * Prompts the user to install the Progressive Web App (PWA).
+ * @param taskId The ID of the async task.
+ */
+export function promptToInstallPWA(
+    taskId: number | string
+): PromptToInstallPWAAction {
+    return {
+        type: 'prompt_to_install_pwa',
+        taskId,
     };
 }
 

@@ -122,6 +122,28 @@ describe('parseVersionNumber()', () => {
                 tag: 'alpha.997',
             },
         ] as const,
+        [
+            '0.22.4',
+            {
+                version: '0.22.4',
+                major: 0,
+                minor: 22,
+                patch: 4,
+                alpha: false,
+                tag: null as string,
+            },
+        ] as const,
+        [
+            ' 0.22.4 ',
+            {
+                version: '0.22.4',
+                major: 0,
+                minor: 22,
+                patch: 4,
+                alpha: false,
+                tag: null as string,
+            },
+        ] as const,
     ];
 
     it.each(cases)('should parse %s', (version, expected) => {
