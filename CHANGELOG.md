@@ -8,6 +8,7 @@
 
 -   Added the ability to omit Content Security Policy directives during build.
     -   Set the `OMIT_BUILD_CSP` environment variable to `"true"` during build to omit them.
+-   Add CLI commands for uploading files and packages.
 
 ### :bug: Bug Fixes
 
