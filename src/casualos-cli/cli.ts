@@ -85,6 +85,7 @@ import {
 } from '@casual-simulation/aux-vm/managers/RecordsManager';
 import standardMimeTypes from 'mime/types/standard.js';
 import otherMimeTypes from 'mime/types/other.js';
+import { parseEntitlements } from 'cli-utils';
 
 const mime = new Mime(standardMimeTypes, otherMimeTypes, {
     'application/json': ['aux', 'json'],
@@ -653,6 +654,7 @@ program
             process.exit(1);
         }
 
+        const entitlements = parseEntitlements(options.entitlements);
         const record = options.record.replace('{userId}', userId);
         const result = await resolveRecordFileInfo(data, mimeType);
 
@@ -677,7 +679,7 @@ program
                     description:
                         options.description || formatVersionSpecifier(key),
                     markers: options.markers || undefined,
-                    entitlements: [],
+                    entitlements,
                 },
             });
 
