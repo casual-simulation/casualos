@@ -638,11 +638,11 @@ export interface WatchBotTimer {
     /**
      * The function that should be called when the bot changes.
      */
-    handler: () => void | Generator<
-        InterpreterStop,
-        any,
-        InterpreterContinuation
-    >;
+    handler: (
+        bot: RuntimeBot,
+        changedTags: string[],
+        botId: string
+    ) => void | Generator<InterpreterStop, any, InterpreterContinuation>;
 }
 
 /**

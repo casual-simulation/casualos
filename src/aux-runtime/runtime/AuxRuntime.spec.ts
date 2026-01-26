@@ -2285,8 +2285,8 @@ describe('AuxRuntime', () => {
                             test3: createBot('test3', {
                                 abc: '999',
                                 test: `@
-                                    watchBot('test1', () => { os.toast("Deleted 1!"); });
-                                    watchBot('test2', () => { os.toast("Deleted 2!"); });
+                                    watchBot('test1', (b, tags, id) => { os.toast("Deleted " + id + "!"); });
+                                    watchBot('test2', (b, tags, id) => { os.toast("Deleted " + id + "!"); });
                                 `,
                             }),
                         })
@@ -2311,12 +2311,12 @@ describe('AuxRuntime', () => {
                         // watchBot() events are executed sequentially in separate promise.then() calls,
                         // so they end up in two different microtasks which mean two different batches
                         expect(events).toEqual([
-                            [toast('Deleted 1!')],
-                            [toast('Deleted 2!')],
+                            [toast('Deleted test1!')],
+                            [toast('Deleted test2!')],
                         ]);
                     } else {
                         expect(events).toEqual([
-                            [toast('Deleted 1!'), toast('Deleted 2!')],
+                            [toast('Deleted test1!'), toast('Deleted test2!')],
                         ]);
                     }
                 });
@@ -2334,7 +2334,7 @@ describe('AuxRuntime', () => {
                                 abc: '999',
                                 test: `@
                                     watchBot('test1', () => { throw new Error('abc'); });
-                                    watchBot('test2', () => { os.toast("Deleted 2!"); });
+                                    watchBot('test2', (b, tags, id) => { os.toast("Deleted " + id + "!"); });
                                 `,
                             }),
                         })
@@ -2360,9 +2360,9 @@ describe('AuxRuntime', () => {
                     if (type === 'interpreted') {
                         // watchBot() events are executed sequentially in separate promise.then() calls,
                         // so they end up in two different microtasks which mean two different batches
-                        expect(events).toEqual([[], [toast('Deleted 2!')]]);
+                        expect(events).toEqual([[], [toast('Deleted test2!')]]);
                     } else {
-                        expect(events).toEqual([[toast('Deleted 2!')]]);
+                        expect(events).toEqual([[toast('Deleted test2!')]]);
                     }
                 });
 
@@ -2841,8 +2841,8 @@ describe('AuxRuntime', () => {
                             test3: createBot('test3', {
                                 abc: '999',
                                 test: `@
-                                    watchBot('test1', () => { os.toast("Changed 1!"); });
-                                    watchBot('test2', () => { os.toast("Changed 2!"); });
+                                    watchBot('test1', (bot, tags) => { os.toast("Changed " + bot.id + "! " + tags.join(",")); });
+                                    watchBot('test2', (bot, tags) => { os.toast("Changed " + bot.id + "! " + tags.join(",")); });
                                 `,
                             }),
                         })
@@ -2875,12 +2875,15 @@ describe('AuxRuntime', () => {
                         // watchBot() events are executed sequentially in separate promise.then() calls,
                         // so they end up in two different microtasks which mean two different batches
                         expect(events).toEqual([
-                            [toast('Changed 1!')],
-                            [toast('Changed 2!')],
+                            [toast('Changed test1! abc')],
+                            [toast('Changed test2! abc')],
                         ]);
                     } else {
                         expect(events).toEqual([
-                            [toast('Changed 1!'), toast('Changed 2!')],
+                            [
+                                toast('Changed test1! abc'),
+                                toast('Changed test2! abc'),
+                            ],
                         ]);
                     }
                 });
