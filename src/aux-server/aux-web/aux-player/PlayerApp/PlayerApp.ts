@@ -370,6 +370,7 @@ export default class PlayerApp extends Vue {
     private _notAuthorizedSimulationId: string;
     showChangeLogin: boolean = false;
     private _isLoggingIn: boolean = false;
+    private _deferredPWAPrompt: any = null;
 
     showNotificationPermissionDialog: boolean = false;
     showNotificationPermissionMessage: string =
@@ -526,6 +527,13 @@ export default class PlayerApp extends Vue {
                 e.returnValue =
                     'Are you sure you want to exit? Some changes may be lost.';
             }
+        });
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent the mini-infobar from appearing on mobile
+            e.preventDefault();
+            // Store the event so it can be triggered later
+            this._deferredPWAPrompt = e;
         });
     }
 
@@ -1053,6 +1061,38 @@ export default class PlayerApp extends Vue {
                         document.exitFullscreen();
                     } else if ((<any>document).webkitExitFullscreen) {
                         (<any>document).webkitExitFullscreen();
+                    }
+                } else if (e.type === 'prompt_to_install_pwa') {
+                    if (this._deferredPWAPrompt) {
+                        // Show the install prompt
+                        this._deferredPWAPrompt.prompt();
+
+                        // Wait for the user to respond to the prompt
+                        this._deferredPWAPrompt.userChoice
+                            .then((choiceResult: any) => {
+                                // Clear the deferred prompt since it can only be used once
+                                this._deferredPWAPrompt = null;
+                                sim.helper.transaction(
+                                    asyncResult(e.taskId, {
+                                        outcome: choiceResult.outcome,
+                                        platform: choiceResult.platform,
+                                    })
+                                );
+                            })
+                            .catch((err: any) => {
+                                this._deferredPWAPrompt = null;
+                                sim.helper.transaction(
+                                    asyncError(e.taskId, err.toString())
+                                );
+                            });
+                    } else {
+                        // PWA installation not available
+                        sim.helper.transaction(
+                            asyncError(
+                                e.taskId,
+                                'PWA installation prompt is not available. This feature may not be supported on this platform or the app may not meet PWA installability criteria.'
+                            )
+                        );
                     }
                 } else if (e.type === 'share') {
                     const anyNav = navigator as any;

@@ -135,6 +135,7 @@ import {
     showJoinCode as calcShowJoinCode,
     requestFullscreen,
     exitFullscreen,
+    promptToInstallPWA as calcPromptToInstallPWA,
     html as htmlMessage,
     hideHtml as hideHtmlMessage,
     setClipboard as calcSetClipboard,
@@ -3583,6 +3584,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 showJoinCode,
                 requestFullscreenMode,
                 exitFullscreenMode,
+                promptToInstallPWA,
 
                 hideLoadingScreen,
 
@@ -6485,6 +6487,33 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function exitFullscreenMode(): ExitFullscreenAction {
         return addAction(exitFullscreen());
+    }
+
+    /**
+     * Prompts the user to install the Progressive Web App (PWA).
+     *
+     * Returns a promise that resolves once the prompt is shown. Rejects with an error if the feature is not supported (for example, on iOS devices).
+     *
+     * Note that this feature may not be available on all platforms and browsers. In particular:
+     * - iOS Safari does not support the PWA installation prompt
+     * - The prompt can only be triggered in response to user interaction
+     * - The prompt will only be shown if the app meets PWA installability criteria
+     *
+     * @example Prompt the user to install the PWA.
+     * try {
+     *     await os.promptToInstallPWA();
+     *     os.toast("Installation prompt shown!");
+     * } catch (error) {
+     *     os.toast("PWA installation is not available: " + error.message);
+     * }
+     *
+     * @dochash actions/os/system
+     * @docname os.promptToInstallPWA
+     */
+    function promptToInstallPWA(): Promise<void> {
+        const task = context.createTask();
+        const event = calcPromptToInstallPWA(task.taskId);
+        return addAsyncAction(task, event);
     }
 
     /**
