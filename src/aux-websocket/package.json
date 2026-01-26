@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-websocket",
-    "version": "3.10.6-alpha.21264937213",
+    "version": "4.0.0-alpha.21374845621",
     "description": "Websocket integration with AUX services",
     "keywords": [],
     "author": "Casual Simulation, Inc.",
@@ -37,7 +37,7 @@
         "access": "public"
     },
     "dependencies": {
-        "@casual-simulation/aux-common": "^3.10.6-alpha.21264937213",
+        "@casual-simulation/aux-common": "^4.0.0-alpha.21374845621",
         "@casual-simulation/websocket": "^3.10.3",
         "rxjs": "8.0.0-alpha.14"
     }

@@ -1,6 +1,6 @@
 {
     "name": "casualos",
-    "version": "3.10.6-alpha.21264937213",
+    "version": "4.0.0-alpha.21374845621",
     "description": "Command line interface for CasualOS.",
     "main": "./dist/index.js",
     "types": "index.d.ts",
@@ -46,14 +46,14 @@
         "commander": "12.0.0",
         "conf": "12.0.0",
         "esbuild": "0.25.11",
+        "mime": "4.1.0",
         "octokit": "^4.0.2",
         "open": "10.1.0",
         "prompts": "2.4.2",
         "simple-git": "^3.24.0",
         "tweetnacl": "1.0.3",
         "uuid": "10.0.0",
-        "zod": "4.1.12",
-        "mime": "4.1.0"
+        "zod": "4.1.12"
     },
     "devDependencies": {
         "@types/prompts": "^2.4.9"
