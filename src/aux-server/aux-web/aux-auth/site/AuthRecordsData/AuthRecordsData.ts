@@ -71,6 +71,9 @@ export default class AuthRecordsData extends Vue {
     }
 
     private _reset(page: number = 1) {
+        if (this._helper) {
+            this._helper.cancel();
+        }
         this._helper = new LoadingHelper(async (lastItem) => {
             const result = await authManager.client.listData({
                 recordName: this.recordName,

@@ -71,6 +71,9 @@ export default class AuthRecordsEvents extends Vue {
     }
 
     private _reset() {
+        if (this._helper) {
+            this._helper.cancel();
+        }
         this._helper = new LoadingHelper(async (lastItem) => {
             const result = await authManager.client.listEvents({
                 recordName: this.recordName,
