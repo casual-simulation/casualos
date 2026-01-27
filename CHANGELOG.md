@@ -14,6 +14,7 @@
 -   Fixed another CSS order issue where placeholders in input menu bots would be incorrectly positioned when focused.
 -   Fixed an issue where it was impossible to update user metadata for deployments which used a separate domain for the API from the auth frontend due to CORS errors.
 -   Fixed an issue where type parameters given to super classes (in the extends clause of a class declaration) weren't supported.
+-   Fixed an issue where quickly switching between records in the auth site could display incorrect data from the previous record.
 
 ## V3.10.5
 
