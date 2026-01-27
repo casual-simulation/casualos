@@ -26,6 +26,9 @@
 -   Added `os.promptToInstallPWA()` to allow prompting users to install the Progressive Web App (PWA).
     -   Returns a promise that resolves once the prompt is shown.
     -   Rejects with an error if not supported (e.g., on iOS devices).
+-   Added `cylinder` as a new bot form.
+    -   Renders as a cylinder standing upright on the Z axis (like a can of soda).
+    -   Use the standard rotation tags (`rotationX`, `rotationY`, `rotationZ`) to control orientation.
 
 ### :bug: Bug Fixes
 
