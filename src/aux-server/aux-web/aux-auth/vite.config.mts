@@ -3,7 +3,6 @@ import fs from 'fs';
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue2';
 import { createSvgIconsPlugin } from 'vite-plugin-svg-icons';
-import { injectHtml } from 'vite-plugin-html';
 import md from '../../plugins/markdown-plugin';
 import virtual from '@rollup/plugin-virtual';
 import {
@@ -15,6 +14,7 @@ import writeFilesPlugin from '../../plugins/write-files-plugin';
 import z from 'zod';
 import type { RemoteCausalRepoProtocol } from '@casual-simulation/aux-common';
 import basicSsl from '@vitejs/plugin-basic-ssl';
+import cspPlugin from '../../plugins/csp-plugin';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
@@ -31,9 +31,13 @@ const casualOsPackages = fs
     )
     .map((folder) => `@casual-simulation/${folder}`);
 
-const allowedChildOrigins = `http://localhost:3000 https://casualos.com https://static.casualos.com https://alpha.casualos.com https://stable.casualos.com https://auxplayer.org https://static.auxplayer.org`;
+let allowedChildOrigins = `http://localhost:3000 https://casualos.com https://static.casualos.com https://alpha.casualos.com https://stable.casualos.com https://auxplayer.org https://static.auxplayer.org`;
 
 export default defineConfig(({ command, mode }) => {
+    if (process.env.ALLOWED_CHILD_ORIGINS) {
+        allowedChildOrigins = process.env.ALLOWED_CHILD_ORIGINS;
+    }
+    const omitBuildCsp: boolean = process.env.OMIT_BUILD_CSP === 'true';
     let apiEndpoint: string | null = null;
     if (process.env.AUTH_API_ENDPOINT) {
         apiEndpoint = process.env.AUTH_API_ENDPOINT;
@@ -136,18 +140,49 @@ export default defineConfig(({ command, mode }) => {
                 symbolId: 'icon-[name]',
                 svgoOptions: false,
             }),
-            injectHtml({
-                data: {
-                    production: command === 'build',
-                    allowedChildOrigins:
-                        process.env.ALLOWED_CHILD_ORIGINS ??
-                        allowedChildOrigins,
-                    allowedFetchOrigins: apiEndpoint,
-                },
-            }),
             writeFilesPlugin({
                 files: {
                     ...policies.files,
+                },
+            }),
+            cspPlugin({
+                filter: (html, ctx) =>
+                    !omitBuildCsp && ctx.path.endsWith('iframe.html'),
+                csp: {
+                    'default-src': "'self'",
+                    'child-src': allowedChildOrigins,
+                    'script-src': [
+                        "'self'",
+                        command !== 'build' ? `'unsafe-eval'` : '',
+                    ].filter((s) => s.length > 0),
+                    'connect-src': ["'self'", apiEndpoint || ''].filter(
+                        (s) => s.length > 0
+                    ),
+                },
+            }),
+            cspPlugin({
+                filter: (html, ctx) =>
+                    !omitBuildCsp && ctx.path.endsWith('index.html'),
+                csp: {
+                    'default-src': "'self' https://js.stripe.com",
+                    'img-src': "'self' https://*",
+                    'style-src': "'self' 'unsafe-inline'",
+                    'child-src': "'self'",
+                    'frame-src': 'https://js.stripe.com',
+                    'script-src': [
+                        "'self'",
+                        'https://js.stripe.com',
+                        'https://scripts.simpleanalyticscdn.com',
+                        "'unsafe-inline'",
+                        command !== 'build' ? `'unsafe-eval'` : '',
+                    ].filter((s) => s.length > 0),
+                    'connect-src': [
+                        "'self'",
+                        apiEndpoint || '',
+                        'https://scripts.simpleanalyticscdn.com',
+                        'http://localhost:9000',
+                        '*.s3.amazonaws.com',
+                    ].filter((s) => s.length > 0),
                 },
             }),
             process.argv.some((a) => a === '--ssl') ? basicSsl() : [],
