@@ -13,6 +13,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where generic type parameters in function calls and new expressions were not removed during transpilation, causing them to be interpreted as comparison operators.
+-   Fixed an issue where type specifieres were not supported for rest parameters.
 
 ## V4.0.0
 
