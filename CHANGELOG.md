@@ -35,6 +35,7 @@
 -   Fixed another CSS order issue where placeholders in input menu bots would be incorrectly positioned when focused.
 -   Fixed an issue where it was impossible to update user metadata for deployments which used a separate domain for the API from the auth frontend due to CORS errors.
 -   Fixed an issue where type parameters given to super classes (in the extends clause of a class declaration) weren't supported.
+-   Fixed an issue where generic type parameters in function calls and new expressions were not removed during transpilation, causing them to be interpreted as comparison operators.
 
 ## V3.10.5
 

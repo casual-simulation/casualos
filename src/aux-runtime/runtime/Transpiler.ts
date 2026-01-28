@@ -193,6 +193,16 @@ export const TypeScriptVisistorKeys: { [nodeType: string]: string[] } = {
         ...(VisitorKeys as any).PropertyDefinition,
         'typeAnnotation',
     ],
+    CallExpression: [
+        ...VisitorKeys.CallExpression,
+        'typeArguments',
+        'typeParameters',
+    ],
+    NewExpression: [
+        ...VisitorKeys.NewExpression,
+        'typeArguments',
+        'typeParameters',
+    ],
 };
 
 /**
