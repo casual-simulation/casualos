@@ -604,6 +604,10 @@ program
         '-k, --key <key>',
         'The session key to use for the session. If omitted, then the current session key will be used.'
     )
+    .option(
+        '--raw',
+        'Whether to output the raw response from the server instead of formatted output.'
+    )
     .description('Upload a package to CasualOS.')
     .action(async (options) => {
         if (!options.record) {
@@ -620,6 +624,7 @@ program
             process.exit(1);
         }
 
+        const raw = options.raw;
         const opts = program.optsWithGlobals();
         const endpoint = await getEndpoint(opts.endpoint);
         const sessionKey = opts.key ?? (await getOrRefreshSessionKey(endpoint));
@@ -664,7 +669,9 @@ program
             );
             process.exit(1);
         } else {
-            console.log('Uploading package...');
+            if (!raw) {
+                console.log('Uploading package...');
+            }
             const recordPackageResult = await client.recordPackageVersion({
                 recordName: record,
                 item: {
@@ -703,7 +710,11 @@ program
                 );
                 process.exit(1);
             }
-            console.log('Package uploaded successfully!');
+            if (!raw) {
+                console.log('Package uploaded successfully!');
+            } else {
+                console.log(JSON.stringify(recordPackageResult));
+            }
         }
     });
 
