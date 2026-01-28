@@ -1,8 +1,23 @@
 # CasualOS Changelog
 
+## V4.0.1
+
+#### Date: 1/28/2026
+
+### :rocket: Features
+
+-   Improved the `upload-package` command to accept `major`, `minor`, and `patch` as options for the new package version.
+    -   Doing so will cause the CLI to lookup the most recent package version and increment the version number based on the option provided.
+    -   e.g. If the latest version is `1.0.0` and you specify `minor`, then the new version will be `1.1.0`.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where generic type parameters in function calls and new expressions were not removed during transpilation, causing them to be interpreted as comparison operators.
+-   Fixed an issue where type specifieres were not supported for rest parameters.
+
 ## V4.0.0
 
-#### Date: 1/26/2026
+#### Date: 1/27/2026
 
 ### :boom: Breaking Changes
 
@@ -26,6 +41,9 @@
 -   Added `os.promptToInstallPWA()` to allow prompting users to install the Progressive Web App (PWA).
     -   Returns a promise that resolves once the prompt is shown.
     -   Rejects with an error if not supported (e.g., on iOS devices).
+-   Added `cylinder` as a new bot form.
+    -   Renders as a cylinder standing upright on the Z axis (like a can of soda).
+    -   Use the standard rotation tags (`rotationX`, `rotationY`, `rotationZ`) to control orientation.
 
 ### :bug: Bug Fixes
 

@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/vue-shortkey",
-    "version": "3.2.7",
+    "version": "4.0.0",
     "description": "Plugin for VueJS 2.x that accepts shortcuts globally",
     "keywords": [],
     "author": "Casual Simulation, Inc.",

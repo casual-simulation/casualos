@@ -891,6 +891,7 @@ export function botCalculationContextTests(
             ['codeHint'],
             ['spherePortal'],
             ['light'],
+            ['cylinder'],
         ];
         const tagCases = ['auxForm', 'form'];
 

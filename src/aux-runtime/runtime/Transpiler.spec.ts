@@ -2102,6 +2102,76 @@ describe('Transpiler', () => {
                 ).toBe(`let myClass = class Test extends A {}`);
             });
 
+            it('should support type specifiers for rest parameters', () => {
+                const transpiler = new Transpiler();
+
+                expect(
+                    transpiler.transpile(
+                        `function abc(...params: number[]): void {}`
+                    )
+                ).toBe(`function abc(...params) {}`);
+
+                expect(
+                    transpiler.transpile(`function abc(...params: any) {}`)
+                ).toBe(`function abc(...params) {}`);
+            });
+
+            it('should remove generic type arguments from function calls', () => {
+                const transpiler = new Transpiler();
+
+                expect(
+                    transpiler.transpile(
+                        `const result = myFunctionCall<number>(param1);`
+                    )
+                ).toBe(`const result = myFunctionCall(param1);`);
+
+                expect(
+                    transpiler.transpile(
+                        `const result = myFunc<string, number>(a, b);`
+                    )
+                ).toBe(`const result = myFunc(a, b);`);
+
+                expect(
+                    transpiler.transpile(
+                        `const result = myFunc<Array<string>>(param);`
+                    )
+                ).toBe(`const result = myFunc(param);`);
+
+                expect(
+                    transpiler.transpile(
+                        `const result = obj.method<number>(param);`
+                    )
+                ).toBe(`const result = obj.method(param);`);
+
+                expect(
+                    transpiler.transpile(
+                        `const result = obj.method1<number>(a).method2<string>(b);`
+                    )
+                ).toBe(`const result = obj.method1(a).method2(b);`);
+            });
+
+            it('should remove generic type arguments from new expressions', () => {
+                const transpiler = new Transpiler();
+
+                expect(
+                    transpiler.transpile(
+                        `const instance = new MyClass<number>(param);`
+                    )
+                ).toBe(`const instance = new MyClass(param);`);
+
+                expect(
+                    transpiler.transpile(
+                        `const instance = new MyClass<string, number>(a, b);`
+                    )
+                ).toBe(`const instance = new MyClass(a, b);`);
+
+                expect(
+                    transpiler.transpile(
+                        `const instance = new MyClass<Array<string>>(param);`
+                    )
+                ).toBe(`const instance = new MyClass(param);`);
+            });
+
             it('should remove the abstract keyword from classes', () => {
                 const transpiler = new Transpiler();
                 expect(transpiler.transpile(`abstract class Test {}`)).toBe(
