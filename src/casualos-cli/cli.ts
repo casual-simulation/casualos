@@ -117,6 +117,10 @@ program
     .option(
         '--origin <origin>',
         'The HTTP origin to use for requests. If not specified, the origin associated with the endpoint will be used. If none is available, then the endpoint is used.'
+    )
+    .option(
+        '--session-key <sessionKey>',
+        'The session key to use for the session. If not specified, then the current session key will be used.'
     );
 
 program
@@ -491,10 +495,6 @@ program
         'The markers to associate with the file.'
     )
     .option('-d, --description <description>', 'The description of the file.')
-    .option(
-        '-k, --key <key>',
-        'The session key to use for the session. If omitted, then the current session key will be used.'
-    )
     .description('Upload a file record to CasualOS.')
     .action(async (options) => {
         if (!options.record) {
