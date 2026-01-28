@@ -628,10 +628,12 @@ program
         const raw = options.raw;
         const opts = program.optsWithGlobals();
         const endpoint = await getEndpoint(opts.endpoint);
-        const sessionKey = opts.key ?? (await getOrRefreshSessionKey(endpoint));
+        const sessionKey =
+            opts.key ?? (await getOrRefreshSessionKey(endpoint, raw));
         const parsedSessionKey = parseSessionKey(sessionKey);
         const userId = parsedSessionKey?.[0] ?? '';
-        const client = await getClient(endpoint, sessionKey);
+        const client = await getClient(endpoint, sessionKey, raw);
+        const record = options.record.replace('{userId}', userId);
         const address = options.address;
 
         let data: Uint8Array;
@@ -676,13 +678,18 @@ program
                     );
                 } else {
                     if (!raw) {
-                        console.log('No existing package found. Starting at version 0.0.0');
+                        console.log(
+                            'No existing package found. Starting at version 0.0.0'
+                        );
                         key = { major: 0, minor: 0, patch: 0, tag: null };
                     }
                 }
             } else {
                 if (!raw) {
-                    console.log('Latest version:', formatVersionSpecifier(latestResult.item.key));
+                    console.log(
+                        'Latest version:',
+                        formatVersionSpecifier(latestResult.item.key)
+                    );
                 }
                 key = latestResult.item.key;
             }
@@ -704,7 +711,7 @@ program
         }
 
         const entitlements = parseEntitlements(options.entitlements);
-        
+
         const result = await resolveRecordFileInfo(data, mimeType);
 
         if (result.success === false) {
@@ -748,7 +755,10 @@ program
                 result.hash
             );
 
-            if (uploadResult.success === false && uploadResult.errorCode !== 'file_already_exists') {
+            if (
+                uploadResult.success === false &&
+                uploadResult.errorCode !== 'file_already_exists'
+            ) {
                 console.error(
                     `Could not upload package (${uploadResult.errorCode}): ${uploadResult.errorMessage}`
                 );
@@ -757,7 +767,12 @@ program
             if (!raw) {
                 console.log('Package uploaded successfully!');
             } else {
-                console.log(JSON.stringify(recordPackageResult));
+                console.log(
+                    JSON.stringify({
+                        ...recordPackageResult,
+                        key,
+                    })
+                );
             }
         }
     });
@@ -1560,8 +1575,10 @@ async function callProcedure(
     }
 }
 
-async function getClient(endpoint: string, key: string) {
-    printStatus(endpoint);
+async function getClient(endpoint: string, key: string, silent = false) {
+    if (!silent) {
+        printStatus(endpoint);
+    }
 
     const client = createRecordsClient(endpoint);
     if (key) {
@@ -1571,14 +1588,14 @@ async function getClient(endpoint: string, key: string) {
     return client;
 }
 
-async function getOrRefreshSessionKey(endpoint: string) {
+async function getOrRefreshSessionKey(endpoint: string, silent = false) {
     const key = getSessionKey(endpoint);
 
     const expiration = getSessionKeyExpiration(key);
     if (isExpired(expiration)) {
         return null;
     } else if (willExpire(expiration)) {
-        return await replaceSessionKey(endpoint, key);
+        return await replaceSessionKey(endpoint, key, silent);
     }
 
     return key;
@@ -1753,7 +1770,11 @@ async function loginWithPrivo(client: ReturnType<typeof createRecordsClient>) {
     return null;
 }
 
-async function replaceSessionKey(endpoint: string, key: string) {
+async function replaceSessionKey(
+    endpoint: string,
+    key: string,
+    silent = false
+) {
     const client = await getClient(endpoint, key);
 
     const result = await client.replaceSession(undefined, {
@@ -1762,14 +1783,18 @@ async function replaceSessionKey(endpoint: string, key: string) {
 
     if (result.success === true) {
         saveSessionKey(endpoint, result.sessionKey);
-        console.log('Session key replaced!');
+        if (!silent) {
+            console.log('Session key replaced!');
+        }
 
         return result.sessionKey;
     }
 
     saveSessionKey(endpoint, null);
-    console.log('Failed to replace session key:');
-    console.log(result);
+    if (!silent) {
+        console.log('Failed to replace session key:');
+        console.log(result);
+    }
     return null;
 }
 
@@ -1778,7 +1803,6 @@ async function getEndpoint(endpoint: string) {
         return endpoint;
     }
     let savedEndpoint = getCurrentEndpoint();
-    console.log('saved endpoint', savedEndpoint);
     if (!savedEndpoint) {
         savedEndpoint = await updateEndpoint();
     }
