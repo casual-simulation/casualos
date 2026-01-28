@@ -203,6 +203,7 @@ export const TypeScriptVisistorKeys: { [nodeType: string]: string[] } = {
         'typeArguments',
         'typeParameters',
     ],
+    RestElement: [...VisitorKeys.RestElement, 'typeAnnotation'],
 };
 
 /**

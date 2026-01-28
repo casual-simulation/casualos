@@ -2102,6 +2102,20 @@ describe('Transpiler', () => {
                 ).toBe(`let myClass = class Test extends A {}`);
             });
 
+            it('should support type specifiers for rest parameters', () => {
+                const transpiler = new Transpiler();
+
+                expect(
+                    transpiler.transpile(
+                        `function abc(...params: number[]): void {}`
+                    )
+                ).toBe(`function abc(...params) {}`);
+
+                expect(
+                    transpiler.transpile(`function abc(...params: any) {}`)
+                ).toBe(`function abc(...params) {}`);
+            });
+
             it('should remove generic type arguments from function calls', () => {
                 const transpiler = new Transpiler();
 
