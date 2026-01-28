@@ -588,7 +588,7 @@ program
     )
     .option('-a, --address <address>', 'The address to upload the package to.')
     .option(
-        '-v, --version <version>',
+        '-k, --key <key>',
         'The version to upload. Must be in the format X.Y.Z or one of "major", "minor", or "patch". If given as "major", "minor", or "patch", the version will be incremented based on the latest version.'
     )
     .option('-f, --file <file>', 'The file to upload.')
@@ -603,10 +603,6 @@ program
         'The entitlements for the package.'
     )
     .option(
-        '-k, --key <key>',
-        'The session key to use for the session. If omitted, then the current session key will be used.'
-    )
-    .option(
         '--raw',
         'Whether to output the raw response from the server instead of formatted output.'
     )
@@ -618,8 +614,8 @@ program
         } else if (!options.address) {
             console.error('Address is required.');
             process.exit(1);
-        } else if (!options.version) {
-            console.error('Version is required.');
+        } else if (!options.key) {
+            console.error('Package key is required.');
             process.exit(1);
         } else if (!options.json && !options.file) {
             console.error('One of --json or --file is required.');
@@ -654,13 +650,13 @@ program
 
         let key: PackageRecordVersionKey;
 
-        const parsedKey = parseVersionNumber(options.version);
+        const parsedKey = parseVersionNumber(options.key);
         if (typeof parsedKey?.major === 'number') {
             key = parsedKey;
         } else if (
-            options.version === 'major' ||
-            options.version === 'minor' ||
-            options.version === 'patch'
+            options.key === 'major' ||
+            options.key === 'minor' ||
+            options.key === 'patch'
         ) {
             // fetch the latest version
             const latestResult = await client.getPackageVersion({
@@ -692,11 +688,11 @@ program
                 key = latestResult.item.key;
             }
 
-            if (options.version === 'major') {
+            if (options.key === 'major') {
                 key.major = (key.major ?? 0) + 1;
-            } else if (options.version === 'minor') {
+            } else if (options.key === 'minor') {
                 key.minor = (key.minor ?? 0) + 1;
-            } else if (options.version === 'patch') {
+            } else if (options.key === 'patch') {
                 key.patch = (key.patch ?? 0) + 1;
             }
         }
