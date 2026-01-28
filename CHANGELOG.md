@@ -4,6 +4,12 @@
 
 #### Date: TBD
 
+### :rocket: Features
+
+-   Improved the `upload-package` command to accept `major`, `minor`, and `patch` as options for the new package version.
+    -   Doing so will cause the CLI to lookup the most recent package version and increment the version number based on the option provided.
+    -   e.g. If the latest version is `1.0.0` and you specify `minor`, then the new version will be `1.1.0`.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where generic type parameters in function calls and new expressions were not removed during transpilation, causing them to be interpreted as comparison operators.
