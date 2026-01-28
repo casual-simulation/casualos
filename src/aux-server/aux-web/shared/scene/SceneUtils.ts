@@ -64,6 +64,7 @@ import {
     SphereGeometry,
     Light,
     HemisphereLight,
+    CylinderGeometry,
 } from '@casual-simulation/three';
 import type {
     BotCalculationContext,
@@ -286,6 +287,16 @@ export function createCircle(size: number, uvAspectRatio: number = 1): Mesh {
     circle.receiveShadow = false;
     (circle.material as any)[DEFAULT_TRANSPARENT] = true;
     return circle;
+}
+
+export function createCylinder(size: number): Mesh {
+    const geometry = new CylinderGeometry(size * 0.5, size * 0.5, size, 24);
+    let material = baseAuxMeshMaterial();
+
+    const cylinder = new Mesh(geometry, material);
+    cylinder.castShadow = true;
+    cylinder.receiveShadow = false;
+    return cylinder;
 }
 
 function adjustUVs(geometry: BufferGeometry, aspectRatio: number) {

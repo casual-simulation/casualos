@@ -61,6 +61,7 @@ import type {
     AddressType,
     CompleteLoginSuccess,
     CompleteOpenIDLoginSuccess,
+    PackageRecordVersionKey,
 } from '@casual-simulation/aux-records';
 import {
     formatVersionSpecifier,
@@ -587,7 +588,7 @@ program
     .option('-a, --address <address>', 'The address to upload the package to.')
     .option(
         '-v, --version <version>',
-        'The version to upload. Must be in the format X.Y.Z'
+        'The version to upload. Must be in the format X.Y.Z or one of "major", "minor", or "patch". If given as "major", "minor", or "patch", the version will be incremented based on the latest version.'
     )
     .option('-f, --file <file>', 'The file to upload.')
     .option('--json <json>', 'The JSON content of the file to upload.')
@@ -603,6 +604,10 @@ program
     .option(
         '-k, --key <key>',
         'The session key to use for the session. If omitted, then the current session key will be used.'
+    )
+    .option(
+        '--raw',
+        'Whether to output the raw response from the server instead of formatted output.'
     )
     .description('Upload a package to CasualOS.')
     .action(async (options) => {
@@ -620,12 +625,16 @@ program
             process.exit(1);
         }
 
+        const raw = options.raw;
         const opts = program.optsWithGlobals();
         const endpoint = await getEndpoint(opts.endpoint);
-        const sessionKey = opts.key ?? (await getOrRefreshSessionKey(endpoint));
+        const sessionKey =
+            opts.key ?? (await getOrRefreshSessionKey(endpoint, raw));
         const parsedSessionKey = parseSessionKey(sessionKey);
         const userId = parsedSessionKey?.[0] ?? '';
-        const client = await getClient(endpoint, sessionKey);
+        const client = await getClient(endpoint, sessionKey, raw);
+        const record = options.record.replace('{userId}', userId);
+        const address = options.address;
 
         let data: Uint8Array;
         let mimeType: string;
@@ -645,7 +654,54 @@ program
             process.exit(1);
         }
 
-        const key = parseVersionNumber(options.version);
+        let key: PackageRecordVersionKey;
+
+        const parsedKey = parseVersionNumber(options.version);
+        if (typeof parsedKey?.major === 'number') {
+            key = parsedKey;
+        } else if (
+            options.version === 'major' ||
+            options.version === 'minor' ||
+            options.version === 'patch'
+        ) {
+            // fetch the latest version
+            const latestResult = await client.getPackageVersion({
+                recordName: record,
+                address: address,
+            });
+
+            if (latestResult.success === false) {
+                if (latestResult.errorCode !== 'not_found') {
+                    console.error(
+                        `Could not fetch latest package version (${latestResult.errorCode}): ${latestResult.errorMessage}`,
+                        latestResult
+                    );
+                } else {
+                    if (!raw) {
+                        console.log(
+                            'No existing package found. Starting at version 0.0.0'
+                        );
+                        key = { major: 0, minor: 0, patch: 0, tag: null };
+                    }
+                }
+            } else {
+                if (!raw) {
+                    console.log(
+                        'Latest version:',
+                        formatVersionSpecifier(latestResult.item.key)
+                    );
+                }
+                key = latestResult.item.key;
+            }
+
+            if (options.version === 'major') {
+                key.major = (key.major ?? 0) + 1;
+            } else if (options.version === 'minor') {
+                key.minor = (key.minor ?? 0) + 1;
+            } else if (options.version === 'patch') {
+                key.patch = (key.patch ?? 0) + 1;
+            }
+        }
 
         if (typeof key?.major !== 'number') {
             console.error(
@@ -655,7 +711,7 @@ program
         }
 
         const entitlements = parseEntitlements(options.entitlements);
-        const record = options.record.replace('{userId}', userId);
+
         const result = await resolveRecordFileInfo(data, mimeType);
 
         if (result.success === false) {
@@ -664,11 +720,13 @@ program
             );
             process.exit(1);
         } else {
-            console.log('Uploading package...');
+            if (!raw) {
+                console.log(`Uploading ${formatVersionSpecifier(key)}...`);
+            }
             const recordPackageResult = await client.recordPackageVersion({
                 recordName: record,
                 item: {
-                    address: options.address,
+                    address: address,
                     key: key,
                     auxFileRequest: {
                         fileByteLength: result.byteLength,
@@ -697,13 +755,25 @@ program
                 result.hash
             );
 
-            if (uploadResult.success === false) {
+            if (
+                uploadResult.success === false &&
+                uploadResult.errorCode !== 'file_already_exists'
+            ) {
                 console.error(
                     `Could not upload package (${uploadResult.errorCode}): ${uploadResult.errorMessage}`
                 );
                 process.exit(1);
             }
-            console.log('Package uploaded successfully!');
+            if (!raw) {
+                console.log('Package uploaded successfully!');
+            } else {
+                console.log(
+                    JSON.stringify({
+                        ...recordPackageResult,
+                        key,
+                    })
+                );
+            }
         }
     });
 
@@ -1505,8 +1575,10 @@ async function callProcedure(
     }
 }
 
-async function getClient(endpoint: string, key: string) {
-    printStatus(endpoint);
+async function getClient(endpoint: string, key: string, silent = false) {
+    if (!silent) {
+        printStatus(endpoint);
+    }
 
     const client = createRecordsClient(endpoint);
     if (key) {
@@ -1516,14 +1588,14 @@ async function getClient(endpoint: string, key: string) {
     return client;
 }
 
-async function getOrRefreshSessionKey(endpoint: string) {
+async function getOrRefreshSessionKey(endpoint: string, silent = false) {
     const key = getSessionKey(endpoint);
 
     const expiration = getSessionKeyExpiration(key);
     if (isExpired(expiration)) {
         return null;
     } else if (willExpire(expiration)) {
-        return await replaceSessionKey(endpoint, key);
+        return await replaceSessionKey(endpoint, key, silent);
     }
 
     return key;
@@ -1698,7 +1770,11 @@ async function loginWithPrivo(client: ReturnType<typeof createRecordsClient>) {
     return null;
 }
 
-async function replaceSessionKey(endpoint: string, key: string) {
+async function replaceSessionKey(
+    endpoint: string,
+    key: string,
+    silent = false
+) {
     const client = await getClient(endpoint, key);
 
     const result = await client.replaceSession(undefined, {
@@ -1707,14 +1783,18 @@ async function replaceSessionKey(endpoint: string, key: string) {
 
     if (result.success === true) {
         saveSessionKey(endpoint, result.sessionKey);
-        console.log('Session key replaced!');
+        if (!silent) {
+            console.log('Session key replaced!');
+        }
 
         return result.sessionKey;
     }
 
     saveSessionKey(endpoint, null);
-    console.log('Failed to replace session key:');
-    console.log(result);
+    if (!silent) {
+        console.log('Failed to replace session key:');
+        console.log(result);
+    }
     return null;
 }
 
@@ -1723,7 +1803,6 @@ async function getEndpoint(endpoint: string) {
         return endpoint;
     }
     let savedEndpoint = getCurrentEndpoint();
-    console.log('saved endpoint', savedEndpoint);
     if (!savedEndpoint) {
         savedEndpoint = await updateEndpoint();
     }
