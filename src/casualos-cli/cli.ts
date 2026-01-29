@@ -594,12 +594,12 @@ program
     .option('-f, --file <file>', 'The file to upload.')
     .option('--json <json>', 'The JSON content of the file to upload.')
     .option(
-        '-m, --markers <...markers>',
+        '-m, --markers <markers>',
         'The markers to associate with the package.'
     )
     .option('-d, --description <description>', 'The description of the file.')
     .option(
-        '-e, --entitlements <...entitlements>',
+        '-e, --entitlements <entitlements>',
         'The entitlements for the package.'
     )
     .option(
@@ -705,8 +705,10 @@ program
             process.exit(1);
         }
 
-        const entitlements = parseEntitlements(options.entitlements);
-
+        const markers = options.markers?.split(' ');
+        const entitlements = parseEntitlements(
+            options.entitlements?.split(' ')
+        );
         const result = await resolveRecordFileInfo(data, mimeType);
 
         if (result.success === false) {
@@ -731,8 +733,8 @@ program
                     },
                     description:
                         options.description || formatVersionSpecifier(key),
-                    markers: options.markers || undefined,
-                    entitlements,
+                    markers: markers || undefined,
+                    entitlements: entitlements || undefined,
                 },
             });
 

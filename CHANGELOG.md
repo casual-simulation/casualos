@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V4.0.4
+
+#### Date: 1/29/2026
+
+### :bug: Bug Fixes
+
+-   Fixed `upload-package` to be able to handle multiple markers and entitlements.
+
 ## V4.0.3
 
 #### Date: 1/29/2026
