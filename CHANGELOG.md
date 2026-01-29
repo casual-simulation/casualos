@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V4.0.3
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed `upload-package` to properly handle when a previous package version doesn't exist.
+
 ## V4.0.2
 
 #### Date: 1/29/2026
