@@ -1,5 +1,19 @@
 # CasualOS Changelog
 
+## V4.0.2
+
+#### Date: 1/29/2026
+
+### :boom: Breaking Changes
+
+-   Changed the options for `upload-package` and `upload-file` commands:
+    -   `-k, --key` -> `--session-key`
+    -   `-v, --version` -> `-k, --key` (`upload-package` only)
+
+### :rocket: Features
+
+-   Improved the CLI to support passing in a custom HTTP origin via the `--origin` option.
+
 ## V4.0.1
 
 #### Date: 1/28/2026

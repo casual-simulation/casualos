@@ -17,7 +17,6 @@
  */
 import prompts from 'prompts';
 import { Command } from 'commander';
-import type { RecordsClient } from '@casual-simulation/aux-records/RecordsClient';
 import { Mime } from 'mime';
 
 /* eslint-disable casualos/no-non-type-imports */
@@ -101,6 +100,12 @@ const program = new Command();
 
 declare const GIT_TAG: string;
 
+interface ClientOpts {
+    endpoint?: string;
+    origin?: string;
+    sessionKey?: string;
+}
+
 program
     .name('casualos')
     .description('A CLI for CasualOS')
@@ -108,6 +113,14 @@ program
     .option(
         '-e, --endpoint <url>',
         'The endpoint to use for queries. Can be used to override the current endpoint.'
+    )
+    .option(
+        '--origin <origin>',
+        'The HTTP origin to use for requests. If not specified, the origin associated with the endpoint will be used. If none is available, then the endpoint is used.'
+    )
+    .option(
+        '--session-key <sessionKey>',
+        'The session key to use for the session. If not specified, then the current session key will be used.'
     );
 
 program
@@ -115,8 +128,7 @@ program
     .description('Login to the CasualOS API')
     .action(async () => {
         const opts = program.optsWithGlobals();
-        const endpoint = await getEndpoint(opts.endpoint);
-        const client = await getClient(endpoint, getSessionKey(endpoint));
+        const client = await getClient(opts);
         await login(client);
     });
 
@@ -195,11 +207,7 @@ program
     )
     .action(async (procedure, input, options) => {
         const opts = program.optsWithGlobals();
-        const endpoint = await getEndpoint(opts.endpoint);
-        const client = await getClient(
-            endpoint,
-            opts.key ?? (await getOrRefreshSessionKey(endpoint))
-        );
+        const client = await getClient(opts);
 
         await query(client, procedure, input);
     });
@@ -218,12 +226,11 @@ program
     .action(async (options) => {
         const opts = program.optsWithGlobals();
         const endpoint = await getEndpoint(opts.endpoint);
-        const key = opts.key ?? (await getOrRefreshSessionKey(endpoint));
-        const client = await getClient(endpoint, key);
+        const client = await getClient(opts);
 
         let userId: string = null;
-        if (key) {
-            const parseResult = parseSessionKey(key);
+        if (client.sessionKey) {
+            const parseResult = parseSessionKey(client.sessionKey);
             if (parseResult) {
                 userId = parseResult[0];
             }
@@ -488,10 +495,6 @@ program
         'The markers to associate with the file.'
     )
     .option('-d, --description <description>', 'The description of the file.')
-    .option(
-        '-k, --key <key>',
-        'The session key to use for the session. If omitted, then the current session key will be used.'
-    )
     .description('Upload a file record to CasualOS.')
     .action(async (options) => {
         if (!options.record) {
@@ -503,11 +506,9 @@ program
         }
 
         const opts = program.optsWithGlobals();
-        const endpoint = await getEndpoint(opts.endpoint);
-        const sessionKey = opts.key ?? (await getOrRefreshSessionKey(endpoint));
-        const parsedSessionKey = parseSessionKey(sessionKey);
+        const client = await getClient(opts);
+        const parsedSessionKey = parseSessionKey(client.sessionKey);
         const userId = parsedSessionKey?.[0] ?? '';
-        const client = await getClient(endpoint, sessionKey);
 
         let data: Uint8Array;
         let mimeType: string;
@@ -587,7 +588,7 @@ program
     )
     .option('-a, --address <address>', 'The address to upload the package to.')
     .option(
-        '-v, --version <version>',
+        '-k, --key <key>',
         'The version to upload. Must be in the format X.Y.Z or one of "major", "minor", or "patch". If given as "major", "minor", or "patch", the version will be incremented based on the latest version.'
     )
     .option('-f, --file <file>', 'The file to upload.')
@@ -602,10 +603,6 @@ program
         'The entitlements for the package.'
     )
     .option(
-        '-k, --key <key>',
-        'The session key to use for the session. If omitted, then the current session key will be used.'
-    )
-    .option(
         '--raw',
         'Whether to output the raw response from the server instead of formatted output.'
     )
@@ -617,8 +614,8 @@ program
         } else if (!options.address) {
             console.error('Address is required.');
             process.exit(1);
-        } else if (!options.version) {
-            console.error('Version is required.');
+        } else if (!options.key) {
+            console.error('Package key is required.');
             process.exit(1);
         } else if (!options.json && !options.file) {
             console.error('One of --json or --file is required.');
@@ -627,14 +624,11 @@ program
 
         const raw = options.raw;
         const opts = program.optsWithGlobals();
-        const endpoint = await getEndpoint(opts.endpoint);
-        const sessionKey =
-            opts.key ?? (await getOrRefreshSessionKey(endpoint, raw));
-        const parsedSessionKey = parseSessionKey(sessionKey);
-        const userId = parsedSessionKey?.[0] ?? '';
-        const client = await getClient(endpoint, sessionKey, raw);
-        const record = options.record.replace('{userId}', userId);
+        const client = await getClient(opts, raw);
         const address = options.address;
+        const parsedSessionKey = parseSessionKey(client.sessionKey);
+        const userId = parsedSessionKey?.[0] ?? '';
+        const record = options.record.replace('{userId}', userId);
 
         let data: Uint8Array;
         let mimeType: string;
@@ -656,13 +650,13 @@ program
 
         let key: PackageRecordVersionKey;
 
-        const parsedKey = parseVersionNumber(options.version);
+        const parsedKey = parseVersionNumber(options.key);
         if (typeof parsedKey?.major === 'number') {
             key = parsedKey;
         } else if (
-            options.version === 'major' ||
-            options.version === 'minor' ||
-            options.version === 'patch'
+            options.key === 'major' ||
+            options.key === 'minor' ||
+            options.key === 'patch'
         ) {
             // fetch the latest version
             const latestResult = await client.getPackageVersion({
@@ -694,11 +688,11 @@ program
                 key = latestResult.item.key;
             }
 
-            if (options.version === 'major') {
+            if (options.key === 'major') {
                 key.major = (key.major ?? 0) + 1;
-            } else if (options.version === 'minor') {
+            } else if (options.key === 'minor') {
                 key.minor = (key.minor ?? 0) + 1;
-            } else if (options.version === 'patch') {
+            } else if (options.key === 'patch') {
                 key.patch = (key.patch ?? 0) + 1;
             }
         }
@@ -1529,14 +1523,7 @@ async function callProcedure(
     query: any
 ) {
     while (true) {
-        const result = await client.callProcedure(
-            operation,
-            input,
-            {
-                headers: getHeaders(client),
-            },
-            query
-        );
+        const result = await client.callProcedure(operation, input, query);
 
         if (result.success === false && result.errorCode === 'not_logged_in') {
             const loginResponse = await prompts({
@@ -1575,27 +1562,41 @@ async function callProcedure(
     }
 }
 
-async function getClient(endpoint: string, key: string, silent = false) {
+async function getClient(opts: ClientOpts, silent = false) {
+    const client = await getClientWithoutSessionKey(opts, silent);
+    if (opts.sessionKey) {
+        client.sessionKey = opts.sessionKey;
+    } else {
+        client.sessionKey = await getOrRefreshSessionKey(
+            {
+                endpoint: client.endpoint,
+                origin: opts.origin,
+            },
+            silent
+        );
+    }
+    return client;
+}
+
+async function getClientWithoutSessionKey(opts: ClientOpts, silent = false) {
+    const endpoint = await getEndpoint(opts.endpoint);
     if (!silent) {
         printStatus(endpoint);
     }
 
     const client = createRecordsClient(endpoint);
-    if (key) {
-        client.sessionKey = key;
-    }
-    Object.assign(client.headers, getHeaders(client));
+    Object.assign(client.headers, getHeaders(endpoint, opts));
     return client;
 }
 
-async function getOrRefreshSessionKey(endpoint: string, silent = false) {
-    const key = getSessionKey(endpoint);
+async function getOrRefreshSessionKey(opts: ClientOpts, silent = false) {
+    const key = getSessionKey(opts.endpoint);
 
     const expiration = getSessionKeyExpiration(key);
     if (isExpired(expiration)) {
         return null;
     } else if (willExpire(expiration)) {
-        return await replaceSessionKey(endpoint, key, silent);
+        return await replaceSessionKey(opts, key, silent);
     }
 
     return key;
@@ -1668,15 +1669,10 @@ async function loginWithCode(
     address: string,
     addressType: AddressType
 ) {
-    const result = await client.requestLogin(
-        {
-            address: address,
-            addressType: addressType,
-        },
-        {
-            headers: getHeaders(client),
-        }
-    );
+    const result = await client.requestLogin({
+        address: address,
+        addressType: addressType,
+    });
 
     if (result.success) {
         const response = await prompts({
@@ -1688,16 +1684,11 @@ async function loginWithCode(
 
         const code = response.code;
 
-        const loginResult = await client.completeLogin(
-            {
-                code: code,
-                requestId: result.requestId,
-                userId: result.userId,
-            },
-            {
-                headers: getHeaders(client),
-            }
-        );
+        const loginResult = await client.completeLogin({
+            code: code,
+            requestId: result.requestId,
+            userId: result.userId,
+        });
 
         if (loginResult.success === true) {
             saveLoginResult(client, loginResult);
@@ -1718,12 +1709,7 @@ async function loginWithCode(
 }
 
 async function loginWithPrivo(client: ReturnType<typeof createRecordsClient>) {
-    const result = await client.requestPrivoLogin(
-        {},
-        {
-            headers: getHeaders(client),
-        }
-    );
+    const result = await client.requestPrivoLogin({});
 
     if (result.success === false) {
         saveLoginResult(client, null);
@@ -1738,14 +1724,9 @@ async function loginWithPrivo(client: ReturnType<typeof createRecordsClient>) {
     const startTime = Date.now();
     const timeout = 1000 * 60 * 5; // 5 minutes
     while (Date.now() - startTime < timeout) {
-        const loginResult = await client.completeOAuthLogin(
-            {
-                requestId: result.requestId,
-            },
-            {
-                headers: getHeaders(client),
-            }
-        );
+        const loginResult = await client.completeOAuthLogin({
+            requestId: result.requestId,
+        });
 
         if (loginResult.success === true) {
             saveLoginResult(client, loginResult);
@@ -1771,18 +1752,18 @@ async function loginWithPrivo(client: ReturnType<typeof createRecordsClient>) {
 }
 
 async function replaceSessionKey(
-    endpoint: string,
+    opts: ClientOpts,
     key: string,
     silent = false
 ) {
-    const client = await getClient(endpoint, key);
+    const client = await getClientWithoutSessionKey(opts, silent);
 
     const result = await client.replaceSession(undefined, {
         sessionKey: key,
     });
 
     if (result.success === true) {
-        saveSessionKey(endpoint, result.sessionKey);
+        saveSessionKey(client.endpoint, result.sessionKey);
         if (!silent) {
             console.log('Session key replaced!');
         }
@@ -1790,7 +1771,7 @@ async function replaceSessionKey(
         return result.sessionKey;
     }
 
-    saveSessionKey(endpoint, null);
+    saveSessionKey(client.endpoint, null);
     if (!silent) {
         console.log('Failed to replace session key:');
         console.log(result);
@@ -1844,9 +1825,9 @@ function getOrigin(endpoint: string) {
     return endpoint;
 }
 
-function getHeaders(client: RecordsClient) {
+function getHeaders(endpoint: string, opts: ClientOpts) {
     return {
-        origin: getOrigin(client.endpoint),
+        origin: opts.origin ?? getOrigin(endpoint),
     };
 }
 
