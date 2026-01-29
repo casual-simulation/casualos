@@ -665,11 +665,12 @@ program
             });
 
             if (latestResult.success === false) {
-                if (latestResult.errorCode !== 'not_found') {
+                if (latestResult.errorCode !== 'data_not_found') {
                     console.error(
                         `Could not fetch latest package version (${latestResult.errorCode}): ${latestResult.errorMessage}`,
                         latestResult
                     );
+                    process.exit(1);
                 } else {
                     if (!raw) {
                         console.log(
