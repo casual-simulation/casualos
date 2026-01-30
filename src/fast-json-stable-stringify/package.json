@@ -4,7 +4,8 @@
     "description": "deterministic `JSON.stringify()` - a faster version of substack's json-stable-strigify without jsonify",
     "main": "index.js",
     "types": "index.d.ts",
-    "module": "index",
+    "type": "module",
+    "module": "index.js",
     "scripts": {
         "eslint": "eslint index.js test",
         "test-spec": "tape test/*.js",

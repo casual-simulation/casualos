@@ -588,7 +588,7 @@ export class PrismaMetricsStore implements MetricsStore {
                     convertToMillis(user.subscriptionPeriodEnd)
                 )),
             };
-        } else {
+        } else if (filter.studioId) {
             const studio = await this._client.studio.findUnique({
                 where: {
                     id: filter.studioId,
@@ -625,6 +625,10 @@ export class PrismaMetricsStore implements MetricsStore {
                     convertToMillis(studio.subscriptionPeriodEnd)
                 )),
             };
+        } else {
+            throw new Error(
+                '[PrismaMetricsStore] Invalid filter. Must specify ownerId or studioId.'
+            );
         }
     }
 

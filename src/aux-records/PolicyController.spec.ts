@@ -160,6 +160,170 @@ describe('PolicyController', () => {
         });
     });
 
+    describe('constructAuthorizationContext()', () => {
+        const cases = [
+            ['record key', true] as const,
+            ['no record key', false] as const,
+        ];
+
+        describe.each(cases)('%s', (caseName, useRecordKey) => {
+            let recordKeyOrName: string;
+            beforeEach(async () => {
+                if (useRecordKey) {
+                    recordKeyOrName = recordKey;
+                } else {
+                    recordKeyOrName = recordName;
+                }
+            });
+
+            it('should construct the authorization context for a user and record', async () => {
+                const context = await controller.constructAuthorizationContext({
+                    recordKeyOrRecordName: recordKeyOrName,
+                    userId: userId,
+                });
+
+                expect(context).toEqual({
+                    success: true,
+                    context: {
+                        recordKeyResult: useRecordKey
+                            ? {
+                                  success: true,
+                                  recordName,
+                                  ownerId,
+                                  keyCreatorId: userId,
+                                  policy: 'subjectfull',
+                              }
+                            : null,
+                        recordKeyProvided: useRecordKey,
+                        recordName: recordName,
+                        recordOwnerId: ownerId,
+                        recordStudioId: null,
+                        subjectPolicy: 'subjectfull',
+                        recordKeyCreatorId: useRecordKey ? userId : undefined,
+                        recordOwnerPrivacyFeatures: {
+                            allowAI: true,
+                            allowPublicData: true,
+                            allowPublicInsts: true,
+                            publishData: true,
+                        },
+                        userPrivacyFeatures: {
+                            allowAI: true,
+                            allowPublicData: true,
+                            allowPublicInsts: true,
+                            publishData: true,
+                        },
+                        userId: userId,
+                        userRole: 'none',
+                        sendNotLoggedIn: true,
+                    },
+                });
+            });
+
+            it('should support records that are owned by studios', async () => {
+                if (useRecordKey) {
+                    const { recordKey } = await createTestRecordKey(
+                        services,
+                        ownerId,
+                        studioRecord
+                    );
+                    recordKeyOrName = recordKey;
+                } else {
+                    recordKeyOrName = studioRecord;
+                }
+
+                const context = await controller.constructAuthorizationContext({
+                    recordKeyOrRecordName: recordKeyOrName,
+                    userId: userId,
+                });
+
+                expect(context).toEqual({
+                    success: true,
+                    context: {
+                        recordKeyResult: useRecordKey
+                            ? {
+                                  success: true,
+                                  recordName: studioRecord,
+                                  ownerId: null,
+                                  keyCreatorId: ownerId,
+                                  policy: 'subjectfull',
+                                  studioId: studioId,
+                                  studioMembers: [
+                                      {
+                                          isPrimaryContact: true,
+                                          role: 'admin',
+                                          studioId,
+                                          userId: ownerId,
+                                          user: {
+                                              id: ownerId,
+                                              email: 'owner@example.com',
+                                              phoneNumber: null,
+                                          },
+                                      },
+                                      {
+                                          isPrimaryContact: false,
+                                          role: 'member',
+                                          studioId,
+                                          userId: memberId,
+                                          user: {
+                                              id: memberId,
+                                              email: 'member@example.com',
+                                              phoneNumber: null,
+                                          },
+                                      },
+                                  ],
+                              }
+                            : null,
+                        recordKeyProvided: useRecordKey,
+                        recordName: studioRecord,
+                        recordOwnerId: null,
+                        recordStudioId: studioId,
+                        subjectPolicy: 'subjectfull',
+                        recordKeyCreatorId: useRecordKey ? ownerId : undefined,
+                        recordStudioMembers: [
+                            {
+                                isPrimaryContact: true,
+                                role: 'admin',
+                                studioId,
+                                userId: ownerId,
+                                user: {
+                                    id: ownerId,
+                                    email: 'owner@example.com',
+                                    phoneNumber: null,
+                                },
+                            },
+                            {
+                                isPrimaryContact: false,
+                                role: 'member',
+                                studioId,
+                                userId: memberId,
+                                user: {
+                                    id: memberId,
+                                    email: 'member@example.com',
+                                    phoneNumber: null,
+                                },
+                            },
+                        ],
+                        recordOwnerPrivacyFeatures: {
+                            allowAI: true,
+                            allowPublicData: true,
+                            allowPublicInsts: true,
+                            publishData: true,
+                        },
+                        userPrivacyFeatures: {
+                            allowAI: true,
+                            allowPublicData: true,
+                            allowPublicInsts: true,
+                            publishData: true,
+                        },
+                        userId: userId,
+                        userRole: 'none',
+                        sendNotLoggedIn: true,
+                    },
+                });
+            });
+        });
+    });
+
     describe('listPermissions()', () => {
         beforeEach(async () => {
             store.roles[recordName] = {
