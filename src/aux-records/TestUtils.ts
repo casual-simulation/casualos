@@ -243,8 +243,10 @@ export async function createTestRecordKey(
         policy,
         userId
     );
-    if (!createRecordKeyResult.success) {
-        throw new Error('Unable to create record key!');
+    if (createRecordKeyResult.success === false) {
+        throw new Error(
+            `Unable to create record key! ${createRecordKeyResult.errorCode} -> ${createRecordKeyResult.errorMessage}`
+        );
     }
 
     const recordKey = createRecordKeyResult.recordKey;

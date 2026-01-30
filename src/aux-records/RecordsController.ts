@@ -646,12 +646,21 @@ export class RecordsController {
             }
 
             if (valid) {
+                let studioMembers: ListedStudioAssignment[] = undefined;
+                if (record.studioId) {
+                    studioMembers = await this._store.listStudioAssignments(
+                        record.studioId
+                    );
+                }
+
                 return {
                     success: true,
                     recordName: name,
                     policy: policy,
                     ownerId: record.ownerId,
+                    studioId: record.studioId ?? undefined,
                     keyCreatorId: creatorId ?? record.ownerId,
+                    studioMembers,
                 };
             } else {
                 return {
@@ -2411,6 +2420,11 @@ export interface ValidatePublicRecordKeySuccess {
     ownerId: string;
 
     /**
+     * The ID of the studio that owns the record.
+     */
+    studioId?: string;
+
+    /**
      * The ID of the user that created the key.
      */
     keyCreatorId: string;
@@ -2419,6 +2433,11 @@ export interface ValidatePublicRecordKeySuccess {
      * The policy for the record key.
      */
     policy: PublicRecordKeyPolicy;
+
+    /**
+     * The IDs of the members of the studio.
+     */
+    studioMembers?: ListedStudioAssignment[];
 }
 
 /**
@@ -2536,7 +2555,7 @@ export interface ValidateRecordNameSuccess {
     success: true;
     recordName: string;
     ownerId: string;
-    studioId: string;
+    studioId: string | null;
 
     /**
      * The IDs of the members of the studio.
