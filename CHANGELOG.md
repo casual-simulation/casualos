@@ -8,6 +8,7 @@
 
 -   Fixed an issue where it was impossible to use record keys on certain studio resources (like packages).
 -   Fixed an issue where the `upload-package` command wouldn't properly choose a default key if the `--raw` option was specified while trying to upload a package that doesn't have a previous version.
+-   Fixed the module type and main export of the `fast-json-stable-stringify` package.
 
 ## V4.0.4
 
