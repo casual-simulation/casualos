@@ -200,11 +200,18 @@ export class WebsocketController {
         message: LoginMessage
     ): Promise<void> {
         try {
+            console.log(
+                `[WebsocketController] [connectionId: ${connectionId}] Login`
+            );
+
             let userId: string | null = null;
             let sessionId: string | null = null;
             let clientConnectionId: string | null;
             if (!message.connectionToken) {
                 if (!message.connectionId) {
+                    console.log(
+                        `[WebsocketController] [connectionId: ${connectionId}] Login failed: unacceptable_connection_id`
+                    );
                     await this._messenger.sendMessage([connectionId], {
                         type: 'login_result',
                         success: false,
@@ -229,6 +236,9 @@ export class WebsocketController {
                         message.connectionToken
                     );
                 if (validationResult.success === false) {
+                    console.log(
+                        `[WebsocketController] [connectionId: ${connectionId}] Login failed: [${validationResult.errorCode}] ${validationResult.errorMessage}`
+                    );
                     await this._messenger.sendMessage([connectionId], {
                         type: 'login_result',
                         success: false,
@@ -269,6 +279,9 @@ export class WebsocketController {
                 }
             }
 
+            console.log(
+                `[WebsocketController] [connectionId: ${connectionId} userId: ${userId} sessionId: ${sessionId} clientConnectionId: ${clientConnectionId}] Login success`
+            );
             await this._messenger.sendMessage([connectionId], {
                 type: 'login_result',
                 success: true,
@@ -293,6 +306,9 @@ export class WebsocketController {
 
     @traced(TRACE_NAME)
     async disconnect(connectionId: string) {
+        console.log(
+            `[WebsocketController] [connectionId: ${connectionId}] Disconnect`
+        );
         const loadedConnections = await this._connectionStore.getConnections(
             connectionId
         );
@@ -1620,6 +1636,9 @@ export class WebsocketController {
         inst: string,
         branch: string
     ) {
+        console.log(
+            `[WebsocketController] [namespace: ${recordName}/${inst}/${branch}, connectionId: ${connectionId}] Unwatch devices for branch`
+        );
         await this._connectionStore.deleteBranchConnection(
             connectionId,
             'watch_branch',
