@@ -676,8 +676,8 @@ program
                         console.log(
                             'No existing package found. Starting at version 0.0.0'
                         );
-                        key = { major: 0, minor: 0, patch: 0, tag: null };
                     }
+                    key = { major: 0, minor: 0, patch: 0, tag: null };
                 }
             } else {
                 if (!raw) {
