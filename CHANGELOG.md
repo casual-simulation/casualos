@@ -7,6 +7,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where it was impossible to use record keys on certain studio resources (like packages).
+-   Fixed an issue where the `upload-package` command wouldn't properly choose a default key if the `--raw` option was specified while trying to upload a package that doesn't have a previous version.
 
 ## V4.0.4
 
