@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V4.0.5
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where it was impossible to use record keys on certain studio resources (like packages).
+
 ## V4.0.4
 
 #### Date: 1/29/2026
