@@ -44,6 +44,8 @@ import {
     ACCOUNT_MARKER,
     PUBLIC_READ_MARKER,
     hasValue,
+    isFailure,
+    logError,
 } from '@casual-simulation/aux-common';
 import type { MetricsStore } from './MetricsStore';
 import type { ConfigurationStore } from './ConfigurationStore';
@@ -57,6 +59,12 @@ import { SpanStatusCode, trace } from '@opentelemetry/api';
 import type { IQueue } from './queue';
 import type { SearchSyncQueueEvent } from './search';
 import type { FinancialController } from './financial/FinancialController';
+import {
+    ACCOUNT_IDS,
+    CurrencyCodes,
+    LEDGERS,
+    TransferCodes,
+} from './financial';
 
 const TRACE_NAME = 'DataRecordsController';
 
@@ -326,6 +334,75 @@ export class DataRecordsController {
                                 'The maximum number of items has been reached for your subscription.',
                             errorReason: 'too_many_items',
                         };
+                    }
+                }
+            }
+
+            if (hasValue(features.data.creditFeePerWrite)) {
+                if (!this._financialController) {
+                    console.warn(
+                        `[DataRecordsController] Cannot charge credits for data write because FinancialController is not configured.`
+                    );
+                } else {
+                    // Try to record the credit usage.
+                    const accountInfo =
+                        await this._financialController.getFinancialAccount({
+                            userId: metricsResult.ownerId,
+                            studioId: metricsResult.studioId,
+                            ledger: LEDGERS.credits,
+                        });
+
+                    if (isFailure(accountInfo)) {
+                        logError(
+                            accountInfo.error,
+                            `[DataRecordsController] Failed to get financial account to charge for data write.`
+                        );
+                    } else {
+                        // Charge the account for the data write.
+                        const transactionResult =
+                            await this._financialController.internalTransaction(
+                                {
+                                    transfers: [
+                                        {
+                                            amount: features.data
+                                                .creditFeePerWrite,
+                                            debitAccountId:
+                                                accountInfo.value.account.id,
+                                            creditAccountId:
+                                                ACCOUNT_IDS.revenue_records_usage_credits,
+                                            currency: CurrencyCodes.credits,
+                                            code: TransferCodes.records_usage_fee,
+                                        },
+                                    ],
+                                }
+                            );
+
+                        if (isFailure(transactionResult)) {
+                            if (
+                                transactionResult.error.errorCode ===
+                                    'debits_exceed_credits' &&
+                                transactionResult.error.accountId ===
+                                    accountInfo.value.account.id.toString()
+                            ) {
+                                logError(
+                                    transactionResult.error,
+                                    `[DataRecordsController] Insufficient funds to perform data write.`,
+                                    console.log
+                                );
+                                // The user does not have enough credits to perform the write.
+                                return {
+                                    success: false,
+                                    errorCode: 'insufficient_funds',
+                                    errorMessage:
+                                        'Not enough credits to perform the data write.',
+                                };
+                            } else {
+                                logError(
+                                    transactionResult.error,
+                                    `[DataRecordsController] Failed to record financial transaction for data write.`
+                                );
+                            }
+                        }
                     }
                 }
             }
@@ -828,7 +905,8 @@ export interface RecordDataFailure {
         | 'not_supported'
         | 'invalid_update_policy'
         | 'invalid_delete_policy'
-        | AuthorizeSubjectFailure['errorCode'];
+        | AuthorizeSubjectFailure['errorCode']
+        | 'insufficient_funds';
 
     /**
      * The error message for the failure.

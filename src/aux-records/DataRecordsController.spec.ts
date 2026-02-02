@@ -28,17 +28,28 @@ import { DataRecordsController } from './DataRecordsController';
 import type { UserPolicy } from './DataRecordsStore';
 import type { PolicyController } from './PolicyController';
 import {
+    checkAccounts,
     createTestControllers,
     createTestRecordKey,
+    createTestSubConfiguration,
     createTestUser,
 } from './TestUtils';
 import {
     ACCOUNT_MARKER,
     ADMIN_ROLE_NAME,
     PUBLIC_READ_MARKER,
+    unwrap,
 } from '@casual-simulation/aux-common';
 import type { MemoryStore } from './MemoryStore';
 import { buildSubscriptionConfig } from './SubscriptionConfigBuilder';
+import {
+    ACCOUNT_IDS,
+    CurrencyCodes,
+    FinancialController,
+    LEDGERS,
+    MemoryFinancialInterface,
+    TransferCodes,
+} from './financial';
 
 console.log = jest.fn();
 
@@ -884,6 +895,339 @@ describe('DataRecordsController', () => {
                 success: false,
                 errorCode: 'data_not_found',
                 errorMessage: expect.any(String),
+            });
+        });
+
+        describe('credits', () => {
+            let financialInterface: MemoryFinancialInterface;
+            let financialController: FinancialController;
+
+            beforeEach(async () => {
+                financialInterface = new MemoryFinancialInterface();
+                financialController = new FinancialController(
+                    financialInterface,
+                    store
+                );
+                manager = new DataRecordsController({
+                    policies,
+                    store,
+                    metrics: store,
+                    config: store,
+                    financialController,
+                });
+
+                unwrap(await financialController.init());
+
+                const account = unwrap(
+                    await financialController.getOrCreateFinancialAccount({
+                        userId: userId,
+                        ledger: LEDGERS.credits,
+                    })
+                );
+
+                unwrap(
+                    await financialController.internalTransaction({
+                        transfers: [
+                            {
+                                amount: 1000n,
+                                debitAccountId: ACCOUNT_IDS.liquidity_credits,
+                                creditAccountId: account.account.id,
+                                code: TransferCodes.admin_credit,
+                                currency: CurrencyCodes.credits,
+                            },
+                        ],
+                    })
+                );
+
+                store.subscriptionConfiguration = createTestSubConfiguration(
+                    (config) =>
+                        config.addSubscription('sub1', (sub) =>
+                            sub.withTier('tier1').withData({
+                                allowed: true,
+                                creditFeePerWrite: 50, // 50 credits per write
+                            })
+                        )
+                );
+
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                });
+            });
+
+            it('should try to debit the users credit account for usage', async () => {
+                const result = (await manager.recordData(
+                    key,
+                    'address',
+                    'data',
+                    'subjectId',
+                    null,
+                    null
+                )) as RecordDataSuccess;
+
+                expect(result.success).toBe(true);
+                expect(result.recordName).toBe('testRecord');
+                expect(result.address).toBe('address');
+
+                const userAccount = unwrap(
+                    await financialController.getAccountBalance({
+                        userId: userId,
+                        ledger: LEDGERS.credits,
+                    })
+                );
+
+                await checkAccounts(financialInterface, [
+                    {
+                        id: ACCOUNT_IDS.revenue_records_usage_credits,
+                        credits_posted: 50n,
+                        debits_posted: 0n,
+                        credits_pending: 0n,
+                        debits_pending: 0n,
+                    },
+                    {
+                        id: BigInt(userAccount!.accountId),
+                        credits_posted: 1000n,
+                        debits_posted: 50n,
+                        credits_pending: 0n,
+                        debits_pending: 0n,
+                    },
+                ]);
+
+                await expect(
+                    store.getData('testRecord', 'address')
+                ).resolves.toEqual({
+                    success: true,
+                    data: 'data',
+                    publisherId: userId,
+                    subjectId: 'subjectId',
+                    updatePolicy: true,
+                    deletePolicy: true,
+                    markers: [PUBLIC_READ_MARKER],
+                });
+            });
+
+            it('should fail to write the data if the user doesnt have enough credits', async () => {
+                store.subscriptionConfiguration = createTestSubConfiguration(
+                    (config) =>
+                        config.addSubscription('sub1', (sub) =>
+                            sub.withTier('tier1').withData({
+                                allowed: true,
+                                creditFeePerWrite: 100_000, // 100,000 credits per write
+                            })
+                        )
+                );
+
+                const result = (await manager.recordData(
+                    key,
+                    'address',
+                    'data',
+                    'subjectId',
+                    null,
+                    null
+                )) as RecordDataSuccess;
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'insufficient_funds',
+                    errorMessage:
+                        'Not enough credits to perform the data write.',
+                });
+
+                const userAccount = unwrap(
+                    await financialController.getAccountBalance({
+                        userId: userId,
+                        ledger: LEDGERS.credits,
+                    })
+                );
+
+                await checkAccounts(financialInterface, [
+                    {
+                        id: ACCOUNT_IDS.revenue_records_usage_credits,
+                        credits_posted: 0n,
+                        debits_posted: 0n,
+                        credits_pending: 0n,
+                        debits_pending: 0n,
+                    },
+                    {
+                        id: BigInt(userAccount!.accountId),
+                        credits_posted: 1000n,
+                        debits_posted: 0n,
+                        credits_pending: 0n,
+                        debits_pending: 0n,
+                    },
+                ]);
+
+                await expect(
+                    store.getData('testRecord', 'address')
+                ).resolves.toEqual({
+                    success: false,
+                    errorCode: 'data_not_found',
+                    errorMessage: expect.any(String),
+                });
+            });
+
+            describe('studio', () => {
+                const studioId = 'studio1';
+                const recordName = 'studioRecord';
+
+                beforeEach(async () => {
+                    await store.addStudio({
+                        id: studioId,
+                        displayName: 'My Studio!',
+                        subscriptionId: 'sub1',
+                        subscriptionStatus: 'active',
+                    });
+
+                    await store.addStudioAssignment({
+                        studioId,
+                        userId,
+                        role: 'admin',
+                        isPrimaryContact: true,
+                    });
+
+                    await store.addRecord({
+                        name: recordName,
+                        studioId: studioId,
+                        ownerId: null,
+                        secretHashes: [],
+                        secretSalt: '',
+                    });
+
+                    const account = unwrap(
+                        await financialController.getOrCreateFinancialAccount({
+                            studioId: studioId,
+                            ledger: LEDGERS.credits,
+                        })
+                    );
+
+                    unwrap(
+                        await financialController.internalTransaction({
+                            transfers: [
+                                {
+                                    amount: 1000n,
+                                    debitAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    creditAccountId: account.account.id,
+                                    code: TransferCodes.admin_credit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                            ],
+                        })
+                    );
+                });
+
+                it('should try to debit the users credit account for usage', async () => {
+                    const result = (await manager.recordData(
+                        recordName,
+                        'address',
+                        'data',
+                        userId,
+                        null,
+                        null
+                    )) as RecordDataSuccess;
+
+                    expect(result.success).toBe(true);
+                    expect(result.recordName).toBe(recordName);
+                    expect(result.address).toBe('address');
+
+                    const studioAccount = unwrap(
+                        await financialController.getAccountBalance({
+                            studioId,
+                            ledger: LEDGERS.credits,
+                        })
+                    );
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: ACCOUNT_IDS.revenue_records_usage_credits,
+                            credits_posted: 50n,
+                            debits_posted: 0n,
+                            credits_pending: 0n,
+                            debits_pending: 0n,
+                        },
+                        {
+                            id: BigInt(studioAccount!.accountId),
+                            credits_posted: 1000n,
+                            debits_posted: 50n,
+                            credits_pending: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+
+                    await expect(
+                        store.getData(recordName, 'address')
+                    ).resolves.toEqual({
+                        success: true,
+                        data: 'data',
+                        publisherId: userId,
+                        subjectId: userId,
+                        updatePolicy: true,
+                        deletePolicy: true,
+                        markers: [PUBLIC_READ_MARKER],
+                    });
+                });
+
+                it('should fail to write the data if the studio doesnt have enough credits', async () => {
+                    store.subscriptionConfiguration =
+                        createTestSubConfiguration((config) =>
+                            config.addSubscription('sub1', (sub) =>
+                                sub.withTier('tier1').withData({
+                                    allowed: true,
+                                    creditFeePerWrite: 100_000, // 100,000 credits per write
+                                })
+                            )
+                        );
+
+                    const result = (await manager.recordData(
+                        recordName,
+                        'address',
+                        'data',
+                        userId,
+                        null,
+                        null
+                    )) as RecordDataSuccess;
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'insufficient_funds',
+                        errorMessage:
+                            'Not enough credits to perform the data write.',
+                    });
+
+                    const studioAccount = unwrap(
+                        await financialController.getAccountBalance({
+                            studioId,
+                            ledger: LEDGERS.credits,
+                        })
+                    );
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: ACCOUNT_IDS.revenue_records_usage_credits,
+                            credits_posted: 0n,
+                            debits_posted: 0n,
+                            credits_pending: 0n,
+                            debits_pending: 0n,
+                        },
+                        {
+                            id: BigInt(studioAccount!.accountId),
+                            credits_posted: 1000n,
+                            debits_posted: 0n,
+                            credits_pending: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+
+                    await expect(
+                        store.getData(recordName, 'address')
+                    ).resolves.toEqual({
+                        success: false,
+                        errorCode: 'data_not_found',
+                        errorMessage: expect.any(String),
+                    });
+                });
             });
         });
     });

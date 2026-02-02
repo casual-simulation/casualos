@@ -1316,37 +1316,8 @@ export interface RecordFeaturesConfiguration {
     maxRecords?: number;
 }
 
-export interface DataFeaturesConfiguration {
-    /**
-     * Whether data resources should be allowed.
-     */
-    allowed: boolean;
-
-    /**
-     * The maximum number of items that are allowed.
-     * If not specified, then there is no limit.
-     */
-    maxItems?: number;
-
-    /**
-     * The maximum number of item reads that are allowed per subscription period.
-     * If not specified, then there is no limit.
-     */
-    maxReadsPerPeriod?: number;
-
-    /**
-     * The maximum number of item writes that are allowed per period.
-     * If not specified, then there is no limit.
-     */
-    maxWritesPerPeriod?: number;
-
-    /**
-     * The maximum number of bytes that can be stored in a single data item.
-     * If not specified, then the limit is 500,000 bytes (500KB).
-     * If set to null, then there is no limit.
-     */
-    maxItemSizeInBytes?: number;
-}
+export type DataFeaturesConfiguration =
+    z.infer<SubscriptionFeaturesSchema>['data'];
 
 export interface FileFeaturesConfiguration {
     /**

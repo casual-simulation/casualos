@@ -27,7 +27,6 @@ import type {
     APISubscription,
     DatabasesFeaturesConfiguration,
     ContractFeaturesConfiguration,
-    DataFeaturesConfiguration,
     EventFeaturesConfiguration,
     FeaturesConfiguration,
     FileFeaturesConfiguration,
@@ -76,12 +75,13 @@ export class FeaturesBuilder {
         return this;
     }
 
-    withData(features?: DataFeaturesConfiguration): this {
-        this._features.data =
+    withData(features?: z.input<DataFeaturesSchema>): this {
+        this._features.data = getDataFeaturesSchema().parse(
             features ??
-            getDataFeaturesSchema().parse({
-                allowed: true,
-            } satisfies z.input<DataFeaturesSchema>);
+                ({
+                    allowed: true,
+                } satisfies z.input<DataFeaturesSchema>)
+        );
         return this;
     }
 
