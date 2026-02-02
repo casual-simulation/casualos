@@ -1464,6 +1464,309 @@ describe('DataRecordsController', () => {
             expect(result.updatePolicy).toBe(true);
             expect(result.deletePolicy).toBe(true);
         });
+
+        describe('credits', () => {
+            let financialInterface: MemoryFinancialInterface;
+            let financialController: FinancialController;
+
+            beforeEach(async () => {
+                financialInterface = new MemoryFinancialInterface();
+                financialController = new FinancialController(
+                    financialInterface,
+                    store
+                );
+                manager = new DataRecordsController({
+                    policies,
+                    store,
+                    metrics: store,
+                    config: store,
+                    financialController,
+                });
+
+                unwrap(await financialController.init());
+
+                const account = unwrap(
+                    await financialController.getOrCreateFinancialAccount({
+                        userId: userId,
+                        ledger: LEDGERS.credits,
+                    })
+                );
+
+                unwrap(
+                    await financialController.internalTransaction({
+                        transfers: [
+                            {
+                                amount: 1000n,
+                                debitAccountId: ACCOUNT_IDS.liquidity_credits,
+                                creditAccountId: account.account.id,
+                                code: TransferCodes.admin_credit,
+                                currency: CurrencyCodes.credits,
+                            },
+                        ],
+                    })
+                );
+
+                store.subscriptionConfiguration = createTestSubConfiguration(
+                    (config) =>
+                        config.addSubscription('sub1', (sub) =>
+                            sub.withTier('tier1').withData({
+                                allowed: true,
+                                creditFeePerRead: 25, // 25 credits per read
+                            })
+                        )
+                );
+
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                });
+
+                // Add some data to read
+                await store.setData(
+                    'testRecord',
+                    'address',
+                    'data',
+                    userId,
+                    'subjectId',
+                    true,
+                    true,
+                    [PUBLIC_READ_MARKER]
+                );
+            });
+
+            it('should try to debit the users credit account for usage', async () => {
+                const result = (await manager.getData(
+                    'testRecord',
+                    'address'
+                )) as GetDataSuccess;
+
+                expect(result.success).toBe(true);
+                expect(result.data).toBe('data');
+                expect(result.publisherId).toBe(userId);
+                expect(result.subjectId).toBe('subjectId');
+
+                const userAccount = unwrap(
+                    await financialController.getAccountBalance({
+                        userId: userId,
+                        ledger: LEDGERS.credits,
+                    })
+                );
+
+                await checkAccounts(financialInterface, [
+                    {
+                        id: ACCOUNT_IDS.revenue_records_usage_credits,
+                        credits_posted: 25n,
+                        debits_posted: 0n,
+                        credits_pending: 0n,
+                        debits_pending: 0n,
+                    },
+                    {
+                        id: BigInt(userAccount!.accountId),
+                        credits_posted: 1000n,
+                        debits_posted: 25n,
+                        credits_pending: 0n,
+                        debits_pending: 0n,
+                    },
+                ]);
+            });
+
+            it('should fail to read the data if the user doesnt have enough credits', async () => {
+                store.subscriptionConfiguration = createTestSubConfiguration(
+                    (config) =>
+                        config.addSubscription('sub1', (sub) =>
+                            sub.withTier('tier1').withData({
+                                allowed: true,
+                                creditFeePerRead: 100_000, // 100,000 credits per read
+                            })
+                        )
+                );
+
+                const result = (await manager.getData(
+                    'testRecord',
+                    'address'
+                )) as GetDataFailure;
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'insufficient_funds',
+                    errorMessage:
+                        'Not enough credits to perform the data read.',
+                });
+
+                const userAccount = unwrap(
+                    await financialController.getAccountBalance({
+                        userId: userId,
+                        ledger: LEDGERS.credits,
+                    })
+                );
+
+                await checkAccounts(financialInterface, [
+                    {
+                        id: ACCOUNT_IDS.revenue_records_usage_credits,
+                        credits_posted: 0n,
+                        debits_posted: 0n,
+                        credits_pending: 0n,
+                        debits_pending: 0n,
+                    },
+                    {
+                        id: BigInt(userAccount!.accountId),
+                        credits_posted: 1000n,
+                        debits_posted: 0n,
+                        credits_pending: 0n,
+                        debits_pending: 0n,
+                    },
+                ]);
+            });
+
+            describe('studio', () => {
+                const studioId = 'studio1';
+                const recordName = 'studioRecord';
+
+                beforeEach(async () => {
+                    await store.addStudio({
+                        id: studioId,
+                        displayName: 'My Studio!',
+                        subscriptionId: 'sub1',
+                        subscriptionStatus: 'active',
+                    });
+
+                    await store.addStudioAssignment({
+                        studioId,
+                        userId,
+                        role: 'admin',
+                        isPrimaryContact: true,
+                    });
+
+                    await store.addRecord({
+                        name: recordName,
+                        studioId: studioId,
+                        ownerId: null,
+                        secretHashes: [],
+                        secretSalt: '',
+                    });
+
+                    const account = unwrap(
+                        await financialController.getOrCreateFinancialAccount({
+                            studioId: studioId,
+                            ledger: LEDGERS.credits,
+                        })
+                    );
+
+                    unwrap(
+                        await financialController.internalTransaction({
+                            transfers: [
+                                {
+                                    amount: 1000n,
+                                    debitAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    creditAccountId: account.account.id,
+                                    code: TransferCodes.admin_credit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                            ],
+                        })
+                    );
+
+                    // Add some data to read
+                    await store.setData(
+                        recordName,
+                        'address',
+                        'data',
+                        userId,
+                        userId,
+                        true,
+                        true,
+                        [PUBLIC_READ_MARKER]
+                    );
+                });
+
+                it('should try to debit the studio credit account for usage', async () => {
+                    const result = (await manager.getData(
+                        recordName,
+                        'address'
+                    )) as GetDataSuccess;
+
+                    expect(result.success).toBe(true);
+                    expect(result.data).toBe('data');
+                    expect(result.publisherId).toBe(userId);
+                    expect(result.subjectId).toBe(userId);
+
+                    const studioAccount = unwrap(
+                        await financialController.getAccountBalance({
+                            studioId,
+                            ledger: LEDGERS.credits,
+                        })
+                    );
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: ACCOUNT_IDS.revenue_records_usage_credits,
+                            credits_posted: 25n,
+                            debits_posted: 0n,
+                            credits_pending: 0n,
+                            debits_pending: 0n,
+                        },
+                        {
+                            id: BigInt(studioAccount!.accountId),
+                            credits_posted: 1000n,
+                            debits_posted: 25n,
+                            credits_pending: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                });
+
+                it('should fail to read the data if the studio doesnt have enough credits', async () => {
+                    store.subscriptionConfiguration =
+                        createTestSubConfiguration((config) =>
+                            config.addSubscription('sub1', (sub) =>
+                                sub.withTier('tier1').withData({
+                                    allowed: true,
+                                    creditFeePerRead: 100_000, // 100,000 credits per read
+                                })
+                            )
+                        );
+
+                    const result = (await manager.getData(
+                        recordName,
+                        'address'
+                    )) as GetDataFailure;
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'insufficient_funds',
+                        errorMessage:
+                            'Not enough credits to perform the data read.',
+                    });
+
+                    const studioAccount = unwrap(
+                        await financialController.getAccountBalance({
+                            studioId,
+                            ledger: LEDGERS.credits,
+                        })
+                    );
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: ACCOUNT_IDS.revenue_records_usage_credits,
+                            credits_posted: 0n,
+                            debits_posted: 0n,
+                            credits_pending: 0n,
+                            debits_pending: 0n,
+                        },
+                        {
+                            id: BigInt(studioAccount!.accountId),
+                            credits_posted: 1000n,
+                            debits_posted: 0n,
+                            credits_pending: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                });
+            });
+        });
     });
 
     describe('listData()', () => {

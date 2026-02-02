@@ -520,6 +520,87 @@ export class DataRecordsController {
                 return authorization;
             }
 
+            const metricsResult =
+                await this._metrics.getSubscriptionDataMetricsByRecordName(
+                    context.context.recordName
+                );
+            const config = await this._config.getSubscriptionConfiguration();
+            const features = getSubscriptionFeatures(
+                config,
+                metricsResult.subscriptionStatus,
+                metricsResult.subscriptionId,
+                metricsResult.ownerId ? 'user' : 'studio'
+            );
+
+            if (hasValue(features.data.creditFeePerRead)) {
+                if (!this._financialController) {
+                    console.warn(
+                        `[DataRecordsController] Cannot charge credits for data read because FinancialController is not configured.`
+                    );
+                } else {
+                    // Try to record the credit usage.
+                    const accountInfo =
+                        await this._financialController.getFinancialAccount({
+                            userId: metricsResult.ownerId,
+                            studioId: metricsResult.studioId,
+                            ledger: LEDGERS.credits,
+                        });
+
+                    if (isFailure(accountInfo)) {
+                        logError(
+                            accountInfo.error,
+                            `[DataRecordsController] Failed to get financial account to charge for data read.`
+                        );
+                    } else {
+                        // Charge the account for the data read.
+                        const transactionResult =
+                            await this._financialController.internalTransaction(
+                                {
+                                    transfers: [
+                                        {
+                                            amount: features.data
+                                                .creditFeePerRead,
+                                            debitAccountId:
+                                                accountInfo.value.account.id,
+                                            creditAccountId:
+                                                ACCOUNT_IDS.revenue_records_usage_credits,
+                                            currency: CurrencyCodes.credits,
+                                            code: TransferCodes.records_usage_fee,
+                                        },
+                                    ],
+                                }
+                            );
+
+                        if (isFailure(transactionResult)) {
+                            if (
+                                transactionResult.error.errorCode ===
+                                    'debits_exceed_credits' &&
+                                transactionResult.error.accountId ===
+                                    accountInfo.value.account.id.toString()
+                            ) {
+                                logError(
+                                    transactionResult.error,
+                                    `[DataRecordsController] Insufficient funds to perform data read.`,
+                                    console.log
+                                );
+                                // The user does not have enough credits to perform the read.
+                                return {
+                                    success: false,
+                                    errorCode: 'insufficient_funds',
+                                    errorMessage:
+                                        'Not enough credits to perform the data read.',
+                                };
+                            } else {
+                                logError(
+                                    transactionResult.error,
+                                    `[DataRecordsController] Failed to record financial transaction for data read.`
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+
             return {
                 success: true,
                 data: result.data,
@@ -1003,7 +1084,8 @@ export interface GetDataFailure {
         | ServerError
         | GetDataStoreResult['errorCode']
         | AuthorizeSubjectFailure['errorCode']
-        | 'not_supported';
+        | 'not_supported'
+        | 'insufficient_funds';
 
     /**
      * The error message for the failure.
