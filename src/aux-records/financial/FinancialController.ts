@@ -148,6 +148,40 @@ export class FinancialController {
                 reserved: 0,
             },
             {
+                id: ACCOUNT_IDS.revenue_records_usage_usd,
+                code: AccountCodes.revenue_platform_fees,
+                flags: getFlagsForAccountCode(
+                    AccountCodes.revenue_platform_fees
+                ),
+                credits_pending: 0n,
+                credits_posted: 0n,
+                debits_pending: 0n,
+                debits_posted: 0n,
+                user_data_128: 0n,
+                user_data_64: 0n,
+                user_data_32: 0,
+                timestamp: 0n,
+                ledger: LEDGERS.usd,
+                reserved: 0,
+            },
+            {
+                id: ACCOUNT_IDS.revenue_records_usage_credits,
+                code: AccountCodes.revenue_platform_fees,
+                flags: getFlagsForAccountCode(
+                    AccountCodes.revenue_platform_fees
+                ),
+                credits_pending: 0n,
+                credits_posted: 0n,
+                debits_pending: 0n,
+                debits_posted: 0n,
+                user_data_128: 0n,
+                user_data_64: 0n,
+                user_data_32: 0,
+                timestamp: 0n,
+                ledger: LEDGERS.credits,
+                reserved: 0,
+            },
+            {
                 id: ACCOUNT_IDS.liquidity_usd,
                 code: AccountCodes.liquidity_pool,
                 flags:

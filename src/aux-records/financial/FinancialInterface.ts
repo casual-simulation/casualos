@@ -167,7 +167,7 @@ export function convertBetweenLedgers(
     from: LedgersType,
     to: LedgersType,
     value: bigint
-): ConvertedCurrency | null {
+): ConvertedCurrency {
     let rate = getExchangeRate(from, to);
     if (rate) {
         return {
@@ -293,6 +293,16 @@ export const ACCOUNT_IDS = {
      * The ID of the store platform fees revenue account.
      */
     revenue_store_platform_fees: 4102n,
+
+    /**
+     * The ID of the records usage revenue account in the USD ledger.
+     */
+    revenue_records_usage_usd: 4103n,
+
+    /**
+     * The ID of the records usage revenue account in the credits ledger.
+     */
+    revenue_records_usage_credits: 4104n,
 
     /**
      * The ID of the USD liquidity account.
@@ -480,6 +490,11 @@ export enum TransferCodes {
      * This is used when a user purchases an item from the store and the platform takes a fee.
      */
     store_platform_fee = 3003,
+
+    /**
+     * A credit to the records usage revenue account and a debit from the user's account.
+     */
+    records_usage_fee = 3004,
 
     // /**
     //  * A credit to the user from external entities (e.g. deposit to system via stripe / balance reload)
