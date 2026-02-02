@@ -2084,6 +2084,12 @@ export class ServerBuilder implements SubscriptionLike {
             console.log('[ServerBuilder] Not using Stripe.');
         }
 
+        if (this._financialStore && this._financialInterface) {
+            this._financialController = new FinancialController(
+                this._financialInterface,
+                this._financialStore
+            );
+        }
         this._authController = new AuthController(
             this._authStore,
             this._authMessenger,
@@ -2112,12 +2118,14 @@ export class ServerBuilder implements SubscriptionLike {
             policies: this._policyController,
             metrics: this._metricsStore,
             searchSyncQueue: this._searchQueue,
+            financialController: this._financialController,
         });
         this._manualDataController = new DataRecordsController({
             store: this._manualDataStore,
             config: this._configStore,
             policies: this._policyController,
             metrics: this._metricsStore,
+            financialController: this._financialController,
         });
         this._filesController = new FileRecordsController({
             store: this._filesStore,
@@ -2155,13 +2163,6 @@ export class ServerBuilder implements SubscriptionLike {
                 privo: this._privoClient,
                 store: this._contractsStore,
             });
-        }
-
-        if (this._financialStore && this._financialInterface) {
-            this._financialController = new FinancialController(
-                this._financialInterface,
-                this._financialStore
-            );
         }
 
         if (this._subscriptionConfig) {

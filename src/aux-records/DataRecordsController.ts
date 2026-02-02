@@ -56,6 +56,7 @@ import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
 import type { IQueue } from './queue';
 import type { SearchSyncQueueEvent } from './search';
+import type { FinancialController } from './financial/FinancialController';
 
 const TRACE_NAME = 'DataRecordsController';
 
@@ -66,6 +67,8 @@ export interface DataRecordsConfiguration {
     config: ConfigurationStore;
 
     searchSyncQueue?: IQueue<SearchSyncQueueEvent> | null;
+
+    financialController?: FinancialController | null;
 }
 
 /**
@@ -76,6 +79,7 @@ export class DataRecordsController {
     private _policies: PolicyController;
     private _metrics: MetricsStore;
     private _config: ConfigurationStore;
+    private _financialController: FinancialController | null;
 
     private _searchSyncQueue: IQueue<SearchSyncQueueEvent> | null;
 
@@ -89,6 +93,7 @@ export class DataRecordsController {
         this._metrics = config.metrics;
         this._config = config.config;
         this._searchSyncQueue = config.searchSyncQueue || null;
+        this._financialController = config.financialController || null;
     }
 
     /**
