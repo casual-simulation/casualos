@@ -148,6 +148,38 @@ export class FinancialController {
                 reserved: 0,
             },
             {
+                id: ACCOUNT_IDS.revenue_ai_usage,
+                code: AccountCodes.revenue_ai_usage,
+                flags: getFlagsForAccountCode(AccountCodes.revenue_ai_usage),
+                credits_pending: 0n,
+                credits_posted: 0n,
+                debits_pending: 0n,
+                debits_posted: 0n,
+                user_data_128: 0n,
+                user_data_64: 0n,
+                user_data_32: 0,
+                timestamp: 0n,
+                ledger: LEDGERS.credits,
+                reserved: 0,
+            },
+            {
+                id: ACCOUNT_IDS.revenue_records_usage,
+                code: AccountCodes.revenue_records_usage,
+                flags: getFlagsForAccountCode(
+                    AccountCodes.revenue_records_usage
+                ),
+                credits_pending: 0n,
+                credits_posted: 0n,
+                debits_pending: 0n,
+                debits_posted: 0n,
+                user_data_128: 0n,
+                user_data_64: 0n,
+                user_data_32: 0,
+                timestamp: 0n,
+                ledger: LEDGERS.credits,
+                reserved: 0,
+            },
+            {
                 id: ACCOUNT_IDS.revenue_records_usage_usd,
                 code: AccountCodes.revenue_platform_fees,
                 flags: getFlagsForAccountCode(

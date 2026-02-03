@@ -64,7 +64,9 @@ import type {
 import type { UserRole } from '@casual-simulation/aux-common';
 import {
     failure,
+    isFailure,
     isSuperUserRole,
+    logError,
     success,
     type DenialReason,
     type KnownErrorCodes,
@@ -76,6 +78,14 @@ import type {
     AIOpenAIRealtimeInterface,
     CreateRealtimeSessionTokenRequest,
 } from './AIOpenAIRealtimeInterface';
+import type { FinancialController } from './financial/FinancialController';
+import type { FinancialStore } from './financial/FinancialStore';
+import {
+    ACCOUNT_IDS,
+    AccountCodes,
+    LEDGERS,
+    TransferCodes,
+} from './financial/FinancialInterface';
 
 const TRACE_NAME = 'AIController';
 
@@ -93,6 +103,8 @@ export interface AIConfiguration {
     openai: {
         realtime: AIOpenAIRealtimeConfiguration;
     } | null;
+    financial: FinancialController | null;
+    financialStore: FinancialStore | null;
 }
 
 export interface AIChatConfiguration {
@@ -283,6 +295,8 @@ export class AIController {
     private _policyStore: PolicyStore;
     private _policies: PolicyController;
     private _recordsStore: RecordsStore;
+    private _financial: FinancialController | null;
+    private _financialStore: FinancialStore | null;
 
     constructor(configuration: AIConfiguration) {
         if (configuration.chat) {
@@ -338,6 +352,8 @@ export class AIController {
         this._config = configuration.config;
         this._policyStore = configuration.policies;
         this._recordsStore = configuration.records;
+        this._financial = configuration.financial;
+        this._financialStore = configuration.financialStore;
     }
 
     @traced(TRACE_NAME)
@@ -520,6 +536,25 @@ export class AIController {
                     createdAtMs: Date.now(),
                     tokens: adjustedTokens,
                 });
+
+                // Bill the user for token usage if credit fee is configured
+                if (allowedFeatures.ai.chat.creditFeePerToken) {
+                    const billingResult = await this._billForAIUsage({
+                        userId: request.userId,
+                        amount: Math.ceil(
+                            adjustedTokens *
+                                allowedFeatures.ai.chat.creditFeePerToken
+                        ),
+                        transferCode: TransferCodes.ai_chat_token_usage,
+                    });
+
+                    if (!billingResult.success) {
+                        console.error(
+                            '[AIController] Failed to bill user for AI chat token usage:',
+                            billingResult.errorMessage
+                        );
+                    }
+                }
             }
 
             return {
@@ -549,6 +584,72 @@ export class AIController {
         const modifier = tokenModifierRatio[model] ?? 1.0;
         const adjustedTokens = modifier * totalTokens;
         return adjustedTokens;
+    }
+
+    /**
+     * Bills a user for AI usage by transferring credits from their account to the revenue account.
+     * @param params The billing parameters.
+     * @returns A result indicating success or failure.
+     */
+    private async _billForAIUsage(params: {
+        userId: string;
+        amount: number;
+        transferCode: TransferCodes;
+    }): Promise<Result<void, SimpleError>> {
+        if (!this._financial || !this._financialStore) {
+            // If financial services are not available, skip billing
+            return success();
+        }
+
+        try {
+            // Get or create the user's credits account
+            const userAccountResult =
+                await this._financial.getOrCreateFinancialAccount({
+                    ownerId: params.userId,
+                    ownerType: 'user',
+                    accountCode: AccountCodes.liabilities_user,
+                    ledger: LEDGERS.credits,
+                });
+
+            if (!userAccountResult.success) {
+                return failure({
+                    errorCode: 'server_error',
+                    errorMessage: 'Failed to get user account for billing.',
+                });
+            }
+
+            // Transfer from user account to revenue account
+            const transferResult = await this._financial.internalTransaction({
+                transfers: [
+                    {
+                        debitAccountId: userAccountResult.account.id,
+                        creditAccountId: ACCOUNT_IDS.revenue_ai_usage,
+                        amount: params.amount,
+                        currency: 'credits',
+                        code: params.transferCode,
+                    },
+                ],
+            });
+
+            if (!transferResult.success) {
+                console.error(
+                    `[AIController] Failed to bill user ${params.userId} for AI usage:`,
+                    transferResult.errorMessage
+                );
+                return failure({
+                    errorCode: transferResult.errorCode,
+                    errorMessage: transferResult.errorMessage,
+                });
+            }
+
+            return success();
+        } catch (err) {
+            console.error('[AIController] Error during AI usage billing:', err);
+            return failure({
+                errorCode: 'server_error',
+                errorMessage: 'An error occurred while billing for AI usage.',
+            });
+        }
     }
 
     @traced(TRACE_NAME)
@@ -749,6 +850,25 @@ export class AIController {
                         createdAtMs: Date.now(),
                         tokens: adjustedTokens,
                     });
+
+                    // Bill the user for token usage if credit fee is configured
+                    if (allowedFeatures.ai.chat.creditFeePerToken) {
+                        const billingResult = await this._billForAIUsage({
+                            userId: request.userId,
+                            amount: Math.ceil(
+                                adjustedTokens *
+                                    allowedFeatures.ai.chat.creditFeePerToken
+                            ),
+                            transferCode: TransferCodes.ai_chat_token_usage,
+                        });
+
+                        if (!billingResult.success) {
+                            console.error(
+                                '[AIController] Failed to bill user for AI chat stream token usage:',
+                                billingResult.errorMessage
+                            );
+                        }
+                    }
                 }
 
                 yield {
@@ -889,6 +1009,22 @@ export class AIController {
                     createdAtMs: Date.now(),
                     skyboxes: 1,
                 });
+
+                // Bill the user for skybox generation usage if credit fee is configured
+                if (allowedFeatures.ai.skyboxes.creditFeePerSkybox) {
+                    const billingResult = await this._billForAIUsage({
+                        userId: request.userId,
+                        amount: allowedFeatures.ai.skyboxes.creditFeePerSkybox,
+                        transferCode: TransferCodes.ai_skybox_usage,
+                    });
+
+                    if (!billingResult.success) {
+                        console.error(
+                            '[AIController] Failed to bill user for AI skybox generation:',
+                            billingResult.errorMessage
+                        );
+                    }
+                }
 
                 return {
                     success: true,
@@ -1188,6 +1324,25 @@ export class AIController {
                 createdAtMs: Date.now(),
                 squarePixels: totalPixels,
             });
+
+            // Bill the user for image generation usage if credit fee is configured
+            if (allowedFeatures.ai.images.creditFeePerSquarePixel) {
+                const billingResult = await this._billForAIUsage({
+                    userId: request.userId,
+                    amount: Math.ceil(
+                        totalPixels *
+                            allowedFeatures.ai.images.creditFeePerSquarePixel
+                    ),
+                    transferCode: TransferCodes.ai_image_usage,
+                });
+
+                if (!billingResult.success) {
+                    console.error(
+                        '[AIController] Failed to bill user for AI image generation:',
+                        billingResult.errorMessage
+                    );
+                }
+            }
 
             return {
                 success: true,
@@ -1655,6 +1810,31 @@ export class AIController {
                 createdAtMs: Date.now(),
                 request: tokenRequest,
             });
+
+            // Bill the user/studio for realtime session usage if credit fee is configured
+            if (features.realtime.creditFeePerRealtimeSession) {
+                const ownerId =
+                    context.context.recordStudioId ??
+                    context.context.recordOwnerId;
+                const ownerType = context.context.recordStudioId
+                    ? 'studio'
+                    : 'user';
+
+                if (ownerId) {
+                    const billingResult = await this._billForAIUsage({
+                        userId: ownerId,
+                        amount: features.realtime.creditFeePerRealtimeSession,
+                        transferCode: TransferCodes.records_usage_fee,
+                    });
+
+                    if (isFailure(billingResult)) {
+                        logError(
+                            billingResult.error,
+                            `[AIController] Failed to bill ${ownerType} for OpenAI realtime session:`
+                        );
+                    }
+                }
+            }
 
             return {
                 success: true,

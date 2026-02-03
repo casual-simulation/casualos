@@ -1672,6 +1672,8 @@ export class ServerBuilder implements SubscriptionLike {
             policies: this._policyStore,
             policyController: null,
             records: this._recordsStore,
+            financial: this._financialController,
+            financialStore: this._financialStore,
         };
 
         if (options.ai.chat) {

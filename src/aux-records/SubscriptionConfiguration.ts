@@ -1409,6 +1409,12 @@ export interface AIChatFeaturesConfiguration {
      * If omitted, then all models are allowed.
      */
     allowedModels?: string[];
+
+    /**
+     * The number of credits that are charged for each token that is generated.
+     * If not specified, then there is no fee.
+     */
+    creditFeePerToken?: number;
 }
 
 export interface AIImageFeaturesConfiguration {
@@ -1432,6 +1438,12 @@ export interface AIImageFeaturesConfiguration {
      * total pixels = (square pixels) ^ 2
      */
     maxSquarePixelsPerPeriod?: number;
+
+    /**
+     * The number of credits that are charged for each square pixel that is generated.
+     * If not specified, then there is no fee.
+     */
+    creditFeePerSquarePixel?: number;
 }
 
 export interface AISkyboxFeaturesConfiguration {
@@ -1445,6 +1457,12 @@ export interface AISkyboxFeaturesConfiguration {
      * If not specified, then there is no limit.
      */
     maxSkyboxesPerPeriod?: number;
+
+    /**
+     * The number of credits that are charged for each skybox that is generated.
+     * If not specified, then there is no fee.
+     */
+    creditFeePerSkybox?: number;
 }
 
 export interface AIHumeFeaturesConfiguration {
