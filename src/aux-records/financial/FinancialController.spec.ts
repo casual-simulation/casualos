@@ -15,11 +15,18 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+import type {
+    Success,
+    Failure,
+    SimpleError,
+} from '@casual-simulation/aux-common';
 import {
     failure,
     success,
     unwrap,
     AccountBalance,
+    isSuccess,
+    isFailure,
 } from '@casual-simulation/aux-common';
 import type { AccountWithDetails } from './FinancialController';
 import {
@@ -2043,6 +2050,43 @@ describe('FinancialController', () => {
             ]);
         });
 
+        it('should post the given transfers for an amount less than the pending amount', async () => {
+            const result = await controller.completePendingTransfers({
+                transfers: [transfer1, transfer2],
+                amount: 50,
+            });
+
+            expect(result).toEqual(
+                success({
+                    transactionId: '4',
+                    transferIds: ['5', '6'],
+                })
+            );
+
+            checkTransfers(await financialInterface.lookupTransfers([5n, 6n]), [
+                {
+                    id: 5n,
+                    amount: 50n,
+                    credit_account_id: BigInt(account1Id),
+                    debit_account_id: ACCOUNT_IDS.assets_stripe,
+                    flags:
+                        TransferFlags.linked |
+                        TransferFlags.post_pending_transfer,
+                    pending_id: 100n,
+                    user_data_128: 4n,
+                },
+                {
+                    id: 6n,
+                    amount: 50n,
+                    credit_account_id: BigInt(account2Id),
+                    debit_account_id: ACCOUNT_IDS.assets_stripe,
+                    flags: TransferFlags.post_pending_transfer,
+                    pending_id: 101n,
+                    user_data_128: 4n,
+                },
+            ]);
+        });
+
         it('should return a specific error code if the transfers have already been completed', async () => {
             const result = await controller.completePendingTransfers({
                 transfers: [transfer1, transfer2],
@@ -2102,6 +2146,360 @@ describe('FinancialController', () => {
                     user_data_128: 4n,
                 },
             ]);
+        });
+    });
+
+    describe('billForUsage()', () => {
+        const cases = [
+            [
+                'user',
+                {
+                    userId: 'user1',
+                },
+            ] as const,
+            [
+                'studio',
+                {
+                    studioId: 'studio1',
+                },
+            ] as const,
+        ];
+
+        describe.each(cases)('billing %s', (_, filter) => {
+            let account1: AccountWithDetails;
+
+            beforeEach(async () => {
+                await controller.init();
+                account1 = unwrap(
+                    await controller.getOrCreateFinancialAccount({
+                        ...filter,
+                        ledger: LEDGERS.credits,
+                    })
+                );
+
+                // Fund user accounts with 500 credits
+                unwrap(
+                    await controller.internalTransaction({
+                        transfers: [
+                            {
+                                transferId: 100n,
+                                debitAccountId: ACCOUNT_IDS.liquidity_credits,
+                                creditAccountId: account1.account.id,
+                                amount: 500n,
+                                code: TransferCodes.admin_credit,
+                                currency: 'credits',
+                            },
+                        ],
+                    })
+                );
+            });
+
+            it('should bill the account and credit the records revenue account', async () => {
+                const result = (await controller.billForUsage({
+                    ...filter,
+                    initialAmount: 50,
+                    action: async () => {
+                        await checkAccounts(financialInterface, [
+                            {
+                                id: account1.account.id,
+                                credits_posted: 500n,
+                                credits_pending: 0n,
+                                debits_posted: 0n,
+                                debits_pending: 50n,
+                            },
+                        ]);
+
+                        return success({
+                            data: 'abc',
+                            cost: 50,
+                        });
+                    },
+                    transferCode: TransferCodes.records_usage_fee,
+                })) as Success<string>;
+
+                expect(isSuccess(result)).toBe(true);
+                expect(result.value).toBe('abc');
+
+                await checkAccounts(financialInterface, [
+                    {
+                        id: account1.account.id,
+                        credits_posted: 500n,
+                        credits_pending: 0n,
+                        debits_posted: 50n,
+                        debits_pending: 0n,
+                    },
+                ]);
+            });
+
+            it('should refund the difference between the initial amount and the actual cost', async () => {
+                const result = (await controller.billForUsage({
+                    ...filter,
+                    initialAmount: 100,
+                    action: async () => {
+                        await checkAccounts(financialInterface, [
+                            {
+                                id: account1.account.id,
+                                credits_posted: 500n,
+                                credits_pending: 0n,
+                                debits_posted: 0n,
+                                debits_pending: 100n,
+                            },
+                        ]);
+
+                        return success({
+                            data: 'abc',
+                            cost: 50,
+                        });
+                    },
+                    transferCode: TransferCodes.records_usage_fee,
+                })) as Success<string>;
+
+                expect(isSuccess(result)).toBe(true);
+                expect(result.value).toBe('abc');
+
+                await checkAccounts(financialInterface, [
+                    {
+                        id: account1.account.id,
+                        credits_posted: 500n,
+                        credits_pending: 0n,
+                        debits_posted: 50n,
+                        debits_pending: 0n,
+                    },
+                ]);
+            });
+
+            it('should transfer an additional amount if the final cost is greater than the initial amount', async () => {
+                const result = (await controller.billForUsage({
+                    ...filter,
+                    initialAmount: 100,
+                    action: async () => {
+                        await checkAccounts(financialInterface, [
+                            {
+                                id: account1.account.id,
+                                credits_posted: 500n,
+                                credits_pending: 0n,
+                                debits_posted: 0n,
+                                debits_pending: 100n,
+                            },
+                        ]);
+
+                        return success({
+                            data: 'abc',
+                            cost: 150,
+                        });
+                    },
+                    transferCode: TransferCodes.records_usage_fee,
+                })) as Success<string>;
+
+                expect(isSuccess(result)).toBe(true);
+                expect(result.value).toBe('abc');
+
+                await checkAccounts(financialInterface, [
+                    {
+                        id: account1.account.id,
+                        credits_posted: 500n,
+                        credits_pending: 0n,
+                        debits_posted: 150n,
+                        debits_pending: 0n,
+                    },
+                ]);
+            });
+
+            it('should transfer an as much as possible if the final cost is greater than the initial amount and the account has insufficient funds', async () => {
+                const result = (await controller.billForUsage({
+                    ...filter,
+                    initialAmount: 100,
+                    action: async () => {
+                        await checkAccounts(financialInterface, [
+                            {
+                                id: account1.account.id,
+                                credits_posted: 500n,
+                                credits_pending: 0n,
+                                debits_posted: 0n,
+                                debits_pending: 100n,
+                            },
+                        ]);
+
+                        return success({
+                            data: 'abc',
+                            cost: 1000,
+                        });
+                    },
+                    transferCode: TransferCodes.records_usage_fee,
+                })) as Success<string>;
+
+                expect(isSuccess(result)).toBe(true);
+                expect(result.value).toBe('abc');
+
+                await checkAccounts(financialInterface, [
+                    {
+                        id: account1.account.id,
+                        credits_posted: 500n,
+                        credits_pending: 0n,
+                        debits_posted: 500n,
+                        debits_pending: 0n,
+                    },
+                ]);
+            });
+
+            it('should void the billing transfer if the action fails', async () => {
+                const result = (await controller.billForUsage({
+                    ...filter,
+                    initialAmount: 100,
+                    action: async () => {
+                        await checkAccounts(financialInterface, [
+                            {
+                                id: account1.account.id,
+                                credits_posted: 500n,
+                                credits_pending: 0n,
+                                debits_posted: 0n,
+                                debits_pending: 100n,
+                            },
+                        ]);
+
+                        return failure({
+                            errorCode: 'server_error',
+                            errorMessage: 'Test failure.',
+                        });
+                    },
+                    transferCode: TransferCodes.records_usage_fee,
+                })) as Failure<SimpleError>;
+
+                expect(isFailure(result)).toBe(true);
+                expect(result.error).toEqual({
+                    errorCode: 'server_error',
+                    errorMessage: 'Test failure.',
+                });
+
+                await checkAccounts(financialInterface, [
+                    {
+                        id: account1.account.id,
+                        credits_posted: 500n,
+                        credits_pending: 0n,
+                        debits_posted: 0n,
+                        debits_pending: 0n,
+                    },
+                ]);
+            });
+
+            it('should return insufficient funds error if the account has insufficient funds for the initial amount', async () => {
+                const action = jest.fn(async () => {
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: account1.account.id,
+                            credits_posted: 500n,
+                            credits_pending: 0n,
+                            debits_posted: 0n,
+                            debits_pending: 100n,
+                        },
+                    ]);
+
+                    return failure<SimpleError>({
+                        errorCode: 'server_error',
+                        errorMessage: 'Test failure.',
+                    });
+                });
+
+                const result = (await controller.billForUsage({
+                    ...filter,
+                    initialAmount: 1000,
+                    action: action,
+                    transferCode: TransferCodes.records_usage_fee,
+                })) as Failure<SimpleError>;
+
+                expect(result).toEqual(
+                    failure({
+                        errorCode: 'insufficient_funds',
+                        errorMessage: 'Insufficient funds to cover usage.',
+                    })
+                );
+
+                await checkAccounts(financialInterface, [
+                    {
+                        id: account1.account.id,
+                        credits_posted: 500n,
+                        credits_pending: 0n,
+                        debits_posted: 0n,
+                        debits_pending: 0n,
+                    },
+                ]);
+
+                expect(action).not.toHaveBeenCalled();
+            });
+
+            it('should not bill when the initial amount is zero', async () => {
+                const result = (await controller.billForUsage({
+                    ...filter,
+                    initialAmount: 0,
+                    action: async () => {
+                        await checkAccounts(financialInterface, [
+                            {
+                                id: account1.account.id,
+                                credits_posted: 500n,
+                                credits_pending: 0n,
+                                debits_posted: 0n,
+                                debits_pending: 0n,
+                            },
+                        ]);
+
+                        return success({
+                            data: 'abc',
+                            cost: 1000,
+                        });
+                    },
+                    transferCode: TransferCodes.records_usage_fee,
+                })) as Success<string>;
+
+                expect(isSuccess(result)).toBe(true);
+                expect(result.value).toBe('abc');
+
+                await checkAccounts(financialInterface, [
+                    {
+                        id: account1.account.id,
+                        credits_posted: 500n,
+                        credits_pending: 0n,
+                        debits_posted: 0n,
+                        debits_pending: 0n,
+                    },
+                ]);
+            });
+
+            it('should not bill when the initial amount is null', async () => {
+                const result = (await controller.billForUsage({
+                    ...filter,
+                    initialAmount: null,
+                    action: async () => {
+                        await checkAccounts(financialInterface, [
+                            {
+                                id: account1.account.id,
+                                credits_posted: 500n,
+                                credits_pending: 0n,
+                                debits_posted: 0n,
+                                debits_pending: 0n,
+                            },
+                        ]);
+
+                        return success({
+                            data: 'abc',
+                            cost: 1000,
+                        });
+                    },
+                    transferCode: TransferCodes.records_usage_fee,
+                })) as Success<string>;
+
+                expect(isSuccess(result)).toBe(true);
+                expect(result.value).toBe('abc');
+
+                await checkAccounts(financialInterface, [
+                    {
+                        id: account1.account.id,
+                        credits_posted: 500n,
+                        credits_pending: 0n,
+                        debits_posted: 0n,
+                        debits_pending: 0n,
+                    },
+                ]);
+            });
         });
     });
 });
