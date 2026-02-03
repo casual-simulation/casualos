@@ -28,6 +28,10 @@ export class BullQueue<T> implements IQueue<T>, SubscriptionLike {
     private _queue: Queue;
     private _sub: Subscription;
 
+    get queue(): Queue {
+        return this._queue;
+    }
+
     constructor(queue: Queue) {
         this._sub = new Subscription();
         this._queue = queue;
