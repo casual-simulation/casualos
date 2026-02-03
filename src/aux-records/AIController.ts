@@ -26,7 +26,6 @@ import type {
 } from '@casual-simulation/aux-common/Errors';
 import type {
     AIChatInterface,
-    AIChatInterfaceResponse,
     AIChatInterfaceStreamResponse,
     AIChatMessage,
 } from './AIChatInterface';
@@ -61,11 +60,14 @@ import type {
     ConstructAuthorizationContextFailure,
     PolicyController,
 } from './PolicyController';
-import type { UserRole } from '@casual-simulation/aux-common';
+import type { Failure, Success, UserRole } from '@casual-simulation/aux-common';
 import {
     failure,
+    genericResult,
+    isFailure,
     isSuperUserRole,
     success,
+    wrap,
     type DenialReason,
     type KnownErrorCodes,
     type Result,
@@ -76,6 +78,11 @@ import type {
     AIOpenAIRealtimeInterface,
     CreateRealtimeSessionTokenRequest,
 } from './AIOpenAIRealtimeInterface';
+import type { FinancialController, UsageBillingOptions } from './financial/FinancialController';
+import type { FinancialStore } from './financial/FinancialStore';
+import {
+    TransferCodes,
+} from './financial/FinancialInterface';
 
 const TRACE_NAME = 'AIController';
 
@@ -93,6 +100,8 @@ export interface AIConfiguration {
     openai: {
         realtime: AIOpenAIRealtimeConfiguration;
     } | null;
+    financial: FinancialController | null;
+    financialStore: FinancialStore | null;
 }
 
 export interface AIChatConfiguration {
@@ -283,6 +292,8 @@ export class AIController {
     private _policyStore: PolicyStore;
     private _policies: PolicyController;
     private _recordsStore: RecordsStore;
+    private _financial: FinancialController | null;
+    private _financialStore: FinancialStore | null;
 
     constructor(configuration: AIConfiguration) {
         if (configuration.chat) {
@@ -338,6 +349,8 @@ export class AIController {
         this._config = configuration.config;
         this._policyStore = configuration.policies;
         this._recordsStore = configuration.records;
+        this._financial = configuration.financial;
+        this._financialStore = configuration.financialStore;
     }
 
     @traced(TRACE_NAME)
@@ -500,7 +513,29 @@ export class AIController {
                 }
             }
 
-            const result = await chat.chat({
+            const creditFeePerInputToken = allowedFeatures.ai.chat.creditFeePerInputToken;
+            const creditFeePerOutputToken = allowedFeatures.ai.chat.creditFeePerOutputToken;
+            const initialAmount = creditFeePerInputToken || creditFeePerOutputToken ? 
+                ((100 * (creditFeePerInputToken ?? 0)) + 100 * (creditFeePerOutputToken ?? 0)) : null;
+
+            const billing = await this._billForAIUsage({
+                userId: request.userId,
+                transferCode: TransferCodes.records_usage_fee,
+                // initialAmount: initialAmount,
+                // action: async () => {
+                    
+                // }
+            });
+
+            const initialResult = await billing.next(success({
+                initialCost: initialAmount
+            }));
+
+            if (isFailure(initialResult.value)) {
+                return genericResult(initialResult.value);
+            }
+
+            const chatResult = await wrap(async () => await chat.chat({
                 messages: request.messages,
                 model: model,
                 temperature: request.temperature,
@@ -510,21 +545,59 @@ export class AIController {
                 stopWords: request.stopWords,
                 userId: request.userId,
                 maxTokens,
-            });
+            }));
+            
+            if (isFailure(chatResult)) {
+                console.error('[AIController] Chat request failed:', chatResult);
 
-            if (result.totalTokens > 0) {
-                const adjustedTokens = this._calculateTokenCost(result, model);
+                // Need to pass failure to billing to ensure that it cancels pending transfers
+                const errorResult = await billing.next(failure({
+                    errorCode: 'server_error',
+                    errorMessage: 'A server error occurred.',
+                }));
+
+                return genericResult(errorResult.value as Failure<SimpleError>);
+            }
+
+            let cost = 0;
+
+            if (chatResult.value.inputTokens > 0 && creditFeePerInputToken) {
+                const adjustedInputTokens = this._calculateTokenCost(chatResult.value.inputTokens, model);
+                cost += adjustedInputTokens * creditFeePerInputToken;
+            }
+
+            if (chatResult.value.outputTokens > 0 && creditFeePerOutputToken) {
+                const adjustedOutputTokens = this._calculateTokenCost(chatResult.value.outputTokens, model);
+                cost += adjustedOutputTokens * creditFeePerOutputToken;
+            }
+
+            if (!chatResult.value.inputTokens && !chatResult.value.outputTokens && chatResult.value.totalTokens > 0) {
+                // Fallback in case the interface doesn't provide input/output token breakdown
+                const adjustedTokens = this._calculateTokenCost(chatResult.value.totalTokens, model);
+                cost = adjustedTokens * (creditFeePerOutputToken ?? creditFeePerInputToken ?? 0);
+            }
+
+            if (chatResult.value.totalTokens > 0) {
+                const adjustedTotalTokens = this._calculateTokenCost(chatResult.value.totalTokens, model);
 
                 await this._metrics.recordChatMetrics({
                     userId: request.userId,
                     createdAtMs: Date.now(),
-                    tokens: adjustedTokens,
+                    tokens: adjustedTotalTokens,
                 });
+            }
+
+            const finalResult = await billing.next(success({
+                cost
+            }));
+
+            if (isFailure(finalResult.value)) {
+                return genericResult(finalResult.value);
             }
 
             return {
                 success: true,
-                choices: result.choices,
+                choices: chatResult.value.choices,
             };
         } catch (err) {
             const span = trace.getActiveSpan();
@@ -541,14 +614,42 @@ export class AIController {
     }
 
     private _calculateTokenCost(
-        result: AIChatInterfaceResponse | AIChatInterfaceStreamResponse,
+        tokens: number,
         model: string
     ) {
-        const totalTokens = result.totalTokens;
         const tokenModifierRatio = this._chatOptions.tokenModifierRatio;
         const modifier = tokenModifierRatio[model] ?? 1.0;
-        const adjustedTokens = modifier * totalTokens;
+        const adjustedTokens = modifier * tokens;
         return adjustedTokens;
+    }
+
+    /**
+     * Bills a user for AI usage by transferring credits from their account to the revenue account.
+     * @param params The billing parameters.
+     * @returns A result indicating success or failure.
+     */
+    private async _billForAIUsage(params: UsageBillingOptions): Promise<AsyncGenerator<Success<void>, Result<void, SimpleError>, Result<{ cost?: number, initialCost?: number }, SimpleError>>> {
+        if (!this._financial) {
+            async function *gen(): AsyncGenerator<Success<void>, Result<void, SimpleError>, Result<{ cost?: number, initialCost?: number }, SimpleError>> {
+                try {
+                    for (let i = 0; i < params.maxSteps; i++) {
+                        const r = yield success();
+                        if (isFailure(r)) {
+                            return r;
+                        }
+                    }
+
+                    return success();
+                } catch(err) {
+                    return success();
+                }
+            }
+
+            const generator = gen();
+            return generator;
+        }
+
+        return await this._financial.billForUsage(params);
     }
 
     @traced(TRACE_NAME)
@@ -1875,15 +1976,7 @@ export interface AIChatSuccess {
 
 export interface AIChatFailure {
     success: false;
-    errorCode:
-        | ServerError
-        | NotLoggedInError
-        | NotSubscribedError
-        | InvalidSubscriptionTierError
-        | NotSupportedError
-        | SubscriptionLimitReached
-        | NotAuthorizedError
-        | 'invalid_model';
+    errorCode: KnownErrorCodes;
     errorMessage: string;
 
     allowedSubscriptionTiers?: string[];
