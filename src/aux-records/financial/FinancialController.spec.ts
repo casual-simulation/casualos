@@ -15,18 +15,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import type {
-    Success,
-    Failure,
-    SimpleError,
-} from '@casual-simulation/aux-common';
 import {
     failure,
     success,
     unwrap,
     AccountBalance,
     isSuccess,
-    isFailure,
 } from '@casual-simulation/aux-common';
 import type { AccountWithDetails } from './FinancialController';
 import {
@@ -2195,30 +2189,35 @@ describe('FinancialController', () => {
             });
 
             it('should bill the account and credit the records revenue account', async () => {
-                const result = (await controller.billForUsage({
+                const billing = await controller.billForUsage({
                     ...filter,
-                    initialAmount: 50,
-                    action: async () => {
-                        await checkAccounts(financialInterface, [
-                            {
-                                id: account1.account.id,
-                                credits_posted: 500n,
-                                credits_pending: 0n,
-                                debits_posted: 0n,
-                                debits_pending: 50n,
-                            },
-                        ]);
-
-                        return success({
-                            data: 'abc',
-                            cost: 50,
-                        });
-                    },
                     transferCode: TransferCodes.records_usage_fee,
-                })) as Success<string>;
+                });
 
-                expect(isSuccess(result)).toBe(true);
-                expect(result.value).toBe('abc');
+                await billing.next(
+                    success({
+                        initialCost: 50,
+                    })
+                );
+
+                await checkAccounts(financialInterface, [
+                    {
+                        id: account1.account.id,
+                        credits_posted: 500n,
+                        credits_pending: 0n,
+                        debits_posted: 0n,
+                        debits_pending: 50n,
+                    },
+                ]);
+
+                const result = await billing.next(
+                    success({
+                        cost: 50,
+                    })
+                );
+
+                expect(result.done).toBe(false);
+                expect(isSuccess(result.value)).toBe(true);
 
                 await checkAccounts(financialInterface, [
                     {
@@ -2231,31 +2230,119 @@ describe('FinancialController', () => {
                 ]);
             });
 
-            it('should refund the difference between the initial amount and the actual cost', async () => {
-                const result = (await controller.billForUsage({
+            it('should bill the account in multiple cycles', async () => {
+                const billing = await controller.billForUsage({
                     ...filter,
-                    initialAmount: 100,
-                    action: async () => {
-                        await checkAccounts(financialInterface, [
-                            {
-                                id: account1.account.id,
-                                credits_posted: 500n,
-                                credits_pending: 0n,
-                                debits_posted: 0n,
-                                debits_pending: 100n,
-                            },
-                        ]);
-
-                        return success({
-                            data: 'abc',
-                            cost: 50,
-                        });
-                    },
                     transferCode: TransferCodes.records_usage_fee,
-                })) as Success<string>;
+                });
 
-                expect(isSuccess(result)).toBe(true);
-                expect(result.value).toBe('abc');
+                await billing.next(
+                    success({
+                        initialCost: 50,
+                    })
+                );
+
+                await checkAccounts(financialInterface, [
+                    {
+                        id: account1.account.id,
+                        credits_posted: 500n,
+                        credits_pending: 0n,
+                        debits_posted: 0n,
+                        debits_pending: 50n,
+                    },
+                ]);
+
+                const result = await billing.next(
+                    success({
+                        cost: 50,
+                    })
+                );
+
+                expect(result.done).toBe(false);
+                expect(isSuccess(result.value)).toBe(true);
+
+                await checkAccounts(financialInterface, [
+                    {
+                        id: account1.account.id,
+                        credits_posted: 500n,
+                        credits_pending: 0n,
+                        debits_posted: 50n,
+                        debits_pending: 0n,
+                    },
+                ]);
+
+                const result2 = await billing.next(
+                    success({
+                        initialCost: 100,
+                    })
+                );
+
+                expect(result.done).toBe(false);
+                expect(isSuccess(result2.value)).toBe(true);
+
+                await checkAccounts(financialInterface, [
+                    {
+                        id: account1.account.id,
+                        credits_posted: 500n,
+                        credits_pending: 0n,
+                        debits_posted: 50n,
+                        debits_pending: 100n,
+                    },
+                ]);
+
+                const finalResult = await billing.next(
+                    success({
+                        cost: 100,
+                    })
+                );
+
+                expect(finalResult.done).toBe(false);
+                expect(isSuccess(finalResult.value)).toBe(true);
+
+                await checkAccounts(financialInterface, [
+                    {
+                        id: account1.account.id,
+                        credits_posted: 500n,
+                        credits_pending: 0n,
+                        debits_posted: 150n,
+                        debits_pending: 0n,
+                    },
+                ]);
+            });
+
+            it('should refund the difference between the initial amount and the actual cost', async () => {
+                const billing = await controller.billForUsage({
+                    ...filter,
+                    transferCode: TransferCodes.records_usage_fee,
+                });
+
+                let result = await billing.next(
+                    success({
+                        initialCost: 100,
+                    })
+                );
+
+                await checkAccounts(financialInterface, [
+                    {
+                        id: account1.account.id,
+                        credits_posted: 500n,
+                        credits_pending: 0n,
+                        debits_posted: 0n,
+                        debits_pending: 100n,
+                    },
+                ]);
+
+                expect(result.done).toBe(false);
+                expect(isSuccess(result.value)).toBe(true);
+
+                const result2 = await billing.next(
+                    success({
+                        cost: 50,
+                    })
+                );
+
+                expect(result2.done).toBe(false);
+                expect(isSuccess(result2.value)).toBe(true);
 
                 await checkAccounts(financialInterface, [
                     {
@@ -2269,30 +2356,30 @@ describe('FinancialController', () => {
             });
 
             it('should transfer an additional amount if the final cost is greater than the initial amount', async () => {
-                const result = (await controller.billForUsage({
+                const billing = await controller.billForUsage({
                     ...filter,
-                    initialAmount: 100,
-                    action: async () => {
-                        await checkAccounts(financialInterface, [
-                            {
-                                id: account1.account.id,
-                                credits_posted: 500n,
-                                credits_pending: 0n,
-                                debits_posted: 0n,
-                                debits_pending: 100n,
-                            },
-                        ]);
-
-                        return success({
-                            data: 'abc',
-                            cost: 150,
-                        });
-                    },
                     transferCode: TransferCodes.records_usage_fee,
-                })) as Success<string>;
+                });
 
-                expect(isSuccess(result)).toBe(true);
-                expect(result.value).toBe('abc');
+                // Set initial amount
+                await billing.next(success({ initialCost: 100 }));
+
+                // Verify pending transfer
+                await checkAccounts(financialInterface, [
+                    {
+                        id: account1.account.id,
+                        credits_posted: 500n,
+                        credits_pending: 0n,
+                        debits_posted: 0n,
+                        debits_pending: 100n,
+                    },
+                ]);
+
+                // Bill for more than initial
+                const result = await billing.next(success({ cost: 150 }));
+
+                expect(result.done).toBe(false);
+                expect(isSuccess(result.value)).toBe(true);
 
                 await checkAccounts(financialInterface, [
                     {
@@ -2306,31 +2393,23 @@ describe('FinancialController', () => {
             });
 
             it('should transfer an as much as possible if the final cost is greater than the initial amount and the account has insufficient funds', async () => {
-                const result = (await controller.billForUsage({
+                const billing = await controller.billForUsage({
                     ...filter,
-                    initialAmount: 100,
-                    action: async () => {
-                        await checkAccounts(financialInterface, [
-                            {
-                                id: account1.account.id,
-                                credits_posted: 500n,
-                                credits_pending: 0n,
-                                debits_posted: 0n,
-                                debits_pending: 100n,
-                            },
-                        ]);
-
-                        return success({
-                            data: 'abc',
-                            cost: 1000,
-                        });
-                    },
                     transferCode: TransferCodes.records_usage_fee,
-                })) as Success<string>;
+                });
 
-                expect(isSuccess(result)).toBe(true);
-                expect(result.value).toBe('abc');
+                // Set initial amount
+                await billing.next(success({ initialCost: 100 }));
 
+                // Try to bill for more than account has (only has 500 credits)
+                const result = await billing.next(success({ cost: 1000 }));
+
+                expect(result.done).toBe(false);
+
+                // TODO: consider whether to fail here instead
+                expect(isSuccess(result.value)).toBe(true);
+
+                // Should have charged as much as possible (500 total)
                 await checkAccounts(financialInterface, [
                     {
                         id: account1.account.id,
@@ -2343,34 +2422,42 @@ describe('FinancialController', () => {
             });
 
             it('should void the billing transfer if the action fails', async () => {
-                const result = (await controller.billForUsage({
+                const billing = await controller.billForUsage({
                     ...filter,
-                    initialAmount: 100,
-                    action: async () => {
-                        await checkAccounts(financialInterface, [
-                            {
-                                id: account1.account.id,
-                                credits_posted: 500n,
-                                credits_pending: 0n,
-                                debits_posted: 0n,
-                                debits_pending: 100n,
-                            },
-                        ]);
-
-                        return failure({
-                            errorCode: 'server_error',
-                            errorMessage: 'Test failure.',
-                        });
-                    },
                     transferCode: TransferCodes.records_usage_fee,
-                })) as Failure<SimpleError>;
-
-                expect(isFailure(result)).toBe(true);
-                expect(result.error).toEqual({
-                    errorCode: 'server_error',
-                    errorMessage: 'Test failure.',
                 });
 
+                // Set initial amount
+                await billing.next(success({ initialCost: 100 }));
+
+                // Verify pending transfer
+                await checkAccounts(financialInterface, [
+                    {
+                        id: account1.account.id,
+                        credits_posted: 500n,
+                        credits_pending: 0n,
+                        debits_posted: 0n,
+                        debits_pending: 100n,
+                    },
+                ]);
+
+                // Send failure result
+                const result = await billing.next(
+                    failure({
+                        errorCode: 'server_error',
+                        errorMessage: 'Test failure.',
+                    })
+                );
+
+                expect(result.done).toBe(true);
+                expect(result.value).toEqual(
+                    failure({
+                        errorCode: 'server_error',
+                        errorMessage: 'Test failure.',
+                    })
+                );
+
+                // Transfer should be voided
                 await checkAccounts(financialInterface, [
                     {
                         id: account1.account.id,
@@ -2383,37 +2470,44 @@ describe('FinancialController', () => {
             });
 
             it('should return insufficient funds error if the account has insufficient funds for the initial amount', async () => {
-                const action = jest.fn(async () => {
-                    await checkAccounts(financialInterface, [
-                        {
-                            id: account1.account.id,
-                            credits_posted: 500n,
-                            credits_pending: 0n,
-                            debits_posted: 0n,
-                            debits_pending: 100n,
-                        },
-                    ]);
-
-                    return failure<SimpleError>({
-                        errorCode: 'server_error',
-                        errorMessage: 'Test failure.',
-                    });
+                const billing = await controller.billForUsage({
+                    ...filter,
+                    transferCode: TransferCodes.records_usage_fee,
                 });
 
-                const result = (await controller.billForUsage({
-                    ...filter,
-                    initialAmount: 1000,
-                    action: action,
-                    transferCode: TransferCodes.records_usage_fee,
-                })) as Failure<SimpleError>;
+                // Try to reserve more than account has
+                const result = await billing.next(
+                    success({ initialCost: 1000 })
+                );
 
-                expect(result).toEqual(
+                expect(result.done).toBe(true);
+                expect(result.value).toEqual(
                     failure({
                         errorCode: 'insufficient_funds',
                         errorMessage: 'Insufficient funds to cover usage.',
                     })
                 );
 
+                // No transfer should have occurred
+                await checkAccounts(financialInterface, [
+                    {
+                        id: account1.account.id,
+                        credits_posted: 500n,
+                        credits_pending: 0n,
+                        debits_posted: 0n,
+                        debits_pending: 0n,
+                    },
+                ]);
+            });
+
+            it('should not bill when the initial amount is zero', async () => {
+                const billing = await controller.billForUsage({
+                    ...filter,
+                    transferCode: TransferCodes.records_usage_fee,
+                });
+
+                await billing.next(success({ initialCost: 0 }));
+
                 await checkAccounts(financialInterface, [
                     {
                         id: account1.account.id,
@@ -2424,71 +2518,29 @@ describe('FinancialController', () => {
                     },
                 ]);
 
-                expect(action).not.toHaveBeenCalled();
-            });
+                const result = await billing.next(success({ cost: 100 }));
 
-            it('should not bill when the initial amount is zero', async () => {
-                const result = (await controller.billForUsage({
-                    ...filter,
-                    initialAmount: 0,
-                    action: async () => {
-                        await checkAccounts(financialInterface, [
-                            {
-                                id: account1.account.id,
-                                credits_posted: 500n,
-                                credits_pending: 0n,
-                                debits_posted: 0n,
-                                debits_pending: 0n,
-                            },
-                        ]);
-
-                        return success({
-                            data: 'abc',
-                            cost: 1000,
-                        });
-                    },
-                    transferCode: TransferCodes.records_usage_fee,
-                })) as Success<string>;
-
-                expect(isSuccess(result)).toBe(true);
-                expect(result.value).toBe('abc');
+                expect(result.done).toBe(false);
+                expect(isSuccess(result.value)).toBe(true);
 
                 await checkAccounts(financialInterface, [
                     {
                         id: account1.account.id,
                         credits_posted: 500n,
                         credits_pending: 0n,
-                        debits_posted: 0n,
+                        debits_posted: 100n,
                         debits_pending: 0n,
                     },
                 ]);
             });
 
             it('should not bill when the initial amount is null', async () => {
-                const result = (await controller.billForUsage({
+                const billing = await controller.billForUsage({
                     ...filter,
-                    initialAmount: null,
-                    action: async () => {
-                        await checkAccounts(financialInterface, [
-                            {
-                                id: account1.account.id,
-                                credits_posted: 500n,
-                                credits_pending: 0n,
-                                debits_posted: 0n,
-                                debits_pending: 0n,
-                            },
-                        ]);
-
-                        return success({
-                            data: 'abc',
-                            cost: 1000,
-                        });
-                    },
                     transferCode: TransferCodes.records_usage_fee,
-                })) as Success<string>;
+                });
 
-                expect(isSuccess(result)).toBe(true);
-                expect(result.value).toBe('abc');
+                await billing.next(success({ initialCost: null }));
 
                 await checkAccounts(financialInterface, [
                     {
@@ -2496,6 +2548,22 @@ describe('FinancialController', () => {
                         credits_posted: 500n,
                         credits_pending: 0n,
                         debits_posted: 0n,
+                        debits_pending: 0n,
+                    },
+                ]);
+
+                const result = await billing.next(success({ cost: 500 }));
+
+                expect(result.done).toBe(false);
+                expect(isSuccess(result.value)).toBe(true);
+
+                // Should have charged 500 credits directly
+                await checkAccounts(financialInterface, [
+                    {
+                        id: account1.account.id,
+                        credits_posted: 500n,
+                        credits_pending: 0n,
+                        debits_posted: 500n,
                         debits_pending: 0n,
                     },
                 ]);

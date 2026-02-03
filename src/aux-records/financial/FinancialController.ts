@@ -20,8 +20,9 @@ import type {
     Result,
     ServerError,
     SimpleError,
+    Success,
 } from '@casual-simulation/aux-common';
-import { AccountBalance } from '@casual-simulation/aux-common';
+import { AccountBalance, isSuccess } from '@casual-simulation/aux-common';
 import {
     failure,
     isFailure,
@@ -867,68 +868,63 @@ export class FinancialController {
 
     /**
      * Attempts to bill the given user or studio for records usage.
-     * @param params The billing parameters.
-     * @returns A result containing the data from the action if successful.
+     * This is an async generator that yields control points where actions should be performed.
+     * The caller should send back { cost, data } after each yield, and the generator will bill for that cost.
+     *
+     * @param params The billing parameters (without the action callback).
+     * @returns An async generator that yields for each action and returns all collected data.
+     *
+     * @example
+     * const billing = controller.billForUsage({ userId, studioId, initialAmount, transferCode });
+     * await billing.next(); // Start generator
+     *
+     * const action1Result = await performAction1();
+     * await billing.next({ cost: 100, data: action1Result });
+     *
+     * const action2Result = await performAction2();
+     * const final = await billing.next({ cost: 50, data: action2Result });
+     *
+     * if (final.done) {
+     *     const allResults = final.value; // Result<T[], SimpleError>
+     * }
      */
     @traced(TRACE_NAME)
-    async billForUsage<T>(
-        params: UsageBillingOptions<T>
-    ): Promise<Result<T, SimpleError>> {
-        if (!params.initialAmount) {
-            const result = await params.action();
+    async billForUsage(
+        params: UsageBillingOptions
+    ): Promise<
+        AsyncGenerator<
+            Success<void>,
+            Result<void, SimpleError>,
+            Result<{ cost?: number; initialCost?: number | null }, SimpleError>
+        >
+    > {
+        const gen = this._billForUsage(params);
+        await gen.next();
+        return gen;
+    }
 
-            if (isFailure(result)) {
-                return result;
-            }
-
-            return success(result.value.data);
-        }
+    @traced(TRACE_NAME)
+    async *_billForUsage(
+        params: UsageBillingOptions
+    ): AsyncGenerator<
+        Success<void>,
+        Result<void, SimpleError>,
+        Result<{ cost?: number; initialCost?: number | null }, SimpleError>
+    > {
+        let accountResult: GetFinancialAccountResult | null = null;
+        const maxSteps = params.maxSteps || 100;
 
         // Get or create the user's credits account
-        const accountResult = await this.getOrCreateFinancialAccount({
+        accountResult = await this.getOrCreateFinancialAccount({
             userId: params.userId,
             studioId: params.studioId,
             ledger: LEDGERS.credits,
         });
 
-        if (!accountResult.success) {
-            return failure({
-                errorCode: 'server_error',
-                errorMessage: 'Failed to get user account for billing.',
-            });
-        }
-
-        // Transfer from user account to revenue account
-        const transferResult = await this.internalTransaction({
-            transfers: [
-                {
-                    debitAccountId: accountResult.value.account.id,
-                    creditAccountId: ACCOUNT_IDS.revenue_records_usage_credits,
-                    amount: params.initialAmount,
-                    currency: 'credits',
-                    code: params.transferCode,
-                    pending: true,
-                    timeoutSeconds: 300,
-                },
-            ],
-        });
-
-        if (isFailure(transferResult)) {
-            if (
-                transferResult.error.errorCode === 'debits_exceed_credits' &&
-                transferResult.error.accountId ===
-                    accountResult.value.account.id.toString()
-            ) {
-                // User doesn't have enough money
-                return failure({
-                    errorCode: 'insufficient_funds',
-                    errorMessage: 'Insufficient funds to cover usage.',
-                });
-            }
-
+        if (isFailure(accountResult)) {
             logError(
-                transferResult.error,
-                `[AIController] Billing transfer failed for user ${params.userId}`
+                accountResult.error,
+                `[FinancialController] Failed to get or create financial account for filter (userId: ${params.userId}, studioId: ${params.studioId})`
             );
             return failure({
                 errorCode: 'server_error',
@@ -936,89 +932,184 @@ export class FinancialController {
             });
         }
 
-        const result = await params.action();
+        let initialAmount: number = 0;
+        let initialTransferResult: TransferResult;
+        const transactionId = this._financialInterface.generateId();
 
-        if (isFailure(result)) {
-            // cancel the transfer
-            const cancelResult = await this.completePendingTransfers({
-                transfers: transferResult.value.transferIds,
-                transactionId: transferResult.value.transactionId,
-                flags: TransferFlags.void_pending_transfer,
-            });
+        // Process each action and bill for it
+        try {
+            for (let steps = 0; steps < maxSteps; steps++) {
+                const result = yield success();
 
-            if (isFailure(cancelResult)) {
-                logError(
-                    cancelResult.error,
-                    `[AIController] Failed to cancel billing transfer for user ${params.userId} after action failure.`
-                );
-            }
+                if (isFailure(result)) {
+                    if (
+                        initialTransferResult &&
+                        isSuccess(initialTransferResult)
+                    ) {
+                        // cancel the transfer
+                        const cancelResult =
+                            await this.completePendingTransfers({
+                                transfers:
+                                    initialTransferResult.value.transferIds,
+                                transactionId: transactionId,
+                                flags: TransferFlags.void_pending_transfer,
+                            });
 
-            return result;
-        }
-
-        const finalCost = result.value.cost;
-
-        const completeResult = await this.completePendingTransfers({
-            transfers: transferResult.value.transferIds,
-            transactionId: transferResult.value.transactionId,
-            amount: Math.min(finalCost, params.initialAmount),
-        });
-
-        if (isFailure(completeResult)) {
-            logError(
-                completeResult.error,
-                `[AIController] Failed to complete billing transfer for user ${params.userId}.`
-            );
-
-            const cancelResult = await this.completePendingTransfers({
-                transfers: transferResult.value.transferIds,
-                transactionId: transferResult.value.transactionId,
-                flags: TransferFlags.void_pending_transfer,
-            });
-
-            if (isFailure(cancelResult)) {
-                logError(
-                    cancelResult.error,
-                    `[AIController] Failed to cancel billing transfer for user ${params.userId} after action failure.`
-                );
-            }
-
-            return failure({
-                errorCode: 'server_error',
-                errorMessage: 'The server encountered an error.',
-            });
-        } else {
-            const additionalAmount = finalCost - params.initialAmount;
-            if (additionalAmount > 0) {
-                // need to charge more
-                const additionalTransferResult = await this.internalTransaction(
-                    {
-                        transactionId: completeResult.value.transactionId,
-                        transfers: [
-                            {
-                                debitAccountId: accountResult.value.account.id,
-                                creditAccountId:
-                                    ACCOUNT_IDS.revenue_records_usage_credits,
-                                amount: additionalAmount,
-                                currency: 'credits',
-                                code: params.transferCode,
-                                balancingDebit: true,
-                            },
-                        ],
+                        if (isFailure(cancelResult)) {
+                            logError(
+                                cancelResult.error,
+                                `[AIController] Failed to cancel billing transfer for user ${params.userId} after action failure.`
+                            );
+                        }
                     }
-                );
 
-                if (isFailure(additionalTransferResult)) {
-                    logError(
-                        additionalTransferResult.error,
-                        `[AIController] Additional billing transfer failed for user ${params.userId} for amount ${additionalAmount}.`
-                    );
+                    return result;
+                }
+
+                const { cost } = result.value;
+
+                if (cost) {
+                    const additionalAmount = cost - initialAmount;
+
+                    if (
+                        initialTransferResult &&
+                        isSuccess(initialTransferResult)
+                    ) {
+                        const completeResult =
+                            await this.completePendingTransfers({
+                                transfers:
+                                    initialTransferResult.value.transferIds,
+                                transactionId: transactionId,
+                                amount: Math.min(cost, initialAmount),
+                            });
+
+                        if (isFailure(completeResult)) {
+                            logError(
+                                completeResult.error,
+                                `[AIController] Failed to complete billing transfer for user ${params.userId}.`
+                            );
+
+                            const cancelResult =
+                                await this.completePendingTransfers({
+                                    transfers:
+                                        initialTransferResult.value.transferIds,
+                                    transactionId: transactionId,
+                                    flags: TransferFlags.void_pending_transfer,
+                                });
+
+                            if (isFailure(cancelResult)) {
+                                logError(
+                                    cancelResult.error,
+                                    `[AIController] Failed to cancel billing transfer for user ${params.userId} after action failure.`
+                                );
+                            }
+
+                            return failure({
+                                errorCode: 'server_error',
+                                errorMessage:
+                                    'The server encountered an error.',
+                            });
+                        }
+
+                        initialTransferResult = null;
+                    }
+
+                    if (additionalAmount > 0) {
+                        const additionalTransferResult =
+                            await this.internalTransaction({
+                                transactionId: transactionId,
+                                transfers: [
+                                    {
+                                        debitAccountId:
+                                            accountResult.value.account.id,
+                                        creditAccountId:
+                                            ACCOUNT_IDS.revenue_records_usage_credits,
+                                        amount: additionalAmount,
+                                        currency: 'credits',
+                                        code: params.transferCode,
+                                        balancingDebit: true,
+                                    },
+                                ],
+                            });
+
+                        if (isFailure(additionalTransferResult)) {
+                            logError(
+                                additionalTransferResult.error,
+                                `[FinancialController] Additional billing transfer failed for user ${params.userId}`
+                            );
+                            return failure({
+                                errorCode: 'server_error',
+                                errorMessage:
+                                    'The server encountered an error.',
+                            });
+                        }
+                    }
+                }
+
+                if (result.value.initialCost) {
+                    if (initialTransferResult) {
+                        console.error(
+                            `[FinancialController] Initial transfer already exists!`
+                        );
+                        return failure({
+                            errorCode: 'server_error',
+                            errorMessage: 'The server encountered an error.',
+                        });
+                    }
+
+                    const newInitialTransferResult =
+                        await this.internalTransaction({
+                            transactionId,
+                            transfers: [
+                                {
+                                    debitAccountId:
+                                        accountResult.value.account.id,
+                                    creditAccountId:
+                                        ACCOUNT_IDS.revenue_records_usage_credits,
+                                    amount: result.value.initialCost,
+                                    currency: 'credits',
+                                    code: params.transferCode,
+                                    pending: true,
+                                    timeoutSeconds: 300,
+                                },
+                            ],
+                        });
+
+                    if (isFailure(newInitialTransferResult)) {
+                        if (
+                            newInitialTransferResult.error.errorCode ===
+                                'debits_exceed_credits' &&
+                            newInitialTransferResult.error.accountId ===
+                                accountResult.value.account.id.toString()
+                        ) {
+                            // User doesn't have enough money
+                            return failure({
+                                errorCode: 'insufficient_funds',
+                                errorMessage:
+                                    'Insufficient funds to cover usage.',
+                            });
+                        }
+
+                        logError(
+                            newInitialTransferResult.error,
+                            `[FinancialController] Initial billing transfer failed`
+                        );
+                        return failure({
+                            errorCode: 'server_error',
+                            errorMessage: 'The server encountered an error.',
+                        });
+                    }
+
+                    initialAmount = result.value.initialCost;
+                    initialTransferResult = newInitialTransferResult;
                 }
             }
-        }
 
-        // return the real results
-        return success(result.value.data);
+            return success();
+        } catch (e) {
+            // Generator completed normally
+            return success();
+        }
     }
 
     private _processTransferResult(
@@ -1608,7 +1699,7 @@ export interface AccountBalances {
     credits: AccountBalance | undefined;
 }
 
-export interface UsageBillingOptions<T> {
+export interface UsageBillingOptions {
     /**
      * The ID of the user to bill.
      * Cannot be specified with studioId.
@@ -1621,13 +1712,11 @@ export interface UsageBillingOptions<T> {
      */
     studioId?: string;
 
-    /**
-     * The initial amount that should be reserved before performing the action.
-     * If the final cost exceeds this amount, then an additional transfer will be performed to cover the difference.
-     * If the final cost is less than this amount, then the difference will be refunded.
-     * If null, then no billing will be performed.
-     */
-    initialAmount: number | null;
+    // /**
+    //  * The initial amount that should be reserved before performing the action.
+    //  * If null, then no billing will be performed, but results will still be collected.
+    //  */
+    // initialAmount: number | null;
 
     /**
      * The transfer code that should be used for the billing transfer.
@@ -1635,15 +1724,9 @@ export interface UsageBillingOptions<T> {
     transferCode: TransferCodes;
 
     /**
-     * The action that performs the usage and returns the final cost.
+     * The maximum number of billing steps that can be performed.
+     *
+     * Defaults to 100.
      */
-    action: () => Promise<
-        Result<
-            {
-                cost: number;
-                data: T;
-            },
-            SimpleError
-        >
-    >;
+    maxSteps?: number;
 }
