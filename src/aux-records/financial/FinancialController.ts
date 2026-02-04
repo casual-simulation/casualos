@@ -895,7 +895,13 @@ export class FinancialController {
         AsyncGenerator<
             Success<void>,
             Result<void, SimpleError>,
-            Result<{ cost?: number; initialCost?: number | null }, SimpleError>
+            Result<
+                {
+                    cost?: number | bigint;
+                    initialCost?: number | bigint | null;
+                },
+                SimpleError
+            >
         >
     > {
         const gen = this._billForUsage(params);
@@ -909,7 +915,10 @@ export class FinancialController {
     ): AsyncGenerator<
         Success<void>,
         Result<void, SimpleError>,
-        Result<{ cost?: number; initialCost?: number | null }, SimpleError>
+        Result<
+            { cost?: number | bigint; initialCost?: number | bigint | null },
+            SimpleError
+        >
     > {
         let accountResult: GetFinancialAccountResult | null = null;
         const maxSteps = params.maxSteps || 100;
@@ -932,7 +941,7 @@ export class FinancialController {
             });
         }
 
-        let initialAmount: number = 0;
+        let initialAmount: bigint = 0n;
         let initialTransferResult: TransferResult;
         const transactionId = this._financialInterface.generateId();
 
@@ -969,7 +978,8 @@ export class FinancialController {
                 const { cost } = result.value;
 
                 if (cost) {
-                    const additionalAmount = cost - initialAmount;
+                    const costBigInt = BigInt(cost);
+                    const additionalAmount = costBigInt - initialAmount;
 
                     if (
                         initialTransferResult &&
@@ -980,7 +990,10 @@ export class FinancialController {
                                 transfers:
                                     initialTransferResult.value.transferIds,
                                 transactionId: transactionId,
-                                amount: Math.min(cost, initialAmount),
+                                amount:
+                                    costBigInt < initialAmount
+                                        ? costBigInt
+                                        : initialAmount,
                             });
 
                         if (isFailure(completeResult)) {
@@ -1100,7 +1113,7 @@ export class FinancialController {
                         });
                     }
 
-                    initialAmount = result.value.initialCost;
+                    initialAmount = BigInt(result.value.initialCost);
                     initialTransferResult = newInitialTransferResult;
                 }
             }
