@@ -357,6 +357,13 @@ export const getSubscriptionFeaturesSchema = memoize(() =>
                 .describe(
                     'The number of credits that are charged for each file per subscription period. If not specified, then there is no fee.'
                 ),
+
+            creditFeePerFileWrite: z
+                .int()
+                .optional()
+                .describe(
+                    'The number of credits that are charged for each file write operation. If not specified, then there is no fee.'
+                ),
         }),
         events: z.object({
             allowed: z
@@ -1349,6 +1356,12 @@ export interface FileFeaturesConfiguration {
      * If not specified, then there is no limit.
      */
     maxBytesTotal?: number;
+
+    /**
+     * The number of credits that are charged for each file write operation.
+     * If not specified, then there is no fee.
+     */
+    creditFeePerFileWrite?: number;
 }
 
 export interface EventFeaturesConfiguration {

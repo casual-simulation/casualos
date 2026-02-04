@@ -48,6 +48,14 @@ import type { ConfigurationStore } from './ConfigurationStore';
 import { getSubscriptionFeatures } from './SubscriptionConfiguration';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
+import type { FinancialController } from './financial/FinancialController';
+import {
+    ACCOUNT_IDS,
+    CurrencyCodes,
+    LEDGERS,
+    TransferCodes,
+} from './financial';
+import { hasValue, isFailure, logError } from '@casual-simulation/aux-common';
 
 const TRACE_NAME = 'FileRecordsController';
 
@@ -56,6 +64,7 @@ export interface FileRecordsConfiguration {
     store: FileRecordsStore;
     metrics: MetricsStore;
     config: ConfigurationStore;
+    financialController?: FinancialController | null;
 }
 
 /**
@@ -66,12 +75,14 @@ export class FileRecordsController {
     private _store: FileRecordsStore;
     private _metrics: MetricsStore;
     private _config: ConfigurationStore;
+    private _financialController: FinancialController | null;
 
     constructor(config: FileRecordsConfiguration) {
         this._policies = config.policies;
         this._store = config.store;
         this._metrics = config.metrics;
         this._config = config.config;
+        this._financialController = config.financialController || null;
     }
 
     /**
@@ -237,6 +248,75 @@ export class FileRecordsController {
                         errorMessage:
                             'The file count limit has been reached for the subscription.',
                     };
+                }
+            }
+
+            if (hasValue(features.files.creditFeePerFileWrite)) {
+                if (!this._financialController) {
+                    console.warn(
+                        `[FileRecordsController] Cannot charge credits for file write because FinancialController is not configured.`
+                    );
+                } else {
+                    // Try to record the credit usage.
+                    const accountInfo =
+                        await this._financialController.getFinancialAccount({
+                            userId: metricsResult.ownerId,
+                            studioId: metricsResult.studioId,
+                            ledger: LEDGERS.credits,
+                        });
+
+                    if (isFailure(accountInfo)) {
+                        logError(
+                            accountInfo.error,
+                            `[FileRecordsController] Failed to get financial account to charge for file write.`
+                        );
+                    } else {
+                        // Charge the account for the file write.
+                        const transactionResult =
+                            await this._financialController.internalTransaction(
+                                {
+                                    transfers: [
+                                        {
+                                            amount: features.files
+                                                .creditFeePerFileWrite,
+                                            debitAccountId:
+                                                accountInfo.value.account.id,
+                                            creditAccountId:
+                                                ACCOUNT_IDS.revenue_records_usage_credits,
+                                            currency: CurrencyCodes.credits,
+                                            code: TransferCodes.records_usage_fee,
+                                        },
+                                    ],
+                                }
+                            );
+
+                        if (isFailure(transactionResult)) {
+                            if (
+                                transactionResult.error.errorCode ===
+                                    'debits_exceed_credits' &&
+                                transactionResult.error.accountId ===
+                                    accountInfo.value.account.id.toString()
+                            ) {
+                                logError(
+                                    transactionResult.error,
+                                    `[FileRecordsController] Insufficient funds to perform file write.`,
+                                    console.log
+                                );
+                                // The user does not have enough credits to perform the write.
+                                return {
+                                    success: false,
+                                    errorCode: 'insufficient_funds',
+                                    errorMessage:
+                                        'Not enough credits to perform the file write.',
+                                };
+                            } else {
+                                logError(
+                                    transactionResult.error,
+                                    `[FileRecordsController] Failed to record financial transaction for file write.`
+                                );
+                            }
+                        }
+                    }
                 }
             }
 
@@ -949,7 +1029,8 @@ export interface RecordFileFailure {
         | AuthorizeSubjectFailure['errorCode']
         | SubscriptionLimitReached
         | 'invalid_file_data'
-        | 'not_supported';
+        | 'not_supported'
+        | 'insufficient_funds';
 
     /**
      * The error message that indicates why the request failed.
