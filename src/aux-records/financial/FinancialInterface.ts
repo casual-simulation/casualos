@@ -301,6 +301,7 @@ export const ACCOUNT_IDS = {
 
     /**
      * The ID of the records usage revenue account in the credits ledger.
+     * This is used for billing data records and file records usage.
      */
     revenue_records_usage_credits: 4104n,
 
