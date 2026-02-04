@@ -5769,8 +5769,8 @@ export class RecordsServer {
                 .inputs(
                     z.object({
                         recordName: RECORD_NAME_VALIDATION.optional(),
-                        inst: z.string().optional(),
-                        marker: z.string().optional(),
+                        inst: z.string().optional().nullable(),
+                        marker: z.string().optional().nullable(),
                     })
                 )
                 .handler(async ({ recordName, inst, marker }, context) => {
