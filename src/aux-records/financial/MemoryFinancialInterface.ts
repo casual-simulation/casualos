@@ -426,10 +426,16 @@ export class MemoryFinancialInterface implements FinancialInterface {
                     } else if (
                         transfer.flags & TransferFlags.post_pending_transfer
                     ) {
+                        const finalAmount =
+                            transfer.amount === 0n ||
+                            transfer.amount > pendingTransfer.amount
+                                ? pendingTransfer.amount
+                                : transfer.amount;
+
                         creditAccount.credits_pending -= pendingTransfer.amount;
                         debitAccount.debits_pending -= pendingTransfer.amount;
-                        creditAccount.credits_posted += pendingTransfer.amount;
-                        debitAccount.debits_posted += pendingTransfer.amount;
+                        creditAccount.credits_posted += finalAmount;
+                        debitAccount.debits_posted += finalAmount;
                     } else if (
                         transfer.flags & TransferFlags.void_pending_transfer
                     ) {
