@@ -7,6 +7,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where shared documents would fail to load from public insts if the user wasn't logged in on initialization.
+-   Fixed an issue where `os.listInsts()` could not be used due to a input mismatch between the server and client.
 
 ## V4.0.5
 
