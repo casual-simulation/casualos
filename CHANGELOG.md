@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V4.0.6
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where shared documents would fail to load from public insts if the user wasn't logged in on initialization.
+
 ## V4.0.5
 
 #### Date: 1/30/2026
