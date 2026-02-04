@@ -296,6 +296,66 @@ export const getDataFeaturesSchema = memoize(() =>
 
 export type DataFeaturesSchema = ReturnType<typeof getDataFeaturesSchema>;
 
+export const aiChatFeaturesSchema = memoize(() =>
+    z.object({
+        allowed: z
+            .boolean()
+            .describe(
+                'Whether AI chat requests are allowed for the subscription. If false, then every request to generate AI chat will be rejected.'
+            ),
+        maxTokensPerPeriod: z
+            .int()
+            .positive()
+            .optional()
+            .describe(
+                'The maximum number of AI chat tokens allowed per subscription period. If omitted, then there is no limit.'
+            ),
+        maxTokensPerRequest: z
+            .int()
+            .positive()
+            .optional()
+            .describe(
+                'The maximum number of AI chat tokens allowed per request. If omitted, then there is no limit.'
+            ),
+        allowedModels: z
+            .array(z.string())
+            .optional()
+            .describe(
+                'The list of model IDs that are allowed for the subscription. If omitted, then all models are allowed.'
+            ),
+
+        creditFeePerInputToken: z.coerce
+            .bigint()
+            .optional()
+            .describe(
+                'The number of credits that are charged for each input token. If not specified, then there is no fee.'
+            ),
+
+        creditFeePerOutputToken: z.coerce
+            .bigint()
+            .optional()
+            .describe(
+                'The number of credits that are charged for each output token. If not specified, then there is no fee.'
+            ),
+
+        preChargeInputTokens: z.coerce
+            .bigint()
+            .optional()
+            .describe(
+                'The number of input tokens that are charged before chat requests are made. This is used to ensure that there are enough credits in the account to cover most of the cost of the request. If the final request costs less, than the difference is refunded to the account. If not, then the difference is charged after the request. If not specified, then the account is pre charged for 100 input tokens and 100 output tokens.'
+            ),
+
+        preChargeOutputTokens: z.coerce
+            .bigint()
+            .optional()
+            .describe(
+                'The number of output tokens that are charged before chat requests are made. This is used to ensure that there are enough credits in the account to cover most of the cost of the request. If the final request costs less, than the difference is refunded to the account. If not, then the difference is charged after the request. If not specified, then the account is pre charged for 100 input tokens and 100 output tokens.'
+            ),
+    })
+);
+
+export type aiChatFeaturesSchema = ReturnType<typeof aiChatFeaturesSchema>;
+
 export const getSubscriptionFeaturesSchema = memoize(() =>
     z.object({
         records: z
@@ -397,40 +457,7 @@ export const getSubscriptionFeaturesSchema = memoize(() =>
                 .describe('Not currently implemented.'),
         }),
         ai: z.object({
-            chat: z.object({
-                allowed: z
-                    .boolean()
-                    .describe(
-                        'Whether AI chat requests are allowed for the subscription. If false, then every request to generate AI chat will be rejected.'
-                    ),
-                maxTokensPerPeriod: z
-                    .int()
-                    .positive()
-                    .optional()
-                    .describe(
-                        'The maximum number of AI chat tokens allowed per subscription period. If omitted, then there is no limit.'
-                    ),
-                allowedModels: z
-                    .array(z.string())
-                    .optional()
-                    .describe(
-                        'The list of model IDs that are allowed for the subscription. If omitted, then all models are allowed.'
-                    ),
-
-                creditFeePerInputToken: z
-                    .int()
-                    .optional()
-                    .describe(
-                        'The number of credits that are charged for each input token. If not specified, then there is no fee.'
-                    ),
-
-                creditFeePerOutputToken: z
-                    .int()
-                    .optional()
-                    .describe(
-                        'The number of credits that are charged for each output token. If not specified, then there is no fee.'
-                    ),
-            }),
+            chat: aiChatFeaturesSchema(),
             images: z.object({
                 allowed: z
                     .boolean()
@@ -1406,42 +1433,7 @@ export interface AIFeaturesConfiguration {
 export type AIOpenAIFeaturesConfiguration =
     z.infer<SubscriptionFeaturesSchema>['ai']['openai'];
 
-export interface AIChatFeaturesConfiguration {
-    /**
-     * Whether AI chat features are allowed.
-     */
-    allowed: boolean;
-
-    /**
-     * The maximum number of tokens that are allowed to be processed per request.
-     * If not specified, then there is no limit.
-     */
-    maxTokensPerRequest?: number;
-
-    /**
-     * The maximum number of tokens that are allowed to be processed per subscription period.
-     * If not specified, then there is no limit.
-     */
-    maxTokensPerPeriod?: number;
-
-    /**
-     * The list of model IDs that are allowed for the subscription.
-     * If omitted, then all models are allowed.
-     */
-    allowedModels?: string[];
-
-    /**
-     * The number of credits that are charged for each input token.
-     * If not specified, then there is no fee.
-     */
-    creditFeePerInputToken?: number;
-
-    /**
-     * The number of credits that are charged for each output token.
-     * If not specified, then there is no fee.
-     */
-    creditFeePerOutputToken?: number;
-}
+export type AIChatFeaturesConfiguration = z.infer<aiChatFeaturesSchema>;
 
 export interface AIImageFeaturesConfiguration {
     /**

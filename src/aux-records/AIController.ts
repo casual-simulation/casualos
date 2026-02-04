@@ -78,11 +78,11 @@ import type {
     AIOpenAIRealtimeInterface,
     CreateRealtimeSessionTokenRequest,
 } from './AIOpenAIRealtimeInterface';
-import type { FinancialController, UsageBillingOptions } from './financial/FinancialController';
-import type { FinancialStore } from './financial/FinancialStore';
-import {
-    TransferCodes,
-} from './financial/FinancialInterface';
+import type {
+    FinancialController,
+    UsageBillingOptions,
+} from './financial/FinancialController';
+import { TransferCodes } from './financial/FinancialInterface';
 
 const TRACE_NAME = 'AIController';
 
@@ -100,8 +100,7 @@ export interface AIConfiguration {
     openai: {
         realtime: AIOpenAIRealtimeConfiguration;
     } | null;
-    financial: FinancialController | null;
-    financialStore: FinancialStore | null;
+    financial?: FinancialController | null;
 }
 
 export interface AIChatConfiguration {
@@ -293,7 +292,6 @@ export class AIController {
     private _policies: PolicyController;
     private _recordsStore: RecordsStore;
     private _financial: FinancialController | null;
-    private _financialStore: FinancialStore | null;
 
     constructor(configuration: AIConfiguration) {
         if (configuration.chat) {
@@ -350,7 +348,6 @@ export class AIController {
         this._policyStore = configuration.policies;
         this._recordsStore = configuration.records;
         this._financial = configuration.financial;
-        this._financialStore = configuration.financialStore;
     }
 
     @traced(TRACE_NAME)
@@ -513,72 +510,105 @@ export class AIController {
                 }
             }
 
-            const creditFeePerInputToken = allowedFeatures.ai.chat.creditFeePerInputToken;
-            const creditFeePerOutputToken = allowedFeatures.ai.chat.creditFeePerOutputToken;
-            const initialAmount = creditFeePerInputToken || creditFeePerOutputToken ? 
-                ((100 * (creditFeePerInputToken ?? 0)) + 100 * (creditFeePerOutputToken ?? 0)) : null;
+            const creditFeePerInputToken =
+                allowedFeatures.ai.chat.creditFeePerInputToken ?? null;
+            const creditFeePerOutputToken =
+                allowedFeatures.ai.chat.creditFeePerOutputToken ?? null;
+            const preChargeInputTokens =
+                allowedFeatures.ai.chat.preChargeInputTokens ?? 100n;
+            const preChargeOutputTokens =
+                allowedFeatures.ai.chat.preChargeOutputTokens ?? 100n;
+            const initialAmount =
+                creditFeePerInputToken || creditFeePerOutputToken
+                    ? preChargeInputTokens * (creditFeePerInputToken ?? 0n) +
+                      preChargeOutputTokens * (creditFeePerOutputToken ?? 0n)
+                    : null;
 
             const billing = await this._billForAIUsage({
                 userId: request.userId,
                 transferCode: TransferCodes.records_usage_fee,
-                // initialAmount: initialAmount,
-                // action: async () => {
-                    
-                // }
             });
 
-            const initialResult = await billing.next(success({
-                initialCost: initialAmount
-            }));
+            const initialResult = await billing.next(
+                success({
+                    initialCost: initialAmount,
+                })
+            );
 
             if (isFailure(initialResult.value)) {
                 return genericResult(initialResult.value);
             }
 
-            const chatResult = await wrap(async () => await chat.chat({
-                messages: request.messages,
-                model: model,
-                temperature: request.temperature,
-                topP: request.topP,
-                frequencyPenalty: request.frequencyPenalty,
-                presencePenalty: request.presencePenalty,
-                stopWords: request.stopWords,
-                userId: request.userId,
-                maxTokens,
-            }));
-            
+            const chatResult = await wrap(
+                async () =>
+                    await chat.chat({
+                        messages: request.messages,
+                        model: model,
+                        temperature: request.temperature,
+                        topP: request.topP,
+                        frequencyPenalty: request.frequencyPenalty,
+                        presencePenalty: request.presencePenalty,
+                        stopWords: request.stopWords,
+                        userId: request.userId,
+                        maxTokens,
+                    })
+            );
+
             if (isFailure(chatResult)) {
-                console.error('[AIController] Chat request failed:', chatResult);
+                console.error(
+                    '[AIController] Chat request failed:',
+                    chatResult
+                );
 
                 // Need to pass failure to billing to ensure that it cancels pending transfers
-                const errorResult = await billing.next(failure({
-                    errorCode: 'server_error',
-                    errorMessage: 'A server error occurred.',
-                }));
+                const errorResult = await billing.next(
+                    failure({
+                        errorCode: 'server_error',
+                        errorMessage: 'A server error occurred.',
+                    })
+                );
 
                 return genericResult(errorResult.value as Failure<SimpleError>);
             }
 
-            let cost = 0;
+            let cost = 0n;
 
             if (chatResult.value.inputTokens > 0 && creditFeePerInputToken) {
-                const adjustedInputTokens = this._calculateTokenCost(chatResult.value.inputTokens, model);
-                cost += adjustedInputTokens * creditFeePerInputToken;
+                const adjustedInputTokens = this._calculateTokenCost(
+                    chatResult.value.inputTokens,
+                    model
+                );
+                cost += BigInt(adjustedInputTokens) * creditFeePerInputToken;
             }
 
             if (chatResult.value.outputTokens > 0 && creditFeePerOutputToken) {
-                const adjustedOutputTokens = this._calculateTokenCost(chatResult.value.outputTokens, model);
-                cost += adjustedOutputTokens * creditFeePerOutputToken;
+                const adjustedOutputTokens = this._calculateTokenCost(
+                    chatResult.value.outputTokens,
+                    model
+                );
+                cost += BigInt(adjustedOutputTokens) * creditFeePerOutputToken;
             }
 
-            if (!chatResult.value.inputTokens && !chatResult.value.outputTokens && chatResult.value.totalTokens > 0) {
+            if (
+                !chatResult.value.inputTokens &&
+                !chatResult.value.outputTokens &&
+                chatResult.value.totalTokens > 0
+            ) {
                 // Fallback in case the interface doesn't provide input/output token breakdown
-                const adjustedTokens = this._calculateTokenCost(chatResult.value.totalTokens, model);
-                cost = adjustedTokens * (creditFeePerOutputToken ?? creditFeePerInputToken ?? 0);
+                const adjustedTokens = this._calculateTokenCost(
+                    chatResult.value.totalTokens,
+                    model
+                );
+                cost =
+                    BigInt(adjustedTokens) *
+                    (creditFeePerOutputToken ?? creditFeePerInputToken ?? 0n);
             }
 
             if (chatResult.value.totalTokens > 0) {
-                const adjustedTotalTokens = this._calculateTokenCost(chatResult.value.totalTokens, model);
+                const adjustedTotalTokens = this._calculateTokenCost(
+                    chatResult.value.totalTokens,
+                    model
+                );
 
                 await this._metrics.recordChatMetrics({
                     userId: request.userId,
@@ -587,9 +617,11 @@ export class AIController {
                 });
             }
 
-            const finalResult = await billing.next(success({
-                cost
-            }));
+            const finalResult = await billing.next(
+                success({
+                    cost,
+                })
+            );
 
             if (isFailure(finalResult.value)) {
                 return genericResult(finalResult.value);
@@ -613,10 +645,7 @@ export class AIController {
         }
     }
 
-    private _calculateTokenCost(
-        tokens: number,
-        model: string
-    ) {
+    private _calculateTokenCost(tokens: number, model: string) {
         const tokenModifierRatio = this._chatOptions.tokenModifierRatio;
         const modifier = tokenModifierRatio[model] ?? 1.0;
         const adjustedTokens = modifier * tokens;
@@ -628,9 +657,27 @@ export class AIController {
      * @param params The billing parameters.
      * @returns A result indicating success or failure.
      */
-    private async _billForAIUsage(params: UsageBillingOptions): Promise<AsyncGenerator<Success<void>, Result<void, SimpleError>, Result<{ cost?: number, initialCost?: number }, SimpleError>>> {
+    private async _billForAIUsage(
+        params: UsageBillingOptions
+    ): Promise<
+        AsyncGenerator<
+            Success<void>,
+            Result<void, SimpleError>,
+            Result<
+                { cost?: number | bigint; initialCost?: number | bigint },
+                SimpleError
+            >
+        >
+    > {
         if (!this._financial) {
-            async function *gen(): AsyncGenerator<Success<void>, Result<void, SimpleError>, Result<{ cost?: number, initialCost?: number }, SimpleError>> {
+            async function* gen(): AsyncGenerator<
+                Success<void>,
+                Result<void, SimpleError>,
+                Result<
+                    { cost?: number | bigint; initialCost?: number | bigint },
+                    SimpleError
+                >
+            > {
                 try {
                     for (let i = 0; i < params.maxSteps; i++) {
                         const r = yield success();
@@ -640,7 +687,7 @@ export class AIController {
                     }
 
                     return success();
-                } catch(err) {
+                } catch (err) {
                     return success();
                 }
             }
@@ -842,7 +889,7 @@ export class AIController {
             for await (let chunk of result) {
                 if (chunk.totalTokens > 0) {
                     const adjustedTokens = this._calculateTokenCost(
-                        chunk,
+                        chunk.totalTokens,
                         model
                     );
                     await this._metrics.recordChatMetrics({
