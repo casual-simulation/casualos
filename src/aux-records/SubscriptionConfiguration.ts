@@ -344,11 +344,11 @@ export const getSubscriptionFeaturesSchema = memoize(() =>
                     'The maximum number of file bytes that can be stored for the subscription. If omitted, then there is no limit.'
                 ),
 
-            creditFeePerBytePerPeriod: z
+            creditFeePerMegabytePerPeriod: z
                 .int()
                 .optional()
                 .describe(
-                    'The number of credits that are charged for each byte stored in files per subscription period. If not specified, then there is no fee.'
+                    'The number of credits that are charged for each megabyte stored in files per subscription period. If not specified, then there is no fee.'
                 ),
 
             creditFeePerFilePerPeriod: z
@@ -596,11 +596,11 @@ export const getSubscriptionFeaturesSchema = memoize(() =>
                     'The number of credits that are charged for each inst per subscription period. If not specified, then there is no fee.'
                 ),
 
-            creditFeePerBytePerPeriod: z
+            creditFeePerMegabytePerPeriod: z
                 .int()
                 .optional()
                 .describe(
-                    'The number of credits that are charged for each byte stored in an inst per subscription period. If not specified, then there is no fee.'
+                    'The number of credits that are charged for each megabyte stored in an inst per subscription period. If not specified, then there is no fee.'
                 ),
         }),
         comId: z
@@ -1362,6 +1362,18 @@ export interface FileFeaturesConfiguration {
      * If not specified, then there is no fee.
      */
     creditFeePerFileWrite?: number;
+
+    /**
+     * The number of credits that are charged per megabyte stored per period.
+     * If not specified, then there is no fee.
+     */
+    creditFeePerMegabytePerPeriod?: number;
+
+    /**
+     * The number of credits that are charged per file stored per period.
+     * If not specified, then there is no fee.
+     */
+    creditFeePerFilePerPeriod?: number;
 }
 
 export interface EventFeaturesConfiguration {
@@ -1531,6 +1543,18 @@ export interface InstsFeaturesConfiguration {
      * The maximum number of concurrent connections allowed per inst.
      */
     maxActiveConnectionsPerInst?: number;
+
+    /**
+     * The number of credits that are charged per inst per period.
+     * If not specified, then there is no fee.
+     */
+    creditFeePerInstPerPeriod?: number;
+
+    /**
+     * The number of credits that are charged per megabyte stored per period for insts.
+     * If not specified, then there is no fee.
+     */
+    creditFeePerMegabytePerPeriod?: number;
 }
 
 export interface StudioComIdFeaturesConfiguration {

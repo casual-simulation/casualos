@@ -2498,6 +2498,177 @@ describe('FileRecordsController', () => {
             });
         });
 
+        describe('creditFeePerMegabytePerPeriod', () => {
+            beforeEach(async () => {
+                store.subscriptionConfiguration = buildSubscriptionConfig(
+                    (config) =>
+                        config.addSubscription('sub1', (sub) =>
+                            sub
+                                .withTier('tier1')
+                                .withAllDefaultFeatures()
+                                .withFiles({
+                                    allowed: true,
+                                    creditFeePerMegabytePerPeriod: 10, // 10 credits per MB
+                                })
+                        )
+                );
+
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                });
+
+                presignUrlMock.mockResolvedValueOnce({
+                    success: true,
+                    uploadUrl: 'testUrl',
+                    uploadMethod: 'POST',
+                    uploadHeaders: {
+                        myHeader: 'myValue',
+                    },
+                });
+            });
+
+            it('should charge for a small file (less than 1 MB) as 1 MB', async () => {
+                const result = (await manager.recordFile(key, userId, {
+                    fileSha256Hex: 'hash',
+                    fileByteLength: 500_000, // 500 KB = less than 1 MB
+                    fileMimeType: 'text/plain',
+                    fileDescription: 'description',
+                    headers: {},
+                })) as RecordFileSuccess;
+
+                expect(result.success).toBe(true);
+
+                const userAccount = unwrap(
+                    await financialController.getAccountBalance({
+                        userId: ownerId,
+                        ledger: LEDGERS.credits,
+                    })
+                );
+
+                // Charging 10 credits per MB, so 500 KB should be charged as 1 MB = 10 credits
+                await checkAccounts(financialInterface, [
+                    {
+                        id: ACCOUNT_IDS.revenue_records_usage_credits,
+                        credits_posted: 10n,
+                        debits_posted: 0n,
+                        credits_pending: 0n,
+                        debits_pending: 0n,
+                    },
+                    {
+                        id: BigInt(userAccount!.accountId),
+                        credits_posted: 1000n,
+                        debits_posted: 10n,
+                        credits_pending: 0n,
+                        debits_pending: 0n,
+                    },
+                ]);
+            });
+
+            it('should charge for a 2 MB file as 2 MB (20 credits)', async () => {
+                presignUrlMock.mockResolvedValueOnce({
+                    success: true,
+                    uploadUrl: 'testUrl',
+                    uploadMethod: 'POST',
+                    uploadHeaders: {
+                        myHeader: 'myValue',
+                    },
+                });
+
+                const result = (await manager.recordFile(key, userId, {
+                    fileSha256Hex: 'hash2',
+                    fileByteLength: 2_000_000, // 2 MB
+                    fileMimeType: 'text/plain',
+                    fileDescription: 'description',
+                    headers: {},
+                })) as RecordFileSuccess;
+
+                expect(result.success).toBe(true);
+
+                const userAccount = unwrap(
+                    await financialController.getAccountBalance({
+                        userId: ownerId,
+                        ledger: LEDGERS.credits,
+                    })
+                );
+
+                // Charging 10 credits per MB, so 2 MB should be charged as 20 credits
+                await checkAccounts(financialInterface, [
+                    {
+                        id: ACCOUNT_IDS.revenue_records_usage_credits,
+                        credits_posted: 20n,
+                        debits_posted: 0n,
+                        credits_pending: 0n,
+                        debits_pending: 0n,
+                    },
+                    {
+                        id: BigInt(userAccount!.accountId),
+                        credits_posted: 1000n,
+                        debits_posted: 20n,
+                        credits_pending: 0n,
+                        debits_pending: 0n,
+                    },
+                ]);
+            });
+
+            it('should fail if user does not have enough credits for megabyte charge', async () => {
+                store.subscriptionConfiguration = buildSubscriptionConfig(
+                    (config) =>
+                        config.addSubscription('sub1', (sub) =>
+                            sub
+                                .withTier('tier1')
+                                .withAllDefaultFeatures()
+                                .withFiles({
+                                    allowed: true,
+                                    creditFeePerMegabytePerPeriod: 500, // 500 credits per MB
+                                })
+                        )
+                );
+
+                const result = (await manager.recordFile(key, userId, {
+                    fileSha256Hex: 'hash3',
+                    fileByteLength: 3_000_000, // 3 MB = would cost 1500 credits, but user only has 1000
+                    fileMimeType: 'text/plain',
+                    fileDescription: 'description',
+                    headers: {},
+                })) as RecordFileFailure;
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'insufficient_funds',
+                    errorMessage:
+                        'Not enough credits to perform the file write.',
+                });
+
+                const userAccount = unwrap(
+                    await financialController.getAccountBalance({
+                        userId: ownerId,
+                        ledger: LEDGERS.credits,
+                    })
+                );
+
+                // No charges should be posted
+                await checkAccounts(financialInterface, [
+                    {
+                        id: ACCOUNT_IDS.revenue_records_usage_credits,
+                        credits_posted: 0n,
+                        debits_posted: 0n,
+                        credits_pending: 0n,
+                        debits_pending: 0n,
+                    },
+                    {
+                        id: BigInt(userAccount!.accountId),
+                        credits_posted: 1000n,
+                        debits_posted: 0n,
+                        credits_pending: 0n,
+                        debits_pending: 0n,
+                    },
+                ]);
+            });
+        });
+
         describe('studio', () => {
             const studioId = 'studio1';
             const studioRecordName = 'studioRecord';
@@ -2673,6 +2844,182 @@ describe('FileRecordsController', () => {
                     success: false,
                     errorCode: 'file_not_found',
                     errorMessage: expect.any(String),
+                });
+            });
+
+            describe('creditFeePerMegabytePerPeriod', () => {
+                beforeEach(async () => {
+                    store.subscriptionConfiguration = buildSubscriptionConfig(
+                        (config) =>
+                            config.addSubscription('sub1', (sub) =>
+                                sub
+                                    .withTier('tier1')
+                                    .withAllDefaultFeatures()
+                                    .withFiles({
+                                        allowed: true,
+                                        creditFeePerMegabytePerPeriod: 15, // 15 credits per MB for studio
+                                    })
+                            )
+                    );
+
+                    presignUrlMock.mockResolvedValueOnce({
+                        success: true,
+                        uploadUrl: 'testUrl',
+                        uploadMethod: 'POST',
+                        uploadHeaders: {
+                            myHeader: 'myValue',
+                        },
+                    });
+                });
+
+                it('should charge studio for a small file (less than 1 MB) as 1 MB', async () => {
+                    const result = (await manager.recordFile(
+                        studioRecordName,
+                        ownerId,
+                        {
+                            fileSha256Hex: 'hash',
+                            fileByteLength: 750_000, // 750 KB = less than 1 MB
+                            fileMimeType: 'text/plain',
+                            fileDescription: 'description',
+                            headers: {},
+                        }
+                    )) as RecordFileSuccess;
+
+                    expect(result.success).toBe(true);
+
+                    const studioAccount = unwrap(
+                        await financialController.getAccountBalance({
+                            studioId,
+                            ledger: LEDGERS.credits,
+                        })
+                    );
+
+                    // Charging 15 credits per MB, so 750 KB should be charged as 1 MB = 15 credits
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: ACCOUNT_IDS.revenue_records_usage_credits,
+                            credits_posted: 15n,
+                            debits_posted: 0n,
+                            credits_pending: 0n,
+                            debits_pending: 0n,
+                        },
+                        {
+                            id: BigInt(studioAccount!.accountId),
+                            credits_posted: 1000n,
+                            debits_posted: 15n,
+                            credits_pending: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                });
+
+                it('should charge studio for a 3 MB file as 3 MB (45 credits)', async () => {
+                    presignUrlMock.mockResolvedValueOnce({
+                        success: true,
+                        uploadUrl: 'testUrl',
+                        uploadMethod: 'POST',
+                        uploadHeaders: {
+                            myHeader: 'myValue',
+                        },
+                    });
+
+                    const result = (await manager.recordFile(
+                        studioRecordName,
+                        ownerId,
+                        {
+                            fileSha256Hex: 'hash2',
+                            fileByteLength: 3_000_000, // 3 MB
+                            fileMimeType: 'text/plain',
+                            fileDescription: 'description',
+                            headers: {},
+                        }
+                    )) as RecordFileSuccess;
+
+                    expect(result.success).toBe(true);
+
+                    const studioAccount = unwrap(
+                        await financialController.getAccountBalance({
+                            studioId,
+                            ledger: LEDGERS.credits,
+                        })
+                    );
+
+                    // Charging 15 credits per MB, so 3 MB should be charged as 45 credits
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: ACCOUNT_IDS.revenue_records_usage_credits,
+                            credits_posted: 45n,
+                            debits_posted: 0n,
+                            credits_pending: 0n,
+                            debits_pending: 0n,
+                        },
+                        {
+                            id: BigInt(studioAccount!.accountId),
+                            credits_posted: 1000n,
+                            debits_posted: 45n,
+                            credits_pending: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                });
+
+                it('should fail if studio does not have enough credits for megabyte charge', async () => {
+                    store.subscriptionConfiguration = buildSubscriptionConfig(
+                        (config) =>
+                            config.addSubscription('sub1', (sub) =>
+                                sub
+                                    .withTier('tier1')
+                                    .withAllDefaultFeatures()
+                                    .withFiles({
+                                        allowed: true,
+                                        creditFeePerMegabytePerPeriod: 600, // 600 credits per MB
+                                    })
+                            )
+                    );
+
+                    const result = (await manager.recordFile(
+                        studioRecordName,
+                        ownerId,
+                        {
+                            fileSha256Hex: 'hash3',
+                            fileByteLength: 2_000_000, // 2 MB = would cost 1200 credits, but studio only has 1000
+                            fileMimeType: 'text/plain',
+                            fileDescription: 'description',
+                            headers: {},
+                        }
+                    )) as RecordFileFailure;
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'insufficient_funds',
+                        errorMessage:
+                            'Not enough credits to perform the file write.',
+                    });
+
+                    const studioAccount = unwrap(
+                        await financialController.getAccountBalance({
+                            studioId,
+                            ledger: LEDGERS.credits,
+                        })
+                    );
+
+                    // No charges should be posted
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: ACCOUNT_IDS.revenue_records_usage_credits,
+                            credits_posted: 0n,
+                            debits_posted: 0n,
+                            credits_pending: 0n,
+                            debits_pending: 0n,
+                        },
+                        {
+                            id: BigInt(studioAccount!.accountId),
+                            credits_posted: 1000n,
+                            debits_posted: 0n,
+                            credits_pending: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
                 });
             });
         });

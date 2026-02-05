@@ -251,6 +251,84 @@ export class FileRecordsController {
                 }
             }
 
+            if (hasValue(features.files.creditFeePerMegabytePerPeriod)) {
+                if (!this._financialController) {
+                    console.warn(
+                        `[FileRecordsController] Cannot charge credits for file storage because FinancialController is not configured.`
+                    );
+                } else {
+                    const megabytes = Math.ceil(
+                        request.fileByteLength / 1_000_000
+                    );
+                    const amount =
+                        megabytes *
+                        features.files.creditFeePerMegabytePerPeriod;
+
+                    if (amount > 0) {
+                        // Try to record the credit usage.
+                        const accountInfo =
+                            await this._financialController.getFinancialAccount(
+                                {
+                                    userId: metricsResult.ownerId,
+                                    studioId: metricsResult.studioId,
+                                    ledger: LEDGERS.credits,
+                                }
+                            );
+
+                        if (isFailure(accountInfo)) {
+                            logError(
+                                accountInfo.error,
+                                `[FileRecordsController] Failed to get financial account to charge for file storage.`
+                            );
+                        } else {
+                            const transactionResult =
+                                await this._financialController.internalTransaction(
+                                    {
+                                        transfers: [
+                                            {
+                                                amount,
+                                                debitAccountId:
+                                                    accountInfo.value.account
+                                                        .id,
+                                                creditAccountId:
+                                                    ACCOUNT_IDS.revenue_records_usage_credits,
+                                                currency: CurrencyCodes.credits,
+                                                code: TransferCodes.records_usage_fee,
+                                            },
+                                        ],
+                                    }
+                                );
+
+                            if (isFailure(transactionResult)) {
+                                if (
+                                    transactionResult.error.errorCode ===
+                                        'debits_exceed_credits' &&
+                                    transactionResult.error.accountId ===
+                                        accountInfo.value.account.id.toString()
+                                ) {
+                                    logError(
+                                        transactionResult.error,
+                                        `[FileRecordsController] Insufficient funds to perform file write.`,
+                                        console.log
+                                    );
+                                    return {
+                                        success: false,
+                                        errorCode: 'insufficient_funds',
+                                        errorMessage:
+                                            'Not enough credits to perform the file write.',
+                                    };
+                                } else {
+                                    logError(
+                                        transactionResult.error,
+                                        `[FileRecordsController] Failed to record financial transaction for file storage.`
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             if (hasValue(features.files.creditFeePerFileWrite)) {
                 if (!this._financialController) {
                     console.warn(
