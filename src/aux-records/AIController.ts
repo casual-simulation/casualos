@@ -43,10 +43,7 @@ import {
     getSubscriptionFeatures,
 } from './SubscriptionConfiguration';
 import type { PolicyStore } from './PolicyStore';
-import type {
-    AIHumeInterface,
-    AIHumeInterfaceGetAccessTokenFailure,
-} from './AIHumeInterface';
+import type { AIHumeInterface } from './AIHumeInterface';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
 import type {
@@ -57,15 +54,15 @@ import type {
 import { fromByteArray } from 'base64-js';
 import type {
     AuthorizeSubjectFailure,
-    ConstructAuthorizationContextFailure,
     PolicyController,
 } from './PolicyController';
-import type { Failure, Success, UserRole } from '@casual-simulation/aux-common';
+import type { Failure, UserRole } from '@casual-simulation/aux-common';
 import {
     failure,
     genericResult,
     isFailure,
     isSuperUserRole,
+    logError,
     success,
     wrap,
     type DenialReason,
@@ -78,11 +75,11 @@ import type {
     AIOpenAIRealtimeInterface,
     CreateRealtimeSessionTokenRequest,
 } from './AIOpenAIRealtimeInterface';
-import type { FinancialController, UsageBillingOptions } from './financial/FinancialController';
-import type { FinancialStore } from './financial/FinancialStore';
 import {
-    TransferCodes,
-} from './financial/FinancialInterface';
+    billForUsage,
+    type FinancialController,
+} from './financial/FinancialController';
+import { TransferCodes } from './financial/FinancialInterface';
 
 const TRACE_NAME = 'AIController';
 
@@ -100,8 +97,7 @@ export interface AIConfiguration {
     openai: {
         realtime: AIOpenAIRealtimeConfiguration;
     } | null;
-    financial: FinancialController | null;
-    financialStore: FinancialStore | null;
+    financial?: FinancialController | null;
 }
 
 export interface AIChatConfiguration {
@@ -293,7 +289,6 @@ export class AIController {
     private _policies: PolicyController;
     private _recordsStore: RecordsStore;
     private _financial: FinancialController | null;
-    private _financialStore: FinancialStore | null;
 
     constructor(configuration: AIConfiguration) {
         if (configuration.chat) {
@@ -350,7 +345,6 @@ export class AIController {
         this._policyStore = configuration.policies;
         this._recordsStore = configuration.records;
         this._financial = configuration.financial;
-        this._financialStore = configuration.financialStore;
     }
 
     @traced(TRACE_NAME)
@@ -513,72 +507,87 @@ export class AIController {
                 }
             }
 
-            const creditFeePerInputToken = allowedFeatures.ai.chat.creditFeePerInputToken;
-            const creditFeePerOutputToken = allowedFeatures.ai.chat.creditFeePerOutputToken;
-            const initialAmount = creditFeePerInputToken || creditFeePerOutputToken ? 
-                ((100 * (creditFeePerInputToken ?? 0)) + 100 * (creditFeePerOutputToken ?? 0)) : null;
+            const creditFeePerInputToken =
+                allowedFeatures.ai.chat.creditFeePerInputToken ?? null;
+            const creditFeePerOutputToken =
+                allowedFeatures.ai.chat.creditFeePerOutputToken ?? null;
+            const preChargeInputTokens = BigInt(
+                this._calculateTokenCost(
+                    allowedFeatures.ai.chat.preChargeInputTokens ?? 100,
+                    model
+                )
+            );
+            const preChargeOutputTokens = BigInt(
+                this._calculateTokenCost(
+                    allowedFeatures.ai.chat.preChargeOutputTokens ?? 100,
+                    model
+                )
+            );
+            const initialAmount =
+                creditFeePerInputToken || creditFeePerOutputToken
+                    ? preChargeInputTokens * (creditFeePerInputToken ?? 0n) +
+                      preChargeOutputTokens * (creditFeePerOutputToken ?? 0n)
+                    : null;
 
-            const billing = await this._billForAIUsage({
+            const billing = await billForUsage(this._financial, {
                 userId: request.userId,
                 transferCode: TransferCodes.records_usage_fee,
-                // initialAmount: initialAmount,
-                // action: async () => {
-                    
-                // }
             });
 
-            const initialResult = await billing.next(success({
-                initialCost: initialAmount
-            }));
+            const initialResult = await billing.next(
+                success({
+                    initialCost: initialAmount,
+                })
+            );
 
             if (isFailure(initialResult.value)) {
                 return genericResult(initialResult.value);
             }
 
-            const chatResult = await wrap(async () => await chat.chat({
-                messages: request.messages,
-                model: model,
-                temperature: request.temperature,
-                topP: request.topP,
-                frequencyPenalty: request.frequencyPenalty,
-                presencePenalty: request.presencePenalty,
-                stopWords: request.stopWords,
-                userId: request.userId,
-                maxTokens,
-            }));
-            
+            const chatResult = await wrap(
+                async () =>
+                    await chat.chat({
+                        messages: request.messages,
+                        model: model,
+                        temperature: request.temperature,
+                        topP: request.topP,
+                        frequencyPenalty: request.frequencyPenalty,
+                        presencePenalty: request.presencePenalty,
+                        stopWords: request.stopWords,
+                        userId: request.userId,
+                        maxTokens,
+                    })
+            );
+
             if (isFailure(chatResult)) {
-                console.error('[AIController] Chat request failed:', chatResult);
+                console.error(
+                    '[AIController] Chat request failed:',
+                    chatResult
+                );
 
                 // Need to pass failure to billing to ensure that it cancels pending transfers
-                const errorResult = await billing.next(failure({
-                    errorCode: 'server_error',
-                    errorMessage: 'A server error occurred.',
-                }));
+                const errorResult = await billing.next(
+                    failure({
+                        errorCode: 'server_error',
+                        errorMessage: 'A server error occurred.',
+                    })
+                );
 
                 return genericResult(errorResult.value as Failure<SimpleError>);
             }
 
-            let cost = 0;
-
-            if (chatResult.value.inputTokens > 0 && creditFeePerInputToken) {
-                const adjustedInputTokens = this._calculateTokenCost(chatResult.value.inputTokens, model);
-                cost += adjustedInputTokens * creditFeePerInputToken;
-            }
-
-            if (chatResult.value.outputTokens > 0 && creditFeePerOutputToken) {
-                const adjustedOutputTokens = this._calculateTokenCost(chatResult.value.outputTokens, model);
-                cost += adjustedOutputTokens * creditFeePerOutputToken;
-            }
-
-            if (!chatResult.value.inputTokens && !chatResult.value.outputTokens && chatResult.value.totalTokens > 0) {
-                // Fallback in case the interface doesn't provide input/output token breakdown
-                const adjustedTokens = this._calculateTokenCost(chatResult.value.totalTokens, model);
-                cost = adjustedTokens * (creditFeePerOutputToken ?? creditFeePerInputToken ?? 0);
-            }
+            const cost = this._calculateChatBillingCost(
+                chatResult.value,
+                creditFeePerInputToken,
+                creditFeePerOutputToken,
+                model
+            );
 
             if (chatResult.value.totalTokens > 0) {
-                const adjustedTotalTokens = this._calculateTokenCost(chatResult.value.totalTokens, model);
+                const adjustedTotalTokens = this._calculateTokenCost(
+                    chatResult.value.totalTokens,
+                    model
+                );
 
                 await this._metrics.recordChatMetrics({
                     userId: request.userId,
@@ -587,9 +596,11 @@ export class AIController {
                 });
             }
 
-            const finalResult = await billing.next(success({
-                cost
-            }));
+            const finalResult = await billing.next(
+                success({
+                    cost,
+                })
+            );
 
             if (isFailure(finalResult.value)) {
                 return genericResult(finalResult.value);
@@ -613,43 +624,59 @@ export class AIController {
         }
     }
 
-    private _calculateTokenCost(
-        tokens: number,
+    /**
+     * Calculates the final billing cost for a chat request given the token usage.
+     */
+    private _calculateChatBillingCost(
+        chatResult: {
+            inputTokens?: number | null;
+            outputTokens?: number | null;
+            totalTokens: number | null;
+        },
+        creditFeePerInputToken: bigint,
+        creditFeePerOutputToken: bigint,
         model: string
     ) {
-        const tokenModifierRatio = this._chatOptions.tokenModifierRatio;
-        const modifier = tokenModifierRatio[model] ?? 1.0;
-        const adjustedTokens = modifier * tokens;
-        return adjustedTokens;
-    }
+        let cost = 0n;
 
-    /**
-     * Bills a user for AI usage by transferring credits from their account to the revenue account.
-     * @param params The billing parameters.
-     * @returns A result indicating success or failure.
-     */
-    private async _billForAIUsage(params: UsageBillingOptions): Promise<AsyncGenerator<Success<void>, Result<void, SimpleError>, Result<{ cost?: number, initialCost?: number }, SimpleError>>> {
-        if (!this._financial) {
-            async function *gen(): AsyncGenerator<Success<void>, Result<void, SimpleError>, Result<{ cost?: number, initialCost?: number }, SimpleError>> {
-                try {
-                    for (let i = 0; i < params.maxSteps; i++) {
-                        const r = yield success();
-                        if (isFailure(r)) {
-                            return r;
-                        }
-                    }
-
-                    return success();
-                } catch(err) {
-                    return success();
-                }
-            }
-
-            const generator = gen();
-            return generator;
+        if (chatResult.inputTokens > 0 && creditFeePerInputToken) {
+            const adjustedInputTokens = this._calculateTokenCost(
+                chatResult.inputTokens,
+                model
+            );
+            cost += BigInt(adjustedInputTokens) * creditFeePerInputToken;
         }
 
-        return await this._financial.billForUsage(params);
+        if (chatResult.outputTokens > 0 && creditFeePerOutputToken) {
+            const adjustedOutputTokens = this._calculateTokenCost(
+                chatResult.outputTokens,
+                model
+            );
+            cost += BigInt(adjustedOutputTokens) * creditFeePerOutputToken;
+        }
+
+        if (
+            !chatResult.inputTokens &&
+            !chatResult.outputTokens &&
+            chatResult.totalTokens > 0
+        ) {
+            // Fallback in case the interface doesn't provide input/output token breakdown
+            const adjustedTokens = this._calculateTokenCost(
+                chatResult.totalTokens,
+                model
+            );
+            cost =
+                BigInt(adjustedTokens) *
+                (creditFeePerOutputToken ?? creditFeePerInputToken ?? 0n);
+        }
+        return cost;
+    }
+
+    private _calculateTokenCost(tokens: number, model: string) {
+        const tokenModifierRatio = this._chatOptions.tokenModifierRatio;
+        const modifier = tokenModifierRatio[model] ?? 1;
+        const adjustedTokens = modifier * tokens;
+        return adjustedTokens;
     }
 
     @traced(TRACE_NAME)
@@ -827,6 +854,43 @@ export class AIController {
                 }
             }
 
+            const creditFeePerInputToken =
+                allowedFeatures.ai.chat.creditFeePerInputToken ?? null;
+            const creditFeePerOutputToken =
+                allowedFeatures.ai.chat.creditFeePerOutputToken ?? null;
+            const preChargeInputTokens = BigInt(
+                this._calculateTokenCost(
+                    allowedFeatures.ai.chat.preChargeInputTokens ?? 100,
+                    model
+                )
+            );
+            const preChargeOutputTokens = BigInt(
+                this._calculateTokenCost(
+                    allowedFeatures.ai.chat.preChargeOutputTokens ?? 100,
+                    model
+                )
+            );
+            const initialAmount =
+                creditFeePerInputToken || creditFeePerOutputToken
+                    ? preChargeInputTokens * (creditFeePerInputToken ?? 0n) +
+                      preChargeOutputTokens * (creditFeePerOutputToken ?? 0n)
+                    : null;
+
+            const billing = await billForUsage(this._financial, {
+                userId: request.userId,
+                transferCode: TransferCodes.records_usage_fee,
+            });
+
+            const initialResult = await billing.next(
+                success({
+                    initialCost: initialAmount,
+                })
+            );
+
+            if (isFailure(initialResult.value)) {
+                return genericResult(initialResult.value);
+            }
+
             const result = chat.chatStream({
                 messages: request.messages,
                 model: model,
@@ -839,10 +903,17 @@ export class AIController {
                 maxTokens,
             });
 
+            let totalTokens = 0;
+            let totalInputTokens = 0;
+            let totalOutputTokens = 0;
+
             for await (let chunk of result) {
+                totalTokens += chunk.totalTokens;
+                totalInputTokens += chunk.inputTokens;
+                totalOutputTokens += chunk.outputTokens;
                 if (chunk.totalTokens > 0) {
                     const adjustedTokens = this._calculateTokenCost(
-                        chunk,
+                        chunk.totalTokens,
                         model
                     );
                     await this._metrics.recordChatMetrics({
@@ -855,6 +926,27 @@ export class AIController {
                 yield {
                     choices: chunk.choices,
                 };
+            }
+
+            const cost = this._calculateChatBillingCost(
+                {
+                    totalTokens,
+                    inputTokens: totalInputTokens,
+                    outputTokens: totalOutputTokens,
+                },
+                creditFeePerInputToken,
+                creditFeePerOutputToken,
+                model
+            );
+
+            const finalResult = await billing.next(
+                success({
+                    cost,
+                })
+            );
+
+            if (isFailure(finalResult.value)) {
+                return genericResult(finalResult.value);
             }
 
             return {
@@ -978,25 +1070,84 @@ export class AIController {
                 }
             }
 
-            const result = await this._generateSkybox.generateSkybox({
-                prompt: request.prompt,
-                negativePrompt: request.negativePrompt,
-                blockadeLabs: request.blockadeLabs,
+            const creditFeePerSkybox =
+                allowedFeatures.ai.skyboxes.creditFeePerSkybox ?? null;
+            const amount = creditFeePerSkybox
+                ? BigInt(creditFeePerSkybox)
+                : null;
+
+            const billing = await billForUsage(this._financial, {
+                userId: request.userId,
+                transferCode: TransferCodes.records_usage_fee,
             });
 
-            if (result.success === true) {
+            const initialResult = await billing.next(
+                success({
+                    initialCost: amount,
+                })
+            );
+
+            if (isFailure(initialResult.value)) {
+                return genericResult(initialResult.value);
+            }
+
+            const result = await wrap(
+                async () =>
+                    await this._generateSkybox.generateSkybox({
+                        prompt: request.prompt,
+                        negativePrompt: request.negativePrompt,
+                        blockadeLabs: request.blockadeLabs,
+                    })
+            );
+
+            if (isFailure(result)) {
+                logError(
+                    result.error,
+                    '[AIController] Skybox generation error:'
+                );
+
+                // Need to pass failure to billing to ensure that it cancels pending transfers
+                await billing.next(
+                    failure({
+                        errorCode: 'server_error',
+                        errorMessage: 'A server error occurred.',
+                    })
+                );
+
+                return {
+                    success: false,
+                    errorCode: 'server_error',
+                    errorMessage: 'A server error occurred.',
+                };
+            }
+
+            if (result.value.success === true) {
                 await this._metrics.recordSkyboxMetrics({
                     userId: request.userId,
                     createdAtMs: Date.now(),
                     skyboxes: 1,
                 });
 
+                const finalResult = await billing.next(
+                    success({
+                        cost: amount,
+                    })
+                );
+
+                if (isFailure(finalResult.value)) {
+                    return genericResult(finalResult.value);
+                }
+
                 return {
                     success: true,
-                    skyboxId: result.skyboxId,
+                    skyboxId: result.value.skyboxId,
                 };
             } else {
-                return result;
+                // Pass the skybox generation error to billing
+                await billing.next(failure(result.value));
+
+                // Return the original skybox error, not the billing error
+                return result.value;
             }
         } catch (err) {
             const span = trace.getActiveSpan();
@@ -1200,7 +1351,7 @@ export class AIController {
                 this._imageOptions.maxImages
             );
 
-            const totalPixels = Math.max(width, height) * numberOfImages;
+            const totalSquarePixels = Math.max(width, height) * numberOfImages;
 
             const metrics = await this._metrics.getSubscriptionAiImageMetrics({
                 ownerId: request.userId,
@@ -1224,7 +1375,7 @@ export class AIController {
 
             if (
                 allowedFeatures.ai.images.maxSquarePixelsPerRequest > 0 &&
-                totalPixels >
+                totalSquarePixels >
                     allowedFeatures.ai.images.maxSquarePixelsPerRequest
             ) {
                 return {
@@ -1236,7 +1387,7 @@ export class AIController {
 
             if (
                 allowedFeatures.ai.images.maxSquarePixelsPerPeriod > 0 &&
-                totalPixels + metrics.totalSquarePixelsInCurrentPeriod >
+                totalSquarePixels + metrics.totalSquarePixelsInCurrentPeriod >
                     allowedFeatures.ai.images.maxSquarePixelsPerPeriod
             ) {
                 return {
@@ -1261,38 +1412,93 @@ export class AIController {
                 }
             }
 
-            const result = await provider.generateImage({
-                model: model,
-                prompt: request.prompt,
-                negativePrompt: request.negativePrompt,
-                width: width,
-                height: height,
-                numberOfImages: numberOfImages,
-                seed: request.seed,
-                steps: Math.min(
-                    request.steps ?? 30,
-                    this._imageOptions.maxSteps
-                ),
-                cfgScale: request.cfgScale,
-                sampler: request.sampler,
-                clipGuidancePreset: request.clipGuidancePreset,
-                stylePreset: request.stylePreset,
+            const creditFeePerSquarePixel =
+                allowedFeatures.ai.images.creditFeePerSquarePixel ?? null;
+            const amount = creditFeePerSquarePixel
+                ? BigInt(Math.ceil(totalSquarePixels * creditFeePerSquarePixel))
+                : null;
+
+            const billing = await billForUsage(this._financial, {
                 userId: request.userId,
+                transferCode: TransferCodes.records_usage_fee,
             });
 
-            if (!result.success) {
-                return result;
+            const initialResult = await billing.next(
+                success({
+                    initialCost: amount,
+                })
+            );
+
+            if (isFailure(initialResult.value)) {
+                return genericResult(initialResult.value);
+            }
+
+            const result = await wrap(
+                async () =>
+                    await provider.generateImage({
+                        model: model,
+                        prompt: request.prompt,
+                        negativePrompt: request.negativePrompt,
+                        width: width,
+                        height: height,
+                        numberOfImages: numberOfImages,
+                        seed: request.seed,
+                        steps: Math.min(
+                            request.steps ?? 30,
+                            this._imageOptions.maxSteps
+                        ),
+                        cfgScale: request.cfgScale,
+                        sampler: request.sampler,
+                        clipGuidancePreset: request.clipGuidancePreset,
+                        stylePreset: request.stylePreset,
+                        userId: request.userId,
+                    })
+            );
+
+            if (isFailure(result)) {
+                logError(result.error, `[AIController] Generate image error:`);
+
+                // Need to pass failure to billing to ensure that it cancels pending transfers
+                await billing.next(
+                    failure({
+                        errorCode: 'server_error',
+                        errorMessage: 'A server error occurred.',
+                    })
+                );
+
+                return {
+                    success: false,
+                    errorCode: 'server_error',
+                    errorMessage: 'A server error occurred.',
+                };
+            }
+
+            if (result.value.success === false) {
+                // Pass the image generation error to billing
+                await billing.next(failure(result.value));
+
+                return result.value;
             }
 
             await this._metrics.recordImageMetrics({
                 userId: request.userId,
                 createdAtMs: Date.now(),
-                squarePixels: totalPixels,
+                squarePixels: totalSquarePixels,
             });
+
+            const finalResult = await billing.next(
+                success({
+                    cost: amount,
+                })
+            );
+
+            if (isFailure(finalResult.value)) {
+                return genericResult(finalResult.value);
+            }
 
             return {
                 success: true,
-                images: result.images,
+                images: result.value.images,
             };
         } catch (err) {
             const span = trace.getActiveSpan();
@@ -1426,12 +1632,40 @@ export class AIController {
                 }
             }
 
+            const fee = features.creditFeePerAccessToken;
+
+            const billing = await billForUsage(this._financial, {
+                userId: context.context.recordOwnerId,
+                studioId: context.context.recordStudioId,
+                transferCode: TransferCodes.records_usage_fee,
+            });
+
+            const initialResult = await billing.next(
+                success({
+                    initialCost: fee,
+                })
+            );
+
+            if (isFailure(initialResult.value)) {
+                return genericResult(initialResult.value);
+            }
+
             const result = await this._humeInterface.getAccessToken({
                 apiKey: humeConfig.apiKey,
                 secretKey: humeConfig.secretKey,
             });
 
-            if (result.success) {
+            if (result.success === true) {
+                const costResult = await billing.next(
+                    success({
+                        cost: fee,
+                    })
+                );
+
+                if (isFailure(costResult.value)) {
+                    return genericResult(costResult.value);
+                }
+
                 return {
                     success: true,
                     accessToken: result.accessToken,
@@ -1440,6 +1674,11 @@ export class AIController {
                     tokenType: result.tokenType,
                 };
             } else {
+                const cancelResult = await billing.next(failure(result));
+                if (isFailure(cancelResult.value)) {
+                    return genericResult(cancelResult.value);
+                }
+
                 return result;
             }
         } catch (err) {
@@ -1733,6 +1972,28 @@ export class AIController {
                 };
             }
 
+            const creditFeePerRealtimeSession =
+                features.realtime.creditFeePerRealtimeSession ?? null;
+            const amount = creditFeePerRealtimeSession
+                ? BigInt(creditFeePerRealtimeSession)
+                : null;
+
+            const billing = await billForUsage(this._financial, {
+                userId: context.context.recordOwnerId ?? undefined,
+                studioId: context.context.recordStudioId ?? undefined,
+                transferCode: TransferCodes.records_usage_fee,
+            });
+
+            const initialResult = await billing.next(
+                success({
+                    initialCost: amount,
+                })
+            );
+
+            if (isFailure(initialResult.value)) {
+                return genericResult(initialResult.value);
+            }
+
             const tokenRequest: CreateRealtimeSessionTokenRequest = {
                 ...request.request,
                 maxResponseOutputTokens:
@@ -1740,27 +2001,64 @@ export class AIController {
                     request.request.maxResponseOutputTokens ??
                     undefined,
             };
-            const result =
-                await this._openAIRealtimeInterface.createRealtimeSessionToken(
-                    tokenRequest
+
+            const result = await wrap(
+                async () =>
+                    await this._openAIRealtimeInterface.createRealtimeSessionToken(
+                        tokenRequest
+                    )
+            );
+
+            if (isFailure(result)) {
+                console.error(
+                    '[AIController] Create OpenAI Realtime session token request failed:',
+                    result
                 );
 
-            if (result.success === false) {
-                return result;
+                // Need to pass failure to billing to ensure that it cancels pending transfers
+                await billing.next(
+                    failure({
+                        errorCode: 'server_error',
+                        errorMessage: 'A server error occurred.',
+                    })
+                );
+
+                return {
+                    success: false,
+                    errorCode: 'server_error',
+                    errorMessage: 'A server error occurred.',
+                };
+            }
+
+            if (result.value.success === false) {
+                // Pass the token creation error to billing
+                await billing.next(failure(result.value));
+
+                return result.value;
             }
 
             await this._metrics.recordOpenAIRealtimeMetrics({
                 userId: context.context.recordOwnerId ?? undefined,
                 studioId: context.context.recordStudioId ?? undefined,
-                sessionId: result.sessionId,
+                sessionId: result.value.sessionId,
                 createdAtMs: Date.now(),
                 request: tokenRequest,
             });
 
+            const finalResult = await billing.next(
+                success({
+                    cost: amount,
+                })
+            );
+
+            if (isFailure(finalResult.value)) {
+                return genericResult(finalResult.value);
+            }
+
             return {
                 success: true,
-                sessionId: result.sessionId,
-                clientSecret: result.clientSecret,
+                sessionId: result.value.sessionId,
+                clientSecret: result.value.clientSecret,
             };
         } catch (err) {
             console.error(
@@ -2028,14 +2326,7 @@ export interface AIGenerateSkyboxSuccess {
 
 export interface AIGenerateSkyboxFailure {
     success: false;
-    errorCode:
-        | ServerError
-        | NotLoggedInError
-        | NotSubscribedError
-        | InvalidSubscriptionTierError
-        | NotSupportedError
-        | SubscriptionLimitReached
-        | NotAuthorizedError;
+    errorCode: KnownErrorCodes;
     errorMessage: string;
 
     allowedSubscriptionTiers?: string[];
@@ -2173,16 +2464,7 @@ export interface AIGenerateImageSuccess {
 
 export interface AIGenerateImageFailure {
     success: false;
-    errorCode:
-        | ServerError
-        | NotLoggedInError
-        | NotSubscribedError
-        | InvalidSubscriptionTierError
-        | NotSupportedError
-        | SubscriptionLimitReached
-        | NotAuthorizedError
-        | 'invalid_request'
-        | 'invalid_model';
+    errorCode: KnownErrorCodes;
     errorMessage: string;
 
     allowedSubscriptionTiers?: string[];
@@ -2231,18 +2513,7 @@ export interface AIHumeGetAccessTokenSuccess {
 export interface AIHumeGetAccessTokenFailure {
     success: false;
 
-    errorCode:
-        | ServerError
-        | NotLoggedInError
-        | NotSubscribedError
-        | InvalidSubscriptionTierError
-        | NotSupportedError
-        | SubscriptionLimitReached
-        | NotAuthorizedError
-        | AIHumeInterfaceGetAccessTokenFailure['errorCode']
-        | ConstructAuthorizationContextFailure['errorCode']
-        | AuthorizeSubjectFailure['errorCode']
-        | 'invalid_request';
+    errorCode: KnownErrorCodes;
     errorMessage: string;
 }
 

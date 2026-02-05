@@ -24,6 +24,7 @@ import {
 } from '@casual-simulation/aux-common';
 import type { AccountWithDetails } from './FinancialController';
 import {
+    billForUsage,
     FinancialController,
     getAccountBalance,
     getAssetAccountBalance,
@@ -2405,8 +2406,6 @@ describe('FinancialController', () => {
                 const result = await billing.next(success({ cost: 1000 }));
 
                 expect(result.done).toBe(false);
-
-                // TODO: consider whether to fail here instead
                 expect(isSuccess(result.value)).toBe(true);
 
                 // Should have charged as much as possible (500 total)
@@ -2416,6 +2415,34 @@ describe('FinancialController', () => {
                         credits_posted: 500n,
                         credits_pending: 0n,
                         debits_posted: 500n,
+                        debits_pending: 0n,
+                    },
+                ]);
+            });
+
+            it('should fail attempting to bill a cost without an initial cost and the user doesnt have the funds for it', async () => {
+                const billing = await controller.billForUsage({
+                    ...filter,
+                    transferCode: TransferCodes.records_usage_fee,
+                });
+
+                // Try to bill for more than account has (only has 500 credits)
+                const result = await billing.next(success({ cost: 1000 }));
+
+                expect(result.done).toBe(true);
+                expect(result.value).toEqual(
+                    failure({
+                        errorCode: 'insufficient_funds',
+                        errorMessage: 'Insufficient funds to cover usage.',
+                    })
+                );
+
+                await checkAccounts(financialInterface, [
+                    {
+                        id: account1.account.id,
+                        credits_posted: 500n,
+                        credits_pending: 0n,
+                        debits_posted: 0n,
                         debits_pending: 0n,
                     },
                 ]);
@@ -2663,5 +2690,64 @@ describe('getAssetAccountBalance()', () => {
         const balance = getAssetAccountBalance(account);
 
         expect(balance).toBe(5); // (155 - 50) - (200n - 100n) = 5
+    });
+});
+
+describe('billForUsage()', () => {
+    it('should return a generator that yields success steps when financial is null', async () => {
+        const billing = await billForUsage(null, {
+            userId: 'user1',
+            transferCode: TransferCodes.records_usage_fee,
+        });
+
+        const step1 = await billing.next(success({ initialCost: 100 }));
+
+        expect(step1).toEqual({
+            done: false,
+            value: success(),
+        });
+
+        const step2 = await billing.next(success({ cost: 200 }));
+
+        expect(step2).toEqual({
+            done: false,
+            value: success(),
+        });
+
+        const step3 = await billing.next(success({ cost: 300 }));
+
+        expect(step3).toEqual({
+            done: false,
+            value: success(),
+        });
+    });
+
+    it('should return failed results when the financial controller is null', async () => {
+        const billing = await billForUsage(null, {
+            userId: 'user1',
+            transferCode: TransferCodes.records_usage_fee,
+        });
+
+        const step1 = await billing.next(success({ initialCost: 100 }));
+
+        expect(step1).toEqual({
+            done: false,
+            value: success(),
+        });
+
+        const step2 = await billing.next(
+            failure({
+                errorCode: 'action_not_supported',
+                errorMessage: 'This action is not supported.',
+            })
+        );
+
+        expect(step2).toEqual({
+            done: true,
+            value: failure({
+                errorCode: 'action_not_supported',
+                errorMessage: 'This action is not supported.',
+            }),
+        });
     });
 });
