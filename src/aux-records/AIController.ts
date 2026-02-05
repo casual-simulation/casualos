@@ -1939,6 +1939,28 @@ export class AIController {
                 };
             }
 
+            const creditFeePerRealtimeSession =
+                features.realtime.creditFeePerRealtimeSession ?? null;
+            const amount = creditFeePerRealtimeSession
+                ? BigInt(creditFeePerRealtimeSession)
+                : null;
+
+            const billing = await billForUsage(this._financial, {
+                userId: context.context.recordOwnerId ?? undefined,
+                studioId: context.context.recordStudioId ?? undefined,
+                transferCode: TransferCodes.records_usage_fee,
+            });
+
+            const initialResult = await billing.next(
+                success({
+                    initialCost: amount,
+                })
+            );
+
+            if (isFailure(initialResult.value)) {
+                return genericResult(initialResult.value);
+            }
+
             const tokenRequest: CreateRealtimeSessionTokenRequest = {
                 ...request.request,
                 maxResponseOutputTokens:
@@ -1946,27 +1968,64 @@ export class AIController {
                     request.request.maxResponseOutputTokens ??
                     undefined,
             };
-            const result =
-                await this._openAIRealtimeInterface.createRealtimeSessionToken(
-                    tokenRequest
+
+            const result = await wrap(
+                async () =>
+                    await this._openAIRealtimeInterface.createRealtimeSessionToken(
+                        tokenRequest
+                    )
+            );
+
+            if (isFailure(result)) {
+                console.error(
+                    '[AIController] Create OpenAI Realtime session token request failed:',
+                    result
                 );
 
-            if (result.success === false) {
-                return result;
+                // Need to pass failure to billing to ensure that it cancels pending transfers
+                await billing.next(
+                    failure({
+                        errorCode: 'server_error',
+                        errorMessage: 'A server error occurred.',
+                    })
+                );
+
+                return {
+                    success: false,
+                    errorCode: 'server_error',
+                    errorMessage: 'A server error occurred.',
+                };
+            }
+
+            if (result.value.success === false) {
+                // Pass the token creation error to billing
+                await billing.next(failure(result.value));
+
+                return result.value;
             }
 
             await this._metrics.recordOpenAIRealtimeMetrics({
                 userId: context.context.recordOwnerId ?? undefined,
                 studioId: context.context.recordStudioId ?? undefined,
-                sessionId: result.sessionId,
+                sessionId: result.value.sessionId,
                 createdAtMs: Date.now(),
                 request: tokenRequest,
             });
 
+            const finalResult = await billing.next(
+                success({
+                    cost: amount,
+                })
+            );
+
+            if (isFailure(finalResult.value)) {
+                return genericResult(finalResult.value);
+            }
+
             return {
                 success: true,
-                sessionId: result.sessionId,
-                clientSecret: result.clientSecret,
+                sessionId: result.value.sessionId,
+                clientSecret: result.value.clientSecret,
             };
         } catch (err) {
             console.error(

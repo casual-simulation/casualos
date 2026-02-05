@@ -65,6 +65,7 @@ import {
 import type { Account } from 'tigerbeetle-node';
 
 console.log = jest.fn();
+console.warn = jest.fn();
 
 describe('AIController', () => {
     let controller: AIController;
@@ -6841,6 +6842,700 @@ describe('AIController', () => {
                 expect(
                     realtimeInterface.createRealtimeSessionToken
                 ).not.toHaveBeenCalled();
+            });
+
+            describe('billing', () => {
+                let account1: Account;
+
+                beforeEach(async () => {
+                    // @ts-expect-error private access
+                    controller._financial = financial;
+
+                    unwrap(await financial.init());
+
+                    store.subscriptionConfiguration = buildSubscriptionConfig(
+                        (config) =>
+                            config.addSubscription('sub1', (sub) =>
+                                sub
+                                    .withTier('tier1')
+                                    .withAllDefaultFeatures()
+                                    .withAIOpenAI({
+                                        realtime: {
+                                            allowed: true,
+                                            maxSessionsPerPeriod: 4,
+                                            creditFeePerRealtimeSession: 100,
+                                        },
+                                    })
+                            )
+                    );
+
+                    account1 = unwrap(
+                        await financial.getOrCreateFinancialAccount({
+                            studioId: studioId,
+                            ledger: LEDGERS.credits,
+                        })
+                    ).account;
+
+                    unwrap(
+                        await financial.internalTransaction({
+                            transfers: [
+                                {
+                                    debitAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    creditAccountId: account1.id,
+                                    amount: 10000n,
+                                    code: TransferCodes.admin_credit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                            ],
+                        })
+                    );
+                });
+
+                it('should charge the studio for creating a realtime session token', async () => {
+                    realtimeInterface.createRealtimeSessionToken.mockImplementationOnce(
+                        async () => {
+                            await checkAccounts(financialInterface, [
+                                {
+                                    id: account1.id,
+                                    credits_posted: 10000n,
+                                    credits_pending: 0n,
+                                    debits_posted: 0n,
+
+                                    // Should charge for creditFeePerRealtimeSession
+                                    debits_pending: 100n,
+                                },
+                            ]);
+
+                            return Promise.resolve({
+                                success: true,
+                                sessionId: 'sessionId',
+                                clientSecret: {
+                                    value: 'secret',
+                                    expiresAt: 999,
+                                },
+                            });
+                        }
+                    );
+
+                    const result =
+                        await controller.createOpenAIRealtimeSessionToken({
+                            userId,
+                            recordName: studioId,
+                            request: {
+                                model: 'test-model',
+                            },
+                        });
+
+                    expect(result).toEqual({
+                        success: true,
+                        sessionId: 'sessionId',
+                        clientSecret: {
+                            value: 'secret',
+                            expiresAt: 999,
+                        },
+                    });
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: account1.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+
+                            // Should charge the full fee
+                            debits_posted: 100n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    expect(
+                        realtimeInterface.createRealtimeSessionToken
+                    ).toHaveBeenCalled();
+                });
+
+                it('should void the pending transfer if session token creation fails', async () => {
+                    realtimeInterface.createRealtimeSessionToken.mockImplementationOnce(
+                        async () => {
+                            await checkAccounts(financialInterface, [
+                                {
+                                    id: account1.id,
+                                    credits_posted: 10000n,
+                                    credits_pending: 0n,
+                                    debits_posted: 0n,
+                                    debits_pending: 100n,
+                                },
+                            ]);
+
+                            return Promise.resolve({
+                                success: false,
+                                errorCode: 'server_error',
+                                errorMessage: 'Session token creation failed',
+                            });
+                        }
+                    );
+
+                    const result =
+                        await controller.createOpenAIRealtimeSessionToken({
+                            userId,
+                            recordName: studioId,
+                            request: {
+                                model: 'test-model',
+                            },
+                        });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'server_error',
+                        errorMessage: 'Session token creation failed',
+                    });
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: account1.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+
+                            // Should void the pending transfer
+                            debits_posted: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    expect(
+                        realtimeInterface.createRealtimeSessionToken
+                    ).toHaveBeenCalled();
+                });
+
+                it('should not create a pending transfer if creditFeePerRealtimeSession is not configured', async () => {
+                    store.subscriptionConfiguration = buildSubscriptionConfig(
+                        (config) =>
+                            config.addSubscription('sub1', (sub) =>
+                                sub
+                                    .withTier('tier1')
+                                    .withAllDefaultFeatures()
+                                    .withAIOpenAI({
+                                        realtime: {
+                                            allowed: true,
+                                            maxSessionsPerPeriod: 4,
+                                        },
+                                    })
+                            )
+                    );
+
+                    realtimeInterface.createRealtimeSessionToken.mockImplementationOnce(
+                        async () => {
+                            await checkAccounts(financialInterface, [
+                                {
+                                    id: account1.id,
+                                    credits_posted: 10000n,
+                                    credits_pending: 0n,
+                                    debits_posted: 0n,
+                                    debits_pending: 0n,
+                                },
+                            ]);
+
+                            return Promise.resolve({
+                                success: true,
+                                sessionId: 'sessionId',
+                                clientSecret: {
+                                    value: 'secret',
+                                    expiresAt: 999,
+                                },
+                            });
+                        }
+                    );
+
+                    const result =
+                        await controller.createOpenAIRealtimeSessionToken({
+                            userId,
+                            recordName: studioId,
+                            request: {
+                                model: 'test-model',
+                            },
+                        });
+
+                    expect(result).toEqual({
+                        success: true,
+                        sessionId: 'sessionId',
+                        clientSecret: {
+                            value: 'secret',
+                            expiresAt: 999,
+                        },
+                    });
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: account1.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    expect(
+                        realtimeInterface.createRealtimeSessionToken
+                    ).toHaveBeenCalled();
+                });
+
+                it('should deny the request if the studio does not have enough credits', async () => {
+                    unwrap(
+                        await financial.internalTransaction({
+                            transfers: [
+                                {
+                                    debitAccountId: account1.id,
+                                    creditAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    amount: 9950n,
+                                    code: TransferCodes.admin_debit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                            ],
+                        })
+                    );
+
+                    const result =
+                        await controller.createOpenAIRealtimeSessionToken({
+                            userId,
+                            recordName: studioId,
+                            request: {
+                                model: 'test-model',
+                            },
+                        });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'insufficient_funds',
+                        errorMessage: 'Insufficient funds to cover usage.',
+                    });
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: account1.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 9950n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    expect(
+                        realtimeInterface.createRealtimeSessionToken
+                    ).not.toHaveBeenCalled();
+                });
+            });
+        });
+
+        describe('subscriptions', () => {
+            beforeEach(async () => {
+                store.subscriptionConfiguration = buildSubscriptionConfig(
+                    (config) =>
+                        config.addSubscription('sub1', (sub) =>
+                            sub
+                                .withTier('tier1')
+                                .withAllDefaultFeatures()
+                                .withAIOpenAI({
+                                    realtime: {
+                                        allowed: true,
+                                        maxSessionsPerPeriod: 4,
+                                    },
+                                })
+                        )
+                );
+
+                await store.saveUser({
+                    id: userId,
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                });
+            });
+
+            it('should reject the request if the feature is not allowed', async () => {
+                store.subscriptionConfiguration = buildSubscriptionConfig(
+                    (config) =>
+                        config.addSubscription('sub1', (sub) =>
+                            sub
+                                .withTier('tier1')
+                                .withAllDefaultFeatures()
+                                .withAIOpenAI({
+                                    realtime: {
+                                        allowed: false,
+                                    },
+                                })
+                        )
+                );
+
+                realtimeInterface.createRealtimeSessionToken.mockResolvedValueOnce(
+                    {
+                        success: true,
+                        sessionId: 'sessionId',
+                        clientSecret: {
+                            value: 'secret',
+                            expiresAt: 999,
+                        },
+                    }
+                );
+
+                const result =
+                    await controller.createOpenAIRealtimeSessionToken({
+                        userId,
+                        recordName: userId,
+                        request: {
+                            model: 'test-model',
+                        },
+                    });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'The subscription does not permit OpenAI Realtime features.',
+                });
+                expect(
+                    realtimeInterface.createRealtimeSessionToken
+                ).not.toHaveBeenCalled();
+            });
+
+            it('should reject the request if it would exceed the subscription period limits', async () => {
+                realtimeInterface.createRealtimeSessionToken.mockResolvedValueOnce(
+                    {
+                        success: true,
+                        sessionId: 'sessionId',
+                        clientSecret: {
+                            value: 'secret',
+                            expiresAt: 999,
+                        },
+                    }
+                );
+
+                await store.recordOpenAIRealtimeMetrics({
+                    createdAtMs: Date.now(),
+                    userId: userId,
+                    sessionId: 'sessionId1',
+                    request: {
+                        model: 'test-model',
+                    },
+                });
+                await store.recordOpenAIRealtimeMetrics({
+                    createdAtMs: Date.now(),
+                    userId: userId,
+                    sessionId: 'sessionId2',
+                    request: {
+                        model: 'test-model',
+                    },
+                });
+                await store.recordOpenAIRealtimeMetrics({
+                    createdAtMs: Date.now(),
+                    userId: userId,
+                    sessionId: 'sessionId3',
+                    request: {
+                        model: 'test-model',
+                    },
+                });
+                await store.recordOpenAIRealtimeMetrics({
+                    createdAtMs: Date.now(),
+                    userId: userId,
+                    sessionId: 'sessionId4',
+                    request: {
+                        model: 'test-model',
+                    },
+                });
+
+                const result =
+                    await controller.createOpenAIRealtimeSessionToken({
+                        userId,
+                        recordName: userId,
+                        request: {
+                            model: 'test-model',
+                        },
+                    });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'subscription_limit_reached',
+                    errorMessage:
+                        'The request exceeds allowed subscription limits.',
+                });
+                expect(
+                    realtimeInterface.createRealtimeSessionToken
+                ).not.toHaveBeenCalled();
+            });
+
+            describe('billing', () => {
+                let account1: Account;
+
+                beforeEach(async () => {
+                    // @ts-expect-error private access
+                    controller._financial = financial;
+
+                    unwrap(await financial.init());
+
+                    store.subscriptionConfiguration = buildSubscriptionConfig(
+                        (config) =>
+                            config.addSubscription('sub1', (sub) =>
+                                sub
+                                    .withTier('tier1')
+                                    .withAllDefaultFeatures()
+                                    .withAIOpenAI({
+                                        realtime: {
+                                            allowed: true,
+                                            maxSessionsPerPeriod: 4,
+                                            creditFeePerRealtimeSession: 100,
+                                        },
+                                    })
+                            )
+                    );
+
+                    account1 = unwrap(
+                        await financial.getOrCreateFinancialAccount({
+                            userId: userId,
+                            ledger: LEDGERS.credits,
+                        })
+                    ).account;
+
+                    unwrap(
+                        await financial.internalTransaction({
+                            transfers: [
+                                {
+                                    debitAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    creditAccountId: account1.id,
+                                    amount: 10000n,
+                                    code: TransferCodes.admin_credit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                            ],
+                        })
+                    );
+                });
+
+                it('should charge the user for creating a realtime session token', async () => {
+                    realtimeInterface.createRealtimeSessionToken.mockImplementationOnce(
+                        async () => {
+                            await checkAccounts(financialInterface, [
+                                {
+                                    id: account1.id,
+                                    credits_posted: 10000n,
+                                    credits_pending: 0n,
+                                    debits_posted: 0n,
+
+                                    // Should charge for creditFeePerRealtimeSession
+                                    debits_pending: 100n,
+                                },
+                            ]);
+
+                            return Promise.resolve({
+                                success: true,
+                                sessionId: 'sessionId',
+                                clientSecret: {
+                                    value: 'secret',
+                                    expiresAt: 999,
+                                },
+                            });
+                        }
+                    );
+
+                    const result =
+                        await controller.createOpenAIRealtimeSessionToken({
+                            userId,
+                            recordName: userId,
+                            request: {
+                                model: 'test-model',
+                            },
+                        });
+
+                    expect(result).toEqual({
+                        success: true,
+                        sessionId: 'sessionId',
+                        clientSecret: {
+                            value: 'secret',
+                            expiresAt: 999,
+                        },
+                    });
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: account1.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+
+                            // Should charge the full fee
+                            debits_posted: 100n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    expect(
+                        realtimeInterface.createRealtimeSessionToken
+                    ).toHaveBeenCalled();
+                });
+
+                it('should void the pending transfer if session token creation fails', async () => {
+                    realtimeInterface.createRealtimeSessionToken.mockImplementationOnce(
+                        async () => {
+                            await checkAccounts(financialInterface, [
+                                {
+                                    id: account1.id,
+                                    credits_posted: 10000n,
+                                    credits_pending: 0n,
+                                    debits_posted: 0n,
+                                    debits_pending: 100n,
+                                },
+                            ]);
+
+                            return Promise.resolve({
+                                success: false,
+                                errorCode: 'server_error',
+                                errorMessage: 'Session token creation failed',
+                            });
+                        }
+                    );
+
+                    const result =
+                        await controller.createOpenAIRealtimeSessionToken({
+                            userId,
+                            recordName: userId,
+                            request: {
+                                model: 'test-model',
+                            },
+                        });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'server_error',
+                        errorMessage: 'Session token creation failed',
+                    });
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: account1.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+
+                            // Should void the pending transfer
+                            debits_posted: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    expect(
+                        realtimeInterface.createRealtimeSessionToken
+                    ).toHaveBeenCalled();
+                });
+
+                it('should not create a pending transfer if creditFeePerRealtimeSession is not configured', async () => {
+                    store.subscriptionConfiguration = buildSubscriptionConfig(
+                        (config) =>
+                            config.addSubscription('sub1', (sub) =>
+                                sub
+                                    .withTier('tier1')
+                                    .withAllDefaultFeatures()
+                                    .withAIOpenAI({
+                                        realtime: {
+                                            allowed: true,
+                                            maxSessionsPerPeriod: 4,
+                                        },
+                                    })
+                            )
+                    );
+
+                    realtimeInterface.createRealtimeSessionToken.mockImplementationOnce(
+                        async () => {
+                            await checkAccounts(financialInterface, [
+                                {
+                                    id: account1.id,
+                                    credits_posted: 10000n,
+                                    credits_pending: 0n,
+                                    debits_posted: 0n,
+                                    debits_pending: 0n,
+                                },
+                            ]);
+
+                            return Promise.resolve({
+                                success: true,
+                                sessionId: 'sessionId',
+                                clientSecret: {
+                                    value: 'secret',
+                                    expiresAt: 999,
+                                },
+                            });
+                        }
+                    );
+
+                    const result =
+                        await controller.createOpenAIRealtimeSessionToken({
+                            userId,
+                            recordName: userId,
+                            request: {
+                                model: 'test-model',
+                            },
+                        });
+
+                    expect(result).toEqual({
+                        success: true,
+                        sessionId: 'sessionId',
+                        clientSecret: {
+                            value: 'secret',
+                            expiresAt: 999,
+                        },
+                    });
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: account1.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    expect(
+                        realtimeInterface.createRealtimeSessionToken
+                    ).toHaveBeenCalled();
+                });
+
+                it('should deny the request if the user does not have enough credits', async () => {
+                    unwrap(
+                        await financial.internalTransaction({
+                            transfers: [
+                                {
+                                    debitAccountId: account1.id,
+                                    creditAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    amount: 9950n,
+                                    code: TransferCodes.admin_debit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                            ],
+                        })
+                    );
+
+                    const result =
+                        await controller.createOpenAIRealtimeSessionToken({
+                            userId,
+                            recordName: userId,
+                            request: {
+                                model: 'test-model',
+                            },
+                        });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'insufficient_funds',
+                        errorMessage: 'Insufficient funds to cover usage.',
+                    });
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: account1.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 9950n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    expect(
+                        realtimeInterface.createRealtimeSessionToken
+                    ).not.toHaveBeenCalled();
+                });
             });
         });
     });
