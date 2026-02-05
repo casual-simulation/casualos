@@ -1632,12 +1632,40 @@ export class AIController {
                 }
             }
 
+            const fee = features.creditFeePerToken;
+
+            const billing = await billForUsage(this._financial, {
+                userId: context.context.recordOwnerId,
+                studioId: context.context.recordStudioId,
+                transferCode: TransferCodes.records_usage_fee,
+            });
+
+            const initialResult = await billing.next(
+                success({
+                    initialCost: fee,
+                })
+            );
+
+            if (isFailure(initialResult.value)) {
+                return genericResult(initialResult.value);
+            }
+
             const result = await this._humeInterface.getAccessToken({
                 apiKey: humeConfig.apiKey,
                 secretKey: humeConfig.secretKey,
             });
 
-            if (result.success) {
+            if (result.success === true) {
+                const costResult = await billing.next(
+                    success({
+                        cost: fee,
+                    })
+                );
+
+                if (isFailure(costResult.value)) {
+                    return genericResult(costResult.value);
+                }
+
                 return {
                     success: true,
                     accessToken: result.accessToken,
@@ -1646,6 +1674,11 @@ export class AIController {
                     tokenType: result.tokenType,
                 };
             } else {
+                const cancelResult = await billing.next(failure(result));
+                if (isFailure(cancelResult.value)) {
+                    return genericResult(cancelResult.value);
+                }
+
                 return result;
             }
         } catch (err) {

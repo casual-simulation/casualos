@@ -5674,6 +5674,269 @@ describe('AIController', () => {
             expect(humeInterface.getAccessToken).not.toHaveBeenCalled();
         });
 
+        describe('subscriptions', () => {
+            beforeEach(async () => {
+                store.subscriptionConfiguration = buildSubscriptionConfig(
+                    (config) =>
+                        config.withUserDefaultFeatures((features) =>
+                            features
+                                .withAllDefaultFeatures()
+                                .withAI()
+                                .withAIHume({
+                                    allowed: true,
+                                })
+                        )
+                );
+
+                await store.saveUser({
+                    id: userId,
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+            });
+
+            describe('billing', () => {
+                let account1: Account;
+
+                beforeEach(async () => {
+                    // @ts-expect-error private access
+                    controller._financial = financial;
+
+                    unwrap(await financial.init());
+
+                    store.subscriptionConfiguration = buildSubscriptionConfig(
+                        (config) =>
+                            config.withUserDefaultFeatures((features) =>
+                                features
+                                    .withAllDefaultFeatures()
+                                    .withAI()
+                                    .withAIHume({
+                                        allowed: true,
+                                        creditFeePerToken: 100n,
+                                    })
+                            )
+                    );
+
+                    account1 = unwrap(
+                        await financial.getOrCreateFinancialAccount({
+                            userId: userId,
+                            ledger: LEDGERS.credits,
+                        })
+                    ).account;
+
+                    unwrap(
+                        await financial.internalTransaction({
+                            transfers: [
+                                {
+                                    debitAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    creditAccountId: account1.id,
+                                    amount: 10000n,
+                                    code: TransferCodes.admin_credit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                            ],
+                        })
+                    );
+                });
+
+                it('should charge the user for getting a Hume access token', async () => {
+                    humeInterface.getAccessToken.mockImplementationOnce(
+                        async () => {
+                            await checkAccounts(financialInterface, [
+                                {
+                                    id: account1.id,
+                                    credits_posted: 10000n,
+                                    credits_pending: 0n,
+                                    debits_posted: 0n,
+
+                                    // Should charge for creditFeePerToken
+                                    debits_pending: 100n,
+                                },
+                            ]);
+
+                            return Promise.resolve({
+                                success: true,
+                                accessToken: 'token',
+                                expiresIn: 3600,
+                                issuedAt: 1234567890,
+                                tokenType: 'Bearer',
+                            });
+                        }
+                    );
+
+                    const result = await controller.getHumeAccessToken({
+                        userId,
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                        accessToken: 'token',
+                        expiresIn: 3600,
+                        issuedAt: 1234567890,
+                        tokenType: 'Bearer',
+                    });
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: account1.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+
+                            // Should charge the full fee
+                            debits_posted: 100n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    expect(humeInterface.getAccessToken).toHaveBeenCalled();
+                });
+
+                it('should void the pending transfer if token generation fails', async () => {
+                    humeInterface.getAccessToken.mockImplementationOnce(
+                        async () => {
+                            await checkAccounts(financialInterface, [
+                                {
+                                    id: account1.id,
+                                    credits_posted: 10000n,
+                                    credits_pending: 0n,
+                                    debits_posted: 0n,
+                                    debits_pending: 100n,
+                                },
+                            ]);
+
+                            return Promise.resolve({
+                                success: false,
+                                errorCode: 'hume_api_error',
+                                errorMessage: 'Hume API Error',
+                            });
+                        }
+                    );
+
+                    const result = await controller.getHumeAccessToken({
+                        userId,
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'hume_api_error',
+                        errorMessage: 'Hume API Error',
+                    });
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: account1.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+
+                            // Should void the pending transfer
+                            debits_posted: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    expect(humeInterface.getAccessToken).toHaveBeenCalled();
+                });
+
+                it('should not create a pending transfer if creditFeePerToken is not configured', async () => {
+                    store.subscriptionConfiguration = buildSubscriptionConfig(
+                        (config) =>
+                            config.withUserDefaultFeatures((features) =>
+                                features
+                                    .withAllDefaultFeatures()
+                                    .withAI()
+                                    .withAIHume({
+                                        allowed: true,
+                                    })
+                            )
+                    );
+
+                    humeInterface.getAccessToken.mockImplementationOnce(
+                        async () => {
+                            await checkAccounts(financialInterface, [
+                                {
+                                    id: account1.id,
+                                    credits_posted: 10000n,
+                                    credits_pending: 0n,
+                                    debits_posted: 0n,
+                                    debits_pending: 0n,
+                                },
+                            ]);
+
+                            return Promise.resolve({
+                                success: true,
+                                accessToken: 'token',
+                                expiresIn: 3600,
+                                issuedAt: 1234567890,
+                                tokenType: 'Bearer',
+                            });
+                        }
+                    );
+
+                    const result = await controller.getHumeAccessToken({
+                        userId,
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                        accessToken: 'token',
+                        expiresIn: 3600,
+                        issuedAt: 1234567890,
+                        tokenType: 'Bearer',
+                    });
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: account1.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    expect(humeInterface.getAccessToken).toHaveBeenCalled();
+                });
+
+                it('should deny the request if the user does not have enough credits', async () => {
+                    unwrap(
+                        await financial.internalTransaction({
+                            transfers: [
+                                {
+                                    debitAccountId: account1.id,
+                                    creditAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    amount: 9950n,
+                                    code: TransferCodes.admin_debit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                            ],
+                        })
+                    );
+
+                    const result = await controller.getHumeAccessToken({
+                        userId,
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'insufficient_funds',
+                        errorMessage: 'Insufficient funds to cover usage.',
+                    });
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: account1.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 9950n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    expect(humeInterface.getAccessToken).not.toHaveBeenCalled();
+                });
+            });
+        });
+
         describe('studio features', () => {
             const studioId = 'studioId';
 
@@ -5903,6 +6166,269 @@ describe('AIController', () => {
                 expect(humeInterface.getAccessToken).toHaveBeenCalledWith({
                     apiKey: 'globalApiKey',
                     secretKey: 'globalSecretKey',
+                });
+            });
+
+            describe('billing', () => {
+                let account1: Account;
+
+                beforeEach(async () => {
+                    // @ts-expect-error private access
+                    controller._financial = financial;
+
+                    unwrap(await financial.init());
+
+                    store.subscriptionConfiguration = buildSubscriptionConfig(
+                        (config) =>
+                            config
+                                .withUserDefaultFeatures((features) =>
+                                    features
+                                        .withAllDefaultFeatures()
+                                        .withAI()
+                                        .withAIHume({
+                                            allowed: false,
+                                        })
+                                )
+                                .addSubscription('sub1', (sub) =>
+                                    sub
+                                        .withTier('tier1')
+                                        .withAllDefaultFeatures()
+                                        .withAI()
+                                        .withAIHume({
+                                            allowed: true,
+                                            creditFeePerToken: 100n,
+                                        })
+                                )
+                    );
+
+                    account1 = unwrap(
+                        await financial.getOrCreateFinancialAccount({
+                            studioId: studioId,
+                            ledger: LEDGERS.credits,
+                        })
+                    ).account;
+
+                    unwrap(
+                        await financial.internalTransaction({
+                            transfers: [
+                                {
+                                    debitAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    creditAccountId: account1.id,
+                                    amount: 10000n,
+                                    code: TransferCodes.admin_credit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                            ],
+                        })
+                    );
+                });
+
+                it('should charge the studio for getting a Hume access token', async () => {
+                    humeInterface.getAccessToken.mockImplementationOnce(
+                        async () => {
+                            await checkAccounts(financialInterface, [
+                                {
+                                    id: account1.id,
+                                    credits_posted: 10000n,
+                                    credits_pending: 0n,
+                                    debits_posted: 0n,
+
+                                    // Should charge for creditFeePerToken
+                                    debits_pending: 100n,
+                                },
+                            ]);
+
+                            return Promise.resolve({
+                                success: true,
+                                accessToken: 'token',
+                                expiresIn: 3600,
+                                issuedAt: 1234567890,
+                                tokenType: 'Bearer',
+                            });
+                        }
+                    );
+
+                    const result = await controller.getHumeAccessToken({
+                        userId,
+                        recordName: studioId,
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                        accessToken: 'token',
+                        expiresIn: 3600,
+                        issuedAt: 1234567890,
+                        tokenType: 'Bearer',
+                    });
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: account1.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+
+                            // Should charge the full fee
+                            debits_posted: 100n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    expect(humeInterface.getAccessToken).toHaveBeenCalled();
+                });
+
+                it('should void the pending transfer if token generation fails', async () => {
+                    humeInterface.getAccessToken.mockImplementationOnce(
+                        async () => {
+                            await checkAccounts(financialInterface, [
+                                {
+                                    id: account1.id,
+                                    credits_posted: 10000n,
+                                    credits_pending: 0n,
+                                    debits_posted: 0n,
+                                    debits_pending: 100n,
+                                },
+                            ]);
+
+                            return Promise.resolve({
+                                success: false,
+                                errorCode: 'hume_api_error',
+                                errorMessage: 'Hume API Error',
+                            });
+                        }
+                    );
+
+                    const result = await controller.getHumeAccessToken({
+                        userId,
+                        recordName: studioId,
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'hume_api_error',
+                        errorMessage: 'Hume API Error',
+                    });
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: account1.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+
+                            // Should void the pending transfer
+                            debits_posted: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    expect(humeInterface.getAccessToken).toHaveBeenCalled();
+                });
+
+                it('should not create a pending transfer if creditFeePerToken is not configured', async () => {
+                    store.subscriptionConfiguration = buildSubscriptionConfig(
+                        (config) =>
+                            config
+                                .withUserDefaultFeatures((features) =>
+                                    features
+                                        .withAllDefaultFeatures()
+                                        .withAI()
+                                        .withAIHume({
+                                            allowed: false,
+                                        })
+                                )
+                                .addSubscription('sub1', (sub) =>
+                                    sub
+                                        .withTier('tier1')
+                                        .withAllDefaultFeatures()
+                                        .withAI()
+                                        .withAIHume({
+                                            allowed: true,
+                                        })
+                                )
+                    );
+
+                    humeInterface.getAccessToken.mockImplementationOnce(
+                        async () => {
+                            await checkAccounts(financialInterface, [
+                                {
+                                    id: account1.id,
+                                    credits_posted: 10000n,
+                                    credits_pending: 0n,
+                                    debits_posted: 0n,
+                                    debits_pending: 0n,
+                                },
+                            ]);
+
+                            return Promise.resolve({
+                                success: true,
+                                accessToken: 'token',
+                                expiresIn: 3600,
+                                issuedAt: 1234567890,
+                                tokenType: 'Bearer',
+                            });
+                        }
+                    );
+
+                    const result = await controller.getHumeAccessToken({
+                        userId,
+                        recordName: studioId,
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                        accessToken: 'token',
+                        expiresIn: 3600,
+                        issuedAt: 1234567890,
+                        tokenType: 'Bearer',
+                    });
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: account1.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    expect(humeInterface.getAccessToken).toHaveBeenCalled();
+                });
+
+                it('should deny the request if the studio does not have enough credits', async () => {
+                    unwrap(
+                        await financial.internalTransaction({
+                            transfers: [
+                                {
+                                    debitAccountId: account1.id,
+                                    creditAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    amount: 9950n,
+                                    code: TransferCodes.admin_debit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                            ],
+                        })
+                    );
+
+                    const result = await controller.getHumeAccessToken({
+                        userId,
+                        recordName: studioId,
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'insufficient_funds',
+                        errorMessage: 'Insufficient funds to cover usage.',
+                    });
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: account1.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 9950n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    expect(humeInterface.getAccessToken).not.toHaveBeenCalled();
                 });
             });
         });
