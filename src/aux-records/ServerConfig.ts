@@ -26,36 +26,40 @@ import { memoize } from 'es-toolkit';
 
 let serverConfigSchema: ServerConfigSchema;
 
-const snsSchema = memoize(() => z.object({
-    type: z.literal('sns'),
-    topicArn: z
-        .string()
-        .min(1)
-        .describe('The ARN of the SNS topic that should be used.'),
-}));
+const snsSchema = memoize(() =>
+    z.object({
+        type: z.literal('sns'),
+        topicArn: z
+            .string()
+            .min(1)
+            .describe('The ARN of the SNS topic that should be used.'),
+    })
+);
 
-const bullmqSchema = memoize(() => z.object({
-    type: z.literal('bullmq'),
+const bullmqSchema = memoize(() =>
+    z.object({
+        type: z.literal('bullmq'),
 
-    process: z
-        .boolean()
-        .prefault(true)
-        .describe(
-            'Whether to process jobs from BullMQ on this node. Defaults to true.'
-        ),
+        process: z
+            .boolean()
+            .prefault(true)
+            .describe(
+                'Whether to process jobs from BullMQ on this node. Defaults to true.'
+            ),
 
-    queue: z
-        .boolean()
-        .prefault(true)
-        .describe(
-            'Whether to allow this node to enqueue jobs in BullMQ. Defaults to true.'
-        ),
+        queue: z
+            .boolean()
+            .prefault(true)
+            .describe(
+                'Whether to allow this node to enqueue jobs in BullMQ. Defaults to true.'
+            ),
 
-    queueName: z
-        .string()
-        .min(1)
-        .describe('The name of the BullMQ queue that should be used.'),
-}));
+        queueName: z
+            .string()
+            .min(1)
+            .describe('The name of the BullMQ queue that should be used.'),
+    })
+);
 
 export const backgroundJobSchema = memoize(() => {
     const backgroundJobSchema = z.discriminatedUnion('type', [
@@ -72,52 +76,162 @@ export type BackgroundJobs = z.infer<BackgroundJobsSchema>;
 export function bullmqScheduledJobSchema<T extends z.ZodType>(jobData: T) {
     const bullmqKeepJobs = z.union([
         z.object({
-            count: z.number().int().nonnegative().optional().describe('Maximum count of jobs to be kept.'),
-            age: z.number().int().nonnegative().optional().describe('Maximum age in seconds of jobs to be kept.'),
-            limit: z.number().int().positive().optional().describe('Maximum quantity of jobs to be removed.'),
+            count: z
+                .number()
+                .int()
+                .nonnegative()
+                .optional()
+                .describe('Maximum count of jobs to be kept.'),
+            age: z
+                .number()
+                .int()
+                .nonnegative()
+                .optional()
+                .describe('Maximum age in seconds of jobs to be kept.'),
+            limit: z
+                .number()
+                .int()
+                .positive()
+                .optional()
+                .describe('Maximum quantity of jobs to be removed.'),
         }),
-        z.number().int().nonnegative().describe('Maximum count of jobs to be kept.'),
+        z
+            .number()
+            .int()
+            .nonnegative()
+            .describe('Maximum count of jobs to be kept.'),
         z.boolean().describe('Whether to remove these jobs.'),
     ]);
     return z.object({
         repeatOptions: z.object({
-            every: z.number().int().positive().optional().describe('The interval in milliseconds between job runs. Cannot be used with "pattern".'),
-            pattern: z.string().min(1).optional().describe('The cron pattern that should be used to schedule the job. Cannot be used with "every".'),
-            count: z.number().int().nonnegative().optional().describe('The start value for the repeat iteration count.'),
-            immediately: z.boolean().optional().describe('Whether the job should run immediately upon being added. Defaults to false. Only works with cron settings.'),
-            key: z.string().optional().describe('Custom repeatable key. This is the key that holds the "metadata" of a given repeatable job. This key is normally auto-generated but it is sometimes useful to specify a custom key for easier retrieval of repeatable jobs.'),
-            limit: z.number().int().optional().describe('The maximum number of times the job should repeat. If omitted, then there is no limit.'),
-            offset: z.number().int().optional().describe('The amount of time in milliseconds to delay the start before the next iteration time.'),
+            every: z
+                .number()
+                .int()
+                .positive()
+                .optional()
+                .describe(
+                    'The interval in milliseconds between job runs. Cannot be used with "pattern".'
+                ),
+            pattern: z
+                .string()
+                .min(1)
+                .optional()
+                .describe(
+                    'The cron pattern that should be used to schedule the job. Cannot be used with "every".'
+                ),
+            count: z
+                .number()
+                .int()
+                .nonnegative()
+                .optional()
+                .describe('The start value for the repeat iteration count.'),
+            immediately: z
+                .boolean()
+                .optional()
+                .describe(
+                    'Whether the job should run immediately upon being added. Defaults to false. Only works with cron settings.'
+                ),
+            key: z
+                .string()
+                .optional()
+                .describe(
+                    'Custom repeatable key. This is the key that holds the "metadata" of a given repeatable job. This key is normally auto-generated but it is sometimes useful to specify a custom key for easier retrieval of repeatable jobs.'
+                ),
+            limit: z
+                .number()
+                .int()
+                .optional()
+                .describe(
+                    'The maximum number of times the job should repeat. If omitted, then there is no limit.'
+                ),
+            offset: z
+                .number()
+                .int()
+                .optional()
+                .describe(
+                    'The amount of time in milliseconds to delay the start before the next iteration time.'
+                ),
         }),
-        jobTemplate: z.object({
-            data: jobData,
-            name: z.string().optional().describe('The name of the job.'),
-            opts: z.object({
-                attempts: z.number().int().optional().describe('The total number of attempts to try the job until it completes. Defaults to 1.'),
-                backoff: z.object({
-                    type: z.enum([
-                        'fixed',
-                        'exponential',
-                    ]),
-                    delay: z.number().int().nonnegative().optional().describe('The delay in miliseconds.'),
-                    jitter: z.number().int().nonnegative().optional().describe('Percentage of jitter usage. Defaults to 0.')
-                }),
-                delay: z.number().int().nonnegative().optional().describe('An amount of milliseconds to wait until this job can be processed. Note that for accurate delays, worker and producers should have their clocks synchronized. Defaults to 0.'),
-                lifo: z.boolean().optional().describe('If true, adds the job to the right of the queue instead of the left (default false).'),
-                priority: z.number().int().nonnegative().optional().describe('Ranges from 0 (highest priority) to 2 097 152 (lowest priority). Note that using priorities has a slight impact on performance, so do not use it if not required.'),
-                removeOnComplete: bullmqKeepJobs.optional()
-                    .describe('If true, removes the job when it successfully completes When given a number, it specifies the maximum amount of jobs to keep, or you can provide an object specifying max age and/or count to keep. It overrides whatever setting is used in the worker. Default behavior is to keep the job in the completed set.'),
-                removeOnFail: bullmqKeepJobs.optional()
-                    .describe('If true, removes the job when it fails after all attempts. When given a number, it specifies the maximum amount of jobs to keep, or you can provide an object specifying max age and/or count to keep. It overrides whatever setting is used in the worker. Default behavior is to keep the job in the failed set.'),
-            }).optional().describe('The options that should be used when adding the job.'),
-        })
-            .describe('The template that should be used when creating the scheduled job.')
-    })
-};
+        jobTemplate: z
+            .object({
+                data: jobData,
+                name: z.string().optional().describe('The name of the job.'),
+                opts: z
+                    .object({
+                        attempts: z
+                            .number()
+                            .int()
+                            .optional()
+                            .describe(
+                                'The total number of attempts to try the job until it completes. Defaults to 1.'
+                            ),
+                        backoff: z.object({
+                            type: z.enum(['fixed', 'exponential']),
+                            delay: z
+                                .number()
+                                .int()
+                                .nonnegative()
+                                .optional()
+                                .describe('The delay in miliseconds.'),
+                            jitter: z
+                                .number()
+                                .int()
+                                .nonnegative()
+                                .optional()
+                                .describe(
+                                    'Percentage of jitter usage. Defaults to 0.'
+                                ),
+                        }),
+                        delay: z
+                            .number()
+                            .int()
+                            .nonnegative()
+                            .optional()
+                            .describe(
+                                'An amount of milliseconds to wait until this job can be processed. Note that for accurate delays, worker and producers should have their clocks synchronized. Defaults to 0.'
+                            ),
+                        lifo: z
+                            .boolean()
+                            .optional()
+                            .describe(
+                                'If true, adds the job to the right of the queue instead of the left (default false).'
+                            ),
+                        priority: z
+                            .number()
+                            .int()
+                            .nonnegative()
+                            .optional()
+                            .describe(
+                                'Ranges from 0 (highest priority) to 2 097 152 (lowest priority). Note that using priorities has a slight impact on performance, so do not use it if not required.'
+                            ),
+                        removeOnComplete: bullmqKeepJobs
+                            .optional()
+                            .describe(
+                                'If true, removes the job when it successfully completes When given a number, it specifies the maximum amount of jobs to keep, or you can provide an object specifying max age and/or count to keep. It overrides whatever setting is used in the worker. Default behavior is to keep the job in the completed set.'
+                            ),
+                        removeOnFail: bullmqKeepJobs
+                            .optional()
+                            .describe(
+                                'If true, removes the job when it fails after all attempts. When given a number, it specifies the maximum amount of jobs to keep, or you can provide an object specifying max age and/or count to keep. It overrides whatever setting is used in the worker. Default behavior is to keep the job in the failed set.'
+                            ),
+                    })
+                    .optional()
+                    .describe(
+                        'The options that should be used when adding the job.'
+                    ),
+            })
+            .describe(
+                'The template that should be used when creating the scheduled job.'
+            ),
+    });
+}
 
-export type BullMQScheduledJobSchema<T extends z.ZodType> = ReturnType<typeof bullmqScheduledJobSchema<T>>;
-export type BullMQScheduledJob<T extends z.ZodType> = z.infer<BullMQScheduledJobSchema<T>>;
-
+export type BullMQScheduledJobSchema<T extends z.ZodType> = ReturnType<
+    typeof bullmqScheduledJobSchema<T>
+>;
+export type BullMQScheduledJob<T extends z.ZodType> = z.infer<
+    BullMQScheduledJobSchema<T>
+>;
 
 function constructServerConfigSchema() {
     /**
@@ -156,8 +270,8 @@ function constructServerConfigSchema() {
             .optional()
             .describe(
                 'The URL that public files should be accessed at. If specified, then public file records will point to this URL instead of the default S3 URL. If not specified, then the default S3 URL will be used. ' +
-                'Useful for adding CDN support for public files. Private file records are unaffected by this setting. ' +
-                'File Record URLs will be formatted as: "{publicFilesUrl}/{recordName}/{filename}".'
+                    'Useful for adding CDN support for public files. Private file records are unaffected by this setting. ' +
+                    'File Record URLs will be formatted as: "{publicFilesUrl}/{recordName}/{filename}".'
             ),
 
         messagesBucket: z
@@ -259,8 +373,8 @@ function constructServerConfigSchema() {
             .optional()
             .describe(
                 'The URL that public files should be accessed at. If specified, then public file records will point to this URL instead of the default S3 URL. If not specified, then the default URL will be used. ' +
-                'Useful for adding CDN support for public files. Private file records are unaffected by this setting. ' +
-                'File Record URLs will be formatted as: "{publicFilesUrl}/{recordName}/{filename}".'
+                    'Useful for adding CDN support for public files. Private file records are unaffected by this setting. ' +
+                    'File Record URLs will be formatted as: "{publicFilesUrl}/{recordName}/{filename}".'
             ),
 
         messagesBucket: z
@@ -1440,17 +1554,23 @@ Because repo/add_updates is a very common permission, we periodically cache perm
                     .describe(
                         'Configuration options for search background jobs. If omitted, then search background jobs will not be supported.'
                     ),
-                financial: z.discriminatedUnion('type', [
-                    snsSchema(),
-                    bullmqSchema().extend({
-                        revenueCreditSweep: 
-                            bullmqScheduledJobSchema(z.object({
-                                type: z.literal('financial-revenue-credit-sweep'),
-                            }))
-                            .nullable()
-                            .describe('A scheduled job that periodically sweeps from credits-denominated revenue accounts into USD-denominated revenue accounts. If null, then this will be disabled.')
-                    }),
-                ])
+                financial: z
+                    .discriminatedUnion('type', [
+                        snsSchema(),
+                        bullmqSchema().extend({
+                            revenueCreditSweep: bullmqScheduledJobSchema(
+                                z.object({
+                                    type: z.literal(
+                                        'financial-revenue-credit-sweep'
+                                    ),
+                                })
+                            )
+                                .nullable()
+                                .describe(
+                                    'A scheduled job that periodically sweeps from credits-denominated revenue accounts into USD-denominated revenue accounts. If null, then this will be disabled.'
+                                ),
+                        }),
+                    ])
                     .prefault({
                         type: 'bullmq',
                         queueName: 'aux-financial-jobs',
@@ -1465,10 +1585,12 @@ Because repo/add_updates is a very common permission, we periodically cache perm
                                     type: 'financial-revenue-credit-sweep',
                                 },
                                 name: 'financial-revenue-credit-sweep',
-                            }
+                            },
                         },
                     })
-                    .describe('Configuration options for financial background jobs. If omitted, then financial background jobs will default to BullMQ.'),
+                    .describe(
+                        'Configuration options for financial background jobs. If omitted, then financial background jobs will default to BullMQ.'
+                    ),
             })
             .optional()
             .describe(
@@ -1606,6 +1728,7 @@ export function getServerConfigSchema() {
 }
 
 export type ServerConfigSchema = ReturnType<typeof constructServerConfigSchema>;
+
 export type ServerConfig = z.infer<
     ReturnType<typeof constructServerConfigSchema>
 >;

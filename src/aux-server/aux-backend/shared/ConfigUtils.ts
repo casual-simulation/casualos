@@ -15,11 +15,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+import type { ServerConfigSchema } from '@casual-simulation/aux-records';
 import {
     getServerConfigSchema,
     type ServerConfig,
 } from '@casual-simulation/aux-records';
 import { merge, tryParseJson } from '@casual-simulation/aux-common';
+import type z from 'zod';
 
 declare const DEVELOPMENT: boolean;
 declare const SERVER_CONFIG: string;
@@ -28,7 +30,7 @@ export const DEV_CONFIG: Partial<ServerConfig> = {};
 
 export function loadConfig(
     required: boolean = true,
-    dynamicConfig: Partial<ServerConfig> = {}
+    dynamicConfig: Partial<z.input<ServerConfigSchema>> = {}
 ): ServerConfig {
     const injectedConfig = parseObject(SERVER_CONFIG);
     const envConfig = parseObject(process.env.SERVER_CONFIG);
