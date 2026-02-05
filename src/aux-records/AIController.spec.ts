@@ -1205,7 +1205,7 @@ describe('AIController', () => {
                     );
                 });
 
-                it.only('should charge the user for total tokens used in the chat', async () => {
+                it('should charge the user for total tokens used in the chat', async () => {
                     chatInterface.chat.mockImplementationOnce(async () => {
                         await checkAccounts(financialInterface, [
                             {
@@ -1269,7 +1269,7 @@ describe('AIController', () => {
                     expect(chatInterface.chat).toHaveBeenCalled();
                 });
 
-                it.only('should charge the user for input tokens and output tokens separately', async () => {
+                it('should charge the user for input tokens and output tokens separately', async () => {
                     chatInterface.chat.mockImplementationOnce(async () => {
                         await checkAccounts(financialInterface, [
                             {
@@ -1334,7 +1334,7 @@ describe('AIController', () => {
                     expect(chatInterface.chat).toHaveBeenCalled();
                 });
 
-                it.only('should be able to only charge for input tokens', async () => {
+                it('should be able to only charge for input tokens', async () => {
                     store.subscriptionConfiguration = buildSubscriptionConfig(
                         (config) =>
                             config.addSubscription('sub1', (sub) =>
@@ -1414,7 +1414,7 @@ describe('AIController', () => {
                     expect(chatInterface.chat).toHaveBeenCalled();
                 });
 
-                it.only('should be able to only charge for output tokens', async () => {
+                it('should be able to only charge for output tokens', async () => {
                     store.subscriptionConfiguration = buildSubscriptionConfig(
                         (config) =>
                             config.addSubscription('sub1', (sub) =>
@@ -1494,7 +1494,7 @@ describe('AIController', () => {
                     expect(chatInterface.chat).toHaveBeenCalled();
                 });
 
-                it.only('should use the specified pre charge amount', async () => {
+                it('should use the specified pre charge amount', async () => {
                     store.subscriptionConfiguration = buildSubscriptionConfig(
                         (config) =>
                             config.addSubscription('sub1', (sub) =>

@@ -60,7 +60,7 @@ import type {
     ConstructAuthorizationContextFailure,
     PolicyController,
 } from './PolicyController';
-import type { Failure, Success, UserRole } from '@casual-simulation/aux-common';
+import type { Failure, UserRole } from '@casual-simulation/aux-common';
 import {
     failure,
     genericResult,
@@ -78,9 +78,9 @@ import type {
     AIOpenAIRealtimeInterface,
     CreateRealtimeSessionTokenRequest,
 } from './AIOpenAIRealtimeInterface';
-import type {
-    FinancialController,
-    UsageBillingOptions,
+import {
+    billForUsage,
+    type FinancialController,
 } from './financial/FinancialController';
 import { TransferCodes } from './financial/FinancialInterface';
 
@@ -524,7 +524,7 @@ export class AIController {
                       preChargeOutputTokens * (creditFeePerOutputToken ?? 0n)
                     : null;
 
-            const billing = await this._billForAIUsage({
+            const billing = await billForUsage(this._financial, {
                 userId: request.userId,
                 transferCode: TransferCodes.records_usage_fee,
             });
@@ -650,53 +650,6 @@ export class AIController {
         const modifier = tokenModifierRatio[model] ?? 1.0;
         const adjustedTokens = modifier * tokens;
         return adjustedTokens;
-    }
-
-    /**
-     * Bills a user for AI usage by transferring credits from their account to the revenue account.
-     * @param params The billing parameters.
-     * @returns A result indicating success or failure.
-     */
-    private async _billForAIUsage(
-        params: UsageBillingOptions
-    ): Promise<
-        AsyncGenerator<
-            Success<void>,
-            Result<void, SimpleError>,
-            Result<
-                { cost?: number | bigint; initialCost?: number | bigint },
-                SimpleError
-            >
-        >
-    > {
-        if (!this._financial) {
-            async function* gen(): AsyncGenerator<
-                Success<void>,
-                Result<void, SimpleError>,
-                Result<
-                    { cost?: number | bigint; initialCost?: number | bigint },
-                    SimpleError
-                >
-            > {
-                try {
-                    for (let i = 0; i < params.maxSteps; i++) {
-                        const r = yield success();
-                        if (isFailure(r)) {
-                            return r;
-                        }
-                    }
-
-                    return success();
-                } catch (err) {
-                    return success();
-                }
-            }
-
-            const generator = gen();
-            return generator;
-        }
-
-        return await this._financial.billForUsage(params);
     }
 
     @traced(TRACE_NAME)
