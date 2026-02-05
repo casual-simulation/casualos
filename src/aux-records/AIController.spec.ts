@@ -2323,39 +2323,46 @@ describe('AIController', () => {
                     subscriptionStatus: 'active',
                 });
 
-                chatInterface2.chat.mockReturnValueOnce(
-                    Promise.resolve({
-                        choices: [
+                chatInterface2.chatStream.mockReturnValueOnce(
+                    asyncIterable<AIChatInterfaceStreamResponse>([
+                        Promise.resolve({
+                            choices: [
+                                {
+                                    role: 'user',
+                                    content: 'test',
+                                    finishReason: 'stop',
+                                },
+                            ],
+                            totalTokens: 1,
+                        }),
+                    ])
+                );
+
+                const result = await unwindAndCaptureAsync(
+                    controller.chatStream({
+                        model: 'test-model3',
+                        messages: [
                             {
                                 role: 'user',
                                 content: 'test',
-                                finishReason: 'stop',
                             },
                         ],
-                        totalTokens: 1,
+                        temperature: 0.5,
+                        userId,
+                        userSubscriptionTier,
                     })
                 );
 
-                const result = await controller.chat({
-                    model: 'test-model3',
-                    messages: [
-                        {
-                            role: 'user',
-                            content: 'test',
-                        },
-                    ],
-                    temperature: 0.5,
-                    userId,
-                    userSubscriptionTier,
-                });
-
                 expect(result).toEqual({
-                    success: false,
-                    errorCode: 'not_authorized',
-                    errorMessage:
-                        'The subscription does not permit the given model for AI Chat features.',
+                    result: {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'The subscription does not permit the given model for AI Chat features.',
+                    },
+                    states: [],
                 });
-                expect(chatInterface.chat).not.toHaveBeenCalled();
+                expect(chatInterface.chatStream).not.toHaveBeenCalled();
             });
 
             it('should return success when allowedModels includes the model', async () => {
@@ -2376,17 +2383,19 @@ describe('AIController', () => {
                         )
                 );
 
-                chatInterface.chat.mockReturnValueOnce(
-                    Promise.resolve({
-                        choices: [
-                            {
-                                role: 'user',
-                                content: 'test',
-                                finishReason: 'stop',
-                            },
-                        ],
-                        totalTokens: 1,
-                    })
+                chatInterface.chatStream.mockReturnValueOnce(
+                    asyncIterable<AIChatInterfaceStreamResponse>([
+                        Promise.resolve({
+                            choices: [
+                                {
+                                    role: 'user',
+                                    content: 'test',
+                                    finishReason: 'stop',
+                                },
+                            ],
+                            totalTokens: 1,
+                        }),
+                    ])
                 );
 
                 await store.saveUser({
@@ -2399,30 +2408,38 @@ describe('AIController', () => {
                     subscriptionStatus: 'active',
                 });
 
-                const result = await controller.chat({
-                    model: 'test-model1',
-                    messages: [
-                        {
-                            role: 'user',
-                            content: 'test',
-                        },
-                    ],
-                    temperature: 0.5,
-                    userId,
-                    userSubscriptionTier,
-                });
+                const result = await unwindAndCaptureAsync(
+                    controller.chatStream({
+                        model: 'test-model1',
+                        messages: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                            },
+                        ],
+                        temperature: 0.5,
+                        userId,
+                        userSubscriptionTier,
+                    })
+                );
 
                 expect(result).toEqual({
-                    success: true,
-                    choices: [
+                    result: {
+                        success: true,
+                    },
+                    states: [
                         {
-                            role: 'user',
-                            content: 'test',
-                            finishReason: 'stop',
+                            choices: [
+                                {
+                                    role: 'user',
+                                    content: 'test',
+                                    finishReason: 'stop',
+                                },
+                            ],
                         },
                     ],
                 });
-                expect(chatInterface.chat).toHaveBeenCalled();
+                expect(chatInterface.chatStream).toHaveBeenCalled();
             });
 
             it('should specify the maximum number of tokens allowed based on how many tokens the subscription has left in the period', async () => {
