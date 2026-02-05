@@ -43,10 +43,7 @@ import {
     getSubscriptionFeatures,
 } from './SubscriptionConfiguration';
 import type { PolicyStore } from './PolicyStore';
-import type {
-    AIHumeInterface,
-    AIHumeInterfaceGetAccessTokenFailure,
-} from './AIHumeInterface';
+import type { AIHumeInterface } from './AIHumeInterface';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
 import type {
@@ -57,7 +54,6 @@ import type {
 import { fromByteArray } from 'base64-js';
 import type {
     AuthorizeSubjectFailure,
-    ConstructAuthorizationContextFailure,
     PolicyController,
 } from './PolicyController';
 import type { Failure, UserRole } from '@casual-simulation/aux-common';
@@ -1355,7 +1351,7 @@ export class AIController {
                 this._imageOptions.maxImages
             );
 
-            const totalPixels = Math.max(width, height) * numberOfImages;
+            const totalSquarePixels = Math.max(width, height) * numberOfImages;
 
             const metrics = await this._metrics.getSubscriptionAiImageMetrics({
                 ownerId: request.userId,
@@ -1379,7 +1375,7 @@ export class AIController {
 
             if (
                 allowedFeatures.ai.images.maxSquarePixelsPerRequest > 0 &&
-                totalPixels >
+                totalSquarePixels >
                     allowedFeatures.ai.images.maxSquarePixelsPerRequest
             ) {
                 return {
@@ -1391,7 +1387,7 @@ export class AIController {
 
             if (
                 allowedFeatures.ai.images.maxSquarePixelsPerPeriod > 0 &&
-                totalPixels + metrics.totalSquarePixelsInCurrentPeriod >
+                totalSquarePixels + metrics.totalSquarePixelsInCurrentPeriod >
                     allowedFeatures.ai.images.maxSquarePixelsPerPeriod
             ) {
                 return {
@@ -1416,38 +1412,93 @@ export class AIController {
                 }
             }
 
-            const result = await provider.generateImage({
-                model: model,
-                prompt: request.prompt,
-                negativePrompt: request.negativePrompt,
-                width: width,
-                height: height,
-                numberOfImages: numberOfImages,
-                seed: request.seed,
-                steps: Math.min(
-                    request.steps ?? 30,
-                    this._imageOptions.maxSteps
-                ),
-                cfgScale: request.cfgScale,
-                sampler: request.sampler,
-                clipGuidancePreset: request.clipGuidancePreset,
-                stylePreset: request.stylePreset,
+            const creditFeePerSquarePixel =
+                allowedFeatures.ai.images.creditFeePerSquarePixel ?? null;
+            const amount = creditFeePerSquarePixel
+                ? BigInt(Math.ceil(totalSquarePixels * creditFeePerSquarePixel))
+                : null;
+
+            const billing = await billForUsage(this._financial, {
                 userId: request.userId,
+                transferCode: TransferCodes.records_usage_fee,
             });
 
-            if (!result.success) {
-                return result;
+            const initialResult = await billing.next(
+                success({
+                    initialCost: amount,
+                })
+            );
+
+            if (isFailure(initialResult.value)) {
+                return genericResult(initialResult.value);
+            }
+
+            const result = await wrap(
+                async () =>
+                    await provider.generateImage({
+                        model: model,
+                        prompt: request.prompt,
+                        negativePrompt: request.negativePrompt,
+                        width: width,
+                        height: height,
+                        numberOfImages: numberOfImages,
+                        seed: request.seed,
+                        steps: Math.min(
+                            request.steps ?? 30,
+                            this._imageOptions.maxSteps
+                        ),
+                        cfgScale: request.cfgScale,
+                        sampler: request.sampler,
+                        clipGuidancePreset: request.clipGuidancePreset,
+                        stylePreset: request.stylePreset,
+                        userId: request.userId,
+                    })
+            );
+
+            if (isFailure(result)) {
+                logError(result.error, `[AIController] Generate image error:`);
+
+                // Need to pass failure to billing to ensure that it cancels pending transfers
+                await billing.next(
+                    failure({
+                        errorCode: 'server_error',
+                        errorMessage: 'A server error occurred.',
+                    })
+                );
+
+                return {
+                    success: false,
+                    errorCode: 'server_error',
+                    errorMessage: 'A server error occurred.',
+                };
+            }
+
+            if (result.value.success === false) {
+                // Pass the image generation error to billing
+                await billing.next(failure(result.value));
+
+                return result.value;
             }
 
             await this._metrics.recordImageMetrics({
                 userId: request.userId,
                 createdAtMs: Date.now(),
-                squarePixels: totalPixels,
+                squarePixels: totalSquarePixels,
             });
+
+            const finalResult = await billing.next(
+                success({
+                    cost: amount,
+                })
+            );
+
+            if (isFailure(finalResult.value)) {
+                return genericResult(finalResult.value);
+            }
 
             return {
                 success: true,
-                images: result.images,
+                images: result.value.images,
             };
         } catch (err) {
             const span = trace.getActiveSpan();
@@ -2321,16 +2372,7 @@ export interface AIGenerateImageSuccess {
 
 export interface AIGenerateImageFailure {
     success: false;
-    errorCode:
-        | ServerError
-        | NotLoggedInError
-        | NotSubscribedError
-        | InvalidSubscriptionTierError
-        | NotSupportedError
-        | SubscriptionLimitReached
-        | NotAuthorizedError
-        | 'invalid_request'
-        | 'invalid_model';
+    errorCode: KnownErrorCodes;
     errorMessage: string;
 
     allowedSubscriptionTiers?: string[];
@@ -2379,18 +2421,7 @@ export interface AIHumeGetAccessTokenSuccess {
 export interface AIHumeGetAccessTokenFailure {
     success: false;
 
-    errorCode:
-        | ServerError
-        | NotLoggedInError
-        | NotSubscribedError
-        | InvalidSubscriptionTierError
-        | NotSupportedError
-        | SubscriptionLimitReached
-        | NotAuthorizedError
-        | AIHumeInterfaceGetAccessTokenFailure['errorCode']
-        | ConstructAuthorizationContextFailure['errorCode']
-        | AuthorizeSubjectFailure['errorCode']
-        | 'invalid_request';
+    errorCode: KnownErrorCodes;
     errorMessage: string;
 }
 

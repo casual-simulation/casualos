@@ -5107,6 +5107,359 @@ describe('AIController', () => {
                     generateImageInterface.generateImage
                 ).not.toHaveBeenCalled();
             });
+
+            describe('billing', () => {
+                let account1: Account;
+
+                beforeEach(async () => {
+                    // @ts-expect-error private access
+                    controller._financial = financial;
+
+                    unwrap(await financial.init());
+
+                    store.subscriptionConfiguration = buildSubscriptionConfig(
+                        (config) =>
+                            config.addSubscription('sub1', (sub) =>
+                                sub
+                                    .withTier('tier1')
+                                    .withAllDefaultFeatures()
+                                    .withAI()
+                                    .withAIImages({
+                                        allowed: true,
+                                        maxSquarePixelsPerRequest: 512,
+                                        maxSquarePixelsPerPeriod: 2048,
+                                        creditFeePerSquarePixel: 1,
+                                    })
+                            )
+                    );
+
+                    account1 = unwrap(
+                        await financial.getOrCreateFinancialAccount({
+                            userId: userId,
+                            ledger: LEDGERS.credits,
+                        })
+                    ).account;
+
+                    unwrap(
+                        await financial.internalTransaction({
+                            transfers: [
+                                {
+                                    debitAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    creditAccountId: account1.id,
+                                    amount: 10000n,
+                                    code: TransferCodes.admin_credit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                            ],
+                        })
+                    );
+                });
+
+                it('should charge the user for generating an image', async () => {
+                    generateImageInterface.generateImage.mockImplementationOnce(
+                        async () => {
+                            await checkAccounts(financialInterface, [
+                                {
+                                    id: account1.id,
+                                    credits_posted: 10000n,
+                                    credits_pending: 0n,
+                                    debits_posted: 0n,
+
+                                    // Should charge for 512 pixels * 1 = 512 credits
+                                    debits_pending: 512n,
+                                },
+                            ]);
+
+                            return Promise.resolve({
+                                success: true,
+                                images: [
+                                    {
+                                        base64: 'base64',
+                                        seed: 123,
+                                        mimeType: 'image/png',
+                                    },
+                                ],
+                            });
+                        }
+                    );
+
+                    const result = await controller.generateImage({
+                        prompt: 'test',
+                        userId,
+                        userSubscriptionTier,
+                        width: 512,
+                        height: 512,
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                        images: [
+                            {
+                                base64: 'base64',
+                                seed: 123,
+                                mimeType: 'image/png',
+                            },
+                        ],
+                    });
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: account1.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+
+                            // Should charge the full fee
+                            debits_posted: 512n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    expect(
+                        generateImageInterface.generateImage
+                    ).toHaveBeenCalled();
+                });
+
+                it('should charge based on total square pixels (max(width, height) * numberOfImages)', async () => {
+                    generateImageInterface.generateImage.mockImplementationOnce(
+                        async () => {
+                            await checkAccounts(financialInterface, [
+                                {
+                                    id: account1.id,
+                                    credits_posted: 10000n,
+                                    credits_pending: 0n,
+                                    debits_posted: 0n,
+
+                                    // Should charge for 256 * 2 images * 1 = 512 credits
+                                    debits_pending: 512n,
+                                },
+                            ]);
+
+                            return Promise.resolve({
+                                success: true,
+                                images: [
+                                    {
+                                        base64: 'base64',
+                                        seed: 123,
+                                        mimeType: 'image/png',
+                                    },
+                                    {
+                                        base64: 'base64',
+                                        seed: 456,
+                                        mimeType: 'image/png',
+                                    },
+                                ],
+                            });
+                        }
+                    );
+
+                    const result = await controller.generateImage({
+                        prompt: 'test',
+                        userId,
+                        userSubscriptionTier,
+                        width: 256,
+                        height: 256,
+                        numberOfImages: 2,
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                        images: [
+                            {
+                                base64: 'base64',
+                                seed: 123,
+                                mimeType: 'image/png',
+                            },
+                            {
+                                base64: 'base64',
+                                seed: 456,
+                                mimeType: 'image/png',
+                            },
+                        ],
+                    });
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: account1.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 512n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    expect(
+                        generateImageInterface.generateImage
+                    ).toHaveBeenCalled();
+                });
+
+                it('should void the pending transfer if image generation fails', async () => {
+                    generateImageInterface.generateImage.mockImplementationOnce(
+                        async () => {
+                            await checkAccounts(financialInterface, [
+                                {
+                                    id: account1.id,
+                                    credits_posted: 10000n,
+                                    credits_pending: 0n,
+                                    debits_posted: 0n,
+                                    debits_pending: 512n,
+                                },
+                            ]);
+
+                            return Promise.resolve({
+                                success: false,
+                                errorCode: 'server_error',
+                                errorMessage: 'Image generation failed',
+                            });
+                        }
+                    );
+
+                    const result = await controller.generateImage({
+                        prompt: 'test',
+                        userId,
+                        userSubscriptionTier,
+                        width: 512,
+                        height: 512,
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'server_error',
+                        errorMessage: 'Image generation failed',
+                    });
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: account1.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+
+                            // Should void the pending transfer
+                            debits_posted: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    expect(
+                        generateImageInterface.generateImage
+                    ).toHaveBeenCalled();
+                });
+
+                it('should not create a pending transfer if creditFeePerSquarePixel is not configured', async () => {
+                    store.subscriptionConfiguration = buildSubscriptionConfig(
+                        (config) =>
+                            config.addSubscription('sub1', (sub) =>
+                                sub
+                                    .withTier('tier1')
+                                    .withAllDefaultFeatures()
+                                    .withAI()
+                                    .withAIImages({
+                                        allowed: true,
+                                        maxSquarePixelsPerRequest: 512,
+                                        maxSquarePixelsPerPeriod: 2048,
+                                    })
+                            )
+                    );
+
+                    generateImageInterface.generateImage.mockImplementationOnce(
+                        async () => {
+                            await checkAccounts(financialInterface, [
+                                {
+                                    id: account1.id,
+                                    credits_posted: 10000n,
+                                    credits_pending: 0n,
+                                    debits_posted: 0n,
+                                    debits_pending: 0n,
+                                },
+                            ]);
+
+                            return Promise.resolve({
+                                success: true,
+                                images: [
+                                    {
+                                        base64: 'base64',
+                                        seed: 123,
+                                        mimeType: 'image/png',
+                                    },
+                                ],
+                            });
+                        }
+                    );
+
+                    const result = await controller.generateImage({
+                        prompt: 'test',
+                        userId,
+                        userSubscriptionTier,
+                        width: 512,
+                        height: 512,
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                        images: [
+                            {
+                                base64: 'base64',
+                                seed: 123,
+                                mimeType: 'image/png',
+                            },
+                        ],
+                    });
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: account1.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    expect(
+                        generateImageInterface.generateImage
+                    ).toHaveBeenCalled();
+                });
+
+                it('should deny the request if the user does not have enough credits', async () => {
+                    unwrap(
+                        await financial.internalTransaction({
+                            transfers: [
+                                {
+                                    debitAccountId: account1.id,
+                                    creditAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    amount: 9950n,
+                                    code: TransferCodes.admin_debit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                            ],
+                        })
+                    );
+
+                    const result = await controller.generateImage({
+                        prompt: 'test',
+                        userId,
+                        userSubscriptionTier,
+                        width: 512,
+                        height: 512,
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'insufficient_funds',
+                        errorMessage: 'Insufficient funds to cover usage.',
+                    });
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: account1.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 9950n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    expect(
+                        generateImageInterface.generateImage
+                    ).not.toHaveBeenCalled();
+                });
+            });
         });
     });
 
