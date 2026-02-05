@@ -127,6 +127,16 @@ export interface AIChatInterfaceStreamResponse {
      * The total number of tokens that were used.
      */
     totalTokens: number;
+
+    /**
+     * The number of input tokens that were used.
+     */
+    inputTokens?: number;
+
+    /**
+     * The number of output tokens that were used.
+     */
+    outputTokens?: number;
 }
 
 export interface AIChatStreamMessage {

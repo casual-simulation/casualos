@@ -2716,6 +2716,477 @@ describe('AIController', () => {
                 });
                 expect(chatInterface.chatStream).not.toHaveBeenCalled();
             });
+
+            describe('billing', () => {
+                let account1: Account;
+
+                beforeEach(async () => {
+                    // @ts-expect-error private access
+                    controller._financial = financial;
+
+                    unwrap(await financial.init());
+
+                    store.subscriptionConfiguration = buildSubscriptionConfig(
+                        (config) =>
+                            config.addSubscription('sub1', (sub) =>
+                                sub
+                                    .withTier('tier1')
+                                    .withAllDefaultFeatures()
+                                    .withAI()
+                                    .withAIChat({
+                                        allowed: true,
+                                        maxTokensPerPeriod: 100,
+                                        maxTokensPerRequest: 75,
+                                        creditFeePerInputToken: 10,
+                                        creditFeePerOutputToken: 15,
+                                    })
+                            )
+                    );
+
+                    account1 = unwrap(
+                        await financial.getOrCreateFinancialAccount({
+                            userId: userId,
+                            ledger: LEDGERS.credits,
+                        })
+                    ).account;
+
+                    unwrap(
+                        await financial.internalTransaction({
+                            transfers: [
+                                {
+                                    debitAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    creditAccountId: account1.id,
+                                    amount: 10000n,
+                                    code: TransferCodes.admin_credit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                            ],
+                        })
+                    );
+                });
+
+                it('should charge the user for total tokens used in the chat', async () => {
+                    chatInterface.chatStream.mockImplementationOnce(
+                        async function* () {
+                            await checkAccounts(financialInterface, [
+                                {
+                                    id: account1.id,
+                                    credits_posted: 10000n,
+                                    credits_pending: 0n,
+                                    debits_posted: 0n,
+
+                                    // Should charge for 100 input and output tokens
+                                    debits_pending: 2500n,
+                                },
+                            ]);
+
+                            yield {
+                                choices: [
+                                    {
+                                        role: 'user',
+                                        content: 'test',
+                                        finishReason: 'stop',
+                                    },
+                                ],
+                                totalTokens: 1,
+                            };
+                        }
+                    );
+
+                    const result = await unwindAndCaptureAsync(
+                        controller.chatStream({
+                            model: 'test-model1',
+                            messages: [
+                                {
+                                    role: 'user',
+                                    content: 'test',
+                                },
+                            ],
+                            temperature: 0.5,
+                            userId,
+                            userSubscriptionTier,
+                        })
+                    );
+
+                    expect(result).toEqual({
+                        result: {
+                            success: true,
+                        },
+                        states: [
+                            {
+                                choices: [
+                                    {
+                                        role: 'user',
+                                        content: 'test',
+                                        finishReason: 'stop',
+                                    },
+                                ],
+                            },
+                        ],
+                    });
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: account1.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+
+                            // Should charge at the output token rate
+                            debits_posted: 15n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    expect(chatInterface.chatStream).toHaveBeenCalled();
+                });
+
+                it('should charge the user for input tokens and output tokens separately', async () => {
+                    chatInterface.chatStream.mockImplementationOnce(
+                        async function* () {
+                            await checkAccounts(financialInterface, [
+                                {
+                                    id: account1.id,
+                                    credits_posted: 10000n,
+                                    credits_pending: 0n,
+                                    debits_posted: 0n,
+
+                                    debits_pending: 2500n,
+                                },
+                            ]);
+
+                            yield {
+                                choices: [
+                                    {
+                                        role: 'user',
+                                        content: 'test',
+                                        finishReason: 'stop',
+                                    },
+                                ],
+                                totalTokens: 15,
+                                inputTokens: 5,
+                                outputTokens: 10,
+                            };
+                        }
+                    );
+
+                    const result = await unwindAndCaptureAsync(
+                        controller.chatStream({
+                            model: 'test-model1',
+                            messages: [
+                                {
+                                    role: 'user',
+                                    content: 'test',
+                                },
+                            ],
+                            temperature: 0.5,
+                            userId,
+                            userSubscriptionTier,
+                        })
+                    );
+
+                    expect(result).toEqual({
+                        result: {
+                            success: true,
+                        },
+                        states: [
+                            {
+                                choices: [
+                                    {
+                                        role: 'user',
+                                        content: 'test',
+                                        finishReason: 'stop',
+                                    },
+                                ],
+                            },
+                        ],
+                    });
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: account1.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+
+                            // 10 * 5 input tokens + 15 * 10 output tokens
+                            debits_posted: 200n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    expect(chatInterface.chatStream).toHaveBeenCalled();
+                });
+
+                it('should be able to only charge for input tokens', async () => {
+                    store.subscriptionConfiguration = buildSubscriptionConfig(
+                        (config) =>
+                            config.addSubscription('sub1', (sub) =>
+                                sub
+                                    .withTier('tier1')
+                                    .withAllDefaultFeatures()
+                                    .withAI()
+                                    .withAIChat({
+                                        allowed: true,
+                                        maxTokensPerPeriod: 100,
+                                        maxTokensPerRequest: 75,
+                                        creditFeePerInputToken: 10,
+                                    })
+                            )
+                    );
+
+                    chatInterface.chatStream.mockImplementationOnce(
+                        async function* () {
+                            await checkAccounts(financialInterface, [
+                                {
+                                    id: account1.id,
+                                    credits_posted: 10000n,
+                                    credits_pending: 0n,
+                                    debits_posted: 0n,
+                                    debits_pending: 1000n,
+                                },
+                            ]);
+
+                            yield {
+                                choices: [
+                                    {
+                                        role: 'user',
+                                        content: 'test',
+                                        finishReason: 'stop',
+                                    },
+                                ],
+                                totalTokens: 15,
+                                inputTokens: 5,
+                                outputTokens: 10,
+                            };
+                        }
+                    );
+
+                    const result = await unwindAndCaptureAsync(
+                        controller.chatStream({
+                            model: 'test-model1',
+                            messages: [
+                                {
+                                    role: 'user',
+                                    content: 'test',
+                                },
+                            ],
+                            temperature: 0.5,
+                            userId,
+                            userSubscriptionTier,
+                        })
+                    );
+
+                    expect(result).toEqual({
+                        result: {
+                            success: true,
+                        },
+                        states: [
+                            {
+                                choices: [
+                                    {
+                                        role: 'user',
+                                        content: 'test',
+                                        finishReason: 'stop',
+                                    },
+                                ],
+                            },
+                        ],
+                    });
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: account1.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+
+                            // 10 * 5 input tokens
+                            debits_posted: 50n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    expect(chatInterface.chatStream).toHaveBeenCalled();
+                });
+
+                it('should be able to only charge for output tokens', async () => {
+                    store.subscriptionConfiguration = buildSubscriptionConfig(
+                        (config) =>
+                            config.addSubscription('sub1', (sub) =>
+                                sub
+                                    .withTier('tier1')
+                                    .withAllDefaultFeatures()
+                                    .withAI()
+                                    .withAIChat({
+                                        allowed: true,
+                                        maxTokensPerPeriod: 100,
+                                        maxTokensPerRequest: 75,
+                                        creditFeePerOutputToken: 15,
+                                    })
+                            )
+                    );
+
+                    chatInterface.chatStream.mockImplementationOnce(
+                        async function* () {
+                            await checkAccounts(financialInterface, [
+                                {
+                                    id: account1.id,
+                                    credits_posted: 10000n,
+                                    credits_pending: 0n,
+                                    debits_posted: 0n,
+                                    debits_pending: 1500n,
+                                },
+                            ]);
+
+                            yield {
+                                choices: [
+                                    {
+                                        role: 'user',
+                                        content: 'test',
+                                        finishReason: 'stop',
+                                    },
+                                ],
+                                totalTokens: 15,
+                                inputTokens: 5,
+                                outputTokens: 10,
+                            };
+                        }
+                    );
+
+                    const result = await unwindAndCaptureAsync(
+                        controller.chatStream({
+                            model: 'test-model1',
+                            messages: [
+                                {
+                                    role: 'user',
+                                    content: 'test',
+                                },
+                            ],
+                            temperature: 0.5,
+                            userId,
+                            userSubscriptionTier,
+                        })
+                    );
+
+                    expect(result).toEqual({
+                        result: {
+                            success: true,
+                        },
+                        states: [
+                            {
+                                choices: [
+                                    {
+                                        role: 'user',
+                                        content: 'test',
+                                        finishReason: 'stop',
+                                    },
+                                ],
+                            },
+                        ],
+                    });
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: account1.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+
+                            // 15 * 10 output tokens
+                            debits_posted: 150n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    expect(chatInterface.chatStream).toHaveBeenCalled();
+                });
+
+                it('should use the specified pre charge amount', async () => {
+                    store.subscriptionConfiguration = buildSubscriptionConfig(
+                        (config) =>
+                            config.addSubscription('sub1', (sub) =>
+                                sub
+                                    .withTier('tier1')
+                                    .withAllDefaultFeatures()
+                                    .withAI()
+                                    .withAIChat({
+                                        allowed: true,
+                                        maxTokensPerPeriod: 100,
+                                        maxTokensPerRequest: 75,
+                                        creditFeePerOutputToken: 15,
+                                        creditFeePerInputToken: 10,
+                                        preChargeInputTokens: 1,
+                                        preChargeOutputTokens: 1,
+                                    })
+                            )
+                    );
+
+                    chatInterface.chatStream.mockImplementationOnce(
+                        async function* () {
+                            await checkAccounts(financialInterface, [
+                                {
+                                    id: account1.id,
+                                    credits_posted: 10000n,
+                                    credits_pending: 0n,
+                                    debits_posted: 0n,
+                                    debits_pending: 25n,
+                                },
+                            ]);
+
+                            yield {
+                                choices: [
+                                    {
+                                        role: 'user',
+                                        content: 'test',
+                                        finishReason: 'stop',
+                                    },
+                                ],
+                                totalTokens: 15,
+                                inputTokens: 5,
+                                outputTokens: 10,
+                            };
+                        }
+                    );
+
+                    const result = await unwindAndCaptureAsync(
+                        controller.chatStream({
+                            model: 'test-model1',
+                            messages: [
+                                {
+                                    role: 'user',
+                                    content: 'test',
+                                },
+                            ],
+                            temperature: 0.5,
+                            userId,
+                            userSubscriptionTier,
+                        })
+                    );
+
+                    expect(result).toEqual({
+                        result: {
+                            success: true,
+                        },
+                        states: [
+                            {
+                                choices: [
+                                    {
+                                        role: 'user',
+                                        content: 'test',
+                                        finishReason: 'stop',
+                                    },
+                                ],
+                            },
+                        ],
+                    });
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: account1.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+
+                            debits_posted: 200n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    expect(chatInterface.chatStream).toHaveBeenCalled();
+                });
+            });
         });
 
         it('should return a not_authorized result if the user privacy features do not allow AI access', async () => {

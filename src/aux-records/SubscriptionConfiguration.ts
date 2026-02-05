@@ -338,15 +338,15 @@ export const aiChatFeaturesSchema = memoize(() =>
                 'The number of credits that are charged for each output token. If not specified, then there is no fee.'
             ),
 
-        preChargeInputTokens: z.coerce
-            .bigint()
+        preChargeInputTokens: z
+            .int()
             .optional()
             .describe(
                 'The number of input tokens that are charged before chat requests are made. This is used to ensure that there are enough credits in the account to cover most of the cost of the request. If the final request costs less, than the difference is refunded to the account. If not, then the difference is charged after the request. If not specified, then the account is pre charged for 100 input tokens and 100 output tokens.'
             ),
 
-        preChargeOutputTokens: z.coerce
-            .bigint()
+        preChargeOutputTokens: z
+            .int()
             .optional()
             .describe(
                 'The number of output tokens that are charged before chat requests are made. This is used to ensure that there are enough credits in the account to cover most of the cost of the request. If the final request costs less, than the difference is refunded to the account. If not, then the difference is charged after the request. If not specified, then the account is pre charged for 100 input tokens and 100 output tokens.'

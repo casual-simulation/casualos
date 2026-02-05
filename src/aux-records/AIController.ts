@@ -514,10 +514,18 @@ export class AIController {
                 allowedFeatures.ai.chat.creditFeePerInputToken ?? null;
             const creditFeePerOutputToken =
                 allowedFeatures.ai.chat.creditFeePerOutputToken ?? null;
-            const preChargeInputTokens =
-                allowedFeatures.ai.chat.preChargeInputTokens ?? 100n;
-            const preChargeOutputTokens =
-                allowedFeatures.ai.chat.preChargeOutputTokens ?? 100n;
+            const preChargeInputTokens = BigInt(
+                this._calculateTokenCost(
+                    allowedFeatures.ai.chat.preChargeInputTokens ?? 100,
+                    model
+                )
+            );
+            const preChargeOutputTokens = BigInt(
+                this._calculateTokenCost(
+                    allowedFeatures.ai.chat.preChargeOutputTokens ?? 100,
+                    model
+                )
+            );
             const initialAmount =
                 creditFeePerInputToken || creditFeePerOutputToken
                     ? preChargeInputTokens * (creditFeePerInputToken ?? 0n) +
@@ -571,38 +579,12 @@ export class AIController {
                 return genericResult(errorResult.value as Failure<SimpleError>);
             }
 
-            let cost = 0n;
-
-            if (chatResult.value.inputTokens > 0 && creditFeePerInputToken) {
-                const adjustedInputTokens = this._calculateTokenCost(
-                    chatResult.value.inputTokens,
-                    model
-                );
-                cost += BigInt(adjustedInputTokens) * creditFeePerInputToken;
-            }
-
-            if (chatResult.value.outputTokens > 0 && creditFeePerOutputToken) {
-                const adjustedOutputTokens = this._calculateTokenCost(
-                    chatResult.value.outputTokens,
-                    model
-                );
-                cost += BigInt(adjustedOutputTokens) * creditFeePerOutputToken;
-            }
-
-            if (
-                !chatResult.value.inputTokens &&
-                !chatResult.value.outputTokens &&
-                chatResult.value.totalTokens > 0
-            ) {
-                // Fallback in case the interface doesn't provide input/output token breakdown
-                const adjustedTokens = this._calculateTokenCost(
-                    chatResult.value.totalTokens,
-                    model
-                );
-                cost =
-                    BigInt(adjustedTokens) *
-                    (creditFeePerOutputToken ?? creditFeePerInputToken ?? 0n);
-            }
+            const cost = this._calculateChatBillingCost(
+                chatResult.value,
+                creditFeePerInputToken,
+                creditFeePerOutputToken,
+                model
+            );
 
             if (chatResult.value.totalTokens > 0) {
                 const adjustedTotalTokens = this._calculateTokenCost(
@@ -645,9 +627,57 @@ export class AIController {
         }
     }
 
+    /**
+     * Calculates the final billing cost for a chat request given the token usage.
+     */
+    private _calculateChatBillingCost(
+        chatResult: {
+            inputTokens?: number | null;
+            outputTokens?: number | null;
+            totalTokens: number | null;
+        },
+        creditFeePerInputToken: bigint,
+        creditFeePerOutputToken: bigint,
+        model: string
+    ) {
+        let cost = 0n;
+
+        if (chatResult.inputTokens > 0 && creditFeePerInputToken) {
+            const adjustedInputTokens = this._calculateTokenCost(
+                chatResult.inputTokens,
+                model
+            );
+            cost += BigInt(adjustedInputTokens) * creditFeePerInputToken;
+        }
+
+        if (chatResult.outputTokens > 0 && creditFeePerOutputToken) {
+            const adjustedOutputTokens = this._calculateTokenCost(
+                chatResult.outputTokens,
+                model
+            );
+            cost += BigInt(adjustedOutputTokens) * creditFeePerOutputToken;
+        }
+
+        if (
+            !chatResult.inputTokens &&
+            !chatResult.outputTokens &&
+            chatResult.totalTokens > 0
+        ) {
+            // Fallback in case the interface doesn't provide input/output token breakdown
+            const adjustedTokens = this._calculateTokenCost(
+                chatResult.totalTokens,
+                model
+            );
+            cost =
+                BigInt(adjustedTokens) *
+                (creditFeePerOutputToken ?? creditFeePerInputToken ?? 0n);
+        }
+        return cost;
+    }
+
     private _calculateTokenCost(tokens: number, model: string) {
         const tokenModifierRatio = this._chatOptions.tokenModifierRatio;
-        const modifier = tokenModifierRatio[model] ?? 1.0;
+        const modifier = tokenModifierRatio[model] ?? 1;
         const adjustedTokens = modifier * tokens;
         return adjustedTokens;
     }
@@ -827,6 +857,43 @@ export class AIController {
                 }
             }
 
+            const creditFeePerInputToken =
+                allowedFeatures.ai.chat.creditFeePerInputToken ?? null;
+            const creditFeePerOutputToken =
+                allowedFeatures.ai.chat.creditFeePerOutputToken ?? null;
+            const preChargeInputTokens = BigInt(
+                this._calculateTokenCost(
+                    allowedFeatures.ai.chat.preChargeInputTokens ?? 100,
+                    model
+                )
+            );
+            const preChargeOutputTokens = BigInt(
+                this._calculateTokenCost(
+                    allowedFeatures.ai.chat.preChargeOutputTokens ?? 100,
+                    model
+                )
+            );
+            const initialAmount =
+                creditFeePerInputToken || creditFeePerOutputToken
+                    ? preChargeInputTokens * (creditFeePerInputToken ?? 0n) +
+                      preChargeOutputTokens * (creditFeePerOutputToken ?? 0n)
+                    : null;
+
+            const billing = await billForUsage(this._financial, {
+                userId: request.userId,
+                transferCode: TransferCodes.records_usage_fee,
+            });
+
+            const initialResult = await billing.next(
+                success({
+                    initialCost: initialAmount,
+                })
+            );
+
+            if (isFailure(initialResult.value)) {
+                return genericResult(initialResult.value);
+            }
+
             const result = chat.chatStream({
                 messages: request.messages,
                 model: model,
@@ -839,7 +906,14 @@ export class AIController {
                 maxTokens,
             });
 
+            let totalTokens = 0;
+            let totalInputTokens = 0;
+            let totalOutputTokens = 0;
+
             for await (let chunk of result) {
+                totalTokens += chunk.totalTokens;
+                totalInputTokens += chunk.inputTokens;
+                totalOutputTokens += chunk.outputTokens;
                 if (chunk.totalTokens > 0) {
                     const adjustedTokens = this._calculateTokenCost(
                         chunk.totalTokens,
@@ -855,6 +929,27 @@ export class AIController {
                 yield {
                     choices: chunk.choices,
                 };
+            }
+
+            const cost = this._calculateChatBillingCost(
+                {
+                    totalTokens,
+                    inputTokens: totalInputTokens,
+                    outputTokens: totalOutputTokens,
+                },
+                creditFeePerInputToken,
+                creditFeePerOutputToken,
+                model
+            );
+
+            const finalResult = await billing.next(
+                success({
+                    cost,
+                })
+            );
+
+            if (isFailure(finalResult.value)) {
+                return genericResult(finalResult.value);
             }
 
             return {
