@@ -1632,7 +1632,7 @@ export class AIController {
                 }
             }
 
-            const fee = features.creditFeePerToken;
+            const fee = features.creditFeePerAccessToken;
 
             const billing = await billForUsage(this._financial, {
                 userId: context.context.recordOwnerId,

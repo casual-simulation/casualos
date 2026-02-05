@@ -508,11 +508,11 @@ export const getSubscriptionFeaturesSchema = memoize(() =>
                             'Whether Hume AI features are allowed for the subscription. If false, then every request to generate Hume AI will be rejected.'
                         ),
 
-                    creditFeePerToken: z.coerce
+                    creditFeePerAccessToken: z.coerce
                         .bigint()
                         .optional()
                         .describe(
-                            'The number of credits that are charged for each token processed by Hume AI. If not specified, then there is no fee.'
+                            'The number of credits that are charged for each access token generated. If not specified, then there is no fee.'
                         ),
                 })
                 .optional()
@@ -1499,7 +1499,7 @@ export interface AIHumeFeaturesConfiguration {
     /**
      * The number of credits that are charged for each token processed by Hume AI.
      */
-    creditFeePerToken?: bigint;
+    creditFeePerAccessToken?: bigint;
 }
 
 export interface AISloydFeaturesConfiguration {

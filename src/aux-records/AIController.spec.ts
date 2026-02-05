@@ -5714,7 +5714,7 @@ describe('AIController', () => {
                                     .withAI()
                                     .withAIHume({
                                         allowed: true,
-                                        creditFeePerToken: 100n,
+                                        creditFeePerAccessToken: 100n,
                                     })
                             )
                     );
@@ -5752,7 +5752,7 @@ describe('AIController', () => {
                                     credits_pending: 0n,
                                     debits_posted: 0n,
 
-                                    // Should charge for creditFeePerToken
+                                    // Should charge for creditFeePerAccessToken
                                     debits_pending: 100n,
                                 },
                             ]);
@@ -5838,7 +5838,7 @@ describe('AIController', () => {
                     expect(humeInterface.getAccessToken).toHaveBeenCalled();
                 });
 
-                it('should not create a pending transfer if creditFeePerToken is not configured', async () => {
+                it('should not create a pending transfer if creditFeePerAccessToken is not configured', async () => {
                     store.subscriptionConfiguration = buildSubscriptionConfig(
                         (config) =>
                             config.withUserDefaultFeatures((features) =>
@@ -6196,7 +6196,7 @@ describe('AIController', () => {
                                         .withAI()
                                         .withAIHume({
                                             allowed: true,
-                                            creditFeePerToken: 100n,
+                                            creditFeePerAccessToken: 100n,
                                         })
                                 )
                     );
@@ -6234,7 +6234,7 @@ describe('AIController', () => {
                                     credits_pending: 0n,
                                     debits_posted: 0n,
 
-                                    // Should charge for creditFeePerToken
+                                    // Should charge for creditFeePerAccessToken
                                     debits_pending: 100n,
                                 },
                             ]);
@@ -6322,7 +6322,7 @@ describe('AIController', () => {
                     expect(humeInterface.getAccessToken).toHaveBeenCalled();
                 });
 
-                it('should not create a pending transfer if creditFeePerToken is not configured', async () => {
+                it('should not create a pending transfer if creditFeePerAccessToken is not configured', async () => {
                     store.subscriptionConfiguration = buildSubscriptionConfig(
                         (config) =>
                             config
