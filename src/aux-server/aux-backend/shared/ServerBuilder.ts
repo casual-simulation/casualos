@@ -202,7 +202,8 @@ import { TypesenseSearchInterface } from '@casual-simulation/aux-records/search'
 import type { NodeConfiguration } from 'typesense/lib/Typesense/Configuration';
 import { PrismaSearchRecordsStore } from '../prisma/PrismaSearchRecordsStore';
 import type { IQueue } from '@casual-simulation/aux-records/queue';
-import { Worker as BullWorker, Job, Processor, Queue } from 'bullmq';
+import type { Processor } from 'bullmq';
+import { Worker as BullWorker, Queue } from 'bullmq';
 import { BullQueue } from '../queue/BullQueue';
 import { SNSClient } from '@aws-sdk/client-sns';
 import { SNSQueue } from '../queue/SNSQueue';
@@ -241,6 +242,7 @@ import { PrismaDatabaseRecordsStore } from '../prisma/PrismaDatabaseRecordsStore
 import type { FinancialStore } from '@casual-simulation/aux-records/financial';
 import {
     FinancialController,
+    FinancialProcessor,
     TigerBeetleFinancialInterface,
 } from '@casual-simulation/aux-records/financial';
 import IORedis from 'ioredis';
@@ -452,6 +454,7 @@ export class ServerBuilder implements SubscriptionLike {
 
     private _financialQueue: IQueue<any> | null = null;
     private _financialWorker: BullWorker | null = null;
+    private _financialProcessor: FinancialProcessor | null = null;
 
     private _databasesStore: DatabaseRecordsStore | null = null;
     private _databaseInterfaceProviderName: 'sqlite' | 'turso' | null = null;
@@ -519,11 +522,11 @@ export class ServerBuilder implements SubscriptionLike {
             options.telemetry.tracing.exporter === 'console'
                 ? new ConsoleSpanExporter()
                 : options.telemetry.tracing.exporter === 'otlp'
-                    ? new OTLPTraceExporter({
-                        url: options.telemetry.tracing.url,
-                        headers: options.telemetry.tracing.headers,
-                    })
-                    : null;
+                ? new OTLPTraceExporter({
+                      url: options.telemetry.tracing.url,
+                      headers: options.telemetry.tracing.headers,
+                  })
+                : null;
 
         console.log(
             `[ServerBuilder] Metrics Configuration:`,
@@ -534,16 +537,16 @@ export class ServerBuilder implements SubscriptionLike {
             options.telemetry.metrics.exporter === 'none'
                 ? null
                 : new PeriodicExportingMetricReader({
-                    exporter:
-                        options.telemetry.metrics.exporter === 'console'
-                            ? new ConsoleMetricExporter()
-                            : options.telemetry.metrics.exporter === 'otlp'
-                                ? new OTLPMetricExporter({
+                      exporter:
+                          options.telemetry.metrics.exporter === 'console'
+                              ? new ConsoleMetricExporter()
+                              : options.telemetry.metrics.exporter === 'otlp'
+                              ? new OTLPMetricExporter({
                                     url: options.telemetry.metrics.url,
                                     headers: options.telemetry.metrics.headers,
                                 })
-                                : null,
-                });
+                              : null,
+                  });
 
         console.log(
             `[ServerBuilder] Instrumentation Configuration:`,
@@ -1691,7 +1694,8 @@ export class ServerBuilder implements SubscriptionLike {
                     });
                 } else if (model.provider === 'custom-openai-completions') {
                     console.log(
-                        `[ServerBuilder] Using Custom OpenAI Chat Interface: ${model.name
+                        `[ServerBuilder] Using Custom OpenAI Chat Interface: ${
+                            model.name
                         } (${model.models.join(', ')})`
                     );
                     this._customChatInterfaces[model.name] =
@@ -1914,20 +1918,18 @@ export class ServerBuilder implements SubscriptionLike {
         return this;
     }
 
-    private _setupJob(name: string,
+    private _setupJob(
+        name: string,
         job: BackgroundJobs,
         redis: IORedis,
         // options: Pick<ServerConfig, 'redis'>,
         process: Processor
-    ): { queue?: IQueue<any>, worker?: BullWorker } {
+    ): { queue?: IQueue<any>; worker?: BullWorker } {
         if (job.type === 'sns') {
             console.log(`[ServerBuilder] Publishing ${name} jobs to SNS.`);
 
             const client = new SNSClient({});
-            const queue = new SNSQueue(
-                client,
-                job.topicArn
-            );
+            const queue = new SNSQueue(client, job.topicArn);
 
             this._subscription.add(() => queue.unsubscribe());
 
@@ -1949,11 +1951,11 @@ export class ServerBuilder implements SubscriptionLike {
                 job.queueName
             );
 
-            const bullQueue = queue = new BullQueue(
+            const bullQueue = (queue = new BullQueue(
                 new Queue(job.queueName, {
                     connection: redis,
                 })
-            );
+            ));
 
             this._subscription.add(() => bullQueue.unsubscribe());
         }
@@ -1964,13 +1966,9 @@ export class ServerBuilder implements SubscriptionLike {
                 `[ServerBuilder] Processing ${name} jobs with BullMQ on:`,
                 job.queueName
             );
-            worker = new BullWorker(
-                job.queueName,
-                process,
-                {
-                    connection: redis,
-                }
-            );
+            worker = new BullWorker(job.queueName, process, {
+                connection: redis,
+            });
 
             this._subscription.add(() => {
                 worker.close();
@@ -1979,7 +1977,7 @@ export class ServerBuilder implements SubscriptionLike {
 
         return {
             queue,
-            worker
+            worker,
         };
     }
 
@@ -1990,8 +1988,10 @@ export class ServerBuilder implements SubscriptionLike {
             throw new Error('Background jobs options must be provided.');
         }
 
+        console.log('[ServerBuilder] Using background jobs.');
+
         const redisServerOptions =
-                options.redis.servers?.bullmq ?? options.redis;
+            options.redis.servers?.bullmq ?? options.redis;
         let redis: IORedis | null = null;
         if (options.jobs.search && this._searchInterface) {
             if (!this._dataStore) {
@@ -2004,6 +2004,8 @@ export class ServerBuilder implements SubscriptionLike {
                     'Search store must be configured before using background search jobs.'
                 );
             }
+
+            console.log('[ServerBuilder] Using Search Sync background jobs.');
 
             this._searchSyncProcessor = new SearchSyncProcessor({
                 searchInterface: this._searchInterface,
@@ -2018,88 +2020,17 @@ export class ServerBuilder implements SubscriptionLike {
             }
 
             redis ??= this._createIORedisClient(redisServerOptions);
-            const { queue, worker } = this._setupJob('search',
+            const { queue, worker } = this._setupJob(
+                'search',
                 options.jobs.search,
                 redis,
-                (job) => this._searchSyncProcessor.process(job.data as SearchSyncQueueEvent)
+                (job) =>
+                    this._searchSyncProcessor.process(
+                        job.data as SearchSyncQueueEvent
+                    )
             );
             this._searchQueue = queue || null;
             this._searchWorker = worker || null;
-
-
-            // if (options.jobs.search.type === 'sns') {
-            //     console.log('[ServerBuilder] Publishing search jobs to SNS.');
-
-            //     const client = new SNSClient({});
-            //     const queue = (this._searchQueue = new SNSQueue(
-            //         client,
-            //         options.jobs.search.topicArn
-            //     ));
-
-            //     this._subscription.add(() => queue.unsubscribe());
-            //     this._subscription.add(() => {
-            //         this._searchQueue = null;
-            //     });
-            // } else {
-            //     if (!options.redis) {
-            //         throw new Error(
-            //             'Redis options must be provided when using BullMQ.'
-            //         );
-            //     }
-            //     // console.log('[ServerBuilder] Using BullMQ for Search jobs.');
-
-            //     const serverOptions =
-            //         options.redis.servers?.bullmq ?? options.redis;
-
-            //     const connection = {
-            //         url: serverOptions.url,
-            //         host: serverOptions.host,
-            //         port: serverOptions.port,
-            //         password: serverOptions.password,
-            //         tls: serverOptions.tls ? {} : undefined,
-            //     };
-
-            //     if (options.jobs.search.queue) {
-            //         console.log(
-            //             '[ServerBuilder] Using BullMQ for search jobs on:',
-            //             options.jobs.search.queueName
-            //         );
-
-            //         const queue = (this._searchQueue = new BullQueue(
-            //             new Queue(options.jobs.search.queueName, {
-            //                 connection,
-            //             })
-            //         ));
-
-            //         this._subscription.add(() => queue.unsubscribe());
-            //         this._subscription.add(() => {
-            //             this._searchQueue = null;
-            //         });
-            //     }
-
-            //     if (options.jobs.search.process) {
-            //         console.log(
-            //             '[ServerBuilder] Processing search jobs with BullMQ on:',
-            //             options.jobs.search.queueName
-            //         );
-            //         this._searchWorker = new BullWorker(
-            //             options.jobs.search.queueName,
-            //             async (job) => {
-            //                 await this._searchSyncProcessor.process(
-            //                     job.data as SearchSyncQueueEvent
-            //                 );
-            //             },
-            //             {
-            //                 connection,
-            //             }
-            //         );
-
-            //         this._subscription.add(() => {
-            //             this._searchWorker?.close();
-            //             this._searchWorker = null;
-            //         });
-            //     }
-            // }
         } else if (!this._searchInterface) {
             console.warn(
                 '[ServerBuilder] A Search interface needs to be configured before search background jobs will be enabled.'
@@ -2107,6 +2038,8 @@ export class ServerBuilder implements SubscriptionLike {
         }
 
         if (options.jobs.financial && this._financialInterface) {
+            console.log('[ServerBuilder] Using Financial background jobs.');
+
             if (!redisServerOptions) {
                 throw new Error(
                     'Redis options must be provided when using BullMQ.'
@@ -2114,28 +2047,55 @@ export class ServerBuilder implements SubscriptionLike {
             }
             redis ??= this._createIORedisClient(redisServerOptions);
 
-            const { queue, worker } = this._setupJob('financial', 
-                options.jobs.financial,
-                redis,
-                (job) => {}
-            );
-            this._financialQueue = queue || null;
-            this._financialWorker = worker || null;
+            this._initActions.push({
+                priority: 0,
+                action: async () => {
+                    if (!this._financialController) {
+                        throw new Error(
+                            'The financial controller is not available when it should be.'
+                        );
+                    }
 
-            if (options.jobs.financial.type === 'bullmq' && queue instanceof BullQueue) {
-                const revenueCreditSweepJobId = 'aux-revenue-credit-sweep';
-                if (options.jobs.financial.revenueCreditSweep) {
-                    console.log('[ServerBuilder] Setting up Revenue Credit Sweep job schedule.');
-                    queue.queue.upsertJobScheduler(
-                        revenueCreditSweepJobId,
-                        options.jobs.financial.revenueCreditSweep.repeatOptions,
-                        options.jobs.financial.revenueCreditSweep.jobTemplate
+                    this._financialProcessor = new FinancialProcessor({
+                        financial: this._financialController,
+                    });
+                    const { queue, worker } = this._setupJob(
+                        'financial',
+                        options.jobs.financial,
+                        redis,
+                        (job) => this._financialProcessor.process(job.data)
                     );
-                } else {
-                    console.log('[ServerBuilder] No Revenue Credit Sweep job schedule configured.');
-                    queue.queue.removeJobScheduler(revenueCreditSweepJobId);
-                }
-            }
+                    this._financialQueue = queue || null;
+                    this._financialWorker = worker || null;
+
+                    if (
+                        options.jobs.financial.type === 'bullmq' &&
+                        queue instanceof BullQueue
+                    ) {
+                        const revenueCreditSweepJobId =
+                            'aux-revenue-credit-sweep';
+                        if (options.jobs.financial.revenueCreditSweep) {
+                            console.log(
+                                '[ServerBuilder] Setting up Revenue Credit Sweep job schedule.'
+                            );
+                            queue.queue.upsertJobScheduler(
+                                revenueCreditSweepJobId,
+                                options.jobs.financial.revenueCreditSweep
+                                    .repeatOptions,
+                                options.jobs.financial.revenueCreditSweep
+                                    .jobTemplate
+                            );
+                        } else {
+                            console.log(
+                                '[ServerBuilder] No Revenue Credit Sweep job schedule configured.'
+                            );
+                            queue.queue.removeJobScheduler(
+                                revenueCreditSweepJobId
+                            );
+                        }
+                    }
+                },
+            });
         }
 
         return this;
@@ -2621,7 +2581,7 @@ export class ServerBuilder implements SubscriptionLike {
     }
 
     private _createIORedisClient(options: RedisServerOptions): IORedis {
-        let redis: IORedis; 
+        let redis: IORedis;
         if (options.url) {
             let url = new URL(options.url);
             redis = new IORedis({
