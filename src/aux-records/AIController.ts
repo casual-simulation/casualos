@@ -66,6 +66,7 @@ import {
     genericResult,
     isFailure,
     isSuperUserRole,
+    logError,
     success,
     wrap,
     type DenialReason,
@@ -1073,25 +1074,84 @@ export class AIController {
                 }
             }
 
-            const result = await this._generateSkybox.generateSkybox({
-                prompt: request.prompt,
-                negativePrompt: request.negativePrompt,
-                blockadeLabs: request.blockadeLabs,
+            const creditFeePerSkybox =
+                allowedFeatures.ai.skyboxes.creditFeePerSkybox ?? null;
+            const amount = creditFeePerSkybox
+                ? BigInt(creditFeePerSkybox)
+                : null;
+
+            const billing = await billForUsage(this._financial, {
+                userId: request.userId,
+                transferCode: TransferCodes.records_usage_fee,
             });
 
-            if (result.success === true) {
+            const initialResult = await billing.next(
+                success({
+                    initialCost: amount,
+                })
+            );
+
+            if (isFailure(initialResult.value)) {
+                return genericResult(initialResult.value);
+            }
+
+            const result = await wrap(
+                async () =>
+                    await this._generateSkybox.generateSkybox({
+                        prompt: request.prompt,
+                        negativePrompt: request.negativePrompt,
+                        blockadeLabs: request.blockadeLabs,
+                    })
+            );
+
+            if (isFailure(result)) {
+                logError(
+                    result.error,
+                    '[AIController] Skybox generation error:'
+                );
+
+                // Need to pass failure to billing to ensure that it cancels pending transfers
+                await billing.next(
+                    failure({
+                        errorCode: 'server_error',
+                        errorMessage: 'A server error occurred.',
+                    })
+                );
+
+                return {
+                    success: false,
+                    errorCode: 'server_error',
+                    errorMessage: 'A server error occurred.',
+                };
+            }
+
+            if (result.value.success === true) {
                 await this._metrics.recordSkyboxMetrics({
                     userId: request.userId,
                     createdAtMs: Date.now(),
                     skyboxes: 1,
                 });
 
+                const finalResult = await billing.next(
+                    success({
+                        cost: amount,
+                    })
+                );
+
+                if (isFailure(finalResult.value)) {
+                    return genericResult(finalResult.value);
+                }
+
                 return {
                     success: true,
-                    skyboxId: result.skyboxId,
+                    skyboxId: result.value.skyboxId,
                 };
             } else {
-                return result;
+                // Pass the skybox generation error to billing
+                await billing.next(failure(result.value));
+
+                // Return the original skybox error, not the billing error
+                return result.value;
             }
         } catch (err) {
             const span = trace.getActiveSpan();
@@ -2123,14 +2183,7 @@ export interface AIGenerateSkyboxSuccess {
 
 export interface AIGenerateSkyboxFailure {
     success: false;
-    errorCode:
-        | ServerError
-        | NotLoggedInError
-        | NotSubscribedError
-        | InvalidSubscriptionTierError
-        | NotSupportedError
-        | SubscriptionLimitReached
-        | NotAuthorizedError;
+    errorCode: KnownErrorCodes;
     errorMessage: string;
 
     allowedSubscriptionTiers?: string[];

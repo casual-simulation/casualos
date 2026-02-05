@@ -4058,6 +4058,253 @@ describe('AIController', () => {
                     generateSkyboxInterface.generateSkybox
                 ).not.toHaveBeenCalled();
             });
+
+            describe('billing', () => {
+                let account1: Account;
+
+                beforeEach(async () => {
+                    // @ts-expect-error private access
+                    controller._financial = financial;
+
+                    unwrap(await financial.init());
+
+                    store.subscriptionConfiguration = buildSubscriptionConfig(
+                        (config) =>
+                            config.addSubscription('sub1', (sub) =>
+                                sub
+                                    .withTier('tier1')
+                                    .withAllDefaultFeatures()
+                                    .withAI()
+                                    .withAISkyboxes({
+                                        allowed: true,
+                                        maxSkyboxesPerPeriod: 4,
+                                        creditFeePerSkybox: 100,
+                                    })
+                            )
+                    );
+
+                    account1 = unwrap(
+                        await financial.getOrCreateFinancialAccount({
+                            userId: userId,
+                            ledger: LEDGERS.credits,
+                        })
+                    ).account;
+
+                    unwrap(
+                        await financial.internalTransaction({
+                            transfers: [
+                                {
+                                    debitAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    creditAccountId: account1.id,
+                                    amount: 10000n,
+                                    code: TransferCodes.admin_credit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                            ],
+                        })
+                    );
+                });
+
+                it('should charge the user for generating a skybox', async () => {
+                    generateSkyboxInterface.generateSkybox.mockImplementationOnce(
+                        async () => {
+                            await checkAccounts(financialInterface, [
+                                {
+                                    id: account1.id,
+                                    credits_posted: 10000n,
+                                    credits_pending: 0n,
+                                    debits_posted: 0n,
+
+                                    // Should charge for creditFeePerSkybox
+                                    debits_pending: 100n,
+                                },
+                            ]);
+
+                            return Promise.resolve({
+                                success: true,
+                                skyboxId: 'test-skybox-id',
+                            });
+                        }
+                    );
+
+                    const result = await controller.generateSkybox({
+                        prompt: 'test',
+                        userId,
+                        userSubscriptionTier,
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                        skyboxId: 'test-skybox-id',
+                    });
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: account1.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+
+                            // Should charge the full fee
+                            debits_posted: 100n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    expect(
+                        generateSkyboxInterface.generateSkybox
+                    ).toHaveBeenCalled();
+                });
+
+                it('should void the pending transfer if skybox generation fails', async () => {
+                    generateSkyboxInterface.generateSkybox.mockImplementationOnce(
+                        async () => {
+                            await checkAccounts(financialInterface, [
+                                {
+                                    id: account1.id,
+                                    credits_posted: 10000n,
+                                    credits_pending: 0n,
+                                    debits_posted: 0n,
+                                    debits_pending: 100n,
+                                },
+                            ]);
+
+                            return Promise.resolve({
+                                success: false,
+                                errorCode: 'server_error',
+                                errorMessage: 'Skybox generation failed',
+                            });
+                        }
+                    );
+
+                    const result = await controller.generateSkybox({
+                        prompt: 'test',
+                        userId,
+                        userSubscriptionTier,
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'server_error',
+                        errorMessage: 'Skybox generation failed',
+                    });
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: account1.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+
+                            // Should void the pending transfer
+                            debits_posted: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    expect(
+                        generateSkyboxInterface.generateSkybox
+                    ).toHaveBeenCalled();
+                });
+
+                it('should not create a pending transfer if creditFeePerSkybox is not configured', async () => {
+                    store.subscriptionConfiguration = buildSubscriptionConfig(
+                        (config) =>
+                            config.addSubscription('sub1', (sub) =>
+                                sub
+                                    .withTier('tier1')
+                                    .withAllDefaultFeatures()
+                                    .withAI()
+                                    .withAISkyboxes({
+                                        allowed: true,
+                                        maxSkyboxesPerPeriod: 4,
+                                    })
+                            )
+                    );
+
+                    generateSkyboxInterface.generateSkybox.mockImplementationOnce(
+                        async () => {
+                            await checkAccounts(financialInterface, [
+                                {
+                                    id: account1.id,
+                                    credits_posted: 10000n,
+                                    credits_pending: 0n,
+                                    debits_posted: 0n,
+                                    debits_pending: 0n,
+                                },
+                            ]);
+
+                            return Promise.resolve({
+                                success: true,
+                                skyboxId: 'test-skybox-id',
+                            });
+                        }
+                    );
+
+                    const result = await controller.generateSkybox({
+                        prompt: 'test',
+                        userId,
+                        userSubscriptionTier,
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                        skyboxId: 'test-skybox-id',
+                    });
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: account1.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    expect(
+                        generateSkyboxInterface.generateSkybox
+                    ).toHaveBeenCalled();
+                });
+
+                it('should deny the request if the user does not have enough credits', async () => {
+                    unwrap(
+                        await financial.internalTransaction({
+                            transfers: [
+                                {
+                                    debitAccountId: account1.id,
+                                    creditAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    amount: 9950n,
+                                    code: TransferCodes.admin_debit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                            ],
+                        })
+                    );
+
+                    const result = await controller.generateSkybox({
+                        prompt: 'test',
+                        userId,
+                        userSubscriptionTier,
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'insufficient_funds',
+                        errorMessage: 'Insufficient funds to cover usage.',
+                    });
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: account1.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 9950n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    expect(
+                        generateSkyboxInterface.generateSkybox
+                    ).not.toHaveBeenCalled();
+                });
+            });
         });
     });
 
