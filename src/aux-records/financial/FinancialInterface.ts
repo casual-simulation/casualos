@@ -446,6 +446,11 @@ export enum TransferCodes {
     account_closing = 7,
 
     /**
+     * A transfer of credits from credits-denominated revenue accounts to their related USD-denominated revenue accounts.
+     */
+    revenue_credit_sweep = 8,
+
+    /**
      * A credit to a user's account based on the purchase of credits.
      * This generally functions as a top-up of the user's account and corresponds to a debit from an assets account.
      */
