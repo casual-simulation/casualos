@@ -79,7 +79,7 @@ import {
     billForUsage,
     type FinancialController,
 } from './financial/FinancialController';
-import { TransferCodes } from './financial/FinancialInterface';
+import { BillingCodes, TransferCodes } from './financial/FinancialInterface';
 
 const TRACE_NAME = 'AIController';
 
@@ -532,6 +532,7 @@ export class AIController {
             const billing = await billForUsage(this._financial, {
                 userId: request.userId,
                 transferCode: TransferCodes.records_usage_fee,
+                billingCode: BillingCodes.ai_chat_tokens,
             });
 
             const initialResult = await billing.next(
@@ -879,6 +880,7 @@ export class AIController {
             const billing = await billForUsage(this._financial, {
                 userId: request.userId,
                 transferCode: TransferCodes.records_usage_fee,
+                billingCode: BillingCodes.ai_chat_tokens,
             });
 
             const initialResult = await billing.next(
@@ -1079,6 +1081,7 @@ export class AIController {
             const billing = await billForUsage(this._financial, {
                 userId: request.userId,
                 transferCode: TransferCodes.records_usage_fee,
+                billingCode: BillingCodes.ai_skybox,
             });
 
             const initialResult = await billing.next(
@@ -1421,6 +1424,7 @@ export class AIController {
             const billing = await billForUsage(this._financial, {
                 userId: request.userId,
                 transferCode: TransferCodes.records_usage_fee,
+                billingCode: BillingCodes.ai_image_pixels,
             });
 
             const initialResult = await billing.next(
@@ -1638,6 +1642,7 @@ export class AIController {
                 userId: context.context.recordOwnerId,
                 studioId: context.context.recordStudioId,
                 transferCode: TransferCodes.records_usage_fee,
+                billingCode: BillingCodes.ai_hume_access_token,
             });
 
             const initialResult = await billing.next(
@@ -1982,6 +1987,7 @@ export class AIController {
                 userId: context.context.recordOwnerId ?? undefined,
                 studioId: context.context.recordStudioId ?? undefined,
                 transferCode: TransferCodes.records_usage_fee,
+                billingCode: BillingCodes.ai_openai_realtime_session,
             });
 
             const initialResult = await billing.next(

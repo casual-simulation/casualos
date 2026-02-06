@@ -34,6 +34,7 @@ import type { MemoryStore } from './MemoryStore';
 import {
     asyncIterable,
     checkAccounts,
+    checkTransfers,
     createTestControllers,
     unwindAndCaptureAsync,
 } from './TestUtils';
@@ -58,11 +59,12 @@ import type { AIOpenAIRealtimeInterface } from './AIOpenAIRealtimeInterface';
 import type { FinancialController, FinancialInterface } from './financial';
 import {
     ACCOUNT_IDS,
+    BillingCodes,
     CurrencyCodes,
     LEDGERS,
     TransferCodes,
 } from './financial';
-import type { Account } from 'tigerbeetle-node';
+import { TransferFlags, type Account } from 'tigerbeetle-node';
 
 console.log = jest.fn();
 console.warn = jest.fn();
@@ -1268,6 +1270,26 @@ describe('AIController', () => {
                         },
                     ]);
                     expect(chatInterface.chat).toHaveBeenCalled();
+
+                    const list = unwrap(
+                        await financial.listTransfers(account1.id)
+                    );
+                    checkTransfers(list.slice(1), [
+                        {
+                            amount: 15n,
+                            credit_account_id:
+                                ACCOUNT_IDS.revenue_records_usage_credits,
+                            flags: TransferFlags.pending,
+                            user_data_32: BillingCodes.ai_chat_tokens,
+                        },
+                        {
+                            amount: 15n,
+                            credit_account_id:
+                                ACCOUNT_IDS.revenue_records_usage_credits,
+                            flags: TransferFlags.post_pending_transfer,
+                            user_data_32: BillingCodes.ai_chat_tokens,
+                        },
+                    ]);
                 });
 
                 it('should charge the user for input tokens and output tokens separately', async () => {
@@ -2839,6 +2861,26 @@ describe('AIController', () => {
                         },
                     ]);
                     expect(chatInterface.chatStream).toHaveBeenCalled();
+
+                    const list = unwrap(
+                        await financial.listTransfers(account1.id)
+                    );
+                    checkTransfers(list.slice(1), [
+                        {
+                            amount: 15n,
+                            credit_account_id:
+                                ACCOUNT_IDS.revenue_records_usage_credits,
+                            flags: TransferFlags.pending,
+                            user_data_32: BillingCodes.ai_chat_tokens,
+                        },
+                        {
+                            amount: 15n,
+                            credit_account_id:
+                                ACCOUNT_IDS.revenue_records_usage_credits,
+                            flags: TransferFlags.post_pending_transfer,
+                            user_data_32: BillingCodes.ai_chat_tokens,
+                        },
+                    ]);
                 });
 
                 it('should charge the user for input tokens and output tokens separately', async () => {
@@ -4154,6 +4196,26 @@ describe('AIController', () => {
                     expect(
                         generateSkyboxInterface.generateSkybox
                     ).toHaveBeenCalled();
+
+                    const list = unwrap(
+                        await financial.listTransfers(account1.id)
+                    );
+                    checkTransfers(list.slice(1), [
+                        {
+                            amount: 100n,
+                            credit_account_id:
+                                ACCOUNT_IDS.revenue_records_usage_credits,
+                            flags: TransferFlags.pending,
+                            user_data_32: BillingCodes.ai_skybox,
+                        },
+                        {
+                            amount: 100n,
+                            credit_account_id:
+                                ACCOUNT_IDS.revenue_records_usage_credits,
+                            flags: TransferFlags.post_pending_transfer,
+                            user_data_32: BillingCodes.ai_skybox,
+                        },
+                    ]);
                 });
 
                 it('should void the pending transfer if skybox generation fails', async () => {
@@ -5218,6 +5280,26 @@ describe('AIController', () => {
                     expect(
                         generateImageInterface.generateImage
                     ).toHaveBeenCalled();
+
+                    const list = unwrap(
+                        await financial.listTransfers(account1.id)
+                    );
+                    checkTransfers(list.slice(1), [
+                        {
+                            amount: 512n,
+                            credit_account_id:
+                                ACCOUNT_IDS.revenue_records_usage_credits,
+                            flags: TransferFlags.pending,
+                            user_data_32: BillingCodes.ai_image_pixels,
+                        },
+                        {
+                            amount: 512n,
+                            credit_account_id:
+                                ACCOUNT_IDS.revenue_records_usage_credits,
+                            flags: TransferFlags.post_pending_transfer,
+                            user_data_32: BillingCodes.ai_image_pixels,
+                        },
+                    ]);
                 });
 
                 it('should charge based on total square pixels (max(width, height) * numberOfImages)', async () => {
@@ -5791,6 +5873,26 @@ describe('AIController', () => {
                         },
                     ]);
                     expect(humeInterface.getAccessToken).toHaveBeenCalled();
+
+                    const list = unwrap(
+                        await financial.listTransfers(account1.id)
+                    );
+                    checkTransfers(list.slice(1), [
+                        {
+                            amount: 100n,
+                            credit_account_id:
+                                ACCOUNT_IDS.revenue_records_usage_credits,
+                            flags: TransferFlags.pending,
+                            user_data_32: BillingCodes.ai_hume_access_token,
+                        },
+                        {
+                            amount: 100n,
+                            credit_account_id:
+                                ACCOUNT_IDS.revenue_records_usage_credits,
+                            flags: TransferFlags.post_pending_transfer,
+                            user_data_32: BillingCodes.ai_hume_access_token,
+                        },
+                    ]);
                 });
 
                 it('should void the pending transfer if token generation fails', async () => {
