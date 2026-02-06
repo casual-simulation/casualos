@@ -37,6 +37,11 @@ export interface MetricsStore {
     ): Promise<FileSubscriptionMetrics>;
 
     /**
+     * Gets the file metrics for all the subscriptions in the system. This is used for periodic billing purposes.
+     */
+    getAllFileSubscriptionMetrics(): Promise<FileSubscriptionMetrics[]>;
+
+    /**
      * Gets the event metrics for the subscription of the given record.
      * @param recordName The name of the record.
      */

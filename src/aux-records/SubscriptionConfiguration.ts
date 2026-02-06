@@ -404,22 +404,22 @@ export const getSubscriptionFeaturesSchema = memoize(() =>
                     'The maximum number of file bytes that can be stored for the subscription. If omitted, then there is no limit.'
                 ),
 
-            creditFeePerBytePerPeriod: z
-                .int()
+            creditFeePerKilobytePerPeriod: z.coerce
+                .bigint()
                 .optional()
                 .describe(
-                    'The number of credits that are charged for each byte stored in files per subscription period. If not specified, then there is no fee.'
+                    'The number of credits that are charged for each kilobyte stored in files per subscription period. If not specified, then there is no fee.'
                 ),
 
-            creditFeePerFilePerPeriod: z
-                .int()
+            creditFeePerFilePerPeriod: z.coerce
+                .bigint()
                 .optional()
                 .describe(
                     'The number of credits that are charged for each file per subscription period. If not specified, then there is no fee.'
                 ),
 
-            creditFeePerFileWrite: z
-                .int()
+            creditFeePerFileWrite: z.coerce
+                .bigint()
                 .optional()
                 .describe(
                     'The number of credits that are charged for each file write operation. If not specified, then there is no fee.'
@@ -1395,7 +1395,17 @@ export interface FileFeaturesConfiguration {
      * The number of credits that are charged for each file write operation.
      * If not specified, then there is no fee.
      */
-    creditFeePerFileWrite?: number;
+    creditFeePerFileWrite?: bigint;
+
+    /**
+     * The number of credits that are charged for each kilobyte (1000 bytes) stored per subscription period.
+     */
+    creditFeePerKilobytePerPeriod?: bigint;
+
+    /**
+     * The number of credits that are charged for each file stored per subscription period.
+     */
+    creditFeePerFilePerPeriod?: bigint;
 }
 
 export interface EventFeaturesConfiguration {

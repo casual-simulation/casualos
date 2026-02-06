@@ -469,6 +469,15 @@ export class MemoryStore
         this.roleAssignments = {};
     }
 
+    async getAllFileSubscriptionMetrics(): Promise<FileSubscriptionMetrics[]> {
+        const metrics = await Promise.all(
+            this._records.map((r) =>
+                this.getSubscriptionFileMetricsByRecordName(r.name)
+            )
+        );
+        return metrics;
+    }
+
     async saveBillingCycleHistory(history: BillingCycleHistory): Promise<void> {
         const existingIndex = this._billingCycleHistories.findIndex(
             (h) => h.id === history.id
