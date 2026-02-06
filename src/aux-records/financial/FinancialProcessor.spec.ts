@@ -26,6 +26,7 @@ import {
 import type { TestServices } from '../TestUtils';
 import {
     checkAccounts,
+    checkBillingTotals,
     createTestControllers,
     createTestSubConfiguration,
 } from '../TestUtils';
@@ -33,6 +34,7 @@ import type { FinancialPeriodicBillingJob } from './FinancialProcessor';
 import { FinancialProcessor } from './FinancialProcessor';
 import {
     ACCOUNT_IDS,
+    BillingCodes,
     CurrencyCodes,
     LEDGERS,
     TransferCodes,
@@ -124,7 +126,7 @@ describe('FinancialProcessor', () => {
         });
     });
 
-    describe.only('financial-periodic-billing', () => {
+    describe('financial-periodic-billing', () => {
         const day = 24 * 60 * 60 * 1000;
         const month = 30 * day;
 
@@ -242,6 +244,14 @@ describe('FinancialProcessor', () => {
                             },
                         ]);
 
+                        await checkBillingTotals(
+                            services.financialController,
+                            account.id,
+                            {
+                                [BillingCodes.inst_count]: 333n * 3n,
+                            }
+                        );
+
                         expect(services.store.billingCycleHistory).toEqual([
                             {
                                 id: expect.any(String),
@@ -284,6 +294,14 @@ describe('FinancialProcessor', () => {
                                 debits_pending: 0n,
                             },
                         ]);
+
+                        await checkBillingTotals(
+                            services.financialController,
+                            account.id,
+                            {
+                                [BillingCodes.inst_count]: 3000n,
+                            }
+                        );
 
                         expect(services.store.billingCycleHistory).toEqual([
                             {
@@ -407,6 +425,14 @@ describe('FinancialProcessor', () => {
                             },
                         ]);
 
+                        await checkBillingTotals(
+                            services.financialController,
+                            account.id,
+                            {
+                                [BillingCodes.inst_count]: 333n * 3n,
+                            }
+                        );
+
                         expect(services.store.billingCycleHistory).toEqual([
                             {
                                 id: expect.any(String),
@@ -449,6 +475,14 @@ describe('FinancialProcessor', () => {
                                 debits_pending: 0n,
                             },
                         ]);
+
+                        await checkBillingTotals(
+                            services.financialController,
+                            account.id,
+                            {
+                                [BillingCodes.inst_count]: 3000n,
+                            }
+                        );
 
                         expect(services.store.billingCycleHistory).toEqual([
                             {
@@ -609,6 +643,14 @@ describe('FinancialProcessor', () => {
                             },
                         ]);
 
+                        await checkBillingTotals(
+                            services.financialController,
+                            account.id,
+                            {
+                                [BillingCodes.inst_byte_storage]: 333n * 11n,
+                            }
+                        );
+
                         expect(services.store.billingCycleHistory).toEqual([
                             {
                                 id: expect.any(String),
@@ -651,6 +693,14 @@ describe('FinancialProcessor', () => {
                                 debits_pending: 0n,
                             },
                         ]);
+
+                        await checkBillingTotals(
+                            services.financialController,
+                            account.id,
+                            {
+                                [BillingCodes.inst_byte_storage]: 1_000n * 11n,
+                            }
+                        );
 
                         expect(services.store.billingCycleHistory).toEqual([
                             {
@@ -806,6 +856,14 @@ describe('FinancialProcessor', () => {
                             },
                         ]);
 
+                        await checkBillingTotals(
+                            services.financialController,
+                            account.id,
+                            {
+                                [BillingCodes.inst_byte_storage]: 333n * 11n,
+                            }
+                        );
+
                         expect(services.store.billingCycleHistory).toEqual([
                             {
                                 id: expect.any(String),
@@ -848,6 +906,14 @@ describe('FinancialProcessor', () => {
                                 debits_pending: 0n,
                             },
                         ]);
+
+                        await checkBillingTotals(
+                            services.financialController,
+                            account.id,
+                            {
+                                [BillingCodes.inst_byte_storage]: 1_000n * 11n,
+                            }
+                        );
 
                         expect(services.store.billingCycleHistory).toEqual([
                             {

@@ -22,6 +22,7 @@ import { v7 as uuidv7 } from 'uuid';
 import type { FinancialController } from './FinancialController';
 import {
     ACCOUNT_IDS,
+    BillingCodes,
     convertBetweenLedgers,
     CurrencyCodes,
     LEDGERS,
@@ -226,6 +227,8 @@ export class FinancialProcessor {
                                             ACCOUNT_IDS.revenue_records_usage_credits,
                                         code: TransferCodes.records_usage_fee,
                                         currency: CurrencyCodes.credits,
+                                        billingCode: BillingCodes.inst_count,
+                                        balancingDebit: true,
                                     },
                                 ],
                             });
@@ -268,6 +271,9 @@ export class FinancialProcessor {
                                             ACCOUNT_IDS.revenue_records_usage_credits,
                                         code: TransferCodes.records_usage_fee,
                                         currency: CurrencyCodes.credits,
+                                        billingCode:
+                                            BillingCodes.inst_byte_storage,
+                                        balancingDebit: true,
                                     },
                                 ],
                             });
