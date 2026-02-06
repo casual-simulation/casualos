@@ -196,7 +196,7 @@ export class FinancialProcessor {
             }
 
             if (
-                features.insts.creditFeePerBytePerPeriod ||
+                features.insts.creditFeePerKilobytePerPeriod ||
                 features.insts.creditFeePerInstPerPeriod
             ) {
                 if (
@@ -234,6 +234,48 @@ export class FinancialProcessor {
                             logError(
                                 feeResult.error,
                                 `[${TRACE_NAME}] [_periodicBilling subscriptionId: ${subscriber.subscriptionId}] Failed to charge inst count fee.`
+                            );
+                        }
+                    }
+                }
+
+                if (
+                    subscriber.totalInstBytes > 0 &&
+                    features.insts.creditFeePerKilobytePerPeriod
+                ) {
+                    const totalKilobytes = Math.ceil(
+                        subscriber.totalInstBytes / 1000
+                    );
+                    const perFractionFee =
+                        features.insts.creditFeePerKilobytePerPeriod /
+                        BigInt(fractionOfCurrentPeriod);
+
+                    if (perFractionFee > 0n) {
+                        const total = BigInt(totalKilobytes) * perFractionFee;
+
+                        console.log(
+                            `[${TRACE_NAME}] [_periodicBilling subscriptionId: ${subscriber.subscriptionId}] Charging inst byte fee. totalInstBytes: ${subscriber.totalInstBytes} fractionOfCurrentPeriod: ${fractionOfCurrentPeriod} perFractionFee: ${perFractionFee} total: ${total}`
+                        );
+
+                        const feeResult =
+                            await this._financial.internalTransaction({
+                                transfers: [
+                                    {
+                                        amount: total,
+                                        debitAccountId:
+                                            account.value.account.id,
+                                        creditAccountId:
+                                            ACCOUNT_IDS.revenue_records_usage_credits,
+                                        code: TransferCodes.records_usage_fee,
+                                        currency: CurrencyCodes.credits,
+                                    },
+                                ],
+                            });
+
+                        if (isFailure(feeResult)) {
+                            logError(
+                                feeResult.error,
+                                `[${TRACE_NAME}] [_periodicBilling subscriptionId: ${subscriber.subscriptionId}] Failed to charge inst byte fee.`
                             );
                         }
                     }

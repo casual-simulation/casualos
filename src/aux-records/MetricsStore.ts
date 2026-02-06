@@ -225,6 +225,11 @@ export interface InstSubscriptionMetrics extends SubscriptionMetrics {
      * The total number of insts stored in the subscription.
      */
     totalInsts: number;
+
+    /**
+     * The total number of bytes stored by insts in the subscription.
+     */
+    totalInstBytes: number;
 }
 
 export interface SubscriptionFilter {

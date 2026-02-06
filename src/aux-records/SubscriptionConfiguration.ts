@@ -630,11 +630,11 @@ export const getSubscriptionFeaturesSchema = memoize(() =>
                     'The number of credits that are charged for each inst per subscription period. If not specified, then there is no fee.'
                 ),
 
-            creditFeePerBytePerPeriod: z.coerce
+            creditFeePerKilobytePerPeriod: z.coerce
                 .bigint()
                 .optional()
                 .describe(
-                    'The number of credits that are charged for each byte stored in an inst per subscription period. If not specified, then there is no fee.'
+                    'The number of credits that are charged for each kilobyte (1000 bytes) stored in an inst per subscription period. If not specified, then there is no fee.'
                 ),
         }),
         comId: z
@@ -1542,9 +1542,9 @@ export interface InstsFeaturesConfiguration {
     creditFeePerInstPerPeriod?: bigint;
 
     /**
-     * The number of credits that are charged for each byte stored in an inst per subscription period.
+     * The number of credits that are charged for each kilobyte (1000 bytes) stored in an inst per subscription period.
      */
-    creditFeePerBytePerPeriod?: bigint;
+    creditFeePerKilobytePerPeriod?: bigint;
 }
 
 export interface StudioComIdFeaturesConfiguration {

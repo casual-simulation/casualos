@@ -3197,6 +3197,7 @@ export class MemoryStore
         const info = await this._getSubscriptionMetrics(filter);
 
         let totalInsts = 0;
+        let totalBytes = 0;
         for (let [recordName, insts] of this._instRecords) {
             let r = this._records.find((r) => r.name === recordName);
             if (!r) {
@@ -3206,12 +3207,16 @@ export class MemoryStore
                 r.studioId === filter.studioId
             ) {
                 totalInsts += insts.size;
+                for (let inst of insts.values()) {
+                    totalBytes += inst.instSizeInBytes;
+                }
             }
         }
 
         return {
             ...info,
             totalInsts,
+            totalInstBytes: totalBytes,
         };
     }
 
@@ -3236,6 +3241,7 @@ export class MemoryStore
         const info = await this._getSubscriptionInfo(recordName);
 
         let totalInsts = 0;
+        let totalBytes = 0;
         for (let [recordName, insts] of this._instRecords) {
             let r = this._records.find((r) => r.name === recordName);
             if (!r) {
@@ -3245,12 +3251,16 @@ export class MemoryStore
                 r.studioId === info.studioId
             ) {
                 totalInsts += insts.size;
+                for (let inst of insts.values()) {
+                    totalBytes += inst.instSizeInBytes;
+                }
             }
         }
 
         return {
             ...info,
             totalInsts,
+            totalInstBytes: totalBytes,
         };
     }
 
