@@ -37,6 +37,7 @@ import {
     createTestRecordKey,
     createTestUser,
     checkAccounts,
+    checkBillingTotals,
 } from './TestUtils';
 import {
     ACCOUNT_MARKER,
@@ -52,12 +53,14 @@ import { MemoryFinancialInterface } from './financial/MemoryFinancialInterface';
 import { FinancialController } from './financial/FinancialController';
 import {
     ACCOUNT_IDS,
+    BillingCodes,
     CurrencyCodes,
     LEDGERS,
     TransferCodes,
 } from './financial';
 
 console.log = jest.fn();
+console.warn = jest.fn();
 
 describe('FileRecordsController', () => {
     let store: MemoryStore;
@@ -2428,6 +2431,14 @@ describe('FileRecordsController', () => {
                 },
             ]);
 
+            await checkBillingTotals(
+                financialController,
+                userAccount!.accountId,
+                {
+                    [BillingCodes.file_write]: 50n,
+                }
+            );
+
             await expect(
                 store.getFileRecord(recordName, 'hash.txt')
             ).resolves.toMatchObject({
@@ -2462,7 +2473,7 @@ describe('FileRecordsController', () => {
             expect(result).toEqual({
                 success: false,
                 errorCode: 'insufficient_funds',
-                errorMessage: 'Not enough credits to perform the file write.',
+                errorMessage: 'Insufficient funds to cover usage.',
             });
 
             const userAccount = unwrap(
@@ -2601,6 +2612,14 @@ describe('FileRecordsController', () => {
                     },
                 ]);
 
+                await checkBillingTotals(
+                    financialController,
+                    studioAccount!.accountId,
+                    {
+                        [BillingCodes.file_write]: 50n,
+                    }
+                );
+
                 await expect(
                     store.getFileRecord(studioRecordName, 'hash.txt')
                 ).resolves.toMatchObject({
@@ -2639,8 +2658,7 @@ describe('FileRecordsController', () => {
                 expect(result).toEqual({
                     success: false,
                     errorCode: 'insufficient_funds',
-                    errorMessage:
-                        'Not enough credits to perform the file write.',
+                    errorMessage: 'Insufficient funds to cover usage.',
                 });
 
                 const studioAccount = unwrap(
