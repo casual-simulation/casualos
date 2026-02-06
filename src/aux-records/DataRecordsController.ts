@@ -19,13 +19,11 @@ import type {
     NotAuthorizedError,
     NotLoggedInError,
     ServerError,
-    SubscriptionLimitReached,
 } from '@casual-simulation/aux-common/Errors';
 import type {
     DataRecordsStore,
     EraseDataStoreResult,
     GetDataStoreResult,
-    SetDataResult,
     UserPolicy,
     ListDataStoreFailure,
 } from './DataRecordsStore';
@@ -39,13 +37,18 @@ import {
     getMarkerResourcesForCreation,
     getMarkerResourcesForUpdate,
 } from './PolicyController';
-import type { DenialReason } from '@casual-simulation/aux-common';
+import type {
+    DenialReason,
+    KnownErrorCodes,
+} from '@casual-simulation/aux-common';
 import {
     ACCOUNT_MARKER,
     PUBLIC_READ_MARKER,
+    genericResult,
     hasValue,
     isFailure,
     logError,
+    success,
 } from '@casual-simulation/aux-common';
 import type { MetricsStore } from './MetricsStore';
 import type { ConfigurationStore } from './ConfigurationStore';
@@ -61,6 +64,8 @@ import type { SearchSyncQueueEvent } from './search';
 import type { FinancialController } from './financial/FinancialController';
 import {
     ACCOUNT_IDS,
+    billForUsage,
+    BillingCodes,
     CurrencyCodes,
     LEDGERS,
     TransferCodes,
@@ -338,72 +343,22 @@ export class DataRecordsController {
                 }
             }
 
-            if (hasValue(features.data.creditFeePerWrite)) {
-                if (!this._financialController) {
-                    console.warn(
-                        `[DataRecordsController] Cannot charge credits for data write because FinancialController is not configured.`
-                    );
-                } else {
-                    // Try to record the credit usage.
-                    const accountInfo =
-                        await this._financialController.getFinancialAccount({
-                            userId: metricsResult.ownerId,
-                            studioId: metricsResult.studioId,
-                            ledger: LEDGERS.credits,
-                        });
+            if (features.data.creditFeePerWrite) {
+                const billing = await billForUsage(this._financialController, {
+                    userId: metricsResult.ownerId,
+                    studioId: metricsResult.studioId,
+                    transferCode: TransferCodes.records_usage_fee,
+                    billingCode: BillingCodes.data_write,
+                });
 
-                    if (isFailure(accountInfo)) {
-                        logError(
-                            accountInfo.error,
-                            `[DataRecordsController] Failed to get financial account to charge for data write.`
-                        );
-                    } else {
-                        // Charge the account for the data write.
-                        const transactionResult =
-                            await this._financialController.internalTransaction(
-                                {
-                                    transfers: [
-                                        {
-                                            amount: features.data
-                                                .creditFeePerWrite,
-                                            debitAccountId:
-                                                accountInfo.value.account.id,
-                                            creditAccountId:
-                                                ACCOUNT_IDS.revenue_records_usage_credits,
-                                            currency: CurrencyCodes.credits,
-                                            code: TransferCodes.records_usage_fee,
-                                        },
-                                    ],
-                                }
-                            );
+                const billingResult = await billing.next(
+                    success({
+                        cost: features.data.creditFeePerWrite,
+                    })
+                );
 
-                        if (isFailure(transactionResult)) {
-                            if (
-                                transactionResult.error.errorCode ===
-                                    'debits_exceed_credits' &&
-                                transactionResult.error.accountId ===
-                                    accountInfo.value.account.id.toString()
-                            ) {
-                                logError(
-                                    transactionResult.error,
-                                    `[DataRecordsController] Insufficient funds to perform data write.`,
-                                    console.log
-                                );
-                                // The user does not have enough credits to perform the write.
-                                return {
-                                    success: false,
-                                    errorCode: 'insufficient_funds',
-                                    errorMessage:
-                                        'Not enough credits to perform the data write.',
-                                };
-                            } else {
-                                logError(
-                                    transactionResult.error,
-                                    `[DataRecordsController] Failed to record financial transaction for data write.`
-                                );
-                            }
-                        }
-                    }
+                if (isFailure(billingResult.value)) {
+                    return genericResult(billingResult.value);
                 }
             }
 
@@ -975,19 +930,7 @@ export interface RecordDataFailure {
     /**
      * The error code for the failure.
      */
-    errorCode:
-        | ServerError
-        | NotLoggedInError
-        | NotAuthorizedError
-        | ValidatePublicRecordKeyFailure['errorCode']
-        | SetDataResult['errorCode']
-        | SubscriptionLimitReached
-        | 'unacceptable_request'
-        | 'not_supported'
-        | 'invalid_update_policy'
-        | 'invalid_delete_policy'
-        | AuthorizeSubjectFailure['errorCode']
-        | 'insufficient_funds';
+    errorCode: KnownErrorCodes;
 
     /**
      * The error message for the failure.

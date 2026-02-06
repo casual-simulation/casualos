@@ -29,6 +29,7 @@ import type { UserPolicy } from './DataRecordsStore';
 import type { PolicyController } from './PolicyController';
 import {
     checkAccounts,
+    checkBillingTotals,
     createTestControllers,
     createTestRecordKey,
     createTestSubConfiguration,
@@ -44,6 +45,7 @@ import type { MemoryStore } from './MemoryStore';
 import { buildSubscriptionConfig } from './SubscriptionConfigBuilder';
 import {
     ACCOUNT_IDS,
+    BillingCodes,
     CurrencyCodes,
     FinancialController,
     LEDGERS,
@@ -52,6 +54,7 @@ import {
 } from './financial';
 
 console.log = jest.fn();
+console.warn = jest.fn();
 
 describe('DataRecordsController', () => {
     let store: MemoryStore;
@@ -1006,6 +1009,14 @@ describe('DataRecordsController', () => {
                     deletePolicy: true,
                     markers: [PUBLIC_READ_MARKER],
                 });
+
+                checkBillingTotals(
+                    financialController,
+                    userAccount!.accountId,
+                    {
+                        [BillingCodes.data_write]: 50n,
+                    }
+                );
             });
 
             it('should fail to write the data if the user doesnt have enough credits', async () => {
@@ -1031,8 +1042,7 @@ describe('DataRecordsController', () => {
                 expect(result).toEqual({
                     success: false,
                     errorCode: 'insufficient_funds',
-                    errorMessage:
-                        'Not enough credits to perform the data write.',
+                    errorMessage: 'Insufficient funds to cover usage.',
                 });
 
                 const userAccount = unwrap(
@@ -1156,6 +1166,14 @@ describe('DataRecordsController', () => {
                         },
                     ]);
 
+                    checkBillingTotals(
+                        financialController,
+                        studioAccount!.accountId,
+                        {
+                            [BillingCodes.data_write]: 50n,
+                        }
+                    );
+
                     await expect(
                         store.getData(recordName, 'address')
                     ).resolves.toEqual({
@@ -1192,8 +1210,7 @@ describe('DataRecordsController', () => {
                     expect(result).toEqual({
                         success: false,
                         errorCode: 'insufficient_funds',
-                        errorMessage:
-                            'Not enough credits to perform the data write.',
+                        errorMessage: 'Insufficient funds to cover usage.',
                     });
 
                     const studioAccount = unwrap(
@@ -1570,6 +1587,14 @@ describe('DataRecordsController', () => {
                         debits_pending: 0n,
                     },
                 ]);
+
+                await checkBillingTotals(
+                    financialController,
+                    userAccount!.accountId,
+                    {
+                        [BillingCodes.data_read]: 25n,
+                    }
+                );
             });
 
             it('should fail to read the data if the user doesnt have enough credits', async () => {
@@ -1716,6 +1741,14 @@ describe('DataRecordsController', () => {
                             debits_pending: 0n,
                         },
                     ]);
+
+                    await checkBillingTotals(
+                        financialController,
+                        studioAccount!.accountId,
+                        {
+                            [BillingCodes.data_read]: 25n,
+                        }
+                    );
                 });
 
                 it('should fail to read the data if the studio doesnt have enough credits', async () => {
