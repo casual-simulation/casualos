@@ -47,6 +47,7 @@ describe('getSubscription()', () => {
                 features: {
                     data: getDataFeaturesSchema().parse({
                         allowed: true,
+                        maxItemSizeInBytes: 500000,
                     }),
                     events: {
                         allowed: true,
@@ -81,6 +82,7 @@ describe('getSubscription()', () => {
             studio: {
                 data: getDataFeaturesSchema().parse({
                     allowed: true,
+                    maxItemSizeInBytes: 500000,
                 }),
                 events: {
                     allowed: true,
@@ -112,6 +114,7 @@ describe('getSubscription()', () => {
             user: {
                 data: getDataFeaturesSchema().parse({
                     allowed: true,
+                    maxItemSizeInBytes: 500000,
                 }),
                 events: {
                     allowed: true,
@@ -163,6 +166,7 @@ describe('getSubscription()', () => {
                     features: {
                         data: getDataFeaturesSchema().parse({
                             allowed: true,
+                            maxItemSizeInBytes: 500000,
                         }),
                         events: {
                             allowed: true,
@@ -197,6 +201,7 @@ describe('getSubscription()', () => {
                 studio: {
                     data: getDataFeaturesSchema().parse({
                         allowed: true,
+                        maxItemSizeInBytes: 500000,
                     }),
                     events: {
                         allowed: true,
@@ -228,6 +233,7 @@ describe('getSubscription()', () => {
                 user: {
                     data: getDataFeaturesSchema().parse({
                         allowed: true,
+                        maxItemSizeInBytes: 500000,
                     }),
                     events: {
                         allowed: true,
@@ -430,6 +436,7 @@ describe('getSubscriptionFeatures()', () => {
                 features: {
                     data: getDataFeaturesSchema().parse({
                         allowed: true,
+                        maxItemSizeInBytes: 500000,
                     }),
                     events: {
                         allowed: true,
@@ -464,6 +471,7 @@ describe('getSubscriptionFeatures()', () => {
             studio: {
                 data: getDataFeaturesSchema().parse({
                     allowed: true,
+                    maxItemSizeInBytes: 500000,
                 }),
                 events: {
                     allowed: true,
@@ -495,6 +503,7 @@ describe('getSubscriptionFeatures()', () => {
             user: {
                 data: getDataFeaturesSchema().parse({
                     allowed: true,
+                    maxItemSizeInBytes: 500000,
                 }),
                 events: {
                     allowed: true,
@@ -546,6 +555,7 @@ describe('getSubscriptionFeatures()', () => {
                     features: {
                         data: getDataFeaturesSchema().parse({
                             allowed: true,
+                            maxItemSizeInBytes: 500000,
                         }),
                         events: {
                             allowed: true,
@@ -580,6 +590,7 @@ describe('getSubscriptionFeatures()', () => {
                 studio: {
                     data: getDataFeaturesSchema().parse({
                         allowed: true,
+                        maxItemSizeInBytes: 500000,
                     }),
                     events: {
                         allowed: true,
@@ -611,6 +622,7 @@ describe('getSubscriptionFeatures()', () => {
                 user: {
                     data: getDataFeaturesSchema().parse({
                         allowed: true,
+                        maxItemSizeInBytes: 500000,
                     }),
                     events: {
                         allowed: true,
@@ -946,6 +958,7 @@ describe('getSubscriptionTier()', () => {
             studio: {
                 data: getDataFeaturesSchema().parse({
                     allowed: true,
+                    maxItemSizeInBytes: 500000,
                 }),
                 events: {
                     allowed: true,
@@ -977,6 +990,7 @@ describe('getSubscriptionTier()', () => {
             user: {
                 data: getDataFeaturesSchema().parse({
                     allowed: true,
+                    maxItemSizeInBytes: 500000,
                 }),
                 events: {
                     allowed: true,
@@ -1035,6 +1049,7 @@ describe('getSubscriptionTier()', () => {
                 studio: {
                     data: getDataFeaturesSchema().parse({
                         allowed: true,
+                        maxItemSizeInBytes: 500000,
                     }),
                     events: {
                         allowed: true,
@@ -1066,6 +1081,7 @@ describe('getSubscriptionTier()', () => {
                 user: {
                     data: getDataFeaturesSchema().parse({
                         allowed: true,
+                        maxItemSizeInBytes: 500000,
                     }),
                     events: {
                         allowed: true,
