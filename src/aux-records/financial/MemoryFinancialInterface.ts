@@ -304,8 +304,20 @@ export class MemoryFinancialInterface implements FinancialInterface {
                                     : CreateTransferError.pending_transfer_already_voided,
                         });
                     } else {
-                        creditAccountId = pendingTransfer.credit_account_id;
-                        debitAccountId = pendingTransfer.debit_account_id;
+                        transfer.credit_account_id = creditAccountId =
+                            pendingTransfer.credit_account_id;
+                        transfer.debit_account_id = debitAccountId =
+                            pendingTransfer.debit_account_id;
+                        transfer.code = transfer.code || pendingTransfer.code;
+                        transfer.user_data_32 =
+                            transfer.user_data_32 ||
+                            pendingTransfer.user_data_32;
+                        transfer.user_data_64 =
+                            transfer.user_data_64 ||
+                            pendingTransfer.user_data_64;
+                        transfer.user_data_128 =
+                            transfer.user_data_128 ||
+                            pendingTransfer.user_data_128;
                     }
                 }
             }
@@ -436,6 +448,8 @@ export class MemoryFinancialInterface implements FinancialInterface {
                         debitAccount.debits_pending -= pendingTransfer.amount;
                         creditAccount.credits_posted += finalAmount;
                         debitAccount.debits_posted += finalAmount;
+
+                        transfer.amount = pendingTransfer.amount = finalAmount;
                     } else if (
                         transfer.flags & TransferFlags.void_pending_transfer
                     ) {
@@ -482,6 +496,10 @@ export class MemoryFinancialInterface implements FinancialInterface {
             } else {
                 linkedTransfers = [];
             }
+        }
+
+        if (linkedTransfers.length > 0) {
+            this._transfers.push(...linkedTransfers);
         }
         return errs;
     }
@@ -562,17 +580,28 @@ export class MemoryFinancialInterface implements FinancialInterface {
                 return false;
             }
             if (filter.flags) {
-                if (filter.flags & AccountFilterFlags.debits) {
+                if (
+                    filter.flags & AccountFilterFlags.credits &&
+                    filter.flags & AccountFilterFlags.debits
+                ) {
+                    if (
+                        t.credit_account_id !== filter.account_id &&
+                        t.debit_account_id !== filter.account_id
+                    ) {
+                        return false;
+                    }
+                } else if (filter.flags & AccountFilterFlags.debits) {
                     if (t.debit_account_id !== filter.account_id) {
                         return false;
                     }
-                }
-                if (filter.flags & AccountFilterFlags.credits) {
+                } else if (filter.flags & AccountFilterFlags.credits) {
                     if (t.credit_account_id !== filter.account_id) {
                         return false;
                     }
                 }
             }
+
+            return true;
         });
 
         if (filter.flags & AccountFilterFlags.reversed) {
