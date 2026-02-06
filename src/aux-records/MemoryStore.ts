@@ -178,6 +178,7 @@ import type {
 } from './SystemNotificationMessenger';
 import type { ModerationConfiguration } from './ModerationConfiguration';
 import type {
+    BillingCycleHistory,
     ExternalPayout,
     FinancialAccount,
     FinancialAccountFilter,
@@ -304,6 +305,8 @@ export class MemoryStore
 
     private _moderationJobs: ModerationJob[] = [];
     private _moderationFileResults: ModerationFileScanResult[] = [];
+
+    private _billingCycleHistories: BillingCycleHistory[] = [];
 
     get aiSloydMetrics(): AISloydMetrics[] {
         return this._aiSloydMetrics;
@@ -453,6 +456,10 @@ export class MemoryStore
         return this._customDomains;
     }
 
+    get billingCycleHistory() {
+        return this._billingCycleHistories;
+    }
+
     constructor(config: MemoryConfiguration) {
         this._subscriptionConfiguration = config.subscriptions;
         this._privoConfiguration = config.privo ?? null;
@@ -460,6 +467,22 @@ export class MemoryStore
         this.policies = {};
         this.roles = {};
         this.roleAssignments = {};
+    }
+
+    async saveBillingCycleHistory(history: BillingCycleHistory): Promise<void> {
+        const existingIndex = this._billingCycleHistories.findIndex(
+            (h) => h.id === history.id
+        );
+        if (existingIndex >= 0) {
+            this._billingCycleHistories[existingIndex] = history;
+        } else {
+            this._billingCycleHistories.push(history);
+        }
+    }
+
+    async getLastBillingCycleHistory(): Promise<BillingCycleHistory | null> {
+        const histories = sortBy(this._billingCycleHistories, (h) => -h.timeMs);
+        return histories.length > 0 ? histories[0] : null;
     }
 
     async setConfiguration<TKey extends ConfigurationKey>(
@@ -3190,6 +3213,21 @@ export class MemoryStore
             ...info,
             totalInsts,
         };
+    }
+
+    async getAllSubscriptionInstMetrics(): Promise<InstSubscriptionMetrics[]> {
+        const allUsers = this._users.map((u) =>
+            this.getSubscriptionInstMetrics({
+                ownerId: u.id,
+            })
+        );
+        const allStudios = this._studios.map((s) =>
+            this.getSubscriptionInstMetrics({
+                studioId: s.id,
+            })
+        );
+
+        return await Promise.all([...allUsers, ...allStudios]);
     }
 
     async getSubscriptionInstMetricsByRecordName(

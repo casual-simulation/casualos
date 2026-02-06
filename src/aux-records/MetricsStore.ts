@@ -114,6 +114,11 @@ export interface MetricsStore {
     ): Promise<InstSubscriptionMetrics>;
 
     /**
+     * Gets all the inst metrics for all the subscriptions in the system. This is used for periodic billing purposes.
+     */
+    getAllSubscriptionInstMetrics(): Promise<InstSubscriptionMetrics[]>;
+
+    /**
      * Gets the inst metrics for the given record.
      * @param recordName The name of the record.
      */

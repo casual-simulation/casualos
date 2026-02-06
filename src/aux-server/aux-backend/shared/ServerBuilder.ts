@@ -2093,6 +2093,27 @@ export class ServerBuilder implements SubscriptionLike {
                                 revenueCreditSweepJobId
                             );
                         }
+
+                        const periodicBillingJobId = 'aux-periodic-billing-job';
+                        if (options.jobs.financial.periodicBilling) {
+                            console.log(
+                                '[ServerBuilder] Setting up Periodic Billing job schedule.'
+                            );
+                            queue.queue.upsertJobScheduler(
+                                periodicBillingJobId,
+                                options.jobs.financial.periodicBilling
+                                    .repeatOptions,
+                                options.jobs.financial.periodicBilling
+                                    .jobTemplate
+                            );
+                        } else {
+                            console.log(
+                                '[ServerBuilder] No Periodic Billing job schedule configured.'
+                            );
+                            queue.queue.removeJobScheduler(
+                                periodicBillingJobId
+                            );
+                        }
                     }
                 },
             });

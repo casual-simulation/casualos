@@ -623,15 +623,15 @@ export const getSubscriptionFeaturesSchema = memoize(() =>
                     'The maximum number of active websocket connections that an inst can have. If omitted, then there is no limit.'
                 ),
 
-            creditFeePerInstPerPeriod: z
-                .int()
+            creditFeePerInstPerPeriod: z.coerce
+                .bigint()
                 .optional()
                 .describe(
                     'The number of credits that are charged for each inst per subscription period. If not specified, then there is no fee.'
                 ),
 
-            creditFeePerBytePerPeriod: z
-                .int()
+            creditFeePerBytePerPeriod: z.coerce
+                .bigint()
                 .optional()
                 .describe(
                     'The number of credits that are charged for each byte stored in an inst per subscription period. If not specified, then there is no fee.'
@@ -1535,6 +1535,16 @@ export interface InstsFeaturesConfiguration {
      * The maximum number of concurrent connections allowed per inst.
      */
     maxActiveConnectionsPerInst?: number;
+
+    /**
+     * The number of credits that are charged for each inst per subscription period.
+     */
+    creditFeePerInstPerPeriod?: bigint;
+
+    /**
+     * The number of credits that are charged for each byte stored in an inst per subscription period.
+     */
+    creditFeePerBytePerPeriod?: bigint;
 }
 
 export interface StudioComIdFeaturesConfiguration {

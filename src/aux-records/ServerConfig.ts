@@ -1569,6 +1569,18 @@ Because repo/add_updates is a very common permission, we periodically cache perm
                                 .describe(
                                     'A scheduled job that periodically sweeps from credits-denominated revenue accounts into USD-denominated revenue accounts. If null, then this will be disabled.'
                                 ),
+
+                            periodicBilling: bullmqScheduledJobSchema(
+                                z.object({
+                                    type: z.literal(
+                                        'financial-periodic-billing'
+                                    ),
+                                })
+                            )
+                                .nullable()
+                                .describe(
+                                    'A scheduled job that periodically bills subscribers based on their subscription and usage. If null, then periodic billing will be disabled.'
+                                ),
                         }),
                     ])
                     .prefault({
@@ -1578,13 +1590,24 @@ Because repo/add_updates is a very common permission, we periodically cache perm
                         queue: true,
                         revenueCreditSweep: {
                             repeatOptions: {
-                                pattern: '0 0 * * *', // Daily at midnight,
+                                pattern: '0 3 * * *', // Daily at 3am to be after other billing jobs
                             },
                             jobTemplate: {
                                 data: {
                                     type: 'financial-revenue-credit-sweep',
                                 },
                                 name: 'financial-revenue-credit-sweep',
+                            },
+                        },
+                        periodicBilling: {
+                            repeatOptions: {
+                                pattern: '0 0 * * *', // Daily at midnight
+                            },
+                            jobTemplate: {
+                                data: {
+                                    type: 'financial-periodic-billing',
+                                },
+                                name: 'financial-periodic-billing',
                             },
                         },
                     })
