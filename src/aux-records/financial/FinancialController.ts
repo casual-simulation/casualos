@@ -32,6 +32,7 @@ import {
     unwrap,
 } from '@casual-simulation/aux-common';
 import type {
+    BillingCodes,
     InterfaceTransferError,
     TransferCodes,
 } from './FinancialInterface';
@@ -750,7 +751,7 @@ export class FinancialController {
                 timestamp: 0n,
                 user_data_128: transactionId,
                 user_data_64: 0n,
-                user_data_32: 0,
+                user_data_32: transfer.billingCode ?? 0,
             });
         }
 
@@ -1065,6 +1066,7 @@ export class FinancialController {
                                         currency: 'credits',
                                         code: params.transferCode,
                                         balancingDebit: balancingDebit,
+                                        billingCode: params.billingCode,
                                     },
                                 ],
                             });
@@ -1133,6 +1135,7 @@ export class FinancialController {
                                     code: params.transferCode,
                                     pending: true,
                                     timeoutSeconds: 300,
+                                    billingCode: params.billingCode,
                                 },
                             ],
                         });
@@ -1621,6 +1624,11 @@ export interface InternalTransferBase {
     code: TransferCodes;
 
     /**
+     * The billing code for the transfer.
+     */
+    billingCode?: BillingCodes;
+
+    /**
      * Whether the transfer is a balancing credit or not.
      *
      * Balancing credits are used to transfer at most amount — automatically transferring less than amount as necessary such that `credit_account.credits_pending + credit_account.credits_posted ≤ credit_account.debits_posted`.
@@ -1790,6 +1798,11 @@ export interface UsageBillingOptions {
      * The transfer code that should be used for the billing transfer.
      */
     transferCode: TransferCodes;
+
+    /**
+     * The billing code that should be set on transfers.
+     */
+    billingCode: BillingCodes;
 
     /**
      * The maximum number of billing steps that can be performed.

@@ -34,6 +34,7 @@ import {
     ACCOUNT_IDS,
     AccountCodes,
     AMOUNT_MAX,
+    BillingCodes,
     CREDITS_DISPLAY_FACTOR,
     CurrencyCodes,
     LEDGERS,
@@ -1306,6 +1307,41 @@ describe('FinancialController', () => {
             ]);
         });
 
+        it('should be able specify a billing code on transfers', async () => {
+            const result = await controller.internalTransaction({
+                transfers: [
+                    {
+                        debitAccountId: ACCOUNT_IDS.assets_stripe,
+                        creditAccountId: account1Id,
+                        currency: 'usd',
+                        amount: 100n,
+                        code: TransferCodes.admin_credit,
+                        billingCode: BillingCodes.ai_skybox,
+                    },
+                ],
+            });
+
+            expect(result).toEqual(
+                success({
+                    transactionId: '3',
+                    transferIds: ['4'],
+                })
+            );
+            checkTransfers(await financialInterface.lookupTransfers([4n]), [
+                {
+                    id: 4n,
+                    amount: 100n,
+                    code: TransferCodes.admin_credit,
+                    credit_account_id: BigInt(account1Id),
+                    debit_account_id: ACCOUNT_IDS.assets_stripe,
+                    flags: TransferFlags.none,
+                    ledger: LEDGERS.usd,
+                    user_data_128: 3n,
+                    user_data_32: BillingCodes.ai_skybox,
+                },
+            ]);
+        });
+
         it('should be able to transfer money from one user account to another', async () => {
             unwrap(
                 await controller.internalTransaction({
@@ -2193,6 +2229,7 @@ describe('FinancialController', () => {
                 const billing = await controller.billForUsage({
                     ...filter,
                     transferCode: TransferCodes.records_usage_fee,
+                    billingCode: BillingCodes.ai_chat_tokens,
                 });
 
                 await billing.next(
@@ -2229,12 +2266,43 @@ describe('FinancialController', () => {
                         debits_pending: 0n,
                     },
                 ]);
+
+                const list = unwrap(
+                    await controller.listTransfers(account1.account.id)
+                );
+
+                checkTransfers(list.slice(1), [
+                    {
+                        id: 4n,
+                        amount: 50n,
+                        code: TransferCodes.records_usage_fee,
+                        credit_account_id:
+                            ACCOUNT_IDS.revenue_records_usage_credits,
+                        debit_account_id: account1.account.id,
+                        flags: TransferFlags.pending,
+                        ledger: LEDGERS.credits,
+                        user_data_32: BillingCodes.ai_chat_tokens,
+                    },
+                    {
+                        id: 5n,
+                        amount: 50n,
+                        credit_account_id:
+                            ACCOUNT_IDS.revenue_records_usage_credits,
+                        debit_account_id: account1.account.id,
+                        code: TransferCodes.records_usage_fee,
+                        pending_id: 4n,
+                        flags: TransferFlags.post_pending_transfer,
+                        ledger: LEDGERS.credits,
+                        user_data_32: BillingCodes.ai_chat_tokens,
+                    },
+                ]);
             });
 
             it('should bill the account in multiple cycles', async () => {
                 const billing = await controller.billForUsage({
                     ...filter,
                     transferCode: TransferCodes.records_usage_fee,
+                    billingCode: BillingCodes.ai_chat_tokens,
                 });
 
                 await billing.next(
@@ -2309,12 +2377,66 @@ describe('FinancialController', () => {
                         debits_pending: 0n,
                     },
                 ]);
+
+                const list = unwrap(
+                    await controller.listTransfers(account1.account.id)
+                );
+
+                checkTransfers(list.slice(1), [
+                    {
+                        id: 4n,
+                        amount: 50n,
+                        code: TransferCodes.records_usage_fee,
+                        credit_account_id:
+                            ACCOUNT_IDS.revenue_records_usage_credits,
+                        debit_account_id: account1.account.id,
+                        flags: TransferFlags.pending,
+                        ledger: LEDGERS.credits,
+                        user_data_32: BillingCodes.ai_chat_tokens,
+                    },
+                    {
+                        id: 5n,
+                        amount: 50n,
+                        credit_account_id:
+                            ACCOUNT_IDS.revenue_records_usage_credits,
+                        debit_account_id: account1.account.id,
+                        code: TransferCodes.records_usage_fee,
+                        pending_id: 4n,
+                        flags: TransferFlags.post_pending_transfer,
+                        ledger: LEDGERS.credits,
+                        user_data_32: BillingCodes.ai_chat_tokens,
+                    },
+                    {
+                        id: 6n,
+                        amount: 100n,
+                        code: TransferCodes.records_usage_fee,
+                        credit_account_id:
+                            ACCOUNT_IDS.revenue_records_usage_credits,
+                        debit_account_id: account1.account.id,
+                        flags: TransferFlags.pending,
+                        ledger: LEDGERS.credits,
+                        user_data_32: BillingCodes.ai_chat_tokens,
+                    },
+                    {
+                        id: 7n,
+                        amount: 100n,
+                        credit_account_id:
+                            ACCOUNT_IDS.revenue_records_usage_credits,
+                        debit_account_id: account1.account.id,
+                        code: TransferCodes.records_usage_fee,
+                        pending_id: 6n,
+                        flags: TransferFlags.post_pending_transfer,
+                        ledger: LEDGERS.credits,
+                        user_data_32: BillingCodes.ai_chat_tokens,
+                    },
+                ]);
             });
 
             it('should refund the difference between the initial amount and the actual cost', async () => {
                 const billing = await controller.billForUsage({
                     ...filter,
                     transferCode: TransferCodes.records_usage_fee,
+                    billingCode: BillingCodes.ai_chat_tokens,
                 });
 
                 let result = await billing.next(
@@ -2360,6 +2482,7 @@ describe('FinancialController', () => {
                 const billing = await controller.billForUsage({
                     ...filter,
                     transferCode: TransferCodes.records_usage_fee,
+                    billingCode: BillingCodes.ai_chat_tokens,
                 });
 
                 // Set initial amount
@@ -2397,6 +2520,7 @@ describe('FinancialController', () => {
                 const billing = await controller.billForUsage({
                     ...filter,
                     transferCode: TransferCodes.records_usage_fee,
+                    billingCode: BillingCodes.ai_chat_tokens,
                 });
 
                 // Set initial amount
@@ -2424,6 +2548,7 @@ describe('FinancialController', () => {
                 const billing = await controller.billForUsage({
                     ...filter,
                     transferCode: TransferCodes.records_usage_fee,
+                    billingCode: BillingCodes.ai_chat_tokens,
                 });
 
                 // Try to bill for more than account has (only has 500 credits)
@@ -2452,6 +2577,7 @@ describe('FinancialController', () => {
                 const billing = await controller.billForUsage({
                     ...filter,
                     transferCode: TransferCodes.records_usage_fee,
+                    billingCode: BillingCodes.ai_chat_tokens,
                 });
 
                 // Set initial amount
@@ -2500,6 +2626,7 @@ describe('FinancialController', () => {
                 const billing = await controller.billForUsage({
                     ...filter,
                     transferCode: TransferCodes.records_usage_fee,
+                    billingCode: BillingCodes.ai_chat_tokens,
                 });
 
                 // Try to reserve more than account has
@@ -2531,6 +2658,7 @@ describe('FinancialController', () => {
                 const billing = await controller.billForUsage({
                     ...filter,
                     transferCode: TransferCodes.records_usage_fee,
+                    billingCode: BillingCodes.ai_chat_tokens,
                 });
 
                 await billing.next(success({ initialCost: 0 }));
@@ -2565,6 +2693,7 @@ describe('FinancialController', () => {
                 const billing = await controller.billForUsage({
                     ...filter,
                     transferCode: TransferCodes.records_usage_fee,
+                    billingCode: BillingCodes.ai_chat_tokens,
                 });
 
                 await billing.next(success({ initialCost: null }));
@@ -2698,6 +2827,7 @@ describe('billForUsage()', () => {
         const billing = await billForUsage(null, {
             userId: 'user1',
             transferCode: TransferCodes.records_usage_fee,
+            billingCode: BillingCodes.ai_chat_tokens,
         });
 
         const step1 = await billing.next(success({ initialCost: 100 }));
@@ -2726,6 +2856,7 @@ describe('billForUsage()', () => {
         const billing = await billForUsage(null, {
             userId: 'user1',
             transferCode: TransferCodes.records_usage_fee,
+            billingCode: BillingCodes.ai_chat_tokens,
         });
 
         const step1 = await billing.next(success({ initialCost: 100 }));
