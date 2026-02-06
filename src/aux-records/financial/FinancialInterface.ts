@@ -529,6 +529,94 @@ export enum TransferCodes {
 }
 
 /**
+ * Standards for billing codes from the system's perspective
+ * * These are used for tracking different types of billable events in the system for reporting and analytics purposes.
+ * * Stored in the user_data_32 field of transfers.
+ * * [0000] Reserved
+ * * [1000] Data records
+ * * [2000] File records
+ * * [3000] Inst records
+ * * [4000] AI services
+ * * [5000] Notification records
+ */
+export enum BillingCodes {
+    /**
+     * Billing code for writing a data record.
+     */
+    data_write = 1001,
+
+    /**
+     * Billing code for reading a data record.
+     */
+    data_read = 1002,
+
+    /**
+     * Billing code for writing a file record.
+     */
+    file_write = 2001,
+
+    /**
+     * Billing code for number of files stored in a record per period.
+     */
+    file_count = 2002,
+
+    /**
+     * Billing code for number of file record bytes stored per period.
+     */
+    file_byte_storage = 2003,
+
+    /**
+     * Billing code for number of insts stored in a record per period.
+     */
+    inst_count = 3001,
+
+    /**
+     * Billing code for number of inst bytes stored in a record per period.
+     */
+    inst_byte_storage = 3002,
+
+    /**
+     * Billing code for AI chat token usage.
+     */
+    ai_chat_tokens = 4001,
+
+    /**
+     * Billing code for AI image pixels generated.
+     */
+    ai_image_pixels = 4002,
+
+    /**
+     * Billing code for generating AI skyboxes.
+     */
+    ai_skybox = 4003,
+
+    /**
+     * Billing code for generating AI Hume access tokens.
+     */
+    ai_hume_access_token = 4004,
+
+    /**
+     * Billing code for creating OpenAI Realtime sessions.
+     */
+    ai_openai_realtime_session = 4005,
+
+    /**
+     * Billing code for sending a notification.
+     */
+    notification_sent = 5001,
+
+    /**
+     * Billing code for sending a push notification.
+     */
+    notification_push_sent = 5002,
+
+    /**
+     * Billing code for number of notification subscribers per period.
+     */
+    notificiation_subscriber_count = 5003,
+}
+
+/**
  * Interface follows Client practices in "tigerbeetle-node" as a base for account and transfer operations.
  * Revise as needed if more operations are needed.
  */
