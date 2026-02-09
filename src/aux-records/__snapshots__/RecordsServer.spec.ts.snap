@@ -7221,17 +7221,17 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                               "creditFeePerFilePerPeriod": Object {
                                 "description": "The number of credits that are charged for each file per subscription period. If not specified, then there is no fee.",
                                 "optional": true,
-                                "type": "number",
+                                "type": "string",
                               },
                               "creditFeePerFileWrite": Object {
                                 "description": "The number of credits that are charged for each file write operation. If not specified, then there is no fee.",
                                 "optional": true,
-                                "type": "number",
+                                "type": "string",
                               },
-                              "creditFeePerMegabytePerPeriod": Object {
-                                "description": "The number of credits that are charged for each megabyte stored in files per subscription period. If not specified, then there is no fee.",
+                              "creditFeePerKilobytePerPeriod": Object {
+                                "description": "The number of credits that are charged for each kilobyte stored in files per subscription period. If not specified, then there is no fee.",
                                 "optional": true,
-                                "type": "number",
+                                "type": "string",
                               },
                               "maxBytesPerFile": Object {
                                 "description": "The maximum number of bytes per file allowed for the subscription. If omitted, then there is no limit.",
@@ -7260,12 +7260,12 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                               "creditFeePerInstPerPeriod": Object {
                                 "description": "The number of credits that are charged for each inst per subscription period. If not specified, then there is no fee.",
                                 "optional": true,
-                                "type": "number",
+                                "type": "string",
                               },
-                              "creditFeePerMegabytePerPeriod": Object {
-                                "description": "The number of credits that are charged for each megabyte stored in an inst per subscription period. If not specified, then there is no fee.",
+                              "creditFeePerKilobytePerPeriod": Object {
+                                "description": "The number of credits that are charged for each kilobyte (1000 bytes) stored in an inst per subscription period. If not specified, then there is no fee.",
                                 "optional": true,
-                                "type": "number",
+                                "type": "string",
                               },
                               "maxActiveConnectionsPerInst": Object {
                                 "description": "The maximum number of active websocket connections that an inst can have. If omitted, then there is no limit.",
@@ -7971,17 +7971,17 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                               "creditFeePerFilePerPeriod": Object {
                                 "description": "The number of credits that are charged for each file per subscription period. If not specified, then there is no fee.",
                                 "optional": true,
-                                "type": "number",
+                                "type": "string",
                               },
                               "creditFeePerFileWrite": Object {
                                 "description": "The number of credits that are charged for each file write operation. If not specified, then there is no fee.",
                                 "optional": true,
-                                "type": "number",
+                                "type": "string",
                               },
-                              "creditFeePerMegabytePerPeriod": Object {
-                                "description": "The number of credits that are charged for each megabyte stored in files per subscription period. If not specified, then there is no fee.",
+                              "creditFeePerKilobytePerPeriod": Object {
+                                "description": "The number of credits that are charged for each kilobyte stored in files per subscription period. If not specified, then there is no fee.",
                                 "optional": true,
-                                "type": "number",
+                                "type": "string",
                               },
                               "maxBytesPerFile": Object {
                                 "description": "The maximum number of bytes per file allowed for the subscription. If omitted, then there is no limit.",
@@ -8010,12 +8010,12 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                               "creditFeePerInstPerPeriod": Object {
                                 "description": "The number of credits that are charged for each inst per subscription period. If not specified, then there is no fee.",
                                 "optional": true,
-                                "type": "number",
+                                "type": "string",
                               },
-                              "creditFeePerMegabytePerPeriod": Object {
-                                "description": "The number of credits that are charged for each megabyte stored in an inst per subscription period. If not specified, then there is no fee.",
+                              "creditFeePerKilobytePerPeriod": Object {
+                                "description": "The number of credits that are charged for each kilobyte (1000 bytes) stored in an inst per subscription period. If not specified, then there is no fee.",
                                 "optional": true,
-                                "type": "number",
+                                "type": "string",
                               },
                               "maxActiveConnectionsPerInst": Object {
                                 "description": "The maximum number of active websocket connections that an inst can have. If omitted, then there is no limit.",
@@ -8831,17 +8831,17 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                                 "creditFeePerFilePerPeriod": Object {
                                   "description": "The number of credits that are charged for each file per subscription period. If not specified, then there is no fee.",
                                   "optional": true,
-                                  "type": "number",
+                                  "type": "string",
                                 },
                                 "creditFeePerFileWrite": Object {
                                   "description": "The number of credits that are charged for each file write operation. If not specified, then there is no fee.",
                                   "optional": true,
-                                  "type": "number",
+                                  "type": "string",
                                 },
-                                "creditFeePerMegabytePerPeriod": Object {
-                                  "description": "The number of credits that are charged for each megabyte stored in files per subscription period. If not specified, then there is no fee.",
+                                "creditFeePerKilobytePerPeriod": Object {
+                                  "description": "The number of credits that are charged for each kilobyte stored in files per subscription period. If not specified, then there is no fee.",
                                   "optional": true,
-                                  "type": "number",
+                                  "type": "string",
                                 },
                                 "maxBytesPerFile": Object {
                                   "description": "The maximum number of bytes per file allowed for the subscription. If omitted, then there is no limit.",
@@ -8870,12 +8870,12 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                                 "creditFeePerInstPerPeriod": Object {
                                   "description": "The number of credits that are charged for each inst per subscription period. If not specified, then there is no fee.",
                                   "optional": true,
-                                  "type": "number",
+                                  "type": "string",
                                 },
-                                "creditFeePerMegabytePerPeriod": Object {
-                                  "description": "The number of credits that are charged for each megabyte stored in an inst per subscription period. If not specified, then there is no fee.",
+                                "creditFeePerKilobytePerPeriod": Object {
+                                  "description": "The number of credits that are charged for each kilobyte (1000 bytes) stored in an inst per subscription period. If not specified, then there is no fee.",
                                   "optional": true,
-                                  "type": "number",
+                                  "type": "string",
                                 },
                                 "maxActiveConnectionsPerInst": Object {
                                   "description": "The maximum number of active websocket connections that an inst can have. If omitted, then there is no limit.",
@@ -17178,17 +17178,17 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                               "creditFeePerFilePerPeriod": Object {
                                 "description": "The number of credits that are charged for each file per subscription period. If not specified, then there is no fee.",
                                 "optional": true,
-                                "type": "number",
+                                "type": "string",
                               },
                               "creditFeePerFileWrite": Object {
                                 "description": "The number of credits that are charged for each file write operation. If not specified, then there is no fee.",
                                 "optional": true,
-                                "type": "number",
+                                "type": "string",
                               },
-                              "creditFeePerMegabytePerPeriod": Object {
-                                "description": "The number of credits that are charged for each megabyte stored in files per subscription period. If not specified, then there is no fee.",
+                              "creditFeePerKilobytePerPeriod": Object {
+                                "description": "The number of credits that are charged for each kilobyte stored in files per subscription period. If not specified, then there is no fee.",
                                 "optional": true,
-                                "type": "number",
+                                "type": "string",
                               },
                               "maxBytesPerFile": Object {
                                 "description": "The maximum number of bytes per file allowed for the subscription. If omitted, then there is no limit.",
@@ -17217,12 +17217,12 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                               "creditFeePerInstPerPeriod": Object {
                                 "description": "The number of credits that are charged for each inst per subscription period. If not specified, then there is no fee.",
                                 "optional": true,
-                                "type": "number",
+                                "type": "string",
                               },
-                              "creditFeePerMegabytePerPeriod": Object {
-                                "description": "The number of credits that are charged for each megabyte stored in an inst per subscription period. If not specified, then there is no fee.",
+                              "creditFeePerKilobytePerPeriod": Object {
+                                "description": "The number of credits that are charged for each kilobyte (1000 bytes) stored in an inst per subscription period. If not specified, then there is no fee.",
                                 "optional": true,
-                                "type": "number",
+                                "type": "string",
                               },
                               "maxActiveConnectionsPerInst": Object {
                                 "description": "The maximum number of active websocket connections that an inst can have. If omitted, then there is no limit.",
@@ -17928,17 +17928,17 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                               "creditFeePerFilePerPeriod": Object {
                                 "description": "The number of credits that are charged for each file per subscription period. If not specified, then there is no fee.",
                                 "optional": true,
-                                "type": "number",
+                                "type": "string",
                               },
                               "creditFeePerFileWrite": Object {
                                 "description": "The number of credits that are charged for each file write operation. If not specified, then there is no fee.",
                                 "optional": true,
-                                "type": "number",
+                                "type": "string",
                               },
-                              "creditFeePerMegabytePerPeriod": Object {
-                                "description": "The number of credits that are charged for each megabyte stored in files per subscription period. If not specified, then there is no fee.",
+                              "creditFeePerKilobytePerPeriod": Object {
+                                "description": "The number of credits that are charged for each kilobyte stored in files per subscription period. If not specified, then there is no fee.",
                                 "optional": true,
-                                "type": "number",
+                                "type": "string",
                               },
                               "maxBytesPerFile": Object {
                                 "description": "The maximum number of bytes per file allowed for the subscription. If omitted, then there is no limit.",
@@ -17967,12 +17967,12 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                               "creditFeePerInstPerPeriod": Object {
                                 "description": "The number of credits that are charged for each inst per subscription period. If not specified, then there is no fee.",
                                 "optional": true,
-                                "type": "number",
+                                "type": "string",
                               },
-                              "creditFeePerMegabytePerPeriod": Object {
-                                "description": "The number of credits that are charged for each megabyte stored in an inst per subscription period. If not specified, then there is no fee.",
+                              "creditFeePerKilobytePerPeriod": Object {
+                                "description": "The number of credits that are charged for each kilobyte (1000 bytes) stored in an inst per subscription period. If not specified, then there is no fee.",
                                 "optional": true,
-                                "type": "number",
+                                "type": "string",
                               },
                               "maxActiveConnectionsPerInst": Object {
                                 "description": "The maximum number of active websocket connections that an inst can have. If omitted, then there is no limit.",
@@ -18788,17 +18788,17 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                                 "creditFeePerFilePerPeriod": Object {
                                   "description": "The number of credits that are charged for each file per subscription period. If not specified, then there is no fee.",
                                   "optional": true,
-                                  "type": "number",
+                                  "type": "string",
                                 },
                                 "creditFeePerFileWrite": Object {
                                   "description": "The number of credits that are charged for each file write operation. If not specified, then there is no fee.",
                                   "optional": true,
-                                  "type": "number",
+                                  "type": "string",
                                 },
-                                "creditFeePerMegabytePerPeriod": Object {
-                                  "description": "The number of credits that are charged for each megabyte stored in files per subscription period. If not specified, then there is no fee.",
+                                "creditFeePerKilobytePerPeriod": Object {
+                                  "description": "The number of credits that are charged for each kilobyte stored in files per subscription period. If not specified, then there is no fee.",
                                   "optional": true,
-                                  "type": "number",
+                                  "type": "string",
                                 },
                                 "maxBytesPerFile": Object {
                                   "description": "The maximum number of bytes per file allowed for the subscription. If omitted, then there is no limit.",
@@ -18827,12 +18827,12 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                                 "creditFeePerInstPerPeriod": Object {
                                   "description": "The number of credits that are charged for each inst per subscription period. If not specified, then there is no fee.",
                                   "optional": true,
-                                  "type": "number",
+                                  "type": "string",
                                 },
-                                "creditFeePerMegabytePerPeriod": Object {
-                                  "description": "The number of credits that are charged for each megabyte stored in an inst per subscription period. If not specified, then there is no fee.",
+                                "creditFeePerKilobytePerPeriod": Object {
+                                  "description": "The number of credits that are charged for each kilobyte (1000 bytes) stored in an inst per subscription period. If not specified, then there is no fee.",
                                   "optional": true,
-                                  "type": "number",
+                                  "type": "string",
                                 },
                                 "maxActiveConnectionsPerInst": Object {
                                   "description": "The maximum number of active websocket connections that an inst can have. If omitted, then there is no limit.",
