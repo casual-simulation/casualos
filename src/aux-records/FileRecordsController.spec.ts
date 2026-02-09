@@ -2373,7 +2373,7 @@ describe('FileRecordsController', () => {
                             .withAllDefaultFeatures()
                             .withFiles({
                                 allowed: true,
-                                creditFeePerFileWrite: 50, // 50 credits per file write
+                                creditFeePerFileWrite: 50n, // 50 credits per file write
                             })
                     )
             );
@@ -2457,7 +2457,7 @@ describe('FileRecordsController', () => {
                             .withAllDefaultFeatures()
                             .withFiles({
                                 allowed: true,
-                                creditFeePerFileWrite: 100_000, // 100,000 credits per file write
+                                creditFeePerFileWrite: 100_000n, // 100,000 credits per file write
                             })
                     )
             );
@@ -2638,7 +2638,7 @@ describe('FileRecordsController', () => {
                                 .withAllDefaultFeatures()
                                 .withFiles({
                                     allowed: true,
-                                    creditFeePerFileWrite: 100_000, // 100,000 credits per file write
+                                    creditFeePerFileWrite: 100_000n, // 100,000 credits per file write
                                 })
                         )
                 );

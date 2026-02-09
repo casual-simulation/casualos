@@ -46,6 +46,7 @@ import { AccountFlags, TransferFlags } from 'tigerbeetle-node';
 import { MemoryStore } from '../MemoryStore';
 import {
     checkAccounts,
+    checkBillingTotals,
     checkTransfers,
     mapBigInts,
     randomBigInt,
@@ -2298,6 +2299,81 @@ describe('FinancialController', () => {
                 ]);
             });
 
+            it('should use the given billing code and transfer code', async () => {
+                const billing = await controller.billForUsage({
+                    ...filter,
+                    transferCode: TransferCodes.records_usage_fee,
+                    billingCode: BillingCodes.ai_chat_tokens,
+                });
+
+                await billing.next(
+                    success({
+                        initialCost: 50,
+                        transferCode: TransferCodes.store_platform_fee,
+                        billingCode: BillingCodes.ai_skybox,
+                    })
+                );
+
+                await checkAccounts(financialInterface, [
+                    {
+                        id: account1.account.id,
+                        credits_posted: 500n,
+                        credits_pending: 0n,
+                        debits_posted: 0n,
+                        debits_pending: 50n,
+                    },
+                ]);
+
+                const result = await billing.next(
+                    success({
+                        cost: 50,
+                    })
+                );
+
+                expect(result.done).toBe(false);
+                expect(isSuccess(result.value)).toBe(true);
+
+                await checkAccounts(financialInterface, [
+                    {
+                        id: account1.account.id,
+                        credits_posted: 500n,
+                        credits_pending: 0n,
+                        debits_posted: 50n,
+                        debits_pending: 0n,
+                    },
+                ]);
+
+                const list = unwrap(
+                    await controller.listTransfers(account1.account.id)
+                );
+
+                checkTransfers(list.slice(1), [
+                    {
+                        id: 4n,
+                        amount: 50n,
+                        code: TransferCodes.store_platform_fee,
+                        credit_account_id:
+                            ACCOUNT_IDS.revenue_records_usage_credits,
+                        debit_account_id: account1.account.id,
+                        flags: TransferFlags.pending,
+                        ledger: LEDGERS.credits,
+                        user_data_32: BillingCodes.ai_skybox,
+                    },
+                    {
+                        id: 5n,
+                        amount: 50n,
+                        credit_account_id:
+                            ACCOUNT_IDS.revenue_records_usage_credits,
+                        debit_account_id: account1.account.id,
+                        code: TransferCodes.store_platform_fee,
+                        pending_id: 4n,
+                        flags: TransferFlags.post_pending_transfer,
+                        ledger: LEDGERS.credits,
+                        user_data_32: BillingCodes.ai_skybox,
+                    },
+                ]);
+            });
+
             it('should bill the account in multiple cycles', async () => {
                 const billing = await controller.billForUsage({
                     ...filter,
@@ -2514,6 +2590,61 @@ describe('FinancialController', () => {
                         debits_pending: 0n,
                     },
                 ]);
+            });
+
+            it('should be able to use a different transfer and billing code for the additional amount', async () => {
+                const billing = await controller.billForUsage({
+                    ...filter,
+                    transferCode: TransferCodes.records_usage_fee,
+                    billingCode: BillingCodes.ai_chat_tokens,
+                });
+
+                // Set initial amount
+                await billing.next(
+                    success({
+                        initialCost: 100,
+                        transferCode: TransferCodes.store_platform_fee,
+                        billingCode: BillingCodes.ai_skybox,
+                    })
+                );
+
+                // Verify pending transfer
+                await checkAccounts(financialInterface, [
+                    {
+                        id: account1.account.id,
+                        credits_posted: 500n,
+                        credits_pending: 0n,
+                        debits_posted: 0n,
+                        debits_pending: 100n,
+                    },
+                ]);
+
+                // Bill for more than initial
+                const result = await billing.next(
+                    success({
+                        cost: 150,
+                        transferCode: TransferCodes.store_platform_fee,
+                        billingCode: BillingCodes.data_read,
+                    })
+                );
+
+                expect(result.done).toBe(false);
+                expect(isSuccess(result.value)).toBe(true);
+
+                await checkAccounts(financialInterface, [
+                    {
+                        id: account1.account.id,
+                        credits_posted: 500n,
+                        credits_pending: 0n,
+                        debits_posted: 150n,
+                        debits_pending: 0n,
+                    },
+                ]);
+
+                await checkBillingTotals(controller, account1.account.id, {
+                    [BillingCodes.ai_skybox]: 100n,
+                    [BillingCodes.data_read]: 50n,
+                });
             });
 
             it('should transfer an as much as possible if the final cost is greater than the initial amount and the account has insufficient funds', async () => {

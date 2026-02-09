@@ -946,10 +946,12 @@ export class FinancialController {
 
         let initialAmount: bigint = 0n;
         let initialTransferResult: TransferResult;
+        let initialTransferCode: TransferCodes | undefined;
+        let initialBillingCode: BillingCodes | undefined;
         const transactionId = this._financialInterface.generateId();
 
         console.log(
-            `[FinancialController] [userId: ${params.userId} studioId: ${params.studioId} transactionId: ${transactionId}] Billing usage for account ID ${accountResult.value.account.id}`
+            `[FinancialController] [userId: ${params.userId} studioId: ${params.studioId} transactionId: ${transactionId} billingCode: ${params.billingCode}] Billing usage for account ID ${accountResult.value.account.id}`
         );
 
         // Process each action and bill for it
@@ -1043,6 +1045,8 @@ export class FinancialController {
                         }
 
                         initialTransferResult = null;
+                        initialTransferCode = undefined;
+                        initialBillingCode = undefined;
                     }
 
                     if (additionalAmount > 0) {
@@ -1064,9 +1068,15 @@ export class FinancialController {
                                             ACCOUNT_IDS.revenue_records_usage_credits,
                                         amount: additionalAmount,
                                         currency: 'credits',
-                                        code: params.transferCode,
+                                        code:
+                                            initialTransferCode ??
+                                            result.value.transferCode ??
+                                            params.transferCode,
                                         balancingDebit: balancingDebit,
-                                        billingCode: params.billingCode,
+                                        billingCode:
+                                            initialBillingCode ??
+                                            result.value.billingCode ??
+                                            params.billingCode,
                                     },
                                 ],
                             });
@@ -1121,6 +1131,11 @@ export class FinancialController {
                         `[FinancialController] [userId: ${params.userId} studioId: ${params.studioId} transactionId: ${transactionId}] Creating initial pending transfer for ${result.value.initialCost} credits for account ${accountResult.value.account.id}.`
                     );
 
+                    initialTransferCode =
+                        result.value.transferCode ?? params.transferCode;
+                    initialBillingCode =
+                        result.value.billingCode ?? params.billingCode;
+
                     const newInitialTransferResult =
                         await this.internalTransaction({
                             transactionId,
@@ -1132,10 +1147,10 @@ export class FinancialController {
                                         ACCOUNT_IDS.revenue_records_usage_credits,
                                     amount: result.value.initialCost,
                                     currency: 'credits',
-                                    code: params.transferCode,
+                                    code: initialTransferCode,
                                     pending: true,
                                     timeoutSeconds: 300,
-                                    billingCode: params.billingCode,
+                                    billingCode: initialBillingCode,
                                 },
                             ],
                         });
@@ -1823,6 +1838,16 @@ export interface BillingStep {
      * If set, completes the pending transfer (if any) and attempts to bill for the remaining amount.
      */
     cost?: number | bigint | null;
+
+    /**
+     * The transfer code that should be used for the billing transfer for this step, if different from the default transfer code specified in UsageBillingOptions.
+     */
+    transferCode?: TransferCodes;
+
+    /**
+     * The billing code that should be set on the transfer for this step, if different from the default billing code specified in UsageBillingOptions.
+     */
+    billingCode?: BillingCodes;
 }
 
 /**

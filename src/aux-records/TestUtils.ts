@@ -41,7 +41,7 @@ import {
 } from '@casual-simulation/aux-common';
 import type { FinancialInterface } from './financial';
 import { FinancialController, MemoryFinancialInterface } from './financial';
-import type { Account, Transfer } from 'tigerbeetle-node';
+import { TransferFlags, type Account, type Transfer } from 'tigerbeetle-node';
 import { v4 as uuidv4, parse } from 'uuid';
 import type { StripeInterface } from './StripeInterface';
 
@@ -384,7 +384,7 @@ export async function checkBillingTotals(
     const actualCodeTotals: Record<number, bigint> = {};
 
     for (let transfer of transfers) {
-        if (!transfer.user_data_32) {
+        if (!transfer.user_data_32 || transfer.flags & TransferFlags.pending) {
             continue;
         }
         const billingCode = transfer.user_data_32;

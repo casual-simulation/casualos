@@ -34,11 +34,18 @@ import {
     CreateTransferError,
     TransferFlags,
 } from 'tigerbeetle-node';
+import { cloneDeep } from 'es-toolkit';
 
 /**
  * The max bigint tigerbeetle can handle. 2^128 - 1 is reserved.
  */
 const MAX_BIGINT_128 = BigInt('340282366920938463463374607431768211454');
+
+interface MemoryFinancialInterfaceCheckpoint {
+    accounts: Map<Account['id'], Account>;
+    balances: Map<Account['id'], AccountBalance[]>;
+    transfers: Transfer[];
+}
 
 export class MemoryFinancialInterface implements FinancialInterface {
     private _accounts: Map<Account['id'], Account> = new Map();
@@ -52,6 +59,20 @@ export class MemoryFinancialInterface implements FinancialInterface {
 
     get transfers() {
         return this._transfers;
+    }
+
+    getCheckpoint(): MemoryFinancialInterfaceCheckpoint {
+        return {
+            accounts: cloneDeep(this._accounts),
+            balances: cloneDeep(this._balances),
+            transfers: cloneDeep(this._transfers),
+        };
+    }
+
+    restoreCheckpoint(checkpoint: MemoryFinancialInterfaceCheckpoint) {
+        this._accounts = cloneDeep(checkpoint.accounts);
+        this._balances = cloneDeep(checkpoint.balances);
+        this._transfers = cloneDeep(checkpoint.transfers);
     }
 
     now() {
@@ -264,6 +285,7 @@ export class MemoryFinancialInterface implements FinancialInterface {
     async createTransfers(batch: Transfer[]): Promise<CreateTransfersError[]> {
         const errs: CreateTransfersError[] = [];
         let linkedTransfers: Transfer[] = [];
+        let checkpoint = this.getCheckpoint();
         for (let i = 0; i < batch.length; i++) {
             const transfer = {
                 ...batch[i],
@@ -494,6 +516,7 @@ export class MemoryFinancialInterface implements FinancialInterface {
                     this._transfers.push(transfer);
                 }
             } else {
+                this.restoreCheckpoint(checkpoint);
                 linkedTransfers = [];
             }
         }

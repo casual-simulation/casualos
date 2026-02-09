@@ -725,20 +725,20 @@ export const getSubscriptionFeaturesSchema = memoize(() =>
                         'The maximum number of push notifications that can be sent per subscription period. This tracks the actual number of push notifications that were sent to users. If not specified, then there is no limit.'
                     ),
 
-                creditFeePerNotificationSent: z
-                    .int()
+                creditFeePerNotificationSent: z.coerce
+                    .bigint()
                     .optional()
                     .describe(
                         'The number of credits that it costs to send a notification. If not specified, then sending notifications is free.'
                     ),
-                creditFeePerPushNotificationSent: z
-                    .int()
+                creditFeePerPushNotificationSent: z.coerce
+                    .bigint()
                     .optional()
                     .describe(
                         'The number of credits that it costs to send a push notification. If not specified, then sending push notifications is free.'
                     ),
-                creditFeePerSubscriberPerPeriod: z
-                    .int()
+                creditFeePerSubscriberPerPeriod: z.coerce
+                    .bigint()
                     .optional()
                     .describe(
                         'The number of credits that are charged for each subscriber per subscription period. If not specified, then there is no fee.'
