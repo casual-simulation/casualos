@@ -7218,11 +7218,6 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                                 "description": "Whether file resources are allowed for the subscription. If false, then every request to create or update a file resource will be rejected.",
                                 "type": "boolean",
                               },
-                              "creditFeePerBytePerPeriod": Object {
-                                "description": "The number of credits that are charged for each byte stored in files per subscription period. If not specified, then there is no fee.",
-                                "optional": true,
-                                "type": "number",
-                              },
                               "creditFeePerFilePerPeriod": Object {
                                 "description": "The number of credits that are charged for each file per subscription period. If not specified, then there is no fee.",
                                 "optional": true,
@@ -7230,6 +7225,11 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                               },
                               "creditFeePerFileWrite": Object {
                                 "description": "The number of credits that are charged for each file write operation. If not specified, then there is no fee.",
+                                "optional": true,
+                                "type": "number",
+                              },
+                              "creditFeePerMegabytePerPeriod": Object {
+                                "description": "The number of credits that are charged for each megabyte stored in files per subscription period. If not specified, then there is no fee.",
                                 "optional": true,
                                 "type": "number",
                               },
@@ -7257,13 +7257,13 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                                 "description": "Whether insts are allowed for the subscription. If false, then every request to create or update an inst will be rejected.",
                                 "type": "boolean",
                               },
-                              "creditFeePerBytePerPeriod": Object {
-                                "description": "The number of credits that are charged for each byte stored in an inst per subscription period. If not specified, then there is no fee.",
+                              "creditFeePerInstPerPeriod": Object {
+                                "description": "The number of credits that are charged for each inst per subscription period. If not specified, then there is no fee.",
                                 "optional": true,
                                 "type": "number",
                               },
-                              "creditFeePerInstPerPeriod": Object {
-                                "description": "The number of credits that are charged for each inst per subscription period. If not specified, then there is no fee.",
+                              "creditFeePerMegabytePerPeriod": Object {
+                                "description": "The number of credits that are charged for each megabyte stored in an inst per subscription period. If not specified, then there is no fee.",
                                 "optional": true,
                                 "type": "number",
                               },
@@ -7968,11 +7968,6 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                                 "description": "Whether file resources are allowed for the subscription. If false, then every request to create or update a file resource will be rejected.",
                                 "type": "boolean",
                               },
-                              "creditFeePerBytePerPeriod": Object {
-                                "description": "The number of credits that are charged for each byte stored in files per subscription period. If not specified, then there is no fee.",
-                                "optional": true,
-                                "type": "number",
-                              },
                               "creditFeePerFilePerPeriod": Object {
                                 "description": "The number of credits that are charged for each file per subscription period. If not specified, then there is no fee.",
                                 "optional": true,
@@ -7980,6 +7975,11 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                               },
                               "creditFeePerFileWrite": Object {
                                 "description": "The number of credits that are charged for each file write operation. If not specified, then there is no fee.",
+                                "optional": true,
+                                "type": "number",
+                              },
+                              "creditFeePerMegabytePerPeriod": Object {
+                                "description": "The number of credits that are charged for each megabyte stored in files per subscription period. If not specified, then there is no fee.",
                                 "optional": true,
                                 "type": "number",
                               },
@@ -8007,13 +8007,13 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                                 "description": "Whether insts are allowed for the subscription. If false, then every request to create or update an inst will be rejected.",
                                 "type": "boolean",
                               },
-                              "creditFeePerBytePerPeriod": Object {
-                                "description": "The number of credits that are charged for each byte stored in an inst per subscription period. If not specified, then there is no fee.",
+                              "creditFeePerInstPerPeriod": Object {
+                                "description": "The number of credits that are charged for each inst per subscription period. If not specified, then there is no fee.",
                                 "optional": true,
                                 "type": "number",
                               },
-                              "creditFeePerInstPerPeriod": Object {
-                                "description": "The number of credits that are charged for each inst per subscription period. If not specified, then there is no fee.",
+                              "creditFeePerMegabytePerPeriod": Object {
+                                "description": "The number of credits that are charged for each megabyte stored in an inst per subscription period. If not specified, then there is no fee.",
                                 "optional": true,
                                 "type": "number",
                               },
@@ -8828,11 +8828,6 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                                   "description": "Whether file resources are allowed for the subscription. If false, then every request to create or update a file resource will be rejected.",
                                   "type": "boolean",
                                 },
-                                "creditFeePerBytePerPeriod": Object {
-                                  "description": "The number of credits that are charged for each byte stored in files per subscription period. If not specified, then there is no fee.",
-                                  "optional": true,
-                                  "type": "number",
-                                },
                                 "creditFeePerFilePerPeriod": Object {
                                   "description": "The number of credits that are charged for each file per subscription period. If not specified, then there is no fee.",
                                   "optional": true,
@@ -8840,6 +8835,11 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                                 },
                                 "creditFeePerFileWrite": Object {
                                   "description": "The number of credits that are charged for each file write operation. If not specified, then there is no fee.",
+                                  "optional": true,
+                                  "type": "number",
+                                },
+                                "creditFeePerMegabytePerPeriod": Object {
+                                  "description": "The number of credits that are charged for each megabyte stored in files per subscription period. If not specified, then there is no fee.",
                                   "optional": true,
                                   "type": "number",
                                 },
@@ -8867,13 +8867,13 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                                   "description": "Whether insts are allowed for the subscription. If false, then every request to create or update an inst will be rejected.",
                                   "type": "boolean",
                                 },
-                                "creditFeePerBytePerPeriod": Object {
-                                  "description": "The number of credits that are charged for each byte stored in an inst per subscription period. If not specified, then there is no fee.",
+                                "creditFeePerInstPerPeriod": Object {
+                                  "description": "The number of credits that are charged for each inst per subscription period. If not specified, then there is no fee.",
                                   "optional": true,
                                   "type": "number",
                                 },
-                                "creditFeePerInstPerPeriod": Object {
-                                  "description": "The number of credits that are charged for each inst per subscription period. If not specified, then there is no fee.",
+                                "creditFeePerMegabytePerPeriod": Object {
+                                  "description": "The number of credits that are charged for each megabyte stored in an inst per subscription period. If not specified, then there is no fee.",
                                   "optional": true,
                                   "type": "number",
                                 },
@@ -17175,11 +17175,6 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                                 "description": "Whether file resources are allowed for the subscription. If false, then every request to create or update a file resource will be rejected.",
                                 "type": "boolean",
                               },
-                              "creditFeePerBytePerPeriod": Object {
-                                "description": "The number of credits that are charged for each byte stored in files per subscription period. If not specified, then there is no fee.",
-                                "optional": true,
-                                "type": "number",
-                              },
                               "creditFeePerFilePerPeriod": Object {
                                 "description": "The number of credits that are charged for each file per subscription period. If not specified, then there is no fee.",
                                 "optional": true,
@@ -17187,6 +17182,11 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                               },
                               "creditFeePerFileWrite": Object {
                                 "description": "The number of credits that are charged for each file write operation. If not specified, then there is no fee.",
+                                "optional": true,
+                                "type": "number",
+                              },
+                              "creditFeePerMegabytePerPeriod": Object {
+                                "description": "The number of credits that are charged for each megabyte stored in files per subscription period. If not specified, then there is no fee.",
                                 "optional": true,
                                 "type": "number",
                               },
@@ -17214,13 +17214,13 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                                 "description": "Whether insts are allowed for the subscription. If false, then every request to create or update an inst will be rejected.",
                                 "type": "boolean",
                               },
-                              "creditFeePerBytePerPeriod": Object {
-                                "description": "The number of credits that are charged for each byte stored in an inst per subscription period. If not specified, then there is no fee.",
+                              "creditFeePerInstPerPeriod": Object {
+                                "description": "The number of credits that are charged for each inst per subscription period. If not specified, then there is no fee.",
                                 "optional": true,
                                 "type": "number",
                               },
-                              "creditFeePerInstPerPeriod": Object {
-                                "description": "The number of credits that are charged for each inst per subscription period. If not specified, then there is no fee.",
+                              "creditFeePerMegabytePerPeriod": Object {
+                                "description": "The number of credits that are charged for each megabyte stored in an inst per subscription period. If not specified, then there is no fee.",
                                 "optional": true,
                                 "type": "number",
                               },
@@ -17925,11 +17925,6 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                                 "description": "Whether file resources are allowed for the subscription. If false, then every request to create or update a file resource will be rejected.",
                                 "type": "boolean",
                               },
-                              "creditFeePerBytePerPeriod": Object {
-                                "description": "The number of credits that are charged for each byte stored in files per subscription period. If not specified, then there is no fee.",
-                                "optional": true,
-                                "type": "number",
-                              },
                               "creditFeePerFilePerPeriod": Object {
                                 "description": "The number of credits that are charged for each file per subscription period. If not specified, then there is no fee.",
                                 "optional": true,
@@ -17937,6 +17932,11 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                               },
                               "creditFeePerFileWrite": Object {
                                 "description": "The number of credits that are charged for each file write operation. If not specified, then there is no fee.",
+                                "optional": true,
+                                "type": "number",
+                              },
+                              "creditFeePerMegabytePerPeriod": Object {
+                                "description": "The number of credits that are charged for each megabyte stored in files per subscription period. If not specified, then there is no fee.",
                                 "optional": true,
                                 "type": "number",
                               },
@@ -17964,13 +17964,13 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                                 "description": "Whether insts are allowed for the subscription. If false, then every request to create or update an inst will be rejected.",
                                 "type": "boolean",
                               },
-                              "creditFeePerBytePerPeriod": Object {
-                                "description": "The number of credits that are charged for each byte stored in an inst per subscription period. If not specified, then there is no fee.",
+                              "creditFeePerInstPerPeriod": Object {
+                                "description": "The number of credits that are charged for each inst per subscription period. If not specified, then there is no fee.",
                                 "optional": true,
                                 "type": "number",
                               },
-                              "creditFeePerInstPerPeriod": Object {
-                                "description": "The number of credits that are charged for each inst per subscription period. If not specified, then there is no fee.",
+                              "creditFeePerMegabytePerPeriod": Object {
+                                "description": "The number of credits that are charged for each megabyte stored in an inst per subscription period. If not specified, then there is no fee.",
                                 "optional": true,
                                 "type": "number",
                               },
@@ -18785,11 +18785,6 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                                   "description": "Whether file resources are allowed for the subscription. If false, then every request to create or update a file resource will be rejected.",
                                   "type": "boolean",
                                 },
-                                "creditFeePerBytePerPeriod": Object {
-                                  "description": "The number of credits that are charged for each byte stored in files per subscription period. If not specified, then there is no fee.",
-                                  "optional": true,
-                                  "type": "number",
-                                },
                                 "creditFeePerFilePerPeriod": Object {
                                   "description": "The number of credits that are charged for each file per subscription period. If not specified, then there is no fee.",
                                   "optional": true,
@@ -18797,6 +18792,11 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                                 },
                                 "creditFeePerFileWrite": Object {
                                   "description": "The number of credits that are charged for each file write operation. If not specified, then there is no fee.",
+                                  "optional": true,
+                                  "type": "number",
+                                },
+                                "creditFeePerMegabytePerPeriod": Object {
+                                  "description": "The number of credits that are charged for each megabyte stored in files per subscription period. If not specified, then there is no fee.",
                                   "optional": true,
                                   "type": "number",
                                 },
@@ -18824,13 +18824,13 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                                   "description": "Whether insts are allowed for the subscription. If false, then every request to create or update an inst will be rejected.",
                                   "type": "boolean",
                                 },
-                                "creditFeePerBytePerPeriod": Object {
-                                  "description": "The number of credits that are charged for each byte stored in an inst per subscription period. If not specified, then there is no fee.",
+                                "creditFeePerInstPerPeriod": Object {
+                                  "description": "The number of credits that are charged for each inst per subscription period. If not specified, then there is no fee.",
                                   "optional": true,
                                   "type": "number",
                                 },
-                                "creditFeePerInstPerPeriod": Object {
-                                  "description": "The number of credits that are charged for each inst per subscription period. If not specified, then there is no fee.",
+                                "creditFeePerMegabytePerPeriod": Object {
+                                  "description": "The number of credits that are charged for each megabyte stored in an inst per subscription period. If not specified, then there is no fee.",
                                   "optional": true,
                                   "type": "number",
                                 },

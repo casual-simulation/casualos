@@ -239,6 +239,7 @@ describe('AIController', () => {
             policies: null,
             policyController: policies,
             records: store,
+            financial: null,
         });
     });
 

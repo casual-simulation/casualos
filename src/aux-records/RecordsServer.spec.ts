@@ -921,6 +921,7 @@ describe('RecordsServer', () => {
             policies: store,
             policyController: policyController,
             records: store,
+            financial: null,
         });
         jobProvider = new MemoryModerationJobProvider();
         moderationController = new ModerationController(
