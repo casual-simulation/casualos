@@ -1,5 +1,6 @@
 # CasualOS Changelog
 
+
 ## V4.1.0
 
 #### Date: TBD
@@ -45,6 +46,11 @@
         -   Added the `creditFeePerNotificationSent` option. This is the number of credits that should be charged for calling `os.sendNotification()`.
         -   Added the `creditFeePerPushNotificationSent` option. This is the number of credits that should be charged for each push notification sent to a device. Note that calling `os.sendNotification()` may send 0 or more push notifications, depending on how many subscribers it has and how many devices they have registered.
         -   Added the `creditFeePerSubscriberPerPeriod` option. This is the number of credits that should be charged per user subscribed to a notification record per period.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where shared documents would fail to load from public insts if the user wasn't logged in on initialization.
+-   Fixed an issue where `os.listInsts()` could not be used due to a input mismatch between the server and client.
 
 ## V4.0.5
 

@@ -597,6 +597,132 @@ describe('AuthCoordinator', () => {
                 expect(authMock.authenticate).not.toHaveBeenCalled();
             });
 
+            it('should generate the connection token for the requested resource', async () => {
+                const connectionSecret = fromByteArray(
+                    randomBytes(SESSION_SECRET_BYTE_LENGTH)
+                );
+                const key = formatV1ConnectionKey(
+                    'userId',
+                    'sessionId',
+                    connectionSecret,
+                    Date.now() + 10000000
+                );
+                const token = generateV1ConnectionToken(
+                    key,
+                    connectionId,
+                    'myRecord',
+                    'myInst'
+                );
+                authMock.getConnectionKey.mockResolvedValueOnce(key);
+
+                await sim.sendAuthMessage({
+                    type: 'request',
+                    origin: origin,
+                    kind: 'not_authorized',
+                    errorCode: 'not_logged_in',
+                    errorMessage: 'Not logged in.',
+                    resource: {
+                        type: 'inst',
+                        recordName: 'myRecord',
+                        inst: 'myInst',
+                        branch: 'doc/myDocument',
+                    },
+                });
+
+                await waitAsync();
+
+                expect(responses).toEqual([
+                    {
+                        type: 'response',
+                        success: true,
+                        indicator: {
+                            connectionToken: token,
+                        },
+                        origin: origin,
+                    },
+                ]);
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+            });
+
+            it('should not generate a connection token for an invalid branch', async () => {
+                const connectionSecret = fromByteArray(
+                    randomBytes(SESSION_SECRET_BYTE_LENGTH)
+                );
+                const key = formatV1ConnectionKey(
+                    'userId',
+                    'sessionId',
+                    connectionSecret,
+                    Date.now() + 10000000
+                );
+                authMock.getConnectionKey.mockResolvedValueOnce(key);
+
+                await sim.sendAuthMessage({
+                    type: 'request',
+                    origin: origin,
+                    kind: 'not_authorized',
+                    errorCode: 'not_logged_in',
+                    errorMessage: 'Not logged in.',
+                    resource: {
+                        type: 'inst',
+                        recordName: 'myRecord',
+                        inst: 'myInst',
+                        branch: 'invalidBranch',
+                    },
+                });
+
+                await waitAsync();
+
+                expect(responses).toEqual([]);
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+            });
+
+            it('should generate a connection token for the current sim', async () => {
+                const connectionSecret = fromByteArray(
+                    randomBytes(SESSION_SECRET_BYTE_LENGTH)
+                );
+                const key = formatV1ConnectionKey(
+                    'userId',
+                    'sessionId',
+                    connectionSecret,
+                    Date.now() + 10000000
+                );
+                const token = generateV1ConnectionToken(
+                    key,
+                    connectionId,
+                    null,
+                    'sim-1'
+                );
+                authMock.getConnectionKey.mockResolvedValueOnce(key);
+
+                await sim.sendAuthMessage({
+                    type: 'request',
+                    origin: origin,
+                    kind: 'not_authorized',
+                    errorCode: 'not_logged_in',
+                    errorMessage: 'Not logged in.',
+                    resource: {
+                        type: 'inst',
+                        recordName: null,
+                        inst: 'sim-1',
+                        branch: 'goodBranch',
+                    },
+                });
+
+                await waitAsync();
+
+                expect(responses).toEqual([
+                    {
+                        type: 'response',
+                        success: true,
+                        indicator: {
+                            connectionToken: token,
+                        },
+                        origin: origin,
+                    },
+                ]);
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+            });
+
             it('should attempt to login and get the connection key', async () => {
                 const connectionSecret = fromByteArray(
                     randomBytes(SESSION_SECRET_BYTE_LENGTH)
