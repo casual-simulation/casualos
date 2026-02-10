@@ -623,9 +623,10 @@ export class NotificationRecordsController extends CrudRecordsController<
 
             // Charge credits for push notifications if configured
             if (
-                metrics.features.creditFeePerNotificationSent ||
-                (metrics.features.creditFeePerPushNotificationSent &&
-                    pushSubs.length > 0)
+                this._financialController &&
+                (metrics.features.creditFeePerNotificationSent ||
+                    (metrics.features.creditFeePerPushNotificationSent &&
+                        pushSubs.length > 0))
             ) {
                 let transfers: InternalTransfer[] = [];
 
