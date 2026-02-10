@@ -2054,10 +2054,25 @@ export class ServerBuilder implements SubscriptionLike {
                         throw new Error(
                             'The financial controller is not available when it should be.'
                         );
+                    } else if (!this._configStore) {
+                        throw new Error(
+                            'The config store is not available when it should be.'
+                        );
+                    } else if (!this._financialStore) {
+                        throw new Error(
+                            'The financial store is not available when it should be.'
+                        );
+                    } else if (!this._metricsStore) {
+                        throw new Error(
+                            'The metrics store is not available when it should be.'
+                        );
                     }
 
                     this._financialProcessor = new FinancialProcessor({
                         financial: this._financialController,
+                        configStore: this._configStore,
+                        financialStore: this._financialStore,
+                        metricsStore: this._metricsStore,
                     });
                     const { queue, worker } = this._setupJob(
                         'financial',
