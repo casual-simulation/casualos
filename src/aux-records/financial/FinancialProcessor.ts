@@ -38,8 +38,12 @@ import {
 import type { MetricsStore, SubscriptionMetrics } from '../MetricsStore';
 import type { ConfigurationStore } from '../ConfigurationStore';
 import type { SubscriptionConfiguration } from '../SubscriptionConfiguration';
-import { getSubscriptionFeatures } from '../SubscriptionConfiguration';
+import {
+    getNotificationFeatures,
+    getSubscriptionFeatures,
+} from '../SubscriptionConfiguration';
 import type { BillingCycleHistory, FinancialStore } from './FinancialStore';
+import type { NotificationRecordsStore } from '../notifications';
 
 const TRACE_NAME = 'FinancialProcessor';
 
@@ -70,6 +74,7 @@ export interface FinancialProcessorConfig {
     financialStore: FinancialStore;
     metricsStore: MetricsStore;
     configStore: ConfigurationStore;
+    notificationsStore: NotificationRecordsStore;
 }
 
 /**
@@ -80,12 +85,14 @@ export class FinancialProcessor {
     private _financialStore: FinancialStore;
     private _metricsStore: MetricsStore;
     private _configStore: ConfigurationStore;
+    private _notificationsStore: NotificationRecordsStore;
 
     constructor(config: FinancialProcessorConfig) {
         this._financial = config.financial;
         this._financialStore = config.financialStore;
         this._metricsStore = config.metricsStore;
         this._configStore = config.configStore;
+        this._notificationsStore = config.notificationsStore;
     }
 
     @traced(TRACE_NAME)
@@ -117,6 +124,11 @@ export class FinancialProcessor {
         await Promise.all([
             this._instPeriodicBilling(currentTime, lastBillingCycle, config),
             this._filePeriodicBilling(currentTime, lastBillingCycle, config),
+            this._notificationPeriodicBilling(
+                currentTime,
+                lastBillingCycle,
+                config
+            ),
         ]);
 
         await this._financialStore.saveBillingCycleHistory({
@@ -524,6 +536,144 @@ export class FinancialProcessor {
         }
 
         return success();
+    }
+
+    private async _notificationPeriodicBilling(
+        currentTime: number,
+        lastBillingCycle: BillingCycleHistory | null | undefined,
+        config: SubscriptionConfiguration
+    ): Promise<Result<void, SimpleError>> {
+        if (!this._notificationsStore) {
+            console.warn(
+                '[FinancialProcessor] No notifications store configured. Skipping notification billing.'
+            );
+            return success();
+        }
+        const notificationSubscribers =
+            await this._notificationsStore.getAllSubscriptionMetrics();
+
+        console.log(
+            `[${TRACE_NAME}] [_notificationPeriodicBilling] Found ${notificationSubscribers.length} total subscription file metrics.`
+        );
+
+        for (const subscriber of notificationSubscribers) {
+            if (subscriber.totalSubscribers <= 0) {
+                console.log(
+                    `[${TRACE_NAME}] [_notificationPeriodicBilling userId: ${subscriber.ownerId} subscriptionId: ${subscriber.subscriptionId}] No periodic subscription usage.`
+                );
+                continue;
+            }
+
+            if (subscriber.ownerId) {
+                console.log(
+                    `[${TRACE_NAME}] [_notificationPeriodicBilling userId: ${subscriber.ownerId} subscriptionId: ${subscriber.subscriptionId}] Processing user billing.`
+                );
+            } else if (subscriber.studioId) {
+                console.log(
+                    `[${TRACE_NAME}] [_notificationPeriodicBilling studioId: ${subscriber.studioId} subscriptionId: ${subscriber.subscriptionId}] Processing studio billing.`
+                );
+            } else {
+                console.warn(
+                    `[${TRACE_NAME}] [_notificationPeriodicBilling subscriptionId: ${subscriber.subscriptionId}] Subscriber has no ownerId or studioId. Skipping.`
+                );
+                continue;
+            }
+
+            if (
+                !subscriber.currentPeriodEndMs ||
+                !subscriber.currentPeriodStartMs
+            ) {
+                console.warn(
+                    `[${TRACE_NAME}] [_notificationPeriodicBilling subscriptionId: ${subscriber.subscriptionId}] Subscriber is missing current period start or end. Skipping.`
+                );
+                continue;
+            }
+
+            const fractionOfCurrentPeriod =
+                this._calculateFractionOfCurrentPeriod(
+                    subscriber,
+                    lastBillingCycle,
+                    currentTime
+                );
+
+            const features = getNotificationFeatures(
+                config,
+                'active',
+                subscriber.subscriptionId,
+                subscriber.subscriptionType
+            );
+
+            const account = await this._financial.getFinancialAccount({
+                studioId: subscriber.studioId,
+                userId: subscriber.ownerId,
+                ledger: LEDGERS.credits,
+            });
+
+            if (isFailure(account)) {
+                logError(
+                    account.error,
+                    `[${TRACE_NAME}] [_notificationPeriodicBilling subscriptionId: ${subscriber.subscriptionId}] Failed to get financial account for subscriber.`
+                );
+                continue;
+            }
+
+            if (!features) {
+                console.warn(
+                    `[${TRACE_NAME}] [_notificationPeriodicBilling subscriptionId: ${subscriber.subscriptionId}] No subscription features found for subscriber. Skipping.`
+                );
+                continue;
+            }
+
+            if (!features.allowed) {
+                console.log(
+                    `[${TRACE_NAME}] [_notificationPeriodicBilling subscriptionId: ${subscriber.subscriptionId}] Subscriber does not have notifications allowed. Skipping.`
+                );
+                continue;
+            }
+
+            if (
+                features.creditFeePerSubscriberPerPeriod &&
+                subscriber.totalSubscribers > 0
+            ) {
+                const perFractionFee =
+                    features.creditFeePerSubscriberPerPeriod /
+                    BigInt(fractionOfCurrentPeriod);
+
+                if (perFractionFee > 0n) {
+                    const total =
+                        BigInt(subscriber.totalSubscribers) * perFractionFee;
+
+                    console.log(
+                        `[${TRACE_NAME}] [_notificationPeriodicBilling subscriptionId: ${subscriber.subscriptionId}] Charging subscriber count fee. totalSubscribers: ${subscriber.totalSubscribers} fractionOfCurrentPeriod: ${fractionOfCurrentPeriod} perFractionFee: ${perFractionFee} total: ${total}`
+                    );
+
+                    const feeResult = await this._financial.internalTransaction(
+                        {
+                            transfers: [
+                                {
+                                    amount: total,
+                                    debitAccountId: account.value.account.id,
+                                    creditAccountId:
+                                        ACCOUNT_IDS.revenue_records_usage_credits,
+                                    code: TransferCodes.records_usage_fee,
+                                    currency: CurrencyCodes.credits,
+                                    billingCode:
+                                        BillingCodes.notification_subscriber_count,
+                                    balancingDebit: true,
+                                },
+                            ],
+                        }
+                    );
+
+                    if (isFailure(feeResult)) {
+                        logError(
+                            feeResult.error,
+                            `[${TRACE_NAME}] [_notificationPeriodicBilling subscriptionId: ${subscriber.subscriptionId}] Failed to charge subscriber count fee.`
+                        );
+                    }
+                }
+            }
+        }
     }
 
     @traced(TRACE_NAME)

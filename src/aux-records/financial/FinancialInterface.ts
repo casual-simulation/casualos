@@ -613,7 +613,7 @@ export enum BillingCodes {
     /**
      * Billing code for number of notification subscribers per period.
      */
-    notificiation_subscriber_count = 5003,
+    notification_subscriber_count = 5003,
 }
 
 /**

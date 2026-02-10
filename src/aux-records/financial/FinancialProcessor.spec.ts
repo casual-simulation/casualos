@@ -40,20 +40,24 @@ import {
     TransferCodes,
 } from './FinancialInterface';
 import type { Account } from 'tigerbeetle-node';
+import { MemoryNotificationRecordsStore } from '../notifications';
 
 console.log = jest.fn();
 
 describe('FinancialProcessor', () => {
     let services: TestServices;
     let processor: FinancialProcessor;
+    let notificationsStore: MemoryNotificationRecordsStore;
 
     beforeEach(async () => {
         services = createTestControllers();
+        notificationsStore = new MemoryNotificationRecordsStore(services.store);
         processor = new FinancialProcessor({
             financial: services.financialController,
             configStore: services.configStore,
             metricsStore: services.store,
             financialStore: services.store,
+            notificationsStore: notificationsStore,
         });
 
         unwrap(await services.financialController.init());
@@ -1534,6 +1538,395 @@ describe('FinancialProcessor', () => {
                             },
                         ]);
                     });
+                });
+            });
+        });
+
+        describe('notifications', () => {
+            describe('user', () => {
+                const userId = 'user1';
+                let account: Account;
+
+                beforeEach(async () => {
+                    await services.store.saveUser({
+                        id: userId,
+                        allSessionRevokeTimeMs: null,
+                        email: 'user1@example.com',
+                        phoneNumber: null,
+                        currentLoginRequestId: null,
+                        subscriptionId: 'sub1',
+                        subscriptionStatus: 'active',
+                        subscriptionPeriodStartMs: month,
+                        subscriptionPeriodEndMs: month * 2,
+                    });
+
+                    await services.store.addRecord({
+                        ownerId: userId,
+                        name: 'myRecord',
+                        secretHashes: [],
+                        secretSalt: '',
+                        studioId: null,
+                    });
+
+                    await notificationsStore.createItem('myRecord', {
+                        address: 'testItem',
+                        description: 'Test Item',
+                        markers: [PUBLIC_READ_MARKER],
+                    });
+
+                    await notificationsStore.saveSubscription({
+                        id: 'sub1',
+                        userId: 'otherUserId',
+                        recordName: 'myRecord',
+                        notificationAddress: 'testItem',
+                        pushSubscriptionId: null,
+                    });
+
+                    await notificationsStore.saveSubscription({
+                        id: 'sub2',
+                        userId: 'otherUserId2',
+                        recordName: 'myRecord',
+                        notificationAddress: 'testItem',
+                        pushSubscriptionId: null,
+                    });
+
+                    await notificationsStore.saveSubscription({
+                        id: 'sub3',
+                        userId: 'otherUserId3',
+                        recordName: 'myRecord',
+                        notificationAddress: 'testItem',
+                        pushSubscriptionId: null,
+                    });
+
+                    const userAccount = unwrap(
+                        await services.financialController.getOrCreateFinancialAccount(
+                            {
+                                userId,
+                                ledger: LEDGERS.credits,
+                            }
+                        )
+                    );
+                    account = userAccount.account;
+
+                    unwrap(
+                        await services.financialController.internalTransaction({
+                            transfers: [
+                                {
+                                    // 1USD = 1,000,000 credits
+                                    amount: 1_000_000n,
+                                    debitAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    creditAccountId: account.id,
+                                    code: TransferCodes.admin_credit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                            ],
+                        })
+                    );
+
+                    services.store.subscriptionConfiguration =
+                        createTestSubConfiguration((config) =>
+                            config.addSubscription('sub1', (sub) =>
+                                sub.withTier('tier1').withNotifications({
+                                    allowed: true,
+                                    creditFeePerSubscriberPerPeriod: 10_000n,
+                                })
+                            )
+                        );
+                });
+
+                it('should charge users for the number of subscribers that they have at the configured rate', async () => {
+                    const job: FinancialPeriodicBillingJob = {
+                        type: 'financial-periodic-billing',
+
+                        // 4th day of subscription period
+                        nowMs: month + day * 4,
+                    };
+
+                    const result = await processor.process(job);
+                    expect(result).toEqual(success());
+
+                    await checkAccounts(services.financialInterface, [
+                        {
+                            id: account.id,
+                            credits_pending: 0n,
+                            credits_posted: 1_000_000n,
+                            debits_pending: 0n,
+
+                            // 1 day of billing for 3 insts at 10,000 credits per 30 days
+                            debits_posted: 333n * 3n,
+                        },
+                        {
+                            id: ACCOUNT_IDS.revenue_records_usage_credits,
+                            credits_posted: 333n * 3n,
+                            credits_pending: 0n,
+                            debits_posted: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+
+                    await checkBillingTotals(
+                        services.financialController,
+                        account.id,
+                        {
+                            [BillingCodes.notification_subscriber_count]:
+                                333n * 3n,
+                        }
+                    );
+
+                    expect(services.store.billingCycleHistory).toEqual([
+                        {
+                            id: expect.any(String),
+                            timeMs: month + day * 4,
+                        },
+                    ]);
+                });
+
+                it('should charge users based on the time since the last billing period', async () => {
+                    await services.store.saveBillingCycleHistory({
+                        id: 'history1',
+                        timeMs: month + day,
+                    });
+
+                    const job: FinancialPeriodicBillingJob = {
+                        type: 'financial-periodic-billing',
+
+                        // 4th day of subscription period
+                        nowMs: month + day * 4,
+                    };
+
+                    const result = await processor.process(job);
+                    expect(result).toEqual(success());
+
+                    await checkAccounts(services.financialInterface, [
+                        {
+                            id: account.id,
+                            credits_pending: 0n,
+                            credits_posted: 1_000_000n,
+                            debits_pending: 0n,
+
+                            // 3 days of billing for 3 subscribers at 10,000 credits per 30 days
+                            debits_posted: 3000n,
+                        },
+                        {
+                            id: ACCOUNT_IDS.revenue_records_usage_credits,
+                            credits_posted: 3000n,
+                            credits_pending: 0n,
+                            debits_posted: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+
+                    await checkBillingTotals(
+                        services.financialController,
+                        account.id,
+                        {
+                            [BillingCodes.notification_subscriber_count]: 3000n,
+                        }
+                    );
+
+                    expect(services.store.billingCycleHistory).toEqual([
+                        {
+                            id: 'history1',
+                            timeMs: month + day,
+                        },
+                        {
+                            id: expect.any(String),
+                            timeMs: month + day * 4,
+                        },
+                    ]);
+                });
+            });
+
+            describe('studio', () => {
+                const studioId = 'studioId';
+                let account: Account;
+
+                beforeEach(async () => {
+                    await services.store.addStudio({
+                        id: studioId,
+                        displayName: 'Test Studio',
+                        subscriptionId: 'sub1',
+                        subscriptionStatus: 'active',
+                        subscriptionPeriodStartMs: month,
+                        subscriptionPeriodEndMs: month * 2,
+                    });
+
+                    await services.store.addRecord({
+                        ownerId: null,
+                        studioId: studioId,
+                        name: 'myRecord',
+                        secretHashes: [],
+                        secretSalt: '',
+                    });
+
+                    await notificationsStore.createItem('myRecord', {
+                        address: 'testItem',
+                        description: 'Test Item',
+                        markers: [PUBLIC_READ_MARKER],
+                    });
+
+                    await notificationsStore.saveSubscription({
+                        id: 'sub1',
+                        userId: 'otherUserId',
+                        recordName: 'myRecord',
+                        notificationAddress: 'testItem',
+                        pushSubscriptionId: null,
+                    });
+
+                    await notificationsStore.saveSubscription({
+                        id: 'sub2',
+                        userId: 'otherUserId2',
+                        recordName: 'myRecord',
+                        notificationAddress: 'testItem',
+                        pushSubscriptionId: null,
+                    });
+
+                    await notificationsStore.saveSubscription({
+                        id: 'sub3',
+                        userId: 'otherUserId3',
+                        recordName: 'myRecord',
+                        notificationAddress: 'testItem',
+                        pushSubscriptionId: null,
+                    });
+
+                    const studioAccount = unwrap(
+                        await services.financialController.getOrCreateFinancialAccount(
+                            {
+                                studioId,
+                                ledger: LEDGERS.credits,
+                            }
+                        )
+                    );
+                    account = studioAccount.account;
+
+                    unwrap(
+                        await services.financialController.internalTransaction({
+                            transfers: [
+                                {
+                                    // 1USD = 1,000,000 credits
+                                    amount: 1_000_000n,
+                                    debitAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    creditAccountId: account.id,
+                                    code: TransferCodes.admin_credit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                            ],
+                        })
+                    );
+
+                    services.store.subscriptionConfiguration =
+                        createTestSubConfiguration((config) =>
+                            config.addSubscription('sub1', (sub) =>
+                                sub.withTier('tier1').withNotifications({
+                                    allowed: true,
+                                    creditFeePerSubscriberPerPeriod: 10_000n,
+                                })
+                            )
+                        );
+                });
+
+                it('should charge users for the number of subscribers that they have at the configured rate', async () => {
+                    const job: FinancialPeriodicBillingJob = {
+                        type: 'financial-periodic-billing',
+
+                        // 4th day of subscription period
+                        nowMs: month + day * 4,
+                    };
+
+                    const result = await processor.process(job);
+                    expect(result).toEqual(success());
+
+                    await checkAccounts(services.financialInterface, [
+                        {
+                            id: account.id,
+                            credits_pending: 0n,
+                            credits_posted: 1_000_000n,
+                            debits_pending: 0n,
+
+                            // 1 day of billing for 3 insts at 10,000 credits per 30 days
+                            debits_posted: 333n * 3n,
+                        },
+                        {
+                            id: ACCOUNT_IDS.revenue_records_usage_credits,
+                            credits_posted: 333n * 3n,
+                            credits_pending: 0n,
+                            debits_posted: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+
+                    await checkBillingTotals(
+                        services.financialController,
+                        account.id,
+                        {
+                            [BillingCodes.notification_subscriber_count]:
+                                333n * 3n,
+                        }
+                    );
+
+                    expect(services.store.billingCycleHistory).toEqual([
+                        {
+                            id: expect.any(String),
+                            timeMs: month + day * 4,
+                        },
+                    ]);
+                });
+
+                it('should charge users based on the time since the last billing period', async () => {
+                    await services.store.saveBillingCycleHistory({
+                        id: 'history1',
+                        timeMs: month + day,
+                    });
+
+                    const job: FinancialPeriodicBillingJob = {
+                        type: 'financial-periodic-billing',
+
+                        // 4th day of subscription period
+                        nowMs: month + day * 4,
+                    };
+
+                    const result = await processor.process(job);
+                    expect(result).toEqual(success());
+
+                    await checkAccounts(services.financialInterface, [
+                        {
+                            id: account.id,
+                            credits_pending: 0n,
+                            credits_posted: 1_000_000n,
+                            debits_pending: 0n,
+
+                            // 3 days of billing for 3 subscribers at 10,000 credits per 30 days
+                            debits_posted: 3000n,
+                        },
+                        {
+                            id: ACCOUNT_IDS.revenue_records_usage_credits,
+                            credits_posted: 3000n,
+                            credits_pending: 0n,
+                            debits_posted: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+
+                    await checkBillingTotals(
+                        services.financialController,
+                        account.id,
+                        {
+                            [BillingCodes.notification_subscriber_count]: 3000n,
+                        }
+                    );
+
+                    expect(services.store.billingCycleHistory).toEqual([
+                        {
+                            id: 'history1',
+                            timeMs: month + day,
+                        },
+                        {
+                            id: expect.any(String),
+                            timeMs: month + day * 4,
+                        },
+                    ]);
                 });
             });
         });

@@ -316,6 +316,10 @@ export class MemoryStore
         return this._users;
     }
 
+    get studios(): Studio[] {
+        return this._studios;
+    }
+
     get userAuthenticators(): AuthUserAuthenticator[] {
         return this._userAuthenticators;
     }
@@ -458,6 +462,10 @@ export class MemoryStore
 
     get billingCycleHistory() {
         return this._billingCycleHistories;
+    }
+
+    get records() {
+        return this._records;
     }
 
     constructor(config: MemoryConfiguration) {
