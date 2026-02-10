@@ -2073,6 +2073,7 @@ export class ServerBuilder implements SubscriptionLike {
                         configStore: this._configStore,
                         financialStore: this._financialStore,
                         metricsStore: this._metricsStore,
+                        notificationsStore: this._notificationsStore,
                     });
                     const { queue, worker } = this._setupJob(
                         'financial',
@@ -2252,6 +2253,7 @@ export class ServerBuilder implements SubscriptionLike {
             config: this._configStore,
             policies: this._policyController,
             metrics: this._metricsStore,
+            financialController: this._financialController,
         });
         this._eventsController = new EventRecordsController({
             store: this._eventsStore,
@@ -2373,6 +2375,7 @@ export class ServerBuilder implements SubscriptionLike {
                 policies: this._policyController,
                 store: this._notificationsStore,
                 pushInterface: this._pushInterface,
+                financialController: this._financialController,
             });
         }
 
@@ -2625,6 +2628,7 @@ export class ServerBuilder implements SubscriptionLike {
                 port: parseInt(url.port),
                 password: url.password,
                 tls: options.tls ? {} : undefined,
+                maxRetriesPerRequest: null,
             });
         } else {
             redis = new IORedis({
@@ -2632,6 +2636,7 @@ export class ServerBuilder implements SubscriptionLike {
                 port: options.port,
                 password: options.password,
                 tls: options.tls ? {} : undefined,
+                maxRetriesPerRequest: null,
             });
         }
 
