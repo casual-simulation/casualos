@@ -23,7 +23,6 @@ import type {
 import type {
     DataRecordsStore,
     EraseDataStoreResult,
-    GetDataStoreResult,
     UserPolicy,
     ListDataStoreFailure,
 } from './DataRecordsStore';
@@ -47,7 +46,6 @@ import {
     genericResult,
     hasValue,
     isFailure,
-    logError,
     success,
 } from '@casual-simulation/aux-common';
 import type { MetricsStore } from './MetricsStore';
@@ -62,14 +60,7 @@ import { SpanStatusCode, trace } from '@opentelemetry/api';
 import type { IQueue } from './queue';
 import type { SearchSyncQueueEvent } from './search';
 import type { FinancialController } from './financial/FinancialController';
-import {
-    ACCOUNT_IDS,
-    billForUsage,
-    BillingCodes,
-    CurrencyCodes,
-    LEDGERS,
-    TransferCodes,
-} from './financial';
+import { billForUsage, BillingCodes, TransferCodes } from './financial';
 
 const TRACE_NAME = 'DataRecordsController';
 
@@ -487,72 +478,22 @@ export class DataRecordsController {
                 metricsResult.ownerId ? 'user' : 'studio'
             );
 
-            if (hasValue(features.data.creditFeePerRead)) {
-                if (!this._financialController) {
-                    console.warn(
-                        `[DataRecordsController] Cannot charge credits for data read because FinancialController is not configured.`
-                    );
-                } else {
-                    // Try to record the credit usage.
-                    const accountInfo =
-                        await this._financialController.getFinancialAccount({
-                            userId: metricsResult.ownerId,
-                            studioId: metricsResult.studioId,
-                            ledger: LEDGERS.credits,
-                        });
+            if (features.data.creditFeePerRead) {
+                const billing = await billForUsage(this._financialController, {
+                    userId: metricsResult.ownerId,
+                    studioId: metricsResult.studioId,
+                    transferCode: TransferCodes.records_usage_fee,
+                    billingCode: BillingCodes.data_read,
+                });
 
-                    if (isFailure(accountInfo)) {
-                        logError(
-                            accountInfo.error,
-                            `[DataRecordsController] Failed to get financial account to charge for data read.`
-                        );
-                    } else {
-                        // Charge the account for the data read.
-                        const transactionResult =
-                            await this._financialController.internalTransaction(
-                                {
-                                    transfers: [
-                                        {
-                                            amount: features.data
-                                                .creditFeePerRead,
-                                            debitAccountId:
-                                                accountInfo.value.account.id,
-                                            creditAccountId:
-                                                ACCOUNT_IDS.revenue_records_usage_credits,
-                                            currency: CurrencyCodes.credits,
-                                            code: TransferCodes.records_usage_fee,
-                                        },
-                                    ],
-                                }
-                            );
+                const billingResult = await billing.next(
+                    success({
+                        cost: features.data.creditFeePerRead,
+                    })
+                );
 
-                        if (isFailure(transactionResult)) {
-                            if (
-                                transactionResult.error.errorCode ===
-                                    'debits_exceed_credits' &&
-                                transactionResult.error.accountId ===
-                                    accountInfo.value.account.id.toString()
-                            ) {
-                                logError(
-                                    transactionResult.error,
-                                    `[DataRecordsController] Insufficient funds to perform data read.`,
-                                    console.log
-                                );
-                                // The user does not have enough credits to perform the read.
-                                return {
-                                    success: false,
-                                    errorCode: 'insufficient_funds',
-                                    errorMessage:
-                                        'Not enough credits to perform the data read.',
-                                };
-                            } else {
-                                logError(
-                                    transactionResult.error,
-                                    `[DataRecordsController] Failed to record financial transaction for data read.`
-                                );
-                            }
-                        }
-                    }
+                if (isFailure(billingResult.value)) {
+                    return genericResult(billingResult.value);
                 }
             }
 
@@ -1023,12 +964,7 @@ export interface GetDataFailure {
     /**
      * The error code for the failure.
      */
-    errorCode:
-        | ServerError
-        | GetDataStoreResult['errorCode']
-        | AuthorizeSubjectFailure['errorCode']
-        | 'not_supported'
-        | 'insufficient_funds';
+    errorCode: KnownErrorCodes;
 
     /**
      * The error message for the failure.

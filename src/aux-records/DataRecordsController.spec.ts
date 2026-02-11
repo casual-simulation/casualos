@@ -1010,7 +1010,7 @@ describe('DataRecordsController', () => {
                     markers: [PUBLIC_READ_MARKER],
                 });
 
-                checkBillingTotals(
+                await checkBillingTotals(
                     financialController,
                     userAccount!.accountId,
                     {
@@ -1128,7 +1128,7 @@ describe('DataRecordsController', () => {
                     );
                 });
 
-                it('should try to debit the users credit account for usage', async () => {
+                it('should try to debit the studio credit account for usage', async () => {
                     const result = (await manager.recordData(
                         recordName,
                         'address',
@@ -1166,7 +1166,7 @@ describe('DataRecordsController', () => {
                         },
                     ]);
 
-                    checkBillingTotals(
+                    await checkBillingTotals(
                         financialController,
                         studioAccount!.accountId,
                         {
@@ -1616,8 +1616,7 @@ describe('DataRecordsController', () => {
                 expect(result).toEqual({
                     success: false,
                     errorCode: 'insufficient_funds',
-                    errorMessage:
-                        'Not enough credits to perform the data read.',
+                    errorMessage: 'Insufficient funds to cover usage.',
                 });
 
                 const userAccount = unwrap(
@@ -1770,8 +1769,7 @@ describe('DataRecordsController', () => {
                     expect(result).toEqual({
                         success: false,
                         errorCode: 'insufficient_funds',
-                        errorMessage:
-                            'Not enough credits to perform the data read.',
+                        errorMessage: 'Insufficient funds to cover usage.',
                     });
 
                     const studioAccount = unwrap(
