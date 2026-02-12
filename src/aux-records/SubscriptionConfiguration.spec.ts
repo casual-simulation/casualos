@@ -21,6 +21,7 @@ import type {
 } from './SubscriptionConfiguration';
 import {
     allowAllFeatures,
+    getDataFeaturesSchema,
     getSubscription,
     getSubscriptionFeatures,
     getSubscriptionTier,
@@ -44,9 +45,9 @@ describe('getSubscription()', () => {
         tiers: {
             beta: {
                 features: {
-                    data: {
+                    data: getDataFeaturesSchema().parse({
                         allowed: true,
-                    },
+                    }),
                     events: {
                         allowed: true,
                     },
@@ -78,9 +79,9 @@ describe('getSubscription()', () => {
         },
         defaultFeatures: {
             studio: {
-                data: {
+                data: getDataFeaturesSchema().parse({
                     allowed: true,
-                },
+                }),
                 events: {
                     allowed: true,
                 },
@@ -109,9 +110,9 @@ describe('getSubscription()', () => {
                 },
             },
             user: {
-                data: {
+                data: getDataFeaturesSchema().parse({
                     allowed: true,
-                },
+                }),
                 events: {
                     allowed: true,
                 },
@@ -160,9 +161,9 @@ describe('getSubscription()', () => {
             tiers: {
                 beta: {
                     features: {
-                        data: {
+                        data: getDataFeaturesSchema().parse({
                             allowed: true,
-                        },
+                        }),
                         events: {
                             allowed: true,
                         },
@@ -194,9 +195,9 @@ describe('getSubscription()', () => {
             },
             defaultFeatures: {
                 studio: {
-                    data: {
+                    data: getDataFeaturesSchema().parse({
                         allowed: true,
-                    },
+                    }),
                     events: {
                         allowed: true,
                     },
@@ -225,9 +226,9 @@ describe('getSubscription()', () => {
                     },
                 },
                 user: {
-                    data: {
+                    data: getDataFeaturesSchema().parse({
                         allowed: true,
-                    },
+                    }),
                     events: {
                         allowed: true,
                     },
@@ -427,9 +428,9 @@ describe('getSubscriptionFeatures()', () => {
         tiers: {
             beta: {
                 features: {
-                    data: {
+                    data: getDataFeaturesSchema().parse({
                         allowed: true,
-                    },
+                    }),
                     events: {
                         allowed: true,
                     },
@@ -461,9 +462,9 @@ describe('getSubscriptionFeatures()', () => {
         },
         defaultFeatures: {
             studio: {
-                data: {
+                data: getDataFeaturesSchema().parse({
                     allowed: true,
-                },
+                }),
                 events: {
                     allowed: true,
                 },
@@ -492,9 +493,9 @@ describe('getSubscriptionFeatures()', () => {
                 },
             },
             user: {
-                data: {
+                data: getDataFeaturesSchema().parse({
                     allowed: true,
-                },
+                }),
                 events: {
                     allowed: true,
                 },
@@ -543,9 +544,9 @@ describe('getSubscriptionFeatures()', () => {
             tiers: {
                 beta: {
                     features: {
-                        data: {
+                        data: getDataFeaturesSchema().parse({
                             allowed: true,
-                        },
+                        }),
                         events: {
                             allowed: true,
                         },
@@ -577,9 +578,9 @@ describe('getSubscriptionFeatures()', () => {
             },
             defaultFeatures: {
                 studio: {
-                    data: {
+                    data: getDataFeaturesSchema().parse({
                         allowed: true,
-                    },
+                    }),
                     events: {
                         allowed: true,
                     },
@@ -608,9 +609,9 @@ describe('getSubscriptionFeatures()', () => {
                     },
                 },
                 user: {
-                    data: {
+                    data: getDataFeaturesSchema().parse({
                         allowed: true,
-                    },
+                    }),
                     events: {
                         allowed: true,
                     },
@@ -943,9 +944,9 @@ describe('getSubscriptionTier()', () => {
         tiers: {},
         defaultFeatures: {
             studio: {
-                data: {
+                data: getDataFeaturesSchema().parse({
                     allowed: true,
-                },
+                }),
                 events: {
                     allowed: true,
                 },
@@ -974,9 +975,9 @@ describe('getSubscriptionTier()', () => {
                 },
             },
             user: {
-                data: {
+                data: getDataFeaturesSchema().parse({
                     allowed: true,
-                },
+                }),
                 events: {
                     allowed: true,
                 },
@@ -1032,9 +1033,9 @@ describe('getSubscriptionTier()', () => {
             tiers: {},
             defaultFeatures: {
                 studio: {
-                    data: {
+                    data: getDataFeaturesSchema().parse({
                         allowed: true,
-                    },
+                    }),
                     events: {
                         allowed: true,
                     },
@@ -1063,9 +1064,9 @@ describe('getSubscriptionTier()', () => {
                     },
                 },
                 user: {
-                    data: {
+                    data: getDataFeaturesSchema().parse({
                         allowed: true,
-                    },
+                    }),
                     events: {
                         allowed: true,
                     },

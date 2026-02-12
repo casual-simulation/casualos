@@ -160,6 +160,11 @@ export interface NotificationRecordsStore
     ): Promise<NotificationSubscriptionMetrics>;
 
     /**
+     * Gets the subscription metrics for all users and studios.
+     */
+    getAllSubscriptionMetrics(): Promise<NotificationSubscriptionMetrics[]>;
+
+    /**
      * Gets the total number of subscriptions that are currently active for the given notification.
      * @param recordName The name of the record that the notification is in.
      * @param address The address of the notification.
@@ -456,6 +461,11 @@ export interface NotificationSubscriptionMetrics
      * The number of sent push notifications that have been recorded for the last subscription period.
      */
     totalSentPushNotificationsInPeriod: number;
+
+    /**
+     * The total number of subscribers that are currently active for the subscription.
+     */
+    totalSubscribers: number;
 }
 
 export type SaveSubscriptionResult =

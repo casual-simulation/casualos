@@ -18,6 +18,7 @@
 import type { PrismaClient } from './generated';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 import type {
+    BillingCycleHistory,
     ExternalPayout,
     FinancialAccount,
     FinancialAccountFilter,
@@ -26,7 +27,7 @@ import type {
 } from '@casual-simulation/aux-records/financial';
 import { cleanupObject } from '@casual-simulation/aux-records';
 import type { PartialExcept } from '@casual-simulation/aux-records/crud';
-import { convertToDate } from './Utils';
+import { convertToDate, convertToMillis } from './Utils';
 
 const TRACE_NAME = 'PrismaFinancialStore';
 
@@ -35,6 +36,38 @@ export class PrismaFinancialStore implements FinancialStore {
 
     constructor(client: PrismaClient) {
         this._client = client;
+    }
+
+    async saveBillingCycleHistory(history: BillingCycleHistory): Promise<void> {
+        await this._client.billingJobHistory.upsert({
+            create: {
+                id: history.id,
+                timeMs: convertToDate(history.timeMs),
+            },
+            update: {
+                timeMs: convertToDate(history.timeMs),
+            },
+            where: {
+                id: history.id,
+            },
+        });
+    }
+
+    async getLastBillingCycleHistory(): Promise<BillingCycleHistory | null> {
+        const history = await this._client.billingJobHistory.findFirst({
+            orderBy: {
+                timeMs: 'desc',
+            },
+        });
+
+        if (!history) {
+            return null;
+        }
+
+        return {
+            id: history.id,
+            timeMs: convertToMillis(history.timeMs),
+        };
     }
 
     @traced(TRACE_NAME)

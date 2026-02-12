@@ -178,6 +178,7 @@ import type {
 } from './SystemNotificationMessenger';
 import type { ModerationConfiguration } from './ModerationConfiguration';
 import type {
+    BillingCycleHistory,
     ExternalPayout,
     FinancialAccount,
     FinancialAccountFilter,
@@ -305,12 +306,18 @@ export class MemoryStore
     private _moderationJobs: ModerationJob[] = [];
     private _moderationFileResults: ModerationFileScanResult[] = [];
 
+    private _billingCycleHistories: BillingCycleHistory[] = [];
+
     get aiSloydMetrics(): AISloydMetrics[] {
         return this._aiSloydMetrics;
     }
 
     get users(): AuthUser[] {
         return this._users;
+    }
+
+    get studios(): Studio[] {
+        return this._studios;
     }
 
     get userAuthenticators(): AuthUserAuthenticator[] {
@@ -453,6 +460,14 @@ export class MemoryStore
         return this._customDomains;
     }
 
+    get billingCycleHistory() {
+        return this._billingCycleHistories;
+    }
+
+    get records() {
+        return this._records;
+    }
+
     constructor(config: MemoryConfiguration) {
         this._subscriptionConfiguration = config.subscriptions;
         this._privoConfiguration = config.privo ?? null;
@@ -460,6 +475,31 @@ export class MemoryStore
         this.policies = {};
         this.roles = {};
         this.roleAssignments = {};
+    }
+
+    async getAllFileSubscriptionMetrics(): Promise<FileSubscriptionMetrics[]> {
+        const metrics = await Promise.all(
+            this._records.map((r) =>
+                this.getSubscriptionFileMetricsByRecordName(r.name)
+            )
+        );
+        return metrics;
+    }
+
+    async saveBillingCycleHistory(history: BillingCycleHistory): Promise<void> {
+        const existingIndex = this._billingCycleHistories.findIndex(
+            (h) => h.id === history.id
+        );
+        if (existingIndex >= 0) {
+            this._billingCycleHistories[existingIndex] = history;
+        } else {
+            this._billingCycleHistories.push(history);
+        }
+    }
+
+    async getLastBillingCycleHistory(): Promise<BillingCycleHistory | null> {
+        const histories = sortBy(this._billingCycleHistories, (h) => -h.timeMs);
+        return histories.length > 0 ? histories[0] : null;
     }
 
     async setConfiguration<TKey extends ConfigurationKey>(
@@ -3174,6 +3214,7 @@ export class MemoryStore
         const info = await this._getSubscriptionMetrics(filter);
 
         let totalInsts = 0;
+        let totalBytes = 0;
         for (let [recordName, insts] of this._instRecords) {
             let r = this._records.find((r) => r.name === recordName);
             if (!r) {
@@ -3183,13 +3224,32 @@ export class MemoryStore
                 r.studioId === filter.studioId
             ) {
                 totalInsts += insts.size;
+                for (let inst of insts.values()) {
+                    totalBytes += inst.instSizeInBytes;
+                }
             }
         }
 
         return {
             ...info,
             totalInsts,
+            totalInstBytes: totalBytes,
         };
+    }
+
+    async getAllSubscriptionInstMetrics(): Promise<InstSubscriptionMetrics[]> {
+        const allUsers = this._users.map((u) =>
+            this.getSubscriptionInstMetrics({
+                ownerId: u.id,
+            })
+        );
+        const allStudios = this._studios.map((s) =>
+            this.getSubscriptionInstMetrics({
+                studioId: s.id,
+            })
+        );
+
+        return await Promise.all([...allUsers, ...allStudios]);
     }
 
     async getSubscriptionInstMetricsByRecordName(
@@ -3198,6 +3258,7 @@ export class MemoryStore
         const info = await this._getSubscriptionInfo(recordName);
 
         let totalInsts = 0;
+        let totalBytes = 0;
         for (let [recordName, insts] of this._instRecords) {
             let r = this._records.find((r) => r.name === recordName);
             if (!r) {
@@ -3207,12 +3268,16 @@ export class MemoryStore
                 r.studioId === info.studioId
             ) {
                 totalInsts += insts.size;
+                for (let inst of insts.values()) {
+                    totalBytes += inst.instSizeInBytes;
+                }
             }
         }
 
         return {
             ...info,
             totalInsts,
+            totalInstBytes: totalBytes,
         };
     }
 

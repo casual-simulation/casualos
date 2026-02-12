@@ -1746,3 +1746,13 @@ model CustomDomain {
     @@unique([studioId, domainName])
     @@index([domainName])
 }
+
+model BillingJobHistory {
+    id String @id
+
+    // The time the cycle was run
+    timeMs Decimal
+
+    createdAt Decimal
+    updatedAt Decimal
+}

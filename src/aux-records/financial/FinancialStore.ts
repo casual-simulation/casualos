@@ -82,6 +82,18 @@ export interface FinancialStore {
     updateExternalPayout(
         payout: PartialExcept<ExternalPayout, 'id'>
     ): Promise<void>;
+
+    /**
+     * Creates or updates the given billing cycle history.
+     * @param history The billing cycle history to save.
+     */
+    saveBillingCycleHistory(history: BillingCycleHistory): Promise<void>;
+
+    /**
+     * Gets the last billing cycle history according to the time.
+     * Returns null if there is no billing cycle history.
+     */
+    getLastBillingCycleHistory(): Promise<BillingCycleHistory | null>;
 }
 
 export interface UniqueFinancialAccountFilter {
@@ -242,6 +254,22 @@ export interface ExternalPayout {
      * The time that the payout was voided at in milliseconds since epoch.
      */
     voidedAtMs?: number;
+}
+
+/**
+ * Represents a billing cycle.
+ * That is, a period of time where users are charged for their usage.
+ */
+export interface BillingCycleHistory {
+    /**
+     * The ID of the history record.
+     */
+    id: string;
+
+    /**
+     * The time the billing cycle was run at in milliseconds since epoch.
+     */
+    timeMs: number;
 }
 
 /**

@@ -17,7 +17,6 @@
  */
 import type {
     FileRecordsStore,
-    AddFileFailure,
     MarkFileRecordAsUploadedFailure,
     EraseFileStoreResult,
     GetFileNameFromUrlResult,
@@ -28,7 +27,6 @@ import type {
     NotLoggedInError,
     NotSupportedError,
     ServerError,
-    SubscriptionLimitReached,
 } from '@casual-simulation/aux-common/Errors';
 import type { ValidatePublicRecordKeyFailure } from './RecordsController';
 import { getExtension } from 'mime';
@@ -40,14 +38,21 @@ import {
     getMarkerResourcesForCreation,
     getMarkerResourcesForUpdate,
 } from './PolicyController';
-import type { UserRole } from '@casual-simulation/aux-common';
-import { ACCOUNT_MARKER } from '@casual-simulation/aux-common';
+import type { KnownErrorCodes, UserRole } from '@casual-simulation/aux-common';
+import {
+    ACCOUNT_MARKER,
+    genericResult,
+    success,
+} from '@casual-simulation/aux-common';
 import { getMarkersOrDefault, getRootMarkersOrDefault } from './Utils';
 import type { MetricsStore } from './MetricsStore';
 import type { ConfigurationStore } from './ConfigurationStore';
 import { getSubscriptionFeatures } from './SubscriptionConfiguration';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
+import type { FinancialController } from './financial/FinancialController';
+import { billForUsage, BillingCodes, TransferCodes } from './financial';
+import { isFailure } from '@casual-simulation/aux-common';
 
 const TRACE_NAME = 'FileRecordsController';
 
@@ -56,6 +61,7 @@ export interface FileRecordsConfiguration {
     store: FileRecordsStore;
     metrics: MetricsStore;
     config: ConfigurationStore;
+    financialController?: FinancialController | null;
 }
 
 /**
@@ -66,12 +72,14 @@ export class FileRecordsController {
     private _store: FileRecordsStore;
     private _metrics: MetricsStore;
     private _config: ConfigurationStore;
+    private _financialController: FinancialController | null;
 
     constructor(config: FileRecordsConfiguration) {
         this._policies = config.policies;
         this._store = config.store;
         this._metrics = config.metrics;
         this._config = config.config;
+        this._financialController = config.financialController || null;
     }
 
     /**
@@ -237,6 +245,25 @@ export class FileRecordsController {
                         errorMessage:
                             'The file count limit has been reached for the subscription.',
                     };
+                }
+            }
+
+            if (features.files.creditFeePerFileWrite) {
+                const billing = await billForUsage(this._financialController, {
+                    userId: metricsResult.ownerId,
+                    studioId: metricsResult.studioId,
+                    transferCode: TransferCodes.records_usage_fee,
+                    billingCode: BillingCodes.file_write,
+                });
+
+                const billingResult = await billing.next(
+                    success({
+                        cost: features.files.creditFeePerFileWrite,
+                    })
+                );
+
+                if (isFailure(billingResult.value)) {
+                    return genericResult(billingResult.value);
                 }
             }
 
@@ -941,15 +968,7 @@ export interface RecordFileFailure {
     /**
      * The error code that indicates why the request failed.
      */
-    errorCode:
-        | ServerError
-        | NotLoggedInError
-        | ValidatePublicRecordKeyFailure['errorCode']
-        | AddFileFailure['errorCode']
-        | AuthorizeSubjectFailure['errorCode']
-        | SubscriptionLimitReached
-        | 'invalid_file_data'
-        | 'not_supported';
+    errorCode: KnownErrorCodes;
 
     /**
      * The error message that indicates why the request failed.

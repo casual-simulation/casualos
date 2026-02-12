@@ -36,18 +36,31 @@ import {
     createTestControllers,
     createTestRecordKey,
     createTestUser,
+    checkAccounts,
+    checkBillingTotals,
 } from './TestUtils';
 import {
     ACCOUNT_MARKER,
     ADMIN_ROLE_NAME,
     PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
+    unwrap,
 } from '@casual-simulation/aux-common';
 import { sortBy } from 'es-toolkit/compat';
 import type { MemoryStore } from './MemoryStore';
 import { buildSubscriptionConfig } from './SubscriptionConfigBuilder';
+import { MemoryFinancialInterface } from './financial/MemoryFinancialInterface';
+import { FinancialController } from './financial/FinancialController';
+import {
+    ACCOUNT_IDS,
+    BillingCodes,
+    CurrencyCodes,
+    LEDGERS,
+    TransferCodes,
+} from './financial';
 
 console.log = jest.fn();
+console.warn = jest.fn();
 
 describe('FileRecordsController', () => {
     let store: MemoryStore;
@@ -2307,6 +2320,378 @@ describe('FileRecordsController', () => {
                 success: true,
                 recordName: 'record-name',
                 fileName: 'file-name.aux',
+            });
+        });
+    });
+
+    describe('credits', () => {
+        let financialInterface: MemoryFinancialInterface;
+        let financialController: FinancialController;
+
+        beforeEach(async () => {
+            financialInterface = new MemoryFinancialInterface();
+            financialController = new FinancialController(
+                financialInterface,
+                store
+            );
+            manager = new FileRecordsController({
+                policies,
+                store,
+                metrics: store,
+                config: store,
+                financialController,
+            });
+
+            unwrap(await financialController.init());
+
+            const account = unwrap(
+                await financialController.getOrCreateFinancialAccount({
+                    userId: ownerId,
+                    ledger: LEDGERS.credits,
+                })
+            );
+
+            unwrap(
+                await financialController.internalTransaction({
+                    transfers: [
+                        {
+                            amount: 1000n,
+                            debitAccountId: ACCOUNT_IDS.liquidity_credits,
+                            creditAccountId: account.account.id,
+                            code: TransferCodes.admin_credit,
+                            currency: CurrencyCodes.credits,
+                        },
+                    ],
+                })
+            );
+
+            store.subscriptionConfiguration = buildSubscriptionConfig(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withFiles({
+                                allowed: true,
+                                creditFeePerFileWrite: 50n, // 50 credits per file write
+                            })
+                    )
+            );
+
+            const user = await store.findUser(ownerId);
+            await store.saveUser({
+                ...user,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            presignUrlMock.mockResolvedValueOnce({
+                success: true,
+                uploadUrl: 'testUrl',
+                uploadMethod: 'POST',
+                uploadHeaders: {
+                    myHeader: 'myValue',
+                },
+            });
+        });
+
+        it('should try to debit the users credit account for file upload', async () => {
+            const result = (await manager.recordFile(key, userId, {
+                fileSha256Hex: 'hash',
+                fileByteLength: 100,
+                fileMimeType: 'text/plain',
+                fileDescription: 'description',
+                headers: {},
+            })) as RecordFileSuccess;
+
+            expect(result.success).toBe(true);
+            expect(result.fileName).toBe('hash.txt');
+
+            const userAccount = unwrap(
+                await financialController.getAccountBalance({
+                    userId: ownerId,
+                    ledger: LEDGERS.credits,
+                })
+            );
+
+            await checkAccounts(financialInterface, [
+                {
+                    id: ACCOUNT_IDS.revenue_records_usage_credits,
+                    credits_posted: 50n,
+                    debits_posted: 0n,
+                    credits_pending: 0n,
+                    debits_pending: 0n,
+                },
+                {
+                    id: BigInt(userAccount!.accountId),
+                    credits_posted: 1000n,
+                    debits_posted: 50n,
+                    credits_pending: 0n,
+                    debits_pending: 0n,
+                },
+            ]);
+
+            await checkBillingTotals(
+                financialController,
+                userAccount!.accountId,
+                {
+                    [BillingCodes.file_write]: 50n,
+                }
+            );
+
+            await expect(
+                store.getFileRecord(recordName, 'hash.txt')
+            ).resolves.toMatchObject({
+                success: true,
+                fileName: 'hash.txt',
+                recordName: recordName,
+            });
+        });
+
+        it('should fail to write the file if the user doesnt have enough credits', async () => {
+            store.subscriptionConfiguration = buildSubscriptionConfig(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withFiles({
+                                allowed: true,
+                                creditFeePerFileWrite: 100_000n, // 100,000 credits per file write
+                            })
+                    )
+            );
+
+            const result = (await manager.recordFile(key, userId, {
+                fileSha256Hex: 'hash',
+                fileByteLength: 100,
+                fileMimeType: 'text/plain',
+                fileDescription: 'description',
+                headers: {},
+            })) as RecordFileFailure;
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'insufficient_funds',
+                errorMessage: 'Insufficient funds to cover usage.',
+            });
+
+            const userAccount = unwrap(
+                await financialController.getAccountBalance({
+                    userId: ownerId,
+                    ledger: LEDGERS.credits,
+                })
+            );
+
+            await checkAccounts(financialInterface, [
+                {
+                    id: ACCOUNT_IDS.revenue_records_usage_credits,
+                    credits_posted: 0n,
+                    debits_posted: 0n,
+                    credits_pending: 0n,
+                    debits_pending: 0n,
+                },
+                {
+                    id: BigInt(userAccount!.accountId),
+                    credits_posted: 1000n,
+                    debits_posted: 0n,
+                    credits_pending: 0n,
+                    debits_pending: 0n,
+                },
+            ]);
+
+            await expect(
+                store.getFileRecord(recordName, 'hash.txt')
+            ).resolves.toEqual({
+                success: false,
+                errorCode: 'file_not_found',
+                errorMessage: expect.any(String),
+            });
+        });
+
+        describe('studio', () => {
+            const studioId = 'studio1';
+            const studioRecordName = 'studioRecord';
+
+            beforeEach(async () => {
+                await store.addStudio({
+                    id: studioId,
+                    displayName: 'My Studio!',
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                });
+
+                await store.addStudioAssignment({
+                    studioId,
+                    userId: ownerId,
+                    role: 'admin',
+                    isPrimaryContact: true,
+                });
+
+                await store.addRecord({
+                    name: studioRecordName,
+                    studioId: studioId,
+                    ownerId: null,
+                    secretHashes: [],
+                    secretSalt: '',
+                });
+
+                // Set up roles so the owner has admin permissions
+                store.roles[studioRecordName] = {
+                    [ownerId]: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const account = unwrap(
+                    await financialController.getOrCreateFinancialAccount({
+                        studioId: studioId,
+                        ledger: LEDGERS.credits,
+                    })
+                );
+
+                unwrap(
+                    await financialController.internalTransaction({
+                        transfers: [
+                            {
+                                amount: 1000n,
+                                debitAccountId: ACCOUNT_IDS.liquidity_credits,
+                                creditAccountId: account.account.id,
+                                code: TransferCodes.admin_credit,
+                                currency: CurrencyCodes.credits,
+                            },
+                        ],
+                    })
+                );
+
+                presignUrlMock.mockResolvedValueOnce({
+                    success: true,
+                    uploadUrl: 'testUrl',
+                    uploadMethod: 'POST',
+                    uploadHeaders: {
+                        myHeader: 'myValue',
+                    },
+                });
+            });
+
+            it('should try to debit the studio credit account for file upload', async () => {
+                const result = (await manager.recordFile(
+                    studioRecordName,
+                    ownerId,
+                    {
+                        fileSha256Hex: 'hash',
+                        fileByteLength: 100,
+                        fileMimeType: 'text/plain',
+                        fileDescription: 'description',
+                        headers: {},
+                    }
+                )) as RecordFileSuccess;
+
+                expect(result.success).toBe(true);
+                expect(result.fileName).toBe('hash.txt');
+
+                const studioAccount = unwrap(
+                    await financialController.getAccountBalance({
+                        studioId,
+                        ledger: LEDGERS.credits,
+                    })
+                );
+
+                await checkAccounts(financialInterface, [
+                    {
+                        id: ACCOUNT_IDS.revenue_records_usage_credits,
+                        credits_posted: 50n,
+                        debits_posted: 0n,
+                        credits_pending: 0n,
+                        debits_pending: 0n,
+                    },
+                    {
+                        id: BigInt(studioAccount!.accountId),
+                        credits_posted: 1000n,
+                        debits_posted: 50n,
+                        credits_pending: 0n,
+                        debits_pending: 0n,
+                    },
+                ]);
+
+                await checkBillingTotals(
+                    financialController,
+                    studioAccount!.accountId,
+                    {
+                        [BillingCodes.file_write]: 50n,
+                    }
+                );
+
+                await expect(
+                    store.getFileRecord(studioRecordName, 'hash.txt')
+                ).resolves.toMatchObject({
+                    success: true,
+                    fileName: 'hash.txt',
+                    recordName: studioRecordName,
+                });
+            });
+
+            it('should fail to write the file if the studio doesnt have enough credits', async () => {
+                store.subscriptionConfiguration = buildSubscriptionConfig(
+                    (config) =>
+                        config.addSubscription('sub1', (sub) =>
+                            sub
+                                .withTier('tier1')
+                                .withAllDefaultFeatures()
+                                .withFiles({
+                                    allowed: true,
+                                    creditFeePerFileWrite: 100_000n, // 100,000 credits per file write
+                                })
+                        )
+                );
+
+                const result = (await manager.recordFile(
+                    studioRecordName,
+                    ownerId,
+                    {
+                        fileSha256Hex: 'hash',
+                        fileByteLength: 100,
+                        fileMimeType: 'text/plain',
+                        fileDescription: 'description',
+                        headers: {},
+                    }
+                )) as RecordFileFailure;
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'insufficient_funds',
+                    errorMessage: 'Insufficient funds to cover usage.',
+                });
+
+                const studioAccount = unwrap(
+                    await financialController.getAccountBalance({
+                        studioId,
+                        ledger: LEDGERS.credits,
+                    })
+                );
+
+                await checkAccounts(financialInterface, [
+                    {
+                        id: ACCOUNT_IDS.revenue_records_usage_credits,
+                        credits_posted: 0n,
+                        debits_posted: 0n,
+                        credits_pending: 0n,
+                        debits_pending: 0n,
+                    },
+                    {
+                        id: BigInt(studioAccount!.accountId),
+                        credits_posted: 1000n,
+                        debits_posted: 0n,
+                        credits_pending: 0n,
+                        debits_pending: 0n,
+                    },
+                ]);
+
+                await expect(
+                    store.getFileRecord(studioRecordName, 'hash.txt')
+                ).resolves.toEqual({
+                    success: false,
+                    errorCode: 'file_not_found',
+                    errorMessage: expect.any(String),
+                });
             });
         });
     });
