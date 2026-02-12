@@ -182,6 +182,7 @@ export class BotShapeDecorator
     private _mapView: MapView;
     private _mapProviderName: string;
     private _mapProviderApiKey: string;
+    private _splat: SplatMesh;
 
     container: Group;
     mesh: Mesh | FrustumHelper;
@@ -734,6 +735,12 @@ export class BotShapeDecorator
         if (this._iframe) {
             this.container.remove(this._iframe.object3d);
             disposeObject3D(this._iframe.object3d);
+        }
+
+        if (this._splat) {
+            this.container.remove(this._splat);
+            this._splat.dispose();
+            this._splat = null;
         }
 
         if (this.scene) {
@@ -1350,6 +1357,9 @@ export class BotShapeDecorator
         const mesh = new SplatMesh({
             url: this._address,
             onLoad: (mesh) => {
+                if (this._splat !== mesh) {
+                    return;
+                }
                 let box = mesh.getBoundingBox();
                 let size = new Vector3();
                 box.getSize(size);
@@ -1380,14 +1390,13 @@ export class BotShapeDecorator
                 this.container.add(this.collider);
                 this.bot3D.colliders.push(this.collider);
 
-                // TODO: Support tinting
-                // TODO: Ensure that race conditions with loading/unloading are handled correctly (e.g. if the form changes while a splat is loading)
-                // TODO: Support using the splat as a collider (if configured - careful because it can be really slow)
+                // TODO: Support color tinting
             },
         });
 
         mesh.quaternion.setFromAxisAngle(new Vector3(1, 0, 0), -Math.PI / 2);
 
+        this._splat = mesh;
         this.container.add(mesh);
         this.mesh = null;
         this.scene = null;
