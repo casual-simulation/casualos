@@ -858,7 +858,6 @@ export function calculateAnchorPosition(
  */
 export function buildSRGBColor(...args: (string | number)[]): Color {
     const c = new Color(...args);
-    c.convertSRGBToLinear();
     return c;
 }
 
