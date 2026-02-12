@@ -220,7 +220,8 @@
             "eslint-plugin-header@3.1.1": "patches/eslint-plugin-header@3.1.1.patch",
             "@types/mongodb": "patches/@types__mongodb.patch",
             "parse5@7.3.0": "patches/parse5@7.3.0.patch",
-            "@sparkjsdev/spark": "patches/@sparkjsdev__spark.patch"
+            "@sparkjsdev/spark": "patches/@sparkjsdev__spark.patch",
+            "@types/three": "patches/@types__three.patch"
         },
         "ignoredBuiltDependencies": [
             "@pulumi/aws-native",

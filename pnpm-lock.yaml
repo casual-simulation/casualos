@@ -19,6 +19,9 @@ patchedDependencies:
   '@types/mongodb':
     hash: 261c68fb0bca872960bfd9ea63f0fa1643a7de8e56ec369cb826d23d6919fab3
     path: patches/@types__mongodb.patch
+  '@types/three':
+    hash: 98f4c7789af2f7ae90c8b0dfd9bb6537d1c5ef2988ddb01f48a62438b53abfc2
+    path: patches/@types__three.patch
   deno-vm@0.13.0:
     hash: 2a6d5036373ec04b771962451fe9bd1f41cd0764a94698793f994de3703ec90d
     path: patches/deno-vm@0.13.0.patch
@@ -161,7 +164,7 @@ importers:
         version: 3.1.33
       '@types/three':
         specifier: ^0.182.0
-        version: 0.182.0
+        version: 0.182.0(patch_hash=98f4c7789af2f7ae90c8b0dfd9bb6537d1c5ef2988ddb01f48a62438b53abfc2)
       '@types/uuid':
         specifier: 10.0.0
         version: 10.0.0
@@ -24547,7 +24550,7 @@ snapshots:
     dependencies:
       '@types/node': 18.19.98
 
-  '@types/three@0.182.0':
+  '@types/three@0.182.0(patch_hash=98f4c7789af2f7ae90c8b0dfd9bb6537d1c5ef2988ddb01f48a62438b53abfc2)':
     dependencies:
       '@dimforge/rapier3d-compat': 0.12.0
       '@tweenjs/tween.js': 23.1.3

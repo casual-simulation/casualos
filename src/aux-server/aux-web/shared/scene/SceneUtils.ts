@@ -99,7 +99,6 @@ export function baseAuxSkyboxMeshMaterial() {
 export function baseAuxMeshMaterial() {
     return new MeshToonMaterial({
         color: 0x00ff00,
-        shininess: 2,
     });
 }
 

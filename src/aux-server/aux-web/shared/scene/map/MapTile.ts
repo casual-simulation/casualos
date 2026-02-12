@@ -88,8 +88,8 @@ export class MapTile extends Object3D {
         return MapTile._SEA_LEVEL_TEXTURE;
     }
 
-    private get _material(): THREE.MeshBasicMaterial {
-        return this._plane.material as THREE.MeshBasicMaterial;
+    private get _material(): MeshBasicMaterial {
+        return this._plane.material as MeshBasicMaterial;
     }
 
     /**
