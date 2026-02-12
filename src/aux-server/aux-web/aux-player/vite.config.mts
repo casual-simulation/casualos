@@ -406,7 +406,7 @@ export default defineConfig(({ command, mode }) => ({
                       ),
                   }
                 : {}),
-            three: '@casual-simulation/three',
+            '@casual-simulation/three': 'three',
             esbuild: 'esbuild-wasm',
             'monaco-editor': '@casual-simulation/monaco-editor',
             lodash: 'es-toolkit/compat',

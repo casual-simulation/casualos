@@ -211,6 +211,7 @@ export function createConfigs(dev, version) {
                         force: true,
                         recursive: true,
                     }),
+                    replaceThreePlugin(),
                     replaceLodashPlugin(),
                     ImportGlobPlugin(),
                 ],
@@ -231,7 +232,11 @@ export function createConfigs(dev, version) {
                     ...extraVariables,
                 },
                 minify: !dev,
-                plugins: [replaceLodashPlugin(), ImportGlobPlugin()],
+                plugins: [
+                    replaceThreePlugin(),
+                    replaceLodashPlugin(),
+                    ImportGlobPlugin(),
+                ],
             },
         ],
         [
@@ -248,7 +253,11 @@ export function createConfigs(dev, version) {
                     ...extraVariables,
                 },
                 minify: !dev,
-                plugins: [replaceLodashPlugin(), ImportGlobPlugin()],
+                plugins: [
+                    replaceThreePlugin(),
+                    replaceLodashPlugin(),
+                    ImportGlobPlugin(),
+                ],
             },
         ],
         [

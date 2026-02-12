@@ -131,7 +131,7 @@
         "@types/redis": "^2.8.32",
         "@types/sshpk": "^1.10.7",
         "@types/stripe-v3": "^3.1.7",
-        "@types/three": "^0.140.0",
+        "@types/three": "^0.182.0",
         "@types/uuid": "10.0.0",
         "@types/vue-color": "^2.4.3",
         "@types/ws": "^8.5.12",
@@ -193,7 +193,8 @@
         "unified": "11.0.4",
         "vue-template-compiler": "^2.6.14",
         "wait-on": "7",
-        "cross-env": "7.0.3"
+        "cross-env": "7.0.3",
+        "three": "^0.182.0"
     },
     "engines": {
         "node": ">=v20.18",
