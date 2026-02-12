@@ -1382,6 +1382,7 @@ export class BotShapeDecorator
 
                 // TODO: Support tinting
                 // TODO: Ensure that race conditions with loading/unloading are handled correctly (e.g. if the form changes while a splat is loading)
+                // TODO: Support using the splat as a collider (if configured - careful because it can be really slow)
             },
         });
 
