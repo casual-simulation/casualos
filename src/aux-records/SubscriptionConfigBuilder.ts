@@ -17,7 +17,6 @@
  */
 import { merge } from '@casual-simulation/aux-common';
 import type {
-    AIChatFeaturesConfiguration,
     AIFeaturesConfiguration,
     AIHumeFeaturesConfiguration,
     AIImageFeaturesConfiguration,
@@ -27,7 +26,6 @@ import type {
     APISubscription,
     DatabasesFeaturesConfiguration,
     ContractFeaturesConfiguration,
-    DataFeaturesConfiguration,
     EventFeaturesConfiguration,
     FeaturesConfiguration,
     FileFeaturesConfiguration,
@@ -48,6 +46,7 @@ import type {
     ContractFeaturesSchema,
     DataFeaturesSchema,
 } from './SubscriptionConfiguration';
+import { aiChatFeaturesSchema } from './SubscriptionConfiguration';
 import {
     getStoreFeaturesSchema,
     getContractFeaturesSchema,
@@ -76,12 +75,13 @@ export class FeaturesBuilder {
         return this;
     }
 
-    withData(features?: DataFeaturesConfiguration): this {
-        this._features.data =
+    withData(features?: z.input<DataFeaturesSchema>): this {
+        this._features.data = getDataFeaturesSchema().parse(
             features ??
-            getDataFeaturesSchema().parse({
-                allowed: true,
-            } satisfies z.input<DataFeaturesSchema>);
+                ({
+                    allowed: true,
+                } satisfies z.input<DataFeaturesSchema>)
+        );
         return this;
     }
 
@@ -178,10 +178,12 @@ export class FeaturesBuilder {
         return this;
     }
 
-    withAIChat(features?: AIChatFeaturesConfiguration): this {
-        this._features.ai.chat = features ?? {
-            allowed: true,
-        };
+    withAIChat(features?: z.input<aiChatFeaturesSchema>): this {
+        this._features.ai.chat = aiChatFeaturesSchema().parse(
+            features ?? {
+                allowed: true,
+            }
+        );
         return this;
     }
 

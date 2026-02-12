@@ -1747,3 +1747,12 @@ model CustomDomain {
     @@index([domainName])
 }
 
+model BillingJobHistory {
+    id String @id @db.Uuid
+
+    // The time the job was run
+    timeMs DateTime
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}

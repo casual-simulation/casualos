@@ -330,12 +330,19 @@ export class MemoryNotificationRecordsStore
         let totalItems = 0;
         let totalSentNotificationsInPeriod = 0;
         let totalSentPushNotificationsInPeriod = 0;
+        let totalSubscribers = 0;
 
         const records = filter.ownerId
             ? await this.store.listRecordsByOwnerId(filter.ownerId)
             : await this.store.listRecordsByStudioId(filter.studioId!);
         for (let record of records) {
-            totalItems += this.getItemRecord(record.name).size;
+            const r = this.getItemRecord(record.name);
+            totalItems += r.size;
+
+            const subs = this._subscriptions.filter(
+                (s) => s.recordName === record.name
+            );
+            totalSubscribers += subs.length;
         }
 
         for (let send of this._sentNotifications) {
@@ -364,6 +371,28 @@ export class MemoryNotificationRecordsStore
             totalItems,
             totalSentNotificationsInPeriod,
             totalSentPushNotificationsInPeriod,
+            totalSubscribers,
         };
+    }
+
+    async getAllSubscriptionMetrics(): Promise<
+        NotificationSubscriptionMetrics[]
+    > {
+        const userMetrics = await Promise.all(
+            this.store.users.map((user) =>
+                this.getSubscriptionMetrics({
+                    ownerId: user.id,
+                })
+            )
+        );
+        const studioMetrics = await Promise.all(
+            this.store.studios.map((studio) =>
+                this.getSubscriptionMetrics({
+                    studioId: studio.id,
+                })
+            )
+        );
+
+        return [...userMetrics, ...studioMetrics];
     }
 }

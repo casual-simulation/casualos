@@ -89,6 +89,8 @@ export class AnthropicAIChatInterface implements AIChatInterface {
                 ],
                 totalTokens:
                     response.usage.input_tokens + response.usage.output_tokens,
+                inputTokens: response.usage.input_tokens,
+                outputTokens: response.usage.output_tokens,
             };
         } catch (err) {
             const span = trace.getActiveSpan();
@@ -143,6 +145,8 @@ export class AnthropicAIChatInterface implements AIChatInterface {
                         totalTokens:
                             chunk.message.usage.input_tokens +
                             chunk.message.usage.output_tokens,
+                        inputTokens: chunk.message.usage.input_tokens,
+                        outputTokens: chunk.message.usage.output_tokens,
                     };
                 } else if (chunk.type === 'content_block_delta') {
                     if (chunk.delta.type === 'text_delta') {

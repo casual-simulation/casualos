@@ -22,6 +22,8 @@ import type {
 import {
     PRIVATE_MARKER,
     SUBSCRIPTION_ID_NAMESPACE,
+    isFailure,
+    logError,
 } from '@casual-simulation/aux-common';
 import type {
     AuthorizationContext,
@@ -58,6 +60,17 @@ import type {
     SendPushNotificationResult,
     WebPushInterface,
 } from './WebPushInterface';
+import type {
+    FinancialController,
+    InternalTransfer,
+} from '../financial/FinancialController';
+import {
+    ACCOUNT_IDS,
+    BillingCodes,
+    CurrencyCodes,
+    LEDGERS,
+    TransferCodes,
+} from '../financial';
 
 const TRACE_NAME = 'NotificationRecordsController';
 
@@ -73,6 +86,11 @@ export interface NotificationRecordsConfiguration
      * The interface that should be used to send push notifications.
      */
     pushInterface: WebPushInterface;
+
+    /**
+     * The financial controller that should be used to charge credits for notification usage.
+     */
+    financialController?: FinancialController | null;
 }
 
 /**
@@ -84,6 +102,7 @@ export class NotificationRecordsController extends CrudRecordsController<
     NotificationRecordsStore
 > {
     private _pushInterface: WebPushInterface;
+    private _financialController: FinancialController | null;
 
     constructor(config: NotificationRecordsConfiguration) {
         super({
@@ -92,6 +111,7 @@ export class NotificationRecordsController extends CrudRecordsController<
             resourceKind: 'notification',
         });
         this._pushInterface = config.pushInterface;
+        this._financialController = config.financialController || null;
     }
 
     @traced(TRACE_NAME)
@@ -221,6 +241,88 @@ export class NotificationRecordsController extends CrudRecordsController<
             }
 
             if (!subscriptionId) {
+                // TODO: Implement in FinancialProcessor
+                // // Charge credits for the subscription if configured
+                // if (metrics.features.creditFeePerSubscriberPerPeriod) {
+
+                //     const billing = await billForUsage(this._financialController, {
+                //         userId: context.context.recordOwnerId,
+                //         studioId: context.context.recordStudioId,
+                //         transferCode: TransferCodes.records_usage_fee,
+                //         billingCode: BillingCodes.noti
+                //     })
+
+                //     if (!this._financialController) {
+                //         console.warn(
+                //             `[NotificationRecordsController] Cannot charge credits for notification subscription because FinancialController is not configured.`
+                //         );
+                //     } else {
+                //         // Try to record the credit usage.
+                //         const accountInfo =
+                //             await this._financialController.getFinancialAccount(
+                //                 {
+                //                     userId: context.context.recordOwnerId,
+                //                     studioId: context.context.recordStudioId,
+                //                     ledger: LEDGERS.credits,
+                //                 }
+                //             );
+
+                //         if (isFailure(accountInfo)) {
+                //             logError(
+                //                 accountInfo.error,
+                //                 `[NotificationRecordsController] Failed to get financial account to charge for notification subscription.`
+                //             );
+                //         } else {
+                //             // Charge the account for the subscription.
+                //             const transactionResult =
+                //                 await this._financialController.internalTransaction(
+                //                     {
+                //                         transfers: [
+                //                             {
+                //                                 amount: metrics.features
+                //                                     .creditFeePerSubscriberPerPeriod,
+                //                                 debitAccountId:
+                //                                     accountInfo.value.account
+                //                                         .id,
+                //                                 creditAccountId:
+                //                                     ACCOUNT_IDS.revenue_records_usage_credits,
+                //                                 currency: CurrencyCodes.credits,
+                //                                 code: TransferCodes.records_usage_fee,
+                //                             },
+                //                         ],
+                //                     }
+                //                 );
+
+                //             if (isFailure(transactionResult)) {
+                //                 if (
+                //                     transactionResult.error.errorCode ===
+                //                         'debits_exceed_credits' &&
+                //                     transactionResult.error.accountId ===
+                //                         accountInfo.value.account.id.toString()
+                //                 ) {
+                //                     logError(
+                //                         transactionResult.error,
+                //                         `[NotificationRecordsController] Insufficient funds to create notification subscription.`,
+                //                         console.log
+                //                     );
+                //                     // The user does not have enough credits to create the subscription.
+                //                     return {
+                //                         success: false,
+                //                         errorCode: 'insufficient_funds',
+                //                         errorMessage:
+                //                             'Not enough credits to create the notification subscription.',
+                //                     };
+                //                 } else {
+                //                     logError(
+                //                         transactionResult.error,
+                //                         `[NotificationRecordsController] Failed to record financial transaction for notification subscription.`
+                //                     );
+                //                 }
+                //             }
+                //         }
+                //     }
+                // }
+
                 subscriptionId = uuidv7();
                 await this.store.saveSubscription({
                     id: subscriptionId,
@@ -514,6 +616,110 @@ export class NotificationRecordsController extends CrudRecordsController<
                         errorMessage:
                             'The maximum number of sent push notifications has been reached for this period.',
                     };
+                }
+            }
+
+            // Charge credits for sending notification if configured
+
+            // Charge credits for push notifications if configured
+            if (
+                this._financialController &&
+                (metrics.features.creditFeePerNotificationSent ||
+                    (metrics.features.creditFeePerPushNotificationSent &&
+                        pushSubs.length > 0))
+            ) {
+                let transfers: InternalTransfer[] = [];
+
+                // Get or create the user's credits account
+                const accountResult =
+                    await this._financialController.getOrCreateFinancialAccount(
+                        {
+                            userId: context.context.recordOwnerId,
+                            studioId: context.context.recordStudioId,
+                            ledger: LEDGERS.credits,
+                        }
+                    );
+
+                if (isFailure(accountResult)) {
+                    logError(
+                        accountResult.error,
+                        `[NotificationRecordsController] [userId: ${context.context.recordOwnerId} studioId: ${context.context.recordStudioId}] Failed to get or create financial account for filter`
+                    );
+                    return {
+                        success: false,
+                        errorCode: 'server_error',
+                        errorMessage: 'The server encountered an error.',
+                    };
+                }
+
+                if (metrics.features.creditFeePerNotificationSent) {
+                    transfers.push({
+                        amount: metrics.features.creditFeePerNotificationSent,
+                        code: TransferCodes.records_usage_fee,
+                        billingCode: BillingCodes.notification_sent,
+                        creditAccountId:
+                            ACCOUNT_IDS.revenue_records_usage_credits,
+                        debitAccountId: accountResult.value.account.id,
+                        currency: CurrencyCodes.credits,
+                    });
+                }
+
+                if (
+                    metrics.features.creditFeePerPushNotificationSent &&
+                    pushSubs.length > 0
+                ) {
+                    const totalPushFee =
+                        BigInt(pushSubs.length) *
+                        metrics.features.creditFeePerPushNotificationSent;
+
+                    transfers.push({
+                        amount: totalPushFee,
+                        code: TransferCodes.records_usage_fee,
+                        billingCode: BillingCodes.notification_push_sent,
+                        creditAccountId:
+                            ACCOUNT_IDS.revenue_records_usage_credits,
+                        debitAccountId: accountResult.value.account.id,
+                        currency: CurrencyCodes.credits,
+                    });
+                }
+
+                if (transfers.length > 0) {
+                    const transactionResult =
+                        await this._financialController.internalTransaction({
+                            transfers,
+                        });
+
+                    if (isFailure(transactionResult)) {
+                        if (
+                            transactionResult.error.errorCode ===
+                                'debits_exceed_credits' &&
+                            transactionResult.error.accountId ===
+                                accountResult.value.account.id.toString()
+                        ) {
+                            logError(
+                                transactionResult.error,
+                                `[NotificationRecordsController] [userId: ${context.context.recordOwnerId}] Insufficient funds to send notification.`,
+                                console.warn
+                            );
+
+                            return {
+                                success: false,
+                                errorCode: 'insufficient_funds',
+                                errorMessage:
+                                    'Insufficient funds to cover usage.',
+                            };
+                        }
+
+                        logError(
+                            transactionResult.error,
+                            `[NotificationRecordsController] [userId: ${context.context.recordOwnerId}] Failed to record financial transaction for sending notification.`
+                        );
+                        return {
+                            success: false,
+                            errorCode: 'server_error',
+                            errorMessage: 'The server encountered an error.',
+                        };
+                    }
                 }
             }
 

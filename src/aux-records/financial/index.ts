@@ -20,4 +20,5 @@ export * from './FinancialController';
 export * from './FinancialInterface';
 export * from './MemoryFinancialInterface';
 export * from './TigerBeetleFinancialInterface';
+export * from './FinancialProcessor';
 // export * from './Types';

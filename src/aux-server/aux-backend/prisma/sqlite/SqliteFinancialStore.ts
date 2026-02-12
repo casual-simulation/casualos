@@ -18,6 +18,7 @@
 import type { PrismaClient } from '../generated-sqlite';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 import type {
+    BillingCycleHistory,
     ExternalPayout,
     FinancialAccount,
     FinancialAccountFilter,
@@ -34,6 +35,41 @@ export class SqliteFinancialStore implements FinancialStore {
 
     constructor(client: PrismaClient) {
         this._client = client;
+    }
+
+    async saveBillingCycleHistory(history: BillingCycleHistory): Promise<void> {
+        await this._client.billingJobHistory.upsert({
+            create: {
+                id: history.id,
+                timeMs: history.timeMs,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+            },
+            update: {
+                timeMs: history.timeMs,
+                updatedAt: Date.now(),
+            },
+            where: {
+                id: history.id,
+            },
+        });
+    }
+
+    async getLastBillingCycleHistory(): Promise<BillingCycleHistory | null> {
+        const history = await this._client.billingJobHistory.findFirst({
+            orderBy: {
+                timeMs: 'desc',
+            },
+        });
+
+        if (!history) {
+            return null;
+        }
+
+        return {
+            id: history.id,
+            timeMs: history.timeMs.toNumber(),
+        };
     }
 
     @traced(TRACE_NAME)

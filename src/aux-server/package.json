@@ -186,7 +186,8 @@
         "web-push": "3.6.7",
         "ws": "8.18.0",
         "yjs": "13.6.8",
-        "zod": "4.1.12"
+        "zod": "4.1.12",
+        "ioredis": "5.9.2"
     },
     "devDependencies": {
         "@casual-simulation/aux-components": "^4.0.5",

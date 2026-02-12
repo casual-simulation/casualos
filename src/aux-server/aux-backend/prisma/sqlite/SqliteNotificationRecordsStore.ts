@@ -422,6 +422,7 @@ export class SqliteNotificationRecordsStore
             totalItems,
             totalSentNotificationsInPeriod,
             totalSentPushNotificationsInPeriod,
+            totalSubscribers,
         ] = await Promise.all([
             this._client.notificationRecord.count({
                 where,
@@ -446,6 +447,11 @@ export class SqliteNotificationRecordsStore
                     },
                 },
             }),
+            this._client.notificationSubscription.count({
+                where: {
+                    record: where.record,
+                },
+            }),
         ]);
 
         return {
@@ -453,7 +459,58 @@ export class SqliteNotificationRecordsStore
             totalItems,
             totalSentNotificationsInPeriod,
             totalSentPushNotificationsInPeriod,
+            totalSubscribers,
         };
+    }
+
+    async getAllSubscriptionMetrics(): Promise<
+        NotificationSubscriptionMetrics[]
+    > {
+        const metrics = await this._client.$queryRaw<
+            NotificationSubscriptionMetrics[]
+        >`
+                SELECT
+                    'user' as "subscriptionType",
+                    u.id as "userId",
+                    NULL as "studioId",
+                    u."subscriptionId" as "subscriptionId",
+                    u."subscriptionStatus" as "subscriptionStatus",
+                    u."subscriptionPeriodStart" as "subscriptionPeriodStart",
+                    u."subscriptionPeriodEnd" as "subscriptionPeriodEnd",
+                    u."stripeAccountId" as "stripeAccountId",
+                    u."stripeAccountStatus" as "stripeAccountStatus",
+                    COUNT(sn.id) as "totalSentNotificationsInPeriod",
+                    COUNT(spn.id) as "totalSentPushNotificationsInPeriod",
+                    COUNT(ns.id) as "totalSubscribers"
+                FROM "User" u
+                INNER JOIN "Record" r ON r."ownerId" = u.id
+                INNER JOIN "SentNotification" sn ON sn."recordName" = r.name AND sn."sentTime" >= u."subscriptionPeriodStart" AND sn."sentTime" < u."subscriptionPeriodEnd"
+                INNER JOIN "SentPushNotification" spn ON spn."sentNotificationId" = sn.id
+                INNER JOIN "NotificationSubscription" ns ON ns."recordName" = r.name
+                GROUP BY u.id
+            UNION ALL
+                SELECT 
+                    'studio' as "subscriptionType",
+                    NULL as "userId",
+                    s.id as "studioId",
+                    s."subscriptionId" as "subscriptionId",
+                    s."subscriptionStatus" as "subscriptionStatus",
+                    s."subscriptionPeriodStart" as "subscriptionPeriodStart",
+                    s."subscriptionPeriodEnd" as "subscriptionPeriodEnd",
+                    s."stripeAccountId" as "stripeAccountId",
+                    s."stripeAccountStatus" as "stripeAccountStatus",
+                    COUNT(sn.id) as "totalSentNotificationsInPeriod",
+                    COUNT(spn.id) as "totalSentPushNotificationsInPeriod",
+                    COUNT(ns.id) as "totalSubscribers"
+                FROM "Studio" s
+                INNER JOIN "Record" r ON r."studioId" = s.id
+                INNER JOIN "SentNotification" sn ON sn."recordName" = r.name AND sn."sentTime" >= s."subscriptionPeriodStart" AND sn."sentTime" < s."subscriptionPeriodEnd"
+                INNER JOIN "SentPushNotification" spn ON spn."sentNotificationId" = sn.id
+                INNER JOIN "NotificationSubscription" ns ON ns."recordName" = r.name
+                GROUP BY s.id;
+            `;
+
+        return metrics;
     }
 
     @traced(TRACE_NAME)
