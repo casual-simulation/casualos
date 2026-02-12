@@ -4,6 +4,13 @@
 
 #### Date: TBD
 
+### :rocket: Features
+
+-   Added support for Gaussian Splats
+    -   Set `formSubtype` to `splat` and `formAddress` to a `.ply`, `.spz`, `.splat`, etc. file.
+    -   Known limitations:
+        -   `color` does not work with splats.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where shared documents would fail to load from public insts if the user wasn't logged in on initialization.
