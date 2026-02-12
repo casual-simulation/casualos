@@ -1349,12 +1349,47 @@ export class BotShapeDecorator
         this._canHaveStroke = false;
         const mesh = new SplatMesh({
             url: this._address,
+            onLoad: (mesh) => {
+                let box = mesh.getBoundingBox();
+                let size = new Vector3();
+                box.getSize(size);
+                let center = new Vector3();
+                box.getCenter(center);
+                const maxScale = Math.max(size.x, size.y, size.z);
+
+                if (this._scaleMode !== 'absolute') {
+                    size.divideScalar(maxScale);
+                    center.divideScalar(maxScale);
+                    mesh.scale.divideScalar(maxScale);
+                }
+
+                if (this._positioningMode !== 'absolute') {
+                    let bottomCenter = new Vector3(
+                        -center.x,
+                        -center.y,
+                        -center.z
+                    );
+                    // Scene
+                    mesh.position.copy(bottomCenter);
+                }
+
+                // Collider
+                const collider = (this.collider = createCube(1));
+                this.collider.scale.copy(size);
+                setColor(collider, 'clear');
+                this.container.add(this.collider);
+                this.bot3D.colliders.push(this.collider);
+
+                // TODO: Support tinting
+                // TODO: Ensure that race conditions with loading/unloading are handled correctly (e.g. if the form changes while a splat is loading)
+            },
         });
 
-        mesh.quaternion.setFromAxisAngle(new Vector3(1, 0, 0), Math.PI / 2);
+        mesh.quaternion.setFromAxisAngle(new Vector3(1, 0, 0), -Math.PI / 2);
 
         this.container.add(mesh);
-        // this.mesh = mesh as any;
+        this.mesh = null;
+        this.scene = null;
 
         this._updateColor(null);
         this._updateOpacity(null);
