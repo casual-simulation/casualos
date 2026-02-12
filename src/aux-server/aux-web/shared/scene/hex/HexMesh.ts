@@ -25,7 +25,7 @@ import type {
 } from '@casual-simulation/three';
 import {
     Mesh,
-    ExtrudeBufferGeometry,
+    ExtrudeGeometry,
     Shape,
     Box3,
     Sphere,
@@ -148,7 +148,7 @@ export function createHexMeshGeometry(
 ): BufferGeometry {
     const verts = hex(size / Math.sqrt(3));
     const shape = new Shape(verts);
-    const geometry = new ExtrudeBufferGeometry(shape, {
+    const geometry = new ExtrudeGeometry(shape, {
         depth: height,
         steps: 1,
         bevelEnabled: false,
