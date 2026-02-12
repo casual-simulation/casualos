@@ -107,15 +107,15 @@ export function baseAuxMeshMaterial() {
  * Create copy of ambient light that is common to all aux scenes.
  */
 export function baseAuxAmbientLight() {
-    return new AmbientLight(0x222222);
+    return new AmbientLight(0xaaaaaa, 1);
 }
 
 /**
  * Create copy of directional light that is common to all aux scenes.
  */
 export function baseAuxDirectionalLight() {
-    let dirLight = new DirectionalLight(0xffffff, 1);
-    dirLight.position.set(0.25, -2.4, 3.0);
+    let dirLight = new DirectionalLight(0xffffff, 2.3);
+    dirLight.position.set(0.25, -2.4, 5.4);
     dirLight.updateMatrixWorld(true);
     // let helper = new DirectionalLightHelper(dirLight);
     // dirLight.add(helper);
