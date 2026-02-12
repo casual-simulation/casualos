@@ -40,6 +40,7 @@ import {
     isBotPointable,
     parseBotVector,
 } from '@casual-simulation/aux-common';
+import { SplatMesh } from '@sparkjsdev/spark';
 import { ArgEvent } from '@casual-simulation/aux-common/Event';
 import type { AnimationAction } from '@casual-simulation/three';
 import {
@@ -1233,6 +1234,8 @@ export class BotShapeDecorator
                 this._createLDraw();
             } else if (this._subShape === 'jsonObject' && this._address) {
                 this._createJsonObject();
+            } else if (this._subShape === 'splat') {
+                this._createSplat();
             } else {
                 this._createCube();
             }
@@ -1339,6 +1342,24 @@ export class BotShapeDecorator
                 );
             }
         }
+    }
+
+    private async _createSplat() {
+        this.stroke = null;
+        this._canHaveStroke = false;
+        const mesh = new SplatMesh({
+            url: this._address,
+        });
+
+        mesh.quaternion.setFromAxisAngle(new Vector3(1, 0, 0), Math.PI / 2);
+
+        this.container.add(mesh);
+        // this.mesh = mesh as any;
+
+        this._updateColor(null);
+        this._updateOpacity(null);
+        this._updateRenderOrder(null);
+        this.bot3D.updateMatrixWorld(true);
     }
 
     private async _loadGLTF(

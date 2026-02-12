@@ -1050,6 +1050,7 @@ export type MenuBotResolvedHoverStyle = 'hover' | 'none';
  */
 export type BotSubShape =
     | 'gltf'
+    | 'splat'
     | 'jsonObject'
     | 'ldraw'
     | 'ldrawText'
