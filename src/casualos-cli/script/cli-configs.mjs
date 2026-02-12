@@ -21,6 +21,7 @@ import {
     paths,
     cleanDirectory,
     emptyModulePlugin,
+    replaceThreePlugin,
 } from '../../../script/build-helpers.mjs';
 import { GIT_HASH, GIT_TAG } from '../../../script/git-stats.mjs';
 
@@ -61,6 +62,7 @@ export function createConfigs(dev, version) {
                 minify: false,
                 external: ['open', 'esbuild'],
                 plugins: [
+                    replaceThreePlugin(),
                     emptyModulePlugin('tigerbeetle-node'),
                     addNodeShebang(),
                 ],
