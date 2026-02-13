@@ -40,8 +40,8 @@ export abstract class MapOverlay extends Object3D {
     /* The plane that represents the overlay as a mesh in the scene. */
     protected _plane: Mesh | null = null;
 
-    protected get _material(): THREE.MeshBasicMaterial {
-        return this._plane.material as THREE.MeshBasicMaterial;
+    protected get _material(): MeshBasicMaterial {
+        return this._plane.material as MeshBasicMaterial;
     }
 
     constructor(

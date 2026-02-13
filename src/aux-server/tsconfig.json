@@ -11,7 +11,8 @@
             ],
             "monaco-editor": [
                 "../../node_modules/@casual-simulation/monaco-editor"
-            ]
+            ],
+            "@casual-simulation/three": ["./node_modules/three"]
         },
         "lib": ["es2015", "es5", "dom"],
         "skipLibCheck": true

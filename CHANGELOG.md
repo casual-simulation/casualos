@@ -7,6 +7,10 @@
 
 ### :rocket: Features
 
+-   Added support for Gaussian Splats
+    -   Set `formSubtype` to `splat` and `formAddress` to a `.ply`, `.spz`, `.splat`, etc. file.
+    -   Known limitations:
+        -   `color` does not work with splats.
 -   Added the ability to charge credits for various aspects of usage.
     -   Note that all values are integer numbers. Additionally, 1,000,000 credits equals 1 USD, where 1 USD equals one cent (`$0.01`). This means that `1` credit equals `$0.00000001` or one millionth of a cent (`1/1000000`).
     -   Defaults
