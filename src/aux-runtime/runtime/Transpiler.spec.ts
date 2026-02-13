@@ -1757,6 +1757,44 @@ describe('Transpiler', () => {
                         return n;
                     }`);
                 });
+
+                it('should remove type annotations from destructured object parameters', () => {
+                    const transpiler = new Transpiler();
+
+                    expect(
+                        transpiler.transpile(
+                            `function MyComponent({id}: {id: string}) {}`
+                        )
+                    ).toBe(`function MyComponent({id}) {}`);
+
+                    expect(
+                        transpiler.transpile(
+                            `function MyComponent({id, name}: {id: string; name: string}) {}`
+                        )
+                    ).toBe(`function MyComponent({id, name}) {}`);
+
+                    expect(
+                        transpiler.transpile(
+                            `const myFunc = ({id}: {id: string}) => id;`
+                        )
+                    ).toBe(`const myFunc = ({id}) => id;`);
+
+                    expect(
+                        transpiler.transpile(
+                            `const myFunc = ({id, name}: {id: string; name: string}) => id;`
+                        )
+                    ).toBe(`const myFunc = ({id, name}) => id;`);
+
+                    expect(
+                        transpiler.transpile(
+                            `function test([a, b]: [string, number]) {}`
+                        )
+                    ).toBe(`function test([a, b]) {}`);
+
+                    expect(
+                        transpiler.transpile(`function test(...args: any[]) {}`)
+                    ).toBe(`function test(...args) {}`);
+                });
             });
 
             it('should remove interface declarations', () => {

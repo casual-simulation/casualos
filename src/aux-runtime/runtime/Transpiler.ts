@@ -204,6 +204,8 @@ export const TypeScriptVisistorKeys: { [nodeType: string]: string[] } = {
         'typeParameters',
     ],
     RestElement: [...VisitorKeys.RestElement, 'typeAnnotation'],
+    ObjectPattern: [...(VisitorKeys as any).ObjectPattern, 'typeAnnotation'],
+    ArrayPattern: [...(VisitorKeys as any).ArrayPattern, 'typeAnnotation'],
 };
 
 /**
@@ -608,6 +610,14 @@ export class Transpiler {
                     }
                 } else if (n.type === 'TSParameterProperty') {
                     // do nothing
+                } else if (
+                    n.type === 'ObjectPattern' ||
+                    n.type === 'ArrayPattern' ||
+                    (n.type === 'RestElement' && n.typeAnnotation)
+                ) {
+                    if (n.typeAnnotation) {
+                        this._removeTypeAnnotation(n, doc, text);
+                    }
                 } else if (n.type === 'MethodDefinition') {
                     if (n.abstract) {
                         this._removeNodeOrReplaceWithUndefined(n, doc, text);
@@ -1555,6 +1565,38 @@ export class Transpiler {
         );
 
         text.delete(absoluteEnd.index - 1, 1);
+    }
+
+    private _removeTypeAnnotation(node: any, doc: Doc, text: Text): void {
+        if (!node.typeAnnotation) {
+            return;
+        }
+
+        doc.clientID += 1;
+        const version = { '0': getClock(doc, 0) };
+
+        const patternEnd = createAbsolutePositionFromStateVector(
+            doc,
+            text,
+            version,
+            node.end,
+            -1,
+            true
+        );
+
+        const typeAnnotationEnd = createAbsolutePositionFromStateVector(
+            doc,
+            text,
+            version,
+            node.typeAnnotation.end,
+            -1,
+            true
+        );
+
+        text.delete(
+            patternEnd.index,
+            typeAnnotationEnd.index - patternEnd.index
+        );
     }
 
     private _replaceJSXElement(

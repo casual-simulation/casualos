@@ -51,6 +51,7 @@
 
 -   Fixed an issue where shared documents would fail to load from public insts if the user wasn't logged in on initialization.
 -   Fixed an issue where `os.listInsts()` could not be used due to a input mismatch between the server and client.
+-   Fixed transpiler error when using TypeScript type annotations on destructured parameters. Functions like `function MyComponent({id}: {id: string}) {}` now correctly transpile to `function MyComponent({id}) {}` instead of throwing "SyntaxError: Unexpected token ':'". This also applies to arrow functions, array destructuring patterns, and rest parameters.
 
 ## V4.0.5
 
