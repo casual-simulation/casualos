@@ -84,10 +84,6 @@ export class HexMesh extends Mesh {
         material.color = val;
     }
 
-    get boundingBox(): Box3 {
-        return new Box3().setFromObject(this);
-    }
-
     get boundingSphere(): Sphere {
         let box = new Box3().setFromObject(this);
         let sphere = new Sphere();
