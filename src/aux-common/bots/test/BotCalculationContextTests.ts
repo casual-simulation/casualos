@@ -1038,6 +1038,7 @@ export function botCalculationContextTests(
     describe('getBotSubShape()', () => {
         const cases = [
             ['gltf'],
+            ['splat'],
             ['src'],
             ['html'],
             ['pointLight'],

@@ -41,8 +41,20 @@ import {
 } from '@casual-simulation/aux-common';
 import type { WebPushInterface } from './WebPushInterface';
 import { v5 as uuidv5 } from 'uuid';
+import {
+    ACCOUNT_IDS,
+    BillingCodes,
+    CurrencyCodes,
+    FinancialController,
+    LEDGERS,
+    MemoryFinancialInterface,
+    TransferCodes,
+} from '../financial';
+import { checkAccounts, checkBillingTotals } from '../TestUtils';
+import { unwrap } from '@casual-simulation/aux-common';
 
 console.log = jest.fn();
+console.warn = jest.fn();
 console.error = jest.fn();
 
 describe('NotificationRecordsController', () => {
@@ -1005,9 +1017,11 @@ describe('NotificationRecordsController', () => {
     });
 
     describe('sendNotification()', () => {
+        const notificationAddress = 'public';
+
         beforeEach(async () => {
             await itemsStore.createItem(recordName, {
-                address: 'public',
+                address: notificationAddress,
                 markers: [PUBLIC_READ_MARKER],
                 description: 'public',
             });
@@ -1016,7 +1030,7 @@ describe('NotificationRecordsController', () => {
                 id: 'sub1',
                 userId: otherUserId,
                 recordName,
-                notificationAddress: 'public',
+                notificationAddress: notificationAddress,
                 active: true,
                 pushSubscription: {
                     endpoint: 'endpoint1',
@@ -1029,7 +1043,7 @@ describe('NotificationRecordsController', () => {
                 id: 'sub1',
                 userId: otherUserId,
                 recordName,
-                notificationAddress: 'public',
+                notificationAddress: notificationAddress,
                 active: true,
                 pushSubscription: {
                     endpoint: 'endpoint2',
@@ -1043,7 +1057,7 @@ describe('NotificationRecordsController', () => {
                 id: 'sub3',
                 userId: null,
                 recordName,
-                notificationAddress: 'public',
+                notificationAddress: notificationAddress,
                 active: true,
                 pushSubscription: {
                     endpoint: 'endpoint3',
@@ -1232,7 +1246,7 @@ describe('NotificationRecordsController', () => {
                 id: 'sub1',
                 userId: otherUserId,
                 recordName,
-                notificationAddress: 'public',
+                notificationAddress: notificationAddress,
                 active: false,
                 pushSubscription: {
                     endpoint: 'endpoint1',
@@ -1242,7 +1256,7 @@ describe('NotificationRecordsController', () => {
 
             const result = await manager.sendNotification({
                 recordName,
-                address: 'public',
+                address: notificationAddress,
                 userId,
                 payload: {
                     title: 'title',
@@ -1379,7 +1393,7 @@ describe('NotificationRecordsController', () => {
 
             const result = await manager.sendNotification({
                 recordName,
-                address: 'public',
+                address: notificationAddress,
                 userId,
                 payload: {
                     title: 'title',
@@ -1625,7 +1639,7 @@ describe('NotificationRecordsController', () => {
             await itemsStore.saveSentNotification({
                 id: 'sent1',
                 recordName,
-                notificationAddress: 'public',
+                notificationAddress: notificationAddress,
                 title: 'title1',
                 body: 'description1',
                 badge: null,
@@ -1636,7 +1650,7 @@ describe('NotificationRecordsController', () => {
 
             const result = await manager.sendNotification({
                 recordName,
-                address: 'public',
+                address: notificationAddress,
                 userId: userId,
                 payload: {
                     title: 'title',
@@ -1690,7 +1704,7 @@ describe('NotificationRecordsController', () => {
                 id: 'sub1',
                 userId: otherUserId,
                 recordName,
-                notificationAddress: 'public',
+                notificationAddress: notificationAddress,
                 active: true,
                 pushSubscription: {
                     endpoint: 'endpoint1',
@@ -1720,7 +1734,7 @@ describe('NotificationRecordsController', () => {
 
             const result = await manager.sendNotification({
                 recordName,
-                address: 'public',
+                address: notificationAddress,
                 userId: userId,
                 payload: {
                     title: 'title',
@@ -1763,6 +1777,844 @@ describe('NotificationRecordsController', () => {
 
             expect(itemsStore.sentNotifications.slice(1)).toEqual([]);
             expect(itemsStore.sentPushNotifications).toEqual([]);
+        });
+
+        describe('credits', () => {
+            let financialInterface: MemoryFinancialInterface;
+            let financialController: FinancialController;
+
+            beforeEach(async () => {
+                financialInterface = new MemoryFinancialInterface();
+                financialController = new FinancialController(
+                    financialInterface,
+                    store
+                );
+
+                pushInterface = {
+                    getServerApplicationKey: jest.fn(),
+                    sendNotification: jest.fn(),
+                };
+
+                manager = new NotificationRecordsController({
+                    policies,
+                    store: itemsStore,
+                    config: store,
+                    pushInterface,
+                    financialController,
+                });
+
+                unwrap(await financialController.init());
+
+                const account = unwrap(
+                    await financialController.getOrCreateFinancialAccount({
+                        userId: userId,
+                        ledger: LEDGERS.credits,
+                    })
+                );
+
+                unwrap(
+                    await financialController.internalTransaction({
+                        transfers: [
+                            {
+                                amount: 10000n,
+                                debitAccountId: ACCOUNT_IDS.liquidity_credits,
+                                creditAccountId: account.account.id,
+                                code: TransferCodes.admin_credit,
+                                currency: CurrencyCodes.credits,
+                            },
+                        ],
+                    })
+                );
+
+                // Create a test notification
+                // await manager.recordItem({
+                //     recordKeyOrRecordName: key,
+                //     userId: userId,
+                //     item: {
+                //         address: notificationAddress,
+                //         markers: [PUBLIC_READ_MARKER],
+                //         description: 'Test notification',
+                //     },
+                //     instances: [],
+                // });
+
+                pushInterface.sendNotification.mockResolvedValue({
+                    success: true,
+                });
+            });
+
+            describe('user', () => {
+                it('should charge credits for sending a notification', async () => {
+                    store.subscriptionConfiguration = buildSubscriptionConfig(
+                        (config) =>
+                            config.addSubscription('sub1', (sub) =>
+                                sub.withTier('tier1').withNotifications({
+                                    allowed: true,
+                                    creditFeePerNotificationSent: 50n, // 50 credits per notification
+                                })
+                            )
+                    );
+
+                    const user = await store.findUser(userId);
+                    await store.saveUser({
+                        ...user,
+                        subscriptionId: 'sub1',
+                        subscriptionStatus: 'active',
+                    });
+
+                    const result = await manager.sendNotification({
+                        recordName,
+                        address: notificationAddress,
+                        userId,
+                        payload: {
+                            title: 'Test',
+                            body: 'Test notification',
+                        },
+                        instances: [],
+                    });
+
+                    expect(result.success).toBe(true);
+
+                    const userAccount = unwrap(
+                        await financialController.getAccountBalance({
+                            userId: userId,
+                            ledger: LEDGERS.credits,
+                        })
+                    );
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: ACCOUNT_IDS.revenue_records_usage_credits,
+                            credits_posted: 50n,
+                            debits_posted: 0n,
+                            credits_pending: 0n,
+                            debits_pending: 0n,
+                        },
+                        {
+                            id: BigInt(userAccount!.accountId),
+                            credits_posted: 10000n,
+                            debits_posted: 50n,
+                            credits_pending: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+
+                    await checkBillingTotals(
+                        financialController,
+                        userAccount!.accountId,
+                        {
+                            [BillingCodes.notification_sent]: 50n,
+                        }
+                    );
+                });
+
+                it('should fail if user doesnt have enough credits to send notification', async () => {
+                    store.subscriptionConfiguration = buildSubscriptionConfig(
+                        (config) =>
+                            config.addSubscription('sub1', (sub) =>
+                                sub.withTier('tier1').withNotifications({
+                                    allowed: true,
+                                    creditFeePerNotificationSent: 100_000n, // 100,000 credits
+                                })
+                            )
+                    );
+
+                    const user = await store.findUser(userId);
+                    await store.saveUser({
+                        ...user,
+                        subscriptionId: 'sub1',
+                        subscriptionStatus: 'active',
+                    });
+
+                    const result = await manager.sendNotification({
+                        recordName,
+                        address: notificationAddress,
+                        userId,
+                        payload: {
+                            title: 'Test',
+                            body: 'Test notification',
+                        },
+                        instances: [],
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'insufficient_funds',
+                        errorMessage: 'Insufficient funds to cover usage.',
+                    });
+
+                    const userAccount = unwrap(
+                        await financialController.getAccountBalance({
+                            userId: userId,
+                            ledger: LEDGERS.credits,
+                        })
+                    );
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: ACCOUNT_IDS.revenue_records_usage_credits,
+                            credits_posted: 0n,
+                            debits_posted: 0n,
+                            credits_pending: 0n,
+                            debits_pending: 0n,
+                        },
+                        {
+                            id: BigInt(userAccount!.accountId),
+                            credits_posted: 10000n,
+                            debits_posted: 0n,
+                            credits_pending: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                });
+
+                it('should charge credits for each push notification sent', async () => {
+                    store.subscriptionConfiguration = buildSubscriptionConfig(
+                        (config) =>
+                            config.addSubscription('sub1', (sub) =>
+                                sub.withTier('tier1').withNotifications({
+                                    allowed: true,
+                                    creditFeePerPushNotificationSent: 25n, // 25 credits per push
+                                })
+                            )
+                    );
+
+                    const user = await store.findUser(userId);
+                    await store.saveUser({
+                        ...user,
+                        subscriptionId: 'sub1',
+                        subscriptionStatus: 'active',
+                    });
+
+                    const result = await manager.sendNotification({
+                        recordName,
+                        address: notificationAddress,
+                        userId,
+                        payload: {
+                            title: 'Test',
+                            body: 'Test notification',
+                        },
+                        instances: [],
+                    });
+
+                    expect(result.success).toBe(true);
+
+                    const userAccount = unwrap(
+                        await financialController.getAccountBalance({
+                            userId: userId,
+                            ledger: LEDGERS.credits,
+                        })
+                    );
+
+                    // Should charge 25 credits per push * 2 subscribers = 50 credits
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: ACCOUNT_IDS.revenue_records_usage_credits,
+                            credits_posted: 50n,
+                            debits_posted: 0n,
+                            credits_pending: 0n,
+                            debits_pending: 0n,
+                        },
+                        {
+                            id: BigInt(userAccount!.accountId),
+                            credits_posted: 10000n,
+                            debits_posted: 50n,
+                            credits_pending: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+
+                    await checkBillingTotals(
+                        financialController,
+                        userAccount!.accountId,
+                        {
+                            [BillingCodes.notification_push_sent]: 50n,
+                        }
+                    );
+                });
+
+                it('should fail if user doesnt have enough credits for push notifications', async () => {
+                    store.subscriptionConfiguration = buildSubscriptionConfig(
+                        (config) =>
+                            config.addSubscription('sub1', (sub) =>
+                                sub.withTier('tier1').withNotifications({
+                                    allowed: true,
+                                    creditFeePerPushNotificationSent: 50_000n, // 50,000 credits per push
+                                })
+                            )
+                    );
+
+                    const user = await store.findUser(userId);
+                    await store.saveUser({
+                        ...user,
+                        subscriptionId: 'sub1',
+                        subscriptionStatus: 'active',
+                    });
+
+                    const result = await manager.sendNotification({
+                        recordName,
+                        address: notificationAddress,
+                        userId,
+                        payload: {
+                            title: 'Test',
+                            body: 'Test notification',
+                        },
+                        instances: [],
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'insufficient_funds',
+                        errorMessage: 'Insufficient funds to cover usage.',
+                    });
+
+                    const userAccount = unwrap(
+                        await financialController.getAccountBalance({
+                            userId: userId,
+                            ledger: LEDGERS.credits,
+                        })
+                    );
+
+                    // Should charge 25 credits per push * 2 subscribers = 50 credits
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: ACCOUNT_IDS.revenue_records_usage_credits,
+                            credits_posted: 0n,
+                            debits_posted: 0n,
+                            credits_pending: 0n,
+                            debits_pending: 0n,
+                        },
+                        {
+                            id: BigInt(userAccount!.accountId),
+                            credits_posted: 10000n,
+                            debits_posted: 0n,
+                            credits_pending: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                });
+
+                it('should not charge for sending a notification if charging for push notifications fails', async () => {
+                    store.subscriptionConfiguration = buildSubscriptionConfig(
+                        (config) =>
+                            config.addSubscription('sub1', (sub) =>
+                                sub.withTier('tier1').withNotifications({
+                                    allowed: true,
+                                    creditFeePerNotificationSent: 50n, // 50 credits per notification
+                                    creditFeePerPushNotificationSent: 50_000n, // 50,000 credits per push
+                                })
+                            )
+                    );
+
+                    const user = await store.findUser(userId);
+                    await store.saveUser({
+                        ...user,
+                        subscriptionId: 'sub1',
+                        subscriptionStatus: 'active',
+                    });
+
+                    const result = await manager.sendNotification({
+                        recordName,
+                        address: notificationAddress,
+                        userId,
+                        payload: {
+                            title: 'Test',
+                            body: 'Test notification',
+                        },
+                        instances: [],
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'insufficient_funds',
+                        errorMessage: 'Insufficient funds to cover usage.',
+                    });
+
+                    const userAccount = unwrap(
+                        await financialController.getAccountBalance({
+                            userId: userId,
+                            ledger: LEDGERS.credits,
+                        })
+                    );
+
+                    // Should charge 25 credits per push * 2 subscribers = 50 credits
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: ACCOUNT_IDS.revenue_records_usage_credits,
+                            credits_posted: 0n,
+                            debits_posted: 0n,
+                            credits_pending: 0n,
+                            debits_pending: 0n,
+                        },
+                        {
+                            id: BigInt(userAccount!.accountId),
+                            credits_posted: 10000n,
+                            debits_posted: 0n,
+                            credits_pending: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                });
+
+                it('should charge both notification and push fees', async () => {
+                    store.subscriptionConfiguration = buildSubscriptionConfig(
+                        (config) =>
+                            config.addSubscription('sub1', (sub) =>
+                                sub.withTier('tier1').withNotifications({
+                                    allowed: true,
+                                    creditFeePerNotificationSent: 100n,
+                                    creditFeePerPushNotificationSent: 25n,
+                                })
+                            )
+                    );
+
+                    const user = await store.findUser(userId);
+                    await store.saveUser({
+                        ...user,
+                        subscriptionId: 'sub1',
+                        subscriptionStatus: 'active',
+                    });
+
+                    const result = await manager.sendNotification({
+                        recordName,
+                        address: notificationAddress,
+                        userId,
+                        payload: {
+                            title: 'Test',
+                            body: 'Test notification',
+                        },
+                        instances: [],
+                    });
+
+                    expect(result.success).toBe(true);
+
+                    const userAccount = unwrap(
+                        await financialController.getAccountBalance({
+                            userId: userId,
+                            ledger: LEDGERS.credits,
+                        })
+                    );
+
+                    // Should charge 100 for notification + (25 * 2) for pushes = 150 total
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: ACCOUNT_IDS.revenue_records_usage_credits,
+                            credits_posted: 150n,
+                            debits_posted: 0n,
+                            credits_pending: 0n,
+                            debits_pending: 0n,
+                        },
+                        {
+                            id: BigInt(userAccount!.accountId),
+                            credits_posted: 10000n,
+                            debits_posted: 150n,
+                            credits_pending: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+
+                    await checkBillingTotals(
+                        financialController,
+                        userAccount!.accountId,
+                        {
+                            [BillingCodes.notification_push_sent]: 50n,
+                            [BillingCodes.notification_sent]: 100n,
+                        }
+                    );
+                });
+            });
+
+            describe('studio', () => {
+                const studioId = 'studio1';
+                const studioRecordName = 'studioRecord';
+
+                beforeEach(async () => {
+                    await store.addStudio({
+                        id: studioId,
+                        displayName: 'My Studio!',
+                        subscriptionId: 'sub1',
+                        subscriptionStatus: 'active',
+                    });
+
+                    await store.addStudioAssignment({
+                        studioId,
+                        userId,
+                        role: 'admin',
+                        isPrimaryContact: true,
+                    });
+
+                    await store.addRecord({
+                        name: studioRecordName,
+                        studioId: studioId,
+                        ownerId: null,
+                        secretHashes: [],
+                        secretSalt: '',
+                    });
+
+                    const account = unwrap(
+                        await financialController.getOrCreateFinancialAccount({
+                            studioId: studioId,
+                            ledger: LEDGERS.credits,
+                        })
+                    );
+
+                    unwrap(
+                        await financialController.internalTransaction({
+                            transfers: [
+                                {
+                                    amount: 10000n,
+                                    debitAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    creditAccountId: account.account.id,
+                                    code: TransferCodes.admin_credit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                            ],
+                        })
+                    );
+
+                    // Create a test notification in the studio record
+                    await manager.recordItem({
+                        recordKeyOrRecordName: studioRecordName,
+                        userId: userId,
+                        item: {
+                            address: notificationAddress,
+                            markers: [PUBLIC_READ_MARKER],
+                            description: 'Studio notification',
+                        },
+                        instances: [],
+                    });
+
+                    store.subscriptionConfiguration = buildSubscriptionConfig(
+                        (config) =>
+                            config.addSubscription('sub1', (sub) =>
+                                sub.withTier('tier1').withNotifications({
+                                    allowed: true,
+                                    creditFeePerNotificationSent: 50n,
+                                    creditFeePerPushNotificationSent: 25n,
+                                })
+                            )
+                    );
+
+                    // Subscribe a user to the notification
+                    await saveTestSubscription({
+                        id: 'studioSub1',
+                        userId: userId,
+                        recordName: studioRecordName,
+                        notificationAddress,
+                        pushSubscription: {
+                            endpoint: 'endpoint1',
+                            keys: { p256dh: 'key1', auth: 'auth1' },
+                        },
+                    });
+
+                    await saveTestSubscription({
+                        id: 'studioSub2',
+                        userId: otherUserId,
+                        recordName: studioRecordName,
+                        notificationAddress,
+                        pushSubscription: {
+                            endpoint: 'endpoint2',
+                            keys: { p256dh: 'key2', auth: 'auth2' },
+                        },
+                    });
+                });
+
+                it('should charge credits for sending a notification', async () => {
+                    store.subscriptionConfiguration = buildSubscriptionConfig(
+                        (config) =>
+                            config.addSubscription('sub1', (sub) =>
+                                sub.withTier('tier1').withNotifications({
+                                    allowed: true,
+                                    creditFeePerNotificationSent: 50n, // 50 credits per notification
+                                })
+                            )
+                    );
+
+                    const result = await manager.sendNotification({
+                        recordName: studioRecordName,
+                        address: notificationAddress,
+                        userId,
+                        payload: {
+                            title: 'Test',
+                            body: 'Test notification',
+                        },
+                        instances: [],
+                    });
+
+                    expect(result.success).toBe(true);
+
+                    const studioAccount = unwrap(
+                        await financialController.getAccountBalance({
+                            studioId: studioId,
+                            ledger: LEDGERS.credits,
+                        })
+                    );
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: ACCOUNT_IDS.revenue_records_usage_credits,
+                            credits_posted: 50n,
+                            debits_posted: 0n,
+                            credits_pending: 0n,
+                            debits_pending: 0n,
+                        },
+                        {
+                            id: BigInt(studioAccount!.accountId),
+                            credits_posted: 10000n,
+                            debits_posted: 50n,
+                            credits_pending: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+
+                    await checkBillingTotals(
+                        financialController,
+                        studioAccount!.accountId,
+                        {
+                            [BillingCodes.notification_sent]: 50n,
+                        }
+                    );
+                });
+
+                it('should fail if studio doesnt have enough credits to send notification', async () => {
+                    store.subscriptionConfiguration = buildSubscriptionConfig(
+                        (config) =>
+                            config.addSubscription('sub1', (sub) =>
+                                sub.withTier('tier1').withNotifications({
+                                    allowed: true,
+                                    creditFeePerNotificationSent: 100_000n, // 100,000 credits
+                                })
+                            )
+                    );
+
+                    const result = await manager.sendNotification({
+                        recordName: studioRecordName,
+                        address: notificationAddress,
+                        userId,
+                        payload: {
+                            title: 'Test',
+                            body: 'Test notification',
+                        },
+                        instances: [],
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'insufficient_funds',
+                        errorMessage: 'Insufficient funds to cover usage.',
+                    });
+                });
+
+                it('should charge credits for each push notification sent', async () => {
+                    store.subscriptionConfiguration = buildSubscriptionConfig(
+                        (config) =>
+                            config.addSubscription('sub1', (sub) =>
+                                sub.withTier('tier1').withNotifications({
+                                    allowed: true,
+                                    creditFeePerPushNotificationSent: 25n, // 25 credits per push
+                                })
+                            )
+                    );
+
+                    const result = await manager.sendNotification({
+                        recordName: studioRecordName,
+                        address: notificationAddress,
+                        userId,
+                        payload: {
+                            title: 'Test',
+                            body: 'Test notification',
+                        },
+                        instances: [],
+                    });
+
+                    expect(result.success).toBe(true);
+
+                    const studioAccount = unwrap(
+                        await financialController.getAccountBalance({
+                            studioId: studioId,
+                            ledger: LEDGERS.credits,
+                        })
+                    );
+
+                    // Should charge 25 credits per push * 2 subscribers = 50 credits
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: ACCOUNT_IDS.revenue_records_usage_credits,
+                            credits_posted: 50n,
+                            debits_posted: 0n,
+                            credits_pending: 0n,
+                            debits_pending: 0n,
+                        },
+                        {
+                            id: BigInt(studioAccount!.accountId),
+                            credits_posted: 10000n,
+                            debits_posted: 50n,
+                            credits_pending: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+
+                    await checkBillingTotals(
+                        financialController,
+                        studioAccount!.accountId,
+                        {
+                            [BillingCodes.notification_push_sent]: 50n,
+                        }
+                    );
+                });
+
+                it('should fail if studio doesnt have enough credits for push notifications', async () => {
+                    store.subscriptionConfiguration = buildSubscriptionConfig(
+                        (config) =>
+                            config.addSubscription('sub1', (sub) =>
+                                sub.withTier('tier1').withNotifications({
+                                    allowed: true,
+                                    creditFeePerPushNotificationSent: 50_000n, // 50,000 credits per push
+                                })
+                            )
+                    );
+
+                    const result = await manager.sendNotification({
+                        recordName: studioRecordName,
+                        address: notificationAddress,
+                        userId,
+                        payload: {
+                            title: 'Test',
+                            body: 'Test notification',
+                        },
+                        instances: [],
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'insufficient_funds',
+                        errorMessage: 'Insufficient funds to cover usage.',
+                    });
+                });
+
+                it('should not charge for sending a notification if charging for push notifications fails', async () => {
+                    store.subscriptionConfiguration = buildSubscriptionConfig(
+                        (config) =>
+                            config.addSubscription('sub1', (sub) =>
+                                sub.withTier('tier1').withNotifications({
+                                    allowed: true,
+                                    creditFeePerNotificationSent: 50n, // 50 credits per notification
+                                    creditFeePerPushNotificationSent: 50_000n, // 50,000 credits per push
+                                })
+                            )
+                    );
+
+                    const user = await store.findUser(userId);
+                    await store.saveUser({
+                        ...user,
+                        subscriptionId: 'sub1',
+                        subscriptionStatus: 'active',
+                    });
+
+                    const result = await manager.sendNotification({
+                        recordName: studioRecordName,
+                        address: notificationAddress,
+                        userId,
+                        payload: {
+                            title: 'Test',
+                            body: 'Test notification',
+                        },
+                        instances: [],
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'insufficient_funds',
+                        errorMessage: 'Insufficient funds to cover usage.',
+                    });
+
+                    const studioAccount = unwrap(
+                        await financialController.getAccountBalance({
+                            studioId,
+                            ledger: LEDGERS.credits,
+                        })
+                    );
+
+                    // Should charge 25 credits per push * 2 subscribers = 50 credits
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: ACCOUNT_IDS.revenue_records_usage_credits,
+                            credits_posted: 0n,
+                            debits_posted: 0n,
+                            credits_pending: 0n,
+                            debits_pending: 0n,
+                        },
+                        {
+                            id: BigInt(studioAccount!.accountId),
+                            credits_posted: 10000n,
+                            debits_posted: 0n,
+                            credits_pending: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                });
+
+                it('should charge both notification and push fees', async () => {
+                    store.subscriptionConfiguration = buildSubscriptionConfig(
+                        (config) =>
+                            config.addSubscription('sub1', (sub) =>
+                                sub.withTier('tier1').withNotifications({
+                                    allowed: true,
+                                    creditFeePerNotificationSent: 100n,
+                                    creditFeePerPushNotificationSent: 25n,
+                                })
+                            )
+                    );
+
+                    const result = await manager.sendNotification({
+                        recordName: studioRecordName,
+                        address: notificationAddress,
+                        userId,
+                        payload: {
+                            title: 'Test',
+                            body: 'Test notification',
+                        },
+                        instances: [],
+                    });
+
+                    expect(result.success).toBe(true);
+
+                    const studioAccount = unwrap(
+                        await financialController.getAccountBalance({
+                            studioId: studioId,
+                            ledger: LEDGERS.credits,
+                        })
+                    );
+
+                    // Should charge 100 for notification + (25 * 2) for pushes = 150 total
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: ACCOUNT_IDS.revenue_records_usage_credits,
+                            credits_posted: 150n,
+                            debits_posted: 0n,
+                            credits_pending: 0n,
+                            debits_pending: 0n,
+                        },
+                        {
+                            id: BigInt(studioAccount!.accountId),
+                            credits_posted: 10000n,
+                            debits_posted: 150n,
+                            credits_pending: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+
+                    await checkBillingTotals(
+                        financialController,
+                        studioAccount!.accountId,
+                        {
+                            [BillingCodes.notification_sent]: 100n,
+                            [BillingCodes.notification_push_sent]: 50n,
+                        }
+                    );
+                });
+            });
         });
     });
 

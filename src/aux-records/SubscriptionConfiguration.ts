@@ -296,6 +296,66 @@ export const getDataFeaturesSchema = memoize(() =>
 
 export type DataFeaturesSchema = ReturnType<typeof getDataFeaturesSchema>;
 
+export const aiChatFeaturesSchema = memoize(() =>
+    z.object({
+        allowed: z
+            .boolean()
+            .describe(
+                'Whether AI chat requests are allowed for the subscription. If false, then every request to generate AI chat will be rejected.'
+            ),
+        maxTokensPerPeriod: z
+            .int()
+            .positive()
+            .optional()
+            .describe(
+                'The maximum number of AI chat tokens allowed per subscription period. If omitted, then there is no limit.'
+            ),
+        maxTokensPerRequest: z
+            .int()
+            .positive()
+            .optional()
+            .describe(
+                'The maximum number of AI chat tokens allowed per request. If omitted, then there is no limit.'
+            ),
+        allowedModels: z
+            .array(z.string())
+            .optional()
+            .describe(
+                'The list of model IDs that are allowed for the subscription. If omitted, then all models are allowed.'
+            ),
+
+        creditFeePerInputToken: z.coerce
+            .bigint()
+            .optional()
+            .describe(
+                'The number of credits that are charged for each input token. If not specified, then there is no fee.'
+            ),
+
+        creditFeePerOutputToken: z.coerce
+            .bigint()
+            .optional()
+            .describe(
+                'The number of credits that are charged for each output token. If not specified, then there is no fee.'
+            ),
+
+        preChargeInputTokens: z
+            .int()
+            .optional()
+            .describe(
+                'The number of input tokens that are charged before chat requests are made. This is used to ensure that there are enough credits in the account to cover most of the cost of the request. If the final request costs less, than the difference is refunded to the account. If not, then the difference is charged after the request. If not specified, then the account is pre charged for 100 input tokens and 100 output tokens.'
+            ),
+
+        preChargeOutputTokens: z
+            .int()
+            .optional()
+            .describe(
+                'The number of output tokens that are charged before chat requests are made. This is used to ensure that there are enough credits in the account to cover most of the cost of the request. If the final request costs less, than the difference is refunded to the account. If not, then the difference is charged after the request. If not specified, then the account is pre charged for 100 input tokens and 100 output tokens.'
+            ),
+    })
+);
+
+export type aiChatFeaturesSchema = ReturnType<typeof aiChatFeaturesSchema>;
+
 export const getSubscriptionFeaturesSchema = memoize(() =>
     z.object({
         records: z
@@ -344,18 +404,25 @@ export const getSubscriptionFeaturesSchema = memoize(() =>
                     'The maximum number of file bytes that can be stored for the subscription. If omitted, then there is no limit.'
                 ),
 
-            creditFeePerBytePerPeriod: z
-                .int()
+            creditFeePerKilobytePerPeriod: z.coerce
+                .bigint()
                 .optional()
                 .describe(
-                    'The number of credits that are charged for each byte stored in files per subscription period. If not specified, then there is no fee.'
+                    'The number of credits that are charged for each kilobyte stored in files per subscription period. If not specified, then there is no fee.'
                 ),
 
-            creditFeePerFilePerPeriod: z
-                .int()
+            creditFeePerFilePerPeriod: z.coerce
+                .bigint()
                 .optional()
                 .describe(
                     'The number of credits that are charged for each file per subscription period. If not specified, then there is no fee.'
+                ),
+
+            creditFeePerFileWrite: z.coerce
+                .bigint()
+                .optional()
+                .describe(
+                    'The number of credits that are charged for each file write operation. If not specified, then there is no fee.'
                 ),
         }),
         events: z.object({
@@ -390,33 +457,7 @@ export const getSubscriptionFeaturesSchema = memoize(() =>
                 .describe('Not currently implemented.'),
         }),
         ai: z.object({
-            chat: z.object({
-                allowed: z
-                    .boolean()
-                    .describe(
-                        'Whether AI chat requests are allowed for the subscription. If false, then every request to generate AI chat will be rejected.'
-                    ),
-                maxTokensPerPeriod: z
-                    .int()
-                    .positive()
-                    .optional()
-                    .describe(
-                        'The maximum number of AI chat tokens allowed per subscription period. If omitted, then there is no limit.'
-                    ),
-                allowedModels: z
-                    .array(z.string())
-                    .optional()
-                    .describe(
-                        'The list of model IDs that are allowed for the subscription. If omitted, then all models are allowed.'
-                    ),
-
-                creditFeePerToken: z
-                    .int()
-                    .optional()
-                    .describe(
-                        'The number of credits that are charged for each token that is generated. If not specified, then there is no fee.'
-                    ),
-            }),
+            chat: aiChatFeaturesSchema(),
             images: z.object({
                 allowed: z
                     .boolean()
@@ -465,6 +506,13 @@ export const getSubscriptionFeaturesSchema = memoize(() =>
                         .boolean()
                         .describe(
                             'Whether Hume AI features are allowed for the subscription. If false, then every request to generate Hume AI will be rejected.'
+                        ),
+
+                    creditFeePerAccessToken: z.coerce
+                        .bigint()
+                        .optional()
+                        .describe(
+                            'The number of credits that are charged for each access token generated. If not specified, then there is no fee.'
                         ),
                 })
                 .optional()
@@ -575,18 +623,18 @@ export const getSubscriptionFeaturesSchema = memoize(() =>
                     'The maximum number of active websocket connections that an inst can have. If omitted, then there is no limit.'
                 ),
 
-            creditFeePerInstPerPeriod: z
-                .int()
+            creditFeePerInstPerPeriod: z.coerce
+                .bigint()
                 .optional()
                 .describe(
                     'The number of credits that are charged for each inst per subscription period. If not specified, then there is no fee.'
                 ),
 
-            creditFeePerBytePerPeriod: z
-                .int()
+            creditFeePerKilobytePerPeriod: z.coerce
+                .bigint()
                 .optional()
                 .describe(
-                    'The number of credits that are charged for each byte stored in an inst per subscription period. If not specified, then there is no fee.'
+                    'The number of credits that are charged for each kilobyte (1000 bytes) stored in an inst per subscription period. If not specified, then there is no fee.'
                 ),
         }),
         comId: z
@@ -677,20 +725,20 @@ export const getSubscriptionFeaturesSchema = memoize(() =>
                         'The maximum number of push notifications that can be sent per subscription period. This tracks the actual number of push notifications that were sent to users. If not specified, then there is no limit.'
                     ),
 
-                creditFeePerNotificationSent: z
-                    .int()
+                creditFeePerNotificationSent: z.coerce
+                    .bigint()
                     .optional()
                     .describe(
                         'The number of credits that it costs to send a notification. If not specified, then sending notifications is free.'
                     ),
-                creditFeePerPushNotificationSent: z
-                    .int()
+                creditFeePerPushNotificationSent: z.coerce
+                    .bigint()
                     .optional()
                     .describe(
                         'The number of credits that it costs to send a push notification. If not specified, then sending push notifications is free.'
                     ),
-                creditFeePerSubscriberPerPeriod: z
-                    .int()
+                creditFeePerSubscriberPerPeriod: z.coerce
+                    .bigint()
                     .optional()
                     .describe(
                         'The number of credits that are charged for each subscriber per subscription period. If not specified, then there is no fee.'
@@ -1316,37 +1364,8 @@ export interface RecordFeaturesConfiguration {
     maxRecords?: number;
 }
 
-export interface DataFeaturesConfiguration {
-    /**
-     * Whether data resources should be allowed.
-     */
-    allowed: boolean;
-
-    /**
-     * The maximum number of items that are allowed.
-     * If not specified, then there is no limit.
-     */
-    maxItems?: number;
-
-    /**
-     * The maximum number of item reads that are allowed per subscription period.
-     * If not specified, then there is no limit.
-     */
-    maxReadsPerPeriod?: number;
-
-    /**
-     * The maximum number of item writes that are allowed per period.
-     * If not specified, then there is no limit.
-     */
-    maxWritesPerPeriod?: number;
-
-    /**
-     * The maximum number of bytes that can be stored in a single data item.
-     * If not specified, then the limit is 500,000 bytes (500KB).
-     * If set to null, then there is no limit.
-     */
-    maxItemSizeInBytes?: number;
-}
+export type DataFeaturesConfiguration =
+    z.infer<SubscriptionFeaturesSchema>['data'];
 
 export interface FileFeaturesConfiguration {
     /**
@@ -1371,6 +1390,22 @@ export interface FileFeaturesConfiguration {
      * If not specified, then there is no limit.
      */
     maxBytesTotal?: number;
+
+    /**
+     * The number of credits that are charged for each file write operation.
+     * If not specified, then there is no fee.
+     */
+    creditFeePerFileWrite?: bigint;
+
+    /**
+     * The number of credits that are charged for each kilobyte (1000 bytes) stored per subscription period.
+     */
+    creditFeePerKilobytePerPeriod?: bigint;
+
+    /**
+     * The number of credits that are charged for each file stored per subscription period.
+     */
+    creditFeePerFilePerPeriod?: bigint;
 }
 
 export interface EventFeaturesConfiguration {
@@ -1415,30 +1450,7 @@ export interface AIFeaturesConfiguration {
 export type AIOpenAIFeaturesConfiguration =
     z.infer<SubscriptionFeaturesSchema>['ai']['openai'];
 
-export interface AIChatFeaturesConfiguration {
-    /**
-     * Whether AI chat features are allowed.
-     */
-    allowed: boolean;
-
-    /**
-     * The maximum number of tokens that are allowed to be processed per request.
-     * If not specified, then there is no limit.
-     */
-    maxTokensPerRequest?: number;
-
-    /**
-     * The maximum number of tokens that are allowed to be processed per subscription period.
-     * If not specified, then there is no limit.
-     */
-    maxTokensPerPeriod?: number;
-
-    /**
-     * The list of model IDs that are allowed for the subscription.
-     * If omitted, then all models are allowed.
-     */
-    allowedModels?: string[];
-}
+export type AIChatFeaturesConfiguration = z.infer<aiChatFeaturesSchema>;
 
 export interface AIImageFeaturesConfiguration {
     /**
@@ -1461,6 +1473,12 @@ export interface AIImageFeaturesConfiguration {
      * total pixels = (square pixels) ^ 2
      */
     maxSquarePixelsPerPeriod?: number;
+
+    /**
+     * The number of credits that are charged for each square pixel that is generated.
+     * If not specified, then there is no fee.
+     */
+    creditFeePerSquarePixel?: number;
 }
 
 export interface AISkyboxFeaturesConfiguration {
@@ -1474,6 +1492,12 @@ export interface AISkyboxFeaturesConfiguration {
      * If not specified, then there is no limit.
      */
     maxSkyboxesPerPeriod?: number;
+
+    /**
+     * The number of credits that are charged for each skybox that is generated.
+     * If not specified, then there is no fee.
+     */
+    creditFeePerSkybox?: number;
 }
 
 export interface AIHumeFeaturesConfiguration {
@@ -1481,6 +1505,11 @@ export interface AIHumeFeaturesConfiguration {
      * Whether Hume AI features are allowed.
      */
     allowed: boolean;
+
+    /**
+     * The number of credits that are charged for each token processed by Hume AI.
+     */
+    creditFeePerAccessToken?: bigint;
 }
 
 export interface AISloydFeaturesConfiguration {
@@ -1516,6 +1545,16 @@ export interface InstsFeaturesConfiguration {
      * The maximum number of concurrent connections allowed per inst.
      */
     maxActiveConnectionsPerInst?: number;
+
+    /**
+     * The number of credits that are charged for each inst per subscription period.
+     */
+    creditFeePerInstPerPeriod?: bigint;
+
+    /**
+     * The number of credits that are charged for each kilobyte (1000 bytes) stored in an inst per subscription period.
+     */
+    creditFeePerKilobytePerPeriod?: bigint;
 }
 
 export interface StudioComIdFeaturesConfiguration {

@@ -25,7 +25,7 @@ import {
     Quaternion,
     Ray,
     Sphere,
-    SphereBufferGeometry,
+    SphereGeometry,
     Vector2,
     Vector3,
 } from '@casual-simulation/three';
@@ -222,7 +222,7 @@ export class SphereGrid3D extends Object3D implements Grid3D {
             disposeObject3D(this._gridLines);
         }
 
-        const sphereGeo = new SphereBufferGeometry(0.5, 24, 24);
+        const sphereGeo = new SphereGeometry(0.5, 24, 24);
         const material = new LineBasicMaterial({
             transparent: true,
             color: new Color('#fff'),

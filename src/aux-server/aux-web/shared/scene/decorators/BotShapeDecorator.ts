@@ -40,6 +40,7 @@ import {
     isBotPointable,
     parseBotVector,
 } from '@casual-simulation/aux-common';
+import { SplatMesh } from '@sparkjsdev/spark';
 import { ArgEvent } from '@casual-simulation/aux-common/Event';
 import type { AnimationAction } from '@casual-simulation/three';
 import {
@@ -181,6 +182,7 @@ export class BotShapeDecorator
     private _mapView: MapView;
     private _mapProviderName: string;
     private _mapProviderApiKey: string;
+    private _splat: SplatMesh;
 
     container: Group;
     mesh: Mesh | FrustumHelper;
@@ -735,6 +737,12 @@ export class BotShapeDecorator
             disposeObject3D(this._iframe.object3d);
         }
 
+        if (this._splat) {
+            this.container.remove(this._splat);
+            this._splat.dispose();
+            this._splat = null;
+        }
+
         if (this.scene) {
             this.scene.traverse((obj) => {
                 if (obj instanceof Mesh) {
@@ -1233,6 +1241,8 @@ export class BotShapeDecorator
                 this._createLDraw();
             } else if (this._subShape === 'jsonObject' && this._address) {
                 this._createJsonObject();
+            } else if (this._subShape === 'splat') {
+                this._createSplat();
             } else {
                 this._createCube();
             }
@@ -1339,6 +1349,62 @@ export class BotShapeDecorator
                 );
             }
         }
+    }
+
+    private async _createSplat() {
+        this.stroke = null;
+        this._canHaveStroke = false;
+        const mesh = new SplatMesh({
+            url: this._address,
+            onLoad: (mesh) => {
+                if (this._splat !== mesh) {
+                    return;
+                }
+                let box = mesh.getBoundingBox();
+                let size = new Vector3();
+                box.getSize(size);
+                let center = new Vector3();
+                box.getCenter(center);
+                const maxScale = Math.max(size.x, size.y, size.z);
+
+                if (this._scaleMode !== 'absolute') {
+                    size.divideScalar(maxScale);
+                    center.divideScalar(maxScale);
+                    mesh.scale.divideScalar(maxScale);
+                }
+
+                if (this._positioningMode !== 'absolute') {
+                    let bottomCenter = new Vector3(
+                        -center.x,
+                        -center.y,
+                        -center.z
+                    );
+                    // Scene
+                    mesh.position.copy(bottomCenter);
+                }
+
+                // Collider
+                const collider = (this.collider = createCube(1));
+                this.collider.scale.copy(size);
+                setColor(collider, 'clear');
+                this.container.add(this.collider);
+                this.bot3D.colliders.push(this.collider);
+
+                // TODO: Support color tinting
+            },
+        });
+
+        mesh.quaternion.setFromAxisAngle(new Vector3(1, 0, 0), -Math.PI / 2);
+
+        this._splat = mesh;
+        this.container.add(mesh);
+        this.mesh = null;
+        this.scene = null;
+
+        this._updateColor(null);
+        this._updateOpacity(null);
+        this._updateRenderOrder(null);
+        this.bot3D.updateMatrixWorld(true);
     }
 
     private async _loadGLTF(

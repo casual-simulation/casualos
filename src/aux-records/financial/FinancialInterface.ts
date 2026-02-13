@@ -167,7 +167,7 @@ export function convertBetweenLedgers(
     from: LedgersType,
     to: LedgersType,
     value: bigint
-): ConvertedCurrency | null {
+): ConvertedCurrency {
     let rate = getExchangeRate(from, to);
     if (rate) {
         return {
@@ -293,6 +293,17 @@ export const ACCOUNT_IDS = {
      * The ID of the store platform fees revenue account.
      */
     revenue_store_platform_fees: 4102n,
+
+    /**
+     * The ID of the records usage revenue account in the USD ledger.
+     */
+    revenue_records_usage_usd: 4103n,
+
+    /**
+     * The ID of the records usage revenue account in the credits ledger.
+     * This is used for billing data records and file records usage.
+     */
+    revenue_records_usage_credits: 4104n,
 
     /**
      * The ID of the USD liquidity account.
@@ -435,6 +446,11 @@ export enum TransferCodes {
     account_closing = 7,
 
     /**
+     * A transfer of credits from credits-denominated revenue accounts to their related USD-denominated revenue accounts.
+     */
+    revenue_credit_sweep = 8,
+
+    /**
      * A credit to a user's account based on the purchase of credits.
      * This generally functions as a top-up of the user's account and corresponds to a debit from an assets account.
      */
@@ -481,6 +497,11 @@ export enum TransferCodes {
      */
     store_platform_fee = 3003,
 
+    /**
+     * A credit to the records usage revenue account and a debit from the user's account.
+     */
+    records_usage_fee = 3004,
+
     // /**
     //  * A credit to the user from external entities (e.g. deposit to system via stripe / balance reload)
     //  */
@@ -505,6 +526,94 @@ export enum TransferCodes {
     //  * A debit to a contract from a user
     //  */
     // user_debits_contract = 2200,
+}
+
+/**
+ * Standards for billing codes from the system's perspective
+ * * These are used for tracking different types of billable events in the system for reporting and analytics purposes.
+ * * Stored in the user_data_32 field of transfers.
+ * * [0000] Reserved
+ * * [1000] Data records
+ * * [2000] File records
+ * * [3000] Inst records
+ * * [4000] AI services
+ * * [5000] Notification records
+ */
+export enum BillingCodes {
+    /**
+     * Billing code for writing a data record.
+     */
+    data_write = 1001,
+
+    /**
+     * Billing code for reading a data record.
+     */
+    data_read = 1002,
+
+    /**
+     * Billing code for writing a file record.
+     */
+    file_write = 2001,
+
+    /**
+     * Billing code for number of files stored in a record per period.
+     */
+    file_count = 2002,
+
+    /**
+     * Billing code for number of file record bytes stored per period.
+     */
+    file_byte_storage = 2003,
+
+    /**
+     * Billing code for number of insts stored in a record per period.
+     */
+    inst_count = 3001,
+
+    /**
+     * Billing code for number of inst bytes stored in a record per period.
+     */
+    inst_byte_storage = 3002,
+
+    /**
+     * Billing code for AI chat token usage.
+     */
+    ai_chat_tokens = 4001,
+
+    /**
+     * Billing code for AI image pixels generated.
+     */
+    ai_image_pixels = 4002,
+
+    /**
+     * Billing code for generating AI skyboxes.
+     */
+    ai_skybox = 4003,
+
+    /**
+     * Billing code for generating AI Hume access tokens.
+     */
+    ai_hume_access_token = 4004,
+
+    /**
+     * Billing code for creating OpenAI Realtime sessions.
+     */
+    ai_openai_realtime_session = 4005,
+
+    /**
+     * Billing code for sending a notification.
+     */
+    notification_sent = 5001,
+
+    /**
+     * Billing code for sending a push notification.
+     */
+    notification_push_sent = 5002,
+
+    /**
+     * Billing code for number of notification subscribers per period.
+     */
+    notification_subscriber_count = 5003,
 }
 
 /**

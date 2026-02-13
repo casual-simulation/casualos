@@ -25,7 +25,7 @@ import type {
 } from '@casual-simulation/three';
 import {
     Mesh,
-    ExtrudeBufferGeometry,
+    ExtrudeGeometry,
     Shape,
     Box3,
     Sphere,
@@ -82,10 +82,6 @@ export class HexMesh extends Mesh {
         if (!val) return;
         let material = <MeshStandardMaterial | MeshToonMaterial>this.material;
         material.color = val;
-    }
-
-    get boundingBox(): Box3 {
-        return new Box3().setFromObject(this);
     }
 
     get boundingSphere(): Sphere {
@@ -148,7 +144,7 @@ export function createHexMeshGeometry(
 ): BufferGeometry {
     const verts = hex(size / Math.sqrt(3));
     const shape = new Shape(verts);
-    const geometry = new ExtrudeBufferGeometry(shape, {
+    const geometry = new ExtrudeGeometry(shape, {
         depth: height,
         steps: 1,
         bevelEnabled: false,

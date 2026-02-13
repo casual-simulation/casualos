@@ -1,5 +1,62 @@
 # CasualOS Changelog
 
+## V4.1.0
+
+#### Date: 2/13/2026
+
+### :rocket: Features
+
+-   Added support for Gaussian Splats
+    -   Set `formSubtype` to `splat` and `formAddress` to a `.ply`, `.spz`, `.splat`, etc. file.
+    -   Known limitations:
+        -   `color` does not work with splats.
+-   Added the ability to charge credits for various aspects of usage.
+    -   Note that all values are integer numbers. Additionally, 1,000,000 credits equals 1 USD, where 1 USD equals one cent (`$0.01`). This means that `1` credit equals `$0.00000001` or one millionth of a cent (`1/1000000`).
+    -   Defaults
+        -   Unless otherwise specified, all fees are optional. This means that there is no charge for usage by default.
+    -   Per Period fees
+        -   CasualOS has the ability to charge fees for usage on a "per-period" basis.
+        -   These fees are calculated based on the duration of the user's subscription period (e.g. June 1st - July 1st), but are charged on a daily basis (e.g. fees are charged on June 1st, 2nd, 3rd, etc.).
+        -   For example, if a user is charged 10,000 credits per file per period (i.e. month), and they have 3 files in their account, then they will be charged `floor((3 * 10000) / 30) = 1000` credits per day.
+        -   This logic applies to all fees which are labeled `"perPeriod"`.
+    -   Insufficient funds
+        -   If the record owner (user or studio) does not have enough funds in their credit-denominated account to pay for a request, then the request will be rejected.
+    -   Data
+        -   Added the `creditFeePerRead` option. This is the number of credits that should be charged for each time a data record is retrieved. Defaults to no charge.
+        -   Added the `creditFeePerWrite` option. This is the number of credits that should be charged for each time a data record is created/updated. Defaults to no charge.
+    -   Files
+        -   Added the `creditFeePerFileWrite` option. This is the number of credits that should be charged for each time a file record is created/updated. Defaults to no charge.
+        -   Added the `creditFeePerFilePerPeriod` option. This is the number of credits that should be charged for each file that the user/studio has in their account per subscription period.
+        -   Added the `creditFeePerKilobytePerPeriod` option. This is the number of credits that should be charged for each kilobyte in each file that the user/studio has in their account per subscription period. For example, if the fee is 1,000 and a user has three 100KB files stored in their account, then they will be charged 100,000 credits over their entire subscription period.
+    -   AI
+        -   Chat
+            -   Note that tokens are calculated based on the `config.ai.tokenModifierRatio` that is configured per-model.
+            -   Not all LLM Chat APIs return token usage split by input and output. In these cases, CasualOS charges all tokens at the output token rate if specified. If not specified, then all tokens are charged at the input token rate.
+            -   Added the `creditFeePerInputToken` option. This is the number of credits that should be charged per input token.
+            -   Added the `creditFeePerOutputToken` option. This is the number of credits that should be charged per output token.
+            -   Added the `preChargeInputTokens` option. This is the number of input tokens that the user needs to be able to pay for before we allow the request to be sent to the external API. If not specified, then this value defaults to `100`.
+            -   Added the `preChargeOutputTokens` option. This is the number of output tokens that the user needs to be able to pay for before we allow the request to be sent to the external API. If not specified, then this value defaults to `100`.
+        -   Images
+            -   Added the `creditFeePerSquarePixel` option. This is the number of credits that should be charged per square pixel (i.e. the width of generated images). For example, the fee for a 512x512 image at a rate of `100` credits per square pixel is: `512 * 100 = 51200`.
+        -   Skyboxes
+            -   Added the `creditFeePerSkybox` option. This is the number of credits that should be charged per skybox generated.
+        -   Hume
+            -   Added the `creditFeePerAccessToken` option. This is the number of credits that should be charged per access token generated for Hume AI.
+    -   Insts
+        -   Added the `creditFeePerInstPerPeriod` option. This is the number of credits that should be charged per stored inst per subscription period.
+        -   Added the `creditFeePerKilobytePerPeriod` option. This is the number of credits that should be charged per stored kilobyte for each inst per subscription period. Note that charges for all storage for an inst, including older branch snapshots.
+    -   Notifications
+        -   Added the `creditFeePerNotificationSent` option. This is the number of credits that should be charged for calling `os.sendNotification()`.
+        -   Added the `creditFeePerPushNotificationSent` option. This is the number of credits that should be charged for each push notification sent to a device. Note that calling `os.sendNotification()` may send 0 or more push notifications, depending on how many subscribers it has and how many devices they have registered.
+        -   Added the `creditFeePerSubscriberPerPeriod` option. This is the number of credits that should be charged per user subscribed to a notification record per period.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where shared documents would fail to load from public insts if the user wasn't logged in on initialization.
+-   Fixed an issue where `os.listInsts()` could not be used due to a input mismatch between the server and client.
+-   Fixed transpiler error when using TypeScript type annotations on destructured parameters. Functions like `function MyComponent({id}: {id: string}) {}` now correctly transpile to `function MyComponent({id}) {}` instead of throwing "SyntaxError: Unexpected token ':'". This also applies to arrow functions, array destructuring patterns, and rest parameters.
+-   Fixed issues with wrist portals being misplaced when using hands in XR.
+
 ## V4.0.5
 
 #### Date: 1/30/2026

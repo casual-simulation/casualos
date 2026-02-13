@@ -79,7 +79,7 @@ export class ArrowHelper extends Object3D {
         super();
         // dir is assumed to be normalized
 
-        this.type = 'ArrowHelper';
+        (this as any).type = 'ArrowHelper';
 
         if (dir === undefined) dir = new Vector3(0, 0, 1);
         if (origin === undefined) origin = new Vector3(0, 0, 0);

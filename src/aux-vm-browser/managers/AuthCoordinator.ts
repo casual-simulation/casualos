@@ -619,7 +619,9 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
         const key = await endpoint.getConnectionKey();
 
         if (!key) {
-            console.log(`[AuthCoordinator] [${sim.id}] Sending connectionId.`);
+            console.log(
+                `[AuthCoordinator] [${sim.id}] Sending connectionId for ${recordName}/${inst}.`
+            );
             sim.sendAuthMessage({
                 type: 'response',
                 success: true,
@@ -637,7 +639,7 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
                 inst
             );
             console.log(
-                `[AuthCoordinator] [${sim.id}] Sending connectionToken.`
+                `[AuthCoordinator] [${sim.id}] Sending connectionToken for ${recordName}/${inst}.`
             );
             sim.sendAuthMessage({
                 type: 'response',
@@ -664,9 +666,27 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
         }
 
         if (key) {
+            if (request.resource) {
+                // Only allow automatically loading branches that start with 'doc/'
+                // This is a temporary solution to prevent loading actual existing inst data and instead only allow loading
+                // shared documents from other records
+                if (
+                    !request.resource.branch.startsWith('doc/') &&
+                    (request.resource.inst !== sim.inst ||
+                        request.resource.recordName !== sim.origin.recordName)
+                ) {
+                    console.error(
+                        `[AuthCoordinator] [${sim.id}] Invalid login request branch does not start with 'doc/' and is not for the current inst.`
+                    );
+                    return;
+                }
+            }
+
+            const recordName =
+                request.resource?.recordName ?? sim.origin.recordName;
+            const inst = request.resource?.inst ?? sim.inst;
             const connectionId = sim.configBotId;
-            const recordName = sim.origin.recordName;
-            const inst = sim.inst;
+
             const token = generateV1ConnectionToken(
                 key,
                 connectionId,
@@ -675,7 +695,7 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
             );
 
             console.log(
-                `[AuthCoordinator] [${sim.id}] Sending connectionToken.`
+                `[AuthCoordinator] [${sim.id}] Sending connectionToken for ${recordName}/${inst}.`
             );
 
             sim.sendAuthMessage({

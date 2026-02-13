@@ -32,7 +32,7 @@ export class Arrow3D extends Object3D {
     public static DefaultColor: Color = buildSRGBColor(1, 1, 1);
     public static DefaultHeadWidth = 0.15;
     public static DefaultHeadLength = 0.3;
-    public static DefaultLineWidth = 0.001;
+    public static DefaultLineWidth = 1;
 
     /**
      * Three JS helper that draws arrows.

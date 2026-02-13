@@ -34,11 +34,18 @@ import {
     CreateTransferError,
     TransferFlags,
 } from 'tigerbeetle-node';
+import { cloneDeep } from 'es-toolkit';
 
 /**
  * The max bigint tigerbeetle can handle. 2^128 - 1 is reserved.
  */
 const MAX_BIGINT_128 = BigInt('340282366920938463463374607431768211454');
+
+interface MemoryFinancialInterfaceCheckpoint {
+    accounts: Map<Account['id'], Account>;
+    balances: Map<Account['id'], AccountBalance[]>;
+    transfers: Transfer[];
+}
 
 export class MemoryFinancialInterface implements FinancialInterface {
     private _accounts: Map<Account['id'], Account> = new Map();
@@ -52,6 +59,20 @@ export class MemoryFinancialInterface implements FinancialInterface {
 
     get transfers() {
         return this._transfers;
+    }
+
+    getCheckpoint(): MemoryFinancialInterfaceCheckpoint {
+        return {
+            accounts: cloneDeep(this._accounts),
+            balances: cloneDeep(this._balances),
+            transfers: cloneDeep(this._transfers),
+        };
+    }
+
+    restoreCheckpoint(checkpoint: MemoryFinancialInterfaceCheckpoint) {
+        this._accounts = cloneDeep(checkpoint.accounts);
+        this._balances = cloneDeep(checkpoint.balances);
+        this._transfers = cloneDeep(checkpoint.transfers);
     }
 
     now() {
@@ -264,6 +285,7 @@ export class MemoryFinancialInterface implements FinancialInterface {
     async createTransfers(batch: Transfer[]): Promise<CreateTransfersError[]> {
         const errs: CreateTransfersError[] = [];
         let linkedTransfers: Transfer[] = [];
+        let checkpoint = this.getCheckpoint();
         for (let i = 0; i < batch.length; i++) {
             const transfer = {
                 ...batch[i],
@@ -304,8 +326,20 @@ export class MemoryFinancialInterface implements FinancialInterface {
                                     : CreateTransferError.pending_transfer_already_voided,
                         });
                     } else {
-                        creditAccountId = pendingTransfer.credit_account_id;
-                        debitAccountId = pendingTransfer.debit_account_id;
+                        transfer.credit_account_id = creditAccountId =
+                            pendingTransfer.credit_account_id;
+                        transfer.debit_account_id = debitAccountId =
+                            pendingTransfer.debit_account_id;
+                        transfer.code = transfer.code || pendingTransfer.code;
+                        transfer.user_data_32 =
+                            transfer.user_data_32 ||
+                            pendingTransfer.user_data_32;
+                        transfer.user_data_64 =
+                            transfer.user_data_64 ||
+                            pendingTransfer.user_data_64;
+                        transfer.user_data_128 =
+                            transfer.user_data_128 ||
+                            pendingTransfer.user_data_128;
                     }
                 }
             }
@@ -426,10 +460,18 @@ export class MemoryFinancialInterface implements FinancialInterface {
                     } else if (
                         transfer.flags & TransferFlags.post_pending_transfer
                     ) {
+                        const finalAmount =
+                            transfer.amount === 0n ||
+                            transfer.amount > pendingTransfer.amount
+                                ? pendingTransfer.amount
+                                : transfer.amount;
+
                         creditAccount.credits_pending -= pendingTransfer.amount;
                         debitAccount.debits_pending -= pendingTransfer.amount;
-                        creditAccount.credits_posted += pendingTransfer.amount;
-                        debitAccount.debits_posted += pendingTransfer.amount;
+                        creditAccount.credits_posted += finalAmount;
+                        debitAccount.debits_posted += finalAmount;
+
+                        transfer.amount = pendingTransfer.amount = finalAmount;
                     } else if (
                         transfer.flags & TransferFlags.void_pending_transfer
                     ) {
@@ -474,8 +516,13 @@ export class MemoryFinancialInterface implements FinancialInterface {
                     this._transfers.push(transfer);
                 }
             } else {
+                this.restoreCheckpoint(checkpoint);
                 linkedTransfers = [];
             }
+        }
+
+        if (linkedTransfers.length > 0) {
+            this._transfers.push(...linkedTransfers);
         }
         return errs;
     }
@@ -556,17 +603,28 @@ export class MemoryFinancialInterface implements FinancialInterface {
                 return false;
             }
             if (filter.flags) {
-                if (filter.flags & AccountFilterFlags.debits) {
+                if (
+                    filter.flags & AccountFilterFlags.credits &&
+                    filter.flags & AccountFilterFlags.debits
+                ) {
+                    if (
+                        t.credit_account_id !== filter.account_id &&
+                        t.debit_account_id !== filter.account_id
+                    ) {
+                        return false;
+                    }
+                } else if (filter.flags & AccountFilterFlags.debits) {
                     if (t.debit_account_id !== filter.account_id) {
                         return false;
                     }
-                }
-                if (filter.flags & AccountFilterFlags.credits) {
+                } else if (filter.flags & AccountFilterFlags.credits) {
                     if (t.credit_account_id !== filter.account_id) {
                         return false;
                     }
                 }
             }
+
+            return true;
         });
 
         if (filter.flags & AccountFilterFlags.reversed) {

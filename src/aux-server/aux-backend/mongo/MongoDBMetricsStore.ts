@@ -84,6 +84,14 @@ export class MongoDBMetricsStore implements MetricsStore {
         this._config = configStore;
     }
 
+    getAllFileSubscriptionMetrics(): Promise<FileSubscriptionMetrics[]> {
+        throw new Error('Method not implemented.');
+    }
+
+    getAllSubscriptionInstMetrics(): Promise<InstSubscriptionMetrics[]> {
+        throw new Error('Method not implemented.');
+    }
+
     getSubscriptionAiOpenAIRealtimeMetrics(
         filter: SubscriptionFilter
     ): Promise<AIOpenAIRealtimeSubscriptionMetrics> {

@@ -62,6 +62,7 @@ Object {
             "type": "string",
           },
           "name": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -93,10 +94,12 @@ Object {
         "hasDefault": true,
         "schema": Object {
           "expireTimeMs": Object {
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
           "userId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -138,14 +141,17 @@ Object {
       "inputs": Object {
         "schema": Object {
           "sessionId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "sessionKey": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "userId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -276,6 +282,7 @@ Object {
             "type": "string",
           },
           "email": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -283,6 +290,7 @@ Object {
             "type": "string",
           },
           "parentEmail": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -326,6 +334,7 @@ Object {
           "response": Object {
             "schema": Object {
               "authenticatorAttachment": Object {
+                "nullable": true,
                 "optional": true,
                 "type": "enum",
                 "values": Array [
@@ -336,13 +345,16 @@ Object {
               "clientExtensionResults": Object {
                 "schema": Object {
                   "appid": Object {
+                    "nullable": true,
                     "optional": true,
                     "type": "boolean",
                   },
                   "credProps": Object {
+                    "nullable": true,
                     "optional": true,
                     "schema": Object {
                       "rk": Object {
+                        "nullable": true,
                         "optional": true,
                         "type": "boolean",
                       },
@@ -350,6 +362,7 @@ Object {
                     "type": "object",
                   },
                   "hmacCreateSecret": Object {
+                    "nullable": true,
                     "optional": true,
                     "type": "boolean",
                   },
@@ -368,6 +381,7 @@ Object {
                     "type": "string",
                   },
                   "authenticatorData": Object {
+                    "nullable": true,
                     "optional": true,
                     "type": "string",
                   },
@@ -375,14 +389,17 @@ Object {
                     "type": "string",
                   },
                   "publicKey": Object {
+                    "nullable": true,
                     "optional": true,
                     "type": "string",
                   },
                   "publicKeyAlgorithm": Object {
+                    "nullable": true,
                     "optional": true,
                     "type": "number",
                   },
                   "transports": Object {
+                    "nullable": true,
                     "optional": true,
                     "schema": Object {
                       "type": "string",
@@ -426,6 +443,7 @@ Object {
           "response": Object {
             "schema": Object {
               "authenticatorAttachment": Object {
+                "nullable": true,
                 "optional": true,
                 "type": "enum",
                 "values": Array [
@@ -436,13 +454,16 @@ Object {
               "clientExtensionResults": Object {
                 "schema": Object {
                   "appid": Object {
+                    "nullable": true,
                     "optional": true,
                     "type": "boolean",
                   },
                   "credProps": Object {
+                    "nullable": true,
                     "optional": true,
                     "schema": Object {
                       "rk": Object {
+                        "nullable": true,
                         "optional": true,
                         "type": "boolean",
                       },
@@ -450,6 +471,7 @@ Object {
                     "type": "object",
                   },
                   "hmacCreateSecret": Object {
+                    "nullable": true,
                     "optional": true,
                     "type": "boolean",
                   },
@@ -474,6 +496,7 @@ Object {
                     "type": "string",
                   },
                   "userHandle": Object {
+                    "nullable": true,
                     "optional": true,
                     "type": "string",
                   },
@@ -544,6 +567,7 @@ Object {
       "inputs": Object {
         "schema": Object {
           "ownerId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -551,6 +575,7 @@ Object {
             "type": "string",
           },
           "studioId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -576,6 +601,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -604,6 +630,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -627,12 +654,14 @@ Object {
       "inputs": Object {
         "schema": Object {
           "eventName": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -656,6 +685,7 @@ Object {
       "inputs": Object {
         "schema": Object {
           "count": Object {
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
@@ -665,6 +695,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -673,6 +704,7 @@ Object {
           },
           "markers": Object {
             "maxLength": 10,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -701,6 +733,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -1089,6 +1122,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -1096,6 +1130,7 @@ Object {
             "type": "array",
           },
           "marker": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -1103,6 +1138,7 @@ Object {
             "type": "string",
           },
           "sort": Object {
+            "nullable": true,
             "optional": true,
             "type": "enum",
             "values": Array [
@@ -1218,6 +1254,7 @@ Object {
                     ],
                     "hasDefault": true,
                     "maxLength": 10,
+                    "nullable": true,
                     "optional": true,
                     "schema": Object {
                       "type": "string",
@@ -1251,6 +1288,7 @@ Object {
                     ],
                     "hasDefault": true,
                     "maxLength": 10,
+                    "nullable": true,
                     "optional": true,
                     "schema": Object {
                       "type": "string",
@@ -1386,6 +1424,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -1440,6 +1479,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -1450,6 +1490,7 @@ Object {
             "type": "string",
           },
           "requestTimeMs": Object {
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
@@ -1469,6 +1510,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -1515,6 +1557,7 @@ Object {
                 ],
                 "hasDefault": true,
                 "maxLength": 10,
+                "nullable": true,
                 "optional": true,
                 "schema": Object {
                   "type": "string",
@@ -1616,6 +1659,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -1641,6 +1685,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -1691,6 +1736,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -1735,6 +1781,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -1779,6 +1826,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -1807,6 +1855,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -1963,6 +2012,7 @@ Object {
             "type": "string",
           },
           "topic": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -2132,6 +2182,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -2139,6 +2190,7 @@ Object {
             "type": "array",
           },
           "key": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -2161,6 +2213,7 @@ Object {
             "type": "string",
           },
           "sha256": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -2185,6 +2238,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -2202,6 +2256,7 @@ Object {
                     "type": "number",
                   },
                   "fileDescription": Object {
+                    "nullable": true,
                     "optional": true,
                     "type": "string",
                   },
@@ -2281,6 +2336,7 @@ Object {
               },
               "markers": Object {
                 "maxLength": 10,
+                "nullable": true,
                 "optional": true,
                 "schema": Object {
                   "type": "string",
@@ -2312,6 +2368,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -2340,6 +2397,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -2398,6 +2456,7 @@ Object {
                 "type": "boolean",
               },
               "id": Object {
+                "nullable": true,
                 "optional": true,
                 "type": "string",
               },
@@ -2527,6 +2586,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -2868,6 +2928,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -2899,6 +2960,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -2927,6 +2989,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -2979,6 +3042,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -3007,6 +3071,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -3210,6 +3275,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -3258,10 +3324,12 @@ Object {
       "inputs": Object {
         "schema": Object {
           "studioId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "userId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -3300,6 +3368,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -4197,6 +4266,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -4220,6 +4290,7 @@ Object {
       "inputs": Object {
         "schema": Object {
           "marker": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -4227,10 +4298,12 @@ Object {
             "type": "string",
           },
           "resourceId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "resourceKind": Object {
+            "nullable": true,
             "optional": true,
             "type": "enum",
             "values": Array [
@@ -4271,6 +4344,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -4302,6 +4376,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -4327,6 +4402,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -4337,10 +4413,12 @@ Object {
             "type": "string",
           },
           "role": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "startingRole": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -4358,16 +4436,19 @@ Object {
       "inputs": Object {
         "schema": Object {
           "expireTimeMs": Object {
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
           "inst": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -4381,6 +4462,7 @@ Object {
             "type": "string",
           },
           "userId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -4398,12 +4480,14 @@ Object {
       "inputs": Object {
         "schema": Object {
           "inst": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -4417,6 +4501,7 @@ Object {
             "type": "string",
           },
           "userId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -4515,12 +4600,14 @@ Object {
       "inputs": Object {
         "schema": Object {
           "frequencyPenalty": Object {
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -4606,15 +4693,18 @@ Object {
             "type": "array",
           },
           "model": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "presencePenalty": Object {
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
           "stopWords": Object {
             "maxLength": 4,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -4622,10 +4712,12 @@ Object {
             "type": "array",
           },
           "temperature": Object {
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
           "topP": Object {
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
@@ -4643,12 +4735,14 @@ Object {
       "inputs": Object {
         "schema": Object {
           "frequencyPenalty": Object {
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -4734,15 +4828,18 @@ Object {
             "type": "array",
           },
           "model": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "presencePenalty": Object {
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
           "stopWords": Object {
             "maxLength": 4,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -4750,10 +4847,12 @@ Object {
             "type": "array",
           },
           "temperature": Object {
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
           "topP": Object {
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
@@ -4783,17 +4882,21 @@ Object {
       "inputs": Object {
         "schema": Object {
           "blockadeLabs": Object {
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "remixImagineId": Object {
+                "nullable": true,
                 "optional": true,
                 "type": "number",
               },
               "seed": Object {
+                "nullable": true,
                 "optional": true,
                 "type": "number",
               },
               "skyboxStyleId": Object {
+                "nullable": true,
                 "optional": true,
                 "type": "number",
               },
@@ -4803,6 +4906,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -4810,6 +4914,7 @@ Object {
             "type": "array",
           },
           "negativePrompt": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -4832,6 +4937,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -4855,20 +4961,24 @@ Object {
       "inputs": Object {
         "schema": Object {
           "cfgScale": Object {
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
           "clipGuidancePreset": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "height": Object {
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -4876,14 +4986,17 @@ Object {
             "type": "array",
           },
           "model": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "negativePrompt": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "numberOfImages": Object {
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
@@ -4891,22 +5004,27 @@ Object {
             "type": "string",
           },
           "sampler": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "seed": Object {
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
           "steps": Object {
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
           "stylePreset": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "width": Object {
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
@@ -4924,6 +5042,7 @@ Object {
       "inputs": Object {
         "schema": Object {
           "recordName": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -4941,10 +5060,12 @@ Object {
       "inputs": Object {
         "schema": Object {
           "baseModelId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "levelOfDetail": Object {
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
@@ -4961,10 +5082,12 @@ Object {
             "type": "string",
           },
           "recordName": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "thumbnail": Object {
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "height": Object {
@@ -5015,6 +5138,7 @@ Object {
           "request": Object {
             "schema": Object {
               "inputAudioFormat": Object {
+                "nullable": true,
                 "optional": true,
                 "type": "enum",
                 "values": Array [
@@ -5028,6 +5152,7 @@ Object {
                 "optional": true,
                 "schema": Object {
                   "type": Object {
+                    "nullable": true,
                     "optional": true,
                     "type": "enum",
                     "values": Array [
@@ -5043,14 +5168,17 @@ Object {
                 "optional": true,
                 "schema": Object {
                   "language": Object {
+                    "nullable": true,
                     "optional": true,
                     "type": "string",
                   },
                   "model": Object {
+                    "nullable": true,
                     "optional": true,
                     "type": "string",
                   },
                   "prompt": Object {
+                    "nullable": true,
                     "optional": true,
                     "type": "string",
                   },
@@ -5058,15 +5186,18 @@ Object {
                 "type": "object",
               },
               "instructions": Object {
+                "nullable": true,
                 "optional": true,
                 "type": "string",
               },
               "maxResponseOutputTokens": Object {
+                "nullable": true,
                 "optional": true,
                 "type": "number",
               },
               "modalities": Object {
                 "maxLength": 2,
+                "nullable": true,
                 "optional": true,
                 "schema": Object {
                   "type": "enum",
@@ -5081,6 +5212,7 @@ Object {
                 "type": "string",
               },
               "outputAudioFormat": Object {
+                "nullable": true,
                 "optional": true,
                 "type": "enum",
                 "values": Array [
@@ -5090,18 +5222,22 @@ Object {
                 ],
               },
               "temperature": Object {
+                "nullable": true,
                 "optional": true,
                 "type": "number",
               },
               "toolChoice": Object {
+                "nullable": true,
                 "optional": true,
                 "type": "string",
               },
               "tools": Object {
+                "nullable": true,
                 "optional": true,
                 "schema": Object {
                   "schema": Object {
                     "description": Object {
+                      "nullable": true,
                       "optional": true,
                       "type": "string",
                     },
@@ -5109,10 +5245,12 @@ Object {
                       "type": "string",
                     },
                     "parameters": Object {
+                      "nullable": true,
                       "optional": true,
                       "type": "any",
                     },
                     "type": Object {
+                      "nullable": true,
                       "optional": true,
                       "type": "enum",
                       "values": Array [
@@ -5129,10 +5267,12 @@ Object {
                 "optional": true,
                 "schema": Object {
                   "createResponse": Object {
+                    "nullable": true,
                     "optional": true,
                     "type": "boolean",
                   },
                   "eagerness": Object {
+                    "nullable": true,
                     "optional": true,
                     "type": "enum",
                     "values": Array [
@@ -5142,22 +5282,27 @@ Object {
                     ],
                   },
                   "interruptResponse": Object {
+                    "nullable": true,
                     "optional": true,
                     "type": "boolean",
                   },
                   "prefixPaddingMs": Object {
+                    "nullable": true,
                     "optional": true,
                     "type": "number",
                   },
                   "silenceDurationMs": Object {
+                    "nullable": true,
                     "optional": true,
                     "type": "number",
                   },
                   "threshold": Object {
+                    "nullable": true,
                     "optional": true,
                     "type": "number",
                   },
                   "type": Object {
+                    "nullable": true,
                     "optional": true,
                     "type": "enum",
                     "values": Array [
@@ -5169,6 +5314,7 @@ Object {
                 "type": "object",
               },
               "voice": Object {
+                "nullable": true,
                 "optional": true,
                 "type": "string",
               },
@@ -5226,6 +5372,7 @@ Object {
       "inputs": Object {
         "schema": Object {
           "comIdConfig": Object {
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "allowedStudioCreators": Object {
@@ -5246,10 +5393,12 @@ Object {
             "type": "object",
           },
           "displayName": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "humeConfig": Object {
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "apiKey": Object {
@@ -5278,6 +5427,7 @@ Object {
           },
           "loomConfig": Object {
             "description": "The configuration that can be used by studios to setup loom.",
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "appId": Object {
@@ -5293,6 +5443,7 @@ Object {
           },
           "playerConfig": Object {
             "description": "The configuration that the comId provides which overrides the default player configuration.",
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "ab1BootstrapURL": Object {
@@ -5413,6 +5564,7 @@ Object {
               "type": "any",
             },
             "description": "The PWA web manifest that should be served for custom domains for the studio.",
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "background_color": Object {
@@ -5632,6 +5784,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
             "type": "string",
           },
           "userId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -5665,18 +5818,22 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
       "inputs": Object {
         "schema": Object {
           "addedDisplayName": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "addedEmail": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "addedPhoneNumber": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "addedUserId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -5710,6 +5867,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
       "inputs": Object {
         "schema": Object {
           "removedUserId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -5787,14 +5945,17 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
       "inputs": Object {
         "schema": Object {
           "contractId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "studioId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "userId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -5812,10 +5973,12 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
       "inputs": Object {
         "schema": Object {
           "studioId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "userId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -5833,6 +5996,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
       "inputs": Object {
         "schema": Object {
           "expectedPrice": Object {
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "cost": Object {
@@ -5857,14 +6021,17 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
             "type": "object",
           },
           "studioId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "subscriptionId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "userId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -5882,6 +6049,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
       "inputs": Object {
         "schema": Object {
           "studioId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -5913,6 +6081,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
             ],
           },
           "userId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -5942,6 +6111,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
       "inputs": Object {
         "schema": Object {
           "studioId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -5990,6 +6160,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                 ],
                 "hasDefault": true,
                 "maxLength": 10,
+                "nullable": true,
                 "optional": true,
                 "schema": Object {
                   "type": "string",
@@ -6122,6 +6293,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -6145,14 +6317,17 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
       "inputs": Object {
         "schema": Object {
           "inst": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "marker": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "recordName": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -6176,6 +6351,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
             "type": "string",
           },
           "note": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -6216,6 +6392,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
       "inputs": Object {
         "schema": Object {
           "amount": Object {
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
@@ -6227,10 +6404,12 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
             ],
           },
           "studioId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "userId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -6280,14 +6459,17 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
       "inputs": Object {
         "schema": Object {
           "inst": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "recordKey": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "recordName": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -6413,6 +6595,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -6443,6 +6626,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -6450,6 +6634,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
             "type": "array",
           },
           "marker": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -6457,6 +6642,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
             "type": "string",
           },
           "sort": Object {
+            "nullable": true,
             "optional": true,
             "type": "enum",
             "values": Array [
@@ -6480,6 +6666,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -6560,6 +6747,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -6585,6 +6773,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -6646,6 +6835,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -6680,6 +6870,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -6859,13 +7050,33 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                                     },
                                     "type": "array",
                                   },
-                                  "creditFeePerToken": Object {
-                                    "description": "The number of credits that are charged for each token that is generated. If not specified, then there is no fee.",
+                                  "creditFeePerInputToken": Object {
+                                    "description": "The number of credits that are charged for each input token. If not specified, then there is no fee.",
                                     "optional": true,
-                                    "type": "number",
+                                    "type": "string",
+                                  },
+                                  "creditFeePerOutputToken": Object {
+                                    "description": "The number of credits that are charged for each output token. If not specified, then there is no fee.",
+                                    "optional": true,
+                                    "type": "string",
                                   },
                                   "maxTokensPerPeriod": Object {
                                     "description": "The maximum number of AI chat tokens allowed per subscription period. If omitted, then there is no limit.",
+                                    "optional": true,
+                                    "type": "number",
+                                  },
+                                  "maxTokensPerRequest": Object {
+                                    "description": "The maximum number of AI chat tokens allowed per request. If omitted, then there is no limit.",
+                                    "optional": true,
+                                    "type": "number",
+                                  },
+                                  "preChargeInputTokens": Object {
+                                    "description": "The number of input tokens that are charged before chat requests are made. This is used to ensure that there are enough credits in the account to cover most of the cost of the request. If the final request costs less, than the difference is refunded to the account. If not, then the difference is charged after the request. If not specified, then the account is pre charged for 100 input tokens and 100 output tokens.",
+                                    "optional": true,
+                                    "type": "number",
+                                  },
+                                  "preChargeOutputTokens": Object {
+                                    "description": "The number of output tokens that are charged before chat requests are made. This is used to ensure that there are enough credits in the account to cover most of the cost of the request. If the final request costs less, than the difference is refunded to the account. If not, then the difference is charged after the request. If not specified, then the account is pre charged for 100 input tokens and 100 output tokens.",
                                     "optional": true,
                                     "type": "number",
                                   },
@@ -6883,6 +7094,11 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                                   "allowed": Object {
                                     "description": "Whether Hume AI features are allowed for the subscription. If false, then every request to generate Hume AI will be rejected.",
                                     "type": "boolean",
+                                  },
+                                  "creditFeePerAccessToken": Object {
+                                    "description": "The number of credits that are charged for each access token generated. If not specified, then there is no fee.",
+                                    "optional": true,
+                                    "type": "string",
                                   },
                                 },
                                 "type": "object",
@@ -7193,15 +7409,20 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                                 "description": "Whether file resources are allowed for the subscription. If false, then every request to create or update a file resource will be rejected.",
                                 "type": "boolean",
                               },
-                              "creditFeePerBytePerPeriod": Object {
-                                "description": "The number of credits that are charged for each byte stored in files per subscription period. If not specified, then there is no fee.",
-                                "optional": true,
-                                "type": "number",
-                              },
                               "creditFeePerFilePerPeriod": Object {
                                 "description": "The number of credits that are charged for each file per subscription period. If not specified, then there is no fee.",
                                 "optional": true,
-                                "type": "number",
+                                "type": "string",
+                              },
+                              "creditFeePerFileWrite": Object {
+                                "description": "The number of credits that are charged for each file write operation. If not specified, then there is no fee.",
+                                "optional": true,
+                                "type": "string",
+                              },
+                              "creditFeePerKilobytePerPeriod": Object {
+                                "description": "The number of credits that are charged for each kilobyte stored in files per subscription period. If not specified, then there is no fee.",
+                                "optional": true,
+                                "type": "string",
                               },
                               "maxBytesPerFile": Object {
                                 "description": "The maximum number of bytes per file allowed for the subscription. If omitted, then there is no limit.",
@@ -7227,15 +7448,15 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                                 "description": "Whether insts are allowed for the subscription. If false, then every request to create or update an inst will be rejected.",
                                 "type": "boolean",
                               },
-                              "creditFeePerBytePerPeriod": Object {
-                                "description": "The number of credits that are charged for each byte stored in an inst per subscription period. If not specified, then there is no fee.",
-                                "optional": true,
-                                "type": "number",
-                              },
                               "creditFeePerInstPerPeriod": Object {
                                 "description": "The number of credits that are charged for each inst per subscription period. If not specified, then there is no fee.",
                                 "optional": true,
-                                "type": "number",
+                                "type": "string",
+                              },
+                              "creditFeePerKilobytePerPeriod": Object {
+                                "description": "The number of credits that are charged for each kilobyte (1000 bytes) stored in an inst per subscription period. If not specified, then there is no fee.",
+                                "optional": true,
+                                "type": "string",
                               },
                               "maxActiveConnectionsPerInst": Object {
                                 "description": "The maximum number of active websocket connections that an inst can have. If omitted, then there is no limit.",
@@ -7285,17 +7506,17 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                               "creditFeePerNotificationSent": Object {
                                 "description": "The number of credits that it costs to send a notification. If not specified, then sending notifications is free.",
                                 "optional": true,
-                                "type": "number",
+                                "type": "string",
                               },
                               "creditFeePerPushNotificationSent": Object {
                                 "description": "The number of credits that it costs to send a push notification. If not specified, then sending push notifications is free.",
                                 "optional": true,
-                                "type": "number",
+                                "type": "string",
                               },
                               "creditFeePerSubscriberPerPeriod": Object {
                                 "description": "The number of credits that are charged for each subscriber per subscription period. If not specified, then there is no fee.",
                                 "optional": true,
-                                "type": "number",
+                                "type": "string",
                               },
                               "maxItems": Object {
                                 "description": "The maximum number of notification items that are allowed for the subscription. If not specified, then there is no limit.",
@@ -7579,13 +7800,33 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                                     },
                                     "type": "array",
                                   },
-                                  "creditFeePerToken": Object {
-                                    "description": "The number of credits that are charged for each token that is generated. If not specified, then there is no fee.",
+                                  "creditFeePerInputToken": Object {
+                                    "description": "The number of credits that are charged for each input token. If not specified, then there is no fee.",
                                     "optional": true,
-                                    "type": "number",
+                                    "type": "string",
+                                  },
+                                  "creditFeePerOutputToken": Object {
+                                    "description": "The number of credits that are charged for each output token. If not specified, then there is no fee.",
+                                    "optional": true,
+                                    "type": "string",
                                   },
                                   "maxTokensPerPeriod": Object {
                                     "description": "The maximum number of AI chat tokens allowed per subscription period. If omitted, then there is no limit.",
+                                    "optional": true,
+                                    "type": "number",
+                                  },
+                                  "maxTokensPerRequest": Object {
+                                    "description": "The maximum number of AI chat tokens allowed per request. If omitted, then there is no limit.",
+                                    "optional": true,
+                                    "type": "number",
+                                  },
+                                  "preChargeInputTokens": Object {
+                                    "description": "The number of input tokens that are charged before chat requests are made. This is used to ensure that there are enough credits in the account to cover most of the cost of the request. If the final request costs less, than the difference is refunded to the account. If not, then the difference is charged after the request. If not specified, then the account is pre charged for 100 input tokens and 100 output tokens.",
+                                    "optional": true,
+                                    "type": "number",
+                                  },
+                                  "preChargeOutputTokens": Object {
+                                    "description": "The number of output tokens that are charged before chat requests are made. This is used to ensure that there are enough credits in the account to cover most of the cost of the request. If the final request costs less, than the difference is refunded to the account. If not, then the difference is charged after the request. If not specified, then the account is pre charged for 100 input tokens and 100 output tokens.",
                                     "optional": true,
                                     "type": "number",
                                   },
@@ -7603,6 +7844,11 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                                   "allowed": Object {
                                     "description": "Whether Hume AI features are allowed for the subscription. If false, then every request to generate Hume AI will be rejected.",
                                     "type": "boolean",
+                                  },
+                                  "creditFeePerAccessToken": Object {
+                                    "description": "The number of credits that are charged for each access token generated. If not specified, then there is no fee.",
+                                    "optional": true,
+                                    "type": "string",
                                   },
                                 },
                                 "type": "object",
@@ -7913,15 +8159,20 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                                 "description": "Whether file resources are allowed for the subscription. If false, then every request to create or update a file resource will be rejected.",
                                 "type": "boolean",
                               },
-                              "creditFeePerBytePerPeriod": Object {
-                                "description": "The number of credits that are charged for each byte stored in files per subscription period. If not specified, then there is no fee.",
-                                "optional": true,
-                                "type": "number",
-                              },
                               "creditFeePerFilePerPeriod": Object {
                                 "description": "The number of credits that are charged for each file per subscription period. If not specified, then there is no fee.",
                                 "optional": true,
-                                "type": "number",
+                                "type": "string",
+                              },
+                              "creditFeePerFileWrite": Object {
+                                "description": "The number of credits that are charged for each file write operation. If not specified, then there is no fee.",
+                                "optional": true,
+                                "type": "string",
+                              },
+                              "creditFeePerKilobytePerPeriod": Object {
+                                "description": "The number of credits that are charged for each kilobyte stored in files per subscription period. If not specified, then there is no fee.",
+                                "optional": true,
+                                "type": "string",
                               },
                               "maxBytesPerFile": Object {
                                 "description": "The maximum number of bytes per file allowed for the subscription. If omitted, then there is no limit.",
@@ -7947,15 +8198,15 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                                 "description": "Whether insts are allowed for the subscription. If false, then every request to create or update an inst will be rejected.",
                                 "type": "boolean",
                               },
-                              "creditFeePerBytePerPeriod": Object {
-                                "description": "The number of credits that are charged for each byte stored in an inst per subscription period. If not specified, then there is no fee.",
-                                "optional": true,
-                                "type": "number",
-                              },
                               "creditFeePerInstPerPeriod": Object {
                                 "description": "The number of credits that are charged for each inst per subscription period. If not specified, then there is no fee.",
                                 "optional": true,
-                                "type": "number",
+                                "type": "string",
+                              },
+                              "creditFeePerKilobytePerPeriod": Object {
+                                "description": "The number of credits that are charged for each kilobyte (1000 bytes) stored in an inst per subscription period. If not specified, then there is no fee.",
+                                "optional": true,
+                                "type": "string",
                               },
                               "maxActiveConnectionsPerInst": Object {
                                 "description": "The maximum number of active websocket connections that an inst can have. If omitted, then there is no limit.",
@@ -8005,17 +8256,17 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                               "creditFeePerNotificationSent": Object {
                                 "description": "The number of credits that it costs to send a notification. If not specified, then sending notifications is free.",
                                 "optional": true,
-                                "type": "number",
+                                "type": "string",
                               },
                               "creditFeePerPushNotificationSent": Object {
                                 "description": "The number of credits that it costs to send a push notification. If not specified, then sending push notifications is free.",
                                 "optional": true,
-                                "type": "number",
+                                "type": "string",
                               },
                               "creditFeePerSubscriberPerPeriod": Object {
                                 "description": "The number of credits that are charged for each subscriber per subscription period. If not specified, then there is no fee.",
                                 "optional": true,
-                                "type": "number",
+                                "type": "string",
                               },
                               "maxItems": Object {
                                 "description": "The maximum number of notification items that are allowed for the subscription. If not specified, then there is no limit.",
@@ -8409,13 +8660,33 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                                       },
                                       "type": "array",
                                     },
-                                    "creditFeePerToken": Object {
-                                      "description": "The number of credits that are charged for each token that is generated. If not specified, then there is no fee.",
+                                    "creditFeePerInputToken": Object {
+                                      "description": "The number of credits that are charged for each input token. If not specified, then there is no fee.",
                                       "optional": true,
-                                      "type": "number",
+                                      "type": "string",
+                                    },
+                                    "creditFeePerOutputToken": Object {
+                                      "description": "The number of credits that are charged for each output token. If not specified, then there is no fee.",
+                                      "optional": true,
+                                      "type": "string",
                                     },
                                     "maxTokensPerPeriod": Object {
                                       "description": "The maximum number of AI chat tokens allowed per subscription period. If omitted, then there is no limit.",
+                                      "optional": true,
+                                      "type": "number",
+                                    },
+                                    "maxTokensPerRequest": Object {
+                                      "description": "The maximum number of AI chat tokens allowed per request. If omitted, then there is no limit.",
+                                      "optional": true,
+                                      "type": "number",
+                                    },
+                                    "preChargeInputTokens": Object {
+                                      "description": "The number of input tokens that are charged before chat requests are made. This is used to ensure that there are enough credits in the account to cover most of the cost of the request. If the final request costs less, than the difference is refunded to the account. If not, then the difference is charged after the request. If not specified, then the account is pre charged for 100 input tokens and 100 output tokens.",
+                                      "optional": true,
+                                      "type": "number",
+                                    },
+                                    "preChargeOutputTokens": Object {
+                                      "description": "The number of output tokens that are charged before chat requests are made. This is used to ensure that there are enough credits in the account to cover most of the cost of the request. If the final request costs less, than the difference is refunded to the account. If not, then the difference is charged after the request. If not specified, then the account is pre charged for 100 input tokens and 100 output tokens.",
                                       "optional": true,
                                       "type": "number",
                                     },
@@ -8433,6 +8704,11 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                                     "allowed": Object {
                                       "description": "Whether Hume AI features are allowed for the subscription. If false, then every request to generate Hume AI will be rejected.",
                                       "type": "boolean",
+                                    },
+                                    "creditFeePerAccessToken": Object {
+                                      "description": "The number of credits that are charged for each access token generated. If not specified, then there is no fee.",
+                                      "optional": true,
+                                      "type": "string",
                                     },
                                   },
                                   "type": "object",
@@ -8743,15 +9019,20 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                                   "description": "Whether file resources are allowed for the subscription. If false, then every request to create or update a file resource will be rejected.",
                                   "type": "boolean",
                                 },
-                                "creditFeePerBytePerPeriod": Object {
-                                  "description": "The number of credits that are charged for each byte stored in files per subscription period. If not specified, then there is no fee.",
-                                  "optional": true,
-                                  "type": "number",
-                                },
                                 "creditFeePerFilePerPeriod": Object {
                                   "description": "The number of credits that are charged for each file per subscription period. If not specified, then there is no fee.",
                                   "optional": true,
-                                  "type": "number",
+                                  "type": "string",
+                                },
+                                "creditFeePerFileWrite": Object {
+                                  "description": "The number of credits that are charged for each file write operation. If not specified, then there is no fee.",
+                                  "optional": true,
+                                  "type": "string",
+                                },
+                                "creditFeePerKilobytePerPeriod": Object {
+                                  "description": "The number of credits that are charged for each kilobyte stored in files per subscription period. If not specified, then there is no fee.",
+                                  "optional": true,
+                                  "type": "string",
                                 },
                                 "maxBytesPerFile": Object {
                                   "description": "The maximum number of bytes per file allowed for the subscription. If omitted, then there is no limit.",
@@ -8777,15 +9058,15 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                                   "description": "Whether insts are allowed for the subscription. If false, then every request to create or update an inst will be rejected.",
                                   "type": "boolean",
                                 },
-                                "creditFeePerBytePerPeriod": Object {
-                                  "description": "The number of credits that are charged for each byte stored in an inst per subscription period. If not specified, then there is no fee.",
-                                  "optional": true,
-                                  "type": "number",
-                                },
                                 "creditFeePerInstPerPeriod": Object {
                                   "description": "The number of credits that are charged for each inst per subscription period. If not specified, then there is no fee.",
                                   "optional": true,
-                                  "type": "number",
+                                  "type": "string",
+                                },
+                                "creditFeePerKilobytePerPeriod": Object {
+                                  "description": "The number of credits that are charged for each kilobyte (1000 bytes) stored in an inst per subscription period. If not specified, then there is no fee.",
+                                  "optional": true,
+                                  "type": "string",
                                 },
                                 "maxActiveConnectionsPerInst": Object {
                                   "description": "The maximum number of active websocket connections that an inst can have. If omitted, then there is no limit.",
@@ -8835,17 +9116,17 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                                 "creditFeePerNotificationSent": Object {
                                   "description": "The number of credits that it costs to send a notification. If not specified, then sending notifications is free.",
                                   "optional": true,
-                                  "type": "number",
+                                  "type": "string",
                                 },
                                 "creditFeePerPushNotificationSent": Object {
                                   "description": "The number of credits that it costs to send a push notification. If not specified, then sending push notifications is free.",
                                   "optional": true,
-                                  "type": "number",
+                                  "type": "string",
                                 },
                                 "creditFeePerSubscriberPerPeriod": Object {
                                   "description": "The number of credits that are charged for each subscriber per subscription period. If not specified, then there is no fee.",
                                   "optional": true,
-                                  "type": "number",
+                                  "type": "string",
                                 },
                                 "maxItems": Object {
                                   "description": "The maximum number of notification items that are allowed for the subscription. If not specified, then there is no limit.",
@@ -9929,6 +10210,7 @@ Object {
             "type": "string",
           },
           "name": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -9960,10 +10242,12 @@ Object {
         "hasDefault": true,
         "schema": Object {
           "expireTimeMs": Object {
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
           "userId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -10005,14 +10289,17 @@ Object {
       "inputs": Object {
         "schema": Object {
           "sessionId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "sessionKey": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "userId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -10143,6 +10430,7 @@ Object {
             "type": "string",
           },
           "email": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -10150,6 +10438,7 @@ Object {
             "type": "string",
           },
           "parentEmail": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -10193,6 +10482,7 @@ Object {
           "response": Object {
             "schema": Object {
               "authenticatorAttachment": Object {
+                "nullable": true,
                 "optional": true,
                 "type": "enum",
                 "values": Array [
@@ -10203,13 +10493,16 @@ Object {
               "clientExtensionResults": Object {
                 "schema": Object {
                   "appid": Object {
+                    "nullable": true,
                     "optional": true,
                     "type": "boolean",
                   },
                   "credProps": Object {
+                    "nullable": true,
                     "optional": true,
                     "schema": Object {
                       "rk": Object {
+                        "nullable": true,
                         "optional": true,
                         "type": "boolean",
                       },
@@ -10217,6 +10510,7 @@ Object {
                     "type": "object",
                   },
                   "hmacCreateSecret": Object {
+                    "nullable": true,
                     "optional": true,
                     "type": "boolean",
                   },
@@ -10235,6 +10529,7 @@ Object {
                     "type": "string",
                   },
                   "authenticatorData": Object {
+                    "nullable": true,
                     "optional": true,
                     "type": "string",
                   },
@@ -10242,14 +10537,17 @@ Object {
                     "type": "string",
                   },
                   "publicKey": Object {
+                    "nullable": true,
                     "optional": true,
                     "type": "string",
                   },
                   "publicKeyAlgorithm": Object {
+                    "nullable": true,
                     "optional": true,
                     "type": "number",
                   },
                   "transports": Object {
+                    "nullable": true,
                     "optional": true,
                     "schema": Object {
                       "type": "string",
@@ -10293,6 +10591,7 @@ Object {
           "response": Object {
             "schema": Object {
               "authenticatorAttachment": Object {
+                "nullable": true,
                 "optional": true,
                 "type": "enum",
                 "values": Array [
@@ -10303,13 +10602,16 @@ Object {
               "clientExtensionResults": Object {
                 "schema": Object {
                   "appid": Object {
+                    "nullable": true,
                     "optional": true,
                     "type": "boolean",
                   },
                   "credProps": Object {
+                    "nullable": true,
                     "optional": true,
                     "schema": Object {
                       "rk": Object {
+                        "nullable": true,
                         "optional": true,
                         "type": "boolean",
                       },
@@ -10317,6 +10619,7 @@ Object {
                     "type": "object",
                   },
                   "hmacCreateSecret": Object {
+                    "nullable": true,
                     "optional": true,
                     "type": "boolean",
                   },
@@ -10341,6 +10644,7 @@ Object {
                     "type": "string",
                   },
                   "userHandle": Object {
+                    "nullable": true,
                     "optional": true,
                     "type": "string",
                   },
@@ -10411,6 +10715,7 @@ Object {
       "inputs": Object {
         "schema": Object {
           "ownerId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -10418,6 +10723,7 @@ Object {
             "type": "string",
           },
           "studioId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -10443,6 +10749,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -10471,6 +10778,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -10494,12 +10802,14 @@ Object {
       "inputs": Object {
         "schema": Object {
           "eventName": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -10523,6 +10833,7 @@ Object {
       "inputs": Object {
         "schema": Object {
           "count": Object {
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
@@ -10532,6 +10843,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -10540,6 +10852,7 @@ Object {
           },
           "markers": Object {
             "maxLength": 10,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -10568,6 +10881,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -10956,6 +11270,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -10963,6 +11278,7 @@ Object {
             "type": "array",
           },
           "marker": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -10970,6 +11286,7 @@ Object {
             "type": "string",
           },
           "sort": Object {
+            "nullable": true,
             "optional": true,
             "type": "enum",
             "values": Array [
@@ -11085,6 +11402,7 @@ Object {
                     ],
                     "hasDefault": true,
                     "maxLength": 10,
+                    "nullable": true,
                     "optional": true,
                     "schema": Object {
                       "type": "string",
@@ -11118,6 +11436,7 @@ Object {
                     ],
                     "hasDefault": true,
                     "maxLength": 10,
+                    "nullable": true,
                     "optional": true,
                     "schema": Object {
                       "type": "string",
@@ -11253,6 +11572,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -11307,6 +11627,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -11317,6 +11638,7 @@ Object {
             "type": "string",
           },
           "requestTimeMs": Object {
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
@@ -11336,6 +11658,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -11382,6 +11705,7 @@ Object {
                 ],
                 "hasDefault": true,
                 "maxLength": 10,
+                "nullable": true,
                 "optional": true,
                 "schema": Object {
                   "type": "string",
@@ -11483,6 +11807,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -11508,6 +11833,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -11558,6 +11884,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -11602,6 +11929,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -11646,6 +11974,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -11674,6 +12003,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -11830,6 +12160,7 @@ Object {
             "type": "string",
           },
           "topic": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -11999,6 +12330,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -12006,6 +12338,7 @@ Object {
             "type": "array",
           },
           "key": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -12028,6 +12361,7 @@ Object {
             "type": "string",
           },
           "sha256": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -12052,6 +12386,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -12069,6 +12404,7 @@ Object {
                     "type": "number",
                   },
                   "fileDescription": Object {
+                    "nullable": true,
                     "optional": true,
                     "type": "string",
                   },
@@ -12148,6 +12484,7 @@ Object {
               },
               "markers": Object {
                 "maxLength": 10,
+                "nullable": true,
                 "optional": true,
                 "schema": Object {
                   "type": "string",
@@ -12179,6 +12516,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -12207,6 +12545,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -12265,6 +12604,7 @@ Object {
                 "type": "boolean",
               },
               "id": Object {
+                "nullable": true,
                 "optional": true,
                 "type": "string",
               },
@@ -12394,6 +12734,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -12735,6 +13076,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -12766,6 +13108,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -12794,6 +13137,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -12846,6 +13190,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -12874,6 +13219,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -13077,6 +13423,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -13125,10 +13472,12 @@ Object {
       "inputs": Object {
         "schema": Object {
           "studioId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "userId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -13167,6 +13516,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -14064,6 +14414,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -14087,6 +14438,7 @@ Object {
       "inputs": Object {
         "schema": Object {
           "marker": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -14094,10 +14446,12 @@ Object {
             "type": "string",
           },
           "resourceId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "resourceKind": Object {
+            "nullable": true,
             "optional": true,
             "type": "enum",
             "values": Array [
@@ -14138,6 +14492,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -14169,6 +14524,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -14194,6 +14550,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -14204,10 +14561,12 @@ Object {
             "type": "string",
           },
           "role": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "startingRole": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -14225,16 +14584,19 @@ Object {
       "inputs": Object {
         "schema": Object {
           "expireTimeMs": Object {
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
           "inst": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -14248,6 +14610,7 @@ Object {
             "type": "string",
           },
           "userId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -14265,12 +14628,14 @@ Object {
       "inputs": Object {
         "schema": Object {
           "inst": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -14284,6 +14649,7 @@ Object {
             "type": "string",
           },
           "userId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -14382,12 +14748,14 @@ Object {
       "inputs": Object {
         "schema": Object {
           "frequencyPenalty": Object {
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -14473,15 +14841,18 @@ Object {
             "type": "array",
           },
           "model": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "presencePenalty": Object {
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
           "stopWords": Object {
             "maxLength": 4,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -14489,10 +14860,12 @@ Object {
             "type": "array",
           },
           "temperature": Object {
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
           "topP": Object {
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
@@ -14510,12 +14883,14 @@ Object {
       "inputs": Object {
         "schema": Object {
           "frequencyPenalty": Object {
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -14601,15 +14976,18 @@ Object {
             "type": "array",
           },
           "model": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "presencePenalty": Object {
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
           "stopWords": Object {
             "maxLength": 4,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -14617,10 +14995,12 @@ Object {
             "type": "array",
           },
           "temperature": Object {
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
           "topP": Object {
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
@@ -14650,17 +15030,21 @@ Object {
       "inputs": Object {
         "schema": Object {
           "blockadeLabs": Object {
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "remixImagineId": Object {
+                "nullable": true,
                 "optional": true,
                 "type": "number",
               },
               "seed": Object {
+                "nullable": true,
                 "optional": true,
                 "type": "number",
               },
               "skyboxStyleId": Object {
+                "nullable": true,
                 "optional": true,
                 "type": "number",
               },
@@ -14670,6 +15054,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -14677,6 +15062,7 @@ Object {
             "type": "array",
           },
           "negativePrompt": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -14699,6 +15085,7 @@ Object {
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -14722,20 +15109,24 @@ Object {
       "inputs": Object {
         "schema": Object {
           "cfgScale": Object {
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
           "clipGuidancePreset": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "height": Object {
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -14743,14 +15134,17 @@ Object {
             "type": "array",
           },
           "model": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "negativePrompt": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "numberOfImages": Object {
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
@@ -14758,22 +15152,27 @@ Object {
             "type": "string",
           },
           "sampler": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "seed": Object {
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
           "steps": Object {
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
           "stylePreset": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "width": Object {
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
@@ -14791,6 +15190,7 @@ Object {
       "inputs": Object {
         "schema": Object {
           "recordName": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -14808,10 +15208,12 @@ Object {
       "inputs": Object {
         "schema": Object {
           "baseModelId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "levelOfDetail": Object {
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
@@ -14828,10 +15230,12 @@ Object {
             "type": "string",
           },
           "recordName": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "thumbnail": Object {
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "height": Object {
@@ -14882,6 +15286,7 @@ Object {
           "request": Object {
             "schema": Object {
               "inputAudioFormat": Object {
+                "nullable": true,
                 "optional": true,
                 "type": "enum",
                 "values": Array [
@@ -14895,6 +15300,7 @@ Object {
                 "optional": true,
                 "schema": Object {
                   "type": Object {
+                    "nullable": true,
                     "optional": true,
                     "type": "enum",
                     "values": Array [
@@ -14910,14 +15316,17 @@ Object {
                 "optional": true,
                 "schema": Object {
                   "language": Object {
+                    "nullable": true,
                     "optional": true,
                     "type": "string",
                   },
                   "model": Object {
+                    "nullable": true,
                     "optional": true,
                     "type": "string",
                   },
                   "prompt": Object {
+                    "nullable": true,
                     "optional": true,
                     "type": "string",
                   },
@@ -14925,15 +15334,18 @@ Object {
                 "type": "object",
               },
               "instructions": Object {
+                "nullable": true,
                 "optional": true,
                 "type": "string",
               },
               "maxResponseOutputTokens": Object {
+                "nullable": true,
                 "optional": true,
                 "type": "number",
               },
               "modalities": Object {
                 "maxLength": 2,
+                "nullable": true,
                 "optional": true,
                 "schema": Object {
                   "type": "enum",
@@ -14948,6 +15360,7 @@ Object {
                 "type": "string",
               },
               "outputAudioFormat": Object {
+                "nullable": true,
                 "optional": true,
                 "type": "enum",
                 "values": Array [
@@ -14957,18 +15370,22 @@ Object {
                 ],
               },
               "temperature": Object {
+                "nullable": true,
                 "optional": true,
                 "type": "number",
               },
               "toolChoice": Object {
+                "nullable": true,
                 "optional": true,
                 "type": "string",
               },
               "tools": Object {
+                "nullable": true,
                 "optional": true,
                 "schema": Object {
                   "schema": Object {
                     "description": Object {
+                      "nullable": true,
                       "optional": true,
                       "type": "string",
                     },
@@ -14976,10 +15393,12 @@ Object {
                       "type": "string",
                     },
                     "parameters": Object {
+                      "nullable": true,
                       "optional": true,
                       "type": "any",
                     },
                     "type": Object {
+                      "nullable": true,
                       "optional": true,
                       "type": "enum",
                       "values": Array [
@@ -14996,10 +15415,12 @@ Object {
                 "optional": true,
                 "schema": Object {
                   "createResponse": Object {
+                    "nullable": true,
                     "optional": true,
                     "type": "boolean",
                   },
                   "eagerness": Object {
+                    "nullable": true,
                     "optional": true,
                     "type": "enum",
                     "values": Array [
@@ -15009,22 +15430,27 @@ Object {
                     ],
                   },
                   "interruptResponse": Object {
+                    "nullable": true,
                     "optional": true,
                     "type": "boolean",
                   },
                   "prefixPaddingMs": Object {
+                    "nullable": true,
                     "optional": true,
                     "type": "number",
                   },
                   "silenceDurationMs": Object {
+                    "nullable": true,
                     "optional": true,
                     "type": "number",
                   },
                   "threshold": Object {
+                    "nullable": true,
                     "optional": true,
                     "type": "number",
                   },
                   "type": Object {
+                    "nullable": true,
                     "optional": true,
                     "type": "enum",
                     "values": Array [
@@ -15036,6 +15462,7 @@ Object {
                 "type": "object",
               },
               "voice": Object {
+                "nullable": true,
                 "optional": true,
                 "type": "string",
               },
@@ -15093,6 +15520,7 @@ Object {
       "inputs": Object {
         "schema": Object {
           "comIdConfig": Object {
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "allowedStudioCreators": Object {
@@ -15113,10 +15541,12 @@ Object {
             "type": "object",
           },
           "displayName": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "humeConfig": Object {
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "apiKey": Object {
@@ -15145,6 +15575,7 @@ Object {
           },
           "loomConfig": Object {
             "description": "The configuration that can be used by studios to setup loom.",
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "appId": Object {
@@ -15160,6 +15591,7 @@ Object {
           },
           "playerConfig": Object {
             "description": "The configuration that the comId provides which overrides the default player configuration.",
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "ab1BootstrapURL": Object {
@@ -15280,6 +15712,7 @@ Object {
               "type": "any",
             },
             "description": "The PWA web manifest that should be served for custom domains for the studio.",
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "background_color": Object {
@@ -15499,6 +15932,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
             "type": "string",
           },
           "userId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -15532,18 +15966,22 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
       "inputs": Object {
         "schema": Object {
           "addedDisplayName": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "addedEmail": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "addedPhoneNumber": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "addedUserId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -15577,6 +16015,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
       "inputs": Object {
         "schema": Object {
           "removedUserId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -15654,14 +16093,17 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
       "inputs": Object {
         "schema": Object {
           "contractId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "studioId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "userId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -15679,10 +16121,12 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
       "inputs": Object {
         "schema": Object {
           "studioId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "userId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -15700,6 +16144,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
       "inputs": Object {
         "schema": Object {
           "expectedPrice": Object {
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "cost": Object {
@@ -15724,14 +16169,17 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
             "type": "object",
           },
           "studioId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "subscriptionId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "userId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -15749,6 +16197,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
       "inputs": Object {
         "schema": Object {
           "studioId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -15780,6 +16229,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
             ],
           },
           "userId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -15809,6 +16259,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
       "inputs": Object {
         "schema": Object {
           "studioId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -15857,6 +16308,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                 ],
                 "hasDefault": true,
                 "maxLength": 10,
+                "nullable": true,
                 "optional": true,
                 "schema": Object {
                   "type": "string",
@@ -15989,6 +16441,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -16012,14 +16465,17 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
       "inputs": Object {
         "schema": Object {
           "inst": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "marker": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "recordName": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -16043,6 +16499,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
             "type": "string",
           },
           "note": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -16083,6 +16540,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
       "inputs": Object {
         "schema": Object {
           "amount": Object {
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
@@ -16094,10 +16552,12 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
             ],
           },
           "studioId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "userId": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -16147,14 +16607,17 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
       "inputs": Object {
         "schema": Object {
           "inst": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "recordKey": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
           "recordName": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -16280,6 +16743,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -16310,6 +16774,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -16317,6 +16782,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
             "type": "array",
           },
           "marker": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -16324,6 +16790,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
             "type": "string",
           },
           "sort": Object {
+            "nullable": true,
             "optional": true,
             "type": "enum",
             "values": Array [
@@ -16347,6 +16814,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -16427,6 +16895,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -16452,6 +16921,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -16513,6 +16983,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -16547,6 +17018,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
+            "nullable": true,
             "optional": true,
             "schema": Object {
               "type": "string",
@@ -16726,13 +17198,33 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                                     },
                                     "type": "array",
                                   },
-                                  "creditFeePerToken": Object {
-                                    "description": "The number of credits that are charged for each token that is generated. If not specified, then there is no fee.",
+                                  "creditFeePerInputToken": Object {
+                                    "description": "The number of credits that are charged for each input token. If not specified, then there is no fee.",
                                     "optional": true,
-                                    "type": "number",
+                                    "type": "string",
+                                  },
+                                  "creditFeePerOutputToken": Object {
+                                    "description": "The number of credits that are charged for each output token. If not specified, then there is no fee.",
+                                    "optional": true,
+                                    "type": "string",
                                   },
                                   "maxTokensPerPeriod": Object {
                                     "description": "The maximum number of AI chat tokens allowed per subscription period. If omitted, then there is no limit.",
+                                    "optional": true,
+                                    "type": "number",
+                                  },
+                                  "maxTokensPerRequest": Object {
+                                    "description": "The maximum number of AI chat tokens allowed per request. If omitted, then there is no limit.",
+                                    "optional": true,
+                                    "type": "number",
+                                  },
+                                  "preChargeInputTokens": Object {
+                                    "description": "The number of input tokens that are charged before chat requests are made. This is used to ensure that there are enough credits in the account to cover most of the cost of the request. If the final request costs less, than the difference is refunded to the account. If not, then the difference is charged after the request. If not specified, then the account is pre charged for 100 input tokens and 100 output tokens.",
+                                    "optional": true,
+                                    "type": "number",
+                                  },
+                                  "preChargeOutputTokens": Object {
+                                    "description": "The number of output tokens that are charged before chat requests are made. This is used to ensure that there are enough credits in the account to cover most of the cost of the request. If the final request costs less, than the difference is refunded to the account. If not, then the difference is charged after the request. If not specified, then the account is pre charged for 100 input tokens and 100 output tokens.",
                                     "optional": true,
                                     "type": "number",
                                   },
@@ -16750,6 +17242,11 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                                   "allowed": Object {
                                     "description": "Whether Hume AI features are allowed for the subscription. If false, then every request to generate Hume AI will be rejected.",
                                     "type": "boolean",
+                                  },
+                                  "creditFeePerAccessToken": Object {
+                                    "description": "The number of credits that are charged for each access token generated. If not specified, then there is no fee.",
+                                    "optional": true,
+                                    "type": "string",
                                   },
                                 },
                                 "type": "object",
@@ -17060,15 +17557,20 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                                 "description": "Whether file resources are allowed for the subscription. If false, then every request to create or update a file resource will be rejected.",
                                 "type": "boolean",
                               },
-                              "creditFeePerBytePerPeriod": Object {
-                                "description": "The number of credits that are charged for each byte stored in files per subscription period. If not specified, then there is no fee.",
-                                "optional": true,
-                                "type": "number",
-                              },
                               "creditFeePerFilePerPeriod": Object {
                                 "description": "The number of credits that are charged for each file per subscription period. If not specified, then there is no fee.",
                                 "optional": true,
-                                "type": "number",
+                                "type": "string",
+                              },
+                              "creditFeePerFileWrite": Object {
+                                "description": "The number of credits that are charged for each file write operation. If not specified, then there is no fee.",
+                                "optional": true,
+                                "type": "string",
+                              },
+                              "creditFeePerKilobytePerPeriod": Object {
+                                "description": "The number of credits that are charged for each kilobyte stored in files per subscription period. If not specified, then there is no fee.",
+                                "optional": true,
+                                "type": "string",
                               },
                               "maxBytesPerFile": Object {
                                 "description": "The maximum number of bytes per file allowed for the subscription. If omitted, then there is no limit.",
@@ -17094,15 +17596,15 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                                 "description": "Whether insts are allowed for the subscription. If false, then every request to create or update an inst will be rejected.",
                                 "type": "boolean",
                               },
-                              "creditFeePerBytePerPeriod": Object {
-                                "description": "The number of credits that are charged for each byte stored in an inst per subscription period. If not specified, then there is no fee.",
-                                "optional": true,
-                                "type": "number",
-                              },
                               "creditFeePerInstPerPeriod": Object {
                                 "description": "The number of credits that are charged for each inst per subscription period. If not specified, then there is no fee.",
                                 "optional": true,
-                                "type": "number",
+                                "type": "string",
+                              },
+                              "creditFeePerKilobytePerPeriod": Object {
+                                "description": "The number of credits that are charged for each kilobyte (1000 bytes) stored in an inst per subscription period. If not specified, then there is no fee.",
+                                "optional": true,
+                                "type": "string",
                               },
                               "maxActiveConnectionsPerInst": Object {
                                 "description": "The maximum number of active websocket connections that an inst can have. If omitted, then there is no limit.",
@@ -17152,17 +17654,17 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                               "creditFeePerNotificationSent": Object {
                                 "description": "The number of credits that it costs to send a notification. If not specified, then sending notifications is free.",
                                 "optional": true,
-                                "type": "number",
+                                "type": "string",
                               },
                               "creditFeePerPushNotificationSent": Object {
                                 "description": "The number of credits that it costs to send a push notification. If not specified, then sending push notifications is free.",
                                 "optional": true,
-                                "type": "number",
+                                "type": "string",
                               },
                               "creditFeePerSubscriberPerPeriod": Object {
                                 "description": "The number of credits that are charged for each subscriber per subscription period. If not specified, then there is no fee.",
                                 "optional": true,
-                                "type": "number",
+                                "type": "string",
                               },
                               "maxItems": Object {
                                 "description": "The maximum number of notification items that are allowed for the subscription. If not specified, then there is no limit.",
@@ -17446,13 +17948,33 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                                     },
                                     "type": "array",
                                   },
-                                  "creditFeePerToken": Object {
-                                    "description": "The number of credits that are charged for each token that is generated. If not specified, then there is no fee.",
+                                  "creditFeePerInputToken": Object {
+                                    "description": "The number of credits that are charged for each input token. If not specified, then there is no fee.",
                                     "optional": true,
-                                    "type": "number",
+                                    "type": "string",
+                                  },
+                                  "creditFeePerOutputToken": Object {
+                                    "description": "The number of credits that are charged for each output token. If not specified, then there is no fee.",
+                                    "optional": true,
+                                    "type": "string",
                                   },
                                   "maxTokensPerPeriod": Object {
                                     "description": "The maximum number of AI chat tokens allowed per subscription period. If omitted, then there is no limit.",
+                                    "optional": true,
+                                    "type": "number",
+                                  },
+                                  "maxTokensPerRequest": Object {
+                                    "description": "The maximum number of AI chat tokens allowed per request. If omitted, then there is no limit.",
+                                    "optional": true,
+                                    "type": "number",
+                                  },
+                                  "preChargeInputTokens": Object {
+                                    "description": "The number of input tokens that are charged before chat requests are made. This is used to ensure that there are enough credits in the account to cover most of the cost of the request. If the final request costs less, than the difference is refunded to the account. If not, then the difference is charged after the request. If not specified, then the account is pre charged for 100 input tokens and 100 output tokens.",
+                                    "optional": true,
+                                    "type": "number",
+                                  },
+                                  "preChargeOutputTokens": Object {
+                                    "description": "The number of output tokens that are charged before chat requests are made. This is used to ensure that there are enough credits in the account to cover most of the cost of the request. If the final request costs less, than the difference is refunded to the account. If not, then the difference is charged after the request. If not specified, then the account is pre charged for 100 input tokens and 100 output tokens.",
                                     "optional": true,
                                     "type": "number",
                                   },
@@ -17470,6 +17992,11 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                                   "allowed": Object {
                                     "description": "Whether Hume AI features are allowed for the subscription. If false, then every request to generate Hume AI will be rejected.",
                                     "type": "boolean",
+                                  },
+                                  "creditFeePerAccessToken": Object {
+                                    "description": "The number of credits that are charged for each access token generated. If not specified, then there is no fee.",
+                                    "optional": true,
+                                    "type": "string",
                                   },
                                 },
                                 "type": "object",
@@ -17780,15 +18307,20 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                                 "description": "Whether file resources are allowed for the subscription. If false, then every request to create or update a file resource will be rejected.",
                                 "type": "boolean",
                               },
-                              "creditFeePerBytePerPeriod": Object {
-                                "description": "The number of credits that are charged for each byte stored in files per subscription period. If not specified, then there is no fee.",
-                                "optional": true,
-                                "type": "number",
-                              },
                               "creditFeePerFilePerPeriod": Object {
                                 "description": "The number of credits that are charged for each file per subscription period. If not specified, then there is no fee.",
                                 "optional": true,
-                                "type": "number",
+                                "type": "string",
+                              },
+                              "creditFeePerFileWrite": Object {
+                                "description": "The number of credits that are charged for each file write operation. If not specified, then there is no fee.",
+                                "optional": true,
+                                "type": "string",
+                              },
+                              "creditFeePerKilobytePerPeriod": Object {
+                                "description": "The number of credits that are charged for each kilobyte stored in files per subscription period. If not specified, then there is no fee.",
+                                "optional": true,
+                                "type": "string",
                               },
                               "maxBytesPerFile": Object {
                                 "description": "The maximum number of bytes per file allowed for the subscription. If omitted, then there is no limit.",
@@ -17814,15 +18346,15 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                                 "description": "Whether insts are allowed for the subscription. If false, then every request to create or update an inst will be rejected.",
                                 "type": "boolean",
                               },
-                              "creditFeePerBytePerPeriod": Object {
-                                "description": "The number of credits that are charged for each byte stored in an inst per subscription period. If not specified, then there is no fee.",
-                                "optional": true,
-                                "type": "number",
-                              },
                               "creditFeePerInstPerPeriod": Object {
                                 "description": "The number of credits that are charged for each inst per subscription period. If not specified, then there is no fee.",
                                 "optional": true,
-                                "type": "number",
+                                "type": "string",
+                              },
+                              "creditFeePerKilobytePerPeriod": Object {
+                                "description": "The number of credits that are charged for each kilobyte (1000 bytes) stored in an inst per subscription period. If not specified, then there is no fee.",
+                                "optional": true,
+                                "type": "string",
                               },
                               "maxActiveConnectionsPerInst": Object {
                                 "description": "The maximum number of active websocket connections that an inst can have. If omitted, then there is no limit.",
@@ -17872,17 +18404,17 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                               "creditFeePerNotificationSent": Object {
                                 "description": "The number of credits that it costs to send a notification. If not specified, then sending notifications is free.",
                                 "optional": true,
-                                "type": "number",
+                                "type": "string",
                               },
                               "creditFeePerPushNotificationSent": Object {
                                 "description": "The number of credits that it costs to send a push notification. If not specified, then sending push notifications is free.",
                                 "optional": true,
-                                "type": "number",
+                                "type": "string",
                               },
                               "creditFeePerSubscriberPerPeriod": Object {
                                 "description": "The number of credits that are charged for each subscriber per subscription period. If not specified, then there is no fee.",
                                 "optional": true,
-                                "type": "number",
+                                "type": "string",
                               },
                               "maxItems": Object {
                                 "description": "The maximum number of notification items that are allowed for the subscription. If not specified, then there is no limit.",
@@ -18276,13 +18808,33 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                                       },
                                       "type": "array",
                                     },
-                                    "creditFeePerToken": Object {
-                                      "description": "The number of credits that are charged for each token that is generated. If not specified, then there is no fee.",
+                                    "creditFeePerInputToken": Object {
+                                      "description": "The number of credits that are charged for each input token. If not specified, then there is no fee.",
                                       "optional": true,
-                                      "type": "number",
+                                      "type": "string",
+                                    },
+                                    "creditFeePerOutputToken": Object {
+                                      "description": "The number of credits that are charged for each output token. If not specified, then there is no fee.",
+                                      "optional": true,
+                                      "type": "string",
                                     },
                                     "maxTokensPerPeriod": Object {
                                       "description": "The maximum number of AI chat tokens allowed per subscription period. If omitted, then there is no limit.",
+                                      "optional": true,
+                                      "type": "number",
+                                    },
+                                    "maxTokensPerRequest": Object {
+                                      "description": "The maximum number of AI chat tokens allowed per request. If omitted, then there is no limit.",
+                                      "optional": true,
+                                      "type": "number",
+                                    },
+                                    "preChargeInputTokens": Object {
+                                      "description": "The number of input tokens that are charged before chat requests are made. This is used to ensure that there are enough credits in the account to cover most of the cost of the request. If the final request costs less, than the difference is refunded to the account. If not, then the difference is charged after the request. If not specified, then the account is pre charged for 100 input tokens and 100 output tokens.",
+                                      "optional": true,
+                                      "type": "number",
+                                    },
+                                    "preChargeOutputTokens": Object {
+                                      "description": "The number of output tokens that are charged before chat requests are made. This is used to ensure that there are enough credits in the account to cover most of the cost of the request. If the final request costs less, than the difference is refunded to the account. If not, then the difference is charged after the request. If not specified, then the account is pre charged for 100 input tokens and 100 output tokens.",
                                       "optional": true,
                                       "type": "number",
                                     },
@@ -18300,6 +18852,11 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                                     "allowed": Object {
                                       "description": "Whether Hume AI features are allowed for the subscription. If false, then every request to generate Hume AI will be rejected.",
                                       "type": "boolean",
+                                    },
+                                    "creditFeePerAccessToken": Object {
+                                      "description": "The number of credits that are charged for each access token generated. If not specified, then there is no fee.",
+                                      "optional": true,
+                                      "type": "string",
                                     },
                                   },
                                   "type": "object",
@@ -18610,15 +19167,20 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                                   "description": "Whether file resources are allowed for the subscription. If false, then every request to create or update a file resource will be rejected.",
                                   "type": "boolean",
                                 },
-                                "creditFeePerBytePerPeriod": Object {
-                                  "description": "The number of credits that are charged for each byte stored in files per subscription period. If not specified, then there is no fee.",
-                                  "optional": true,
-                                  "type": "number",
-                                },
                                 "creditFeePerFilePerPeriod": Object {
                                   "description": "The number of credits that are charged for each file per subscription period. If not specified, then there is no fee.",
                                   "optional": true,
-                                  "type": "number",
+                                  "type": "string",
+                                },
+                                "creditFeePerFileWrite": Object {
+                                  "description": "The number of credits that are charged for each file write operation. If not specified, then there is no fee.",
+                                  "optional": true,
+                                  "type": "string",
+                                },
+                                "creditFeePerKilobytePerPeriod": Object {
+                                  "description": "The number of credits that are charged for each kilobyte stored in files per subscription period. If not specified, then there is no fee.",
+                                  "optional": true,
+                                  "type": "string",
                                 },
                                 "maxBytesPerFile": Object {
                                   "description": "The maximum number of bytes per file allowed for the subscription. If omitted, then there is no limit.",
@@ -18644,15 +19206,15 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                                   "description": "Whether insts are allowed for the subscription. If false, then every request to create or update an inst will be rejected.",
                                   "type": "boolean",
                                 },
-                                "creditFeePerBytePerPeriod": Object {
-                                  "description": "The number of credits that are charged for each byte stored in an inst per subscription period. If not specified, then there is no fee.",
-                                  "optional": true,
-                                  "type": "number",
-                                },
                                 "creditFeePerInstPerPeriod": Object {
                                   "description": "The number of credits that are charged for each inst per subscription period. If not specified, then there is no fee.",
                                   "optional": true,
-                                  "type": "number",
+                                  "type": "string",
+                                },
+                                "creditFeePerKilobytePerPeriod": Object {
+                                  "description": "The number of credits that are charged for each kilobyte (1000 bytes) stored in an inst per subscription period. If not specified, then there is no fee.",
+                                  "optional": true,
+                                  "type": "string",
                                 },
                                 "maxActiveConnectionsPerInst": Object {
                                   "description": "The maximum number of active websocket connections that an inst can have. If omitted, then there is no limit.",
@@ -18702,17 +19264,17 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                                 "creditFeePerNotificationSent": Object {
                                   "description": "The number of credits that it costs to send a notification. If not specified, then sending notifications is free.",
                                   "optional": true,
-                                  "type": "number",
+                                  "type": "string",
                                 },
                                 "creditFeePerPushNotificationSent": Object {
                                   "description": "The number of credits that it costs to send a push notification. If not specified, then sending push notifications is free.",
                                   "optional": true,
-                                  "type": "number",
+                                  "type": "string",
                                 },
                                 "creditFeePerSubscriberPerPeriod": Object {
                                   "description": "The number of credits that are charged for each subscriber per subscription period. If not specified, then there is no fee.",
                                   "optional": true,
-                                  "type": "number",
+                                  "type": "string",
                                 },
                                 "maxItems": Object {
                                   "description": "The maximum number of notification items that are allowed for the subscription. If not specified, then there is no limit.",

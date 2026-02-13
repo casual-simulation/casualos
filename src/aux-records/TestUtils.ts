@@ -34,10 +34,14 @@ import {
 } from './packages/version';
 import { FileRecordsController } from './FileRecordsController';
 import type { PublicRecordKeyPolicy } from '@casual-simulation/aux-common';
-import { mapValuesDeep, parseSessionKey } from '@casual-simulation/aux-common';
+import {
+    mapValuesDeep,
+    parseSessionKey,
+    unwrap,
+} from '@casual-simulation/aux-common';
 import type { FinancialInterface } from './financial';
 import { FinancialController, MemoryFinancialInterface } from './financial';
-import type { Account, Transfer } from 'tigerbeetle-node';
+import { TransferFlags, type Account, type Transfer } from 'tigerbeetle-node';
 import { v4 as uuidv4, parse } from 'uuid';
 import type { StripeInterface } from './StripeInterface';
 
@@ -369,6 +373,28 @@ export async function checkAccounts(
 
     //     expect(mapBigInts(actual)).toMatchObject(mapBigInts(expected));
     // }
+}
+
+export async function checkBillingTotals(
+    financial: FinancialController,
+    accountId: bigint | string,
+    codeTotals: Record<number, bigint>
+) {
+    const transfers = unwrap(await financial.listTransfers(accountId));
+    const actualCodeTotals: Record<number, bigint> = {};
+
+    for (let transfer of transfers) {
+        if (!transfer.user_data_32 || transfer.flags & TransferFlags.pending) {
+            continue;
+        }
+        const billingCode = transfer.user_data_32;
+        if (!actualCodeTotals[billingCode]) {
+            actualCodeTotals[billingCode] = 0n;
+        }
+        actualCodeTotals[billingCode] += transfer.amount;
+    }
+
+    expect(actualCodeTotals).toMatchObject(codeTotals);
 }
 
 export function checkTransfers(

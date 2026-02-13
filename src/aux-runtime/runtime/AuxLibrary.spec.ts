@@ -8101,7 +8101,7 @@ describe('AuxLibrary', () => {
                 const action: any = library.api.os.listInsts('recordName');
                 const expected = calcListInsts(
                     'recordName',
-                    null,
+                    undefined,
                     {},
                     context.tasks.size
                 );
@@ -8117,7 +8117,7 @@ describe('AuxLibrary', () => {
                 );
                 const expected = calcListInsts(
                     'recordName',
-                    null,
+                    undefined,
                     { endpoint: 'myEndpoint' },
                     context.tasks.size
                 );
@@ -8150,7 +8150,7 @@ describe('AuxLibrary', () => {
                 const expected = calcListInstsByMarker(
                     'recordName',
                     'myMarker',
-                    null,
+                    undefined,
                     {},
                     context.tasks.size
                 );
@@ -8170,7 +8170,7 @@ describe('AuxLibrary', () => {
                 const expected = calcListInstsByMarker(
                     'recordName',
                     'myMarker',
-                    null,
+                    undefined,
                     { endpoint: 'myEndpoint' },
                     context.tasks.size
                 );

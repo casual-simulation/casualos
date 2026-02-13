@@ -1949,6 +1949,7 @@ export function getBotSubShape(
     const shape: BotSubShape = calculateBotValue(calc, bot, 'auxFormSubtype');
     if (
         shape === 'gltf' ||
+        shape === 'splat' ||
         shape === 'jsonObject' ||
         shape === 'html' ||
         shape === 'src' ||
