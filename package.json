@@ -131,7 +131,7 @@
         "@types/redis": "^2.8.32",
         "@types/sshpk": "^1.10.7",
         "@types/stripe-v3": "^3.1.7",
-        "@types/three": "^0.140.0",
+        "@types/three": "^0.182.0",
         "@types/uuid": "10.0.0",
         "@types/vue-color": "^2.4.3",
         "@types/ws": "^8.5.12",
@@ -144,6 +144,7 @@
         "chokidar": "3.5.2",
         "commander": "12.0.0",
         "concurrently": "8.2.2",
+        "cross-env": "7.0.3",
         "del": "7.0.0",
         "es-toolkit": "1.39.10",
         "esbuild": "0.27.0",
@@ -185,6 +186,7 @@
         "sass": "1.56.1",
         "source-map": "0.7.3",
         "tar": "4.4.18",
+        "three": "^0.182.0",
         "ts-jest": "29.4.5",
         "ts-jest-mock-import-meta": "1.3.0",
         "tsx": "^4.20.6",
@@ -192,8 +194,7 @@
         "typescript-eslint": "^8.26.1",
         "unified": "11.0.4",
         "vue-template-compiler": "^2.6.14",
-        "wait-on": "7",
-        "cross-env": "7.0.3"
+        "wait-on": "7"
     },
     "engines": {
         "node": ">=v20.18",
@@ -218,7 +219,9 @@
             "deno-vm@0.13.0": "patches/deno-vm@0.13.0.patch",
             "eslint-plugin-header@3.1.1": "patches/eslint-plugin-header@3.1.1.patch",
             "@types/mongodb": "patches/@types__mongodb.patch",
-            "parse5@7.3.0": "patches/parse5@7.3.0.patch"
+            "parse5@7.3.0": "patches/parse5@7.3.0.patch",
+            "@sparkjsdev/spark": "patches/@sparkjsdev__spark.patch",
+            "@types/three": "patches/@types__three.patch"
         },
         "ignoredBuiltDependencies": [
             "@pulumi/aws-native",

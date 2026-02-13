@@ -19,7 +19,8 @@ import { ServerBuilder } from './ServerBuilder';
 import { getAllowedAPIOrigins, allowedOrigins } from './EnvUtils';
 import { merge } from 'es-toolkit/compat';
 import { loadConfig } from './ConfigUtils';
-import type { ServerConfig } from '@casual-simulation/aux-records';
+import type { ServerConfigSchema } from '@casual-simulation/aux-records';
+import type z from 'zod';
 
 declare let S3_ENDPOINT: string;
 declare let DEVELOPMENT: boolean;
@@ -49,7 +50,7 @@ export const SNS_TOPIC_ARN = process.env.SNS_TOPIC_ARN;
  * @returns
  */
 export function constructServerlessAwsServerBuilder() {
-    const dynamicConfig: Partial<ServerConfig> = {
+    const dynamicConfig: Partial<z.input<ServerConfigSchema>> = {
         s3: {
             region: REGION,
             filesBucket: FILES_BUCKET,
@@ -122,7 +123,7 @@ export function constructServerlessAwsServerBuilder() {
  * Loads the server and configures it.
  */
 export function constructServerBuilder(
-    dynamicConfig: Partial<ServerConfig> = {}
+    dynamicConfig: Partial<z.input<ServerConfigSchema>> = {}
 ) {
     const config = loadConfig(true, dynamicConfig);
 

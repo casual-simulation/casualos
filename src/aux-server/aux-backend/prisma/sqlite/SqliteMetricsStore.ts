@@ -174,17 +174,111 @@ export class SqliteMetricsStore implements MetricsStore {
             throw new Error('Invalid filter');
         }
 
-        const instMetrics = await this._client.instRecord.aggregate({
-            where,
-            _count: {
-                _all: true,
-            },
-        });
+        const [instCount, instSize] = await Promise.all([
+            this._client.instRecord.aggregate({
+                where,
+                _count: {
+                    _all: true,
+                },
+            }),
+            this._client.branchUpdate.aggregate({
+                where: where as Prisma.BranchUpdateWhereInput,
+                _sum: {
+                    sizeInBytes: true,
+                },
+            }),
+        ]);
 
         return {
             ...metrics,
-            totalInsts: instMetrics._count._all,
+            totalInsts: instCount._count._all,
+            totalInstBytes: instSize._sum.sizeInBytes || 0,
         };
+    }
+
+    @traced(TRACE_NAME)
+    async getAllFileSubscriptionMetrics(): Promise<FileSubscriptionMetrics[]> {
+        const allMetrics = await this._client.$queryRaw<
+            FileSubscriptionMetrics[]
+        >`
+            SELECT 
+                'user' as "subscriptionType",
+                u.id as "userId",
+                NULL as "studioId",
+                u."subscriptionId" as "subscriptionId",
+                u."subscriptionStatus" as "subscriptionStatus",
+                u."subscriptionPeriodStart" as "subscriptionPeriodStart",
+                u."subscriptionPeriodEnd" as "subscriptionPeriodEnd",
+                u."stripeAccountId" as "stripeAccountId",
+                u."stripeAccountStatus" as "stripeAccountStatus",
+                SUM(fr."sizeInBytes") as "totalFileBytesReserved",
+                COUNT(fr."id") as "totalFiles"
+            FROM "User" u
+            INNER JOIN "Record" r ON r."ownerId" = u.id
+            INNER JOIN "FileRecord" fr ON fr."recordName" = r.name
+            GROUP BY u.id
+        UNION ALL
+            SELECT 
+                'studio' as "subscriptionType",
+                NULL as "userId",
+                s.id as "studioId",
+                s."subscriptionId" as "subscriptionId",
+                s."subscriptionStatus" as "subscriptionStatus",
+                s."subscriptionPeriodStart" as "subscriptionPeriodStart",
+                s."subscriptionPeriodEnd" as "subscriptionPeriodEnd",
+                s."stripeAccountId" as "stripeAccountId",
+                s."stripeAccountStatus" as "stripeAccountStatus",
+                SUM(fr."sizeInBytes") as "totalFileBytesReserved",
+                COUNT(fr."id") as "totalFiles"
+            FROM "Studio" s
+            INNER JOIN "Record" r ON r."studioId" = s.id
+            INNER JOIN "FileRecord" fr ON fr."recordName" = r.name
+            GROUP BY s.id;`;
+
+        return allMetrics;
+    }
+
+    @traced(TRACE_NAME)
+    async getAllSubscriptionInstMetrics(): Promise<InstSubscriptionMetrics[]> {
+        const allMetrics = await this._client.$queryRaw<
+            InstSubscriptionMetrics[]
+        >`
+            SELECT 
+                'user' as "subscriptionType",
+                u.id as "userId",
+                NULL as "studioId",
+                u."subscriptionId" as "subscriptionId",
+                u."subscriptionStatus" as "subscriptionStatus",
+                u."subscriptionPeriodStart" as "subscriptionPeriodStart",
+                u."subscriptionPeriodEnd" as "subscriptionPeriodEnd",
+                u."stripeAccountId" as "stripeAccountId",
+                u."stripeAccountStatus" as "stripeAccountStatus",
+                SUM(i."sizeInBytes") as "totalInstBytes",
+                COUNT(i."id") as "totalInsts"
+            FROM "User" u
+            INNER JOIN "Record" r ON r."ownerId" = u.id
+            INNER JOIN "InstRecord" i ON i."recordName" = r.name
+            GROUP BY u.id
+        UNION ALL
+            SELECT 
+                'studio' as "subscriptionType",
+                NULL as "userId",
+                s.id as "studioId",
+                s."subscriptionId" as "subscriptionId",
+                s."subscriptionStatus" as "subscriptionStatus",
+                s."subscriptionPeriodStart" as "subscriptionPeriodStart",
+                s."subscriptionPeriodEnd" as "subscriptionPeriodEnd",
+                s."stripeAccountId" as "stripeAccountId",
+                s."stripeAccountStatus" as "stripeAccountStatus",
+                SUM(bu."sizeInBytes") as "totalInstBytes",
+                COUNT(i."id") as "totalInsts"
+            FROM "Studio" s
+            INNER JOIN "Record" r ON r."studioId" = s.id
+            INNER JOIN "InstRecord" i ON i."recordName" = r.name
+            INNER JOIN "BranchUpdate" bu ON bu."recordName" = r.name
+            GROUP BY s.id;`;
+
+        return allMetrics;
     }
 
     @traced(TRACE_NAME)
@@ -207,9 +301,17 @@ export class SqliteMetricsStore implements MetricsStore {
             throw new Error('Invalid filter');
         }
 
-        const totalInsts = await this._client.instRecord.count({
-            where,
-        });
+        const [totalInsts, instSize] = await Promise.all([
+            this._client.instRecord.count({
+                where,
+            }),
+            this._client.branchUpdate.aggregate({
+                where: where as Prisma.BranchUpdateWhereInput,
+                _sum: {
+                    sizeInBytes: true,
+                },
+            }),
+        ]);
 
         return {
             recordName,
@@ -228,6 +330,7 @@ export class SqliteMetricsStore implements MetricsStore {
 
             subscriptionType: result.owner ? 'user' : 'studio',
             totalInsts: totalInsts,
+            totalInstBytes: instSize._sum.sizeInBytes || 0,
             ...(await this._getSubscriptionPeriod(
                 result.owner?.subscriptionStatus ||
                     result.studio?.subscriptionStatus,

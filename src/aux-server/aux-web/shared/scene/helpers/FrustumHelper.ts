@@ -127,7 +127,7 @@ export class FrustumHelper extends LineSegments {
         );
         geometry.setAttribute('color', new Float32BufferAttribute(colors, 3));
 
-        this.type = <any>'FrustumHelper';
+        (this as any).type = <any>'FrustumHelper';
 
         this.camera = new PerspectiveCamera(75, 1.3333333, 0.01, 1);
         if ((<any>this.camera).updateProjectionMatrix) {

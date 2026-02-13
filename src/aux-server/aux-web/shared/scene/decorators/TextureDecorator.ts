@@ -22,7 +22,7 @@ import type {
     SpriteMaterial,
     MeshToonMaterial,
 } from '@casual-simulation/three';
-import { sRGBEncoding } from '@casual-simulation/three';
+import { SRGBColorSpace } from '@casual-simulation/three';
 import type { BotCalculationContext } from '@casual-simulation/aux-common';
 import { calculateBotValue, hasValue } from '@casual-simulation/aux-common';
 import { AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
@@ -156,7 +156,7 @@ export class TextureDecorator extends AuxBot3DDecoratorBase {
         if (this._targetMeshDecorator.allowModifications) {
             this.bot3D.display.visible = true;
         }
-        texture.encoding = sRGBEncoding;
+        texture.colorSpace = SRGBColorSpace;
         this._texture = texture;
 
         texture.needsUpdate = true;

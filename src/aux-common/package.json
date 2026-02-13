@@ -39,7 +39,7 @@
         "@casual-simulation/fast-json-stable-stringify": "^4.0.5",
         "@casual-simulation/js-interpreter": "^4.0.0",
         "@casual-simulation/stacktrace": "^4.0.0",
-        "@casual-simulation/three": "^0.140.3",
+        "three": "^0.182.0",
         "@casual-simulation/timesync": "^4.0.0",
         "@opentelemetry/api": "^1.9.0",
         "@opentelemetry/resources": "^1.25.1",

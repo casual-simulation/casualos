@@ -297,7 +297,7 @@ function replaceEsbuildPlugin() {
 }
 
 function replaceThreePlugin() {
-    return replaceModulePlugin(/^three$/, '@casual-simulation/three');
+    return replaceModulePlugin(/^@casual-simulation\/three$/, 'three');
 }
 
 function replaceLodashPlugin() {

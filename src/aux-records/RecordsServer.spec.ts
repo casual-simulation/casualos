@@ -646,6 +646,18 @@ describe('RecordsServer', () => {
             domainNameValidator,
         });
 
+        currentId = 1n;
+        const idOffset = randomBigInt();
+        financialInterface = new TigerBeetleFinancialInterface({
+            client: tbClient,
+            id: () => currentId++,
+            idOffset: idOffset,
+        });
+        financialController = new FinancialController(
+            financialInterface,
+            store
+        );
+
         websocketConnectionStore = new MemoryWebsocketConnectionStore();
         websocketMessenger = new MemoryWebsocketMessenger();
         instStore = new SplitInstRecordsStore(
@@ -680,6 +692,7 @@ describe('RecordsServer', () => {
             metrics: store,
             policies: policyController,
             store,
+            financialController: financialController,
         });
 
         manualDataController = new DataRecordsController({
@@ -687,6 +700,7 @@ describe('RecordsServer', () => {
             metrics: store,
             policies: policyController,
             store: manualDataStore,
+            financialController: financialController,
         });
 
         filesController = new FileRecordsController({
@@ -805,17 +819,6 @@ describe('RecordsServer', () => {
             store: contractRecordsStore,
             privo: privoClient,
         });
-        currentId = 1n;
-        const idOffset = randomBigInt();
-        financialInterface = new TigerBeetleFinancialInterface({
-            client: tbClient,
-            id: () => currentId++,
-            idOffset: idOffset,
-        });
-        financialController = new FinancialController(
-            financialInterface,
-            store
-        );
 
         subscriptionController = new SubscriptionController(
             stripe,
@@ -918,6 +921,7 @@ describe('RecordsServer', () => {
             policies: store,
             policyController: policyController,
             records: store,
+            financial: null,
         });
         jobProvider = new MemoryModerationJobProvider();
         moderationController = new ModerationController(

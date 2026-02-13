@@ -876,7 +876,7 @@ export class RecordsServer {
                 .inputs(
                     z.object({
                         displayName: z.string(),
-                        name: NAME_VALIDATION.optional(),
+                        name: NAME_VALIDATION.optional().nullable(),
                     })
                 )
                 .handler(async ({ displayName, name }) => {
@@ -916,8 +916,12 @@ export class RecordsServer {
                 .inputs(
                     z
                         .object({
-                            expireTimeMs: z.coerce.number().int().optional(),
-                            userId: z.string().optional(),
+                            expireTimeMs: z.coerce
+                                .number()
+                                .int()
+                                .optional()
+                                .nullable(),
+                            userId: z.string().optional().nullable(),
                         })
                         .prefault({})
                 )
@@ -988,9 +992,9 @@ export class RecordsServer {
                 .http('POST', '/api/v2/revokeSession')
                 .inputs(
                     z.object({
-                        userId: z.string().optional(),
-                        sessionId: z.string().optional(),
-                        sessionKey: z.string().optional(),
+                        userId: z.string().optional().nullable(),
+                        sessionId: z.string().optional().nullable(),
+                        sessionKey: z.string().optional().nullable(),
                     })
                 )
                 .handler(
@@ -1136,8 +1140,8 @@ export class RecordsServer {
                 .http('POST', '/api/v2/register/privo')
                 .inputs(
                     z.object({
-                        email: z.email().min(1).optional(),
-                        parentEmail: z.email().min(1).optional(),
+                        email: z.email().min(1).optional().nullable(),
+                        parentEmail: z.email().min(1).optional().nullable(),
                         name: NAME_VALIDATION,
                         dateOfBirth: z.coerce.date(),
                         displayName: DISPLAY_NAME_VALIDATION,
@@ -1232,24 +1236,38 @@ export class RecordsServer {
                                 authenticatorData: z
                                     .string()
                                     .nonempty()
-                                    .optional(),
+                                    .optional()
+                                    .nullable(),
                                 transports: z
                                     .array(z.string().min(1).max(64))
-                                    .optional(),
-                                publicKeyAlgorithm: z.number().optional(),
-                                publicKey: z.string().nonempty().optional(),
+                                    .optional()
+                                    .nullable(),
+                                publicKeyAlgorithm: z
+                                    .number()
+                                    .optional()
+                                    .nullable(),
+                                publicKey: z
+                                    .string()
+                                    .nonempty()
+                                    .optional()
+                                    .nullable(),
                             }),
                             authenticatorAttachment: z
                                 .enum(['cross-platform', 'platform'])
-                                .optional(),
+                                .optional()
+                                .nullable(),
                             clientExtensionResults: z.object({
-                                appid: z.boolean().optional(),
+                                appid: z.boolean().optional().nullable(),
                                 credProps: z
                                     .object({
-                                        rk: z.boolean().optional(),
+                                        rk: z.boolean().optional().nullable(),
                                     })
-                                    .optional(),
-                                hmacCreateSecret: z.boolean().optional(),
+                                    .optional()
+                                    .nullable(),
+                                hmacCreateSecret: z
+                                    .boolean()
+                                    .optional()
+                                    .nullable(),
                             }),
                             type: z.literal('public-key'),
                         }),
@@ -1319,19 +1337,28 @@ export class RecordsServer {
                                 clientDataJSON: z.string().nonempty(),
                                 authenticatorData: z.string().nonempty(),
                                 signature: z.string().nonempty(),
-                                userHandle: z.string().nonempty().optional(),
+                                userHandle: z
+                                    .string()
+                                    .nonempty()
+                                    .optional()
+                                    .nullable(),
                             }),
                             authenticatorAttachment: z
                                 .enum(['cross-platform', 'platform'])
-                                .optional(),
+                                .optional()
+                                .nullable(),
                             clientExtensionResults: z.object({
-                                appid: z.boolean().optional(),
+                                appid: z.boolean().optional().nullable(),
                                 credProps: z
                                     .object({
-                                        rk: z.boolean().optional(),
+                                        rk: z.boolean().optional().nullable(),
                                     })
-                                    .optional(),
-                                hmacCreateSecret: z.boolean().optional(),
+                                    .optional()
+                                    .nullable(),
+                                hmacCreateSecret: z
+                                    .boolean()
+                                    .optional()
+                                    .nullable(),
                             }),
                             type: z.literal('public-key'),
                         }),
@@ -1436,7 +1463,8 @@ export class RecordsServer {
                                         : 'ownerId must be a string.',
                             })
                             .nonempty('ownerId must not be empty.')
-                            .optional(),
+                            .optional()
+                            .nullable(),
                         studioId: z
                             .string({
                                 error: (issue) =>
@@ -1445,7 +1473,8 @@ export class RecordsServer {
                                         : 'studioId must be a string.',
                             })
                             .nonempty('studioId must not be empty.')
-                            .optional(),
+                            .optional()
+                            .nullable(),
                     })
                 )
                 .handler(async ({ recordName, ownerId, studioId }, context) => {
@@ -1491,7 +1520,8 @@ export class RecordsServer {
                                     ? 'count is required.'
                                     : 'count must be a number.',
                         }),
-                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                     })
                 )
                 .handler(
@@ -1538,7 +1568,8 @@ export class RecordsServer {
                                         : 'eventName must be a string.',
                             })
                             .nonempty('eventName must not be empty'),
-                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                     })
                 )
                 .handler(
@@ -1579,8 +1610,10 @@ export class RecordsServer {
                                         : 'eventName must be a string.',
                             })
                             .nonempty('eventName must be non-empty.')
-                            .optional(),
-                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                            .optional()
+                            .nullable(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                     })
                 )
                 .handler(
@@ -1613,9 +1646,10 @@ export class RecordsServer {
                     z.object({
                         recordKey: RECORD_KEY_VALIDATION,
                         eventName: EVENT_NAME_VALIDATION,
-                        count: z.number().optional(),
-                        markers: MARKERS_VALIDATION.optional(),
-                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        count: z.number().optional().nullable(),
+                        markers: MARKERS_VALIDATION.optional().nullable(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                     })
                 )
                 .handler(
@@ -1656,7 +1690,8 @@ export class RecordsServer {
                     z.object({
                         recordKey: RECORD_KEY_VALIDATION,
                         address: ADDRESS_VALIDATION,
-                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                     })
                 )
                 .handler(async (data, context) =>
@@ -1806,9 +1841,13 @@ export class RecordsServer {
                     z.object({
                         recordName: RECORD_NAME_VALIDATION,
                         address: ADDRESS_VALIDATION.nullable().optional(),
-                        marker: MARKER_VALIDATION.optional(),
-                        sort: z.enum(['ascending', 'descending']).optional(),
-                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        marker: MARKER_VALIDATION.optional().nullable(),
+                        sort: z
+                            .enum(['ascending', 'descending'])
+                            .optional()
+                            .nullable(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                     })
                 )
                 .handler(
@@ -1886,19 +1925,20 @@ export class RecordsServer {
                         targetResourceKind: z.enum(['data', 'file']),
                         targetRecordName: RECORD_NAME_VALIDATION,
                         targetAddress: ADDRESS_VALIDATION,
-                        markers: MARKERS_VALIDATION.optional().prefault([
-                            PRIVATE_MARKER,
-                        ]),
+                        markers: MARKERS_VALIDATION.optional()
+                            .nullable()
+                            .prefault([PRIVATE_MARKER]),
                     }),
                     z.object({
                         address: ADDRESS_VALIDATION,
                         targetResourceKind: z.literal('inst'),
-                        targetRecordName:
-                            RECORD_NAME_VALIDATION.optional().nullable(),
+                        targetRecordName: RECORD_NAME_VALIDATION.optional()
+                            .nullable()
+                            .nullable(),
                         targetAddress: ADDRESS_VALIDATION,
-                        markers: MARKERS_VALIDATION.optional().prefault([
-                            PRIVATE_MARKER,
-                        ]),
+                        markers: MARKERS_VALIDATION.optional()
+                            .nullable()
+                            .prefault([PRIVATE_MARKER]),
                     }),
                 ]),
                 procedure()
@@ -1931,7 +1971,8 @@ export class RecordsServer {
                         .object({
                             recordName: RECORD_NAME_VALIDATION,
                             address: z.string().min(1),
-                            instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                            instances:
+                                INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                         })
                         .catchall(z.union([z.string(), z.array(z.string())]))
                 )
@@ -2055,8 +2096,9 @@ export class RecordsServer {
                     z.object({
                         recordName: RECORD_NAME_VALIDATION,
                         address: ADDRESS_VALIDATION,
-                        requestTimeMs: z.int().optional(),
-                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        requestTimeMs: z.int().optional().nullable(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                     })
                 )
                 .handler(
@@ -2101,7 +2143,8 @@ export class RecordsServer {
                 .inputs(
                     z.object({
                         runId: z.string().min(1),
-                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                     })
                 )
                 .handler(async ({ runId, instances }, context) => {
@@ -2140,9 +2183,9 @@ export class RecordsServer {
                 z.object({
                     address: ADDRESS_VALIDATION,
                     description: z.string().min(1),
-                    markers: MARKERS_VALIDATION.optional().prefault([
-                        PRIVATE_MARKER,
-                    ]),
+                    markers: MARKERS_VALIDATION.optional()
+                        .nullable()
+                        .prefault([PRIVATE_MARKER]),
                 }),
                 procedure()
                     .origins('api')
@@ -2172,7 +2215,8 @@ export class RecordsServer {
                     z.object({
                         recordName: RECORD_NAME_VALIDATION,
                         address: ADDRESS_VALIDATION,
-                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                     })
                 )
                 .handler(
@@ -2218,7 +2262,8 @@ export class RecordsServer {
                 )
                 .inputs(
                     z.object({
-                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                     })
                 )
                 .handler(async ({ instances }, context) => {
@@ -2266,7 +2311,8 @@ export class RecordsServer {
                 .inputs(
                     z.object({
                         pushSubscription: PUSH_SUBSCRIPTION_SCHEMA,
-                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                     })
                 )
                 .handler(async ({ pushSubscription, instances }, context) => {
@@ -2306,7 +2352,8 @@ export class RecordsServer {
                     z.object({
                         recordName: RECORD_NAME_VALIDATION,
                         address: ADDRESS_VALIDATION,
-                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                         pushSubscription: PUSH_SUBSCRIPTION_SCHEMA,
                     })
                 )
@@ -2353,7 +2400,8 @@ export class RecordsServer {
                 .inputs(
                     z.object({
                         subscriptionId: z.string(),
-                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                     })
                 )
                 .handler(async ({ subscriptionId, instances }, context) => {
@@ -2394,9 +2442,10 @@ export class RecordsServer {
                     z.object({
                         recordName: RECORD_NAME_VALIDATION,
                         address: ADDRESS_VALIDATION,
-                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                         payload: PUSH_NOTIFICATION_PAYLOAD,
-                        topic: z.string().optional(),
+                        topic: z.string().optional().nullable(),
                     })
                 )
                 .handler(
@@ -2506,9 +2555,10 @@ export class RecordsServer {
                         minor: z.coerce.number().int().optional().nullable(),
                         patch: z.coerce.number().int().optional().nullable(),
                         tag: z.string().optional().nullable(),
-                        sha256: z.string().optional(),
-                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
-                        key: z.string().min(1).optional(),
+                        sha256: z.string().optional().nullable(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
+                        key: z.string().min(1).optional().nullable(),
                     })
                 )
                 .handler(
@@ -2587,6 +2637,7 @@ export class RecordsServer {
                                     .max(16)
                                     .nullable()
                                     .optional()
+                                    .nullable()
                                     .prefault(''),
                             }),
                             auxFileRequest: z.object({
@@ -2597,13 +2648,15 @@ export class RecordsServer {
                                     .string()
                                     .min(1)
                                     .max(128)
-                                    .optional(),
+                                    .optional()
+                                    .nullable(),
                             }),
                             entitlements: z.array(ENTITLEMENT_VALIDATION()),
                             description: z.string(),
-                            markers: MARKERS_VALIDATION.optional(),
+                            markers: MARKERS_VALIDATION.optional().nullable(),
                         }),
-                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                     })
                 )
                 .handler(async ({ recordName, item, instances }, context) => {
@@ -2657,7 +2710,8 @@ export class RecordsServer {
                     z.object({
                         recordName: RECORD_NAME_VALIDATION,
                         address: ADDRESS_VALIDATION,
-                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                     })
                 )
                 .handler(
@@ -2705,7 +2759,8 @@ export class RecordsServer {
                             patch: z.int(),
                             tag: z.string().max(16).prefault(''),
                         }),
-                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                     })
                 )
                 .handler(
@@ -2751,7 +2806,7 @@ export class RecordsServer {
                     z.object({
                         packageVersionId: z.string().min(1).max(36),
                         review: z.object({
-                            id: z.string().min(1).max(36).optional(),
+                            id: z.string().min(1).max(36).optional().nullable(),
                             approved: z.boolean(),
                             approvalType: z
                                 .enum(['normal', 'super'])
@@ -2897,7 +2952,8 @@ export class RecordsServer {
                         recordName:
                             RECORD_NAME_VALIDATION.optional().nullable(),
                         inst: z.string().min(1),
-                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                     })
                 )
                 .handler(async ({ recordName, inst, instances }, context) => {
@@ -2972,7 +3028,8 @@ export class RecordsServer {
                         recordName: RECORD_NAME_VALIDATION,
                         address: ADDRESS_VALIDATION,
                         document: SEARCH_DOCUMENT_SCHEMA,
-                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                     })
                 )
                 .handler(
@@ -3017,7 +3074,8 @@ export class RecordsServer {
                         recordName: RECORD_NAME_VALIDATION,
                         address: ADDRESS_VALIDATION,
                         documentId: z.string().min(1).max(256),
-                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                     })
                 )
                 .handler(
@@ -3072,7 +3130,8 @@ export class RecordsServer {
                                 ])
                             )
                             .max(100),
-                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                     })
                 )
                 .handler(
@@ -3130,7 +3189,8 @@ export class RecordsServer {
                 .inputs(
                     z.object({
                         syncId: z.string().min(1),
-                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                     })
                 )
                 .handler(async ({ syncId, instances }, context) => {
@@ -3184,7 +3244,8 @@ export class RecordsServer {
                                     z.number(),
                                 ])
                             ),
-                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                     })
                 )
                 .handler(
@@ -3278,7 +3339,8 @@ export class RecordsServer {
                             .boolean()
                             .optional()
                             .prefault(true),
-                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                     })
                 )
                 .handler(
@@ -3492,8 +3554,8 @@ export class RecordsServer {
                 .http('GET', '/api/v2/records/list')
                 .inputs(
                     z.object({
-                        studioId: z.string().nonempty().optional(),
-                        userId: z.string().optional(),
+                        studioId: z.string().nonempty().optional().nullable(),
+                        userId: z.string().optional().nullable(),
                     })
                 )
                 .handler(async ({ studioId, userId }, context) => {
@@ -3584,7 +3646,8 @@ export class RecordsServer {
                     z.object({
                         recordName: RECORD_NAME_VALIDATION,
                         permission: AVAILABLE_PERMISSIONS_VALIDATION,
-                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                     })
                 )
                 .handler(
@@ -3653,7 +3716,8 @@ export class RecordsServer {
                                         : 'permissionId must be a string.',
                             })
                             .nonempty('permissionId must not be empty'),
-                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                     })
                 )
                 .handler(async ({ permissionId, instances }, context) => {
@@ -3685,8 +3749,10 @@ export class RecordsServer {
                 .inputs(
                     z.object({
                         recordName: RECORD_NAME_VALIDATION,
-                        marker: MARKER_VALIDATION.optional(),
-                        resourceKind: RESOURCE_KIND_VALIDATION().optional(),
+                        marker: MARKER_VALIDATION.optional().nullable(),
+                        resourceKind: RESOURCE_KIND_VALIDATION()
+                            .optional()
+                            .nullable(),
                         resourceId: z
                             .string({
                                 error: (issue) =>
@@ -3694,7 +3760,8 @@ export class RecordsServer {
                                         ? 'resourceId is required.'
                                         : 'resourceId must be a string.',
                             })
-                            .optional(),
+                            .optional()
+                            .nullable(),
                     })
                 )
                 .handler(
@@ -3756,7 +3823,8 @@ export class RecordsServer {
                                         : 'userId must be a string.',
                             })
                             .nonempty('userId must not be empty'),
-                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                     })
                 )
                 .handler(async ({ recordName, userId, instances }, context) => {
@@ -3796,7 +3864,8 @@ export class RecordsServer {
                                         : 'inst must be a string.',
                             })
                             .nonempty('inst must not be empty'),
-                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                     })
                 )
                 .handler(async ({ recordName, inst, instances }, context) => {
@@ -3836,7 +3905,8 @@ export class RecordsServer {
                                         : 'startingRole must be a string.',
                             })
                             .nonempty('startingRole must not be empty')
-                            .optional(),
+                            .optional()
+                            .nullable(),
                         role: z
                             .string({
                                 error: (issue) =>
@@ -3845,8 +3915,10 @@ export class RecordsServer {
                                         : 'role must be a string.',
                             })
                             .nonempty('role must not be empty')
-                            .optional(),
-                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                            .optional()
+                            .nullable(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                     })
                 )
                 .handler(
@@ -3904,7 +3976,8 @@ export class RecordsServer {
                                         : 'userId must be a string.',
                             })
                             .nonempty('userId must not be empty')
-                            .optional(),
+                            .optional()
+                            .nullable(),
                         inst: z
                             .string({
                                 error: (issue) =>
@@ -3913,7 +3986,8 @@ export class RecordsServer {
                                         : 'inst must be a string.',
                             })
                             .nonempty('inst must not be empty')
-                            .optional(),
+                            .optional()
+                            .nullable(),
                         role: z
                             .string({
                                 error: (issue) =>
@@ -3930,8 +4004,10 @@ export class RecordsServer {
                                         : 'expireTimeMs must be a number.',
                             })
                             .positive('expireTimeMs must be positive')
-                            .optional(),
-                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                            .optional()
+                            .nullable(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                     })
                 )
                 .handler(
@@ -3988,7 +4064,8 @@ export class RecordsServer {
                                         : 'userId must be a string.',
                             })
                             .nonempty('userId must not be empty')
-                            .optional(),
+                            .optional()
+                            .nullable(),
                         inst: z
                             .string({
                                 error: (issue) =>
@@ -3997,7 +4074,8 @@ export class RecordsServer {
                                         : 'inst must be a string.',
                             })
                             .nonempty('inst must not be empty')
-                            .optional(),
+                            .optional()
+                            .nullable(),
                         role: z
                             .string({
                                 error: (issue) =>
@@ -4006,7 +4084,8 @@ export class RecordsServer {
                                         : 'role must be a string.',
                             })
                             .nonempty('role must not be empty'),
-                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                     })
                 )
                 .handler(
@@ -4166,14 +4245,34 @@ export class RecordsServer {
                 .http('POST', '/api/v2/ai/chat')
                 .inputs(
                     z.object({
-                        model: z.string().nonempty().optional(),
+                        model: z.string().nonempty().optional().nullable(),
                         messages: z.array(AI_CHAT_MESSAGE_SCHEMA).min(1),
-                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
-                        temperature: z.number().min(0).max(2).optional(),
-                        topP: z.number().optional(),
-                        presencePenalty: z.number().min(-2).max(2).optional(),
-                        frequencyPenalty: z.number().min(-2).max(2).optional(),
-                        stopWords: z.array(z.string()).max(4).optional(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
+                        temperature: z
+                            .number()
+                            .min(0)
+                            .max(2)
+                            .optional()
+                            .nullable(),
+                        topP: z.number().optional().nullable(),
+                        presencePenalty: z
+                            .number()
+                            .min(-2)
+                            .max(2)
+                            .optional()
+                            .nullable(),
+                        frequencyPenalty: z
+                            .number()
+                            .min(-2)
+                            .max(2)
+                            .optional()
+                            .nullable(),
+                        stopWords: z
+                            .array(z.string())
+                            .max(4)
+                            .optional()
+                            .nullable(),
                     })
                 )
                 .handler(
@@ -4215,14 +4314,34 @@ export class RecordsServer {
                 .http('POST', '/api/v2/ai/chat/stream')
                 .inputs(
                     z.object({
-                        model: z.string().nonempty().optional(),
+                        model: z.string().nonempty().optional().nullable(),
                         messages: z.array(AI_CHAT_MESSAGE_SCHEMA).min(1),
-                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
-                        temperature: z.number().min(0).max(2).optional(),
-                        topP: z.number().optional(),
-                        presencePenalty: z.number().min(-2).max(2).optional(),
-                        frequencyPenalty: z.number().min(-2).max(2).optional(),
-                        stopWords: z.array(z.string()).max(4).optional(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
+                        temperature: z
+                            .number()
+                            .min(0)
+                            .max(2)
+                            .optional()
+                            .nullable(),
+                        topP: z.number().optional().nullable(),
+                        presencePenalty: z
+                            .number()
+                            .min(-2)
+                            .max(2)
+                            .optional()
+                            .nullable(),
+                        frequencyPenalty: z
+                            .number()
+                            .min(-2)
+                            .max(2)
+                            .optional()
+                            .nullable(),
+                        stopWords: z
+                            .array(z.string())
+                            .max(4)
+                            .optional()
+                            .nullable(),
                     })
                 )
                 .handler(async ({ model, messages, ...options }, context) => {
@@ -4295,15 +4414,21 @@ export class RecordsServer {
                             .string()
                             .nonempty()
                             .max(600)
-                            .optional(),
+                            .optional()
+                            .nullable(),
                         blockadeLabs: z
                             .object({
-                                skyboxStyleId: z.number().optional(),
-                                remixImagineId: z.number().optional(),
-                                seed: z.number().optional(),
+                                skyboxStyleId: z.number().optional().nullable(),
+                                remixImagineId: z
+                                    .number()
+                                    .optional()
+                                    .nullable(),
+                                seed: z.number().optional().nullable(),
                             })
-                            .optional(),
-                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                            .optional()
+                            .nullable(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                     })
                 )
                 .handler(
@@ -4353,7 +4478,8 @@ export class RecordsServer {
                                         : 'skyboxId must be a string.',
                             })
                             .nonempty('skyboxId must not be empty'),
-                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                     })
                 )
                 .handler(async ({ skyboxId, instances }, context) => {
@@ -4404,18 +4530,36 @@ export class RecordsServer {
                                         : 'model must be a string.',
                             })
                             .nonempty('model must not be empty')
-                            .optional(),
-                        negativePrompt: z.string().nonempty().optional(),
-                        width: z.int().positive().optional(),
-                        height: z.int().positive().optional(),
-                        seed: z.int().positive().optional(),
-                        numberOfImages: z.int().positive().optional(),
-                        steps: z.int().positive().optional(),
-                        sampler: z.string().nonempty().optional(),
-                        cfgScale: z.int().min(0).optional(),
-                        clipGuidancePreset: z.string().nonempty().optional(),
-                        stylePreset: z.string().nonempty().optional(),
-                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                            .optional()
+                            .nullable(),
+                        negativePrompt: z
+                            .string()
+                            .nonempty()
+                            .optional()
+                            .nullable(),
+                        width: z.int().positive().optional().nullable(),
+                        height: z.int().positive().optional().nullable(),
+                        seed: z.int().positive().optional().nullable(),
+                        numberOfImages: z
+                            .int()
+                            .positive()
+                            .optional()
+                            .nullable(),
+                        steps: z.int().positive().optional().nullable(),
+                        sampler: z.string().nonempty().optional().nullable(),
+                        cfgScale: z.int().min(0).optional().nullable(),
+                        clipGuidancePreset: z
+                            .string()
+                            .nonempty()
+                            .optional()
+                            .nullable(),
+                        stylePreset: z
+                            .string()
+                            .nonempty()
+                            .optional()
+                            .nullable(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                     })
                 )
                 .handler(
@@ -4480,7 +4624,8 @@ export class RecordsServer {
                 .http('GET', '/api/v2/ai/hume/token')
                 .inputs(
                     z.object({
-                        recordName: RECORD_NAME_VALIDATION.optional(),
+                        recordName:
+                            RECORD_NAME_VALIDATION.optional().nullable(),
                     })
                 )
                 .handler(async ({ recordName }, context) => {
@@ -4513,20 +4658,27 @@ export class RecordsServer {
                 .http('POST', '/api/v2/ai/sloyd/model')
                 .inputs(
                     z.object({
-                        recordName: RECORD_NAME_VALIDATION.optional(),
+                        recordName:
+                            RECORD_NAME_VALIDATION.optional().nullable(),
                         outputMimeType: z
                             .enum(['model/gltf+json', 'model/gltf-binary'])
                             .prefault('model/gltf+json'),
                         prompt: z.string().min(1),
-                        levelOfDetail: z.number().min(0.01).max(1).optional(),
-                        baseModelId: z.string().optional(),
+                        levelOfDetail: z
+                            .number()
+                            .min(0.01)
+                            .max(1)
+                            .optional()
+                            .nullable(),
+                        baseModelId: z.string().optional().nullable(),
                         thumbnail: z
                             .object({
                                 type: z.literal('image/png'),
                                 width: z.int().min(1),
                                 height: z.int().min(1),
                             })
-                            .optional(),
+                            .optional()
+                            .nullable(),
                     })
                 )
                 .handler(
@@ -4614,69 +4766,122 @@ export class RecordsServer {
                         recordName: RECORD_NAME_VALIDATION,
                         request: z.object({
                             model: z.string().min(1),
-                            instructions: z.string().min(1).optional(),
+                            instructions: z
+                                .string()
+                                .min(1)
+                                .optional()
+                                .nullable(),
                             modalities: z
                                 .array(z.enum(['audio', 'text']))
                                 .max(2)
-                                .optional(),
-                            maxResponseOutputTokens: z.int().min(1).optional(),
+                                .optional()
+                                .nullable(),
+                            maxResponseOutputTokens: z
+                                .int()
+                                .min(1)
+                                .optional()
+                                .nullable(),
                             inputAudioFormat: z
                                 .enum(['pcm16', 'g711_ulaw', 'g711_alaw'])
-                                .optional(),
+                                .optional()
+                                .nullable(),
                             inputAudioNoiseReduction: z
                                 .object({
                                     type: z
                                         .enum(['near_field', 'far_field'])
-                                        .optional(),
+                                        .optional()
+                                        .nullable(),
                                 })
                                 .optional()
                                 .nullable(),
                             inputAudioTranscription: z
                                 .object({
-                                    language: z.string().min(1).optional(),
-                                    model: z.string().min(1).optional(),
-                                    prompt: z.string().min(1).optional(),
+                                    language: z
+                                        .string()
+                                        .min(1)
+                                        .optional()
+                                        .nullable(),
+                                    model: z
+                                        .string()
+                                        .min(1)
+                                        .optional()
+                                        .nullable(),
+                                    prompt: z
+                                        .string()
+                                        .min(1)
+                                        .optional()
+                                        .nullable(),
                                 })
                                 .optional()
                                 .nullable(),
                             outputAudioFormat: z
                                 .enum(['pcm16', 'g711_ulaw', 'g711_alaw'])
-                                .optional(),
-                            temperature: z.number().min(0).max(2).optional(),
-                            toolChoice: z.string().optional(),
+                                .optional()
+                                .nullable(),
+                            temperature: z
+                                .number()
+                                .min(0)
+                                .max(2)
+                                .optional()
+                                .nullable(),
+                            toolChoice: z.string().optional().nullable(),
                             tools: z
                                 .array(
                                     z.object({
-                                        description: z.string().optional(),
+                                        description: z
+                                            .string()
+                                            .optional()
+                                            .nullable(),
                                         name: z.string(),
-                                        parameters: z.any().optional(),
-                                        type: z.enum(['function']).optional(),
+                                        parameters: z
+                                            .any()
+                                            .optional()
+                                            .nullable(),
+                                        type: z
+                                            .enum(['function'])
+                                            .optional()
+                                            .nullable(),
                                     })
                                 )
-                                .optional(),
+                                .optional()
+                                .nullable(),
                             turnDetection: z
                                 .object({
-                                    createResponse: z.boolean().optional(),
+                                    createResponse: z
+                                        .boolean()
+                                        .optional()
+                                        .nullable(),
                                     eagerness: z
                                         .enum(['low', 'medium', 'high'])
-                                        .optional(),
-                                    interruptResponse: z.boolean().optional(),
+                                        .optional()
+                                        .nullable(),
+                                    interruptResponse: z
+                                        .boolean()
+                                        .optional()
+                                        .nullable(),
                                     prefixPaddingMs: z
                                         .number()
                                         .min(0)
-                                        .optional(),
+                                        .optional()
+                                        .nullable(),
                                     silenceDurationMs: z
                                         .number()
                                         .min(0)
-                                        .optional(),
-                                    threshold: z.number().min(0).optional(),
+                                        .optional()
+                                        .nullable(),
+                                    threshold: z
+                                        .number()
+                                        .min(0)
+                                        .optional()
+                                        .nullable(),
                                     type: z
                                         .enum(['server_vad', 'semantic_vad'])
-                                        .optional(),
+                                        .optional()
+                                        .nullable(),
                                 })
                                 .optional()
                                 .nullable(),
-                            voice: z.string().min(1).optional(),
+                            voice: z.string().min(1).optional().nullable(),
                         }),
                     })
                 )
@@ -4793,7 +4998,8 @@ export class RecordsServer {
                 .inputs(
                     z.object({
                         id: STUDIO_ID_VALIDATION,
-                        displayName: STUDIO_DISPLAY_NAME_VALIDATION.optional(),
+                        displayName:
+                            STUDIO_DISPLAY_NAME_VALIDATION.optional().nullable(),
                         logoUrl: z.url().min(1).max(512).nullable().optional(),
                         logoBackgroundColor: z
                             .string({
@@ -4806,16 +5012,21 @@ export class RecordsServer {
                             .max(32)
                             .nullable()
                             .optional(),
-                        comIdConfig: COM_ID_CONFIG_SCHEMA.optional(),
-                        playerConfig: COM_ID_PLAYER_CONFIG.optional().describe(
-                            'The configuration that the comId provides which overrides the default player configuration.'
-                        ),
-                        loomConfig: LOOM_CONFIG.optional().describe(
-                            'The configuration that can be used by studios to setup loom.'
-                        ),
-                        humeConfig: HUME_CONFIG.optional(),
-                        playerWebManifest:
-                            WEB_MANIFEST_SCHEMA.optional().describe(
+                        comIdConfig: COM_ID_CONFIG_SCHEMA.optional().nullable(),
+                        playerConfig: COM_ID_PLAYER_CONFIG.optional()
+                            .nullable()
+                            .describe(
+                                'The configuration that the comId provides which overrides the default player configuration.'
+                            ),
+                        loomConfig: LOOM_CONFIG.optional()
+                            .nullable()
+                            .describe(
+                                'The configuration that can be used by studios to setup loom.'
+                            ),
+                        humeConfig: HUME_CONFIG.optional().nullable(),
+                        playerWebManifest: WEB_MANIFEST_SCHEMA.optional()
+                            .nullable()
+                            .describe(
                                 'The PWA web manifest that should be served for custom domains for the studio.'
                             ),
                     })
@@ -5023,7 +5234,7 @@ export class RecordsServer {
                 .inputs(
                     z.object({
                         comId: z.string().nonempty().nullable().optional(),
-                        userId: z.string().optional(),
+                        userId: z.string().optional().nullable(),
                     })
                 )
                 .handler(async ({ comId, userId }, context) => {
@@ -5106,7 +5317,8 @@ export class RecordsServer {
                                         : 'addedUserId must be a string.',
                             })
                             .nonempty('addedUserId must not be empty')
-                            .optional(),
+                            .optional()
+                            .nullable(),
                         addedEmail: z
                             .string({
                                 error: (issue) =>
@@ -5115,7 +5327,8 @@ export class RecordsServer {
                                         : 'addedEmail must be a string.',
                             })
                             .nonempty('addedEmail must not be empty')
-                            .optional(),
+                            .optional()
+                            .nullable(),
                         addedPhoneNumber: z
                             .string({
                                 error: (issue) =>
@@ -5124,7 +5337,8 @@ export class RecordsServer {
                                         : 'addedPhoneNumber must be a string.',
                             })
                             .nonempty('addedPhoneNumber must not be empty')
-                            .optional(),
+                            .optional()
+                            .nullable(),
                         addedDisplayName: z
                             .string({
                                 error: (issue) =>
@@ -5133,7 +5347,8 @@ export class RecordsServer {
                                         : 'addedDisplayName must be a string.',
                             })
                             .nonempty('addedDisplayName must not be empty')
-                            .optional(),
+                            .optional()
+                            .nullable(),
                         role: z.union([
                             z.literal('admin'),
                             z.literal('member'),
@@ -5191,7 +5406,8 @@ export class RecordsServer {
                                         : 'removedUserId must be a string.',
                             })
                             .nonempty('removedUserId must not be empty')
-                            .optional(),
+                            .optional()
+                            .nullable(),
                     })
                 )
                 .handler(async ({ studioId, removedUserId }, context) => {
@@ -5311,9 +5527,24 @@ export class RecordsServer {
                 .http('GET', '/api/v2/balances')
                 .inputs(
                     z.object({
-                        studioId: z.string().min(1).max(255).optional(),
-                        contractId: z.string().min(1).max(255).optional(),
-                        userId: z.string().min(1).max(255).optional(),
+                        studioId: z
+                            .string()
+                            .min(1)
+                            .max(255)
+                            .optional()
+                            .nullable(),
+                        contractId: z
+                            .string()
+                            .min(1)
+                            .max(255)
+                            .optional()
+                            .nullable(),
+                        userId: z
+                            .string()
+                            .min(1)
+                            .max(255)
+                            .optional()
+                            .nullable(),
                     })
                 )
                 .handler(async (input, context) => {
@@ -5378,7 +5609,8 @@ export class RecordsServer {
                                         : 'studioId must be a string.',
                             })
                             .nonempty('studioId must be non-empty.')
-                            .optional(),
+                            .optional()
+                            .nullable(),
                         userId: z
                             .string({
                                 error: (issue) =>
@@ -5387,7 +5619,8 @@ export class RecordsServer {
                                         : 'userId must be a string.',
                             })
                             .nonempty('userId must be non-empty.')
-                            .optional(),
+                            .optional()
+                            .nullable(),
                     })
                 )
                 .handler(async ({ studioId, userId }, context) => {
@@ -5463,7 +5696,8 @@ export class RecordsServer {
                                         : 'userId must be a string.',
                             })
                             .nonempty('userId must not be empty.')
-                            .optional(),
+                            .optional()
+                            .nullable(),
                         studioId: z
                             .string({
                                 error: (issue) =>
@@ -5472,8 +5706,9 @@ export class RecordsServer {
                                         : 'studioId must be a string.',
                             })
                             .nonempty('studioId must not be empty.')
-                            .optional(),
-                        subscriptionId: z.string().optional(),
+                            .optional()
+                            .nullable(),
+                        subscriptionId: z.string().optional().nullable(),
                         expectedPrice: z
                             .object({
                                 currency: z.string(),
@@ -5486,7 +5721,8 @@ export class RecordsServer {
                                 ]),
                                 intervalLength: z.number(),
                             })
-                            .optional(),
+                            .optional()
+                            .nullable(),
                     })
                 )
                 .handler(
@@ -5532,8 +5768,8 @@ export class RecordsServer {
                 .http('POST', '/api/v2/subscriptions/update')
                 .inputs(
                     z.object({
-                        userId: z.string().optional(),
-                        studioId: z.string().optional(),
+                        userId: z.string().optional().nullable(),
+                        studioId: z.string().optional().nullable(),
                         subscriptionId: z.string().nullable(),
                         subscriptionStatus: z
                             .enum([
@@ -5636,7 +5872,7 @@ export class RecordsServer {
                 .http('POST', '/api/v2/stripe/login')
                 .inputs(
                     z.object({
-                        studioId: z.string().min(1).optional(),
+                        studioId: z.string().min(1).optional().nullable(),
                     })
                 )
                 .handler(async ({ studioId }, context) => {
@@ -5687,9 +5923,9 @@ export class RecordsServer {
                         .int('initialValue must be an integer.')
                         .nonnegative('initialValue must be non-negative.'),
                     description: z.string().optional().nullable(),
-                    markers: MARKERS_VALIDATION.optional().prefault([
-                        PRIVATE_MARKER,
-                    ]),
+                    markers: MARKERS_VALIDATION.optional()
+                        .nullable()
+                        .prefault([PRIVATE_MARKER]),
                 }),
                 procedure()
                     .origins('api')
@@ -5727,7 +5963,8 @@ export class RecordsServer {
                     z.object({
                         recordName: RECORD_NAME_VALIDATION,
                         address: ADDRESS_VALIDATION,
-                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                     })
                 )
                 .handler(
@@ -5768,9 +6005,10 @@ export class RecordsServer {
                 .http('GET', '/api/v2/records/insts/list')
                 .inputs(
                     z.object({
-                        recordName: RECORD_NAME_VALIDATION.optional(),
-                        inst: z.string().optional(),
-                        marker: z.string().optional(),
+                        recordName:
+                            RECORD_NAME_VALIDATION.optional().nullable(),
+                        inst: z.string().optional().nullable(),
+                        marker: z.string().optional().nullable(),
                     })
                 )
                 .handler(async ({ recordName, inst, marker }, context) => {
@@ -5810,7 +6048,7 @@ export class RecordsServer {
                     z.object({
                         contractId: z.string().min(1),
                         amount: z.int().positive(),
-                        note: z.string().min(1).optional(),
+                        note: z.string().min(1).optional().nullable(),
                         payoutDestination: z.enum(['account', 'stripe']),
                     })
                 )
@@ -5892,9 +6130,9 @@ export class RecordsServer {
                 .http('POST', '/api/v2/financial/payouts')
                 .inputs(
                     z.object({
-                        userId: z.string().min(1).optional(),
-                        studioId: z.string().min(1).optional(),
-                        amount: z.int().positive().optional(),
+                        userId: z.string().min(1).optional().nullable(),
+                        studioId: z.string().min(1).optional().nullable(),
+                        amount: z.int().positive().optional().nullable(),
                         destination: z.enum(['stripe', 'cash']),
                     })
                 )
@@ -6019,9 +6257,10 @@ export class RecordsServer {
                 .http('DELETE', '/api/v2/records/insts')
                 .inputs(
                     z.object({
-                        recordKey: RECORD_KEY_VALIDATION.optional(),
-                        recordName: RECORD_NAME_VALIDATION.optional(),
-                        inst: z.string().optional(),
+                        recordKey: RECORD_KEY_VALIDATION.optional().nullable(),
+                        recordName:
+                            RECORD_NAME_VALIDATION.optional().nullable(),
+                        inst: z.string().optional().nullable(),
                     })
                 )
                 .handler(async ({ recordKey, recordName, inst }, context) => {
@@ -6183,7 +6422,8 @@ export class RecordsServer {
                     z.object({
                         recordName: RECORD_NAME_VALIDATION,
                         address: ADDRESS_VALIDATION,
-                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                     })
                 )
                 .handler(
@@ -6219,9 +6459,13 @@ export class RecordsServer {
                     z.object({
                         recordName: RECORD_NAME_VALIDATION,
                         address: ADDRESS_VALIDATION.nullable().optional(),
-                        marker: MARKER_VALIDATION.optional(),
-                        sort: z.enum(['ascending', 'descending']).optional(),
-                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        marker: MARKER_VALIDATION.optional().nullable(),
+                        sort: z
+                            .enum(['ascending', 'descending'])
+                            .optional()
+                            .nullable(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                     })
                 )
                 .handler(
@@ -6297,7 +6541,8 @@ export class RecordsServer {
                             redirectUrl: z.url().nullable().optional(),
                             markers: MARKERS_VALIDATION,
                         }),
-                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                     })
                 )
                 .handler(async ({ recordName, item, instances }, context) => {
@@ -6334,7 +6579,8 @@ export class RecordsServer {
                     z.object({
                         recordName: RECORD_NAME_VALIDATION,
                         address: ADDRESS_VALIDATION,
-                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                     })
                 )
                 .handler(
@@ -6376,7 +6622,8 @@ export class RecordsServer {
                             expectedCost: z.int().gte(0),
                             currency: z.string().min(1).max(15).toLowerCase(),
                         }),
-                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                         returnUrl: z.url(),
                         successUrl: z.url(),
                     })
@@ -6429,7 +6676,8 @@ export class RecordsServer {
                                 .toLowerCase()
                                 .prefault('usd'),
                         }),
-                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                         returnUrl: z.url(),
                         successUrl: z.url(),
                     })
@@ -6480,7 +6728,8 @@ export class RecordsServer {
                     z.object({
                         recordName: RECORD_NAME_VALIDATION,
                         address: ADDRESS_VALIDATION,
-                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                     })
                 )
                 .handler(
@@ -6656,8 +6905,8 @@ export class RecordsServer {
             path: '/api/v3/callProcedure',
             schema: z.object({
                 procedure: z.string().nonempty(),
-                input: z.any().optional(),
-                query: z.any().optional(),
+                input: z.any().optional().nullable(),
+                query: z.any().optional().nullable(),
             }),
             handler: async (request, { procedure, input, query }) => {
                 const proc = (procs as any)[procedure] as Procedure<
@@ -8244,7 +8493,7 @@ export class RecordsServer {
             let body = tryParseJson(request.body);
             if (body.success) {
                 const schema = z.object({
-                    subscriptionId: z.string().optional(),
+                    subscriptionId: z.string().optional().nullable(),
                     expectedPrice: z
                         .object({
                             currency: z.string(),
@@ -8252,7 +8501,8 @@ export class RecordsServer {
                             interval: z.enum(['month', 'year', 'week', 'day']),
                             intervalLength: z.number(),
                         })
-                        .optional(),
+                        .optional()
+                        .nullable(),
                 });
 
                 const parseResult = schema.safeParse(body.value);

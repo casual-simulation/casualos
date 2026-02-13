@@ -1,0 +1,10 @@
+diff --git a/examples/jsm/loaders/KTX2Loader.d.ts b/examples/jsm/loaders/KTX2Loader.d.ts
+index f8cdfb635951c1c541490a5b710a00cf0d710a17..2ca03b24ff9f15e6b2fcacfeb2d78efd9208be9b 100644
+--- a/examples/jsm/loaders/KTX2Loader.d.ts
++++ b/examples/jsm/loaders/KTX2Loader.d.ts
+@@ -1,4 +1,5 @@
+ import { CompressedTexture, Loader, LoadingManager, WebGLRenderer } from "three";
++// @ts-ignore
+ import { Renderer, WebGPURenderer } from "three/webgpu";
+ import { WorkerPool } from "../utils/WorkerPool.js";
+ 

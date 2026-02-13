@@ -19,13 +19,10 @@ import type {
     NotAuthorizedError,
     NotLoggedInError,
     ServerError,
-    SubscriptionLimitReached,
 } from '@casual-simulation/aux-common/Errors';
 import type {
     DataRecordsStore,
     EraseDataStoreResult,
-    GetDataStoreResult,
-    SetDataResult,
     UserPolicy,
     ListDataStoreFailure,
 } from './DataRecordsStore';
@@ -39,11 +36,17 @@ import {
     getMarkerResourcesForCreation,
     getMarkerResourcesForUpdate,
 } from './PolicyController';
-import type { DenialReason } from '@casual-simulation/aux-common';
+import type {
+    DenialReason,
+    KnownErrorCodes,
+} from '@casual-simulation/aux-common';
 import {
     ACCOUNT_MARKER,
     PUBLIC_READ_MARKER,
+    genericResult,
     hasValue,
+    isFailure,
+    success,
 } from '@casual-simulation/aux-common';
 import type { MetricsStore } from './MetricsStore';
 import type { ConfigurationStore } from './ConfigurationStore';
@@ -56,6 +59,8 @@ import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
 import type { IQueue } from './queue';
 import type { SearchSyncQueueEvent } from './search';
+import type { FinancialController } from './financial/FinancialController';
+import { billForUsage, BillingCodes, TransferCodes } from './financial';
 
 const TRACE_NAME = 'DataRecordsController';
 
@@ -66,6 +71,8 @@ export interface DataRecordsConfiguration {
     config: ConfigurationStore;
 
     searchSyncQueue?: IQueue<SearchSyncQueueEvent> | null;
+
+    financialController?: FinancialController | null;
 }
 
 /**
@@ -76,6 +83,7 @@ export class DataRecordsController {
     private _policies: PolicyController;
     private _metrics: MetricsStore;
     private _config: ConfigurationStore;
+    private _financialController: FinancialController | null;
 
     private _searchSyncQueue: IQueue<SearchSyncQueueEvent> | null;
 
@@ -89,6 +97,7 @@ export class DataRecordsController {
         this._metrics = config.metrics;
         this._config = config.config;
         this._searchSyncQueue = config.searchSyncQueue || null;
+        this._financialController = config.financialController || null;
     }
 
     /**
@@ -325,6 +334,25 @@ export class DataRecordsController {
                 }
             }
 
+            if (features.data.creditFeePerWrite) {
+                const billing = await billForUsage(this._financialController, {
+                    userId: metricsResult.ownerId,
+                    studioId: metricsResult.studioId,
+                    transferCode: TransferCodes.records_usage_fee,
+                    billingCode: BillingCodes.data_write,
+                });
+
+                const billingResult = await billing.next(
+                    success({
+                        cost: features.data.creditFeePerWrite,
+                    })
+                );
+
+                if (isFailure(billingResult.value)) {
+                    return genericResult(billingResult.value);
+                }
+            }
+
             const result2 = await this._store.setData(
                 recordName,
                 address,
@@ -436,6 +464,37 @@ export class DataRecordsController {
 
             if (authorization.success === false) {
                 return authorization;
+            }
+
+            const metricsResult =
+                await this._metrics.getSubscriptionDataMetricsByRecordName(
+                    context.context.recordName
+                );
+            const config = await this._config.getSubscriptionConfiguration();
+            const features = getSubscriptionFeatures(
+                config,
+                metricsResult.subscriptionStatus,
+                metricsResult.subscriptionId,
+                metricsResult.ownerId ? 'user' : 'studio'
+            );
+
+            if (features.data.creditFeePerRead) {
+                const billing = await billForUsage(this._financialController, {
+                    userId: metricsResult.ownerId,
+                    studioId: metricsResult.studioId,
+                    transferCode: TransferCodes.records_usage_fee,
+                    billingCode: BillingCodes.data_read,
+                });
+
+                const billingResult = await billing.next(
+                    success({
+                        cost: features.data.creditFeePerRead,
+                    })
+                );
+
+                if (isFailure(billingResult.value)) {
+                    return genericResult(billingResult.value);
+                }
             }
 
             return {
@@ -812,18 +871,7 @@ export interface RecordDataFailure {
     /**
      * The error code for the failure.
      */
-    errorCode:
-        | ServerError
-        | NotLoggedInError
-        | NotAuthorizedError
-        | ValidatePublicRecordKeyFailure['errorCode']
-        | SetDataResult['errorCode']
-        | SubscriptionLimitReached
-        | 'unacceptable_request'
-        | 'not_supported'
-        | 'invalid_update_policy'
-        | 'invalid_delete_policy'
-        | AuthorizeSubjectFailure['errorCode'];
+    errorCode: KnownErrorCodes;
 
     /**
      * The error message for the failure.
@@ -916,11 +964,7 @@ export interface GetDataFailure {
     /**
      * The error code for the failure.
      */
-    errorCode:
-        | ServerError
-        | GetDataStoreResult['errorCode']
-        | AuthorizeSubjectFailure['errorCode']
-        | 'not_supported';
+    errorCode: KnownErrorCodes;
 
     /**
      * The error message for the failure.

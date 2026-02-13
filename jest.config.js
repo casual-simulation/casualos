@@ -33,8 +33,8 @@ module.exports = {
         '^aux-common/(.*)$': '<rootDir>/src/aux-common/$1',
         '^@casual-simulation/three/examples/js/renderers/CSS3DRenderer$':
             '<rootDir>/__mocks__/CSS3DRendererMock.js',
-        '^three$':
-            '<rootDir>/src/aux-server/node_modules/@casual-simulation/three',
+        '^@casual-simulation\\/three$':
+            '<rootDir>/src/aux-server/node_modules/three',
         '^esbuild-wasm/esbuild.wasm\\?url$':
             '<rootDir>/__mocks__/esbuild.wasm.js',
         '^aux-jest-matchers$': '<rootDir>/jest/jest-matchers.ts',

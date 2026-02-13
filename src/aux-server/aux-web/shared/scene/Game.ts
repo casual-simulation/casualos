@@ -26,11 +26,11 @@ import {
     Color,
     Vector3,
     Vector2,
-    sRGBEncoding,
     VideoTexture,
     Object3D,
     PMREMGenerator,
     EquirectangularReflectionMapping,
+    SRGBColorSpace,
 } from '@casual-simulation/three';
 import type { IGameView } from '../vue-components/IGameView';
 import { ArgEvent } from '@casual-simulation/aux-common/Event';
@@ -108,7 +108,7 @@ import { parseCasualOSUrl } from '../UrlUtils';
 export const PREFERRED_XR_REFERENCE_SPACE = 'local-floor';
 
 // Set the default UP direction
-Object3D.DefaultUp.copy(WORLD_UP);
+Object3D.DEFAULT_UP.copy(WORLD_UP);
 
 /**
  * The Game class is the root of all Three Js activity for the current AUX session.
@@ -871,7 +871,7 @@ export abstract class Game {
         }));
         webGlRenderer.autoClear = false;
         webGlRenderer.shadowMap.enabled = false;
-        this.renderer.outputEncoding = sRGBEncoding;
+        this.renderer.outputColorSpace = SRGBColorSpace;
         this.gameView.gameView.appendChild(this.renderer.domElement);
     }
 
@@ -888,7 +888,7 @@ export abstract class Game {
         //
         this.mainScene = new Scene();
         this.mainScene.name = 'MainScene';
-        this.mainScene.autoUpdate = false;
+        this.mainScene.matrixAutoUpdate = false;
 
         // Main scene camera.
         this.setCameraType('orthographic');

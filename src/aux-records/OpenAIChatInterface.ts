@@ -174,6 +174,8 @@ export class OpenAIChatInterface implements AIChatInterface {
             return {
                 choices: choices,
                 totalTokens: result.data.usage?.total_tokens ?? 0,
+                inputTokens: result.data.usage?.prompt_tokens,
+                outputTokens: result.data.usage?.completion_tokens,
             };
         } catch (err) {
             if (axios.isAxiosError(err)) {
@@ -260,6 +262,8 @@ export class OpenAIChatInterface implements AIChatInterface {
                         .function_call as unknown as AIFunctionCall,
                 })),
                 totalTokens: chunk.usage?.total_tokens ?? 0,
+                inputTokens: chunk.usage?.prompt_tokens,
+                outputTokens: chunk.usage?.completion_tokens,
             };
         }
     }
