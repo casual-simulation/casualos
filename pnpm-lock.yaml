@@ -422,7 +422,7 @@ importers:
   src/aux-benchmarks:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-common
       benchmark:
         specifier: 2.1.4
@@ -450,7 +450,7 @@ importers:
   src/aux-common:
     dependencies:
       '@casual-simulation/crypto':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../crypto
       '@casual-simulation/engine262':
         specifier: 0.0.1-4de2170374e22761996e46eb1362f4496ee57f8f
@@ -462,7 +462,7 @@ importers:
         specifier: ^4.0.1-alpha.21448844597
         version: link:../expect
       '@casual-simulation/fast-json-stable-stringify':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../fast-json-stable-stringify
       '@casual-simulation/js-interpreter':
         specifier: ^4.0.1-alpha.21448844597
@@ -550,31 +550,31 @@ importers:
   src/aux-components:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-common
       '@casual-simulation/aux-vm':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-vm
       '@casual-simulation/aux-vm-browser':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-vm-browser
       '@casual-simulation/aux-vm-client':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-vm-client
       '@casual-simulation/aux-vm-deno':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-vm-deno
       '@casual-simulation/aux-vm-node':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-vm-node
       '@casual-simulation/crypto':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../crypto
       '@casual-simulation/crypto-browser':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../crypto-browser
       '@casual-simulation/crypto-node':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../crypto-node
       '@casual-simulation/three':
         specifier: ^0.140.3
@@ -728,13 +728,13 @@ importers:
         specifier: 0.24.3
         version: 0.24.3(encoding@0.1.13)
       '@casual-simulation/aux-common':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-common
       '@casual-simulation/crypto':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../crypto
       '@casual-simulation/fast-json-stable-stringify':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../fast-json-stable-stringify
       '@casual-simulation/rate-limit-redis':
         specifier: ^4.0.1-alpha.21448844597
@@ -845,10 +845,10 @@ importers:
         specifier: ^3.609.0
         version: 3.862.0
       '@casual-simulation/aux-common':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-records
       axios:
         specifier: 1.7.7
@@ -869,13 +869,13 @@ importers:
   src/aux-runtime:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-records
       '@casual-simulation/crypto':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../crypto
       '@casual-simulation/engine262':
         specifier: 0.0.1-4de2170374e22761996e46eb1362f4496ee57f8f
@@ -887,7 +887,7 @@ importers:
         specifier: ^4.0.1-alpha.21448844597
         version: link:../expect
       '@casual-simulation/fast-json-stable-stringify':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../fast-json-stable-stringify
       '@casual-simulation/js-interpreter':
         specifier: ^4.0.1-alpha.21448844597
@@ -1032,40 +1032,40 @@ importers:
         specifier: ^3.609.0
         version: 3.862.0
       '@casual-simulation/aux-common':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-records
       '@casual-simulation/aux-records-aws':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-records-aws
       '@casual-simulation/aux-runtime':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-vm
       '@casual-simulation/aux-vm-browser':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-vm-browser
       '@casual-simulation/aux-vm-client':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-vm-client
       '@casual-simulation/aux-vm-deno':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-vm-deno
       '@casual-simulation/aux-vm-node':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-vm-node
       '@casual-simulation/crypto':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../crypto
       '@casual-simulation/crypto-browser':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../crypto-browser
       '@casual-simulation/crypto-node':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../crypto-node
       '@casual-simulation/engine262':
         specifier: 0.0.1-4de2170374e22761996e46eb1362f4496ee57f8f
@@ -1074,7 +1074,7 @@ importers:
         specifier: ^4.0.1-alpha.21448844597
         version: link:../expect
       '@casual-simulation/fast-json-stable-stringify':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../fast-json-stable-stringify
       '@casual-simulation/js-interpreter':
         specifier: ^4.0.1-alpha.21448844597
@@ -1277,6 +1277,9 @@ importers:
       inherits:
         specifier: 2.0.4
         version: 2.0.4
+      ioredis:
+        specifier: 5.9.2
+        version: 5.9.2
       jsbarcode:
         specifier: 3.11.0
         version: 3.11.0
@@ -1399,7 +1402,7 @@ importers:
         version: 4.1.12
     devDependencies:
       '@casual-simulation/aux-components':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-components
       '@rollup/plugin-virtual':
         specifier: 3.0.2
@@ -1486,19 +1489,19 @@ importers:
   src/aux-vm:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-records
       '@casual-simulation/aux-runtime':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-runtime
       '@casual-simulation/crypto':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../crypto
       '@casual-simulation/fast-json-stable-stringify':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../fast-json-stable-stringify
       '@casual-simulation/timesync':
         specifier: ^4.0.1-alpha.21448844597
@@ -1537,31 +1540,31 @@ importers:
   src/aux-vm-browser:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-records
       '@casual-simulation/aux-runtime':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-vm
       '@casual-simulation/aux-vm-client':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-vm-client
       '@casual-simulation/aux-websocket':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-websocket
       '@casual-simulation/aux-websocket-aws':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-websocket-aws
       '@casual-simulation/crypto':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../crypto
       '@casual-simulation/crypto-browser':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../crypto-browser
       '@casual-simulation/websocket':
         specifier: ^4.0.1-alpha.21448844597
@@ -1595,22 +1598,22 @@ importers:
   src/aux-vm-client:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-common
       '@casual-simulation/aux-runtime':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-vm
       '@casual-simulation/aux-websocket':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-websocket
       '@casual-simulation/aux-websocket-aws':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-websocket-aws
       '@casual-simulation/crypto':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../crypto
       '@casual-simulation/timesync':
         specifier: ^4.0.1-alpha.21448844597
@@ -1637,22 +1640,22 @@ importers:
   src/aux-vm-deno:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-common
       '@casual-simulation/aux-runtime':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-vm
       '@casual-simulation/aux-vm-client':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-vm-client
       '@casual-simulation/crypto':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../crypto
       '@casual-simulation/crypto-browser':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../crypto-browser
       comlink:
         specifier: 4.3.1
@@ -1673,22 +1676,22 @@ importers:
   src/aux-vm-node:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-common
       '@casual-simulation/aux-runtime':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-vm
       '@casual-simulation/aux-vm-client':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-vm-client
       '@casual-simulation/crypto':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../crypto
       '@casual-simulation/crypto-node':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../crypto-node
       es-toolkit:
         specifier: 1.39.10
@@ -1703,7 +1706,7 @@ importers:
   src/aux-websocket:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-common
       '@casual-simulation/websocket':
         specifier: ^4.0.1-alpha.21448844597
@@ -1715,7 +1718,7 @@ importers:
   src/aux-websocket-aws:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-common
       '@casual-simulation/websocket':
         specifier: ^4.0.1-alpha.21448844597
@@ -1730,16 +1733,16 @@ importers:
   src/casualos-cli:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-records
       '@casual-simulation/aux-runtime':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../aux-vm
       '@octokit/app':
         specifier: ^15.1.0
@@ -1817,7 +1820,7 @@ importers:
   src/crypto:
     dependencies:
       '@casual-simulation/fast-json-stable-stringify':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../fast-json-stable-stringify
       '@types/scrypt-async':
         specifier: ^1.3.1
@@ -1838,7 +1841,7 @@ importers:
   src/crypto-browser:
     dependencies:
       '@casual-simulation/crypto':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../crypto
       bowser:
         specifier: ^2.4.0
@@ -1847,7 +1850,7 @@ importers:
   src/crypto-node:
     dependencies:
       '@casual-simulation/crypto':
-        specifier: ^4.0.1-alpha.21448844597
+        specifier: ^4.0.5
         version: link:../crypto
       '@types/bn.js':
         specifier: ^5.1.0
@@ -3907,8 +3910,8 @@ packages:
   '@ioredis/commands@1.2.0':
     resolution: {integrity: sha512-Sx1pU8EM64o2BrqNpEO1CNLtKQwyhuXuqyfH7oGKCk+1a33d2r5saW8zNwm3j6BTExtjrv2BxTgzzkMwts6vGg==}
 
-  '@ioredis/commands@1.3.0':
-    resolution: {integrity: sha512-M/T6Zewn7sDaBQEqIZ8Rb+i9y8qfGmq+5SDFSf9sA2lUZTmdDLVdOiQaeDp+Q4wElZ9HG1GAX5KhDaidp6LQsQ==}
+  '@ioredis/commands@1.5.0':
+    resolution: {integrity: sha512-eUgLqrMf8nJkZxT24JvVRrQya1vZkQh8BBeYNwGDqa5I0VUi8ACx7uFvAaLxintokpTenkK6DASvo/bvNbBGow==}
 
   '@isaacs/cliui@8.0.2':
     resolution: {integrity: sha512-O8jcjabXaleOG9DQ0+ARXWZBTfnP4WNAqzuiJK7ll44AmxGKv/J2M4TPjxjY3znBCfvBXFzucm1twdyFybFqEA==}
@@ -10612,8 +10615,8 @@ packages:
     resolution: {integrity: sha512-P9F4Eo6zicYsIJbEy/mPJmSxKY0rVcmiy5H8oXPxPDotQRCvCBjBuI5QWoQQanVE9jdeocnum5iqYAHl4pHdLA==}
     engines: {node: '>=6'}
 
-  ioredis@5.7.0:
-    resolution: {integrity: sha512-NUcA93i1lukyXU+riqEyPtSEkyFq8tX90uL659J+qpCZ3rEdViB/APC58oAhIh3+bJln2hzdlZbBZsGNrlsR8g==}
+  ioredis@5.9.2:
+    resolution: {integrity: sha512-tAAg/72/VxOUW7RQSX1pIxJVucYKcjFjfvj60L57jrZpYCHC3XN0WCQ3sNYL4Gmvv+7GPvTAjc+KSdeNuE8oWQ==}
     engines: {node: '>=12.22.0'}
 
   iota-array@1.0.0:
@@ -19658,7 +19661,7 @@ snapshots:
 
   '@ioredis/commands@1.2.0': {}
 
-  '@ioredis/commands@1.3.0': {}
+  '@ioredis/commands@1.5.0': {}
 
   '@isaacs/cliui@8.0.2':
     dependencies:
@@ -25628,7 +25631,7 @@ snapshots:
   bullmq@5.56.9:
     dependencies:
       cron-parser: 4.9.0
-      ioredis: 5.7.0
+      ioredis: 5.9.2
       msgpackr: 1.11.5
       node-abort-controller: 3.1.1
       semver: 7.7.1
@@ -29031,9 +29034,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ioredis@5.7.0:
+  ioredis@5.9.2:
     dependencies:
-      '@ioredis/commands': 1.3.0
+      '@ioredis/commands': 1.5.0
       cluster-key-slot: 1.1.2
       debug: 4.4.0
       denque: 2.1.0

@@ -414,6 +414,20 @@ describe('RecordsController', () => {
                 ownerId: null,
                 keyCreatorId: 'userId',
                 policy: 'subjectless',
+                studioId: 'studioId',
+                studioMembers: [
+                    {
+                        isPrimaryContact: false,
+                        role: 'admin',
+                        studioId: 'studioId',
+                        user: {
+                            email: 'test@example.com',
+                            id: 'userId',
+                            phoneNumber: null,
+                        },
+                        userId: 'userId',
+                    },
+                ],
             });
         });
 

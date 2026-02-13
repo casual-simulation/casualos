@@ -10821,8 +10821,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function listInsts(
         recordName: string,
-        startingInst: string | null = null,
-        endpoint: string | null = null
+        startingInst?: string | null,
+        endpoint?: string | null
     ): Promise<ListInstsResult> {
         let options: RecordActionOptions = {};
         if (hasValue(endpoint)) {
@@ -10863,7 +10863,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function listInstsByMarker(
         recordName: string,
         marker: string,
-        startingInst: string | null = null,
+        startingInst?: string | null,
         options: RecordActionOptions = {}
     ): Promise<ListInstsResult> {
         const task = context.createTask();

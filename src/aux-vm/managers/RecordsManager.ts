@@ -1072,6 +1072,15 @@ export class RecordsManager {
 
             const uploadResult = await uploadFile(result.data, data, hash);
 
+            if (uploadResult.success) {
+                console.log('[RecordsManager] File recorded!');
+            } else {
+                console.error(
+                    '[RecordsManager] File upload failed!',
+                    uploadResult
+                );
+            }
+
             if (hasValue(event.taskId)) {
                 this._helper.transaction(
                     asyncResult(event.taskId, uploadResult)
@@ -2328,6 +2337,15 @@ export class RecordsManager {
                 hash
             );
 
+            if (uploadResult.success) {
+                console.log('[RecordsManager] File recorded!');
+            } else {
+                console.error(
+                    '[RecordsManager] File upload failed!',
+                    uploadResult
+                );
+            }
+
             if (uploadResult.success === false) {
                 if (hasValue(event.taskId)) {
                     this._helper.transaction(
@@ -3166,14 +3184,12 @@ export async function uploadFile(
     });
 
     if (uploadResult.status >= 200 && uploadResult.status < 300) {
-        console.log('[RecordsManager] File recorded!');
         return {
             success: true,
             url: url,
             sha256Hash: hash,
         };
     } else {
-        console.error('[RecordsManager] File upload failed!', uploadResult);
         return {
             success: false,
             errorCode: 'upload_failed',

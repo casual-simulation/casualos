@@ -44,6 +44,7 @@ import type {
     PackageVersionRecordsStore,
     FinancialInterface,
     PurchasableItemRecordsStore,
+    BackgroundJobs,
 } from '@casual-simulation/aux-records';
 import {
     DNSDomainNameValidator,
@@ -201,6 +202,7 @@ import { TypesenseSearchInterface } from '@casual-simulation/aux-records/search'
 import type { NodeConfiguration } from 'typesense/lib/Typesense/Configuration';
 import { PrismaSearchRecordsStore } from '../prisma/PrismaSearchRecordsStore';
 import type { IQueue } from '@casual-simulation/aux-records/queue';
+import type { Processor } from 'bullmq';
 import { Worker as BullWorker, Queue } from 'bullmq';
 import { BullQueue } from '../queue/BullQueue';
 import { SNSClient } from '@aws-sdk/client-sns';
@@ -240,8 +242,10 @@ import { PrismaDatabaseRecordsStore } from '../prisma/PrismaDatabaseRecordsStore
 import type { FinancialStore } from '@casual-simulation/aux-records/financial';
 import {
     FinancialController,
+    FinancialProcessor,
     TigerBeetleFinancialInterface,
 } from '@casual-simulation/aux-records/financial';
+import IORedis from 'ioredis';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
@@ -447,6 +451,10 @@ export class ServerBuilder implements SubscriptionLike {
     private _searchSyncProcessor: SearchSyncProcessor | null = null;
     private _searchQueue: IQueue<SearchSyncQueueEvent> | null = null;
     private _searchWorker: BullWorker | null = null;
+
+    private _financialQueue: IQueue<any> | null = null;
+    private _financialWorker: BullWorker | null = null;
+    private _financialProcessor: FinancialProcessor | null = null;
 
     private _databasesStore: DatabaseRecordsStore | null = null;
     private _databaseInterfaceProviderName: 'sqlite' | 'turso' | null = null;
@@ -1910,6 +1918,69 @@ export class ServerBuilder implements SubscriptionLike {
         return this;
     }
 
+    private _setupJob(
+        name: string,
+        job: BackgroundJobs,
+        redis: IORedis,
+        // options: Pick<ServerConfig, 'redis'>,
+        process: Processor
+    ): { queue?: IQueue<any>; worker?: BullWorker } {
+        if (job.type === 'sns') {
+            console.log(`[ServerBuilder] Publishing ${name} jobs to SNS.`);
+
+            const client = new SNSClient({});
+            const queue = new SNSQueue(client, job.topicArn);
+
+            this._subscription.add(() => queue.unsubscribe());
+
+            return {
+                queue,
+            };
+        }
+
+        if (!redis) {
+            throw new Error(
+                'Redis options must be provided when using BullMQ.'
+            );
+        }
+
+        let queue: IQueue<any> | undefined = undefined;
+        if (job.queue) {
+            console.log(
+                `[ServerBuilder] Using BullMQ for ${name} jobs on:`,
+                job.queueName
+            );
+
+            const bullQueue = (queue = new BullQueue(
+                new Queue(job.queueName, {
+                    connection: redis,
+                })
+            ));
+
+            this._subscription.add(() => bullQueue.unsubscribe());
+        }
+
+        let worker: BullWorker | undefined = undefined;
+        if (job.process) {
+            console.log(
+                `[ServerBuilder] Processing ${name} jobs with BullMQ on:`,
+                job.queueName
+            );
+            worker = new BullWorker(job.queueName, process, {
+                connection: redis,
+            });
+
+            this._subscription.add(() => {
+                worker.close();
+            });
+        }
+
+        return {
+            queue,
+            worker,
+        };
+    }
+
     useBackgroundJobs(
         options: Pick<ServerConfig, 'jobs' | 'redis'> = this._options
     ): this {
@@ -1917,6 +1988,11 @@ export class ServerBuilder implements SubscriptionLike {
             throw new Error('Background jobs options must be provided.');
         }
 
+        console.log('[ServerBuilder] Using background jobs.');
+
+        const redisServerOptions =
+            options.redis.servers?.bullmq ?? options.redis;
+        let redis: IORedis | null = null;
         if (options.jobs.search && this._searchInterface) {
             if (!this._dataStore) {
                 throw new Error(
@@ -1929,89 +2005,134 @@ export class ServerBuilder implements SubscriptionLike {
                 );
             }
 
+            console.log('[ServerBuilder] Using Search Sync background jobs.');
+
             this._searchSyncProcessor = new SearchSyncProcessor({
                 searchInterface: this._searchInterface,
                 data: this._dataStore,
                 search: this._searchStore,
             });
 
-            if (options.jobs.search.type === 'sns') {
-                console.log('[ServerBuilder] Publishing search jobs to SNS.');
-
-                const client = new SNSClient({});
-                const queue = (this._searchQueue = new SNSQueue(
-                    client,
-                    options.jobs.search.topicArn
-                ));
-
-                this._subscription.add(() => queue.unsubscribe());
-                this._subscription.add(() => {
-                    this._searchQueue = null;
-                });
-            } else {
-                if (!options.redis) {
-                    throw new Error(
-                        'Redis options must be provided when using BullMQ.'
-                    );
-                }
-                // console.log('[ServerBuilder] Using BullMQ for Search jobs.');
-
-                const serverOptions =
-                    options.redis.servers?.bullmq ?? options.redis;
-
-                const connection = {
-                    url: serverOptions.url,
-                    host: serverOptions.host,
-                    port: serverOptions.port,
-                    password: serverOptions.password,
-                    tls: serverOptions.tls ? {} : undefined,
-                };
-
-                if (options.jobs.search.queue) {
-                    console.log(
-                        '[ServerBuilder] Using BullMQ for search jobs on:',
-                        options.jobs.search.queueName
-                    );
-
-                    const queue = (this._searchQueue = new BullQueue(
-                        new Queue(options.jobs.search.queueName, {
-                            connection,
-                        })
-                    ));
-
-                    this._subscription.add(() => queue.unsubscribe());
-                    this._subscription.add(() => {
-                        this._searchQueue = null;
-                    });
-                }
-
-                if (options.jobs.search.process) {
-                    console.log(
-                        '[ServerBuilder] Processing search jobs with BullMQ on:',
-                        options.jobs.search.queueName
-                    );
-                    this._searchWorker = new BullWorker(
-                        options.jobs.search.queueName,
-                        async (job) => {
-                            await this._searchSyncProcessor.process(
-                                job.data as SearchSyncQueueEvent
-                            );
-                        },
-                        {
-                            connection,
-                        }
-                    );
-
-                    this._subscription.add(() => {
-                        this._searchWorker?.close();
-                        this._searchWorker = null;
-                    });
-                }
+            if (!redisServerOptions) {
+                throw new Error(
+                    'Redis options must be provided when using BullMQ.'
+                );
             }
+
+            redis ??= this._createIORedisClient(redisServerOptions);
+            const { queue, worker } = this._setupJob(
+                'search',
+                options.jobs.search,
+                redis,
+                (job) =>
+                    this._searchSyncProcessor.process(
+                        job.data as SearchSyncQueueEvent
+                    )
+            );
+            this._searchQueue = queue || null;
+            this._searchWorker = worker || null;
         } else if (!this._searchInterface) {
             console.warn(
                 '[ServerBuilder] A Search interface needs to be configured before search background jobs will be enabled.'
             );
+        }
+
+        if (options.jobs.financial && this._financialInterface) {
+            console.log('[ServerBuilder] Using Financial background jobs.');
+
+            if (!redisServerOptions) {
+                throw new Error(
+                    'Redis options must be provided when using BullMQ.'
+                );
+            }
+            redis ??= this._createIORedisClient(redisServerOptions);
+
+            this._initActions.push({
+                priority: 0,
+                action: async () => {
+                    if (!this._financialController) {
+                        throw new Error(
+                            'The financial controller is not available when it should be.'
+                        );
+                    } else if (!this._configStore) {
+                        throw new Error(
+                            'The config store is not available when it should be.'
+                        );
+                    } else if (!this._financialStore) {
+                        throw new Error(
+                            'The financial store is not available when it should be.'
+                        );
+                    } else if (!this._metricsStore) {
+                        throw new Error(
+                            'The metrics store is not available when it should be.'
+                        );
+                    }
+
+                    this._financialProcessor = new FinancialProcessor({
+                        financial: this._financialController,
+                        configStore: this._configStore,
+                        financialStore: this._financialStore,
+                        metricsStore: this._metricsStore,
+                        notificationsStore: this._notificationsStore,
+                    });
+                    const { queue, worker } = this._setupJob(
+                        'financial',
+                        options.jobs.financial,
+                        redis,
+                        (job) => this._financialProcessor.process(job.data)
+                    );
+                    this._financialQueue = queue || null;
+                    this._financialWorker = worker || null;
+
+                    if (
+                        options.jobs.financial.type === 'bullmq' &&
+                        queue instanceof BullQueue
+                    ) {
+                        const revenueCreditSweepJobId =
+                            'aux-revenue-credit-sweep';
+                        if (options.jobs.financial.revenueCreditSweep) {
+                            console.log(
+                                '[ServerBuilder] Setting up Revenue Credit Sweep job schedule.'
+                            );
+                            queue.queue.upsertJobScheduler(
+                                revenueCreditSweepJobId,
+                                options.jobs.financial.revenueCreditSweep
+                                    .repeatOptions,
+                                options.jobs.financial.revenueCreditSweep
+                                    .jobTemplate
+                            );
+                        } else {
+                            console.log(
+                                '[ServerBuilder] No Revenue Credit Sweep job schedule configured.'
+                            );
+                            queue.queue.removeJobScheduler(
+                                revenueCreditSweepJobId
+                            );
+                        }
+
+                        const periodicBillingJobId = 'aux-periodic-billing-job';
+                        if (options.jobs.financial.periodicBilling) {
+                            console.log(
+                                '[ServerBuilder] Setting up Periodic Billing job schedule.'
+                            );
+                            queue.queue.upsertJobScheduler(
+                                periodicBillingJobId,
+                                options.jobs.financial.periodicBilling
+                                    .repeatOptions,
+                                options.jobs.financial.periodicBilling
+                                    .jobTemplate
+                            );
+                        } else {
+                            console.log(
+                                '[ServerBuilder] No Periodic Billing job schedule configured.'
+                            );
+                            queue.queue.removeJobScheduler(
+                                periodicBillingJobId
+                            );
+                        }
+                    }
+                },
+            });
         }
 
         return this;
@@ -2084,6 +2205,12 @@ export class ServerBuilder implements SubscriptionLike {
             console.log('[ServerBuilder] Not using Stripe.');
         }
 
+        if (this._financialStore && this._financialInterface) {
+            this._financialController = new FinancialController(
+                this._financialInterface,
+                this._financialStore
+            );
+        }
         this._authController = new AuthController(
             this._authStore,
             this._authMessenger,
@@ -2112,18 +2239,21 @@ export class ServerBuilder implements SubscriptionLike {
             policies: this._policyController,
             metrics: this._metricsStore,
             searchSyncQueue: this._searchQueue,
+            financialController: this._financialController,
         });
         this._manualDataController = new DataRecordsController({
             store: this._manualDataStore,
             config: this._configStore,
             policies: this._policyController,
             metrics: this._metricsStore,
+            financialController: this._financialController,
         });
         this._filesController = new FileRecordsController({
             store: this._filesStore,
             config: this._configStore,
             policies: this._policyController,
             metrics: this._metricsStore,
+            financialController: this._financialController,
         });
         this._eventsController = new EventRecordsController({
             store: this._eventsStore,
@@ -2155,13 +2285,6 @@ export class ServerBuilder implements SubscriptionLike {
                 privo: this._privoClient,
                 store: this._contractsStore,
             });
-        }
-
-        if (this._financialStore && this._financialInterface) {
-            this._financialController = new FinancialController(
-                this._financialInterface,
-                this._financialStore
-            );
         }
 
         if (this._subscriptionConfig) {
@@ -2252,6 +2375,7 @@ export class ServerBuilder implements SubscriptionLike {
                 policies: this._policyController,
                 store: this._notificationsStore,
                 pushInterface: this._pushInterface,
+                financialController: this._financialController,
             });
         }
 
@@ -2492,6 +2616,33 @@ export class ServerBuilder implements SubscriptionLike {
             });
         }
 
+        return redis;
+    }
+
+    private _createIORedisClient(options: RedisServerOptions): IORedis {
+        let redis: IORedis;
+        if (options.url) {
+            let url = new URL(options.url);
+            redis = new IORedis({
+                host: url.hostname,
+                port: parseInt(url.port),
+                password: url.password,
+                tls: options.tls ? {} : undefined,
+                maxRetriesPerRequest: null,
+            });
+        } else {
+            redis = new IORedis({
+                host: options.host,
+                port: options.port,
+                password: options.password,
+                tls: options.tls ? {} : undefined,
+                maxRetriesPerRequest: null,
+            });
+        }
+
+        this._subscription.add(() => {
+            redis.quit();
+        });
         return redis;
     }
 

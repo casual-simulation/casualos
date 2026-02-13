@@ -291,6 +291,8 @@ export class PolicyController {
                 recordName = recordKeyResult.recordName;
                 ownerId = recordKeyResult.ownerId;
                 recordKeyCreatorId = recordKeyResult.keyCreatorId;
+                studioId = recordKeyResult.studioId;
+                studioMembers = recordKeyResult.studioMembers;
             } else {
                 return {
                     success: false,
@@ -387,7 +389,7 @@ export class PolicyController {
             recordKeyCreatorId,
             recordOwnerId: ownerId,
             recordOwnerPrivacyFeatures,
-            recordStudioId: studioId,
+            recordStudioId: studioId ?? null,
             recordStudioMembers: studioMembers,
             userId: request.userId,
             userRole: userRole,

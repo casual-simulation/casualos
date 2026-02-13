@@ -37,6 +37,11 @@ export interface MetricsStore {
     ): Promise<FileSubscriptionMetrics>;
 
     /**
+     * Gets the file metrics for all the subscriptions in the system. This is used for periodic billing purposes.
+     */
+    getAllFileSubscriptionMetrics(): Promise<FileSubscriptionMetrics[]>;
+
+    /**
      * Gets the event metrics for the subscription of the given record.
      * @param recordName The name of the record.
      */
@@ -112,6 +117,11 @@ export interface MetricsStore {
     getSubscriptionInstMetrics(
         filter: SubscriptionFilter
     ): Promise<InstSubscriptionMetrics>;
+
+    /**
+     * Gets all the inst metrics for all the subscriptions in the system. This is used for periodic billing purposes.
+     */
+    getAllSubscriptionInstMetrics(): Promise<InstSubscriptionMetrics[]>;
 
     /**
      * Gets the inst metrics for the given record.
@@ -220,6 +230,11 @@ export interface InstSubscriptionMetrics extends SubscriptionMetrics {
      * The total number of insts stored in the subscription.
      */
     totalInsts: number;
+
+    /**
+     * The total number of bytes stored by insts in the subscription.
+     */
+    totalInstBytes: number;
 }
 
 export interface SubscriptionFilter {
