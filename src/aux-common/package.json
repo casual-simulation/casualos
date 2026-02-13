@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-common",
-    "version": "4.0.5",
+    "version": "4.1.0-alpha.21969711490",
     "description": "Common library for AUX projects",
     "main": "index.js",
     "types": "index.d.ts",
@@ -32,15 +32,15 @@
         "access": "public"
     },
     "dependencies": {
-        "@casual-simulation/crypto": "^4.0.5",
+        "@casual-simulation/crypto": "^4.1.0-alpha.21969711490",
         "@casual-simulation/engine262": "0.0.1-4de2170374e22761996e46eb1362f4496ee57f8f",
         "@casual-simulation/error-stack-parser": "^2.0.7",
         "@casual-simulation/expect": "^4.0.0",
-        "@casual-simulation/fast-json-stable-stringify": "^4.0.5",
+        "@casual-simulation/fast-json-stable-stringify": "^4.1.0-alpha.21969711490",
         "@casual-simulation/js-interpreter": "^4.0.0",
         "@casual-simulation/stacktrace": "^4.0.0",
         "@casual-simulation/three": "^0.140.3",
-        "@casual-simulation/timesync": "^4.0.1-alpha.21448844597",
+        "@casual-simulation/timesync": "^4.1.0-alpha.21969711490",
         "@opentelemetry/api": "^1.9.0",
         "@opentelemetry/resources": "^1.25.1",
         "@opentelemetry/semantic-conventions": "^1.25.1",

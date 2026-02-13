@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/websocket",
-    "version": "4.0.1-alpha.21448844597",
+    "version": "4.1.0-alpha.21969711490",
     "description": "Minimal WebSocket implementation",
     "keywords": [],
     "author": "Casual Simulation, Inc.",
