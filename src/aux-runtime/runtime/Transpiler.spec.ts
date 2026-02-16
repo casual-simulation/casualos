@@ -2124,6 +2124,18 @@ describe('Transpiler', () => {
                 );
             });
 
+            it('should remove generic type arguments from class methods', () => {
+                const transpiler = new Transpiler();
+
+                expect(
+                    transpiler.transpile(
+                        `class ABC { myMethod<T>() {} static myStaticMethod<T>() {} }`
+                    )
+                ).toBe(
+                    `class ABC { myMethod() {} static myStaticMethod() {} }`
+                );
+            });
+
             it('should support generic type arguments with extends clauses', () => {
                 const transpiler = new Transpiler();
 
