@@ -222,10 +222,6 @@ export function constructServerBuilder(
         builder.usePrismaAndRedisInstRecords();
     }
 
-    if (config.tigerBeetle) {
-        builder.useTigerBeetle();
-    }
-
     if (config.ai) {
         builder.useAI();
     }
@@ -258,7 +254,7 @@ export function constructServerBuilder(
         builder.useRekognitionModeration();
     }
 
-    if (config.tigerBeetle) {
+    if (config.tigerBeetle && config.tigerBeetle._enabled) {
         builder.useTigerBeetle();
     }
 

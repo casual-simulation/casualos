@@ -1149,6 +1149,12 @@ Because repo/add_updates is a very common permission, we periodically cache perm
 
     const tigerBeetleSchema = z
         .object({
+            _enabled: z
+                .boolean()
+                .prefault(false)
+                .describe(
+                    'Whether to enable the finanical interface. Defaults to false.'
+                ),
             clusterId: z.coerce
                 .bigint()
                 .min(0n, 'The cluster ID must be a non-negative integer.')
