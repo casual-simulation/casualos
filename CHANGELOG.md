@@ -1,8 +1,17 @@
 # CasualOS Changelog
 
-## V4.1.0
+## V4.1.1
 
 #### Date: TBD
+
+### :bug: Bug Fixes'
+
+- Fixed `splat` form collider not being oriented correctly.
+- Fixed `splat` form meshes not being disposed when the bot shape is rebuilt.
+
+## V4.1.0
+
+#### Date: 2/13/2026
 
 ### :rocket: Features
 
