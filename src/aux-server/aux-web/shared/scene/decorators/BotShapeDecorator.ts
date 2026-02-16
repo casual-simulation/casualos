@@ -1358,7 +1358,14 @@ export class BotShapeDecorator
                 if (this._splat !== mesh) {
                     return;
                 }
-                let box = mesh.getBoundingBox();
+                const localBox = mesh.getBoundingBox();
+
+                // Apply -90° X rotation to the bounding box.
+                const box = new Box3(
+                    new Vector3(localBox.min.x, localBox.min.z, -localBox.max.y),
+                    new Vector3(localBox.max.x, localBox.max.z, -localBox.min.y)
+                );
+
                 let size = new Vector3();
                 box.getSize(size);
                 let center = new Vector3();
