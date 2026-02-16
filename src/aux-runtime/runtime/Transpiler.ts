@@ -188,6 +188,11 @@ export const TypeScriptVisistorKeys: { [nodeType: string]: string[] } = {
         'returnType',
         'typeParameters',
     ],
+    MethodDefinition: [
+        ...((VisitorKeys as any).MethodDefinition ?? []),
+        'returnType',
+        'typeParameters',
+    ],
     Identifier: [...VisitorKeys.Identifier, 'typeAnnotation'],
     PropertyDefinition: [
         ...(VisitorKeys as any).PropertyDefinition,
