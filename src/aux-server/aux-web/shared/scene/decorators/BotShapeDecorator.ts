@@ -573,8 +573,6 @@ export class BotShapeDecorator
             return;
         }
 
-        console.log('[BotShapeDecorator] Play Animation:', animation);
-
         const clips = this._getClips(animation);
 
         if (clips.length > 0) {
@@ -607,7 +605,6 @@ export class BotShapeDecorator
             }
 
             const listener = () => {
-                console.log('[BotShapeDecorator] Finished Animation');
                 this._updateAnimation(this._animation, true, previousTime);
                 this._animationMixer.removeEventListener('finished', listener);
             };
@@ -1206,7 +1203,8 @@ export class BotShapeDecorator
             this.scene ||
             this._shapeSubscription ||
             this._keyboard ||
-            this.light
+            this.light ||
+            this._splat
         ) {
             this.dispose();
         }
