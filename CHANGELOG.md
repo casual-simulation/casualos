@@ -4,7 +4,11 @@
 
 #### Date: 2/17/2026
 
-### :bug: Bug Fixes'
+### :rocket: Features
+
+-   Added the `cone` and `capsule` forms.
+
+### :bug: Bug Fixes
 
 -   Fixed `splat` form collider not being oriented correctly.
 -   Fixed `splat` form meshes not being disposed when the bot shape is rebuilt.
