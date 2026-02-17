@@ -394,7 +394,8 @@ export class PolicyController {
             userId: request.userId,
             userRole: userRole,
             userPrivacyFeatures,
-            sendNotLoggedIn: request.sendNotLoggedIn ?? true,
+            sendNotLoggedIn:
+                request.sendNotLoggedIn ?? subjectPolicy !== 'subjectless',
         };
 
         return {

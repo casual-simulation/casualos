@@ -70,6 +70,8 @@ describe('PolicyController', () => {
     const userId: string = 'userId';
     let recordKey: string;
     let savedRecordKey: RecordKey;
+    let subjectlessRecordKey: string;
+    let savedSubjectlessRecordKey: RecordKey;
     let recordName: string;
     let record: Record = null;
     let services: TestServices;
@@ -90,6 +92,18 @@ describe('PolicyController', () => {
         savedRecordKey = services.store.recordKeys.find(
             (k) => k.recordName === recordName
         );
+
+        const testSubjectlessRecordKey = await createTestRecordKey(
+            services,
+            userId,
+            recordName,
+            'subjectless'
+        );
+        subjectlessRecordKey = testSubjectlessRecordKey.recordKey;
+
+        savedSubjectlessRecordKey = services.store.recordKeys.find(
+            (k) => k.recordName === recordName && k.policy === 'subjectless'
+        );
     });
 
     beforeEach(async () => {
@@ -104,6 +118,10 @@ describe('PolicyController', () => {
 
         await services.store.addRecordKey({
             ...savedRecordKey,
+        });
+
+        await services.store.addRecordKey({
+            ...savedSubjectlessRecordKey,
         });
 
         await services.authStore.saveNewUser({
@@ -320,6 +338,89 @@ describe('PolicyController', () => {
                         sendNotLoggedIn: true,
                     },
                 });
+            });
+        });
+
+        it('should disable sendNotLoggedIn if given a subjectless record key', async () => {
+            const context = await controller.constructAuthorizationContext({
+                recordKeyOrRecordName: subjectlessRecordKey,
+                userId: userId,
+            });
+
+            expect(context).toEqual({
+                success: true,
+                context: {
+                    recordKeyResult: {
+                        success: true,
+                        recordName,
+                        ownerId,
+                        keyCreatorId: userId,
+                        policy: 'subjectless',
+                    },
+                    recordKeyProvided: true,
+                    recordName: recordName,
+                    recordOwnerId: ownerId,
+                    recordStudioId: null,
+                    subjectPolicy: 'subjectless',
+                    recordKeyCreatorId: userId,
+                    recordOwnerPrivacyFeatures: {
+                        allowAI: true,
+                        allowPublicData: true,
+                        allowPublicInsts: true,
+                        publishData: true,
+                    },
+                    userPrivacyFeatures: {
+                        allowAI: true,
+                        allowPublicData: true,
+                        allowPublicInsts: true,
+                        publishData: true,
+                    },
+                    userId: userId,
+                    userRole: 'none',
+                    sendNotLoggedIn: false,
+                },
+            });
+        });
+
+        it('should keep sendNotLoggedIn from the request if given a subjectless record key', async () => {
+            const context = await controller.constructAuthorizationContext({
+                recordKeyOrRecordName: subjectlessRecordKey,
+                userId: userId,
+                sendNotLoggedIn: true,
+            });
+
+            expect(context).toEqual({
+                success: true,
+                context: {
+                    recordKeyResult: {
+                        success: true,
+                        recordName,
+                        ownerId,
+                        keyCreatorId: userId,
+                        policy: 'subjectless',
+                    },
+                    recordKeyProvided: true,
+                    recordName: recordName,
+                    recordOwnerId: ownerId,
+                    recordStudioId: null,
+                    subjectPolicy: 'subjectless',
+                    recordKeyCreatorId: userId,
+                    recordOwnerPrivacyFeatures: {
+                        allowAI: true,
+                        allowPublicData: true,
+                        allowPublicInsts: true,
+                        publishData: true,
+                    },
+                    userPrivacyFeatures: {
+                        allowAI: true,
+                        allowPublicData: true,
+                        allowPublicInsts: true,
+                        publishData: true,
+                    },
+                    userId: userId,
+                    userRole: 'none',
+                    sendNotLoggedIn: true,
+                },
             });
         });
     });
