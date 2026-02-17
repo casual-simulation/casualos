@@ -1802,7 +1802,8 @@ export function getBotShape(calc: BotCalculationContext, bot: Bot): BotShape {
         shape === 'spherePortal' ||
         shape === 'light' ||
         shape === 'cylinder' ||
-        shape === 'cone'
+        shape === 'cone' ||
+        shape === 'capsule'
     ) {
         return shape;
     }
