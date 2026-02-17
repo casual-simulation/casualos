@@ -63,9 +63,12 @@ import {
     Light,
     HemisphereLight,
     CylinderGeometry,
+    DataTexture,
+    NearestFilter,
+    RedFormat
 } from '@casual-simulation/three';
 import type {
-    BotCalculationContext,
+    BotCalculationContext, 
     Bot,
     BotLabelAnchor,
 } from '@casual-simulation/aux-common';
@@ -80,6 +83,12 @@ import { BackSide } from 'three';
 import { AuxBot3D } from './AuxBot3D';
 import { MapView } from './map/MapView';
 import type { MapProvider } from 'geo-three';
+
+const TOON_GRADIENT_COLORS = new Uint8Array([0, 42, 85, 127, 185, 230, 255]);
+const TOON_GRADIENT_MAP = new DataTexture(TOON_GRADIENT_COLORS, TOON_GRADIENT_COLORS.length, 1, RedFormat);
+TOON_GRADIENT_MAP.magFilter = NearestFilter;
+TOON_GRADIENT_MAP.minFilter = NearestFilter;
+TOON_GRADIENT_MAP.needsUpdate = true;
 
 /**
  * Gets the direction of the up vector for 3D portals.
@@ -99,6 +108,7 @@ export function baseAuxSkyboxMeshMaterial() {
 export function baseAuxMeshMaterial() {
     return new MeshToonMaterial({
         color: 0x00ff00,
+        gradientMap: TOON_GRADIENT_MAP
     });
 }
 
@@ -106,15 +116,15 @@ export function baseAuxMeshMaterial() {
  * Create copy of ambient light that is common to all aux scenes.
  */
 export function baseAuxAmbientLight() {
-    return new AmbientLight(0xaaaaaa, 1);
+    return new AmbientLight(0xffffff, 1);
 }
 
 /**
  * Create copy of directional light that is common to all aux scenes.
  */
 export function baseAuxDirectionalLight() {
-    let dirLight = new DirectionalLight(0xffffff, 2.3);
-    dirLight.position.set(0.25, -2.4, 5.4);
+    let dirLight = new DirectionalLight(0xffffff, 3.3);
+    dirLight.position.set(0.25, -2.4, 3.0);
     dirLight.updateMatrixWorld(true);
     // let helper = new DirectionalLightHelper(dirLight);
     // dirLight.add(helper);
@@ -176,7 +186,7 @@ export function createSkybox(
     let material = baseAuxSkyboxMeshMaterial();
     material.color = new Color(color);
 
-    const sphere = new Mesh(geometry, material.clone());
+    const sphere = new Mesh(geometry, material);
     sphere.position.copy(position);
     return sphere;
 }
@@ -196,7 +206,7 @@ export function createSphere(
     let material = baseAuxMeshMaterial();
     material.color = new Color(color);
 
-    const sphere = new Mesh(geometry, material.clone());
+    const sphere = new Mesh(geometry, material);
     sphere.position.copy(position);
     return sphere;
 }
@@ -213,7 +223,7 @@ export function createSprite(uvAspectRatio: number = 1): Mesh {
 
     const geometry = new PlaneGeometry(1, 1, 16, 16);
     adjustUVs(geometry, uvAspectRatio);
-    let sprite = new Mesh(geometry, material.clone());
+    let sprite = new Mesh(geometry, material);
     (sprite.material as any)[DEFAULT_TRANSPARENT] = true;
     return sprite;
 }
