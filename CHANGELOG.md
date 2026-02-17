@@ -1,5 +1,20 @@
 # CasualOS Changelog
 
+## V4.1.1
+
+#### Date: 2/17/2026
+
+### :rocket: Features
+
+-   Added the `cone` and `capsule` forms.
+
+### :bug: Bug Fixes
+
+-   Fixed `splat` form collider not being oriented correctly.
+-   Fixed `splat` form meshes not being disposed when the bot shape is rebuilt.
+-   Fixed transpiler handling for TypeScript generic parameters on class methods so they are stripped during transpilation.
+-   Fixed an issue where it was impossible to use a record key create records (data, file, etc.) with a custom marker path (e.g. `publicRead:path`).
+
 ## V4.1.0
 
 #### Date: 2/13/2026

@@ -24,6 +24,8 @@ import type {
 import {
     PolicyController,
     explainationForPermissionAssignment,
+    getMarkerResourcesForCreation,
+    getMarkerResourcesForUpdate,
     willMarkersBeRemaining,
 } from './PolicyController';
 import type {
@@ -70,6 +72,8 @@ describe('PolicyController', () => {
     const userId: string = 'userId';
     let recordKey: string;
     let savedRecordKey: RecordKey;
+    let subjectlessRecordKey: string;
+    let savedSubjectlessRecordKey: RecordKey;
     let recordName: string;
     let record: Record = null;
     let services: TestServices;
@@ -90,6 +94,18 @@ describe('PolicyController', () => {
         savedRecordKey = services.store.recordKeys.find(
             (k) => k.recordName === recordName
         );
+
+        const testSubjectlessRecordKey = await createTestRecordKey(
+            services,
+            userId,
+            recordName,
+            'subjectless'
+        );
+        subjectlessRecordKey = testSubjectlessRecordKey.recordKey;
+
+        savedSubjectlessRecordKey = services.store.recordKeys.find(
+            (k) => k.recordName === recordName && k.policy === 'subjectless'
+        );
     });
 
     beforeEach(async () => {
@@ -104,6 +120,10 @@ describe('PolicyController', () => {
 
         await services.store.addRecordKey({
             ...savedRecordKey,
+        });
+
+        await services.store.addRecordKey({
+            ...savedSubjectlessRecordKey,
         });
 
         await services.authStore.saveNewUser({
@@ -320,6 +340,89 @@ describe('PolicyController', () => {
                         sendNotLoggedIn: true,
                     },
                 });
+            });
+        });
+
+        it('should disable sendNotLoggedIn if given a subjectless record key', async () => {
+            const context = await controller.constructAuthorizationContext({
+                recordKeyOrRecordName: subjectlessRecordKey,
+                userId: userId,
+            });
+
+            expect(context).toEqual({
+                success: true,
+                context: {
+                    recordKeyResult: {
+                        success: true,
+                        recordName,
+                        ownerId,
+                        keyCreatorId: userId,
+                        policy: 'subjectless',
+                    },
+                    recordKeyProvided: true,
+                    recordName: recordName,
+                    recordOwnerId: ownerId,
+                    recordStudioId: null,
+                    subjectPolicy: 'subjectless',
+                    recordKeyCreatorId: userId,
+                    recordOwnerPrivacyFeatures: {
+                        allowAI: true,
+                        allowPublicData: true,
+                        allowPublicInsts: true,
+                        publishData: true,
+                    },
+                    userPrivacyFeatures: {
+                        allowAI: true,
+                        allowPublicData: true,
+                        allowPublicInsts: true,
+                        publishData: true,
+                    },
+                    userId: userId,
+                    userRole: 'none',
+                    sendNotLoggedIn: false,
+                },
+            });
+        });
+
+        it('should keep sendNotLoggedIn from the request if given a subjectless record key', async () => {
+            const context = await controller.constructAuthorizationContext({
+                recordKeyOrRecordName: subjectlessRecordKey,
+                userId: userId,
+                sendNotLoggedIn: true,
+            });
+
+            expect(context).toEqual({
+                success: true,
+                context: {
+                    recordKeyResult: {
+                        success: true,
+                        recordName,
+                        ownerId,
+                        keyCreatorId: userId,
+                        policy: 'subjectless',
+                    },
+                    recordKeyProvided: true,
+                    recordName: recordName,
+                    recordOwnerId: ownerId,
+                    recordStudioId: null,
+                    subjectPolicy: 'subjectless',
+                    recordKeyCreatorId: userId,
+                    recordOwnerPrivacyFeatures: {
+                        allowAI: true,
+                        allowPublicData: true,
+                        allowPublicInsts: true,
+                        publishData: true,
+                    },
+                    userPrivacyFeatures: {
+                        allowAI: true,
+                        allowPublicData: true,
+                        allowPublicInsts: true,
+                        publishData: true,
+                    },
+                    userId: userId,
+                    userRole: 'none',
+                    sendNotLoggedIn: true,
+                },
             });
         });
     });
@@ -8683,5 +8786,124 @@ describe('willMarkersBeRemaining()', () => {
         const removed = [] as string[];
         const added = ['third'];
         expect(willMarkersBeRemaining(existing, removed, added)).toBe(true);
+    });
+});
+
+describe('getMarkerResourcesForCreation()', () => {
+    it('should return the marker resources that need to be assigned', () => {
+        const markers = ['first', 'second:/abc'];
+        expect(getMarkerResourcesForCreation(markers)).toEqual([
+            {
+                resourceKind: 'marker',
+                action: 'assign',
+                resourceId: 'first',
+                markers: [ACCOUNT_MARKER],
+            },
+            {
+                resourceKind: 'marker',
+                action: 'assign',
+
+                // Should preserve the path for markers
+                resourceId: 'second:/abc',
+                markers: [ACCOUNT_MARKER],
+            },
+        ]);
+    });
+
+    it('should not include the publicRead marker', () => {
+        const markers = ['first', PUBLIC_READ_MARKER, 'second:/abc'];
+        expect(getMarkerResourcesForCreation(markers)).toEqual([
+            {
+                resourceKind: 'marker',
+                action: 'assign',
+                resourceId: 'first',
+                markers: [ACCOUNT_MARKER],
+            },
+            {
+                resourceKind: 'marker',
+                action: 'assign',
+                resourceId: 'second:/abc',
+                markers: [ACCOUNT_MARKER],
+            },
+        ]);
+    });
+
+    it('should only process root markers', () => {
+        const markers = [
+            'first',
+            `${PUBLIC_READ_MARKER}:myCustomPath`,
+            'second',
+        ];
+        expect(getMarkerResourcesForCreation(markers)).toEqual([
+            {
+                resourceKind: 'marker',
+                action: 'assign',
+                resourceId: 'first',
+                markers: [ACCOUNT_MARKER],
+            },
+            {
+                resourceKind: 'marker',
+                action: 'assign',
+                resourceId: 'second',
+                markers: [ACCOUNT_MARKER],
+            },
+        ]);
+    });
+});
+
+describe('getMarkerResourcesForUpdate()', () => {
+    it('should return the marker resources that need to be changed', () => {
+        const existingMarkers = ['first', 'second'];
+        const newMarkers = ['first', 'third:/abc'];
+        expect(
+            getMarkerResourcesForUpdate(existingMarkers, newMarkers)
+        ).toEqual([
+            {
+                resourceKind: 'marker',
+                action: 'assign',
+
+                // Should preserve the path for markers
+                resourceId: 'third:/abc',
+                markers: [ACCOUNT_MARKER],
+            },
+            {
+                resourceKind: 'marker',
+                action: 'unassign',
+
+                resourceId: 'second',
+                markers: [ACCOUNT_MARKER],
+            },
+        ]);
+    });
+
+    it('should include the publicRead marker', () => {
+        const existingMarkers = ['first', 'second'];
+        const newMarkers = ['first', PUBLIC_READ_MARKER, 'third:/abc'];
+        expect(
+            getMarkerResourcesForUpdate(existingMarkers, newMarkers)
+        ).toEqual([
+            {
+                resourceKind: 'marker',
+                action: 'assign',
+
+                resourceId: PUBLIC_READ_MARKER,
+                markers: [ACCOUNT_MARKER],
+            },
+            {
+                resourceKind: 'marker',
+                action: 'assign',
+
+                // Should preserve the path for markers
+                resourceId: 'third:/abc',
+                markers: [ACCOUNT_MARKER],
+            },
+            {
+                resourceKind: 'marker',
+                action: 'unassign',
+
+                resourceId: 'second',
+                markers: [ACCOUNT_MARKER],
+            },
+        ]);
     });
 });

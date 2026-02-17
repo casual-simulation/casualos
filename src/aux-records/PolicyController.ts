@@ -193,7 +193,7 @@ export function getMarkerResourcesForCreation(
 ): ResourceInfo[] {
     // If the resource has the PUBLIC_READ_MARKER, then we only need the "create" permission and not the "assign" permission.
     return markers
-        .filter((m) => m !== PUBLIC_READ_MARKER)
+        .filter((m) => getRootMarker(m) !== PUBLIC_READ_MARKER)
         .map(
             (m) =>
                 ({
@@ -394,7 +394,8 @@ export class PolicyController {
             userId: request.userId,
             userRole: userRole,
             userPrivacyFeatures,
-            sendNotLoggedIn: request.sendNotLoggedIn ?? true,
+            sendNotLoggedIn:
+                request.sendNotLoggedIn ?? subjectPolicy !== 'subjectless',
         };
 
         return {
