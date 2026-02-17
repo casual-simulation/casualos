@@ -63,10 +63,13 @@ import {
     Light,
     HemisphereLight,
     CylinderGeometry,
+    DataTexture,
+    NearestFilter,
+    RedFormat,
     CapsuleGeometry,
 } from '@casual-simulation/three';
 import type {
-    BotCalculationContext,
+    BotCalculationContext, 
     Bot,
     BotLabelAnchor,
 } from '@casual-simulation/aux-common';
@@ -81,6 +84,7 @@ import { BackSide } from 'three';
 import { AuxBot3D } from './AuxBot3D';
 import { MapView } from './map/MapView';
 import type { MapProvider } from 'geo-three';
+import { memoize } from 'es-toolkit/compat';
 
 /**
  * Gets the direction of the up vector for 3D portals.
@@ -94,12 +98,24 @@ export function baseAuxSkyboxMeshMaterial() {
     return new MeshBasicMaterial({ side: BackSide });
 }
 
+const getToonGradientMap = memoize(() => {
+    const bands = new Uint8Array([40, 85, 127, 255]);
+
+    const texture = new DataTexture(bands, bands.length, 1, RedFormat);
+    texture.magFilter = NearestFilter;
+    texture.minFilter = NearestFilter;
+    texture.needsUpdate = true;
+
+    return texture;
+});
+
 /**
  * Create copy of material that most meshes in Aux Builder/Player use.
  */
 export function baseAuxMeshMaterial() {
     return new MeshToonMaterial({
         color: 0x00ff00,
+        gradientMap: getToonGradientMap(),
     });
 }
 
@@ -107,15 +123,15 @@ export function baseAuxMeshMaterial() {
  * Create copy of ambient light that is common to all aux scenes.
  */
 export function baseAuxAmbientLight() {
-    return new AmbientLight(0xaaaaaa, 1);
+    return new AmbientLight(0xffffff, 1);
 }
 
 /**
  * Create copy of directional light that is common to all aux scenes.
  */
 export function baseAuxDirectionalLight() {
-    let dirLight = new DirectionalLight(0xffffff, 2.3);
-    dirLight.position.set(0.25, -2.4, 5.4);
+    let dirLight = new DirectionalLight(0xffffff, 3.3);
+    dirLight.position.set(0.25, -2.4, 3.0);
     dirLight.updateMatrixWorld(true);
     // let helper = new DirectionalLightHelper(dirLight);
     // dirLight.add(helper);
@@ -177,7 +193,7 @@ export function createSkybox(
     let material = baseAuxSkyboxMeshMaterial();
     material.color = new Color(color);
 
-    const sphere = new Mesh(geometry, material.clone());
+    const sphere = new Mesh(geometry, material);
     sphere.position.copy(position);
     return sphere;
 }
@@ -197,7 +213,7 @@ export function createSphere(
     let material = baseAuxMeshMaterial();
     material.color = new Color(color);
 
-    const sphere = new Mesh(geometry, material.clone());
+    const sphere = new Mesh(geometry, material);
     sphere.position.copy(position);
     return sphere;
 }
@@ -214,7 +230,7 @@ export function createSprite(uvAspectRatio: number = 1): Mesh {
 
     const geometry = new PlaneGeometry(1, 1, 16, 16);
     adjustUVs(geometry, uvAspectRatio);
-    let sprite = new Mesh(geometry, material.clone());
+    let sprite = new Mesh(geometry, material);
     (sprite.material as any)[DEFAULT_TRANSPARENT] = true;
     return sprite;
 }
