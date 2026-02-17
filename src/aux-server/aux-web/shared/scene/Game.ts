@@ -863,8 +863,17 @@ export abstract class Game {
     }
 
     protected setupRenderer() {
+        // TODO: Hack for being able to disable antialiasing
+        // for splat rendering performance
+        let antialias = true;
+        if (typeof location !== 'undefined' && location.search) {
+            const params = new URLSearchParams(location.search);
+            if (params.has('antialias')) {
+                antialias = params.get('antialias') !== 'false';
+            }
+        }
         const webGlRenderer = (this.renderer = new WebGLRenderer({
-            antialias: true,
+            antialias: antialias,
 
             // Alpha is required for CSS Renderer (HTML support)
             alpha: true,
