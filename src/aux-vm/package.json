@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-vm",
-    "version": "4.1.0-alpha.21998910393",
+    "version": "4.1.1-alpha.22108147374",
     "description": "A set of abstractions required to securely run an AUX.",
     "keywords": [
         "aux"
@@ -39,9 +39,9 @@
         "url": "https://github.com/casual-simulation/casualos/issues"
     },
     "dependencies": {
-        "@casual-simulation/aux-common": "^4.1.0-alpha.21998910393",
-        "@casual-simulation/aux-records": "^4.1.0-alpha.21998910393",
-        "@casual-simulation/aux-runtime": "^4.1.0-alpha.21998910393",
+        "@casual-simulation/aux-common": "^4.1.1-alpha.22108147374",
+        "@casual-simulation/aux-records": "^4.1.1-alpha.22108147374",
+        "@casual-simulation/aux-runtime": "^4.1.1-alpha.22108147374",
         "@casual-simulation/crypto": "^4.0.5",
         "@casual-simulation/fast-json-stable-stringify": "^4.0.5",
         "@casual-simulation/timesync": "^4.0.0",
