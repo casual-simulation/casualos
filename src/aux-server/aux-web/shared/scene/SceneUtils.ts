@@ -99,7 +99,8 @@ export function baseAuxSkyboxMeshMaterial() {
 }
 
 const getToonGradientMap = memoize(() => {
-    const bands = new Uint8Array([0, 42, 85, 127, 185, 230, 255]);
+    const bands = new Uint8Array([40, 85, 127, 255]);
+
     const texture = new DataTexture(bands, bands.length, 1, RedFormat);
     texture.magFilter = NearestFilter;
     texture.minFilter = NearestFilter;
