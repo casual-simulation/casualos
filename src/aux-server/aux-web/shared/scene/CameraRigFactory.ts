@@ -28,18 +28,13 @@ import type { Viewport } from './Viewport';
 
 export const Orthographic_FrustrumSize: number = 100;
 export const Orthographic_DefaultZoom: number = 8;
-export const Orthographic_NearClip: number = 0.001;
+export const Orthographic_NearClip: number = 0.1;
 export const Orthographic_FarClip: number = 20000;
 export const Orthographic_MinZoom: number = 0.4;
 export const Orthographic_MaxZoom: number = 80;
 
 export const Perspective_FOV: number = 60;
-/**
- * The near clipping plane distance for perspective cameras, measured in world units.
- * Objects closer than this distance to the camera will not be rendered.
- * @default 0.001
- */
-export const Perspective_NearClip: number = 0.001;
+export const Perspective_NearClip: number = 0.1;
 export const Perspective_FarClip: number = 20000;
 export const Perspective_DefaultPosition = { x: 5, y: 5, z: 5 };
 export const Perspective_MinZoom: number = 0;
