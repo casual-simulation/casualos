@@ -6,8 +6,10 @@
 
 ### :bug: Bug Fixes'
 
-- Fixed `splat` form collider not being oriented correctly.
-- Fixed `splat` form meshes not being disposed when the bot shape is rebuilt.
+-   Fixed `splat` form collider not being oriented correctly.
+-   Fixed `splat` form meshes not being disposed when the bot shape is rebuilt.
+-   Fixed transpiler handling for TypeScript generic parameters on class methods so they are stripped during transpilation.
+-   Fixed an issue where it was impossible to use a record key create records (data, file, etc.) with a custom marker path (e.g. `publicRead:path`).
 
 ## V4.1.0
 
@@ -64,7 +66,6 @@
 -   Fixed an issue where shared documents would fail to load from public insts if the user wasn't logged in on initialization.
 -   Fixed an issue where `os.listInsts()` could not be used due to a input mismatch between the server and client.
 -   Fixed transpiler error when using TypeScript type annotations on destructured parameters. Functions like `function MyComponent({id}: {id: string}) {}` now correctly transpile to `function MyComponent({id}) {}` instead of throwing "SyntaxError: Unexpected token ':'". This also applies to arrow functions, array destructuring patterns, and rest parameters.
--   Fixed transpiler handling for TypeScript generic parameters on class methods so they are stripped during transpilation.
 -   Fixed issues with wrist portals being misplaced when using hands in XR.
 
 ## V4.0.5
