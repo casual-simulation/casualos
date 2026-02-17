@@ -573,8 +573,6 @@ export class BotShapeDecorator
             return;
         }
 
-        console.log('[BotShapeDecorator] Play Animation:', animation);
-
         const clips = this._getClips(animation);
 
         if (clips.length > 0) {
@@ -607,7 +605,6 @@ export class BotShapeDecorator
             }
 
             const listener = () => {
-                console.log('[BotShapeDecorator] Finished Animation');
                 this._updateAnimation(this._animation, true, previousTime);
                 this._animationMixer.removeEventListener('finished', listener);
             };
@@ -1206,7 +1203,8 @@ export class BotShapeDecorator
             this.scene ||
             this._shapeSubscription ||
             this._keyboard ||
-            this.light
+            this.light ||
+            this._splat
         ) {
             this.dispose();
         }
@@ -1360,7 +1358,14 @@ export class BotShapeDecorator
                 if (this._splat !== mesh) {
                     return;
                 }
-                let box = mesh.getBoundingBox();
+                const localBox = mesh.getBoundingBox();
+
+                // Apply -90° X rotation to the bounding box.
+                const box = new Box3(
+                    new Vector3(localBox.min.x, localBox.min.z, -localBox.max.y),
+                    new Vector3(localBox.max.x, localBox.max.z, -localBox.min.y)
+                );
+
                 let size = new Vector3();
                 box.getSize(size);
                 let center = new Vector3();
