@@ -296,6 +296,16 @@ export function createCylinder(size: number): Mesh {
     return cylinder;
 }
 
+export function createCone(size: number): Mesh {
+    const geometry = new ConeGeometry(size * 0.5, size, 24)
+    let material = baseAuxMeshMaterial();
+
+    const cone = new Mesh(geometry, material);
+    cone.castShadow = true;
+    cone.receiveShadow = false;
+    return cone;
+}
+
 function adjustUVs(geometry: BufferGeometry, aspectRatio: number) {
     if (aspectRatio !== 1) {
         const uvs = geometry.getAttribute('uv') as Float32BufferAttribute;

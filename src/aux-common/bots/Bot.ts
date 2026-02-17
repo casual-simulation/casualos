@@ -1022,7 +1022,8 @@ export type BotShape =
     | 'codeButton'
     | 'codeHint'
     | 'light'
-    | 'cylinder';
+    | 'cylinder'
+    | 'cone';
 
 /**
  * Defines the possible forms that a menu bot can appear as.

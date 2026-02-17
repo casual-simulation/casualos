@@ -103,6 +103,7 @@ import {
     createPlane,
     createMapPlane,
     createCylinder,
+    createCone,
 } from '../SceneUtils';
 import { FrustumHelper } from '../helpers/FrustumHelper';
 import { Axial, HexMesh } from '../hex';
@@ -1229,6 +1230,8 @@ export class BotShapeDecorator
             this._createMapPlane();
         } else if (this._shape === 'cylinder') {
             this._createCylinder();
+        } else if (this._shape === 'cone') {
+            this._createCone();
         } else if (this._shape === 'mesh') {
             if (this._subShape === 'gltf' && this._address) {
                 this._createGltf();
@@ -2019,6 +2022,15 @@ export class BotShapeDecorator
 
     private _createCylinder() {
         this.mesh = this.collider = createCylinder(1);
+        this.mesh.rotation.set(Math.PI / 2, 0, 0);
+        this.container.add(this.mesh);
+        this.bot3D.colliders.push(this.collider);
+        this.stroke = null;
+        this._canHaveStroke = false;
+    }
+
+    private _createCone() {
+        this.mesh = this.collider = createCone(1);
         this.mesh.rotation.set(Math.PI / 2, 0, 0);
         this.container.add(this.mesh);
         this.bot3D.colliders.push(this.collider);
