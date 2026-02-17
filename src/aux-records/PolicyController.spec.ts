@@ -24,6 +24,8 @@ import type {
 import {
     PolicyController,
     explainationForPermissionAssignment,
+    getMarkerResourcesForCreation,
+    getMarkerResourcesForUpdate,
     willMarkersBeRemaining,
 } from './PolicyController';
 import type {
@@ -8784,5 +8786,124 @@ describe('willMarkersBeRemaining()', () => {
         const removed = [] as string[];
         const added = ['third'];
         expect(willMarkersBeRemaining(existing, removed, added)).toBe(true);
+    });
+});
+
+describe('getMarkerResourcesForCreation()', () => {
+    it('should return the marker resources that need to be assigned', () => {
+        const markers = ['first', 'second:/abc'];
+        expect(getMarkerResourcesForCreation(markers)).toEqual([
+            {
+                resourceKind: 'marker',
+                action: 'assign',
+                resourceId: 'first',
+                markers: [ACCOUNT_MARKER],
+            },
+            {
+                resourceKind: 'marker',
+                action: 'assign',
+
+                // Should preserve the path for markers
+                resourceId: 'second:/abc',
+                markers: [ACCOUNT_MARKER],
+            },
+        ]);
+    });
+
+    it('should not include the publicRead marker', () => {
+        const markers = ['first', PUBLIC_READ_MARKER, 'second:/abc'];
+        expect(getMarkerResourcesForCreation(markers)).toEqual([
+            {
+                resourceKind: 'marker',
+                action: 'assign',
+                resourceId: 'first',
+                markers: [ACCOUNT_MARKER],
+            },
+            {
+                resourceKind: 'marker',
+                action: 'assign',
+                resourceId: 'second:/abc',
+                markers: [ACCOUNT_MARKER],
+            },
+        ]);
+    });
+
+    it('should only process root markers', () => {
+        const markers = [
+            'first',
+            `${PUBLIC_READ_MARKER}:myCustomPath`,
+            'second',
+        ];
+        expect(getMarkerResourcesForCreation(markers)).toEqual([
+            {
+                resourceKind: 'marker',
+                action: 'assign',
+                resourceId: 'first',
+                markers: [ACCOUNT_MARKER],
+            },
+            {
+                resourceKind: 'marker',
+                action: 'assign',
+                resourceId: 'second',
+                markers: [ACCOUNT_MARKER],
+            },
+        ]);
+    });
+});
+
+describe('getMarkerResourcesForUpdate()', () => {
+    it('should return the marker resources that need to be changed', () => {
+        const existingMarkers = ['first', 'second'];
+        const newMarkers = ['first', 'third:/abc'];
+        expect(
+            getMarkerResourcesForUpdate(existingMarkers, newMarkers)
+        ).toEqual([
+            {
+                resourceKind: 'marker',
+                action: 'assign',
+
+                // Should preserve the path for markers
+                resourceId: 'third:/abc',
+                markers: [ACCOUNT_MARKER],
+            },
+            {
+                resourceKind: 'marker',
+                action: 'unassign',
+
+                resourceId: 'second',
+                markers: [ACCOUNT_MARKER],
+            },
+        ]);
+    });
+
+    it('should include the publicRead marker', () => {
+        const existingMarkers = ['first', 'second'];
+        const newMarkers = ['first', PUBLIC_READ_MARKER, 'third:/abc'];
+        expect(
+            getMarkerResourcesForUpdate(existingMarkers, newMarkers)
+        ).toEqual([
+            {
+                resourceKind: 'marker',
+                action: 'assign',
+
+                resourceId: PUBLIC_READ_MARKER,
+                markers: [ACCOUNT_MARKER],
+            },
+            {
+                resourceKind: 'marker',
+                action: 'assign',
+
+                // Should preserve the path for markers
+                resourceId: 'third:/abc',
+                markers: [ACCOUNT_MARKER],
+            },
+            {
+                resourceKind: 'marker',
+                action: 'unassign',
+
+                resourceId: 'second',
+                markers: [ACCOUNT_MARKER],
+            },
+        ]);
     });
 });
