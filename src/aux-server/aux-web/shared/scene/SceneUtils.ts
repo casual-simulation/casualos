@@ -63,6 +63,7 @@ import {
     Light,
     HemisphereLight,
     CylinderGeometry,
+    CapsuleGeometry,
 } from '@casual-simulation/three';
 import type {
     BotCalculationContext,
@@ -294,6 +295,28 @@ export function createCylinder(size: number): Mesh {
     cylinder.castShadow = true;
     cylinder.receiveShadow = false;
     return cylinder;
+}
+
+export function createCone(size: number): Mesh {
+    const geometry = new ConeGeometry(size * 0.5, size, 24);
+    let material = baseAuxMeshMaterial();
+
+    const cone = new Mesh(geometry, material);
+    cone.castShadow = true;
+    cone.receiveShadow = false;
+    return cone;
+}
+
+export function createCapsule(size: number): Mesh {
+    const radius = size * 0.3;
+    const height = size - radius * 2;
+    const geometry = new CapsuleGeometry(radius, height, 8, 24, 1)
+    let material = baseAuxMeshMaterial();
+
+    const capsule = new Mesh(geometry, material);
+    capsule.castShadow = true;
+    capsule.receiveShadow = false;
+    return capsule;
 }
 
 function adjustUVs(geometry: BufferGeometry, aspectRatio: number) {
