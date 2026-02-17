@@ -1536,6 +1536,7 @@ export class BotShapeDecorator
         this._updateOpacity(null);
         this._updateRenderOrder(null);
         this.bot3D.updateMatrixWorld(true);
+        this.bot3D.forceComputeBoundingObjects();
     }
 
     private async _createLDraw() {
@@ -1788,6 +1789,7 @@ export class BotShapeDecorator
         this._updateRenderOrder(null);
         this._updateBuildStep(null);
         this.bot3D.updateMatrixWorld(true);
+        this.bot3D.forceComputeBoundingObjects();
     }
 
     private _processGLTFAnimations(gltf: GLTF) {
