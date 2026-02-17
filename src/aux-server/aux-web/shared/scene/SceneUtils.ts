@@ -84,12 +84,7 @@ import { BackSide } from 'three';
 import { AuxBot3D } from './AuxBot3D';
 import { MapView } from './map/MapView';
 import type { MapProvider } from 'geo-three';
-
-const TOON_GRADIENT_COLORS = new Uint8Array([0, 42, 85, 127, 185, 230, 255]);
-const TOON_GRADIENT_MAP = new DataTexture(TOON_GRADIENT_COLORS, TOON_GRADIENT_COLORS.length, 1, RedFormat);
-TOON_GRADIENT_MAP.magFilter = NearestFilter;
-TOON_GRADIENT_MAP.minFilter = NearestFilter;
-TOON_GRADIENT_MAP.needsUpdate = true;
+import { memoize } from 'es-toolkit/compat';
 
 /**
  * Gets the direction of the up vector for 3D portals.
@@ -103,13 +98,23 @@ export function baseAuxSkyboxMeshMaterial() {
     return new MeshBasicMaterial({ side: BackSide });
 }
 
+const getToonGradientMap = memoize(() => {
+    const bands = new Uint8Array([0, 42, 85, 127, 185, 230, 255]);
+    const texture = new DataTexture(bands, bands.length, 1, RedFormat);
+    texture.magFilter = NearestFilter;
+    texture.minFilter = NearestFilter;
+    texture.needsUpdate = true;
+
+    return texture;
+});
+
 /**
  * Create copy of material that most meshes in Aux Builder/Player use.
  */
 export function baseAuxMeshMaterial() {
     return new MeshToonMaterial({
         color: 0x00ff00,
-        gradientMap: TOON_GRADIENT_MAP
+        gradientMap: getToonGradientMap(),
     });
 }
 
