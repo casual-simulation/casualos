@@ -113,6 +113,7 @@ async function setupWatch(builds) {
             '**/vite.config.mts.timestamp-*',
             '**/*.aux',
             '**/*.db',
+            '**/*.db-journal',
         ],
         ignoreInitial: true,
         followSymlinks: false,

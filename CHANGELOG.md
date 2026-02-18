@@ -1,5 +1,14 @@
 # CasualOS Changelog
 
+## V4.1.2
+
+#### Date: 2/18/2026
+
+### :bug: Bug Fixes
+
+-   Fixed the `after` query parameter on the auth site to properly redirect to the given path.
+    -   Additionally, added the ability to redirect to external URLs that start with the `casualquilt-auth:` scheme. Other external URLs are not supported at the moment (e.g. `https://google.com` won't redirect to Google for security reasons).
+
 ## V4.1.1
 
 #### Date: 2/17/2026

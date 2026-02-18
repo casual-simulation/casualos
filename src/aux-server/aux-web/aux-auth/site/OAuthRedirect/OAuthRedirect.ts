@@ -19,6 +19,7 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import { authManager } from '../../shared/index';
 import { OAUTH_LOGIN_CHANNEL_NAME } from '../../shared/AuthManager';
+import { redirectAfterLogin } from '../AuthRedirectHelpers';
 
 @Component({
     components: {},
@@ -63,11 +64,7 @@ export default class OAuthRedirect extends Vue {
                         localStorage.removeItem('privo_oauth_after');
 
                         // Redirect to the appropriate page
-                        if (after) {
-                            this.$router.push({ name: after });
-                        } else {
-                            this.$router.push({ name: 'home' });
-                        }
+                        redirectAfterLogin(this.$router, after);
                     } else {
                         console.error(
                             '[OAuthRedirect] OAuth login completion failed',

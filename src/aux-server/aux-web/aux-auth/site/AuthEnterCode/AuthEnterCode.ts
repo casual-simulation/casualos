@@ -20,6 +20,7 @@ import Component from 'vue-class-component';
 import { Prop } from 'vue-property-decorator';
 import { authManager } from '../../shared/index';
 import { browserSupportsWebAuthn } from '@simplewebauthn/browser';
+import { redirectAfterLogin } from '../AuthRedirectHelpers';
 
 @Component({
     components: {},
@@ -111,11 +112,7 @@ export default class AuthLogin extends Vue {
             return;
         }
 
-        if (this.after) {
-            this.$router.push({ name: this.after });
-        } else {
-            this.$router.push({ name: 'home' });
-        }
+        redirectAfterLogin(this.$router, this.after);
     }
 
     private async _checkLoginStatus() {

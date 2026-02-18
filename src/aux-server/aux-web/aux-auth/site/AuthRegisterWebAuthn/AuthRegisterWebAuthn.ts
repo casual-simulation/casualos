@@ -23,6 +23,7 @@ import { browserSupportsWebAuthn } from '@simplewebauthn/browser';
 import type { FormError } from '@casual-simulation/aux-common';
 import { getFormErrors } from '@casual-simulation/aux-common';
 import FieldErrors from '../../../shared/vue-components/FieldErrors/FieldErrors';
+import { redirectAfterLogin } from '../AuthRedirectHelpers';
 
 @Component({
     components: {
@@ -69,10 +70,6 @@ export default class AuthRegisterWebAuthn extends Vue {
     }
 
     private async _loadInfoAndNavigate() {
-        if (this.after) {
-            this.$router.push({ name: this.after });
-        } else {
-            this.$router.push({ name: 'home' });
-        }
+        redirectAfterLogin(this.$router, this.after);
     }
 }
