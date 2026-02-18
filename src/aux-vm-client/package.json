@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-vm-client",
-    "version": "4.1.1",
+    "version": "4.1.2-alpha.22136125995",
     "description": "A set of utilities required to securely run an AUX as a client.",
     "keywords": [
         "aux"
@@ -39,11 +39,11 @@
         "url": "https://github.com/casual-simulation/casualos/issues"
     },
     "dependencies": {
-        "@casual-simulation/aux-common": "^4.1.1",
-        "@casual-simulation/aux-runtime": "^4.1.1",
-        "@casual-simulation/aux-vm": "^4.1.1",
-        "@casual-simulation/aux-websocket": "^4.1.1",
-        "@casual-simulation/aux-websocket-aws": "^4.1.1",
+        "@casual-simulation/aux-common": "^4.1.2-alpha.22136125995",
+        "@casual-simulation/aux-runtime": "^4.1.2-alpha.22136125995",
+        "@casual-simulation/aux-vm": "^4.1.2-alpha.22136125995",
+        "@casual-simulation/aux-websocket": "^4.1.2-alpha.22136125995",
+        "@casual-simulation/aux-websocket-aws": "^4.1.2-alpha.22136125995",
         "@casual-simulation/crypto": "^4.0.5",
         "@casual-simulation/timesync": "^4.0.0",
         "@casual-simulation/websocket": "^4.0.0",
