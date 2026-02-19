@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V4.1.3
+
+#### Date: 2/19/2026
+
+### :bug: Bug Fixes
+
+- Fixed freeze caused by pressing <kbd>Shift</kbd> key on keyboard form.
+
 ## V4.1.2
 
 #### Date: 2/18/2026
