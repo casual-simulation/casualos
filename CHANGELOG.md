@@ -2,7 +2,7 @@
 
 ## V4.1.3
 
-#### Date: TBD
+#### Date: 2/19/2026
 
 ### :bug: Bug Fixes
 
