@@ -34,6 +34,9 @@ patchedDependencies:
   parse5@7.3.0:
     hash: 45caeb8ab7738b23d9d8d4d3ad51db27f1a2c964995bd94d53757866c91cc87c
     path: patches/parse5@7.3.0.patch
+  three-mesh-ui:
+    hash: 41ed98e897b00cfbbdb6fa2d403b9a4ea6ffce710546aee3c6dd4647870c5f52
+    path: patches/three-mesh-ui.patch
 
 importers:
 
@@ -1354,7 +1357,7 @@ importers:
         version: 0.182.0
       three-mesh-ui:
         specifier: 6.5.4
-        version: 6.5.4(three@0.182.0)
+        version: 6.5.4(patch_hash=41ed98e897b00cfbbdb6fa2d403b9a4ea6ffce710546aee3c6dd4647870c5f52)(three@0.182.0)
       three.meshline:
         specifier: 1.3.0
         version: 1.3.0
@@ -34466,7 +34469,7 @@ snapshots:
 
   text-table@0.2.0: {}
 
-  three-mesh-ui@6.5.4(three@0.182.0):
+  three-mesh-ui@6.5.4(patch_hash=41ed98e897b00cfbbdb6fa2d403b9a4ea6ffce710546aee3c6dd4647870c5f52)(three@0.182.0):
     dependencies:
       three: 0.182.0
 

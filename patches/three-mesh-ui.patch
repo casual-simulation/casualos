@@ -1,0 +1,20 @@
+diff --git a/build/three-mesh-ui.module.js b/build/three-mesh-ui.module.js
+index 2fdb8faa4703a67379fb69e798af8b2bcd850425..37411aaa258d5c590feb81a0387db7c106fbd1bf 100644
+--- a/build/three-mesh-ui.module.js
++++ b/build/three-mesh-ui.module.js
+@@ -4773,14 +4773,13 @@ function getGlyphPairKerning( font, glyphPair ) {
+  * @private
+  */
+ function buildText() {
+-
+ 	const translatedGeom = [];
+ 
+ 	this.inlines.forEach( ( inline, i ) => {
+ 
+ 		translatedGeom[ i ] = new MSDFGlyph( inline, this.getFontFamily() );
+ 
+-		translatedGeom[ i ].translate( inline.offsetX, inline.offsetY, 0 );
++		translatedGeom[ i ].translate( inline.offsetX ?? 0, inline.offsetY ?? 0, 0 );
+ 
+ 	} );
+ 
