@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V4.1.3
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed how passkeys are triggered for Safari-based browsers to try to make them work more consistently.
+
 ## V4.1.2
 
 #### Date: 2/18/2026
