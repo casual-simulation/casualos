@@ -15599,6 +15599,14 @@ interface Os {
          */
         useDebugValue<T>(value: T, formatter?: (value: T) => any): void;
 
+        /**
+         * Returns the current context value, as given by the nearest context provider for the given context.
+         * When the provider updates, this Hook will trigger a rerender with the latest context value.
+         *
+         * @param context The context you want to use
+         */
+        useContext<T>(context: PreactContext<T>): T;
+
         useErrorBoundary(
             callback?: (error: any) => Promise<void> | void
         ): [any, () => void];
