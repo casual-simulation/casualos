@@ -322,9 +322,10 @@ export interface Route<
      * If true, then all origins are allowed.
      * If 'account', then only the configured account origins are allowed.
      * If 'api', then only the configured API origins are allowed.
+     * If 'self', then either the API or account origins are allowed.
      * If omitted, then it is up to the handler to determine if the origin is allowed.
      */
-    allowedOrigins?: Set<string> | true | 'account' | 'api';
+    allowedOrigins?: Set<string> | true | 'account' | 'api' | 'self';
 }
 
 const RECORDS_SERVER_METER = 'RecordsServer';
@@ -509,6 +510,8 @@ export class RecordsServer {
      * The set of origins that are allowed for account management requests.
      */
     private _allowedAccountOrigins: Set<string>;
+    private _allowedSelfOrigins: Set<string>;
+
     private _rateLimit: RateLimitController;
     private _websocketRateLimit: RateLimitController;
     private _policyController: PolicyController;
@@ -577,6 +580,10 @@ export class RecordsServer {
     }: RecordsServerOptions) {
         this._allowedAccountOrigins = allowedAccountOrigins;
         this._allowedApiOrigins = allowedApiOrigins;
+        this._allowedSelfOrigins = new Set<string>([
+            ...allowedAccountOrigins,
+            ...allowedApiOrigins,
+        ]);
         this._auth = authController;
         this._livekit = livekitController;
         this._records = recordsController;
@@ -5523,7 +5530,7 @@ export class RecordsServer {
                 }),
 
             getBalances: procedure()
-                .origins('account')
+                .origins('self')
                 .http('GET', '/api/v2/balances')
                 .inputs(
                     z.object({
@@ -6933,6 +6940,8 @@ export class RecordsServer {
                         ? this._allowedAccountOrigins
                         : proc.allowedOrigins === 'api'
                         ? this._allowedApiOrigins
+                        : proc.allowedOrigins === 'self'
+                        ? this._allowedSelfOrigins
                         : proc.allowedOrigins ?? true;
 
                 if (origins !== true && !validateOrigin(request, origins)) {
@@ -7379,6 +7388,8 @@ export class RecordsServer {
                     ? this._allowedAccountOrigins
                     : route.allowedOrigins === 'api'
                     ? this._allowedApiOrigins
+                    : route.allowedOrigins === 'self'
+                    ? this._allowedSelfOrigins
                     : route.allowedOrigins ?? true;
 
             try {

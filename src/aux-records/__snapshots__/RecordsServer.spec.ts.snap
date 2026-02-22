@@ -5963,7 +5963,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
         "type": "object",
       },
       "name": "getBalances",
-      "origins": "account",
+      "origins": "self",
     },
     Object {
       "http": Object {
@@ -16111,7 +16111,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
         "type": "object",
       },
       "name": "getBalances",
-      "origins": "account",
+      "origins": "self",
     },
     Object {
       "http": Object {
