@@ -1657,10 +1657,10 @@ Because repo/add_updates is a very common permission, we periodically cache perm
                 proxy: z
                     .object({
                         trust: z
-                            .string()
+                            .union([z.string(), z.boolean(), z.number()])
                             .optional()
                             .describe(
-                                'The IP Address range of proxies that should be trusted.'
+                                'The express.js "trust proxy" value. Can be a string, boolean, or number representing the IP Address range of proxies that should be trusted.'
                             ),
                     })
                     .optional()
