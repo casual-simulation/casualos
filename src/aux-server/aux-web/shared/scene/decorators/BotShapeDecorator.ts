@@ -1404,6 +1404,8 @@ export class BotShapeDecorator
         this._updateColor(null);
         this._updateOpacity(null);
         this._updateRenderOrder(null);
+        this._updateDepth(null);
+        this._updateDepthWrite(null);
         this.bot3D.updateMatrixWorld(true);
     }
 
@@ -1535,8 +1537,9 @@ export class BotShapeDecorator
         this._updateColor(null);
         this._updateOpacity(null);
         this._updateRenderOrder(null);
+        this._updateDepth(null);
+        this._updateDepthWrite(null);
         this.bot3D.updateMatrixWorld(true);
-        this.bot3D.forceComputeBoundingObjects();
     }
 
     private async _createLDraw() {
@@ -1679,6 +1682,8 @@ export class BotShapeDecorator
         this._updateColor(null);
         this._updateOpacity(null);
         this._updateRenderOrder(null);
+        this._updateDepth(null);
+        this._updateDepthWrite(null);
         this._updateBuildStep(null);
         this.bot3D.updateMatrixWorld(true);
     }
@@ -1787,9 +1792,10 @@ export class BotShapeDecorator
         this._updateColor(null);
         this._updateOpacity(null);
         this._updateRenderOrder(null);
+        this._updateDepth(null);
+        this._updateDepthWrite(null);
         this._updateBuildStep(null);
         this.bot3D.updateMatrixWorld(true);
-        this.bot3D.forceComputeBoundingObjects();
     }
 
     private _processGLTFAnimations(gltf: GLTF) {
