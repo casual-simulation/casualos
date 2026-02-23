@@ -1,8 +1,41 @@
 # CasualOS Changelog
 
-## V4.1.0
+## V4.1.3
 
 #### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed freeze caused by pressing <kbd>Shift</kbd> key on keyboard form.
+-   Fixed an issue where `xp.getAccountBalances()` would always fail with `invalid_origin` errors.
+
+## V4.1.2
+
+#### Date: 2/18/2026
+
+### :bug: Bug Fixes
+
+-   Fixed the `after` query parameter on the auth site to properly redirect to the given path.
+    -   Additionally, added the ability to redirect to external URLs that start with the `casualquilt-auth:` scheme. Other external URLs are not supported at the moment (e.g. `https://google.com` won't redirect to Google for security reasons).
+
+## V4.1.1
+
+#### Date: 2/17/2026
+
+### :rocket: Features
+
+-   Added the `cone` and `capsule` forms.
+
+### :bug: Bug Fixes
+
+-   Fixed `splat` form collider not being oriented correctly.
+-   Fixed `splat` form meshes not being disposed when the bot shape is rebuilt.
+-   Fixed transpiler handling for TypeScript generic parameters on class methods so they are stripped during transpilation.
+-   Fixed an issue where it was impossible to use a record key create records (data, file, etc.) with a custom marker path (e.g. `publicRead:path`).
+
+## V4.1.0
+
+#### Date: 2/13/2026
 
 ### :rocket: Features
 

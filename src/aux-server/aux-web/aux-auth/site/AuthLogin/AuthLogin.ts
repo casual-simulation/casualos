@@ -28,6 +28,7 @@ import { getFormErrors } from '@casual-simulation/aux-common';
 import HasAccountCard from '../HasAccountCard/HasAccountCard';
 import { browserSupportsWebAuthnAutofill } from '@simplewebauthn/browser';
 import FieldErrors from '../../../shared/vue-components/FieldErrors/FieldErrors';
+import { redirectAfterLogin } from '../AuthRedirectHelpers';
 
 declare let ENABLE_SMS_AUTHENTICATION: boolean;
 
@@ -127,22 +128,14 @@ export default class AuthLogin extends Vue {
         if (this._loggedIn) {
             await authManager.loadUserInfo();
 
-            if (this.after) {
-                this.$router.push({ name: this.after });
-            } else {
-                this.$router.push({ name: 'home' });
-            }
+            redirectAfterLogin(this.$router, this.after);
         } else if (authManager.usePrivoLogin) {
             /* empty */
         } else if (await browserSupportsWebAuthnAutofill()) {
             const result = await authManager.loginWithWebAuthn(true);
             if (result.success === true) {
                 await authManager.loadUserInfo();
-                if (this.after) {
-                    this.$router.push({ name: this.after });
-                } else {
-                    this.$router.push({ name: 'home' });
-                }
+                redirectAfterLogin(this.$router, this.after);
             } else {
                 console.error(
                     '[AuthLogin] Could not login with WebAuthn:',

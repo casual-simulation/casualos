@@ -129,9 +129,10 @@ export interface Procedure<
      * If true, then all origins are allowed.
      * If 'account', then only the configured account origins are allowed.
      * If 'api', then only the configured API origins are allowed.
+     * If 'self', then either the API or account origins are allowed.
      * If omitted, then it is up to the handler to determine if the origin is allowed.
      */
-    allowedOrigins?: Set<string> | true | 'account' | 'api';
+    allowedOrigins?: Set<string> | true | 'account' | 'api' | 'self';
 
     /**
      * The HTTP-specific configuration for the procedure.
@@ -281,7 +282,9 @@ export interface ProcedureBuilder {
      * Configures the origins that are allowed for the route.
      * @param allowedOrigins The origins that are allowed.
      */
-    origins(allowedOrigins: Set<string> | true | 'account' | 'api'): this;
+    origins(
+        allowedOrigins: Set<string> | true | 'account' | 'api' | 'self'
+    ): this;
 
     /**
      * Configures the HTTP method and path for this RPC.
@@ -462,9 +465,10 @@ export interface ProcedureMetadata {
      * If true, then all origins are allowed.
      * If 'account', then only the configured account origins are allowed.
      * If 'api', then only the configured API origins are allowed.
+     * If 'self', then either the API or account origins are allowed.
      * If omitted, then it is up to the handler to determine if the origin is allowed.
      */
-    origins?: Set<string> | true | 'account' | 'api';
+    origins?: Set<string> | true | 'account' | 'api' | 'self';
 
     /**
      * The HTTP-specific configuration for the procedure.

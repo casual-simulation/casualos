@@ -103,6 +103,8 @@ import {
     createPlane,
     createMapPlane,
     createCylinder,
+    createCone,
+    createCapsule,
 } from '../SceneUtils';
 import { FrustumHelper } from '../helpers/FrustumHelper';
 import { Axial, HexMesh } from '../hex';
@@ -573,8 +575,6 @@ export class BotShapeDecorator
             return;
         }
 
-        console.log('[BotShapeDecorator] Play Animation:', animation);
-
         const clips = this._getClips(animation);
 
         if (clips.length > 0) {
@@ -607,7 +607,6 @@ export class BotShapeDecorator
             }
 
             const listener = () => {
-                console.log('[BotShapeDecorator] Finished Animation');
                 this._updateAnimation(this._animation, true, previousTime);
                 this._animationMixer.removeEventListener('finished', listener);
             };
@@ -1206,7 +1205,8 @@ export class BotShapeDecorator
             this.scene ||
             this._shapeSubscription ||
             this._keyboard ||
-            this.light
+            this.light ||
+            this._splat
         ) {
             this.dispose();
         }
@@ -1231,6 +1231,10 @@ export class BotShapeDecorator
             this._createMapPlane();
         } else if (this._shape === 'cylinder') {
             this._createCylinder();
+        } else if (this._shape === 'cone') {
+            this._createCone();
+        } else if (this._shape === 'capsule') {
+            this._createCapsule();
         } else if (this._shape === 'mesh') {
             if (this._subShape === 'gltf' && this._address) {
                 this._createGltf();
@@ -1360,7 +1364,14 @@ export class BotShapeDecorator
                 if (this._splat !== mesh) {
                     return;
                 }
-                let box = mesh.getBoundingBox();
+                const localBox = mesh.getBoundingBox();
+
+                // Apply -90° X rotation to the bounding box.
+                const box = new Box3(
+                    new Vector3(localBox.min.x, localBox.min.z, -localBox.max.y),
+                    new Vector3(localBox.max.x, localBox.max.z, -localBox.min.y)
+                );
+
                 let size = new Vector3();
                 box.getSize(size);
                 let center = new Vector3();
@@ -2022,6 +2033,24 @@ export class BotShapeDecorator
 
     private _createCylinder() {
         this.mesh = this.collider = createCylinder(1);
+        this.mesh.rotation.set(Math.PI / 2, 0, 0);
+        this.container.add(this.mesh);
+        this.bot3D.colliders.push(this.collider);
+        this.stroke = null;
+        this._canHaveStroke = false;
+    }
+
+    private _createCone() {
+        this.mesh = this.collider = createCone(1);
+        this.mesh.rotation.set(Math.PI / 2, 0, 0);
+        this.container.add(this.mesh);
+        this.bot3D.colliders.push(this.collider);
+        this.stroke = null;
+        this._canHaveStroke = false;
+    }
+
+    private _createCapsule() {
+        this.mesh = this.collider = createCapsule(1);
         this.mesh.rotation.set(Math.PI / 2, 0, 0);
         this.container.add(this.mesh);
         this.bot3D.colliders.push(this.collider);
