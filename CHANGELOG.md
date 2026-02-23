@@ -8,6 +8,7 @@
 
 -   Fixed freeze caused by pressing <kbd>Shift</kbd> key on keyboard form.
 -   Fixed an issue where `xp.getAccountBalances()` would always fail with `invalid_origin` errors.
+-   Fixed depth sorting issues on initial load for mesh forms (`gltf`, `jsonObject`, `ldraw`, and `splat`) by applying `formDepthTest` and `formDepthWrite` immediately after mesh creation, and removed unnecessary post-load bounding recomputation workarounds.
 
 ## V4.1.2
 
