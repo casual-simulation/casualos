@@ -1,8 +1,16 @@
 # CasualOS Changelog
 
-## V4.1.3
+## V4.1.4
 
 #### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where animations with `clampWhenFinished` set to `true` would continue to influence subsequent animations.
+
+## V4.1.3
+
+#### Date: 2/22/2026
 
 ### :bug: Bug Fixes
 
