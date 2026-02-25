@@ -136,6 +136,12 @@ export default class AuthStudio extends Vue {
     humeApiKey: string = null;
     humeSecretKey: string = null;
 
+    originalPostHogApiKey: string = null;
+    postHogApiKey: string = null;
+
+    originalPostHogApiHost: string = null;
+    postHogApiHost: string = null;
+
     isLoadingInfo: boolean = false;
     isSavingStudio: boolean = false;
     isManagingStore: boolean = false;
@@ -580,6 +586,22 @@ export default class AuthStudio extends Vue {
                 hasUpdate = true;
             }
 
+            if (this.postHogApiKey !== this.originalPostHogApiKey) {
+                update.playerConfig = {
+                    ...(update.playerConfig || {}),
+                    postHogApiKey: this.postHogApiKey || null,
+                };
+                hasUpdate = true;
+            }
+
+            if (this.postHogApiHost !== this.originalPostHogApiHost) {
+                update.playerConfig = {
+                    ...(update.playerConfig || {}),
+                    postHogApiHost: this.postHogApiHost || null,
+                };
+                hasUpdate = true;
+            }
+
             if (
                 this.loomPrivateKey ||
                 this.loomPublicAppId !== this.originalLoomPublicAppId
@@ -637,6 +659,8 @@ export default class AuthStudio extends Vue {
                 this.originalJitsiAppName = this.jitsiAppName;
                 this.originalWhat3WordsApiKey = this.what3WordsApiKey;
                 this.originalLoomPublicAppId = this.loomPublicAppId;
+                this.originalPostHogApiHost = this.postHogApiHost;
+                this.originalPostHogApiKey = this.postHogApiKey;
                 this.loomPrivateKey = null;
                 this.originalHumeApiKey = this.humeApiKey;
                 this.humeSecretKey = null;
@@ -723,6 +747,10 @@ export default class AuthStudio extends Vue {
                     result.studio.loomConfig?.appId ?? null;
                 this.originalHumeApiKey = this.humeApiKey =
                     result.studio.humeConfig?.apiKey ?? null;
+                this.originalPostHogApiKey = this.postHogApiKey =
+                    result.studio.playerConfig?.postHogApiKey ?? null;
+                this.originalPostHogApiHost = this.postHogApiHost =
+                    result.studio.playerConfig?.postHogApiHost ?? null;
                 this.loomPrivateKey = null;
                 this.humeSecretKey = null;
             }
