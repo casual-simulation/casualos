@@ -73,15 +73,12 @@ export class CachingConfigStore implements ConfigurationStore {
             key
         );
 
-        if (cached) {
+        if (typeof cached !== 'undefined') {
             return cached;
         }
 
         const result = await this._store.getConfiguration(key, defaultValue);
-
-        if (result) {
-            await this._cache.store(key, result, this._cacheSeconds);
-        }
+        await this._cache.store(key, result, this._cacheSeconds);
 
         return result;
     }
@@ -90,14 +87,12 @@ export class CachingConfigStore implements ConfigurationStore {
     async getWebConfig(): Promise<WebConfig | null> {
         const cached = await this._cache.retrieve<WebConfig>(WEB_CONFIG_KEY);
 
-        if (cached) {
+        if (typeof cached !== 'undefined') {
             return cached;
         }
 
         const result = await this._store.getWebConfig();
-        if (result) {
-            await this._cache.store(WEB_CONFIG_KEY, result, this._cacheSeconds);
-        }
+        await this._cache.store(WEB_CONFIG_KEY, result, this._cacheSeconds);
 
         return result;
     }
@@ -108,18 +103,16 @@ export class CachingConfigStore implements ConfigurationStore {
             PLAYER_WEB_MANIFEST_KEY
         );
 
-        if (cached) {
+        if (typeof cached !== 'undefined') {
             return cached;
         }
 
         const result = await this._store.getPlayerWebManifest();
-        if (result) {
-            await this._cache.store(
-                PLAYER_WEB_MANIFEST_KEY,
-                result,
-                this._cacheSeconds
-            );
-        }
+        await this._cache.store(
+            PLAYER_WEB_MANIFEST_KEY,
+            result,
+            this._cacheSeconds
+        );
 
         return result;
     }
@@ -130,18 +123,12 @@ export class CachingConfigStore implements ConfigurationStore {
             'subscriptions'
         );
 
-        if (cached) {
+        if (typeof cached !== 'undefined') {
             return cached;
         }
 
         const result = await this._store.getSubscriptionConfiguration();
-        if (result) {
-            await this._cache.store(
-                'subscriptions',
-                result,
-                this._cacheSeconds
-            );
-        }
+        await this._cache.store('subscriptions', result, this._cacheSeconds);
 
         return result;
     }
@@ -150,14 +137,12 @@ export class CachingConfigStore implements ConfigurationStore {
     async getPrivoConfiguration(): Promise<PrivoConfiguration> {
         const cached = await this._cache.retrieve<PrivoConfiguration>('privo');
 
-        if (cached) {
+        if (typeof cached !== 'undefined') {
             return cached;
         }
 
         const result = await this._store.getPrivoConfiguration();
-        if (result) {
-            await this._cache.store('privo', result, this._cacheSeconds);
-        }
+        await this._cache.store('privo', result, this._cacheSeconds);
 
         return result;
     }
@@ -168,14 +153,12 @@ export class CachingConfigStore implements ConfigurationStore {
             'moderation'
         );
 
-        if (cached) {
+        if (typeof cached !== 'undefined') {
             return cached;
         }
 
         const result = await this._store.getModerationConfig();
-        if (result) {
-            await this._cache.store('moderation', result, this._cacheSeconds);
-        }
+        await this._cache.store('moderation', result, this._cacheSeconds);
 
         return result;
     }
