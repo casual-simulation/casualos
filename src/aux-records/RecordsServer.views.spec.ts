@@ -928,6 +928,72 @@ describe('RecordsServer', () => {
                     });
                 });
 
+                it('should include posthog', async () => {
+                    store.webConfig = {
+                        causalRepoConnectionProtocol: 'websocket',
+                        version: 2,
+                        logoTitle: 'Test Logo',
+                        logoUrl: 'https://example.com/logo.png',
+                        postHogApiHost: 'https://posthog.example.com',
+                        postHogApiKey: 'posthog_project_api_key',
+                    };
+
+                    const result = await server.handleHttpRequest(
+                        scoped('player', httpGet(path, defaultHeaders))
+                    );
+
+                    expect(result.statusCode).toBe(200);
+
+                    const body = result.body as string;
+                    const dom = new JSDOM(body);
+
+                    const postHogApiKey = dom.window.document.querySelector(
+                        'postApp script#posthog-api-key'
+                    );
+
+                    expect(postHogApiKey?.innerHTML).toBe(
+                        'posthog_project_api_key'
+                    );
+
+                    const postHogHost = dom.window.document.querySelector(
+                        'postApp script#posthog-host'
+                    );
+
+                    expect(postHogHost?.innerHTML).toBe(
+                        'https://posthog.example.com'
+                    );
+
+                    const webConfig = dom.window.document.querySelector(
+                        'postApp script#casualos-web-config'
+                    );
+
+                    expect(
+                        webConfig?.attributes.getNamedItem('type')?.value
+                    ).toBe('application/json');
+
+                    const json = tryParseJson(webConfig!.innerHTML!);
+
+                    expect(json).toEqual({
+                        success: true,
+                        value: {
+                            causalRepoConnectionProtocol: 'websocket',
+                            version: 2,
+                            logoTitle: 'Test Logo',
+                            logoUrl: 'https://example.com/logo.png',
+                            studiosSupported: true,
+                            subscriptionsSupported: true,
+                            requirePrivoLogin: false,
+                            postHogApiHost: 'https://posthog.example.com',
+                            postHogApiKey: 'posthog_project_api_key',
+                        },
+                    });
+
+                    expect(result.headers).toEqual({
+                        ...corsHeaders(defaultHeaders.origin),
+                        'Content-Type': 'text/html; charset=utf-8',
+                    });
+                });
+
                 it('should include the configured icons', async () => {
                     store.webConfig = {
                         causalRepoConnectionProtocol: 'websocket',
@@ -1196,6 +1262,72 @@ describe('RecordsServer', () => {
                     //         'Content-Type': 'text/html; charset=utf-8',
                     //     },
                     // });
+
+                    expect(result.headers).toEqual({
+                        ...corsHeaders(defaultHeaders.origin),
+                        'Content-Type': 'text/html; charset=utf-8',
+                    });
+                });
+
+                it('should include posthog', async () => {
+                    store.webConfig = {
+                        causalRepoConnectionProtocol: 'websocket',
+                        version: 2,
+                        logoTitle: 'Test Logo',
+                        logoUrl: 'https://example.com/logo.png',
+                        postHogApiHost: 'https://posthog.example.com',
+                        postHogApiKey: 'posthog_project_api_key',
+                    };
+
+                    const result = await server.handleHttpRequest(
+                        scoped('auth', httpGet(path, defaultHeaders))
+                    );
+
+                    expect(result.statusCode).toBe(200);
+
+                    const body = result.body as string;
+                    const dom = new JSDOM(body);
+
+                    const postHogApiKey = dom.window.document.querySelector(
+                        'postApp script#posthog-api-key'
+                    );
+
+                    expect(postHogApiKey?.innerHTML).toBe(
+                        'posthog_project_api_key'
+                    );
+
+                    const postHogHost = dom.window.document.querySelector(
+                        'postApp script#posthog-host'
+                    );
+
+                    expect(postHogHost?.innerHTML).toBe(
+                        'https://posthog.example.com'
+                    );
+
+                    const webConfig = dom.window.document.querySelector(
+                        'postApp script#casualos-web-config'
+                    );
+
+                    expect(
+                        webConfig?.attributes.getNamedItem('type')?.value
+                    ).toBe('application/json');
+
+                    const json = tryParseJson(webConfig!.innerHTML!);
+
+                    expect(json).toEqual({
+                        success: true,
+                        value: {
+                            causalRepoConnectionProtocol: 'websocket',
+                            version: 2,
+                            studiosSupported: true,
+                            subscriptionsSupported: true,
+                            requirePrivoLogin: false,
+                            logoTitle: 'Test Logo',
+                            logoUrl: 'https://example.com/logo.png',
+                            postHogApiHost: 'https://posthog.example.com',
+                            postHogApiKey: 'posthog_project_api_key',
+                        },
+                    });
 
                     expect(result.headers).toEqual({
                         ...corsHeaders(defaultHeaders.origin),

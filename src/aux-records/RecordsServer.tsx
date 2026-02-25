@@ -661,6 +661,30 @@ export class RecordsServer {
                             }
                         }
 
+                        if (config.value.postHogApiKey) {
+                            postApp.push(
+                                <script
+                                    type="text/plain"
+                                    id="posthog-api-key"
+                                    dangerouslySetInnerHTML={{
+                                        __html: config.value.postHogApiKey,
+                                    }}
+                                />
+                            );
+                        }
+
+                        if (config.value.postHogApiHost) {
+                            postApp.push(
+                                <script
+                                    type="text/plain"
+                                    id="posthog-host"
+                                    dangerouslySetInnerHTML={{
+                                        __html: config.value.postHogApiHost,
+                                    }}
+                                />
+                            );
+                        }
+
                         if (config.value.icons) {
                             if (config.value.icons.appleTouchIcon) {
                                 icons.push(
@@ -743,6 +767,30 @@ export class RecordsServer {
                                 }}
                             />
                         );
+
+                        if (config.value.postHogApiKey) {
+                            postApp.push(
+                                <script
+                                    type="text/plain"
+                                    id="posthog-api-key"
+                                    dangerouslySetInnerHTML={{
+                                        __html: config.value.postHogApiKey,
+                                    }}
+                                />
+                            );
+                        }
+
+                        if (config.value.postHogApiHost) {
+                            postApp.push(
+                                <script
+                                    type="text/plain"
+                                    id="posthog-host"
+                                    dangerouslySetInnerHTML={{
+                                        __html: config.value.postHogApiHost,
+                                    }}
+                                />
+                            );
+                        }
 
                         let csp = `default-src 'self' https://js.stripe.com; img-src 'self' https://*; style-src 'self' 'unsafe-inline'; frame-src https://js.stripe.com; child-src https://*; connect-src 'self'  https://scripts.simpleanalyticscdn.com http://localhost:9000 *.s3.amazonaws.com`;
                         if (config.value.recordsOrigin) {
