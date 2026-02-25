@@ -2,11 +2,12 @@
 
 ## V4.1.4
 
-#### Date: 2/22/2026
+#### Date: TBD
 
 ### :bug: Bug Fixes
 
 -   Fixed an issue where animations with `clampWhenFinished` set to `true` would continue to influence subsequent animations.
+-   Fixed depth sorting issues on initial load for mesh forms (`gltf`, `jsonObject`, `ldraw`, and `splat`) by applying `formDepthTest` and `formDepthWrite` immediately after mesh creation, and removed unnecessary post-load bounding recomputation workarounds.
 
 ## V4.1.3
 
@@ -16,7 +17,6 @@
 
 -   Fixed freeze caused by pressing <kbd>Shift</kbd> key on keyboard form.
 -   Fixed an issue where `xp.getAccountBalances()` would always fail with `invalid_origin` errors.
--   Fixed depth sorting issues on initial load for mesh forms (`gltf`, `jsonObject`, `ldraw`, and `splat`) by applying `formDepthTest` and `formDepthWrite` immediately after mesh creation, and removed unnecessary post-load bounding recomputation workarounds.
 
 ## V4.1.2
 
