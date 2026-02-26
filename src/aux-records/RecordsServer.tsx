@@ -30,7 +30,9 @@ import {
     validateSessionKey,
 } from './AuthController';
 import {
+    failure,
     genericResult,
+    isFailure,
     isSuccess,
     isSuperUserRole,
     mapResult,
@@ -96,6 +98,7 @@ import type {
     RPCContext,
     SimpleError,
     GenericQueryStringParameters,
+    Result,
 } from '@casual-simulation/aux-common';
 import { getStatusCode } from '@casual-simulation/aux-common';
 import type { ModerationController } from './ModerationController';
@@ -6996,6 +6999,7 @@ export class RecordsServer {
         this.addRoute({
             method: 'POST',
             path: '/api/v3/callProcedure',
+            allowedOrigins: true,
             schema: z.object({
                 procedure: z.string().nonempty(),
                 input: z.any().optional().nullable(),
@@ -7021,7 +7025,7 @@ export class RecordsServer {
                     span.setAttribute('request.procedure', procedure);
                 }
 
-                const origins =
+                let origins =
                     proc.allowedOrigins === 'account'
                         ? this._allowedAccountOrigins
                         : proc.allowedOrigins === 'api'
@@ -7030,13 +7034,23 @@ export class RecordsServer {
                         ? this._allowedSelfOrigins
                         : proc.allowedOrigins ?? true;
 
-                if (origins !== true && !validateOrigin(request, origins)) {
+                const allowCustomDomains =
+                    proc.allowedOrigins === 'api' ||
+                    proc.allowedOrigins === true;
+                const validOrigin = await this.verifyOrigins(
+                    request,
+                    origins,
+                    allowCustomDomains
+                );
+
+                if (isFailure(validOrigin)) {
                     return formatResponse(
                         request,
                         returnResult(INVALID_ORIGIN_RESULT),
                         origins
                     );
                 }
+                origins = validOrigin.value.origins;
 
                 const context: RPCContext = {
                     ipAddress: request.ipAddress,
@@ -7340,6 +7354,46 @@ export class RecordsServer {
             },
         }
     )
+
+    /**
+     * Verifies that the given request comes from one of the given origins or a verified custom domain, if allowCustomDomains is true.
+     */
+    async verifyOrigins(
+        request: GenericHttpRequest,
+        origins: Set<string> | true,
+        allowCustomDomains: boolean
+    ): Promise<Result<{ origins: Set<string> | true }, SimpleError>> {
+        if (origins === true || validateOrigin(request, origins)) {
+            return success({ origins });
+        }
+
+        if (allowCustomDomains) {
+            if (!request.headers.host && !request.headers.origin) {
+                // If the request doesn't have a host or origin header, then we can't verify the origin. Reject the request.
+                return failure(INVALID_ORIGIN_RESULT);
+            }
+
+            // Fallback to checking custom domains
+            // Custom domains are allowed if the true origin matches a verified custom domain in our system.
+            const origin = new URL(
+                request.headers.origin ?? `http://${request.headers.host}`
+            );
+            const customDomain =
+                await this._records.getVerifiedCustomDomainByName(
+                    origin.hostname
+                );
+
+            if (isSuccess(customDomain) && customDomain.value) {
+                // allow the request
+                return success({
+                    origins: true,
+                });
+            }
+        }
+
+        return failure(INVALID_ORIGIN_RESULT);
+    }
+
     @traceHttpResponse()
     async handleHttpRequest(
         request: GenericHttpRequest
@@ -7479,41 +7533,24 @@ export class RecordsServer {
                     : route.allowedOrigins ?? true;
 
             try {
-                if (origins !== true && !validateOrigin(request, origins)) {
-                    let allow = false;
-                    const host = request.headers.host;
-                    if (host && route.allowedOrigins === 'api') {
-                        // Fallback to checking custom domains
-                        const requestUrl = new URL(
-                            request.path,
-                            `http://${host}`
-                        );
-                        const origin = new URL(request.headers.origin);
+                const allowCustomDomains =
+                    route.allowedOrigins === 'api' ||
+                    route.allowedOrigins === 'self';
+                const validOrigin = await this.verifyOrigins(
+                    request,
+                    origins,
+                    allowCustomDomains
+                );
 
-                        // All custom domain requests must come from the custom domain
-                        if (origin.host === requestUrl.host) {
-                            // Only allow API routes to use custom domains
-                            const customDomain =
-                                await this._records.getVerifiedCustomDomainByName(
-                                    requestUrl.hostname
-                                );
-
-                            if (isSuccess(customDomain) && customDomain.value) {
-                                // allow the request
-                                allow = true;
-                                origins = true;
-                            }
-                        }
-                    }
-
-                    if (!allow) {
-                        return formatResponse(
-                            request,
-                            returnResult(INVALID_ORIGIN_RESULT),
-                            origins
-                        );
-                    }
+                if (isFailure(validOrigin)) {
+                    return formatResponse(
+                        request,
+                        returnResult(genericResult(validOrigin)),
+                        origins
+                    );
                 }
+
+                origins = validOrigin.value.origins;
 
                 let response: GenericHttpResponse;
                 if (route.schema) {
@@ -8037,10 +8074,16 @@ export class RecordsServer {
     private async _handleOptions(
         request: GenericHttpRequest
     ): Promise<GenericHttpResponse> {
-        if (
-            !validateOrigin(request, this._allowedApiOrigins) &&
-            !validateOrigin(request, this._allowedAccountOrigins)
-        ) {
+        const validOrigin = await this.verifyOrigins(
+            request,
+            new Set([
+                ...this._allowedApiOrigins,
+                ...this._allowedAccountOrigins,
+            ]),
+            true
+        );
+
+        if (isFailure(validOrigin)) {
             return returnResult(INVALID_ORIGIN_RESULT);
         }
 
