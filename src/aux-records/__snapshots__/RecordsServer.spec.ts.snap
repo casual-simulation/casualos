@@ -9827,6 +9827,12 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                     "hasDefault": true,
                     "type": "boolean",
                   },
+                  "enableSimpleAnalytics": Object {
+                    "description": "Whether to enable simple analytics. Defaults to false.",
+                    "nullable": true,
+                    "optional": true,
+                    "type": "boolean",
+                  },
                   "enableSmsAuthentication": Object {
                     "nullable": true,
                     "optional": true,
@@ -19995,6 +20001,12 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                   "enableDom": Object {
                     "defaultValue": false,
                     "hasDefault": true,
+                    "type": "boolean",
+                  },
+                  "enableSimpleAnalytics": Object {
+                    "description": "Whether to enable simple analytics. Defaults to false.",
+                    "nullable": true,
+                    "optional": true,
                     "type": "boolean",
                   },
                   "enableSmsAuthentication": Object {

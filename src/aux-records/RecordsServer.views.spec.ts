@@ -994,6 +994,33 @@ describe('RecordsServer', () => {
                     });
                 });
 
+                it('should include simple analytics', async () => {
+                    store.webConfig = {
+                        causalRepoConnectionProtocol: 'websocket',
+                        version: 2,
+                        logoTitle: 'Test Logo',
+                        logoUrl: 'https://example.com/logo.png',
+                        enableSimpleAnalytics: true,
+                    };
+
+                    const result = await server.handleHttpRequest(
+                        scoped('player', httpGet(path, defaultHeaders))
+                    );
+
+                    expect(result.statusCode).toBe(200);
+
+                    const body = result.body as string;
+                    const dom = new JSDOM(body);
+
+                    const simpleAnalytics = dom.window.document.querySelector(
+                        'postApp script#simple-analytics'
+                    );
+
+                    expect(simpleAnalytics?.getAttribute('src')).toBe(
+                        'https://scripts.simpleanalyticscdn.com/latest.js'
+                    );
+                });
+
                 it('should include the configured icons', async () => {
                     store.webConfig = {
                         causalRepoConnectionProtocol: 'websocket',
@@ -1333,6 +1360,33 @@ describe('RecordsServer', () => {
                         ...corsHeaders(defaultHeaders.origin),
                         'Content-Type': 'text/html; charset=utf-8',
                     });
+                });
+
+                it('should include simple analytics', async () => {
+                    store.webConfig = {
+                        causalRepoConnectionProtocol: 'websocket',
+                        version: 2,
+                        logoTitle: 'Test Logo',
+                        logoUrl: 'https://example.com/logo.png',
+                        enableSimpleAnalytics: true,
+                    };
+
+                    const result = await server.handleHttpRequest(
+                        scoped('auth', httpGet(path, defaultHeaders))
+                    );
+
+                    expect(result.statusCode).toBe(200);
+
+                    const body = result.body as string;
+                    const dom = new JSDOM(body);
+
+                    const simpleAnalytics = dom.window.document.querySelector(
+                        'postApp script#simple-analytics'
+                    );
+
+                    expect(simpleAnalytics?.getAttribute('src')).toBe(
+                        'https://scripts.simpleanalyticscdn.com/latest.js'
+                    );
                 });
 
                 it('should include a Content Security Policy meta tag', async () => {

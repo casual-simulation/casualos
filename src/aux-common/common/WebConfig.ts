@@ -266,6 +266,11 @@ export interface WebConfig {
      * The HTTP host that should be used for PostHog analytics. If not specified, then the default PostHog cloud host will be used.
      */
     postHogApiHost?: string | null;
+
+    /**
+     * Whether to enable simple analytics. Defaults to false.
+     */
+    enableSimpleAnalytics?: boolean | null;
 }
 
 /**
@@ -391,6 +396,12 @@ export const WEB_CONFIG_SCHEMA = z.object({
         .describe(
             'The HTTP host that should be used for PostHog analytics. If not specified, then the default PostHog cloud host will be used.'
         ),
+
+    enableSimpleAnalytics: z
+        .boolean()
+        .nullable()
+        .optional()
+        .describe('Whether to enable simple analytics. Defaults to false.'),
 });
 
 export function parseWebConfig(

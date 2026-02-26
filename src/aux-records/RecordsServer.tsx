@@ -685,6 +685,25 @@ export class RecordsServer {
                             );
                         }
 
+                        if (config.value.enableSimpleAnalytics) {
+                            postApp.push(
+                                <script
+                                    id="simple-analytics"
+                                    async
+                                    defer
+                                    data-allow-params="pattern,ask,inst"
+                                    src="https://scripts.simpleanalyticscdn.com/latest.js"
+                                />,
+                                <noscript>
+                                    <img
+                                        src="https://queue.simpleanalyticscdn.com/noscript.gif"
+                                        alt=""
+                                        referrerpolicy="no-referrer-when-downgrade"
+                                    />
+                                </noscript>
+                            );
+                        }
+
                         if (config.value.icons) {
                             if (config.value.icons.appleTouchIcon) {
                                 icons.push(
@@ -789,6 +808,25 @@ export class RecordsServer {
                                         __html: config.value.postHogApiHost,
                                     }}
                                 />
+                            );
+                        }
+
+                        if (config.value.enableSimpleAnalytics) {
+                            postApp.push(
+                                <script
+                                    id="simple-analytics"
+                                    async
+                                    defer
+                                    data-allow-params="pattern,ask,inst"
+                                    src="https://scripts.simpleanalyticscdn.com/latest.js"
+                                />,
+                                <noscript>
+                                    <img
+                                        src="https://queue.simpleanalyticscdn.com/noscript.gif"
+                                        alt=""
+                                        referrerpolicy="no-referrer-when-downgrade"
+                                    />
+                                </noscript>
                             );
                         }
 
