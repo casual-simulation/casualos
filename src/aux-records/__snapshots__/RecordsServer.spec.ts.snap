@@ -5551,6 +5551,16 @@ Object {
                 "optional": true,
                 "type": "string",
               },
+              "postHogApiHost": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
+              },
+              "postHogApiKey": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
+              },
               "what3WordsApiKey": Object {
                 "nullable": true,
                 "optional": true,
@@ -9873,6 +9883,18 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                       "player",
                       "builder",
                     ],
+                  },
+                  "postHogApiHost": Object {
+                    "description": "The HTTP host that should be used for PostHog analytics. If not specified, then the default PostHog cloud host will be used.",
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "postHogApiKey": Object {
+                    "description": "The API key that should be used for PostHog analytics. If not specified, then PostHog will not be initialized.",
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
                   },
                   "recordsOrigin": Object {
                     "nullable": true,
@@ -15699,6 +15721,16 @@ Object {
                 "optional": true,
                 "type": "string",
               },
+              "postHogApiHost": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
+              },
+              "postHogApiKey": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
+              },
               "what3WordsApiKey": Object {
                 "nullable": true,
                 "optional": true,
@@ -20021,6 +20053,18 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                       "player",
                       "builder",
                     ],
+                  },
+                  "postHogApiHost": Object {
+                    "description": "The HTTP host that should be used for PostHog analytics. If not specified, then the default PostHog cloud host will be used.",
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "postHogApiKey": Object {
+                    "description": "The API key that should be used for PostHog analytics. If not specified, then PostHog will not be initialized.",
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
                   },
                   "recordsOrigin": Object {
                     "nullable": true,
