@@ -168,6 +168,18 @@
                     <md-table-cell>comID.what3WordsApiKey</md-table-cell>
                     <md-table-cell>{{ originalWhat3WordsApiKey || '(default)' }}</md-table-cell>
                 </md-table-row>
+                <md-table-row @click="updatePlayerConfig()">
+                    <md-tooltip>The API Key that should be used for PostHog analytics.</md-tooltip>
+                    <md-table-cell>comID.postHogApiKey</md-table-cell>
+                    <md-table-cell>{{ originalPostHogApiKey || '(default)' }}</md-table-cell>
+                </md-table-row>
+                <md-table-row @click="updatePlayerConfig()">
+                    <md-tooltip
+                        >The HTTP Host that should be used for PostHog analytics.</md-tooltip
+                    >
+                    <md-table-cell>comID.postHogApiHost</md-table-cell>
+                    <md-table-cell>{{ originalPostHogApiHost || '(default)' }}</md-table-cell>
+                </md-table-row>
                 <md-table-row v-if="allowLoom" @click="updateLoomConfig()">
                     <md-tooltip
                         >The public App ID of the Loom app that should be used for the
@@ -385,6 +397,23 @@
                         mapPortal uses.</span
                     >
                     <field-errors field="playerConfig.arcGisApiKey" :errors="errors" />
+                </md-field>
+                <md-field :class="postHogApiKeyFieldClass">
+                    <label for="postHogApiKey">comID.postHogApiKey</label>
+                    <md-input id="postHogApiKey" v-model="postHogApiKey" type="text"></md-input>
+                    <span class="md-helper-text"
+                        >The <a href="https://posthog.com/">PostHog</a> API Key that CasualOS uses
+                        for analytics.</span
+                    >
+                    <field-errors field="playerConfig.postHogApiKey" :errors="errors" />
+                </md-field>
+                <md-field :class="postHogApiHostFieldClass">
+                    <label for="postHogApiHost">comID.postHogApiHost</label>
+                    <md-input id="postHogApiHost" v-model="postHogApiHost" type="text"></md-input>
+                    <span class="md-helper-text"
+                        >The HTTP Host that CasualOS should use for PostHog analytics.</span
+                    >
+                    <field-errors field="playerConfig.postHogApiHost" :errors="errors" />
                 </md-field>
                 <field-errors :field="null" :errors="errors" />
             </md-dialog-content>

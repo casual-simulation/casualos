@@ -22,7 +22,6 @@ import { importMapPlugin } from 'importmap-vite-plugin';
 import { GIT_HASH, GIT_TAG } from '../../../../script/git-stats.mjs';
 import simpleAnalyticsPlugin from '../../plugins/simple-analytics-plugin';
 
-const ENABLE_DOM_ACCESS = process.env.ENABLE_DOM_ACCESS === 'true';
 const OMIT_SIMPLE_ANALYTICS = process.env.OMIT_SIMPLE_ANALYTICS === 'true';
 
 const distDir = path.resolve(__dirname, '..', 'dist');

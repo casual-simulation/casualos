@@ -22,8 +22,15 @@ if (import.meta.env.VITE_POSTHOG_API_KEY) {
         console.warn('PostHog is not initialized in development mode.');
     } else {
         const defaultHost = 'https://us.i.posthog.com';
-        posthog.init(import.meta.env.VITE_POSTHOG_API_KEY, {
-            api_host: import.meta.env.VITE_POSTHOG_HOST ?? defaultHost,
+        const apiKey =
+            document.querySelector('script#posthog-api-key')?.innerHTML ??
+            import.meta.env.VITE_POSTHOG_API_KEY;
+        const host =
+            document.querySelector('script#posthog-host')?.innerHTML ??
+            import.meta.env.VITE_POSTHOG_HOST ??
+            defaultHost;
+        posthog.init(apiKey, {
+            api_host: host,
             defaults: '2025-11-30',
         });
     }

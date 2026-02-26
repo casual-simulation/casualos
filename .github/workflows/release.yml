@@ -53,6 +53,7 @@ jobs:
                   npm run build
               env:
                   OMIT_BUILD_CSP: 'true'
+                  OMIT_SIMPLE_ANALYTICS: 'true'
             - name: Publish Master NPM Packages
               if: ${{ github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/heads/release/') }}
               run: |
