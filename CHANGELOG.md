@@ -4,6 +4,12 @@
 
 #### Date: TBD
 
+### :boom: Breaking Changes
+
+-   Disabled [Simple Analytics](https://www.simpleanalytics.com/) by default on Docker Builds.
+    -   This only affects deployments which serve the CasualOS files from the docker build (e.g. you don't have a CDN with a custom build of the CasualOS frontends).
+    -   If you want to re-enable Simple Analytics, you can set `enableSimpleAnalytics` in the `webConfig` to `true`.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where animations with `clampWhenFinished` set to `true` would continue to influence subsequent animations.
