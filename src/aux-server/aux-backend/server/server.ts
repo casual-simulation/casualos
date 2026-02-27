@@ -103,6 +103,10 @@ export class Server {
                 'trust proxy',
                 this._config.server.proxy.trust
             );
+            this._backendApp.set(
+                'trust proxy',
+                this._config.server.proxy.trust
+            );
         }
 
         const builder = constructServerBuilder(this._config);
