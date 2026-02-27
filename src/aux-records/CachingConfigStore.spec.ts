@@ -92,6 +92,16 @@ describe('CachingPolicyStore', () => {
             expect(result).toEqual(createTestSubConfiguration());
             expect(inner.getSubscriptionConfiguration).toHaveBeenCalledTimes(0);
         });
+
+        it('should return null if null is cached', async () => {
+            await cache.store(`subscriptions`, null, 1);
+
+            inner.subscriptionConfiguration = createTestSubConfiguration();
+            const result = await store.getSubscriptionConfiguration();
+
+            expect(result).toBeNull();
+            expect(inner.getSubscriptionConfiguration).toHaveBeenCalledTimes(0);
+        });
     });
 
     describe('getPrivoConfiguration()', () => {
@@ -120,10 +130,20 @@ describe('CachingPolicyStore', () => {
         it('should retrieve the value from the cache', async () => {
             await cache.store(`privo`, createTestPrivoConfiguration(), 1);
 
-            inner.moderationConfiguration = null;
+            inner.privoConfiguration = null;
             const result = await store.getPrivoConfiguration();
 
             expect(result).toEqual(createTestPrivoConfiguration());
+            expect(inner.getPrivoConfiguration).toHaveBeenCalledTimes(0);
+        });
+
+        it('should return null if null is cached', async () => {
+            await cache.store(`privo`, null, 1);
+
+            inner.privoConfiguration = createTestPrivoConfiguration();
+            const result = await store.getPrivoConfiguration();
+
+            expect(result).toBeNull();
             expect(inner.getPrivoConfiguration).toHaveBeenCalledTimes(0);
         });
     });
@@ -172,6 +192,18 @@ describe('CachingPolicyStore', () => {
             expect(result).toEqual({
                 allowUnauthenticatedReports: true,
             });
+            expect(inner.getModerationConfig).toHaveBeenCalledTimes(0);
+        });
+
+        it('should return null if null is cached', async () => {
+            await cache.store(`moderation`, null, 1);
+
+            inner.moderationConfiguration = {
+                allowUnauthenticatedReports: true,
+            };
+            const result = await store.getModerationConfig();
+
+            expect(result).toBeNull();
             expect(inner.getModerationConfig).toHaveBeenCalledTimes(0);
         });
     });
