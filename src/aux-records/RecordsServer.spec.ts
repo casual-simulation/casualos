@@ -238,6 +238,7 @@ import {
 } from './HttpTestUtils';
 import type { DomainNameValidator } from './dns';
 import { WEB_MANIFEST_SCHEMA } from '@casual-simulation/aux-common/common/WebManifest';
+import { METADATA_KEY } from './ConfigurationStore';
 
 jest.setTimeout(10000); // 10 seconds
 
@@ -26606,15 +26607,22 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         f.withAllDefaultFeatures().withComId()
                     )
             );
+
+            await store.setConfiguration(METADATA_KEY, {
+                apiOrigin: apiOrigin,
+                frontendOrigin: 'https://frontend.example.com'
+            });
         });
 
         it('should add a custom domain', async () => {
             domainNameValidator.getVerificationDNSRecord.mockResolvedValueOnce(
-                success({
-                    recordType: 'TXT',
-                    value: 'verification-value',
-                    ttlSeconds: 300,
-                })
+                success([
+                    {
+                        recordType: 'TXT',
+                        value: 'verification-value',
+                        ttlSeconds: 300,
+                    },
+                ])
             );
 
             const result = await server.handleHttpRequest(
@@ -26632,9 +26640,13 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                 statusCode: 200,
                 body: {
                     success: true,
-                    recordType: 'TXT',
-                    value: 'verification-value',
-                    ttlSeconds: 300,
+                    items: [
+                        {
+                            recordType: 'TXT',
+                            value: 'verification-value',
+                            ttlSeconds: 300,
+                        },
+                    ],
                 },
                 headers: accountCorsHeaders,
             });
@@ -27282,6 +27294,11 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                 verified: null,
             });
 
+            await store.setConfiguration(METADATA_KEY, {
+                frontendOrigin: 'https://frontend.example.com',
+                apiOrigin: 'https://api.example.com',
+            });
+
             domainNameValidator.validateDomainName.mockResolvedValue(success());
         });
 
@@ -27306,7 +27323,8 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
 
             expect(domainNameValidator.validateDomainName).toHaveBeenCalledWith(
                 'example.com',
-                'verification-key'
+                'verification-key',
+                'frontend.example.com'
             );
 
             // Verify domain was marked as verified
