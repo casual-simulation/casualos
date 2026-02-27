@@ -68,6 +68,7 @@ export class SqliteRecordsStore implements RecordsStore {
                 studioId: domain.studioId,
                 verificationKey: domain.verificationKey,
                 verified: domain.verified,
+                expectedHostName: domain.expectedHostName,
                 createdAt: Date.now(),
                 updatedAt: Date.now(),
             },
@@ -77,6 +78,7 @@ export class SqliteRecordsStore implements RecordsStore {
                 studioId: domain.studioId,
                 verificationKey: domain.verificationKey,
                 verified: domain.verified,
+                expectedHostName: domain.expectedHostName,
                 updatedAt: Date.now(),
             },
             where: {
@@ -114,6 +116,7 @@ export class SqliteRecordsStore implements RecordsStore {
             studioId: domain.studioId,
             verificationKey: domain.verificationKey,
             verified: domain.verified as true | null,
+            expectedHostName: domain.expectedHostName,
             studio: this._convertToStudio(domain.studio),
         };
     }
@@ -132,6 +135,7 @@ export class SqliteRecordsStore implements RecordsStore {
             domainName: domain.domainName,
             studioId: domain.studioId,
             verificationKey: domain.verificationKey,
+            expectedHostName: domain.expectedHostName,
             verified: domain.verified as true | null,
         }));
     }
@@ -164,6 +168,7 @@ export class SqliteRecordsStore implements RecordsStore {
             studioId: domain.studioId,
             verificationKey: domain.verificationKey,
             verified: domain.verified as true | null,
+            expectedHostName: domain.expectedHostName,
             studio: this._convertToStudio(domain.studio),
         };
     }
