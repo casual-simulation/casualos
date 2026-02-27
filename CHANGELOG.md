@@ -9,6 +9,7 @@
 -   Fixed an issue where the server would not utilize the cache if a null value was stored.
     -   This would cause the server to continue to query the database instead of caching the null value.
 -   Fixed an issue where the auth (and API) backend would not use the `server.proxy.trust` configuration value.
+-   Fixed type definitions for `Vector2.negate()`, `Vector3.negate()`, `math.degreesToRadians()`, and `math.radiansToDegrees()`.
 
 ## V4.1.4
 
