@@ -7384,6 +7384,11 @@ export class RecordsServer {
                 );
 
             if (isSuccess(customDomain) && customDomain.value) {
+                console.log(
+                    '[RecordsServer] Verified custom domain origin:',
+                    origin.hostname
+                );
+
                 // allow the request
                 return success({
                     origins: true,
