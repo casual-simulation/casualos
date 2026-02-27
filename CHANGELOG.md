@@ -4,6 +4,12 @@
 
 #### Date: TBD
 
+### :rocket: Features
+
+-   Added the ability to validate CNAME records for custom domains before enabling them.
+    -   Requires that the `meta.frontendOrigin` key is set in the server config.
+    -   CNAME is preferred for custom domains because it seamlessly supports IPv4 & IPv6 in addition to if IP addresses ever change.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where the server would not utilize the cache if a null value was stored.
