@@ -629,7 +629,12 @@ export class ServerBuilder implements SubscriptionLike {
     useMongoDB(
         options: Pick<
             ServerConfig,
-            'mongodb' | 'subscriptions' | 'moderation' | 'server' | 'privo'
+            | 'mongodb'
+            | 'subscriptions'
+            | 'moderation'
+            | 'server'
+            | 'privo'
+            | 'meta'
         > = this._options
     ): this {
         console.log('[ServerBuilder] Using MongoDB.');
@@ -681,6 +686,7 @@ export class ServerBuilder implements SubscriptionLike {
                         webConfig: options.server?.webConfig as WebConfig,
                         privo: options.privo as PrivoConfiguration,
                         playerWebManifest: options.server?.playerWebManifest,
+                        meta: options.meta,
                     },
                     configuration
                 );
@@ -2759,7 +2765,12 @@ export class ServerBuilder implements SubscriptionLike {
         prismaClient: PrismaClient,
         options: Pick<
             ServerConfig,
-            'prisma' | 'subscriptions' | 'moderation' | 'privo' | 'server'
+            | 'prisma'
+            | 'subscriptions'
+            | 'moderation'
+            | 'privo'
+            | 'server'
+            | 'meta'
         >
     ): ConfigurationStore {
         let configStore: ConfigurationStore;
@@ -2771,6 +2782,7 @@ export class ServerBuilder implements SubscriptionLike {
                 moderation: options.moderation as ModerationConfiguration,
                 webConfig: options.server?.webConfig as WebConfig,
                 playerWebManifest: options.server?.playerWebManifest,
+                meta: options.meta,
             });
         } else {
             configStore = new PrismaConfigurationStore(prismaClient, {
@@ -2780,6 +2792,7 @@ export class ServerBuilder implements SubscriptionLike {
                 moderation: options.moderation as ModerationConfiguration,
                 webConfig: options.server?.webConfig as WebConfig,
                 playerWebManifest: options.server?.playerWebManifest,
+                meta: options.meta,
             });
         }
 

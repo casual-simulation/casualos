@@ -53,6 +53,7 @@ import {
 import type { DomainNameValidator } from './dns';
 import { WEB_MANIFEST_SCHEMA } from '@casual-simulation/aux-common/common/WebManifest';
 import type z from 'zod';
+import { METADATA_KEY } from './ConfigurationStore';
 
 const uuidMock: jest.Mock = <any>uuid;
 const uuidv7Mock: jest.Mock = <any>uuidv7;
@@ -5509,15 +5510,22 @@ describe('RecordsController', () => {
                         })
                     )
             );
+
+            await store.setConfiguration(METADATA_KEY, {
+                frontendOrigin: 'https://example.com',
+                apiOrigin: 'https://api.example.com',
+            });
         });
 
         it('should create a custom domain and return verification DNS record', async () => {
             domainNameValidator.getVerificationDNSRecord.mockResolvedValue(
-                success({
-                    recordType: 'TXT',
-                    value: 'verification-value',
-                    ttlSeconds: 300,
-                })
+                success([
+                    {
+                        recordType: 'TXT',
+                        value: 'verification-value',
+                        ttlSeconds: 300,
+                    },
+                ])
             );
 
             const result = await manager.addCustomDomain({
@@ -5527,11 +5535,13 @@ describe('RecordsController', () => {
             });
 
             expect(result).toEqual(
-                success({
-                    recordType: 'TXT',
-                    value: 'verification-value',
-                    ttlSeconds: 300,
-                })
+                success([
+                    {
+                        recordType: 'TXT',
+                        value: 'verification-value',
+                        ttlSeconds: 300,
+                    },
+                ])
             );
 
             const domains = await store.listCustomDomainsByStudioId(studioId);
@@ -5541,12 +5551,17 @@ describe('RecordsController', () => {
                 domainName: 'example.com',
                 studioId,
                 verificationKey: expect.any(String),
+                expectedHostName: 'example.com',
                 verified: null,
             });
 
             expect(
                 domainNameValidator.getVerificationDNSRecord
-            ).toHaveBeenCalledWith('example.com', domains[0].verificationKey);
+            ).toHaveBeenCalledWith(
+                'example.com',
+                domains[0].verificationKey,
+                'example.com'
+            );
         });
 
         it('should return not_supported if domainNameValidator is not configured', async () => {
@@ -5559,6 +5574,24 @@ describe('RecordsController', () => {
                 privo: null,
                 domainNameValidator: null,
             });
+
+            const result = await manager.addCustomDomain({
+                userId,
+                studioId,
+                domain: 'example.com',
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'Custom domains are not supported on this server.',
+                })
+            );
+        });
+
+        it('should return not_supported if there is no configured frontendOrigin', async () => {
+            await store.setConfiguration(METADATA_KEY, null);
 
             const result = await manager.addCustomDomain({
                 userId,
@@ -5692,11 +5725,13 @@ describe('RecordsController', () => {
             );
 
             domainNameValidator.getVerificationDNSRecord.mockResolvedValue(
-                success({
-                    recordType: 'TXT',
-                    value: 'verification-value',
-                    ttlSeconds: 300,
-                })
+                success([
+                    {
+                        recordType: 'TXT',
+                        value: 'verification-value',
+                        ttlSeconds: 300,
+                    },
+                ])
             );
 
             // Add multiple domains to verify no limit is enforced
@@ -5723,11 +5758,13 @@ describe('RecordsController', () => {
             });
 
             expect(result).toEqual(
-                success({
-                    recordType: 'TXT',
-                    value: 'verification-value',
-                    ttlSeconds: 300,
-                })
+                success([
+                    {
+                        recordType: 'TXT',
+                        value: 'verification-value',
+                        ttlSeconds: 300,
+                    },
+                ])
             );
 
             const domains = await store.listCustomDomainsByStudioId(studioId);
@@ -5736,11 +5773,13 @@ describe('RecordsController', () => {
 
         it('should generate a unique verification key for each domain', async () => {
             domainNameValidator.getVerificationDNSRecord.mockResolvedValue(
-                success({
-                    recordType: 'TXT',
-                    value: 'verification-value',
-                    ttlSeconds: 300,
-                })
+                success([
+                    {
+                        recordType: 'TXT',
+                        value: 'verification-value',
+                        ttlSeconds: 300,
+                    },
+                ])
             );
 
             uuidv7Mock.mockReturnValueOnce('domain-1');
@@ -6347,6 +6386,11 @@ describe('RecordsController', () => {
                 verificationKey: 'verification-key',
                 verified: null,
             });
+
+            await store.setConfiguration(METADATA_KEY, {
+                frontendOrigin: 'https://example.com',
+                apiOrigin: 'https://api.example.com',
+            });
         });
 
         it('should return not_supported if domainNameValidator is not configured', async () => {
@@ -6359,6 +6403,23 @@ describe('RecordsController', () => {
                 privo: null,
                 domainNameValidator: null,
             });
+
+            const result = await manager.verifyCustomDomain({
+                userId,
+                customDomainId: domainId,
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'Custom domains are not supported on this server.',
+                })
+            );
+        });
+
+        it('should return not_supported if frontendOrigin is not configured', async () => {
+            await store.setConfiguration(METADATA_KEY, null);
 
             const result = await manager.verifyCustomDomain({
                 userId,
@@ -6434,7 +6495,8 @@ describe('RecordsController', () => {
 
             expect(domainNameValidator.validateDomainName).toHaveBeenCalledWith(
                 'example.com',
-                'verification-key'
+                'verification-key',
+                'example.com'
             );
 
             // Verify domain was not marked as verified
@@ -6454,7 +6516,38 @@ describe('RecordsController', () => {
 
             expect(domainNameValidator.validateDomainName).toHaveBeenCalledWith(
                 'example.com',
-                'verification-key'
+                'verification-key',
+                'example.com'
+            );
+
+            // Verify domain was marked as verified
+            const domain = await store.getCustomDomainById(domainId);
+            expect(domain?.verified).toBe(true);
+        });
+
+        it('should use the stored expectedHostName', async () => {
+            await store.saveCustomDomain({
+                id: domainId,
+                domainName: 'example.com',
+                studioId,
+                verificationKey: 'verification-key',
+                expectedHostName: 'custom-hostname.com',
+                verified: null,
+            });
+
+            domainNameValidator.validateDomainName.mockResolvedValue(success());
+
+            const result = await manager.verifyCustomDomain({
+                userId,
+                customDomainId: domainId,
+            });
+
+            expect(result).toEqual(success());
+
+            expect(domainNameValidator.validateDomainName).toHaveBeenCalledWith(
+                'example.com',
+                'verification-key',
+                'custom-hostname.com'
             );
 
             // Verify domain was marked as verified

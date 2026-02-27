@@ -744,6 +744,11 @@ export interface CustomDomain {
     verificationKey: string;
 
     /**
+     * The host name that should be set in the CNAME record for verification.
+     */
+    expectedHostName?: string | null;
+
+    /**
      * Whether the custom domain has been verified.
      * Null if not verified.
      */

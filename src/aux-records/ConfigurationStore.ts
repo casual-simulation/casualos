@@ -32,8 +32,9 @@ import {
     WEB_MANIFEST_SCHEMA,
     type WebManifest,
 } from '@casual-simulation/aux-common/common/WebManifest';
-import type z from 'zod';
+import z from 'zod';
 import { STORED_AUX_SCHEMA } from './webhooks';
+import { memoize } from 'es-toolkit';
 
 export const SUBSCRIPTIONS_CONFIG_KEY = 'subscriptions';
 
@@ -46,6 +47,40 @@ export const WEB_CONFIG_KEY = 'web';
 export const PLAYER_WEB_MANIFEST_KEY = 'playerWebManifest';
 
 export const AB1_BOOTSTRAP_KEY = 'ab1Bootstrap';
+
+export const METADATA_KEY = 'metadata';
+
+export const serverMetadataSchema = memoize(() =>
+    z.object({
+        frontendOrigin: z
+            .url()
+            .optional()
+            .nullable()
+            .describe(
+                'The HTTP origin that the CasualOS frontend (player) is available at.'
+            ),
+        apiOrigin: z
+            .string()
+            .describe('The HTTP origin that the API is available at.'),
+        websocketOrigin: z
+            .string()
+            .optional()
+            .nullable()
+            .describe(
+                'The HTTP origin that the Websocket API is available at.'
+            ),
+        websocketProtocol: z
+            .enum(['websocket', 'apiary-aws'])
+            .optional()
+            .nullable()
+            .describe(
+                'The protocol that should be used to connect to the websocket origin.'
+            ),
+    })
+);
+
+export type ServerMetadataSchema = ReturnType<typeof serverMetadataSchema>;
+export type ServerMetadata = z.infer<ServerMetadataSchema>;
 
 /**
  * The default configuration values used when no configuration is found in the store.
@@ -75,6 +110,11 @@ export interface DefaultConfiguration {
      * The default player web manifest.
      */
     playerWebManifest: WebManifest | null;
+
+    /**
+     * The metadata about the server deployment.
+     */
+    meta: ServerMetadata | null;
 }
 
 export const CONFIGURATION_SCHEMAS = [
@@ -87,6 +127,7 @@ export const CONFIGURATION_SCHEMAS = [
     { key: WEB_CONFIG_KEY, schema: WEB_CONFIG_SCHEMA } as const,
     { key: PLAYER_WEB_MANIFEST_KEY, schema: WEB_MANIFEST_SCHEMA } as const,
     { key: AB1_BOOTSTRAP_KEY, schema: STORED_AUX_SCHEMA } as const,
+    { key: METADATA_KEY, schema: serverMetadataSchema() } as const,
 ];
 
 /**
@@ -99,6 +140,7 @@ export const CONFIGURATION_SCHEMAS_MAP = {
     [WEB_CONFIG_KEY]: WEB_CONFIG_SCHEMA,
     [PLAYER_WEB_MANIFEST_KEY]: WEB_MANIFEST_SCHEMA,
     [AB1_BOOTSTRAP_KEY]: STORED_AUX_SCHEMA,
+    [METADATA_KEY]: serverMetadataSchema(),
 };
 
 export const CONFIGURATION_KEYS: ConfigurationKey[] = CONFIGURATION_SCHEMAS.map(
