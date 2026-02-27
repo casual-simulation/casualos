@@ -690,19 +690,23 @@
                         </md-button>
                     </div>
 
-                    <div v-if="verificationRecord" class="verification-instructions">
+                    <div v-if="verificationRecords" class="verification-instructions">
                         <h3>Verification Instructions</h3>
                         <p>
                             To verify your domain <strong>{{ newDomainName }}</strong
-                            >, add the following DNS record:
+                            >, add the following DNS records:
                         </p>
-                        <div class="dns-record">
-                            <p><strong>Type:</strong> {{ verificationRecord.recordType }}</p>
-                            <p><strong>Value:</strong> {{ verificationRecord.value }}</p>
-                            <p><strong>TTL:</strong> {{ verificationRecord.ttlSeconds }} seconds</p>
+                        <div
+                            class="dns-record"
+                            v-for="record in verificationRecords"
+                            :key="record.id"
+                        >
+                            <p><strong>Type:</strong> {{ record.recordType }}</p>
+                            <p><strong>Value:</strong> {{ record.value }}</p>
+                            <p><strong>TTL:</strong> {{ record.ttlSeconds }} seconds</p>
                         </div>
                         <p>
-                            After adding the DNS record, click the verify button next to the domain
+                            After adding the DNS records, click the verify button next to the domain
                             to check verification status.
                         </p>
                     </div>
