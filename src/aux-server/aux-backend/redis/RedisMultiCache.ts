@@ -68,7 +68,7 @@ export class RedisCache implements Cache {
         const k = `${this._namespace}/${key}`;
         await this._redis.set(
             k,
-            JSON.stringify(data, (key, value) => {
+            JSON.stringify(data ?? '-', (key, value) => {
                 if (typeof value === 'bigint') {
                     return value.toString();
                 }
@@ -83,6 +83,9 @@ export class RedisCache implements Cache {
         const k = `${this._namespace}/${key}`;
         const result = await this._redis.get(k);
         if (result) {
+            if (result === '-') {
+                return null as any;
+            }
             return JSON.parse(result);
         } else {
             return undefined;
