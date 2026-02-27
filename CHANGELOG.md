@@ -1,5 +1,15 @@
 # CasualOS Changelog
 
+## V4.1.5
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the server would not utilize the cache if a null value was stored.
+    -   This would cause the server to continue to query the database instead of caching the null value.
+-   Fixed an issue where the auth (and API) backend would not use the `server.proxy.trust` configuration value.
+
 ## V4.1.4
 
 #### Date: 2/26/2026
