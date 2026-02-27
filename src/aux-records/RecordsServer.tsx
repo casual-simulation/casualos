@@ -7373,20 +7373,29 @@ export class RecordsServer {
                 return failure(INVALID_ORIGIN_RESULT);
             }
 
-            // Fallback to checking custom domains
-            // Custom domains are allowed if the true origin matches a verified custom domain in our system.
-            const origin = new URL(
-                request.headers.origin ?? `http://${request.headers.host}`
-            );
+            let originHostname: string;
+
+            try {
+                // Fallback to checking custom domains
+                // Custom domains are allowed if the true origin matches a verified custom domain in our system.
+                const origin = new URL(
+                    request.headers.origin ?? `http://${request.headers.host}`
+                );
+                originHostname = origin.hostname;
+            } catch (err) {
+                // Malformed origin or host header. Reject the request.
+                return failure(INVALID_ORIGIN_RESULT);
+            }
+
             const customDomain =
                 await this._records.getVerifiedCustomDomainByName(
-                    origin.hostname
+                    originHostname
                 );
 
             if (isSuccess(customDomain) && customDomain.value) {
                 console.log(
                     '[RecordsServer] Verified custom domain origin:',
-                    origin.hostname
+                    originHostname
                 );
 
                 // allow the request
