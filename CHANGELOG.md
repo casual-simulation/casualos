@@ -40,6 +40,7 @@
 
 -   Fixed freeze caused by pressing <kbd>Shift</kbd> key on keyboard form.
 -   Fixed an issue where `xp.getAccountBalances()` would always fail with `invalid_origin` errors.
+-   Fixed how passkeys are triggered for Safari-based browsers to try to make them work more consistently.
 
 ## V4.1.2
 

@@ -64,10 +64,10 @@
                     v-if="supportsWebAuthn"
                     type="button"
                     @click="webAuthnLogin()"
-                    :disabled="processing"
+                    :disabled="processing || loadingWebAuthn"
                 >
                     <md-progress-spinner
-                        v-if="processing && processingKind === 'webauthn'"
+                        v-if="(processing && processingKind === 'webauthn') || loadingWebAuthn"
                         md-mode="indeterminate"
                         :md-diameter="20"
                         :md-stroke="2"
