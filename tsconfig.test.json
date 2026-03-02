@@ -20,7 +20,11 @@
         "jsxImportSource": "preact",
         "noEmit": true
     },
-    "files": ["src/aux-server/typings/casual-simulation.three.d.ts"],
+    "files": [
+        "src/aux-server/typings/casual-simulation.three.d.ts",
+        "src/aux-server/typings/global.d.ts",
+        "src/aux-server/typings/what3words.d.ts"
+    ],
     "references": [
         { "path": "./src/crypto" },
         { "path": "./src/aux-server" },
