@@ -51,6 +51,7 @@ import { v4 as uuid, v7 as uuidv7 } from 'uuid';
 import type { MetricsStore, SubscriptionFilter } from './MetricsStore';
 import {
     AB1_BOOTSTRAP_KEY,
+    METADATA_KEY,
     type ConfigurationInput,
     type ConfigurationKey,
     type ConfigurationOutput,
@@ -1375,12 +1376,12 @@ export class RecordsController {
     /**
      * Attempts to add a custom domain to a studio.
      * @param request The request to add the custom domain.
-     * @returns A result containing the verification DNS record or an error.
+     * @returns A result containing the verification DNS records or an error.
      */
     @traced(TRACE_NAME)
     async addCustomDomain(
         request: AddCustomDomainRequest
-    ): Promise<Result<DomainNameVerificationDNSRecord, SimpleError>> {
+    ): Promise<Result<DomainNameVerificationDNSRecord[], SimpleError>> {
         if (!this._domainNameValidator) {
             return failure({
                 errorCode: 'not_supported',
@@ -1388,6 +1389,21 @@ export class RecordsController {
                     'Custom domains are not supported on this server.',
             });
         }
+
+        const meta = await this._config.getConfiguration(METADATA_KEY);
+
+        if (!meta?.frontendOrigin) {
+            console.warn(
+                '[RecordsController] [addCustomDomain] Frontend origin is not configured. Custom domains will not work properly.'
+            );
+            return failure({
+                errorCode: 'not_supported',
+                errorMessage:
+                    'Custom domains are not supported on this server.',
+            });
+        }
+
+        const expectedDomainName = new URL(meta.frontendOrigin).hostname;
 
         const studio = await this._store.getStudioById(request.studioId);
 
@@ -1448,6 +1464,7 @@ export class RecordsController {
             domainName: request.domain,
             studioId: request.studioId,
             verificationKey,
+            expectedHostName: expectedDomainName,
             verified: null,
         };
 
@@ -1456,7 +1473,8 @@ export class RecordsController {
         const verificationDnsRecord =
             await this._domainNameValidator.getVerificationDNSRecord(
                 customDomain.domainName,
-                customDomain.verificationKey
+                customDomain.verificationKey,
+                expectedDomainName
             );
 
         return verificationDnsRecord;
@@ -1609,9 +1627,30 @@ export class RecordsController {
             });
         }
 
+        let expectedDomainName: string | undefined =
+            customDomain.expectedHostName;
+
+        if (!expectedDomainName) {
+            const meta = await this._config.getConfiguration(METADATA_KEY);
+
+            if (!meta?.frontendOrigin) {
+                console.warn(
+                    '[RecordsController] [verifyCustomDomain] Frontend origin is not configured. Custom domain verification may not work properly.'
+                );
+                return failure({
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'Custom domains are not supported on this server.',
+                });
+            }
+
+            expectedDomainName = new URL(meta.frontendOrigin).hostname;
+        }
+
         const result = await this._domainNameValidator.validateDomainName(
             customDomain.domainName,
-            customDomain.verificationKey
+            customDomain.verificationKey,
+            expectedDomainName
         );
 
         if (isFailure(result)) {

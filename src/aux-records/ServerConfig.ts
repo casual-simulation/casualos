@@ -23,6 +23,7 @@ import { z } from 'zod';
 import { WEB_CONFIG_SCHEMA } from '@casual-simulation/aux-common';
 import { WEB_MANIFEST_SCHEMA } from '@casual-simulation/aux-common/common/WebManifest';
 import { memoize } from 'es-toolkit';
+import { serverMetadataSchema } from './ConfigurationStore';
 
 let serverConfigSchema: ServerConfigSchema;
 
@@ -1522,26 +1523,8 @@ Because repo/add_updates is a very common permission, we periodically cache perm
                 'Web Push configuration options. If omitted, then web push notifications will be disabled.'
             ),
 
-        meta: z
-            .object({
-                apiOrigin: z
-                    .string()
-                    .describe('The HTTP origin that the API is available at.'),
-                websocketOrigin: z
-                    .string()
-                    .optional()
-                    .nullable()
-                    .describe(
-                        'The HTTP origin that the Websocket API is available at.'
-                    ),
-                websocketProtocol: z
-                    .enum(['websocket', 'apiary-aws'])
-                    .optional()
-                    .nullable()
-                    .describe(
-                        'The protocol that should be used to connect to the websocket origin.'
-                    ),
-            })
+        meta: serverMetadataSchema()
+            .nullable()
             .optional()
             .describe(
                 'The metadata about the server deployment. If omitted, then the server will not be able to provide information about itself. This would result in records features not being supported in webhook handlers.'
@@ -1657,10 +1640,10 @@ Because repo/add_updates is a very common permission, we periodically cache perm
                 proxy: z
                     .object({
                         trust: z
-                            .string()
+                            .union([z.string(), z.boolean(), z.number()])
                             .optional()
                             .describe(
-                                'The IP Address range of proxies that should be trusted.'
+                                'The express.js "trust proxy" value. Can be a string, boolean, or number representing the IP Address range of proxies that should be trusted.'
                             ),
                     })
                     .optional()

@@ -64,6 +64,7 @@ export class PrismaRecordsStore implements RecordsStore {
                 domainName: domain.domainName,
                 studioId: domain.studioId,
                 verificationKey: domain.verificationKey,
+                expectedHostName: domain.expectedHostName,
                 verified: domain.verified,
             },
             update: {
@@ -71,6 +72,7 @@ export class PrismaRecordsStore implements RecordsStore {
                 domainName: domain.domainName,
                 studioId: domain.studioId,
                 verificationKey: domain.verificationKey,
+                expectedHostName: domain.expectedHostName,
                 verified: domain.verified,
             },
             where: {
@@ -108,6 +110,7 @@ export class PrismaRecordsStore implements RecordsStore {
             studioId: domain.studioId,
             verificationKey: domain.verificationKey,
             verified: domain.verified as true | null,
+            expectedHostName: domain.expectedHostName,
             studio: this._convertToStudio(domain.studio),
         };
     }
@@ -127,6 +130,7 @@ export class PrismaRecordsStore implements RecordsStore {
             studioId: domain.studioId,
             verificationKey: domain.verificationKey,
             verified: domain.verified as true | null,
+            expectedHostName: domain.expectedHostName,
         }));
     }
 
@@ -158,6 +162,7 @@ export class PrismaRecordsStore implements RecordsStore {
             studioId: domain.studioId,
             verificationKey: domain.verificationKey,
             verified: domain.verified as true | null,
+            expectedHostName: domain.expectedHostName,
             studio: this._convertToStudio(domain.studio),
         };
     }

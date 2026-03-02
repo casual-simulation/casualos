@@ -1,5 +1,45 @@
 # CasualOS Changelog
 
+## V4.1.6
+
+#### Date: 3/2/2026
+
+### :bug: Bug Fixes
+
+-   Fixed an issue when trying to read cached default values from Redis.
+
+## V4.1.5
+
+#### Date: 3/2/2026
+
+### :rocket: Features
+
+-   Added the ability to validate CNAME records for custom domains before enabling them.
+    -   Requires that the `meta.frontendOrigin` key is set in the server config.
+    -   CNAME is preferred for custom domains because it seamlessly supports IPv4 & IPv6 in addition to if IP addresses ever change.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the server would not utilize the cache if a null value was stored.
+    -   This would cause the server to continue to query the database instead of caching the null value.
+-   Fixed an issue where the auth (and API) backend would not use the `server.proxy.trust` configuration value.
+-   Fixed type definitions for `Vector2.negate()`, `Vector3.negate()`, `math.degreesToRadians()`, and `math.radiansToDegrees()`.
+
+## V4.1.4
+
+#### Date: 2/26/2026
+
+### :boom: Breaking Changes
+
+-   Disabled [Simple Analytics](https://www.simpleanalytics.com/) by default on Docker Builds.
+    -   This only affects deployments which serve the CasualOS files from the docker build (e.g. you don't have a CDN with a custom build of the CasualOS frontends).
+    -   If you want to re-enable Simple Analytics, you can set `enableSimpleAnalytics` in the `webConfig` to `true`.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where animations with `clampWhenFinished` set to `true` would continue to influence subsequent animations.
+-   Fixed depth sorting issues on initial load for mesh forms (`gltf`, `jsonObject`, `ldraw`, and `splat`) by applying `formDepthTest` and `formDepthWrite` immediately after mesh creation, and removed unnecessary post-load bounding recomputation workarounds.
+
 ## V4.1.3
 
 #### Date: 2/22/2026

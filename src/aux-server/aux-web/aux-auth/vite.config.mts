@@ -19,6 +19,9 @@ import cspPlugin from '../../plugins/csp-plugin';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import { GIT_HASH, GIT_TAG } from '../../../../script/git-stats.mjs';
+import simpleAnalyticsPlugin from '../../plugins/simple-analytics-plugin';
+
+const OMIT_SIMPLE_ANALYTICS = process.env.OMIT_SIMPLE_ANALYTICS === 'true';
 
 const distDir = path.resolve(__dirname, 'dist');
 
@@ -185,6 +188,7 @@ export default defineConfig(({ command, mode }) => {
                     ].filter((s) => s.length > 0),
                 },
             }),
+            ...(!OMIT_SIMPLE_ANALYTICS ? [simpleAnalyticsPlugin()] : []),
             process.argv.some((a) => a === '--ssl') ? basicSsl() : [],
         ],
         assetsInclude: ['**/*.gltf', '**/*.glb'],

@@ -136,6 +136,12 @@ export default class AuthStudio extends Vue {
     humeApiKey: string = null;
     humeSecretKey: string = null;
 
+    originalPostHogApiKey: string = null;
+    postHogApiKey: string = null;
+
+    originalPostHogApiHost: string = null;
+    postHogApiHost: string = null;
+
     isLoadingInfo: boolean = false;
     isSavingStudio: boolean = false;
     isManagingStore: boolean = false;
@@ -156,7 +162,7 @@ export default class AuthStudio extends Vue {
     verifyingDomain: string = null;
     deletingDomain: string = null;
     domainError: string = null;
-    verificationRecord: DomainNameVerificationDNSRecord = null;
+    verificationRecords: DomainNameVerificationDNSRecord[] = null;
 
     errors: FormError[] = [];
 
@@ -340,7 +346,7 @@ export default class AuthStudio extends Vue {
         this.showCustomDomains = true;
         this.newDomainName = '';
         this.domainError = null;
-        this.verificationRecord = null;
+        this.verificationRecords = null;
         await this.loadCustomDomains();
     }
 
@@ -348,7 +354,7 @@ export default class AuthStudio extends Vue {
         this.showCustomDomains = false;
         this.newDomainName = '';
         this.domainError = null;
-        this.verificationRecord = null;
+        this.verificationRecords = null;
     }
 
     async loadCustomDomains() {
@@ -375,7 +381,7 @@ export default class AuthStudio extends Vue {
         try {
             this.addingDomain = true;
             this.domainError = null;
-            this.verificationRecord = null;
+            this.verificationRecords = null;
 
             const result = await authManager.client.addCustomDomain({
                 studioId: this.studioId,
@@ -389,11 +395,7 @@ export default class AuthStudio extends Vue {
             }
 
             // Store verification record for display
-            this.verificationRecord = {
-                recordType: result.recordType,
-                value: result.value,
-                ttlSeconds: result.ttlSeconds,
-            };
+            this.verificationRecords = result.items;
 
             // Reload the domains list
             await this.loadCustomDomains();
@@ -428,7 +430,7 @@ export default class AuthStudio extends Vue {
 
             // Clear verification instructions if visible
             if (this.newDomainName === domain.domainName) {
-                this.verificationRecord = null;
+                this.verificationRecords = null;
             }
         } catch (error) {
             console.error('Error verifying domain:', error);
@@ -459,7 +461,7 @@ export default class AuthStudio extends Vue {
 
             // Clear verification instructions if this was the domain being added
             if (this.newDomainName === domain.domainName) {
-                this.verificationRecord = null;
+                this.verificationRecords = null;
                 this.newDomainName = '';
             }
 
@@ -580,6 +582,22 @@ export default class AuthStudio extends Vue {
                 hasUpdate = true;
             }
 
+            if (this.postHogApiKey !== this.originalPostHogApiKey) {
+                update.playerConfig = {
+                    ...(update.playerConfig || {}),
+                    postHogApiKey: this.postHogApiKey || null,
+                };
+                hasUpdate = true;
+            }
+
+            if (this.postHogApiHost !== this.originalPostHogApiHost) {
+                update.playerConfig = {
+                    ...(update.playerConfig || {}),
+                    postHogApiHost: this.postHogApiHost || null,
+                };
+                hasUpdate = true;
+            }
+
             if (
                 this.loomPrivateKey ||
                 this.loomPublicAppId !== this.originalLoomPublicAppId
@@ -637,6 +655,8 @@ export default class AuthStudio extends Vue {
                 this.originalJitsiAppName = this.jitsiAppName;
                 this.originalWhat3WordsApiKey = this.what3WordsApiKey;
                 this.originalLoomPublicAppId = this.loomPublicAppId;
+                this.originalPostHogApiHost = this.postHogApiHost;
+                this.originalPostHogApiKey = this.postHogApiKey;
                 this.loomPrivateKey = null;
                 this.originalHumeApiKey = this.humeApiKey;
                 this.humeSecretKey = null;
@@ -723,6 +743,10 @@ export default class AuthStudio extends Vue {
                     result.studio.loomConfig?.appId ?? null;
                 this.originalHumeApiKey = this.humeApiKey =
                     result.studio.humeConfig?.apiKey ?? null;
+                this.originalPostHogApiKey = this.postHogApiKey =
+                    result.studio.playerConfig?.postHogApiKey ?? null;
+                this.originalPostHogApiHost = this.postHogApiHost =
+                    result.studio.playerConfig?.postHogApiHost ?? null;
                 this.loomPrivateKey = null;
                 this.humeSecretKey = null;
             }

@@ -168,6 +168,18 @@
                     <md-table-cell>comID.what3WordsApiKey</md-table-cell>
                     <md-table-cell>{{ originalWhat3WordsApiKey || '(default)' }}</md-table-cell>
                 </md-table-row>
+                <md-table-row @click="updatePlayerConfig()">
+                    <md-tooltip>The API Key that should be used for PostHog analytics.</md-tooltip>
+                    <md-table-cell>comID.postHogApiKey</md-table-cell>
+                    <md-table-cell>{{ originalPostHogApiKey || '(default)' }}</md-table-cell>
+                </md-table-row>
+                <md-table-row @click="updatePlayerConfig()">
+                    <md-tooltip
+                        >The HTTP Host that should be used for PostHog analytics.</md-tooltip
+                    >
+                    <md-table-cell>comID.postHogApiHost</md-table-cell>
+                    <md-table-cell>{{ originalPostHogApiHost || '(default)' }}</md-table-cell>
+                </md-table-row>
                 <md-table-row v-if="allowLoom" @click="updateLoomConfig()">
                     <md-tooltip
                         >The public App ID of the Loom app that should be used for the
@@ -385,6 +397,23 @@
                         mapPortal uses.</span
                     >
                     <field-errors field="playerConfig.arcGisApiKey" :errors="errors" />
+                </md-field>
+                <md-field :class="postHogApiKeyFieldClass">
+                    <label for="postHogApiKey">comID.postHogApiKey</label>
+                    <md-input id="postHogApiKey" v-model="postHogApiKey" type="text"></md-input>
+                    <span class="md-helper-text"
+                        >The <a href="https://posthog.com/">PostHog</a> API Key that CasualOS uses
+                        for analytics.</span
+                    >
+                    <field-errors field="playerConfig.postHogApiKey" :errors="errors" />
+                </md-field>
+                <md-field :class="postHogApiHostFieldClass">
+                    <label for="postHogApiHost">comID.postHogApiHost</label>
+                    <md-input id="postHogApiHost" v-model="postHogApiHost" type="text"></md-input>
+                    <span class="md-helper-text"
+                        >The HTTP Host that CasualOS should use for PostHog analytics.</span
+                    >
+                    <field-errors field="playerConfig.postHogApiHost" :errors="errors" />
                 </md-field>
                 <field-errors :field="null" :errors="errors" />
             </md-dialog-content>
@@ -661,19 +690,23 @@
                         </md-button>
                     </div>
 
-                    <div v-if="verificationRecord" class="verification-instructions">
+                    <div v-if="verificationRecords" class="verification-instructions">
                         <h3>Verification Instructions</h3>
                         <p>
                             To verify your domain <strong>{{ newDomainName }}</strong
-                            >, add the following DNS record:
+                            >, add the following DNS records:
                         </p>
-                        <div class="dns-record">
-                            <p><strong>Type:</strong> {{ verificationRecord.recordType }}</p>
-                            <p><strong>Value:</strong> {{ verificationRecord.value }}</p>
-                            <p><strong>TTL:</strong> {{ verificationRecord.ttlSeconds }} seconds</p>
+                        <div
+                            class="dns-record"
+                            v-for="record in verificationRecords"
+                            :key="record.id"
+                        >
+                            <p><strong>Type:</strong> {{ record.recordType }}</p>
+                            <p><strong>Value:</strong> {{ record.value }}</p>
+                            <p><strong>TTL:</strong> {{ record.ttlSeconds }} seconds</p>
                         </div>
                         <p>
-                            After adding the DNS record, click the verify button next to the domain
+                            After adding the DNS records, click the verify button next to the domain
                             to check verification status.
                         </p>
                     </div>

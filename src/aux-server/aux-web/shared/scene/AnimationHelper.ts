@@ -242,6 +242,12 @@ export class AnimationHelper {
                 !isPlayingPreviousClip &&
                 hasValue(options.fadeDuration)
             ) {
+                if (previousClip) {
+                    previousClip.stop();
+                    if (cancelPreviousClip) {
+                        cancelPreviousClip();
+                    }
+                }
                 clip.fadeIn(
                     realNumberOrDefault(options.fadeDuration / 1000, 0)
                 );
@@ -297,7 +303,9 @@ export class AnimationHelper {
                         if (clip.isRunning()) {
                             clip.stop();
                         }
-                        mixer.currentClip = null;
+                        if (!clip.clampWhenFinished) {
+                            mixer.currentClip = null;
+                        }
                         mixer.state = 'stopped';
                         for (let sub of mixer.subscriptions) {
                             sub.startLocalMixer();
@@ -389,6 +397,12 @@ export class AnimationHelper {
 
             const stopAnimation = () => {
                 cancelCurrentClip(true);
+                // Ensure clamped animations are fully stopped,
+                // since the finish listener preserves them.
+                currentClip.stop();
+                if (mixer.currentClip === currentClip) {
+                    mixer.currentClip = null;
+                }
                 resolve();
 
                 const animationStopArg = {

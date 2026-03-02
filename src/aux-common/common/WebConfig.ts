@@ -256,6 +256,21 @@ export interface WebConfig {
         favicon?: string | null;
         appleTouchIcon?: string | null;
     };
+
+    /**
+     * The API key that should be used for PostHog analytics. If not specified, then PostHog will not be initialized.
+     */
+    postHogApiKey?: string | null;
+
+    /**
+     * The HTTP host that should be used for PostHog analytics. If not specified, then the default PostHog cloud host will be used.
+     */
+    postHogApiHost?: string | null;
+
+    /**
+     * Whether to enable simple analytics. Defaults to false.
+     */
+    enableSimpleAnalytics?: boolean | null;
 }
 
 /**
@@ -364,6 +379,29 @@ export const WEB_CONFIG_SCHEMA = z.object({
         .describe('The set of icons that should be used for the web client.'),
 
     supportUrl: z.string().min(1).nullable().optional(),
+
+    postHogApiKey: z
+        .string()
+        .min(1)
+        .nullable()
+        .optional()
+        .describe(
+            'The API key that should be used for PostHog analytics. If not specified, then PostHog will not be initialized.'
+        ),
+    postHogApiHost: z
+        .string()
+        .min(1)
+        .nullable()
+        .optional()
+        .describe(
+            'The HTTP host that should be used for PostHog analytics. If not specified, then the default PostHog cloud host will be used.'
+        ),
+
+    enableSimpleAnalytics: z
+        .boolean()
+        .nullable()
+        .optional()
+        .describe('Whether to enable simple analytics. Defaults to false.'),
 });
 
 export function parseWebConfig(
