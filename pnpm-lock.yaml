@@ -565,19 +565,19 @@ importers:
         specifier: ^4.1.4
         version: link:../aux-common
       '@casual-simulation/aux-vm':
-        specifier: ^4.1.4
+        specifier: ^4.1.5
         version: link:../aux-vm
       '@casual-simulation/aux-vm-browser':
-        specifier: ^4.1.4
+        specifier: ^4.1.5
         version: link:../aux-vm-browser
       '@casual-simulation/aux-vm-client':
-        specifier: ^4.1.4
+        specifier: ^4.1.5
         version: link:../aux-vm-client
       '@casual-simulation/aux-vm-deno':
-        specifier: ^4.1.4
+        specifier: ^4.1.5
         version: link:../aux-vm-deno
       '@casual-simulation/aux-vm-node':
-        specifier: ^4.1.4
+        specifier: ^4.1.5
         version: link:../aux-vm-node
       '@casual-simulation/crypto':
         specifier: ^4.0.5
@@ -860,7 +860,7 @@ importers:
         specifier: ^4.1.4
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^4.1.4
+        specifier: ^4.1.5
         version: link:../aux-records
       axios:
         specifier: 1.7.7
@@ -884,7 +884,7 @@ importers:
         specifier: ^4.1.4
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^4.1.4
+        specifier: ^4.1.5
         version: link:../aux-records
       '@casual-simulation/crypto':
         specifier: ^4.0.5
@@ -1047,28 +1047,28 @@ importers:
         specifier: ^4.1.4
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^4.1.4
+        specifier: ^4.1.5
         version: link:../aux-records
       '@casual-simulation/aux-records-aws':
-        specifier: ^4.1.4
+        specifier: ^4.1.5
         version: link:../aux-records-aws
       '@casual-simulation/aux-runtime':
-        specifier: ^4.1.4
+        specifier: ^4.1.5
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^4.1.4
+        specifier: ^4.1.5
         version: link:../aux-vm
       '@casual-simulation/aux-vm-browser':
-        specifier: ^4.1.4
+        specifier: ^4.1.5
         version: link:../aux-vm-browser
       '@casual-simulation/aux-vm-client':
-        specifier: ^4.1.4
+        specifier: ^4.1.5
         version: link:../aux-vm-client
       '@casual-simulation/aux-vm-deno':
-        specifier: ^4.1.4
+        specifier: ^4.1.5
         version: link:../aux-vm-deno
       '@casual-simulation/aux-vm-node':
-        specifier: ^4.1.4
+        specifier: ^4.1.5
         version: link:../aux-vm-node
       '@casual-simulation/crypto':
         specifier: ^4.0.5
@@ -1417,7 +1417,7 @@ importers:
         version: 4.1.12
     devDependencies:
       '@casual-simulation/aux-components':
-        specifier: ^4.1.4
+        specifier: ^4.1.5
         version: link:../aux-components
       '@rollup/plugin-virtual':
         specifier: 3.0.2
@@ -1507,10 +1507,10 @@ importers:
         specifier: ^4.1.4
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^4.1.4
+        specifier: ^4.1.5
         version: link:../aux-records
       '@casual-simulation/aux-runtime':
-        specifier: ^4.1.4
+        specifier: ^4.1.5
         version: link:../aux-runtime
       '@casual-simulation/crypto':
         specifier: ^4.0.5
@@ -1558,16 +1558,16 @@ importers:
         specifier: ^4.1.4
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^4.1.4
+        specifier: ^4.1.5
         version: link:../aux-records
       '@casual-simulation/aux-runtime':
-        specifier: ^4.1.4
+        specifier: ^4.1.5
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^4.1.4
+        specifier: ^4.1.5
         version: link:../aux-vm
       '@casual-simulation/aux-vm-client':
-        specifier: ^4.1.4
+        specifier: ^4.1.5
         version: link:../aux-vm-client
       '@casual-simulation/aux-websocket':
         specifier: ^4.1.4
@@ -1616,10 +1616,10 @@ importers:
         specifier: ^4.1.4
         version: link:../aux-common
       '@casual-simulation/aux-runtime':
-        specifier: ^4.1.4
+        specifier: ^4.1.5
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^4.1.4
+        specifier: ^4.1.5
         version: link:../aux-vm
       '@casual-simulation/aux-websocket':
         specifier: ^4.1.4
@@ -1658,13 +1658,13 @@ importers:
         specifier: ^4.1.4
         version: link:../aux-common
       '@casual-simulation/aux-runtime':
-        specifier: ^4.1.4
+        specifier: ^4.1.5
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^4.1.4
+        specifier: ^4.1.5
         version: link:../aux-vm
       '@casual-simulation/aux-vm-client':
-        specifier: ^4.1.4
+        specifier: ^4.1.5
         version: link:../aux-vm-client
       '@casual-simulation/crypto':
         specifier: ^4.0.5
@@ -1694,13 +1694,13 @@ importers:
         specifier: ^4.1.4
         version: link:../aux-common
       '@casual-simulation/aux-runtime':
-        specifier: ^4.1.4
+        specifier: ^4.1.5
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^4.1.4
+        specifier: ^4.1.5
         version: link:../aux-vm
       '@casual-simulation/aux-vm-client':
-        specifier: ^4.1.4
+        specifier: ^4.1.5
         version: link:../aux-vm-client
       '@casual-simulation/crypto':
         specifier: ^4.0.5
@@ -1751,13 +1751,13 @@ importers:
         specifier: ^4.1.4
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^4.1.4
+        specifier: ^4.1.5
         version: link:../aux-records
       '@casual-simulation/aux-runtime':
-        specifier: ^4.1.4
+        specifier: ^4.1.5
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^4.1.4
+        specifier: ^4.1.5
         version: link:../aux-vm
       '@octokit/app':
         specifier: ^15.1.0
@@ -9999,6 +9999,7 @@ packages:
   git-raw-commits@3.0.0:
     resolution: {integrity: sha512-b5OHmZ3vAgGrDn/X0kS+9qCfNKWe4K/jFnhwzVWWg0/k5eLa3060tZShrRg8Dja5kPc+YjS0Gc6y7cRr44Lpjw==}
     engines: {node: '>=14'}
+    deprecated: This package is no longer maintained. For the JavaScript API, please use @conventional-changelog/git-client instead.
     hasBin: true
 
   git-remote-origin-url@2.0.0:
@@ -10008,6 +10009,7 @@ packages:
   git-semver-tags@5.0.1:
     resolution: {integrity: sha512-hIvOeZwRbQ+7YEUmCkHqo8FOLQZCEn18yevLHADlFPZY02KJGsu5FZt9YW/lybfK2uhWFI7Qg/07LekJiTv7iA==}
     engines: {node: '>=14'}
+    deprecated: This package is no longer maintained. For the JavaScript API, please use @conventional-changelog/git-client instead.
     hasBin: true
 
   git-up@7.0.0:
