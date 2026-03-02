@@ -4,6 +4,10 @@
 
 #### Date: TBD
 
+### :rocket: Features
+
+-   Added `analytics.recordEvent()` to also send events to PostHog when configured and enabled, while continuing to send to Simple Analytics when available, and returning an error when neither analytics provider is available.
+
 ### :bug: Bug Fixes
 
 -   Fixed freeze caused by pressing <kbd>Shift</kbd> key on keyboard form.
