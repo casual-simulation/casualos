@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V4.1.6
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue when trying to read cached default values from Redis.
+
 ## V4.1.5
 
 #### Date: 3/2/2026
