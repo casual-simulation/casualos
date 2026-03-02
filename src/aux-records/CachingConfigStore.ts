@@ -23,7 +23,11 @@ import type {
     ConfigurationOutput,
 } from './ConfigurationStore';
 import {
+    CONFIGURATION_SCHEMAS_MAP,
+    MODERATION_CONFIG_KEY,
     PLAYER_WEB_MANIFEST_KEY,
+    PRIVO_CONFIG_KEY,
+    SUBSCRIPTIONS_CONFIG_KEY,
     WEB_CONFIG_KEY,
     type ConfigurationStore,
 } from './ConfigurationStore';
@@ -74,7 +78,23 @@ export class CachingConfigStore implements ConfigurationStore {
         );
 
         if (typeof cached !== 'undefined') {
-            return cached;
+            if (cached) {
+                const schema = CONFIGURATION_SCHEMAS_MAP[key];
+                const parsed = schema.safeParse(cached);
+
+                if (!parsed.success) {
+                    console.warn(
+                        `Cached configuration for key "${key}" is invalid:`,
+                        parsed.error
+                    );
+                    await this._cache.remove(key);
+                } else {
+                    return parsed.data as ConfigurationOutput<TKey>;
+                }
+            } else {
+                // If null is cached, return that instead of hitting the store again.
+                return cached;
+            }
         }
 
         const result = await this._store.getConfiguration(key, defaultValue);
@@ -84,82 +104,92 @@ export class CachingConfigStore implements ConfigurationStore {
     }
 
     @traced(TRACE_NAME)
-    async getWebConfig(): Promise<WebConfig | null> {
-        const cached = await this._cache.retrieve<WebConfig>(WEB_CONFIG_KEY);
+    private async _getConfiguration<TKey extends ConfigurationKey>(
+        key: TKey,
+        retrieve: () => Promise<ConfigurationOutput<TKey> | null>
+    ): Promise<ConfigurationOutput<TKey> | null> {
+        const cached = await this._cache.retrieve<ConfigurationOutput<TKey>>(
+            key
+        );
 
         if (typeof cached !== 'undefined') {
-            return cached;
+            if (cached) {
+                const schema = CONFIGURATION_SCHEMAS_MAP[key];
+                const parsed = schema.safeParse(cached);
+
+                if (!parsed.success) {
+                    console.warn(
+                        `Cached configuration for key "${key}" is invalid:`,
+                        parsed.error
+                    );
+                    await this._cache.remove(key);
+                } else {
+                    return parsed.data as ConfigurationOutput<TKey>;
+                }
+            } else {
+                // If null is cached, return that instead of hitting the store again.
+                return cached;
+            }
         }
 
-        const result = await this._store.getWebConfig();
-        await this._cache.store(WEB_CONFIG_KEY, result, this._cacheSeconds);
+        const result = await retrieve();
+        await this._cache.store(key, result, this._cacheSeconds);
 
         return result;
+    }
+
+    @traced(TRACE_NAME)
+    async getWebConfig(): Promise<WebConfig | null> {
+        return (await this._getConfiguration(
+            WEB_CONFIG_KEY,
+            async () =>
+                (await this._store.getWebConfig()) as ConfigurationOutput<
+                    typeof WEB_CONFIG_KEY
+                > | null
+        )) as WebConfig | null;
     }
 
     @traced(TRACE_NAME)
     async getPlayerWebManifest(): Promise<WebManifest | null> {
-        const cached = await this._cache.retrieve<WebManifest>(
-            PLAYER_WEB_MANIFEST_KEY
-        );
-
-        if (typeof cached !== 'undefined') {
-            return cached;
-        }
-
-        const result = await this._store.getPlayerWebManifest();
-        await this._cache.store(
+        return (await this._getConfiguration(
             PLAYER_WEB_MANIFEST_KEY,
-            result,
-            this._cacheSeconds
-        );
-
-        return result;
+            async () =>
+                (await this._store.getPlayerWebManifest()) as ConfigurationOutput<
+                    typeof PLAYER_WEB_MANIFEST_KEY
+                > | null
+        )) as WebManifest | null;
     }
 
     @traced(TRACE_NAME)
-    async getSubscriptionConfiguration(): Promise<SubscriptionConfiguration> {
-        const cached = await this._cache.retrieve<SubscriptionConfiguration>(
-            'subscriptions'
-        );
-
-        if (typeof cached !== 'undefined') {
-            return cached;
-        }
-
-        const result = await this._store.getSubscriptionConfiguration();
-        await this._cache.store('subscriptions', result, this._cacheSeconds);
-
-        return result;
+    async getSubscriptionConfiguration(): Promise<SubscriptionConfiguration | null> {
+        return (await this._getConfiguration(
+            SUBSCRIPTIONS_CONFIG_KEY,
+            async () =>
+                (await this._store.getSubscriptionConfiguration()) as ConfigurationOutput<
+                    typeof SUBSCRIPTIONS_CONFIG_KEY
+                > | null
+        )) as SubscriptionConfiguration | null;
     }
 
     @traced(TRACE_NAME)
     async getPrivoConfiguration(): Promise<PrivoConfiguration> {
-        const cached = await this._cache.retrieve<PrivoConfiguration>('privo');
-
-        if (typeof cached !== 'undefined') {
-            return cached;
-        }
-
-        const result = await this._store.getPrivoConfiguration();
-        await this._cache.store('privo', result, this._cacheSeconds);
-
-        return result;
+        return (await this._getConfiguration(
+            PRIVO_CONFIG_KEY,
+            async () =>
+                (await this._store.getPrivoConfiguration()) as ConfigurationOutput<
+                    typeof PRIVO_CONFIG_KEY
+                > | null
+        )) as PrivoConfiguration;
     }
 
     @traced(TRACE_NAME)
     async getModerationConfig(): Promise<ModerationConfiguration> {
-        const cached = await this._cache.retrieve<ModerationConfiguration>(
-            'moderation'
-        );
-
-        if (typeof cached !== 'undefined') {
-            return cached;
-        }
-
-        const result = await this._store.getModerationConfig();
-        await this._cache.store('moderation', result, this._cacheSeconds);
-
-        return result;
+        return (await this._getConfiguration(
+            MODERATION_CONFIG_KEY,
+            async () =>
+                (await this._store.getModerationConfig()) as ConfigurationOutput<
+                    typeof MODERATION_CONFIG_KEY
+                > | null
+        )) as ModerationConfiguration;
     }
 }

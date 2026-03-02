@@ -72,8 +72,13 @@ export class SqliteConfigurationStore implements ConfigurationStore {
         } else if (key === 'subscriptions') {
             return this._defaultConfiguration
                 .subscriptions as ConfigurationOutput<TKey>;
+        } else if (key === 'metadata') {
+            return this._defaultConfiguration.meta as ConfigurationOutput<TKey>;
         }
 
+        console.warn(
+            `[${TRACE_NAME}] No default value found for configuration key: ${key}`
+        );
         return null;
     }
 

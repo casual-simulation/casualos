@@ -6958,6 +6958,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
               "web",
               "playerWebManifest",
               "ab1Bootstrap",
+              "metadata",
             ],
           },
         },
@@ -10161,6 +10162,46 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                   },
                 ],
                 "type": "union",
+              },
+            },
+            "type": "object",
+          },
+          Object {
+            "schema": Object {
+              "key": Object {
+                "type": "literal",
+                "value": "metadata",
+              },
+              "value": Object {
+                "schema": Object {
+                  "apiOrigin": Object {
+                    "description": "The HTTP origin that the API is available at.",
+                    "type": "string",
+                  },
+                  "frontendOrigin": Object {
+                    "description": "The HTTP origin that the CasualOS frontend (player) is available at.",
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "websocketOrigin": Object {
+                    "description": "The HTTP origin that the Websocket API is available at.",
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "websocketProtocol": Object {
+                    "description": "The protocol that should be used to connect to the websocket origin.",
+                    "nullable": true,
+                    "optional": true,
+                    "type": "enum",
+                    "values": Array [
+                      "websocket",
+                      "apiary-aws",
+                    ],
+                  },
+                },
+                "type": "object",
               },
             },
             "type": "object",
@@ -17134,6 +17175,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
               "web",
               "playerWebManifest",
               "ab1Bootstrap",
+              "metadata",
             ],
           },
         },
@@ -20337,6 +20379,46 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                   },
                 ],
                 "type": "union",
+              },
+            },
+            "type": "object",
+          },
+          Object {
+            "schema": Object {
+              "key": Object {
+                "type": "literal",
+                "value": "metadata",
+              },
+              "value": Object {
+                "schema": Object {
+                  "apiOrigin": Object {
+                    "description": "The HTTP origin that the API is available at.",
+                    "type": "string",
+                  },
+                  "frontendOrigin": Object {
+                    "description": "The HTTP origin that the CasualOS frontend (player) is available at.",
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "websocketOrigin": Object {
+                    "description": "The HTTP origin that the Websocket API is available at.",
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "websocketProtocol": Object {
+                    "description": "The protocol that should be used to connect to the websocket origin.",
+                    "nullable": true,
+                    "optional": true,
+                    "type": "enum",
+                    "values": Array [
+                      "websocket",
+                      "apiary-aws",
+                    ],
+                  },
+                },
+                "type": "object",
               },
             },
             "type": "object",

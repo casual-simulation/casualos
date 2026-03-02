@@ -1735,6 +1735,8 @@ model CustomDomain {
     // The HMAC-SHA-256 key used to validate requests for this domain
     verificationKey String
 
+    expectedHostName String?
+
     // Whether the domain has been verified
     // Null if not yet verified
     verified Boolean?

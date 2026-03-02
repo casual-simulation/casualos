@@ -162,7 +162,7 @@ export default class AuthStudio extends Vue {
     verifyingDomain: string = null;
     deletingDomain: string = null;
     domainError: string = null;
-    verificationRecord: DomainNameVerificationDNSRecord = null;
+    verificationRecords: DomainNameVerificationDNSRecord[] = null;
 
     errors: FormError[] = [];
 
@@ -346,7 +346,7 @@ export default class AuthStudio extends Vue {
         this.showCustomDomains = true;
         this.newDomainName = '';
         this.domainError = null;
-        this.verificationRecord = null;
+        this.verificationRecords = null;
         await this.loadCustomDomains();
     }
 
@@ -354,7 +354,7 @@ export default class AuthStudio extends Vue {
         this.showCustomDomains = false;
         this.newDomainName = '';
         this.domainError = null;
-        this.verificationRecord = null;
+        this.verificationRecords = null;
     }
 
     async loadCustomDomains() {
@@ -381,7 +381,7 @@ export default class AuthStudio extends Vue {
         try {
             this.addingDomain = true;
             this.domainError = null;
-            this.verificationRecord = null;
+            this.verificationRecords = null;
 
             const result = await authManager.client.addCustomDomain({
                 studioId: this.studioId,
@@ -395,11 +395,7 @@ export default class AuthStudio extends Vue {
             }
 
             // Store verification record for display
-            this.verificationRecord = {
-                recordType: result.recordType,
-                value: result.value,
-                ttlSeconds: result.ttlSeconds,
-            };
+            this.verificationRecords = result.items;
 
             // Reload the domains list
             await this.loadCustomDomains();
@@ -434,7 +430,7 @@ export default class AuthStudio extends Vue {
 
             // Clear verification instructions if visible
             if (this.newDomainName === domain.domainName) {
-                this.verificationRecord = null;
+                this.verificationRecords = null;
             }
         } catch (error) {
             console.error('Error verifying domain:', error);
@@ -465,7 +461,7 @@ export default class AuthStudio extends Vue {
 
             // Clear verification instructions if this was the domain being added
             if (this.newDomainName === domain.domainName) {
-                this.verificationRecord = null;
+                this.verificationRecords = null;
                 this.newDomainName = '';
             }
 

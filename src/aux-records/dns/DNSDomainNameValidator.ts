@@ -35,7 +35,8 @@ import { hmac, sha256 } from 'hash.js';
 export class DNSDomainNameValidator implements DomainNameValidator {
     async validateDomainName(
         domainName: string,
-        verificationKey: string
+        verificationKey: string,
+        expectedHostName: string
     ): Promise<Result<void, SimpleError>> {
         console.log(
             `[DNSDomainNameValidator] Validating domain name: ${domainName}`
@@ -58,17 +59,36 @@ export class DNSDomainNameValidator implements DomainNameValidator {
             }
         }
 
+        const cnameRecords = await dns.resolveCname(domainName);
+        console.log(
+            `[DNSDomainNameValidator] Retrieved CNAME records:`,
+            cnameRecords
+        );
+        if (cnameRecords.length >= 2) {
+            return failure({
+                errorCode: 'record_already_exists',
+                errorMessage:
+                    'Multiple CNAME records found for the domain name. Please ensure that only one CNAME record is set for the domain name.',
+            });
+        }
+        for (let cname of cnameRecords) {
+            if (cname.trim() === expectedHostName) {
+                return success();
+            }
+        }
+
         return failure({
             errorCode: 'not_found',
             errorMessage:
-                'A valid DNS TXT record was not found for the domain name.',
+                'Valid DNS TXT and CNAME records were not found for the domain name.',
         });
     }
 
     async getVerificationDNSRecord(
         domainName: string,
-        verificationKey: string
-    ): Promise<Result<DomainNameVerificationDNSRecord, SimpleError>> {
+        verificationKey: string,
+        expectedHostName: string
+    ): Promise<Result<DomainNameVerificationDNSRecord[], SimpleError>> {
         const hash = this._generateVerificationHash(
             domainName,
             verificationKey
@@ -78,7 +98,14 @@ export class DNSDomainNameValidator implements DomainNameValidator {
             value: `casualos-verification=${hash}`,
             ttlSeconds: 32600,
         };
-        return success(record);
+        return success([
+            record,
+            {
+                recordType: 'CNAME',
+                value: expectedHostName,
+                ttlSeconds: 32600,
+            },
+        ]);
     }
 
     private _generateVerificationHash(

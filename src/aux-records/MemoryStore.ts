@@ -140,6 +140,7 @@ import type {
     AIOpenAIRealtimeSubscriptionMetrics,
     AIOpenAIRealtimeMetrics,
 } from './MetricsStore';
+import type { ServerMetadata } from './ConfigurationStore';
 import {
     CONFIGURATION_SCHEMAS_MAP,
     type ConfigurationInput,
@@ -263,6 +264,12 @@ export class MemoryStore
 
     private _financialAccounts: FinancialAccount[] = [];
     private _customDomains: CustomDomain[] = [];
+    private _serverMetadata: {
+        apiOrigin: string;
+        frontendOrigin?: string;
+        websocketOrigin?: string;
+        websocketProtocol?: 'websocket' | 'apiary-aws';
+    };
 
     get aiOpenAIRealtimeMetrics(): AIOpenAIRealtimeMetrics[] {
         return this._aiRealtimeMetrics;
@@ -523,6 +530,8 @@ export class MemoryStore
             this._playerWebManifest = finalValue as WebManifest;
         } else if (key === 'ab1Bootstrap') {
             this._ab1Bootstrap = finalValue as StoredAux;
+        } else if (key === 'metadata') {
+            this._serverMetadata = finalValue as ServerMetadata;
         } else {
             throw new Error('Unsupported configuration key: ' + key);
         }
@@ -559,6 +568,11 @@ export class MemoryStore
                     .parse(defaultValue ?? null)) as ConfigurationOutput<TKey>;
         } else if (key === 'ab1Bootstrap') {
             return (this._ab1Bootstrap ?? null) as ConfigurationOutput<TKey>;
+        } else if (key === 'metadata') {
+            return (this._serverMetadata ??
+                CONFIGURATION_SCHEMAS_MAP[key]
+                    .nullable()
+                    .parse(defaultValue ?? null)) as ConfigurationOutput<TKey>;
         } else {
             throw new Error('Unsupported configuration key: ' + key);
         }
@@ -609,6 +623,7 @@ export class MemoryStore
             studioId: domain.studioId,
             verificationKey: domain.verificationKey,
             verified: domain.verified,
+            expectedHostName: domain.expectedHostName,
             studio,
         };
     }
@@ -632,6 +647,7 @@ export class MemoryStore
             studioId: domain.studioId,
             verificationKey: domain.verificationKey,
             verified: domain.verified,
+            expectedHostName: domain.expectedHostName,
             studio,
         };
     }

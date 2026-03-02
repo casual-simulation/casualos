@@ -26,21 +26,25 @@ export interface DomainNameValidator {
      * Validates the given domain name using the provided verification key.
      * @param domainName The domain name to validate.
      * @param verificationKey The verification key to use for validation.
+     * @param expectedHostName The expected host name that should be set in the CNAME record for validation.
      */
     validateDomainName(
         domainName: string,
-        verificationKey: string
+        verificationKey: string,
+        expectedHostName: string
     ): Promise<Result<void, SimpleError>>;
 
     /**
-     * Gets the DNS record that should be set for verifying the given domain name.
-     * @param domainName The domain name to get the verification record for.
-     * @param verificationKey The verification key to use for generating the record.
+     * Gets the DNS records that should be set for verifying the given domain name.
+     * @param domainName The domain name to get the verification records for.
+     * @param verificationKey The verification key to use for generating the records.
+     * @param expectedHostName The expected host name that should be set in the CNAME record for validation.
      */
     getVerificationDNSRecord(
         domainName: string,
-        verificationKey: string
-    ): Promise<Result<DomainNameVerificationDNSRecord, SimpleError>>;
+        verificationKey: string,
+        expectedHostName: string
+    ): Promise<Result<DomainNameVerificationDNSRecord[], SimpleError>>;
 }
 
 /**
@@ -50,7 +54,7 @@ export interface DomainNameVerificationDNSRecord {
     /**
      * The type of DNS record that should be set for the verification.
      */
-    recordType: 'TXT';
+    recordType: 'TXT' | 'CNAME';
 
     /**
      * The value that should be set for the verification record.

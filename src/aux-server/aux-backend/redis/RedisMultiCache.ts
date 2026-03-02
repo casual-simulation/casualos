@@ -66,7 +66,15 @@ export class RedisCache implements Cache {
     @traced(TRACE_NAME, SPAN_OPTIONS)
     async store<T>(key: string, data: T, expireSeconds: number): Promise<void> {
         const k = `${this._namespace}/${key}`;
-        await this._redis.set(k, JSON.stringify(data));
+        await this._redis.set(
+            k,
+            JSON.stringify(data ?? '-', (key, value) => {
+                if (typeof value === 'bigint') {
+                    return value.toString();
+                }
+                return value;
+            })
+        );
         await this._redis.expire(k, expireSeconds);
     }
 
@@ -75,6 +83,9 @@ export class RedisCache implements Cache {
         const k = `${this._namespace}/${key}`;
         const result = await this._redis.get(k);
         if (result) {
+            if (result === '-') {
+                return null as any;
+            }
             return JSON.parse(result);
         } else {
             return undefined;

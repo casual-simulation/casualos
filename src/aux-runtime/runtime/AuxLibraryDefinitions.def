@@ -7959,6 +7959,18 @@ declare class Vector2 {
      * Normalizing a vector preserves its directionality while making the length (i.e. scale) of it 1.
      */
     normalize(): Vector2;
+
+    /**
+     * Negates each component of this vector and returns a new vector that contains the result.
+     *
+     * @example Negate a vector.
+     * const myVector = new Vector2(1, 2);
+     * const negated = myVector.negate();
+     *
+     * os.toast(`Vector: ${myVector}, Negated: ${negated}`);
+     */
+    negate(): Vector2;
+
     toString(): string;
     /**
      * Determines if this vector equals the other vector.
@@ -8085,6 +8097,18 @@ declare class Vector3 {
      * A normalized vector is a vector whose length equals 1.
      */
     normalize(): Vector3;
+
+    /**
+     * Negates each component of this vector and returns a new vector that contains the result.
+     *
+     * @example Negate a vector.
+     * const myVector = new Vector3(1, 2, 3);
+     * const negated = myVector.negate();
+     *
+     * os.toast(`Vector: ${myVector}, Negated: ${negated}`);
+     */
+    negate(): Vector3;
+
     toString(): string;
     /**
      * Determines if this vector equals the other vector.
@@ -18094,6 +18118,36 @@ interface Math {
      * @param pointerRotation The rotation that the pointer has represented in radians.
      */
     getForwardDirection(pointerRotation: RawRotation | Rotation): Vector3;
+
+    /**
+     * Converts the given number of [degrees](https://en.wikipedia.org/wiki/Degree_(angle)) to [radians](https://en.wikipedia.org/wiki/Radian) and returns the result.
+     *
+     * This operation is equivalent to `radians = degrees * (Math.PI / 180)`.
+     *
+     * @param degrees the number of degrees that should be converted to radians.
+     *
+     * @example Get the number of radians for a 90 degree angle
+     * const radians = math.degreesToRadians(90);
+     *
+     * @dochash actions/math
+     * @docname math.degreesToRadians
+     */
+    degreesToRadians(degrees: number): number;
+
+    /**
+     * Converts the given number of [radians](https://en.wikipedia.org/wiki/Radian) to [degrees](https://en.wikipedia.org/wiki/Degree_(angle)) and returns the result.
+     *
+     * This operation is equivalent to `degrees = radians * (180 / Math.PI)`.
+     *
+     * @param radians the number of radians that should be converted to degrees.
+     *
+     * @example Get the number of degrees for a Math.PI / 2 angle
+     * const degrees = math.radiansToDegrees(Math.PI / 2);
+     *
+     * @dochash actions/math
+     * @docname math.radiansToDegrees
+     */
+    radiansToDegrees(radians: number): number;
 
     /**
      * Finds the point at which the the given ray and ground plane intersect.
