@@ -757,6 +757,10 @@ program
         '--allow-duplicates',
         'Whether to allow duplicate bots. If a duplicate is encoutered, then a new bot ID will be generated for the duplicate.'
     )
+    .option(
+        '-a, --aux-version <version>',
+        'The version of aux files to produce. If omitted, then version 1 will be used.'
+    )
     .description('Generate an AUX file from a folder.')
     .action(async (dir, output, options) => {
         if (options.overwrite) {
@@ -771,6 +775,15 @@ program
         if (options.allowDuplicates) {
             console.log('Allowing duplicate bots.');
         }
+
+        options.auxVersion = z.coerce
+            .number()
+            .int()
+            .min(1)
+            .max(2)
+            .default(1)
+            .parse(options.auxVersion);
+
         await auxReadFs(dir, output, options);
     });
 
@@ -1474,6 +1487,8 @@ interface ReadFsOptions {
     filter?: string;
 
     allowDuplicates?: boolean;
+
+    auxVersion?: 1 | 2;
 }
 
 async function auxReadFs(
@@ -1481,7 +1496,7 @@ async function auxReadFs(
     output: string,
     options: ReadFsOptions
 ) {
-    const { overwrite } = options;
+    const { overwrite, auxVersion } = options;
 
     const failOnDuplicate = !options.allowDuplicates;
     if (!input) {
@@ -1538,10 +1553,10 @@ async function auxReadFs(
             failOnDuplicate
         );
 
-        const storedAux: StoredAuxVersion1 = {
-            version: 1,
-            state: botsState,
-        };
+        const storedAux: StoredAux = constructAux(
+            botsState,
+            auxVersion as 1 | 2
+        );
 
         const outputFolder = path.dirname(output);
         if (outputFolder) {
