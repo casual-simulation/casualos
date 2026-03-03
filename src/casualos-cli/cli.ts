@@ -93,7 +93,7 @@ import { existsSync, statSync } from 'node:fs';
 import { mkdir, readdir, stat, writeFile } from 'node:fs/promises';
 import { v4 as uuid } from 'uuid';
 import fastJsonStableStringify from '../fast-json-stable-stringify';
-import { minifyAux } from './minify';
+import { minifyBots } from './minify';
 import {
     resolveRecordFileInfo,
     uploadFile,
@@ -473,7 +473,7 @@ async function convertAuxFile(
     inputPath: string,
     auxVersion: 1 | 2
 ): Promise<Result<StoredAux, SimpleError>> {
-    const fileContent = await readAuxFile(inputPath);
+    const fileContent = await readAuxFileBots(inputPath);
     if (isFailure(fileContent)) {
         return fileContent;
     }
@@ -488,6 +488,10 @@ program
     .description('Minify an AUX file in place.')
     .argument('<input>', 'The AUX file to minify.')
     .option('-t, --target <...targets>', 'The targets to minify for.')
+    .option(
+        '-a, --aux-version <version>',
+        'The version of aux files to produce. If not provided, then the minified file will use the same version as the input file.'
+    )
     .action(async (input, options) => {
         const defaultTargets = ['chrome100'];
         const targets = options.target
@@ -496,30 +500,50 @@ program
                 : [options.target]
             : defaultTargets;
         const inputPath = path.resolve(input);
-        const auxJson = tryParseJson(await readFile(inputPath, 'utf-8'));
+
+        const auxVersion = z.coerce
+            .number()
+            .int()
+            .min(1)
+            .max(2)
+            .nullable()
+            .optional()
+            .parse(options.auxVersion);
+
+        if (
+            auxVersion !== 1 &&
+            auxVersion !== 2 &&
+            auxVersion !== null &&
+            auxVersion !== undefined
+        ) {
+            console.error('Invalid aux version specified. Must be 1 or 2.');
+            process.exit(1);
+        }
+
+        const auxJson = await readAuxFile(inputPath);
 
         if (auxJson.success === false) {
-            throw new Error(`Could not parse aux file: ${auxJson.error}`);
+            console.error(auxJson.error.errorMessage);
+            process.exit(1);
         } else {
             const originalStat = await stat(inputPath);
 
-            const aux = STORED_AUX_SCHEMA.safeParse(auxJson.value);
+            const bots = getBotsStateFromStoredAux(auxJson.value);
+            const minified = await minifyBots(bots, targets);
 
-            if (aux.success === false) {
-                throw new Error(
-                    `Aux file is not a valid stored aux: ${aux.error.toString()}`
-                );
-            }
+            const storedAux = constructAux(
+                minified,
+                (auxVersion ?? auxJson.value.version) as 1 | 2
+            );
 
-            const minified = await minifyAux(aux.data as StoredAux, targets);
-
-            await writeFile(inputPath, JSON.stringify(minified));
+            await writeFile(inputPath, JSON.stringify(storedAux));
 
             const newStat = await stat(inputPath);
             console.log(`Minified aux file: ${inputPath}`);
             console.log(`Original Size: ${originalStat.size} bytes`);
             console.log(`New Size: ${newStat.size} bytes`);
             console.log(`Targets: ${targets.join(', ')}`);
+            console.log(`Version: ${storedAux.version}`);
         }
     });
 
@@ -1538,7 +1562,7 @@ async function auxReadFs(
 
 async function readAuxFile(
     filePath: string
-): Promise<Result<BotsState, SimpleError>> {
+): Promise<Result<StoredAux, SimpleError>> {
     const targetStat = await stat(filePath);
     if (!targetStat.isFile()) {
         throw new Error(`Path is not a file: ${filePath}`);
@@ -1566,7 +1590,18 @@ async function readAuxFile(
         });
     }
 
-    const botsState = getBotsStateFromStoredAux(storedAux.data as StoredAux);
+    return success(storedAux.data as StoredAux);
+}
+
+async function readAuxFileBots(
+    filePath: string
+): Promise<Result<BotsState, SimpleError>> {
+    const auxFileResult = await readAuxFile(filePath);
+    if (auxFileResult.success === false) {
+        return failure(auxFileResult.error);
+    }
+
+    const botsState = getBotsStateFromStoredAux(auxFileResult.value);
     if (!botsState) {
         throw new Error(
             `Aux file at ${filePath} is not a valid (or supported) aux file.`
@@ -1635,7 +1670,7 @@ async function auxReadFsCore(
             if (file.endsWith('.aux')) {
                 console.log(`Reading aux: ${file}`);
                 const isSystemBotFile = file.endsWith('.bot.aux');
-                const auxFile = await readAuxFile(filePath);
+                const auxFile = await readAuxFileBots(filePath);
 
                 if (isFailure(auxFile)) {
                     console.error(auxFile.error.errorMessage);
