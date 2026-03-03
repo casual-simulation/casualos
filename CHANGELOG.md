@@ -43,6 +43,8 @@
         -h, --help                   display help for command
         ```
 
+-   Added the `--aux-version <version>` option to the `pack-aux` CLI command.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue when trying to read cached default values from Redis.
