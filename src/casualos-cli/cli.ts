@@ -334,7 +334,7 @@ program
 program
     .command('minify-aux')
     .description('Minify an AUX file in place.')
-    .argument('[input]', 'The AUX file to minify.')
+    .argument('<input>', 'The AUX file to minify.')
     .option('-t, --target <...targets>', 'The targets to minify for.')
     .action(async (input, options) => {
         const defaultTargets = ['chrome100'];
@@ -374,7 +374,7 @@ program
 program
     .command('check-aux')
     .description('Check if an AUX file is valid and can be loaded.')
-    .argument('[input]', 'The AUX file to check.')
+    .argument('<input>', 'The AUX file to check.')
     .option(
         '--skip-scripts',
         'Whether to skip checking script tags. By default, script tags are checked and any errors in them will be reported.'
@@ -526,8 +526,8 @@ program
 
 program
     .command('unpack-aux')
-    .argument('[input]', 'The aux file/directory to convert to a file system.')
-    .argument('[dir]', 'The directory to write the file system to.')
+    .argument('<input>', 'The aux file/directory to convert to a file system.')
+    .argument('<dir>', 'The directory to write the file system to.')
     .option('-o, --overwrite', 'Overwrite existing files.')
     .option('-r, --recursive', 'Recursively convert aux files in a directory.')
     .option(
@@ -568,11 +568,11 @@ program
 program
     .command('pack-aux')
     .argument(
-        '[dir]',
+        '<dir>',
         'The directory to read the file system from. If the directory does not contain an extra.aux file, then each directory will be read as a separate aux file.'
     )
     .argument(
-        '[output]',
+        '<output>',
         'The output file to write the aux file to. This should be the folder that each aux should be written to if the input directory contains multiple aux filesystems.'
     )
     .option('-o, --overwrite', 'Overwrite existing files.')
