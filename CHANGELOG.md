@@ -7,6 +7,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue when trying to read cached default values from Redis.
+-   Fixed an issue where package version markers were ignored when retrieving them.
 
 ## V4.1.5
 
