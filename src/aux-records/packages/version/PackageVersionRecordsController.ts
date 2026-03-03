@@ -218,9 +218,10 @@ export class PackageVersionRecordsController {
                 : ('create' as const);
             let authorization: AuthorizeUserAndInstancesForResourcesResult;
             if (action === 'update') {
-                const existingMarkers = existingItem.item.markers;
+                const existingMarkers =
+                    existingItem.item.markers ?? parentMarkers;
                 resourceMarkers = request.item.markers ?? existingMarkers;
-                // resourceMarkers = existingItem.item.markers;
+
                 action = 'update';
                 authorization =
                     await this._policies.authorizeUserAndInstancesForResources(
@@ -247,7 +248,7 @@ export class PackageVersionRecordsController {
                     return authorization;
                 }
             } else {
-                // TODO: Allow these markers to be inherited from the parent package.
+                // Allow these markers to be inherited from the parent package.
                 // When the markers are inherited, then the user shouldn't need permission to assign them.
                 let usingGivenMarkers = true;
                 resourceMarkers = request.item.markers;
