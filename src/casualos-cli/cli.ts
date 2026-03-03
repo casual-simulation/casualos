@@ -33,25 +33,36 @@ import type {
     Bot,
     BotsState,
     BotTags,
+    Result,
     StoredAux,
     StoredAuxVersion1,
 } from '@casual-simulation/aux-common';
 import {
+    calculateStringTagValue,
     createBot,
     DATE_TAG_PREFIX,
     DNA_TAG_PREFIX,
+    failure,
     getBotsStateFromStoredAux,
     getSessionKeyExpiration,
     getUploadState,
     hasValue,
     isExpired,
+    isFailure,
+    isFormula,
+    isModule,
+    isScript,
     LIBRARY_SCRIPT_PREFIX,
     merge,
     NUMBER_TAG_PREFIX,
+    parseFormula,
+    parseModule,
+    parseScript,
     parseSessionKey,
     parseVersionNumber,
     ROTATION_TAG_PREFIX,
     STRING_TAG_PREFIX,
+    success,
     tryParseJson,
     VECTOR_TAG_PREFIX,
     willExpire,
@@ -86,6 +97,8 @@ import {
 import standardMimeTypes from 'mime/types/standard.js';
 import otherMimeTypes from 'mime/types/other.js';
 import { parseEntitlements } from 'cli-utils';
+import { Transpiler } from '@casual-simulation/aux-runtime';
+import { groupBy } from 'es-toolkit';
 
 const mime = new Mime(standardMimeTypes, otherMimeTypes, {
     'application/json': ['aux', 'json'],
@@ -355,6 +368,159 @@ program
             console.log(`Original Size: ${originalStat.size} bytes`);
             console.log(`New Size: ${newStat.size} bytes`);
             console.log(`Targets: ${targets.join(', ')}`);
+        }
+    });
+
+program
+    .command('check-aux')
+    .description('Check if an AUX file is valid and can be loaded.')
+    .argument('[input]', 'The AUX file to check.')
+    .option(
+        '--skip-scripts',
+        'Whether to skip checking script tags. By default, script tags are checked and any errors in them will be reported.'
+    )
+    .action(async (input, options) => {
+        // Implement the action for checking the AUX file here.
+
+        const skipScripts = options.skipScripts ?? false;
+        const inputPath = path.resolve(input);
+        const auxJson = tryParseJson(await readFile(inputPath, 'utf-8'));
+        if (auxJson.success === false) {
+            console.error(`Could not parse aux file: ${auxJson.error}`);
+            process.exit(1);
+        }
+
+        const aux = STORED_AUX_SCHEMA.safeParse(auxJson.value);
+
+        if (aux.success === false) {
+            console.error(
+                `Aux file is not a valid stored aux: ${aux.error.toString()}`
+            );
+            process.exit(1);
+        }
+
+        const botsState = getBotsStateFromStoredAux(
+            aux.data as StoredAuxVersion1
+        );
+
+        interface ValueError {
+            bot: Bot;
+            tag: string;
+            space: string;
+            errorCode: string;
+            errorMessage: string;
+        }
+
+        const transpiler = new Transpiler();
+
+        function checkCode(
+            bot: Bot,
+            tag: string,
+            space: string,
+            code: string
+        ): Result<void, ValueError> {
+            try {
+                transpiler.transpile(code);
+            } catch (err) {
+                return failure({
+                    bot,
+                    tag,
+                    space,
+                    errorCode: 'invalid_script',
+                    errorMessage: err.toString(),
+                });
+            }
+
+            return success();
+        }
+
+        function checkValue(
+            bot: Bot,
+            tag: string,
+            space: string,
+            value: any
+        ): Result<void, ValueError> {
+            if (isFormula(value)) {
+                const formula = parseFormula(value);
+                const parsed = tryParseJson(formula);
+                if (parsed.success === false) {
+                    return failure({
+                        bot,
+                        tag,
+                        space,
+                        errorCode: 'invalid_formula',
+                        errorMessage: parsed.error as string,
+                    });
+                }
+            } else if (!skipScripts) {
+                if (isScript(value)) {
+                    const code = parseScript(value);
+                    return checkCode(bot, tag, space, code);
+                } else if (isModule(value)) {
+                    const code = parseModule(value);
+                    return checkCode(bot, tag, space, code);
+                }
+            }
+
+            return success();
+        }
+
+        const errors: ValueError[] = [];
+
+        for (let botId in botsState) {
+            const bot = botsState[botId];
+            for (let tag in bot.tags) {
+                const value = bot.tags[tag];
+                const result = checkValue(bot, tag, null, value);
+                if (isFailure(result)) {
+                    errors.push(result.error);
+                }
+            }
+
+            for (let space in bot.masks) {
+                const masks = bot.masks[space];
+                for (let tag in masks) {
+                    const value = masks[tag];
+                    const result = checkValue(bot, tag, space, value);
+                    if (isFailure(result)) {
+                        errors.push(result.error);
+                    }
+                }
+            }
+        }
+
+        if (errors.length > 0) {
+            console.error(`Found ${errors.length} errors in aux file:`);
+            const byBot = groupBy(errors, (error) => error.bot.id);
+
+            for (let botId in byBot) {
+                const botErrors = byBot[botId];
+                const bot = botErrors[0].bot;
+                const system = calculateStringTagValue(
+                    null,
+                    bot,
+                    'system',
+                    null
+                );
+                console.error(
+                    `Bot: ${bot.id}${system ? `, System: ${system}` : ''}`
+                );
+                for (let error of botErrors) {
+                    console.error(
+                        `  Tag: ${error.tag}${
+                            error.space ? `, Space: ${error.space}` : ''
+                        }, Error: (${error.errorCode}) ${error.errorMessage}`
+                    );
+                }
+            }
+
+            process.exit(2);
+        } else {
+            console.log(
+                `Aux file is valid! No errors found in ${
+                    Object.keys(botsState).length
+                } bots.`
+            );
         }
     });
 

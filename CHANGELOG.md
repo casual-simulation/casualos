@@ -4,6 +4,11 @@
 
 #### Date: TBD
 
+### :rocket: Features
+
+-   Added the `check-aux` CLI command.
+    -   It checks that the given file is in a valid format and that none of the scripts have syntax errors.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue when trying to read cached default values from Redis.
