@@ -34,18 +34,21 @@ import type {
     BotsState,
     BotTags,
     Result,
+    SimpleError,
     StoredAux,
     StoredAuxVersion1,
+    StoredAuxVersion2,
 } from '@casual-simulation/aux-common';
 import {
     calculateStringTagValue,
+    constructInitializationUpdate,
     createBot,
+    createInitializationUpdate,
     DATE_TAG_PREFIX,
     DNA_TAG_PREFIX,
     failure,
     getBotsStateFromStoredAux,
     getSessionKeyExpiration,
-    getUploadState,
     hasValue,
     isExpired,
     isFailure,
@@ -66,6 +69,7 @@ import {
     tryParseJson,
     VECTOR_TAG_PREFIX,
     willExpire,
+    wrap,
 } from '@casual-simulation/aux-common';
 import type {
     AddressType,
@@ -330,6 +334,154 @@ program
                 break;
         }
     });
+
+program
+    .command('convert-aux')
+    .argument(
+        '<input>',
+        'The path of the file to convert. If the -r flag is provided, then this can be a directory and all aux files in the directory will be converted.'
+    )
+    .argument(
+        '<output>',
+        'The path to write the converted file to. If the -r flag is provided, then this should be a directory and converted files will be written to this directory with the same name as the original file.'
+    )
+    .option(
+        '-r, --recursive',
+        'Whether to recursively convert aux files in a directory. If this flag is provided, then the path argument can be a directory and all aux files in the directory will be converted.'
+    )
+    .option(
+        '-a, --aux-version <version>',
+        'The version of aux files to convert to. If not provided, then the latest version (2) will be used.'
+    )
+    .option(
+        '-o, --overwrite',
+        'Whether to overwrite existing files. If this flag is not provided and the output file already exists, then the conversion will fail.'
+    )
+    .description('Convert AUX files between formats.')
+    .action(async (input, output, options) => {
+        const recursive = options.recursive ?? false;
+        const overwrite = options.overwrite ?? false;
+
+        const inputPath = path.resolve(input);
+        const outputPath = path.resolve(output);
+
+        const auxVersion = z.coerce
+            .number()
+            .int()
+            .min(1)
+            .max(2)
+            .default(2)
+            .parse(options.auxVersion);
+
+        if (auxVersion !== 1 && auxVersion !== 2) {
+            console.error('Invalid aux version specified. Must be 1 or 2.');
+            process.exit(1);
+        }
+
+        console.log(`Converting aux file(s) to version ${auxVersion}...`);
+
+        if (recursive) {
+            const files = await readdir(inputPath, {
+                withFileTypes: true,
+            });
+
+            await mkdir(outputPath, {
+                recursive: true,
+            });
+
+            for (let file of files) {
+                if (!file.isFile() && !file.isSymbolicLink()) {
+                    continue;
+                }
+                const fullInputPath = path.join(inputPath, file.name);
+                const fullOutputPath = path.join(outputPath, file.name);
+
+                const result = await convertAuxFile(fullInputPath, auxVersion);
+
+                if (isFailure(result)) {
+                    console.error(
+                        `Failed to convert aux file at path ${fullInputPath}: ${result.error.errorMessage}`
+                    );
+                    continue;
+                }
+
+                const writeResult = await wrap(() =>
+                    writeFile(fullOutputPath, JSON.stringify(result.value), {
+                        flag: overwrite ? 'w' : 'wx',
+                    })
+                );
+
+                if (isFailure(writeResult)) {
+                    console.error(
+                        `Failed to write converted aux file to path ${fullOutputPath}: ${writeResult.error.error}`
+                    );
+                    continue;
+                }
+
+                console.log(
+                    `Successfully converted aux file at path ${fullInputPath} to ${fullOutputPath}`
+                );
+            }
+        } else {
+            const result = await convertAuxFile(inputPath, auxVersion);
+
+            if (isFailure(result)) {
+                console.error(
+                    `Failed to convert aux file at path ${inputPath}: ${result.error.errorMessage}`
+                );
+                process.exit(1);
+            }
+
+            const writeResult = await wrap(() =>
+                writeFile(outputPath, JSON.stringify(result.value), {
+                    flag: overwrite ? 'w' : 'wx',
+                })
+            );
+
+            if (isFailure(writeResult)) {
+                console.error(
+                    `Failed to write converted aux file to path ${outputPath}: ${writeResult.error.error}`
+                );
+                process.exit(1);
+            }
+
+            console.log(
+                `Successfully converted aux file at path ${inputPath} to ${outputPath}`
+            );
+        }
+    });
+
+function constructAux(state: BotsState, version: 1 | 2): StoredAux {
+    if (version === 2) {
+        const update = constructInitializationUpdate(
+            createInitializationUpdate(Object.values(state))
+        );
+        const storedAux: StoredAuxVersion2 = {
+            version: 2,
+            updates: [update],
+        };
+        return storedAux;
+    } else {
+        return {
+            version: 1,
+            state,
+        };
+    }
+}
+
+async function convertAuxFile(
+    inputPath: string,
+    auxVersion: 1 | 2
+): Promise<Result<StoredAux, SimpleError>> {
+    const fileContent = await readAuxFile(inputPath);
+    if (isFailure(fileContent)) {
+        return fileContent;
+    }
+
+    const aux = fileContent.value;
+    const storedAux = constructAux(aux, auxVersion);
+    return success(storedAux);
+}
 
 program
     .command('minify-aux')
@@ -1384,23 +1536,44 @@ async function auxReadFs(
     }
 }
 
-async function readAuxFile(filePath: string): Promise<BotsState> {
+async function readAuxFile(
+    filePath: string
+): Promise<Result<BotsState, SimpleError>> {
     const targetStat = await stat(filePath);
     if (!targetStat.isFile()) {
         throw new Error(`Path is not a file: ${filePath}`);
     }
 
-    const contents = JSON.parse(
-        await readFile(filePath, { encoding: 'utf-8' })
-    );
-    const botsState = getBotsStateFromStoredAux(contents);
+    const fileContents = await readFile(filePath, { encoding: 'utf-8' });
+
+    const parseResult = tryParseJson(fileContents);
+
+    if (parseResult.success === false) {
+        return failure({
+            errorCode: 'invalid_file_data',
+            errorMessage: `Could not parse aux file at ${filePath} as JSON.\n\nError: ${parseResult.error}`,
+        });
+    }
+
+    const storedAux = STORED_AUX_SCHEMA.safeParse(parseResult.value);
+    if (storedAux.success === false) {
+        return failure({
+            errorCode: 'invalid_file_data',
+            errorMessage: `Aux file at ${filePath} does not match the expected format.\n\nError: ${z.prettifyError(
+                storedAux.error
+            )}`,
+            issues: storedAux.error.issues,
+        });
+    }
+
+    const botsState = getBotsStateFromStoredAux(storedAux.data as StoredAux);
     if (!botsState) {
         throw new Error(
             `Aux file at ${filePath} is not a valid (or supported) aux file.`
         );
     }
 
-    return getUploadState(botsState);
+    return success(botsState);
 }
 
 async function assignBots(
@@ -1462,7 +1635,14 @@ async function auxReadFsCore(
             if (file.endsWith('.aux')) {
                 console.log(`Reading aux: ${file}`);
                 const isSystemBotFile = file.endsWith('.bot.aux');
-                const auxBotsState = await readAuxFile(filePath);
+                const auxFile = await readAuxFile(filePath);
+
+                if (isFailure(auxFile)) {
+                    console.error(auxFile.error.errorMessage);
+                    continue;
+                }
+
+                const auxBotsState = auxFile.value;
 
                 // Get the first bot Id from the aux file
                 if (isSystemBotFile && !botId) {
