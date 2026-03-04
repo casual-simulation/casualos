@@ -88,6 +88,42 @@ export interface AuxDevice {
      * Whether the device supports virtual reality features.
      */
     supportsVR: boolean;
+
+    /**
+     * Whether the device supports full Document Object Model features.
+     * See https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model for more info.
+     */
+    supportsDOM: boolean;
+
+    /**
+     * Whether this device has enabled collaboration features.
+     *
+     * When creating a simulation, this property may be used to enable or disable features that facilitate users interacting with each other.
+     * For example, setting isCollaborative to false would make the shared partition act like a tempLocal partition.
+     */
+    isCollaborative: boolean;
+
+    /**
+     * Whether this device can enable collaboration features after the simulation has started.
+     */
+    allowCollaborationUpgrade: boolean;
+
+    /**
+     * The URL that AB-1 should be bootstraped from.
+     */
+    ab1BootstrapUrl: string;
+
+    /**
+     * The stored aux that AB-1 should be bootstraped from.
+     */
+    ab1BootstrapAux?: StoredAux;
+
+    /**
+     * The comID that this inst was loaded from.
+     *
+     * Null if it was not loaded from a comID.
+     */
+    comID: string | null;
 }
 
 /**
