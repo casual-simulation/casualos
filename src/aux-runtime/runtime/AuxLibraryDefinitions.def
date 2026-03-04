@@ -4406,6 +4406,16 @@ export interface RecordFileFailure {
         | NotSupportedError
         | 'invalid_file_data';
     errorMessage: string;
+    
+    /**
+     * The URL that the file is available at if it has already been uploaded.
+     */
+    existingFileUrl?: string;
+
+    /**
+     * The name of the file that was attempted to be recorded.
+     */
+    existingFileName?: string;
 }
 
 export type EraseFileResult = EraseFileSuccess | EraseFileFailure;
