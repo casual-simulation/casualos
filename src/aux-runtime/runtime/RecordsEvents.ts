@@ -165,11 +165,6 @@ export interface AIChatOptions extends RecordActionOptions {
      * The model that should be used.
      *
      * If not specified, then a default will be used.
-     *
-     * Currently, the following models are supported:
-     *
-     * - `gpt-4`
-     * - `gpt-3.5-turbo`
      */
     preferredModel?: string;
 
