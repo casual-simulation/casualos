@@ -59,7 +59,7 @@ importers:
         version: 1.52.0
       '@testing-library/preact':
         specifier: 3.2.4
-        version: 3.2.4(preact@10.19.6)
+        version: 3.2.4(preact@10.28.4)
       '@types/arcgis-js-api':
         specifier: 4.24.0
         version: 4.24.0
@@ -534,8 +534,8 @@ importers:
         specifier: 3.4.4
         version: 3.4.4
       preact:
-        specifier: 10.19.6
-        version: 10.19.6
+        specifier: 10.28.4
+        version: 10.28.4
       rxjs:
         specifier: 8.0.0-alpha.14
         version: 8.0.0-alpha.14
@@ -809,11 +809,11 @@ importers:
         specifier: 5.6.1
         version: 5.6.1
       preact:
-        specifier: 10.19.6
-        version: 10.19.6
+        specifier: 10.28.4
+        version: 10.28.4
       preact-render-to-string:
         specifier: 6.6.3
-        version: 6.6.3(preact@10.19.6)
+        version: 6.6.3(preact@10.28.4)
       tigerbeetle-node:
         specifier: 0.16.44
         version: 0.16.44
@@ -965,8 +965,8 @@ importers:
         specifier: 2.4.6
         version: 2.4.6
       preact:
-        specifier: 10.19.6
-        version: 10.19.6
+        specifier: 10.28.4
+        version: 10.28.4
       rxjs:
         specifier: 8.0.0-alpha.14
         version: 8.0.0-alpha.14
@@ -1165,7 +1165,7 @@ importers:
         version: 1.25.1
       '@preact/signals':
         specifier: 2.8.1
-        version: 2.8.1(preact@10.19.6)
+        version: 2.8.1(preact@10.28.4)
       '@prisma/client':
         specifier: ^6.14.0
         version: 6.14.0(prisma@6.14.0(typescript@5.8.3))(typescript@5.8.3)
@@ -1329,11 +1329,11 @@ importers:
         specifier: ^1.310.2
         version: 1.310.2
       preact:
-        specifier: 10.19.6
-        version: 10.19.6
+        specifier: 10.28.4
+        version: 10.28.4
       preact-render-to-string:
         specifier: 6.6.3
-        version: 6.6.3(preact@10.19.6)
+        version: 6.6.3(preact@10.28.4)
       prisma:
         specifier: ^6.14.0
         version: 6.14.0(typescript@5.8.3)
@@ -1546,8 +1546,8 @@ importers:
         specifier: 3.4.4
         version: 3.4.4
       preact:
-        specifier: 10.19.6
-        version: 10.19.6
+        specifier: 10.28.4
+        version: 10.28.4
       rxjs:
         specifier: 8.0.0-alpha.14
         version: 8.0.0-alpha.14
@@ -13406,8 +13406,8 @@ packages:
     peerDependencies:
       preact: '>=10 || >= 11.0.0-0'
 
-  preact@10.19.6:
-    resolution: {integrity: sha512-gympg+T2Z1fG1unB8NH29yHJwnEaCH37Z32diPDku316OTnRPeMbiRV9kTrfZpocXjdfnWuFUl/Mj4BHaf6gnw==}
+  preact@10.28.4:
+    resolution: {integrity: sha512-uKFfOHWuSNpRFVTnljsCluEFq57OKT+0QdOiQo8XWnQ/pSvg7OpX5eNOejELXJMWy+BwM2nobz0FkvzmnpCNsQ==}
 
   precise-commits@1.0.2:
     resolution: {integrity: sha512-PYkoNTFXVvZRzJTDxdgzmPanhSNGj5Wtj2NgSo7IhwNXGcKktX+L4DJhyIrhFSLsWWAvd+cYyyU2eXlaX5QxzA==}
@@ -21644,10 +21644,10 @@ snapshots:
 
   '@preact/signals-core@1.13.0': {}
 
-  '@preact/signals@2.8.1(preact@10.19.6)':
+  '@preact/signals@2.8.1(preact@10.28.4)':
     dependencies:
       '@preact/signals-core': 1.13.0
-      preact: 10.19.6
+      preact: 10.28.4
 
   '@prisma/client@6.14.0(prisma@6.14.0(typescript@5.8.3))(typescript@5.8.3)':
     optionalDependencies:
@@ -22842,10 +22842,10 @@ snapshots:
       lz-string: 1.5.0
       pretty-format: 27.5.1
 
-  '@testing-library/preact@3.2.4(preact@10.19.6)':
+  '@testing-library/preact@3.2.4(preact@10.28.4)':
     dependencies:
       '@testing-library/dom': 8.20.1
-      preact: 10.19.6
+      preact: 10.28.4
 
   '@tootallnate/once@2.0.0': {}
 
@@ -32603,7 +32603,7 @@ snapshots:
       '@posthog/core': 1.9.0
       core-js: 3.42.0
       fflate: 0.4.8
-      preact: 10.19.6
+      preact: 10.28.4
       web-vitals: 4.2.4
 
   posthtml-parser@0.2.1:
@@ -32629,11 +32629,11 @@ snapshots:
       posthtml-parser: 0.2.1
       posthtml-render: 1.4.0
 
-  preact-render-to-string@6.6.3(preact@10.19.6):
+  preact-render-to-string@6.6.3(preact@10.28.4):
     dependencies:
-      preact: 10.19.6
+      preact: 10.28.4
 
-  preact@10.19.6: {}
+  preact@10.28.4: {}
 
   precise-commits@1.0.2(prettier@2.8.8):
     dependencies:
