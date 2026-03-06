@@ -13,6 +13,11 @@
 
 -   Fixed an issue when trying to read cached default values from Redis.
 -   Fixed an issue where package version markers were ignored when retrieving them.
+-   Fixed an issue where using the [Non-null Assertion Operator](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#non-null-assertion-operator-postfix-) would break CasualOS scripts.
+-   Fixed an issue where using the [Definite Assignment Assertion Operator](https://www.typescriptlang.org/docs/handbook/2/classes.html#--strictpropertyinitialization) would break CasualOS scripts.
+-   Changed to throw an error when [Parameter Properties](https://www.typescriptlang.org/docs/handbook/2/classes.html#parameter-properties) are used.
+    -   Previously, users would end up with opaque syntax errors.
+    -   Now, CasualOS will return an error that specifies that parameter properties aren't supported.
 
 ## V4.1.5
 
