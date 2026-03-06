@@ -2298,24 +2298,105 @@ describe('Transpiler', () => {
                 ).toBe(`class Test { set #value(val) { } }`);
             });
 
-            it('should keep visibility annotations from constructor parameters in classes', () => {
+            it('should error if a parameter property is encountered', () => {
                 const transpiler = new Transpiler();
-                expect(
+                expect(() => {
+                    transpiler.transpile(
+                        `class Test { constructor(public prop: number) {} }`
+                    );
+                }).toThrow(
+                    new SyntaxError(
+                        'TypesScript parameter properties are not supported in CausalOS scripts. (1:25)'
+                    )
+                );
+
+                expect(() => {
+                    transpiler.transpile(
+                        `class Test { constructor(private prop: number) {} }`
+                    );
+                }).toThrow(
+                    new SyntaxError(
+                        'TypesScript parameter properties are not supported in CausalOS scripts. (1:25)'
+                    )
+                );
+
+                expect(() => {
+                    transpiler.transpile(
+                        `class Test { constructor(protected prop: number) {} }`
+                    );
+                }).toThrow(
+                    new SyntaxError(
+                        'TypesScript parameter properties are not supported in CausalOS scripts. (1:25)'
+                    )
+                );
+
+                expect(() => {
+                    transpiler.transpile(
+                        `class Test { constructor(public readonly prop: number) {} }`
+                    );
+                }).toThrow(
+                    new SyntaxError(
+                        'TypesScript parameter properties are not supported in CausalOS scripts. (1:25)'
+                    )
+                );
+
+                expect(() => {
                     transpiler.transpile(
                         `class Test { constructor(readonly prop: number) {} }`
+                    );
+                }).toThrow(
+                    new SyntaxError(
+                        'TypesScript parameter properties are not supported in CausalOS scripts. (1:25)'
                     )
-                ).toBe(`class Test { constructor(readonly prop) {} }`);
+                );
             });
 
-            it('should remove visibility annotations from constructors in exported classes', () => {
+            it('should remove non-null assertion operators', () => {
                 const transpiler = new Transpiler();
                 expect(
-                    transpiler.transpile(
-                        `export class Test { public constructor(prop: number) {} }`
-                    )
-                ).toBe(
-                    `class Test { constructor(prop) {} }\nawait exports({ Test, });`
+                    transpiler.transpile(`const abc = someValue!.property;`)
+                ).toBe(`const abc = someValue.property;`);
+
+                expect(transpiler.transpile(`const abc = someValue!;`)).toBe(
+                    `const abc = someValue;`
                 );
+
+                expect(transpiler.transpile(`const abc = someValue![0];`)).toBe(
+                    `const abc = someValue[0];`
+                );
+
+                expect(
+                    transpiler.transpile(`const abc = (someValue)![0];`)
+                ).toBe(`const abc = (someValue)[0];`);
+            });
+
+            it('should remove definite assignment assertion operators', () => {
+                const transpiler = new Transpiler();
+                expect(
+                    transpiler.transpile(`class Test { myProp!: number; }`)
+                ).toBe(`class Test { myProp; }`);
+
+                expect(
+                    transpiler.transpile(
+                        `class Test { private myProp!: number; }`
+                    )
+                ).toBe(`class Test { myProp; }`);
+
+                expect(
+                    transpiler.transpile(
+                        `class Test { protected myProp!: number; }`
+                    )
+                ).toBe(`class Test { myProp; }`);
+
+                expect(
+                    transpiler.transpile(
+                        `class Test { readonly myProp!: number; }`
+                    )
+                ).toBe(`class Test { readonly myProp; }`);
+
+                expect(
+                    transpiler.transpile(`class Test { #myProp!: number; }`)
+                ).toBe(`class Test { #myProp; }`);
             });
         });
 

@@ -10,7 +10,7 @@
     },
     "scripts": {
         "start": "node ./dist/cli.js",
-        "dev": "npm run build && npm start",
+        "dev": "pnpm build && pnpm start",
         "build": "node ./script/build-cli.mjs",
         "test": "jest",
         "test:watch": "jest --watchAll"

@@ -59,7 +59,7 @@ export class MemorySubCrudRecordsStore<
     }
 
     async createItem(recordName: string, item: T): Promise<CrudResult> {
-        const recordItem = this._itemStore.getItemByAddress(
+        const recordItem = await this._itemStore.getItemByAddress(
             recordName,
             item.address
         );
