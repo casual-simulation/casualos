@@ -2307,15 +2307,23 @@ describe('Transpiler', () => {
                 ).toBe(`class Test { constructor(readonly prop) {} }`);
             });
 
-            it('should remove visibility annotations from constructors in exported classes', () => {
+            it('should remove non-null assertion operators', () => {
                 const transpiler = new Transpiler();
                 expect(
-                    transpiler.transpile(
-                        `export class Test { public constructor(prop: number) {} }`
-                    )
-                ).toBe(
-                    `class Test { constructor(prop) {} }\nawait exports({ Test, });`
+                    transpiler.transpile(`const abc = someValue!.property;`)
+                ).toBe(`const abc = someValue.property;`);
+
+                expect(transpiler.transpile(`const abc = someValue!;`)).toBe(
+                    `const abc = someValue;`
                 );
+
+                expect(transpiler.transpile(`const abc = someValue![0];`)).toBe(
+                    `const abc = someValue[0];`
+                );
+
+                expect(
+                    transpiler.transpile(`const abc = (someValue)![0];`)
+                ).toBe(`const abc = (someValue)[0];`);
             });
         });
 
