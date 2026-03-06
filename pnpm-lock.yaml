@@ -1163,6 +1163,9 @@ importers:
       '@opentelemetry/semantic-conventions':
         specifier: ~1.25.1
         version: 1.25.1
+      '@preact/signals':
+        specifier: 2.8.1
+        version: 2.8.1(preact@10.19.6)
       '@prisma/client':
         specifier: ^6.14.0
         version: 6.14.0(prisma@6.14.0(typescript@5.8.3))(typescript@5.8.3)
@@ -5221,6 +5224,14 @@ packages:
 
   '@posthog/core@1.9.0':
     resolution: {integrity: sha512-j7KSWxJTUtNyKynLt/p0hfip/3I46dWU2dk+pt7dKRoz2l5CYueHuHK4EO7Wlgno5yo1HO4sc4s30MXMTICHJw==}
+
+  '@preact/signals-core@1.13.0':
+    resolution: {integrity: sha512-slT6XeTCAbdql61GVLlGU4x7XHI7kCZV5Um5uhE4zLX4ApgiiXc0UYFvVOKq06xcovzp7p+61l68oPi563ARKg==}
+
+  '@preact/signals@2.8.1':
+    resolution: {integrity: sha512-wX6U0SpcCukZTJBs5ChljvBZb3XmYzA5gd4vKHgX8wZZKaQCo2WHtmThdLx+mcVvlBa5u3XShC7ffbETJD4BiQ==}
+    peerDependencies:
+      preact: '>= 10.25.0 || >=11.0.0-0'
 
   '@prisma/client@6.14.0':
     resolution: {integrity: sha512-8E/Nk3eL5g7RQIg/LUj1ICyDmhD053STjxrPxUtCRybs2s/2sOEcx9NpITuAOPn07HEpWBfhAVe1T/HYWXUPOw==}
@@ -21630,6 +21641,13 @@ snapshots:
   '@posthog/core@1.9.0':
     dependencies:
       cross-spawn: 7.0.6
+
+  '@preact/signals-core@1.13.0': {}
+
+  '@preact/signals@2.8.1(preact@10.19.6)':
+    dependencies:
+      '@preact/signals-core': 1.13.0
+      preact: 10.19.6
 
   '@prisma/client@6.14.0(prisma@6.14.0(typescript@5.8.3))(typescript@5.8.3)':
     optionalDependencies:

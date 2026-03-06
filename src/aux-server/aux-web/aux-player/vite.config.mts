@@ -48,6 +48,9 @@ const policies = getPolicies(true);
 const importableLibraries = {
     yjs: './aux-web/shared/public/import-map/yjs',
     luxon: './aux-web/shared/public/import-map/luxon',
+    '@preact/signals/utils':
+        './aux-web/shared/public/import-map/preact.signals.utils',
+    '@preact/signals': './aux-web/shared/public/import-map/preact.signals',
     'preact/compat': './aux-web/shared/public/import-map/preact.compat',
     'preact/jsx-runtime':
         './aux-web/shared/public/import-map/preact.jsx-runtime',
@@ -85,6 +88,8 @@ const nodeModuleChunks: { [key: string]: string[] } = {
         '@sparkjsdev/spark',
     ],
     yjs: ['yjs', 'lib0'],
+    '@preact/signals/utils': ['@preact/signals/utils'],
+    '@preact/signals': ['@preact/signals'],
     preact: ['preact'],
     rxjs: ['rxjs', 'rxjs/dist/esm/internal/operators'],
     'vue-filepond': ['vue-filepond', 'filepond'],
