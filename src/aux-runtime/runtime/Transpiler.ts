@@ -614,7 +614,17 @@ export class Transpiler {
                         this._removeClassAbstract(n, doc, text);
                     }
                 } else if (n.type === 'TSParameterProperty') {
-                    // do nothing
+                    // Parameter properties are a shorthand for defining and initializing a class property in the constructor parameters.
+                    // They are not supported in CausalOS scripts because they would require a lot of complex transformations to work correctly,
+                    // especially with regards to the order of initialization and the handling of accessibility modifiers.
+                    // For simplicity, we just throw an error when we encounter them.
+                    throw new SyntaxError(
+                        `TypesScript parameter properties are not supported in CausalOS scripts. (${
+                            n.loc
+                                ? `${n.loc.start.line}:${n.loc.start.column}`
+                                : 'unknown location'
+                        })`
+                    );
                 } else if (
                     n.type === 'ObjectPattern' ||
                     n.type === 'ArrayPattern' ||

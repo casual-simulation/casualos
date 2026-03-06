@@ -2298,13 +2298,57 @@ describe('Transpiler', () => {
                 ).toBe(`class Test { set #value(val) { } }`);
             });
 
-            it('should keep visibility annotations from constructor parameters in classes', () => {
+            it('should error if a parameter property is encountered', () => {
                 const transpiler = new Transpiler();
-                expect(
+                expect(() => {
+                    transpiler.transpile(
+                        `class Test { constructor(public prop: number) {} }`
+                    );
+                }).toThrow(
+                    new SyntaxError(
+                        'TypesScript parameter properties are not supported in CausalOS scripts. (1:25)'
+                    )
+                );
+
+                expect(() => {
+                    transpiler.transpile(
+                        `class Test { constructor(private prop: number) {} }`
+                    );
+                }).toThrow(
+                    new SyntaxError(
+                        'TypesScript parameter properties are not supported in CausalOS scripts. (1:25)'
+                    )
+                );
+
+                expect(() => {
+                    transpiler.transpile(
+                        `class Test { constructor(protected prop: number) {} }`
+                    );
+                }).toThrow(
+                    new SyntaxError(
+                        'TypesScript parameter properties are not supported in CausalOS scripts. (1:25)'
+                    )
+                );
+
+                expect(() => {
+                    transpiler.transpile(
+                        `class Test { constructor(public readonly prop: number) {} }`
+                    );
+                }).toThrow(
+                    new SyntaxError(
+                        'TypesScript parameter properties are not supported in CausalOS scripts. (1:25)'
+                    )
+                );
+
+                expect(() => {
                     transpiler.transpile(
                         `class Test { constructor(readonly prop: number) {} }`
+                    );
+                }).toThrow(
+                    new SyntaxError(
+                        'TypesScript parameter properties are not supported in CausalOS scripts. (1:25)'
                     )
-                ).toBe(`class Test { constructor(readonly prop) {} }`);
+                );
             });
 
             it('should remove non-null assertion operators', () => {
