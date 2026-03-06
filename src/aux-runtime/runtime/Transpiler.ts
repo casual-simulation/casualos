@@ -643,6 +643,9 @@ export class Transpiler {
                     if (n.accessibility) {
                         this._removeAccessibility(n, doc, text);
                     }
+                    if (n.definite) {
+                        this._removeDefiniteAssignmentAssertion(n, doc, text);
+                    }
                 } else if (n.type === 'TSNonNullExpression') {
                     this._removeNonNullExpression(n, doc, text);
                 } else if (n.type === 'TSAsExpression') {
@@ -685,6 +688,27 @@ export class Transpiler {
 
         // Delete only the non-null assertion operator, which is the last character before the end of the expression.
         text.delete(absoluteEnd.index - 1, 1);
+    }
+
+    private _removeDefiniteAssignmentAssertion(
+        n: any,
+        doc: Doc,
+        text: Text
+    ): void {
+        doc.clientID += 1;
+        const version = { '0': getClock(doc, 0) };
+
+        const absoluteEnd = createAbsolutePositionFromStateVector(
+            doc,
+            text,
+            version,
+            n.key.end,
+            undefined,
+            true
+        );
+
+        // Delete only the non-null assertion operator, which is the last character before the end of the expression.
+        text.delete(absoluteEnd.index, 1);
     }
 
     private _replaceCallExpression(

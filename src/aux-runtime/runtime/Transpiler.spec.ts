@@ -2369,6 +2369,35 @@ describe('Transpiler', () => {
                     transpiler.transpile(`const abc = (someValue)![0];`)
                 ).toBe(`const abc = (someValue)[0];`);
             });
+
+            it('should remove definite assignment assertion operators', () => {
+                const transpiler = new Transpiler();
+                expect(
+                    transpiler.transpile(`class Test { myProp!: number; }`)
+                ).toBe(`class Test { myProp; }`);
+
+                expect(
+                    transpiler.transpile(
+                        `class Test { private myProp!: number; }`
+                    )
+                ).toBe(`class Test { myProp; }`);
+
+                expect(
+                    transpiler.transpile(
+                        `class Test { protected myProp!: number; }`
+                    )
+                ).toBe(`class Test { myProp; }`);
+
+                expect(
+                    transpiler.transpile(
+                        `class Test { readonly myProp!: number; }`
+                    )
+                ).toBe(`class Test { readonly myProp; }`);
+
+                expect(
+                    transpiler.transpile(`class Test { #myProp!: number; }`)
+                ).toBe(`class Test { #myProp; }`);
+            });
         });
 
         describe('directives', () => {
