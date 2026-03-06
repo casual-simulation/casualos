@@ -44,6 +44,8 @@
         ```
 
 -   Added the `--aux-version <version>` option to the `pack-aux` CLI command.
+-   Added the [`@preact/signals`](https://www.npmjs.com/package/@preact/signals) library.
+    -   This also includes `@preact/signals/utils`.
 
 ### :bug: Bug Fixes
 
