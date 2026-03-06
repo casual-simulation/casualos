@@ -7,7 +7,43 @@
 ### :rocket: Features
 
 -   Added the `check-aux` CLI command.
+
     -   It checks that the given file is in a valid format and that none of the scripts have syntax errors.
+
+        ```
+        Usage: casualos check-aux [options] <input>
+
+        Check if an AUX file is valid and can be loaded.
+
+        Arguments:
+        input           The AUX file to check.
+
+        Options:
+        --skip-scripts  Whether to skip checking script tags. By default, script tags are checked and any errors in them will be reported.
+        -h, --help      display help for command
+        ```
+
+-   Added the `convert-aux` CLI command.
+
+    -   It works exactly like the `aux convert` command, except it is non-interactive and supports specifying the target AUX version.
+
+        ```
+        Usage: casualos convert-aux [options] <input> <output>
+
+        Convert AUX files between formats.
+
+        Arguments:
+        input                        The path of the file to convert. If the -r flag is provided, then this can be a directory and all aux files in the directory will be converted.
+        output                       The path to write the converted file to. If the -r flag is provided, then this should be a directory and converted files will be written to this directory with the same name as the original file.
+
+        Options:
+        -r, --recursive              Whether to recursively convert aux files in a directory. If this flag is provided, then the path argument can be a directory and all aux files in the directory will be converted.
+        -a, --aux-version <version>  The version of aux files to convert to. If not provided, then the latest version (2) will be used.
+        -o, --overwrite              Whether to overwrite existing files. If this flag is not provided and the output file already exists, then the conversion will fail.
+        -h, --help                   display help for command
+        ```
+
+-   Added the `--aux-version <version>` option to the `pack-aux` CLI command.
 
 ### :bug: Bug Fixes
 

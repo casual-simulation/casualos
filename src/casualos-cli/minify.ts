@@ -16,11 +16,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import type { StoredAux } from '@casual-simulation/aux-common';
+import type { BotsState } from '@casual-simulation/aux-common';
 import {
-    constructInitializationUpdate,
     DNA_TAG_PREFIX,
-    getBotsStateFromStoredAux,
     isFormula,
     isModule,
     isScript,
@@ -46,8 +44,8 @@ import { addDirectives, Transpiler } from '@casual-simulation/aux-runtime';
  * @param aux The aux object to minify.
  * @param target The target or targets to minify for.
  */
-export async function minifyAux(
-    aux: StoredAux,
+export async function minifyBots(
+    bots: BotsState,
     target: string | string[] = [
         'es2020',
         'chrome109',
@@ -55,8 +53,8 @@ export async function minifyAux(
         'edge139',
         'firefox140',
     ]
-): Promise<StoredAux> {
-    return transformAux(aux, {
+): Promise<BotsState> {
+    return transformAux(bots, {
         minify: true,
         target,
         jsx: 'transform',
@@ -73,10 +71,10 @@ export async function minifyAux(
  * @returns The transformed aux object.
  */
 export async function transformAux(
-    aux: StoredAux,
+    bots: BotsState,
     transformOptions: esbuild.TransformOptions
-): Promise<StoredAux> {
-    const state = cloneDeep(getBotsStateFromStoredAux(aux));
+): Promise<BotsState> {
+    const state = cloneDeep(bots);
 
     const transpiler = new Transpiler({
         jsxFactory: JSX_FACTORY,
@@ -203,20 +201,21 @@ export async function transformAux(
 
     await Promise.all(promises);
 
-    if (aux.version === 1) {
-        return {
-            version: 1,
-            state,
-        };
-    } else {
-        return {
-            version: 2,
-            updates: [
-                constructInitializationUpdate({
-                    type: 'create_initialization_update',
-                    bots: Object.values(state),
-                }),
-            ],
-        };
-    }
+    return state;
+    // if (aux.version === 1) {
+    //     return {
+    //         version: 1,
+    //         state,
+    //     };
+    // } else {
+    //     return {
+    //         version: 2,
+    //         updates: [
+    //             constructInitializationUpdate({
+    //                 type: 'create_initialization_update',
+    //                 bots: Object.values(state),
+    //             }),
+    //         ],
+    //     };
+    // }
 }

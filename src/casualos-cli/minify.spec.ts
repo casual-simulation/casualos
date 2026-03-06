@@ -16,9 +16,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import type { StoredAuxVersion1 } from '@casual-simulation/aux-common';
+import type {
+    BotsState,
+    StoredAuxVersion1,
+} from '@casual-simulation/aux-common';
 import { createBot, isScript } from '@casual-simulation/aux-common';
-import { minifyAux } from './minify';
+import { minifyBots } from './minify';
 
 describe('minify', () => {
     describe('js', () => {
@@ -37,15 +40,14 @@ describe('minify', () => {
                 },
             };
 
-            const minified = (await minifyAux(
-                aux,
+            const minified = (await minifyBots(
+                aux.state,
                 'chrome100'
-            )) as StoredAuxVersion1;
+            )) as BotsState;
 
-            expect(minified.version).toBe(1);
-            expect(Object.keys(minified.state)).toEqual(['test1']);
+            expect(Object.keys(minified)).toEqual(['test1']);
 
-            const bot = minified.state['test1'];
+            const bot = minified['test1'];
             expect(isScript(bot.tags.onClick)).toBe(true);
             expect(bot.tags.onClick !== aux.state.test1.tags.onClick).toBe(
                 true
@@ -76,15 +78,11 @@ describe('minify', () => {
                 },
             };
 
-            const minified = (await minifyAux(
-                aux,
-                'chrome100'
-            )) as StoredAuxVersion1;
+            const minified = await minifyBots(aux.state, 'chrome100');
 
-            expect(minified.version).toBe(1);
-            expect(Object.keys(minified.state)).toEqual(['test1']);
+            expect(Object.keys(minified)).toEqual(['test1']);
 
-            const bot = minified.state['test1'];
+            const bot = minified['test1'];
             expect(isScript(bot.tags.onClick)).toBe(true);
 
             expect(bot.tags.onClick !== aux.state.test1.tags.onClick).toBe(
@@ -120,15 +118,11 @@ describe('minify', () => {
                 },
             };
 
-            const minified = (await minifyAux(
-                aux,
-                'chrome100'
-            )) as StoredAuxVersion1;
+            const minified = await minifyBots(aux.state, 'chrome100');
 
-            expect(minified.version).toBe(1);
-            expect(Object.keys(minified.state)).toEqual(['test1']);
+            expect(Object.keys(minified)).toEqual(['test1']);
 
-            const bot = minified.state['test1'];
+            const bot = minified['test1'];
             expect(isScript(bot.tags.onClick)).toBe(true);
 
             expect(bot.tags.onClick !== aux.state.test1.tags.onClick).toBe(
@@ -164,15 +158,11 @@ describe('minify', () => {
                 },
             };
 
-            const minified = (await minifyAux(
-                aux,
-                'chrome100'
-            )) as StoredAuxVersion1;
+            const minified = await minifyBots(aux.state, 'chrome100');
 
-            expect(minified.version).toBe(1);
-            expect(Object.keys(minified.state)).toEqual(['test1']);
+            expect(Object.keys(minified)).toEqual(['test1']);
 
-            const bot = minified.state['test1'];
+            const bot = minified['test1'];
             expect(isScript(bot.tags.onClick)).toBe(true);
 
             expect(bot.tags.onClick !== aux.state.test1.tags.onClick).toBe(
@@ -210,15 +200,11 @@ describe('minify', () => {
                 },
             };
 
-            const minified = (await minifyAux(
-                aux,
-                'chrome100'
-            )) as StoredAuxVersion1;
+            const minified = await minifyBots(aux.state, 'chrome100');
 
-            expect(minified.version).toBe(1);
-            expect(Object.keys(minified.state)).toEqual(['test1']);
+            expect(Object.keys(minified)).toEqual(['test1']);
 
-            const bot = minified.state['test1'];
+            const bot = minified['test1'];
             expect(isScript(bot.tags.onClick)).toBe(true);
 
             expect(bot.tags.onClick !== aux.state.test1.tags.onClick).toBe(
@@ -259,15 +245,11 @@ describe('minify', () => {
                 },
             };
 
-            const minified = (await minifyAux(
-                aux,
-                'chrome100'
-            )) as StoredAuxVersion1;
+            const minified = await minifyBots(aux.state, 'chrome100');
 
-            expect(minified.version).toBe(1);
-            expect(Object.keys(minified.state)).toEqual(['test1']);
+            expect(Object.keys(minified)).toEqual(['test1']);
 
-            const bot = minified.state['test1'];
+            const bot = minified['test1'];
             expect(isScript(bot.tags.onClick)).toBe(true);
 
             expect(bot.tags.onClick !== aux.state.test1.tags.onClick).toBe(
@@ -306,15 +288,11 @@ describe('minify', () => {
                 },
             };
 
-            const minified = (await minifyAux(
-                aux,
-                'chrome100'
-            )) as StoredAuxVersion1;
+            const minified = await minifyBots(aux.state, 'chrome100');
 
-            expect(minified.version).toBe(1);
-            expect(Object.keys(minified.state)).toEqual(['test1']);
+            expect(Object.keys(minified)).toEqual(['test1']);
 
-            const bot = minified.state['test1'];
+            const bot = minified['test1'];
             expect(
                 bot.tags['abc.css'] !== aux.state.test1.tags['abc.css']
             ).toBe(true);
