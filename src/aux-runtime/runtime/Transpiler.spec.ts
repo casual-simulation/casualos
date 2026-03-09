@@ -2368,6 +2368,37 @@ describe('Transpiler', () => {
                 expect(
                     transpiler.transpile(`const abc = (someValue)![0];`)
                 ).toBe(`const abc = (someValue)[0];`);
+
+                expect(transpiler.transpile(`const abc = someValue[0]!;`)).toBe(
+                    `const abc = someValue[0];`
+                );
+            });
+
+            it('should preserve null-coalescing operators', () => {
+                const transpiler = new Transpiler();
+                expect(
+                    transpiler.transpile(`const abc = someValue ?? "default";`)
+                ).toBe(`const abc = someValue ?? "default";`);
+
+                expect(
+                    transpiler.transpile(`const abc = someValue ?? "default";`)
+                ).toBe(`const abc = someValue ?? "default";`);
+
+                expect(
+                    transpiler.transpile(`const abc = someValue ?? "default";`)
+                ).toBe(`const abc = someValue ?? "default";`);
+
+                expect(
+                    transpiler.transpile(`const abc = someValue?.someProperty;`)
+                ).toBe(`const abc = someValue?.someProperty;`);
+
+                expect(
+                    transpiler.transpile(`const abc = someValue?.[0];`)
+                ).toBe(`const abc = someValue?.[0];`);
+
+                expect(
+                    transpiler.transpile(`const abc = (someValue)?.[0];`)
+                ).toBe(`const abc = (someValue)?.[0];`);
             });
 
             it('should remove definite assignment assertion operators', () => {
