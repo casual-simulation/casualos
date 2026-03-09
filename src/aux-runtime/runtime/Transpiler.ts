@@ -614,7 +614,17 @@ export class Transpiler {
                         this._removeClassAbstract(n, doc, text);
                     }
                 } else if (n.type === 'TSParameterProperty') {
-                    // do nothing
+                    // Parameter properties are a shorthand for defining and initializing a class property in the constructor parameters.
+                    // They are not supported in CausalOS scripts because they would require a lot of complex transformations to work correctly,
+                    // especially with regards to the order of initialization and the handling of accessibility modifiers.
+                    // For simplicity, we just throw an error when we encounter them.
+                    throw new SyntaxError(
+                        `TypesScript parameter properties are not supported in CausalOS scripts. (${
+                            n.loc
+                                ? `${n.loc.start.line}:${n.loc.start.column}`
+                                : 'unknown location'
+                        })`
+                    );
                 } else if (
                     n.type === 'ObjectPattern' ||
                     n.type === 'ArrayPattern' ||
@@ -633,6 +643,11 @@ export class Transpiler {
                     if (n.accessibility) {
                         this._removeAccessibility(n, doc, text);
                     }
+                    if (n.definite) {
+                        this._removeDefiniteAssignmentAssertion(n, doc, text);
+                    }
+                } else if (n.type === 'TSNonNullExpression') {
+                    this._removeNonNullExpression(n, doc, text);
                 } else if (n.type === 'TSAsExpression') {
                     this._removeAsExpression(n, doc, text);
                 } else if (n.type === 'Identifier' && n.optional === true) {
@@ -656,6 +671,44 @@ export class Transpiler {
                 ...TypeScriptVisistorKeys,
             },
         });
+    }
+
+    private _removeNonNullExpression(n: any, doc: Doc, text: Text): void {
+        doc.clientID += 1;
+        const version = { '0': getClock(doc, 0) };
+
+        const absoluteEnd = createAbsolutePositionFromStateVector(
+            doc,
+            text,
+            version,
+            n.end,
+            undefined,
+            true
+        );
+
+        // Delete only the non-null assertion operator, which is the last character before the end of the expression.
+        text.delete(absoluteEnd.index - 1, 1);
+    }
+
+    private _removeDefiniteAssignmentAssertion(
+        n: any,
+        doc: Doc,
+        text: Text
+    ): void {
+        doc.clientID += 1;
+        const version = { '0': getClock(doc, 0) };
+
+        const absoluteEnd = createAbsolutePositionFromStateVector(
+            doc,
+            text,
+            version,
+            n.key.end,
+            undefined,
+            true
+        );
+
+        // Delete only the non-null assertion operator, which is the last character before the end of the expression.
+        text.delete(absoluteEnd.index, 1);
     }
 
     private _replaceCallExpression(

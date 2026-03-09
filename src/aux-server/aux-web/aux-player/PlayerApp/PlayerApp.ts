@@ -126,6 +126,8 @@ import { recordsCallProcedure } from '@casual-simulation/aux-runtime';
 import { getSimulationId } from '../../../shared/SimulationHelpers';
 import LoadingWidget from '../../shared/vue-components/LoadingWidget/LoadingWidget';
 import type { PushSubscriptionType } from '@casual-simulation/aux-records';
+import { recordAnalyticsEvent } from './PlayerApp.analytics';
+import type { PostHog } from 'posthog-js';
 
 let syntheticVoices = [] as SyntheticVoice[];
 
@@ -1461,22 +1463,21 @@ export default class PlayerApp extends Vue {
                     }
                 } else if (e.type === 'analytics_record_event') {
                     try {
-                        if (typeof sa_event === 'function') {
-                            const callback = () => {
-                                if (hasValue(e.taskId)) {
-                                    simulation.helper.transaction(
-                                        asyncResult(e.taskId, null)
-                                    );
-                                }
-                            };
-                            if (hasValue(e.metadata)) {
-                                sa_event(e.name, e.metadata, callback);
-                            } else {
-                                sa_event(e.name, callback);
-                            }
-                        } else {
-                            throw new Error(
-                                'Analytics are not supported on this inst.'
+                        await recordAnalyticsEvent({
+                            event: e,
+                            simpleAnalytics:
+                                typeof sa_event === 'function'
+                                    ? sa_event
+                                    : undefined,
+                            posthog: (window as any).posthog as
+                                | PostHog
+                                | undefined,
+                            isDev: import.meta.env.DEV,
+                        });
+
+                        if (hasValue(e.taskId)) {
+                            simulation.helper.transaction(
+                                asyncResult(e.taskId, null)
                             );
                         }
                     } catch (ex) {

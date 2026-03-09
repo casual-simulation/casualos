@@ -1,5 +1,64 @@
 # CasualOS Changelog
 
+## V4.2.0
+
+#### Date: 3/9/2026
+
+### :rocket: Features
+
+-   Added the `check-aux` CLI command.
+
+    -   It checks that the given file is in a valid format and that none of the scripts have syntax errors.
+
+        ```
+        Usage: casualos check-aux [options] <input>
+
+        Check if an AUX file is valid and can be loaded.
+
+        Arguments:
+        input           The AUX file to check.
+
+        Options:
+        --skip-scripts  Whether to skip checking script tags. By default, script tags are checked and any errors in them will be reported.
+        -h, --help      display help for command
+        ```
+
+-   Added the `convert-aux` CLI command.
+
+    -   It works exactly like the `aux convert` command, except it is non-interactive and supports specifying the target AUX version.
+
+        ```
+        Usage: casualos convert-aux [options] <input> <output>
+
+        Convert AUX files between formats.
+
+        Arguments:
+        input                        The path of the file to convert. If the -r flag is provided, then this can be a directory and all aux files in the directory will be converted.
+        output                       The path to write the converted file to. If the -r flag is provided, then this should be a directory and converted files will be written to this directory with the same name as the original file.
+
+        Options:
+        -r, --recursive              Whether to recursively convert aux files in a directory. If this flag is provided, then the path argument can be a directory and all aux files in the directory will be converted.
+        -a, --aux-version <version>  The version of aux files to convert to. If not provided, then the latest version (2) will be used.
+        -o, --overwrite              Whether to overwrite existing files. If this flag is not provided and the output file already exists, then the conversion will fail.
+        -h, --help                   display help for command
+        ```
+
+-   Added the `--aux-version <version>` option to the `pack-aux` CLI command.
+-   Added the [`@preact/signals`](https://www.npmjs.com/package/@preact/signals) library.
+    -   This also includes `@preact/signals/utils`.
+-   Added `preact/hooks` as an importable library.
+-   Added `analytics.recordEvent()` to also send events to PostHog when configured and enabled, while continuing to send to Simple Analytics when available, and returning an error when neither analytics provider is available.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue when trying to read cached default values from Redis.
+-   Fixed an issue where package version markers were ignored when retrieving them.
+-   Fixed an issue where using the [Non-null Assertion Operator](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#non-null-assertion-operator-postfix-) would break CasualOS scripts.
+-   Fixed an issue where using the [Definite Assignment Assertion Operator](https://www.typescriptlang.org/docs/handbook/2/classes.html#--strictpropertyinitialization) would break CasualOS scripts.
+-   Changed to throw an error when [Parameter Properties](https://www.typescriptlang.org/docs/handbook/2/classes.html#parameter-properties) are used.
+    -   Previously, users would end up with opaque syntax errors.
+    -   Now, CasualOS will return an error that specifies that parameter properties aren't supported.
+
 ## V4.1.5
 
 #### Date: 3/2/2026
