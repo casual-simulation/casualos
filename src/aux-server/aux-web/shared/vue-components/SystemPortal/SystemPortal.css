@@ -356,6 +356,88 @@
 .editor-code {
     flex: 1 1 auto;
     position: relative;
+    overflow: hidden;
+}
+
+.editor-dock {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    width: 100%;
+    height: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+    align-items: stretch;
+}
+
+.editor-group {
+    flex: 1 1 0;
+    min-width: 220px;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    background: rgba(0, 0, 0, 0.03);
+}
+
+.editor-tabs {
+    display: flex;
+    align-items: center;
+    overflow-x: auto;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.editor-tab {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding-left: 8px;
+    border-right: 1px solid rgba(0, 0, 0, 0.08);
+    cursor: pointer;
+    white-space: nowrap;
+    min-height: 32px;
+}
+
+.editor-tab.active {
+    background: rgba(47, 141, 254, 0.12);
+}
+
+.editor-tab.default {
+    border-top: 2px solid #2f8dfe;
+}
+
+.editor-tab-title {
+    font-size: 12px;
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.editor-tab-action {
+    margin: 0;
+    width: 24px;
+    min-width: 24px;
+    height: 24px;
+}
+
+.editor-pane {
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.editor-dock-dropzone {
+    flex: 0 0 180px;
+    border: 2px dashed rgba(47, 141, 254, 0.5);
+    border-radius: 6px;
+    color: #2f8dfe;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 8px;
 }
 
 .pin-tag-button {

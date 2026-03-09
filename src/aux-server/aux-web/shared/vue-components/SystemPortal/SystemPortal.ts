@@ -31,6 +31,7 @@ import {
     SYSTEM_PORTAL,
     SYSTEM_TAG_NAME,
     formatValue,
+    calculateFormattedBotValue,
     DNA_TAG_PREFIX,
     BOT_LINK_TAG_PREFIX,
     SYSTEM_PORTAL_BOT,
@@ -81,6 +82,7 @@ import type {
     SystemPortalSearchItem,
     SystemPortalSearchMatch,
     SystemPortalSearchTag,
+    SystemPortalSelectionUpdate,
 } from '@casual-simulation/aux-vm-browser/managers/SystemPortalCoordinator';
 import SystemPortalTag from '../SystemPortalTag/SystemPortalTag';
 import SystemPortalDiffTag from '../SystemPortalDiffTag/SystemPortalDiffTag';
@@ -125,6 +127,11 @@ export default class SystemPortal extends Vue {
     selectedBot: Bot = null;
     selectedTag: string = null;
     selectedTagSpace: string = null;
+    defaultEditor: SystemPortalDockEditor = null;
+    defaultEditorKey: string = null;
+    additionalEditors: SystemPortalDockEditor[] = [];
+    editorGroups: SystemPortalEditorGroup[] = [];
+    draggingEditorKey: string = null;
 
     recents: SystemPortalRecentTag[] = [];
 
@@ -263,6 +270,17 @@ export default class SystemPortal extends Vue {
         this.selectedBot = null;
         this.selectedTag = null;
         this.selectedTagSpace = null;
+        this.defaultEditor = null;
+        this.defaultEditorKey = null;
+        this.additionalEditors = [];
+        this.editorGroups = [
+            {
+                id: this._createEditorGroupId(),
+                editorKeys: [],
+                activeEditorKey: null,
+            },
+        ];
+        this.draggingEditorKey = null;
         this.isViewingTags = true;
         this.tagsVisible = true;
         this.pinnedTagsVisible = true;
@@ -291,6 +309,7 @@ export default class SystemPortal extends Vue {
                     this.selectedBot = e.bot;
                     this.selectedTag = e.tag;
                     this.selectedTagSpace = e.space ?? undefined;
+                    this._syncDefaultEditor(e);
 
                     for (let tag of [...e.tags, ...(e.pinnedTags ?? [])]) {
                         if (tag.focusValue) {
@@ -304,6 +323,10 @@ export default class SystemPortal extends Vue {
                     this.selectedBotSimId = null;
                     this.selectedBot = null;
                     this.selectedTag = null;
+                    this.selectedTagSpace = null;
+                    this.defaultEditor = null;
+                    this._removeDefaultEditorFromGroups();
+                    this.defaultEditorKey = null;
                 }
 
                 if (this._focusEditorOnSelectionUpdate) {
@@ -533,7 +556,7 @@ export default class SystemPortal extends Vue {
     }
 
     private _runQuickAccessAction() {
-        const editor = <TagValueEditor>this.$refs.multilineEditor;
+        const editor = this._getDefaultEditorInstance();
         const monacoEditor = editor?.monacoEditor()?.editor;
         if (monacoEditor) {
             monacoEditor.focus();
@@ -920,9 +943,12 @@ export default class SystemPortal extends Vue {
         selectionStart: number,
         selectionEnd: number
     ): boolean {
-        let editor = <TagValueEditor>this.$refs.multilineEditor;
-        const monacoEditor = editor?.monacoEditor()?.editor;
-        if (monacoEditor) {
+        for (let editor of this._allEditorInstances()) {
+            const monacoEditor = editor?.monacoEditor()?.editor;
+            if (!monacoEditor) {
+                continue;
+            }
+
             const model = monacoEditor.getModel();
             if (model && model.uri.toString() === modelUri) {
                 setTimeout(() => {
@@ -980,7 +1006,7 @@ export default class SystemPortal extends Vue {
     private _focusEditor() {
         this._focusEditorOnSelectionUpdate = false;
         this.$nextTick(() => {
-            let editor = <TagValueEditor>this.$refs.multilineEditor;
+            const editor = this._getDefaultEditorInstance();
             editor?.focusEditor();
         });
     }
@@ -990,6 +1016,398 @@ export default class SystemPortal extends Vue {
             this._focusEditorOnSelectionUpdate = true;
             this.selectTag(tag);
         });
+    }
+
+    private _syncDefaultEditor(
+        update: Extract<SystemPortalSelectionUpdate, { hasSelection: true }>
+    ) {
+        const defaultEditor = this._createEditorFromSelection(update);
+        this.defaultEditor = defaultEditor;
+
+        if (!defaultEditor) {
+            this._removeDefaultEditorFromGroups();
+            this.defaultEditorKey = null;
+            return;
+        }
+
+        const nextDefaultKey = defaultEditor.key;
+        this._upsertEditor(defaultEditor, true);
+
+        const previousDefaultKey = this.defaultEditorKey;
+        if (previousDefaultKey && previousDefaultKey !== nextDefaultKey) {
+            this._replaceEditorKey(previousDefaultKey, nextDefaultKey);
+            this.additionalEditors = this.additionalEditors.filter(
+                (e) => e.key !== nextDefaultKey
+            );
+        }
+
+        this.defaultEditorKey = nextDefaultKey;
+        if (!this._groupForEditorKey(nextDefaultKey)) {
+            this._ensureFirstGroup().editorKeys.unshift(nextDefaultKey);
+        }
+
+        const group = this._groupForEditorKey(nextDefaultKey);
+        if (group && !group.activeEditorKey) {
+            group.activeEditorKey = nextDefaultKey;
+        }
+    }
+
+    private _createEditorFromSelection(
+        update: Extract<SystemPortalSelectionUpdate, { hasSelection: true }>
+    ): SystemPortalDockEditor | null {
+        const simulationId = update.simulationId;
+        const botId = update.bot?.id;
+        const tag = update.tag ?? this.getFirstTag();
+        const space = update.space ?? null;
+
+        if (!simulationId || !botId || !tag) {
+            return null;
+        }
+
+        return this._buildEditor(simulationId, botId, tag, space);
+    }
+
+    private _buildEditor(
+        simulationId: string,
+        botId: string,
+        tag: string,
+        space: string
+    ): SystemPortalDockEditor {
+        const key = this._editorKey(simulationId, botId, tag, space);
+        return {
+            key,
+            simulationId,
+            botId,
+            tag,
+            space: space ?? null,
+        };
+    }
+
+    private _editorKey(
+        simulationId: string,
+        botId: string,
+        tag: string,
+        space: string
+    ): string {
+        return `${simulationId}:${botId}:${tag}:${space ?? ''}`;
+    }
+
+    private _createEditorGroupId() {
+        return `group-${Math.random().toString(36).slice(2, 10)}`;
+    }
+
+    private _ensureFirstGroup(): SystemPortalEditorGroup {
+        if (!this.editorGroups || this.editorGroups.length <= 0) {
+            this.editorGroups = [
+                {
+                    id: this._createEditorGroupId(),
+                    editorKeys: [],
+                    activeEditorKey: null,
+                },
+            ];
+        }
+        return this.editorGroups[0];
+    }
+
+    private _upsertEditor(editor: SystemPortalDockEditor, isDefault: boolean) {
+        if (isDefault) {
+            this.defaultEditor = editor;
+            return;
+        }
+
+        const index = this.additionalEditors.findIndex(
+            (e) => e.key === editor.key
+        );
+        if (index >= 0) {
+            this.additionalEditors.splice(index, 1, editor);
+        } else {
+            this.additionalEditors.push(editor);
+        }
+    }
+
+    private _replaceEditorKey(oldKey: string, newKey: string) {
+        if (oldKey === newKey) {
+            return;
+        }
+
+        for (let group of this.editorGroups) {
+            const index = group.editorKeys.indexOf(oldKey);
+            if (index >= 0) {
+                group.editorKeys.splice(index, 1, newKey);
+            }
+            if (group.activeEditorKey === oldKey) {
+                group.activeEditorKey = newKey;
+            }
+        }
+    }
+
+    private _removeDefaultEditorFromGroups() {
+        if (!this.defaultEditorKey) {
+            return;
+        }
+
+        for (let group of this.editorGroups) {
+            const index = group.editorKeys.indexOf(this.defaultEditorKey);
+            if (index >= 0) {
+                group.editorKeys.splice(index, 1);
+                if (group.activeEditorKey === this.defaultEditorKey) {
+                    group.activeEditorKey = group.editorKeys[0] ?? null;
+                }
+            }
+        }
+
+        this._cleanupEmptyGroups();
+    }
+
+    private _cleanupEmptyGroups() {
+        this.editorGroups = this.editorGroups.filter(
+            (g, index) => g.editorKeys.length > 0 || index === 0
+        );
+    }
+
+    private _groupForEditorKey(key: string): SystemPortalEditorGroup | null {
+        return (
+            this.editorGroups.find((g) => g.editorKeys.includes(key)) ?? null
+        );
+    }
+
+    editorForKey(key: string): SystemPortalDockEditor | null {
+        if (this.defaultEditor && this.defaultEditor.key === key) {
+            return this.defaultEditor;
+        }
+        return this.additionalEditors.find((e) => e.key === key) ?? null;
+    }
+
+    activeEditorForGroup(
+        group: SystemPortalEditorGroup
+    ): SystemPortalDockEditor | null {
+        const key = group.activeEditorKey ?? group.editorKeys[0];
+        if (!key) {
+            return null;
+        }
+        return this.editorForKey(key);
+    }
+
+    editorBot(editor: SystemPortalDockEditor): Bot | null {
+        const sim = appManager.simulationManager.simulations.get(
+            editor.simulationId
+        );
+        if (!sim) {
+            return null;
+        }
+        return sim.helper.botsState[editor.botId] ?? null;
+    }
+
+    editorDisplayName(editor: SystemPortalDockEditor): string {
+        if (!editor) {
+            return '';
+        }
+
+        const bot = this.editorBot(editor);
+        if (bot) {
+            const systemTag = calculateStringTagValue(
+                null,
+                bot,
+                SYSTEM_TAG_NAME,
+                SYSTEM_TAG
+            );
+            const system = calculateFormattedBotValue(null, bot, systemTag);
+            const area = getSystemArea(system);
+            const title = getShortId(bot);
+            if (area) {
+                return `${editor.tag} - ${area}.${title}`;
+            }
+            return `${editor.tag} - ${title}`;
+        }
+
+        return editor.tag;
+    }
+
+    getEditorRef(groupId: string) {
+        return `editor-${groupId}`;
+    }
+
+    selectEditorTab(groupId: string, editorKey: string) {
+        const group = this.editorGroups.find((g) => g.id === groupId);
+        if (group) {
+            group.activeEditorKey = editorKey;
+        }
+    }
+
+    openTagInAdditionalEditor(tag: SystemPortalSelectionTag) {
+        if (!this.selectedBotSimId || !this.selectedBotId || !tag?.name) {
+            return;
+        }
+
+        const editor = this._buildEditor(
+            this.selectedBotSimId,
+            this.selectedBotId,
+            tag.name,
+            tag.space ?? null
+        );
+
+        if (editor.key === this.defaultEditorKey) {
+            const group = this._groupForEditorKey(editor.key);
+            if (group) {
+                group.activeEditorKey = editor.key;
+            }
+            return;
+        }
+
+        this._upsertEditor(editor, false);
+        const targetGroup =
+            this.editorGroups.find((g) => g.activeEditorKey) ??
+            this._ensureFirstGroup();
+
+        if (!targetGroup.editorKeys.includes(editor.key)) {
+            targetGroup.editorKeys.push(editor.key);
+        }
+        targetGroup.activeEditorKey = editor.key;
+    }
+
+    closeEditor(editorKey: string) {
+        if (editorKey === this.defaultEditorKey) {
+            return;
+        }
+
+        this.additionalEditors = this.additionalEditors.filter(
+            (e) => e.key !== editorKey
+        );
+
+        for (let group of this.editorGroups) {
+            const index = group.editorKeys.indexOf(editorKey);
+            if (index >= 0) {
+                group.editorKeys.splice(index, 1);
+                if (group.activeEditorKey === editorKey) {
+                    group.activeEditorKey = group.editorKeys[0] ?? null;
+                }
+            }
+        }
+
+        this._cleanupEmptyGroups();
+    }
+
+    makeEditorDefault(editorKey: string) {
+        if (editorKey === this.defaultEditorKey) {
+            return;
+        }
+
+        const editor = this.editorForKey(editorKey);
+        if (!editor) {
+            return;
+        }
+
+        const tags: BotTags = {
+            [SYSTEM_PORTAL_BOT]: createBotLink([editor.botId]),
+            [SYSTEM_PORTAL_TAG]: editor.tag,
+            [SYSTEM_PORTAL_TAG_SPACE]: editor.space ?? null,
+            [SYSTEM_PORTAL_PANE]: 'bots',
+        };
+
+        this._setSimUserBotTags(editor.simulationId, tags);
+    }
+
+    onEditorTabDragStart(editorKey: string, event: DragEvent) {
+        this.draggingEditorKey = editorKey;
+        event.dataTransfer?.setData('text/plain', editorKey);
+        if (event.dataTransfer) {
+            event.dataTransfer.effectAllowed = 'move';
+        }
+    }
+
+    onEditorTabDragEnd() {
+        this.draggingEditorKey = null;
+    }
+
+    onEditorTabDropInGroup(groupId: string, event: DragEvent) {
+        event.preventDefault();
+        const editorKey =
+            event.dataTransfer?.getData('text/plain') ?? this.draggingEditorKey;
+
+        if (!editorKey) {
+            return;
+        }
+
+        this._moveEditorToGroup(editorKey, groupId);
+        this.draggingEditorKey = null;
+    }
+
+    onEditorTabDropNewGroup(event: DragEvent) {
+        event.preventDefault();
+        const editorKey =
+            event.dataTransfer?.getData('text/plain') ?? this.draggingEditorKey;
+        if (!editorKey) {
+            return;
+        }
+
+        const newGroup: SystemPortalEditorGroup = {
+            id: this._createEditorGroupId(),
+            editorKeys: [],
+            activeEditorKey: null,
+        };
+        this.editorGroups.push(newGroup);
+        this._moveEditorToGroup(editorKey, newGroup.id);
+        this.draggingEditorKey = null;
+    }
+
+    private _moveEditorToGroup(editorKey: string, groupId: string) {
+        const targetGroup = this.editorGroups.find((g) => g.id === groupId);
+        if (!targetGroup) {
+            return;
+        }
+
+        for (let group of this.editorGroups) {
+            const index = group.editorKeys.indexOf(editorKey);
+            if (index >= 0) {
+                group.editorKeys.splice(index, 1);
+                if (group.activeEditorKey === editorKey) {
+                    group.activeEditorKey = group.editorKeys[0] ?? null;
+                }
+            }
+        }
+
+        if (!targetGroup.editorKeys.includes(editorKey)) {
+            targetGroup.editorKeys.push(editorKey);
+        }
+        targetGroup.activeEditorKey = editorKey;
+
+        this._cleanupEmptyGroups();
+    }
+
+    private _allEditorInstances(): TagValueEditor[] {
+        const editors: TagValueEditor[] = [];
+        if (!this.editorGroups) {
+            return editors;
+        }
+
+        for (let group of this.editorGroups) {
+            const refName = this.getEditorRef(group.id);
+            const ref = this.$refs[refName] as
+                | TagValueEditor
+                | TagValueEditor[];
+            if (Array.isArray(ref)) {
+                editors.push(...ref.filter((r) => !!r));
+            } else if (ref) {
+                editors.push(ref);
+            }
+        }
+
+        return editors;
+    }
+
+    private _getDefaultEditorInstance(): TagValueEditor | null {
+        const defaultGroup = this.defaultEditorKey
+            ? this._groupForEditorKey(this.defaultEditorKey)
+            : null;
+        if (!defaultGroup) {
+            return this._allEditorInstances()[0] ?? null;
+        }
+        const refName = this.getEditorRef(defaultGroup.id);
+        const ref = this.$refs[refName] as TagValueEditor | TagValueEditor[];
+        if (Array.isArray(ref)) {
+            return ref[0] ?? null;
+        }
+        return ref ?? null;
     }
 
     isTagSelected(tag: SystemPortalSelectionTag | SystemPortalRecentTag) {
@@ -1065,7 +1483,12 @@ export default class SystemPortal extends Vue {
         }
     }
 
-    selectTag(tag: SystemPortalSelectionTag) {
+    selectTag(tag: SystemPortalSelectionTag, event?: MouseEvent) {
+        if (event?.ctrlKey || event?.metaKey) {
+            this.openTagInAdditionalEditor(tag);
+            return;
+        }
+
         let tags: BotTags = {
             [SYSTEM_PORTAL_TAG]: tag.name,
             [SYSTEM_PORTAL_TAG_SPACE]: tag.space ?? null,
@@ -1103,7 +1526,25 @@ export default class SystemPortal extends Vue {
         appManager.systemPortal.removePinnedTag(tag);
     }
 
-    selectRecentTag(recent: SystemPortalRecentTag) {
+    selectRecentTag(recent: SystemPortalRecentTag, event?: MouseEvent) {
+        if (event?.ctrlKey || event?.metaKey) {
+            const editor = this._buildEditor(
+                recent.simulationId,
+                recent.botId,
+                recent.tag,
+                recent.space ?? null
+            );
+            this._upsertEditor(editor, false);
+            const targetGroup =
+                this.editorGroups.find((g) => g.activeEditorKey) ??
+                this._ensureFirstGroup();
+            if (!targetGroup.editorKeys.includes(editor.key)) {
+                targetGroup.editorKeys.push(editor.key);
+            }
+            targetGroup.activeEditorKey = editor.key;
+            return;
+        }
+
         this._focusEditorOnSelectionUpdate = true;
 
         // const sim = appManager.simulationManager.simulations.get(recent.simulationId);
@@ -1145,16 +1586,18 @@ export default class SystemPortal extends Vue {
         }
     }
 
-    onEditorFocused(focused: boolean) {
+    onEditorFocused(focused: boolean, editor?: SystemPortalDockEditor) {
         if (focused) {
-            if (this.selectedBot && this.selectedTag) {
+            const target = editor ?? this.defaultEditor;
+            const bot = target ? this.editorBot(target) : null;
+            if (bot && target?.tag) {
                 const sim = appManager.simulationManager.simulations.get(
-                    this.selectedBotSimId
+                    target.simulationId
                 );
-                sim.helper.setEditingBot(
-                    this.selectedBot,
-                    this.selectedTag,
-                    this.selectedTagSpace
+                sim?.helper.setEditingBot(
+                    bot,
+                    target.tag,
+                    target.space ?? null
                 );
             }
         }
@@ -1445,4 +1888,18 @@ interface SearchItem {
     isScript?: boolean;
     isFormula?: boolean;
     prefix?: string;
+}
+
+interface SystemPortalDockEditor {
+    key: string;
+    simulationId: string;
+    botId: string;
+    tag: string;
+    space?: string;
+}
+
+interface SystemPortalEditorGroup {
+    id: string;
+    editorKeys: string[];
+    activeEditorKey: string | null;
 }

@@ -294,7 +294,7 @@
                                     :tag="tag"
                                     :selected="isTagSelected(tag)"
                                     :showCloseButton="true"
-                                    @click="selectTag(tag)"
+                                    @click="selectTag(tag, $event)"
                                     @pin="pinTag(tag)"
                                     @close="closeTag(tag)"
                                     @focusChanged="onTagFocusChanged(selectedBotSimId, tag, $event)"
@@ -336,7 +336,7 @@
                                 :bot="selectedBot"
                                 :tag="tag"
                                 :selected="isTagSelected(tag)"
-                                @click="selectTag(tag)"
+                                @click="selectTag(tag, $event)"
                                 @pin="pinTag(tag)"
                                 @focusChanged="onTagFocusChanged(selectedBotSimId, tag, $event)"
                             >
@@ -421,7 +421,7 @@
                                 }"
                                 v-for="recent of recents"
                                 :key="`${recent.botId}.${recent.tag}.${recent.space}`"
-                                @click="selectRecentTag(recent)"
+                                @click="selectRecentTag(recent, $event)"
                             >
                                 <bot-tag
                                     :tag="recent.tag"
@@ -474,19 +474,77 @@
                                 @onFocused="onEditorFocused($event)"
                             >
                             </tag-value-editor>
-                            <tag-value-editor
-                                v-else-if="selectedBot && hasTag()"
-                                ref="multilineEditor"
-                                :simId="selectedBotSimId"
-                                :bot="selectedBot"
-                                :tag="selectedTag || getFirstTag()"
-                                :space="selectedTagSpace"
-                                :showDesktopEditor="true"
-                                :showResize="false"
-                                @onFocused="onEditorFocused($event)"
-                                @modelChanged="onEditorModelChanged($event)"
-                            >
-                            </tag-value-editor>
+                            <div v-else-if="selectedPane === 'bots'" class="editor-dock">
+                                <div
+                                    class="editor-group"
+                                    v-for="group of editorGroups"
+                                    :key="group.id"
+                                    @dragover.prevent
+                                    @drop="onEditorTabDropInGroup(group.id, $event)"
+                                >
+                                    <div class="editor-tabs">
+                                        <div
+                                            v-for="editorKey of group.editorKeys"
+                                            :key="editorKey"
+                                            class="editor-tab"
+                                            :class="{
+                                                active: group.activeEditorKey === editorKey,
+                                                default: defaultEditorKey === editorKey,
+                                            }"
+                                            draggable="true"
+                                            @dragstart="onEditorTabDragStart(editorKey, $event)"
+                                            @dragend="onEditorTabDragEnd()"
+                                            @click="selectEditorTab(group.id, editorKey)"
+                                        >
+                                            <span class="editor-tab-title">{{
+                                                editorDisplayName(editorForKey(editorKey))
+                                            }}</span>
+                                            <md-button
+                                                class="md-icon-button md-dense editor-tab-action"
+                                                v-if="defaultEditorKey !== editorKey"
+                                                @click.stop="makeEditorDefault(editorKey)"
+                                            >
+                                                <md-icon>star_border</md-icon>
+                                                <md-tooltip md-direction="top"
+                                                    >Make Default Editor</md-tooltip
+                                                >
+                                            </md-button>
+                                            <md-button
+                                                class="md-icon-button md-dense editor-tab-action"
+                                                v-if="defaultEditorKey !== editorKey"
+                                                @click.stop="closeEditor(editorKey)"
+                                            >
+                                                <md-icon>close</md-icon>
+                                            </md-button>
+                                        </div>
+                                    </div>
+                                    <div class="editor-pane">
+                                        <tag-value-editor
+                                            v-if="activeEditorForGroup(group)"
+                                            :ref="getEditorRef(group.id)"
+                                            :simId="activeEditorForGroup(group).simulationId"
+                                            :bot="editorBot(activeEditorForGroup(group))"
+                                            :tag="activeEditorForGroup(group).tag"
+                                            :space="activeEditorForGroup(group).space"
+                                            :showDesktopEditor="true"
+                                            :showResize="false"
+                                            @onFocused="
+                                                onEditorFocused($event, activeEditorForGroup(group))
+                                            "
+                                            @modelChanged="onEditorModelChanged($event)"
+                                        >
+                                        </tag-value-editor>
+                                    </div>
+                                </div>
+                                <div
+                                    v-if="draggingEditorKey"
+                                    class="editor-dock-dropzone"
+                                    @dragover.prevent
+                                    @drop="onEditorTabDropNewGroup($event)"
+                                >
+                                    Drop here to create a new docked pane
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
