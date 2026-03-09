@@ -1463,10 +1463,8 @@ export default class PlayerApp extends Vue {
                     }
                 } else if (e.type === 'analytics_record_event') {
                     try {
-                        recordAnalyticsEvent({
+                        await recordAnalyticsEvent({
                             event: e,
-                            transaction: (...actions: any[]) =>
-                                simulation.helper.transaction(...actions),
                             simpleAnalytics:
                                 typeof sa_event === 'function'
                                     ? sa_event
@@ -1474,9 +1472,14 @@ export default class PlayerApp extends Vue {
                             posthog: (window as any).posthog as
                                 | PostHog
                                 | undefined,
-                            posthogApiKey: import.meta.env.VITE_POSTHOG_API_KEY,
                             isDev: import.meta.env.DEV,
                         });
+
+                        if (hasValue(e.taskId)) {
+                            simulation.helper.transaction(
+                                asyncResult(e.taskId, null)
+                            );
+                        }
                     } catch (ex) {
                         if (hasValue(e.taskId)) {
                             simulation.helper.transaction(

@@ -15,20 +15,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { asyncResult } from '@casual-simulation/aux-common';
-import {
-    recordAnalyticsEvent,
-    type SimpleAnalyticsRecordEvent,
-} from './PlayerApp.analytics';
+import type { SimpleAnalyticsRecordEvent } from './PlayerApp.analytics';
+import { recordAnalyticsEvent } from './PlayerApp.analytics';
 
 describe('recordAnalyticsEvent()', () => {
-    let transaction: jest.Mock;
-
-    beforeEach(() => {
-        transaction = jest.fn();
-    });
-
-    it('should record using simple analytics when available', () => {
+    it('should record using simple analytics when available', async () => {
         const simpleAnalytics = jest.fn(
             (...args: [string, any, () => void] | [string, () => void]) => {
                 const callback = args[args.length - 1] as () => void;
@@ -40,16 +31,14 @@ describe('recordAnalyticsEvent()', () => {
             has_opted_out_capturing: jest.fn(() => false),
         };
 
-        recordAnalyticsEvent({
+        await recordAnalyticsEvent({
             event: {
                 name: 'test_event',
                 metadata: { source: 'spec' },
                 taskId: 1,
             },
-            transaction,
             simpleAnalytics,
-            posthog,
-            posthogApiKey: undefined,
+            posthog: undefined,
             isDev: false,
         });
 
@@ -60,24 +49,21 @@ describe('recordAnalyticsEvent()', () => {
             expect.any(Function)
         );
         expect(posthog.capture).not.toHaveBeenCalled();
-        expect(transaction).toHaveBeenCalledWith(asyncResult(1, null));
     });
 
-    it('should record using posthog when posthog is configured and simple analytics is not available', () => {
+    it('should record using posthog when posthog is configured and simple analytics is not available', async () => {
         const posthog = {
             capture: jest.fn(),
             has_opted_out_capturing: jest.fn(() => false),
         };
 
-        recordAnalyticsEvent({
+        await recordAnalyticsEvent({
             event: {
                 name: 'test_event',
                 metadata: { source: 'spec' },
                 taskId: 2,
             },
-            transaction,
             posthog,
-            posthogApiKey: 'ph_test_key',
             isDev: false,
         });
 
@@ -85,10 +71,9 @@ describe('recordAnalyticsEvent()', () => {
         expect(posthog.capture).toHaveBeenCalledWith('test_event', {
             source: 'spec',
         });
-        expect(transaction).toHaveBeenCalledWith(asyncResult(2, null));
     });
 
-    it('should record using both simple analytics and posthog when both are available', () => {
+    it('should record using both simple analytics and posthog when both are available', async () => {
         const simpleAnalytics = jest.fn(
             (...args: [string, any, () => void] | [string, () => void]) => {
                 const callback = args[args.length - 1] as () => void;
@@ -100,42 +85,36 @@ describe('recordAnalyticsEvent()', () => {
             has_opted_out_capturing: jest.fn(() => false),
         };
 
-        recordAnalyticsEvent({
+        await recordAnalyticsEvent({
             event: {
                 name: 'test_event',
                 metadata: { source: 'spec' },
                 taskId: 3,
             },
-            transaction,
             simpleAnalytics,
             posthog,
-            posthogApiKey: 'ph_test_key',
             isDev: false,
         });
 
         expect(posthog.capture).toHaveBeenCalledTimes(1);
         expect(simpleAnalytics).toHaveBeenCalledTimes(1);
-        expect(transaction).toHaveBeenCalledWith(asyncResult(3, null));
     });
 
-    it('should throw when neither provider is enabled', () => {
-        expect(() =>
-            recordAnalyticsEvent({
-                event: {
-                    name: 'test_event',
-                    metadata: { source: 'spec' },
-                    taskId: 4,
-                },
-                transaction,
-                posthogApiKey: undefined,
-                isDev: false,
-            })
-        ).toThrow('Analytics are not supported on this inst.');
-
-        expect(transaction).not.toHaveBeenCalled();
+    it('should throw when neither provider is enabled', async () => {
+        await expect(
+            async () =>
+                await recordAnalyticsEvent({
+                    event: {
+                        name: 'test_event',
+                        metadata: { source: 'spec' },
+                        taskId: 4,
+                    },
+                    isDev: false,
+                })
+        ).rejects.toThrow('Analytics are not supported on this inst.');
     });
 
-    it('should fallback to simple analytics when posthog capture throws', () => {
+    it('should fallback to simple analytics when posthog capture throws', async () => {
         const consoleSpy = jest
             .spyOn(console, 'error')
             .mockImplementation(() => {});
@@ -152,27 +131,24 @@ describe('recordAnalyticsEvent()', () => {
             has_opted_out_capturing: jest.fn(() => false),
         };
 
-        recordAnalyticsEvent({
+        await recordAnalyticsEvent({
             event: {
                 name: 'test_event',
                 metadata: { source: 'spec' },
                 taskId: 5,
             },
-            transaction,
             simpleAnalytics,
             posthog,
-            posthogApiKey: 'ph_test_key',
             isDev: false,
         });
 
         expect(posthog.capture).toHaveBeenCalledTimes(1);
         expect(simpleAnalytics).toHaveBeenCalledTimes(1);
-        expect(transaction).toHaveBeenCalledWith(asyncResult(5, null));
         expect(consoleSpy).toHaveBeenCalled();
         consoleSpy.mockRestore();
     });
 
-    it('should throw when posthog capture throws and simple analytics is unavailable', () => {
+    it('should throw when posthog capture throws and simple analytics is unavailable', async () => {
         const consoleSpy = jest
             .spyOn(console, 'error')
             .mockImplementation(() => {});
@@ -183,70 +159,64 @@ describe('recordAnalyticsEvent()', () => {
             has_opted_out_capturing: jest.fn(() => false),
         };
 
-        expect(() =>
-            recordAnalyticsEvent({
-                event: {
-                    name: 'test_event',
-                    metadata: { source: 'spec' },
-                    taskId: 6,
-                },
-                transaction,
-                posthog,
-                posthogApiKey: 'ph_test_key',
-                isDev: false,
-            })
-        ).toThrow('posthog failed');
+        await expect(
+            async () =>
+                await recordAnalyticsEvent({
+                    event: {
+                        name: 'test_event',
+                        metadata: { source: 'spec' },
+                        taskId: 6,
+                    },
+                    posthog,
+                    isDev: false,
+                })
+        ).rejects.toThrow('posthog failed');
 
-        expect(transaction).not.toHaveBeenCalled();
         expect(consoleSpy).toHaveBeenCalled();
         consoleSpy.mockRestore();
     });
 
-    it('should throw in development mode when simple analytics is unavailable', () => {
+    it('should throw in development mode when simple analytics is unavailable', async () => {
         const posthog = {
             capture: jest.fn(),
             has_opted_out_capturing: jest.fn(() => false),
         };
 
-        expect(() =>
-            recordAnalyticsEvent({
-                event: {
-                    name: 'test_event',
-                    metadata: { source: 'spec' },
-                    taskId: 7,
-                },
-                transaction,
-                posthog,
-                posthogApiKey: 'ph_test_key',
-                isDev: true,
-            })
-        ).toThrow('Analytics are not supported on this inst.');
+        await expect(
+            async () =>
+                await recordAnalyticsEvent({
+                    event: {
+                        name: 'test_event',
+                        metadata: { source: 'spec' },
+                        taskId: 7,
+                    },
+                    posthog,
+                    isDev: true,
+                })
+        ).rejects.toThrow('Analytics are not supported on this inst.');
 
         expect(posthog.capture).not.toHaveBeenCalled();
-        expect(transaction).not.toHaveBeenCalled();
     });
 
-    it('should throw when posthog is opted out and simple analytics is unavailable', () => {
+    it('should throw when posthog is opted out and simple analytics is unavailable', async () => {
         const posthog = {
             capture: jest.fn(),
             has_opted_out_capturing: jest.fn(() => true),
         };
 
-        expect(() =>
-            recordAnalyticsEvent({
-                event: {
-                    name: 'test_event',
-                    metadata: { source: 'spec' },
-                    taskId: 8,
-                },
-                transaction,
-                posthog,
-                posthogApiKey: 'ph_test_key',
-                isDev: false,
-            })
-        ).toThrow('Analytics are not supported on this inst.');
+        await expect(
+            async () =>
+                await recordAnalyticsEvent({
+                    event: {
+                        name: 'test_event',
+                        metadata: { source: 'spec' },
+                        taskId: 8,
+                    },
+                    posthog,
+                    isDev: false,
+                })
+        ).rejects.toThrow('Analytics are not supported on this inst.');
 
         expect(posthog.capture).not.toHaveBeenCalled();
-        expect(transaction).not.toHaveBeenCalled();
     });
 });

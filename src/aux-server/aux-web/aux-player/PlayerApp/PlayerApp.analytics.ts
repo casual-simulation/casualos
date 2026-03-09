@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { asyncResult, hasValue } from '@casual-simulation/aux-common';
+import { hasValue } from '@casual-simulation/aux-common';
 import type { PostHog } from 'posthog-js';
 
 export type SimpleAnalyticsRecordEvent = {
@@ -31,26 +31,18 @@ interface RecordAnalyticsEventOptions {
         metadata?: any;
         taskId?: number | string;
     };
-    transaction: (...actions: any[]) => void;
     simpleAnalytics?: SimpleAnalyticsRecordEvent;
     posthog?: PostHogRecordEvent;
-    posthogApiKey?: string;
     isDev: boolean;
 }
 
-export function recordAnalyticsEvent(options: RecordAnalyticsEventOptions) {
-    const {
-        event,
-        transaction,
-        simpleAnalytics,
-        posthog,
-        posthogApiKey,
-        isDev,
-    } = options;
+export async function recordAnalyticsEvent(
+    options: RecordAnalyticsEventOptions
+): Promise<void> {
+    const { event, simpleAnalytics, posthog, isDev } = options;
 
     const hasSimpleAnalytics = typeof simpleAnalytics === 'function';
     const hasPosthog =
-        hasValue(posthogApiKey) &&
         !isDev &&
         !!posthog &&
         typeof posthog.capture === 'function' &&
@@ -78,24 +70,19 @@ export function recordAnalyticsEvent(options: RecordAnalyticsEventOptions) {
     }
 
     if (hasSimpleAnalytics) {
-        const callback = () => {
-            if (hasValue(event.taskId)) {
-                transaction(asyncResult(event.taskId, null));
-            }
-        };
         if (hasValue(event.metadata)) {
-            simpleAnalytics(event.name, event.metadata, callback);
+            await new Promise<void>((resolve) =>
+                simpleAnalytics(event.name, event.metadata, () => resolve())
+            );
         } else {
-            simpleAnalytics(event.name, callback);
+            await new Promise<void>((resolve) =>
+                simpleAnalytics(event.name, () => resolve())
+            );
         }
         return;
     }
 
     if (posthogError) {
         throw posthogError;
-    }
-
-    if (hasValue(event.taskId)) {
-        transaction(asyncResult(event.taskId, null));
     }
 }
