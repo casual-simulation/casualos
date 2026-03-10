@@ -1276,12 +1276,8 @@ export default class SystemPortal extends Vue {
         targetGroup.activeEditorKey = editor.key;
     }
 
-    private _openRecentTagInGroup(
-        recent: SystemPortalRecentTag,
-        groupId: string
-    ) {
-        const group = this.editorGroups.find((g) => g.id === groupId);
-        if (!group) {
+    openRecentInAdditionalEditor(recent: SystemPortalRecentTag) {
+        if (!recent?.simulationId || !recent.botId || !recent.tag) {
             return;
         }
 
@@ -1292,17 +1288,15 @@ export default class SystemPortal extends Vue {
             recent.space ?? null
         );
 
-        if (editor.key === this.defaultEditorKey) {
-            group.activeEditorKey = editor.key;
-            return;
-        }
-
         this._upsertEditor(editor, false);
+        const targetGroup =
+            this.editorGroups.find((g) => g.activeEditorKey) ??
+            this._ensureFirstGroup();
 
-        if (!group.editorKeys.includes(editor.key)) {
-            group.editorKeys.push(editor.key);
+        if (!targetGroup.editorKeys.includes(editor.key)) {
+            targetGroup.editorKeys.push(editor.key);
         }
-        group.activeEditorKey = editor.key;
+        targetGroup.activeEditorKey = editor.key;
     }
 
     closeEditor(editorKey: string) {
@@ -1353,41 +1347,142 @@ export default class SystemPortal extends Vue {
             return;
         }
         this.draggingEditorKey = editorKey;
-        event.dataTransfer?.setData('text/plain', `editor:${editorKey}`);
+        this.draggingRecentTag = null;
+        console.log('[SystemPortal] onEditorTabDragStart', {
+            editorKey,
+            draggingEditorKey: this.draggingEditorKey,
+            draggingRecentTag: this.draggingRecentTag,
+        });
+        event.dataTransfer?.setData('text/plain', editorKey);
         if (event.dataTransfer) {
             event.dataTransfer.effectAllowed = 'move';
         }
     }
 
     onEditorTabDragEnd() {
+        console.log('[SystemPortal] onEditorTabDragEnd', {
+            draggingEditorKey: this.draggingEditorKey,
+            draggingRecentTag: this.draggingRecentTag,
+        });
         this.draggingEditorKey = null;
         this.draggingRecentTag = null;
     }
 
     onRecentTagDragStart(recent: SystemPortalRecentTag, event: DragEvent) {
+        this.draggingEditorKey = null;
         this.draggingRecentTag = recent;
-        event.dataTransfer?.setData('text/plain', 'recent');
+        console.log('[SystemPortal] onRecentTagDragStart', {
+            recent,
+            draggingEditorKey: this.draggingEditorKey,
+            draggingRecentTag: this.draggingRecentTag,
+            hasDataTransfer: !!event.dataTransfer,
+        });
+        event.dataTransfer?.setData(
+            'application/x-system-portal-recent',
+            JSON.stringify(recent)
+        );
         if (event.dataTransfer) {
             event.dataTransfer.effectAllowed = 'copyMove';
         }
     }
 
-    onRecentTagDragEnd() {
-        this.draggingRecentTag = null;
+    private _getDroppedEditorOrRecent(
+        event: DragEvent
+    ):
+        | { type: 'editor'; editorKey: string }
+        | { type: 'recent'; recent: SystemPortalRecentTag }
+        | null {
+        console.log('[SystemPortal] _getDroppedEditorOrRecent:start', {
+            draggingEditorKey: this.draggingEditorKey,
+            draggingRecentTag: this.draggingRecentTag,
+        });
+        // Check for a recent tag stored on this instance first (set via
+        // inline template handler when dragging a recent tag pill).
+        if (
+            this.draggingRecentTag?.simulationId &&
+            this.draggingRecentTag.botId &&
+            this.draggingRecentTag.tag
+        ) {
+            console.log(
+                '[SystemPortal] _getDroppedEditorOrRecent:recent state',
+                {
+                    recent: this.draggingRecentTag,
+                }
+            );
+            return {
+                type: 'recent',
+                recent: this.draggingRecentTag,
+            };
+        }
+
+        const recentData = event.dataTransfer?.getData(
+            'application/x-system-portal-recent'
+        );
+        if (recentData) {
+            try {
+                const recent = JSON.parse(recentData) as SystemPortalRecentTag;
+                if (recent?.simulationId && recent?.botId && recent?.tag) {
+                    console.log(
+                        '[SystemPortal] _getDroppedEditorOrRecent:recent payload',
+                        {
+                            recent,
+                        }
+                    );
+                    return {
+                        type: 'recent',
+                        recent,
+                    };
+                }
+            } catch {
+                // Ignore malformed drag payloads.
+                console.warn(
+                    '[SystemPortal] _getDroppedEditorOrRecent:failed to parse recent payload'
+                );
+            }
+        }
+
+        const editorKey =
+            event.dataTransfer?.getData('text/plain') ?? this.draggingEditorKey;
+        if (editorKey && editorKey !== '__dragging-recent__') {
+            console.log(
+                '[SystemPortal] _getDroppedEditorOrRecent:editor payload',
+                {
+                    editorKey,
+                }
+            );
+            return {
+                type: 'editor',
+                editorKey,
+            };
+        }
+
+        return null;
     }
 
     onEditorTabDropInGroup(groupId: string, event: DragEvent) {
         event.preventDefault();
-        const data = event.dataTransfer?.getData('text/plain') ?? '';
+        const droppedItem = this._getDroppedEditorOrRecent(event);
+        console.log('[SystemPortal] onEditorTabDropInGroup', {
+            groupId,
+            droppedItem,
+            draggingEditorKey: this.draggingEditorKey,
+            draggingRecentTag: this.draggingRecentTag,
+        });
+        if (!droppedItem) {
+            return;
+        }
 
-        if (data.startsWith('editor:')) {
-            const editorKey =
-                data.slice('editor:'.length) || this.draggingEditorKey;
-            if (editorKey) {
-                this._moveEditorToGroup(editorKey, groupId);
-            }
-        } else if (data === 'recent' && this.draggingRecentTag) {
-            this._openRecentTagInGroup(this.draggingRecentTag, groupId);
+        if (droppedItem.type === 'editor') {
+            this._moveEditorToGroup(droppedItem.editorKey, groupId);
+        } else {
+            this.openRecentInAdditionalEditor(droppedItem.recent);
+            const editor = this._buildEditor(
+                droppedItem.recent.simulationId,
+                droppedItem.recent.botId,
+                droppedItem.recent.tag,
+                droppedItem.recent.space ?? null
+            );
+            this._moveEditorToGroup(editor.key, groupId);
         }
 
         this.draggingEditorKey = null;
@@ -1396,6 +1491,16 @@ export default class SystemPortal extends Vue {
 
     onEditorTabDropNewGroup(event: DragEvent) {
         event.preventDefault();
+        const droppedItem = this._getDroppedEditorOrRecent(event);
+        console.log('[SystemPortal] onEditorTabDropNewGroup', {
+            droppedItem,
+            draggingEditorKey: this.draggingEditorKey,
+            draggingRecentTag: this.draggingRecentTag,
+        });
+        if (!droppedItem) {
+            return;
+        }
+
         const newGroup: SystemPortalEditorGroup = {
             id: this._createEditorGroupId(),
             editorKeys: [],
@@ -1403,15 +1508,17 @@ export default class SystemPortal extends Vue {
         };
         this.editorGroups.push(newGroup);
 
-        const data = event.dataTransfer?.getData('text/plain') ?? '';
-        if (data.startsWith('editor:')) {
-            const editorKey =
-                data.slice('editor:'.length) || this.draggingEditorKey;
-            if (editorKey) {
-                this._moveEditorToGroup(editorKey, newGroup.id);
-            }
-        } else if (data === 'recent' && this.draggingRecentTag) {
-            this._openRecentTagInGroup(this.draggingRecentTag, newGroup.id);
+        if (droppedItem.type === 'editor') {
+            this._moveEditorToGroup(droppedItem.editorKey, newGroup.id);
+        } else {
+            this.openRecentInAdditionalEditor(droppedItem.recent);
+            const editor = this._buildEditor(
+                droppedItem.recent.simulationId,
+                droppedItem.recent.botId,
+                droppedItem.recent.tag,
+                droppedItem.recent.space ?? null
+            );
+            this._moveEditorToGroup(editor.key, newGroup.id);
         }
 
         this.draggingEditorKey = null;
@@ -1600,20 +1707,7 @@ export default class SystemPortal extends Vue {
 
     selectRecentTag(recent: SystemPortalRecentTag, event?: MouseEvent) {
         if (event?.ctrlKey || event?.metaKey) {
-            const editor = this._buildEditor(
-                recent.simulationId,
-                recent.botId,
-                recent.tag,
-                recent.space ?? null
-            );
-            this._upsertEditor(editor, false);
-            const targetGroup =
-                this.editorGroups.find((g) => g.activeEditorKey) ??
-                this._ensureFirstGroup();
-            if (!targetGroup.editorKeys.includes(editor.key)) {
-                targetGroup.editorKeys.push(editor.key);
-            }
-            targetGroup.activeEditorKey = editor.key;
+            this.openRecentInAdditionalEditor(recent);
             return;
         }
 

@@ -414,33 +414,52 @@
                     </div>
                     <div class="editor">
                         <div class="editor-recents">
-                            <md-button
-                                class="editor-recents-item md-raised md-dense"
-                                :class="{
-                                    selected: isTagSelected(recent),
-                                }"
+                            <div
+                                class="editor-recents-item-wrapper"
                                 v-for="recent of recents"
                                 :key="`${recent.botId}.${recent.tag}.${recent.space}`"
                                 draggable="true"
-                                @dragstart="onRecentTagDragStart(recent, $event)"
-                                @dragend="onRecentTagDragEnd()"
-                                @click="selectRecentTag(recent, $event)"
+                                @dragstart="
+                                    draggingEditorKey = '__dragging-recent__';
+                                    draggingRecentTag = recent;
+                                "
+                                @dragend="
+                                    draggingEditorKey = null;
+                                    draggingRecentTag = null;
+                                "
                             >
-                                <bot-tag
-                                    :tag="recent.tag"
-                                    :prefix="recent.prefix"
-                                    :allowCloning="false"
-                                ></bot-tag>
-                                <span v-show="!!recent.space" class="tag-space">{{
-                                    recent.space
-                                }}</span>
-                                <span class="tag-owner">
-                                    {{ recent.hint }}
-                                </span>
-                                <md-tooltip>
-                                    {{ recent.system }}
-                                </md-tooltip>
-                            </md-button>
+                                <md-button
+                                    class="editor-recents-item md-raised md-dense"
+                                    :class="{
+                                        selected: isTagSelected(recent),
+                                    }"
+                                    draggable="true"
+                                    @dragstart.native="
+                                        draggingEditorKey = '__dragging-recent__';
+                                        draggingRecentTag = recent;
+                                    "
+                                    @dragend.native="
+                                        draggingEditorKey = null;
+                                        draggingRecentTag = null;
+                                    "
+                                    @click="selectRecentTag(recent, $event)"
+                                >
+                                    <bot-tag
+                                        :tag="recent.tag"
+                                        :prefix="recent.prefix"
+                                        :allowCloning="false"
+                                    ></bot-tag>
+                                    <span v-show="!!recent.space" class="tag-space">{{
+                                        recent.space
+                                    }}</span>
+                                    <span class="tag-owner">
+                                        {{ recent.hint }}
+                                    </span>
+                                    <md-tooltip>
+                                        {{ recent.system }}
+                                    </md-tooltip>
+                                </md-button>
+                            </div>
                         </div>
                         <div class="editor-code">
                             <tag-diff-editor

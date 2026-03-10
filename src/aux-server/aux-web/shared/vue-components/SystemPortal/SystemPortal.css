@@ -325,6 +325,11 @@
     overflow-x: hidden;
 }
 
+.editor-recents-item-wrapper {
+    flex: 0 0 auto;
+    display: inline-flex;
+}
+
 .editor-recents-item {
     flex: 0 0 auto;
     margin: 0;
