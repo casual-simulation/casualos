@@ -199,19 +199,9 @@
     color: #333 !important;
 }
 
-.area {
-    /* display: flex;
-    gap: 4px; */
-}
-
 .area-title {
     font-weight: 600;
     font-size: 16px;
-}
-
-.area-bots {
-    /* flex: 1 1 auto; */
-    /* text-align: end; */
 }
 
 .areas-list {
@@ -340,6 +330,7 @@
     margin: 0;
     white-space: nowrap;
     text-transform: none;
+    cursor: grab;
 }
 
 .editor-recents-item.selected {
@@ -398,6 +389,7 @@
     cursor: pointer;
     white-space: nowrap;
     min-height: 32px;
+    cursor: grab;
 }
 
 .editor-tab.active {

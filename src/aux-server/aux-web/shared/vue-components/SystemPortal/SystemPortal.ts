@@ -132,6 +132,7 @@ export default class SystemPortal extends Vue {
     additionalEditors: SystemPortalDockEditor[] = [];
     editorGroups: SystemPortalEditorGroup[] = [];
     draggingEditorKey: string = null;
+    draggingRecentTag: SystemPortalRecentTag = null;
 
     recents: SystemPortalRecentTag[] = [];
 
@@ -281,6 +282,7 @@ export default class SystemPortal extends Vue {
             },
         ];
         this.draggingEditorKey = null;
+        this.draggingRecentTag = null;
         this.isViewingTags = true;
         this.tagsVisible = true;
         this.pinnedTagsVisible = true;
@@ -1035,21 +1037,18 @@ export default class SystemPortal extends Vue {
 
         const previousDefaultKey = this.defaultEditorKey;
         if (previousDefaultKey && previousDefaultKey !== nextDefaultKey) {
-            this._replaceEditorKey(previousDefaultKey, nextDefaultKey);
+            this._removeEditorKeyFromGroups(previousDefaultKey);
             this.additionalEditors = this.additionalEditors.filter(
                 (e) => e.key !== nextDefaultKey
             );
         }
 
         this.defaultEditorKey = nextDefaultKey;
-        if (!this._groupForEditorKey(nextDefaultKey)) {
-            this._ensureFirstGroup().editorKeys.unshift(nextDefaultKey);
-        }
-
-        const group = this._groupForEditorKey(nextDefaultKey);
-        if (group && !group.activeEditorKey) {
-            group.activeEditorKey = nextDefaultKey;
-        }
+        this._removeEditorKeyFromGroups(nextDefaultKey);
+        const firstGroup = this._ensureFirstGroup();
+        firstGroup.editorKeys.unshift(nextDefaultKey);
+        firstGroup.activeEditorKey = nextDefaultKey;
+        this._cleanupEmptyGroups();
     }
 
     private _createEditorFromSelection(
@@ -1137,6 +1136,18 @@ export default class SystemPortal extends Vue {
             }
             if (group.activeEditorKey === oldKey) {
                 group.activeEditorKey = newKey;
+            }
+        }
+    }
+
+    private _removeEditorKeyFromGroups(editorKey: string) {
+        for (let group of this.editorGroups) {
+            const index = group.editorKeys.indexOf(editorKey);
+            if (index >= 0) {
+                group.editorKeys.splice(index, 1);
+                if (group.activeEditorKey === editorKey) {
+                    group.activeEditorKey = group.editorKeys[0] ?? null;
+                }
             }
         }
     }
@@ -1265,6 +1276,35 @@ export default class SystemPortal extends Vue {
         targetGroup.activeEditorKey = editor.key;
     }
 
+    private _openRecentTagInGroup(
+        recent: SystemPortalRecentTag,
+        groupId: string
+    ) {
+        const group = this.editorGroups.find((g) => g.id === groupId);
+        if (!group) {
+            return;
+        }
+
+        const editor = this._buildEditor(
+            recent.simulationId,
+            recent.botId,
+            recent.tag,
+            recent.space ?? null
+        );
+
+        if (editor.key === this.defaultEditorKey) {
+            group.activeEditorKey = editor.key;
+            return;
+        }
+
+        this._upsertEditor(editor, false);
+
+        if (!group.editorKeys.includes(editor.key)) {
+            group.editorKeys.push(editor.key);
+        }
+        group.activeEditorKey = editor.key;
+    }
+
     closeEditor(editorKey: string) {
         if (editorKey === this.defaultEditorKey) {
             return;
@@ -1308,8 +1348,12 @@ export default class SystemPortal extends Vue {
     }
 
     onEditorTabDragStart(editorKey: string, event: DragEvent) {
+        if (editorKey === this.defaultEditorKey) {
+            event.preventDefault();
+            return;
+        }
         this.draggingEditorKey = editorKey;
-        event.dataTransfer?.setData('text/plain', editorKey);
+        event.dataTransfer?.setData('text/plain', `editor:${editorKey}`);
         if (event.dataTransfer) {
             event.dataTransfer.effectAllowed = 'move';
         }
@@ -1317,40 +1361,68 @@ export default class SystemPortal extends Vue {
 
     onEditorTabDragEnd() {
         this.draggingEditorKey = null;
+        this.draggingRecentTag = null;
+    }
+
+    onRecentTagDragStart(recent: SystemPortalRecentTag, event: DragEvent) {
+        this.draggingRecentTag = recent;
+        event.dataTransfer?.setData('text/plain', 'recent');
+        if (event.dataTransfer) {
+            event.dataTransfer.effectAllowed = 'copyMove';
+        }
+    }
+
+    onRecentTagDragEnd() {
+        this.draggingRecentTag = null;
     }
 
     onEditorTabDropInGroup(groupId: string, event: DragEvent) {
         event.preventDefault();
-        const editorKey =
-            event.dataTransfer?.getData('text/plain') ?? this.draggingEditorKey;
+        const data = event.dataTransfer?.getData('text/plain') ?? '';
 
-        if (!editorKey) {
-            return;
+        if (data.startsWith('editor:')) {
+            const editorKey =
+                data.slice('editor:'.length) || this.draggingEditorKey;
+            if (editorKey) {
+                this._moveEditorToGroup(editorKey, groupId);
+            }
+        } else if (data === 'recent' && this.draggingRecentTag) {
+            this._openRecentTagInGroup(this.draggingRecentTag, groupId);
         }
 
-        this._moveEditorToGroup(editorKey, groupId);
         this.draggingEditorKey = null;
+        this.draggingRecentTag = null;
     }
 
     onEditorTabDropNewGroup(event: DragEvent) {
         event.preventDefault();
-        const editorKey =
-            event.dataTransfer?.getData('text/plain') ?? this.draggingEditorKey;
-        if (!editorKey) {
-            return;
-        }
-
         const newGroup: SystemPortalEditorGroup = {
             id: this._createEditorGroupId(),
             editorKeys: [],
             activeEditorKey: null,
         };
         this.editorGroups.push(newGroup);
-        this._moveEditorToGroup(editorKey, newGroup.id);
+
+        const data = event.dataTransfer?.getData('text/plain') ?? '';
+        if (data.startsWith('editor:')) {
+            const editorKey =
+                data.slice('editor:'.length) || this.draggingEditorKey;
+            if (editorKey) {
+                this._moveEditorToGroup(editorKey, newGroup.id);
+            }
+        } else if (data === 'recent' && this.draggingRecentTag) {
+            this._openRecentTagInGroup(this.draggingRecentTag, newGroup.id);
+        }
+
         this.draggingEditorKey = null;
+        this.draggingRecentTag = null;
     }
 
     private _moveEditorToGroup(editorKey: string, groupId: string) {
+        if (editorKey === this.defaultEditorKey) {
+            return;
+        }
+
         const targetGroup = this.editorGroups.find((g) => g.id === groupId);
         if (!targetGroup) {
             return;

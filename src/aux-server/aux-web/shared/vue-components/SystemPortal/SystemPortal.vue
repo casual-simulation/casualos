@@ -421,6 +421,9 @@
                                 }"
                                 v-for="recent of recents"
                                 :key="`${recent.botId}.${recent.tag}.${recent.space}`"
+                                draggable="true"
+                                @dragstart="onRecentTagDragStart(recent, $event)"
+                                @dragend="onRecentTagDragEnd()"
                                 @click="selectRecentTag(recent, $event)"
                             >
                                 <bot-tag
@@ -491,7 +494,7 @@
                                                 active: group.activeEditorKey === editorKey,
                                                 default: defaultEditorKey === editorKey,
                                             }"
-                                            draggable="true"
+                                            :draggable="defaultEditorKey !== editorKey"
                                             @dragstart="onEditorTabDragStart(editorKey, $event)"
                                             @dragend="onEditorTabDragEnd()"
                                             @click="selectEditorTab(group.id, editorKey)"
