@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V4.2.1
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where some static files weren't being served properly.
+
 ## V4.2.0
 
 #### Date: 3/9/2026
