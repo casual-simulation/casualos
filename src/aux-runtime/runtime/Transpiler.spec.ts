@@ -2449,6 +2449,16 @@ describe('Transpiler', () => {
                     transpiler.transpile(`const abc = <T,>(a: T): T => a;`)
                 ).toBe(`const abc = (a) => a;`);
             });
+
+            it('should support satisfies expressions', () => {
+                const transpiler = new Transpiler();
+
+                expect(
+                    transpiler.transpile(
+                        `const abc: any = { a: 123, b: "hello" } satisfies { a: number, b: string };`
+                    )
+                ).toBe(`const abc = { a: 123, b: "hello" };`);
+            });
         });
 
         describe('directives', () => {
