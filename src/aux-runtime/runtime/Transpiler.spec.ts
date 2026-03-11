@@ -2429,6 +2429,26 @@ describe('Transpiler', () => {
                     transpiler.transpile(`class Test { #myProp!: number; }`)
                 ).toBe(`class Test { #myProp; }`);
             });
+
+            it('should remove type annotations from arrow functions', () => {
+                const transpiler = new Transpiler();
+
+                expect(
+                    transpiler.transpile(
+                        `const abc = (n: number): number => n;`
+                    )
+                ).toBe(`const abc = (n) => n;`);
+
+                expect(
+                    transpiler.transpile(
+                        `const abc = ({a, b, c}: {a: number, b: number, c: number}): number => a;`
+                    )
+                ).toBe(`const abc = ({a, b, c}) => a;`);
+
+                expect(
+                    transpiler.transpile(`const abc = <T,>(a: T): T => a;`)
+                ).toBe(`const abc = (a) => a;`);
+            });
         });
 
         describe('directives', () => {

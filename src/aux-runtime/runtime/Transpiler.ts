@@ -211,6 +211,11 @@ export const TypeScriptVisistorKeys: { [nodeType: string]: string[] } = {
     RestElement: [...VisitorKeys.RestElement, 'typeAnnotation'],
     ObjectPattern: [...(VisitorKeys as any).ObjectPattern, 'typeAnnotation'],
     ArrayPattern: [...(VisitorKeys as any).ArrayPattern, 'typeAnnotation'],
+    ArrowFunctionExpression: [
+        ...VisitorKeys.ArrowFunctionExpression,
+        'returnType',
+        'typeParameters',
+    ],
 };
 
 /**
