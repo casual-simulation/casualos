@@ -1,5 +1,14 @@
 # CasualOS Changelog
 
+## V4.2.2
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where CasualOS didn't support return type annotations on arrow functions.
+-   Fixed an issue where CasualOS didn't support generic type parameters on arrow functions.
+
 ## V4.2.1
 
 #### Date: 3/10/2026
