@@ -9,6 +9,7 @@
 -   Fixed an issue where CasualOS didn't support return type annotations on arrow functions.
 -   Fixed an issue where CasualOS didn't support generic type parameters on arrow functions.
 -   Fixed an issue where CasualOS didn't support "satisfies" TypeScript expressions.
+-   Fixed an issue where CasualOS didn't support some parenthesized expressions.
 
 ## V4.2.1
 
