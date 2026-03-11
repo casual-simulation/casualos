@@ -422,6 +422,18 @@
                                 @dragstart="
                                     draggingEditorKey = '__dragging-recent__';
                                     draggingRecentTag = recent;
+                                    $event.dataTransfer &&
+                                        $event.dataTransfer.setData(
+                                            'application/x-system-portal-recent',
+                                            JSON.stringify(recent)
+                                        );
+                                    $event.dataTransfer &&
+                                        $event.dataTransfer.setData(
+                                            'text/plain',
+                                            '__dragging-recent__'
+                                        );
+                                    $event.dataTransfer &&
+                                        ($event.dataTransfer.effectAllowed = 'copyMove');
                                 "
                                 @dragend="
                                     draggingEditorKey = null;
@@ -437,6 +449,18 @@
                                     @dragstart.native="
                                         draggingEditorKey = '__dragging-recent__';
                                         draggingRecentTag = recent;
+                                        $event.dataTransfer &&
+                                            $event.dataTransfer.setData(
+                                                'application/x-system-portal-recent',
+                                                JSON.stringify(recent)
+                                            );
+                                        $event.dataTransfer &&
+                                            $event.dataTransfer.setData(
+                                                'text/plain',
+                                                '__dragging-recent__'
+                                            );
+                                        $event.dataTransfer &&
+                                            ($event.dataTransfer.effectAllowed = 'copyMove');
                                     "
                                     @dragend.native="
                                         draggingEditorKey = null;

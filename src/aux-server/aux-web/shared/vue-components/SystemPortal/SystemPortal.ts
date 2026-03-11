@@ -1203,10 +1203,20 @@ export default class SystemPortal extends Vue {
         const sim = appManager.simulationManager.simulations.get(
             editor.simulationId
         );
-        if (!sim) {
-            return null;
+        const directBot = sim?.helper.botsState[editor.botId] ?? null;
+        if (directBot) {
+            return directBot;
         }
-        return sim.helper.botsState[editor.botId] ?? null;
+
+        // Fallback for cases where the stored simulationId is stale.
+        for (let [id, otherSim] of appManager.simulationManager.simulations) {
+            const bot = otherSim.helper.botsState[editor.botId] ?? null;
+            if (bot) {
+                return bot;
+            }
+        }
+
+        return null;
     }
 
     editorDisplayName(editor: SystemPortalDockEditor): string {
@@ -1281,12 +1291,7 @@ export default class SystemPortal extends Vue {
             return;
         }
 
-        const editor = this._buildEditor(
-            recent.simulationId,
-            recent.botId,
-            recent.tag,
-            recent.space ?? null
-        );
+        const editor = this._buildEditorFromRecent(recent);
 
         this._upsertEditor(editor, false);
         const targetGroup =
@@ -1297,6 +1302,37 @@ export default class SystemPortal extends Vue {
             targetGroup.editorKeys.push(editor.key);
         }
         targetGroup.activeEditorKey = editor.key;
+    }
+
+    private _buildEditorFromRecent(
+        recent: SystemPortalRecentTag
+    ): SystemPortalDockEditor {
+        const resolvedSimulationId = this._resolveSimulationIdForRecent(recent);
+        return this._buildEditor(
+            resolvedSimulationId,
+            recent.botId,
+            recent.tag,
+            recent.space || null
+        );
+    }
+
+    private _resolveSimulationIdForRecent(
+        recent: SystemPortalRecentTag
+    ): string {
+        const directSim = appManager.simulationManager.simulations.get(
+            recent.simulationId
+        );
+        if (directSim?.helper.botsState[recent.botId]) {
+            return recent.simulationId;
+        }
+
+        for (let [id, sim] of appManager.simulationManager.simulations) {
+            if (sim.helper.botsState[recent.botId]) {
+                return id;
+            }
+        }
+
+        return recent.simulationId;
     }
 
     closeEditor(editorKey: string) {
@@ -1369,7 +1405,7 @@ export default class SystemPortal extends Vue {
     }
 
     onRecentTagDragStart(recent: SystemPortalRecentTag, event: DragEvent) {
-        this.draggingEditorKey = null;
+        this.draggingEditorKey = '__dragging-recent__';
         this.draggingRecentTag = recent;
         console.log('[SystemPortal] onRecentTagDragStart', {
             recent,
@@ -1381,9 +1417,18 @@ export default class SystemPortal extends Vue {
             'application/x-system-portal-recent',
             JSON.stringify(recent)
         );
+        event.dataTransfer?.setData('text/plain', '__dragging-recent__');
         if (event.dataTransfer) {
             event.dataTransfer.effectAllowed = 'copyMove';
         }
+    }
+
+    onRecentTagDragEnd() {
+        // Delay cleanup to ensure drop handlers can read drag state first.
+        setTimeout(() => {
+            this.draggingEditorKey = null;
+            this.draggingRecentTag = null;
+        }, 0);
     }
 
     private _getDroppedEditorOrRecent(
@@ -1475,14 +1520,17 @@ export default class SystemPortal extends Vue {
         if (droppedItem.type === 'editor') {
             this._moveEditorToGroup(droppedItem.editorKey, groupId);
         } else {
-            this.openRecentInAdditionalEditor(droppedItem.recent);
-            const editor = this._buildEditor(
-                droppedItem.recent.simulationId,
-                droppedItem.recent.botId,
-                droppedItem.recent.tag,
-                droppedItem.recent.space ?? null
-            );
-            this._moveEditorToGroup(editor.key, groupId);
+            const editor = this._buildEditorFromRecent(droppedItem.recent);
+            if (editor.key !== this.defaultEditorKey) {
+                this._upsertEditor(editor, false);
+            }
+            const targetGroup = this.editorGroups.find((g) => g.id === groupId);
+            if (targetGroup) {
+                if (!targetGroup.editorKeys.includes(editor.key)) {
+                    targetGroup.editorKeys.push(editor.key);
+                }
+                targetGroup.activeEditorKey = editor.key;
+            }
         }
 
         this.draggingEditorKey = null;
@@ -1511,16 +1559,15 @@ export default class SystemPortal extends Vue {
         if (droppedItem.type === 'editor') {
             this._moveEditorToGroup(droppedItem.editorKey, newGroup.id);
         } else {
-            this.openRecentInAdditionalEditor(droppedItem.recent);
-            const editor = this._buildEditor(
-                droppedItem.recent.simulationId,
-                droppedItem.recent.botId,
-                droppedItem.recent.tag,
-                droppedItem.recent.space ?? null
-            );
-            this._moveEditorToGroup(editor.key, newGroup.id);
+            const editor = this._buildEditorFromRecent(droppedItem.recent);
+            if (editor.key !== this.defaultEditorKey) {
+                this._upsertEditor(editor, false);
+            }
+            newGroup.editorKeys.push(editor.key);
+            newGroup.activeEditorKey = editor.key;
         }
 
+        this._cleanupEmptyGroups();
         this.draggingEditorKey = null;
         this.draggingRecentTag = null;
     }
