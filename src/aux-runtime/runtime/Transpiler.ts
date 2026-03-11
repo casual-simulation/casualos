@@ -166,6 +166,8 @@ export const TypeScriptVisistorKeys: { [nodeType: string]: string[] } = {
     TSSatisfiesExpression: [],
     TSParameterProperty: ['parameter'],
 
+    ParenthesizedExpression: ['expression'],
+
     ClassDeclaration: [
         ...VisitorKeys.ClassDeclaration,
         'implements',
@@ -468,6 +470,10 @@ export class Transpiler {
             ecmaVersion: <any>14,
             locations: true,
             sourceType: 'module',
+
+            // We need to preserve parenthesis in order to
+            // correctly handle scenarios where extra parenthesis are used, like in arrow functions returning object literals.
+            preserveParens: true,
         });
         return node;
     }
@@ -1483,12 +1489,12 @@ export class Transpiler {
         doc.clientID += 1;
         const version = { '0': getClock(doc, 0) };
 
-        const expressionEnd = createAbsolutePositionFromStateVector(
+        const afterExpression = createAbsolutePositionFromStateVector(
             doc,
             text,
             version,
             node.expression.end,
-            -1,
+            1,
             true
         );
 
@@ -1502,8 +1508,8 @@ export class Transpiler {
         );
 
         text.delete(
-            expressionEnd.index,
-            absoluteEnd.index - expressionEnd.index
+            afterExpression.index,
+            absoluteEnd.index - afterExpression.index
         );
     }
 
@@ -1516,7 +1522,7 @@ export class Transpiler {
             text,
             version,
             node.expression.end,
-            -1,
+            1,
             true
         );
 

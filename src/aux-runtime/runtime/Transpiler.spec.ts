@@ -2458,6 +2458,50 @@ describe('Transpiler', () => {
                         `const abc: any = { a: 123, b: "hello" } satisfies { a: number, b: string };`
                     )
                 ).toBe(`const abc = { a: 123, b: "hello" };`);
+
+                expect(
+                    transpiler.transpile(
+                        `const abc: any = ({ a: 123, b: "hello" }) satisfies { a: number, b: string };`
+                    )
+                ).toBe(`const abc = ({ a: 123, b: "hello" });`);
+
+                expect(
+                    transpiler.transpile(
+                        `const abc: any = (({ a: 123, b: "hello" }) satisfies { a: number, b: string });`
+                    )
+                ).toBe(`const abc = (({ a: 123, b: "hello" }));`);
+            });
+
+            it('should support as expressions after initializers', () => {
+                const transpiler = new Transpiler();
+
+                expect(
+                    transpiler.transpile(
+                        `const abc: any = { a: 123, b: "hello" } as { a: number, b: string };`
+                    )
+                ).toBe(`const abc = { a: 123, b: "hello" };`);
+
+                expect(
+                    transpiler.transpile(
+                        `const abc = () => ({ a: 123, b: "hello" }) as { a: number, b: string };`
+                    )
+                ).toBe(`const abc = () => ({ a: 123, b: "hello" });`);
+
+                expect(
+                    transpiler.transpile(
+                        `const result: any = values.map((v) => ({ a: v.a, b: v.b }) as { a: number, b: string });`
+                    )
+                ).toBe(
+                    `const result = values.map((v) => ({ a: v.a, b: v.b }));`
+                );
+
+                expect(
+                    transpiler.transpile(
+                        `const result: any = values.map((v) => ((({ a: v.a, b: v.b })) as { a: number, b: string }));`
+                    )
+                ).toBe(
+                    `const result = values.map((v) => ((({ a: v.a, b: v.b }))));`
+                );
             });
         });
 
