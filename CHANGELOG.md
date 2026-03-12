@@ -4,6 +4,10 @@
 
 #### Date: TBD
 
+### :rocket: Features
+
+-   Updated the default privacy policy.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where CasualOS didn't support return type annotations on arrow functions.
