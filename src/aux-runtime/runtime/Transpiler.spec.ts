@@ -2429,6 +2429,80 @@ describe('Transpiler', () => {
                     transpiler.transpile(`class Test { #myProp!: number; }`)
                 ).toBe(`class Test { #myProp; }`);
             });
+
+            it('should remove type annotations from arrow functions', () => {
+                const transpiler = new Transpiler();
+
+                expect(
+                    transpiler.transpile(
+                        `const abc = (n: number): number => n;`
+                    )
+                ).toBe(`const abc = (n) => n;`);
+
+                expect(
+                    transpiler.transpile(
+                        `const abc = ({a, b, c}: {a: number, b: number, c: number}): number => a;`
+                    )
+                ).toBe(`const abc = ({a, b, c}) => a;`);
+
+                expect(
+                    transpiler.transpile(`const abc = <T,>(a: T): T => a;`)
+                ).toBe(`const abc = (a) => a;`);
+            });
+
+            it('should support satisfies expressions', () => {
+                const transpiler = new Transpiler();
+
+                expect(
+                    transpiler.transpile(
+                        `const abc: any = { a: 123, b: "hello" } satisfies { a: number, b: string };`
+                    )
+                ).toBe(`const abc = { a: 123, b: "hello" };`);
+
+                expect(
+                    transpiler.transpile(
+                        `const abc: any = ({ a: 123, b: "hello" }) satisfies { a: number, b: string };`
+                    )
+                ).toBe(`const abc = ({ a: 123, b: "hello" });`);
+
+                expect(
+                    transpiler.transpile(
+                        `const abc: any = (({ a: 123, b: "hello" }) satisfies { a: number, b: string });`
+                    )
+                ).toBe(`const abc = (({ a: 123, b: "hello" }));`);
+            });
+
+            it('should support as expressions after initializers', () => {
+                const transpiler = new Transpiler();
+
+                expect(
+                    transpiler.transpile(
+                        `const abc: any = { a: 123, b: "hello" } as { a: number, b: string };`
+                    )
+                ).toBe(`const abc = { a: 123, b: "hello" };`);
+
+                expect(
+                    transpiler.transpile(
+                        `const abc = () => ({ a: 123, b: "hello" }) as { a: number, b: string };`
+                    )
+                ).toBe(`const abc = () => ({ a: 123, b: "hello" });`);
+
+                expect(
+                    transpiler.transpile(
+                        `const result: any = values.map((v) => ({ a: v.a, b: v.b }) as { a: number, b: string });`
+                    )
+                ).toBe(
+                    `const result = values.map((v) => ({ a: v.a, b: v.b }));`
+                );
+
+                expect(
+                    transpiler.transpile(
+                        `const result: any = values.map((v) => ((({ a: v.a, b: v.b })) as { a: number, b: string }));`
+                    )
+                ).toBe(
+                    `const result = values.map((v) => ((({ a: v.a, b: v.b }))));`
+                );
+            });
         });
 
         describe('directives', () => {

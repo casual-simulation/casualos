@@ -1,5 +1,22 @@
 # CasualOS Changelog
 
+## V4.2.2
+
+#### Date: 3/13/2026
+
+### :rocket: Features
+
+-   Updated the default privacy policy.
+-   Added the ability to configure whether the grid portal automatically opens.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where CasualOS didn't support return type annotations on arrow functions.
+-   Fixed an issue where CasualOS didn't support generic type parameters on arrow functions.
+-   Fixed an issue where CasualOS didn't support "satisfies" TypeScript expressions.
+-   Fixed an issue where CasualOS didn't support some parenthesized expressions.
+-   Fixed an issue where the `value` attribute wouldn't work for `<select>` elements in custom apps.
+
 ## V4.2.1
 
 #### Date: 3/10/2026

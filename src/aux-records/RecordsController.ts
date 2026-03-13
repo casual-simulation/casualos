@@ -1191,6 +1191,13 @@ export class RecordsController {
                 ...updates,
             };
 
+            if (updates.playerConfig) {
+                final.playerConfig = {
+                    ...(existingStudio.playerConfig ?? {}),
+                    ...updates.playerConfig,
+                };
+            }
+
             await this._store.updateStudio(final);
 
             if (loomConfig) {

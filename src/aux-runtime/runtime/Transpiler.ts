@@ -163,7 +163,10 @@ export const TypeScriptVisistorKeys: { [nodeType: string]: string[] } = {
     TSMethodSignature: [],
     TSPropertySignature: [],
     TSAsExpression: [],
+    TSSatisfiesExpression: [],
     TSParameterProperty: ['parameter'],
+
+    ParenthesizedExpression: ['expression'],
 
     ClassDeclaration: [
         ...VisitorKeys.ClassDeclaration,
@@ -211,6 +214,11 @@ export const TypeScriptVisistorKeys: { [nodeType: string]: string[] } = {
     RestElement: [...VisitorKeys.RestElement, 'typeAnnotation'],
     ObjectPattern: [...(VisitorKeys as any).ObjectPattern, 'typeAnnotation'],
     ArrayPattern: [...(VisitorKeys as any).ArrayPattern, 'typeAnnotation'],
+    ArrowFunctionExpression: [
+        ...VisitorKeys.ArrowFunctionExpression,
+        'returnType',
+        'typeParameters',
+    ],
 };
 
 /**
@@ -462,6 +470,10 @@ export class Transpiler {
             ecmaVersion: <any>14,
             locations: true,
             sourceType: 'module',
+
+            // We need to preserve parenthesis in order to
+            // correctly handle scenarios where extra parenthesis are used, like in arrow functions returning object literals.
+            preserveParens: true,
         });
         return node;
     }
@@ -652,6 +664,8 @@ export class Transpiler {
                     this._removeAsExpression(n, doc, text);
                 } else if (n.type === 'Identifier' && n.optional === true) {
                     this._removeOptionalFromIdentifier(n, doc, text);
+                } else if (n.type === 'TSSatisfiesExpression') {
+                    this._removeSatisfiesExpression(n, doc, text);
                 } else if (n.type.startsWith('TS')) {
                     this._removeNodeOrReplaceWithUndefined(n, doc, text);
                 } else if (n.type === 'CallExpression') {
@@ -1475,12 +1489,12 @@ export class Transpiler {
         doc.clientID += 1;
         const version = { '0': getClock(doc, 0) };
 
-        const expressionEnd = createAbsolutePositionFromStateVector(
+        const afterExpression = createAbsolutePositionFromStateVector(
             doc,
             text,
             version,
             node.expression.end,
-            -1,
+            1,
             true
         );
 
@@ -1494,8 +1508,36 @@ export class Transpiler {
         );
 
         text.delete(
-            expressionEnd.index,
-            absoluteEnd.index - expressionEnd.index
+            afterExpression.index,
+            absoluteEnd.index - afterExpression.index
+        );
+    }
+
+    private _removeSatisfiesExpression(node: any, doc: Doc, text: Text): any {
+        doc.clientID += 1;
+        const version = { '0': getClock(doc, 0) };
+
+        const afterExpression = createAbsolutePositionFromStateVector(
+            doc,
+            text,
+            version,
+            node.expression.end,
+            1,
+            true
+        );
+
+        const absoluteEnd = createAbsolutePositionFromStateVector(
+            doc,
+            text,
+            version,
+            node.end,
+            -1,
+            true
+        );
+
+        text.delete(
+            afterExpression.index,
+            absoluteEnd.index - afterExpression.index
         );
     }
 
