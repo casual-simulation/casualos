@@ -7,6 +7,7 @@
 ### :rocket: Features
 
 -   Updated the default privacy policy.
+-   Added the ability to configure whether the grid portal automatically opens.
 
 ### :bug: Bug Fixes
 
