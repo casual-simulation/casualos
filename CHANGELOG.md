@@ -2,7 +2,7 @@
 
 ## V4.2.2
 
-#### Date: TBD
+#### Date: 3/13/2026
 
 ### :rocket: Features
 
