@@ -154,6 +154,13 @@
                     }}</md-table-cell>
                 </md-table-row>
                 <md-table-row v-if="allowComId" @click="updatePlayerConfig()">
+                    <md-tooltip>Whether to disable loading the grid portal by default.</md-tooltip>
+                    <md-table-cell>comID.noAutomaticGridPortal</md-table-cell>
+                    <md-table-cell>{{
+                        originalNoAutomaticGridPortal || '(default)'
+                    }}</md-table-cell>
+                </md-table-row>
+                <md-table-row v-if="allowComId" @click="updatePlayerConfig()">
                     <md-tooltip
                         >The name of the Jitsi App that should be used for the
                         meetPortal.</md-tooltip
@@ -168,12 +175,12 @@
                     <md-table-cell>comID.what3WordsApiKey</md-table-cell>
                     <md-table-cell>{{ originalWhat3WordsApiKey || '(default)' }}</md-table-cell>
                 </md-table-row>
-                <md-table-row @click="updatePlayerConfig()">
+                <md-table-row v-if="allowComId" @click="updatePlayerConfig()">
                     <md-tooltip>The API Key that should be used for PostHog analytics.</md-tooltip>
                     <md-table-cell>comID.postHogApiKey</md-table-cell>
                     <md-table-cell>{{ originalPostHogApiKey || '(default)' }}</md-table-cell>
                 </md-table-row>
-                <md-table-row @click="updatePlayerConfig()">
+                <md-table-row v-if="allowComId" @click="updatePlayerConfig()">
                     <md-tooltip
                         >The HTTP Host that should be used for PostHog analytics.</md-tooltip
                     >
@@ -357,15 +364,27 @@
                         type="text"
                     ></md-input>
                     <span class="md-helper-text">
-                        The inst that should be loaded when executing the automatic BIOS option. Has
-                        no effect if comID.automaticBiosOption is not set.
+                        The inst that should be loaded when executing the automatic BIOS option.
                     </span>
-                    <span>
+                    <md-tooltip>
                         The format should be <code>{recordName}/{instName}</code>. For
                         local/public/free insts, recordName can be omitted (e.g.
                         <code>/{instName}</code>).
-                    </span>
+                    </md-tooltip>
                     <field-errors field="playerConfig.automaticBiosOptionInst" :errors="errors" />
+                </md-field>
+                <md-field :class="noAutomaticGridPortalFieldClass">
+                    <!-- <label for="noAutomaticGridPortal">comID.noAutomaticGridPortal</label> -->
+                    <md-checkbox
+                        id="noAutomaticGridPortal"
+                        class="com-id-checkbox"
+                        v-model="noAutomaticGridPortal"
+                        >comID.noAutomaticGridPortal</md-checkbox
+                    >
+                    <span class="md-helper-text">
+                        Check this to disable loading the grid portal by default.
+                    </span>
+                    <field-errors field="playerConfig.noAutomaticGridPortal" :errors="errors" />
                 </md-field>
                 <md-field :class="jitsiAppNameFieldClass">
                     <label for="jistiAppName">comID.jistiAppName</label>
@@ -720,3 +739,4 @@
 </template>
 <script src="./AuthStudio.ts"></script>
 <style src="./AuthStudio.css" scoped></style>
+<style src="./AuthStudioGlobals.css"></style>
