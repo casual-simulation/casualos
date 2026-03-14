@@ -5551,6 +5551,11 @@ Object {
                 "optional": true,
                 "type": "string",
               },
+              "noAutomaticGridPortal": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "boolean",
+              },
               "postHogApiHost": Object {
                 "nullable": true,
                 "optional": true,
@@ -9881,6 +9886,12 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                     "nullable": true,
                     "optional": true,
                     "type": "string",
+                  },
+                  "noAutomaticGridPortal": Object {
+                    "description": "Whether to disable loading the grid portal by default. Defaults to false.",
+                    "nullable": true,
+                    "optional": true,
+                    "type": "boolean",
                   },
                   "playerMode": Object {
                     "nullable": true,
@@ -15768,6 +15779,11 @@ Object {
                 "optional": true,
                 "type": "string",
               },
+              "noAutomaticGridPortal": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "boolean",
+              },
               "postHogApiHost": Object {
                 "nullable": true,
                 "optional": true,
@@ -20098,6 +20114,12 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                     "nullable": true,
                     "optional": true,
                     "type": "string",
+                  },
+                  "noAutomaticGridPortal": Object {
+                    "description": "Whether to disable loading the grid portal by default. Defaults to false.",
+                    "nullable": true,
+                    "optional": true,
+                    "type": "boolean",
                   },
                   "playerMode": Object {
                     "nullable": true,
