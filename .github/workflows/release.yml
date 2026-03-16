@@ -57,7 +57,6 @@ jobs:
             - name: Publish Master NPM Packages
               if: ${{ github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/heads/release/') }}
               run: |
-                  npm whoami
                   echo "Publishing NPM Packages..."
                   pnpm -r publish --no-git-checks
 
@@ -72,7 +71,6 @@ jobs:
             - name: Publish Alpha NPM Packages
               if: ${{ github.ref != 'refs/heads/master' && !startsWith(github.ref, 'refs/heads/release/') }}
               run: |
-                  npm whoami
                   echo "Publishing NPM Packages..."
                   ls -la
                   pnpm -r publish --tag alpha --no-git-checks
