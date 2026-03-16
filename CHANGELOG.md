@@ -44,6 +44,9 @@
         ```
 
 -   Added the `--aux-version <version>` option to the `pack-aux` CLI command.
+-   Added System Portal multi-pane and navigation
+    -   Users can now drag/drop recent tags to open new panes in the System Portal.
+    -   Users can ctrl/cmd-click on recent tags to open a new browser tab
 
 ### :bug: Bug Fixes
 
