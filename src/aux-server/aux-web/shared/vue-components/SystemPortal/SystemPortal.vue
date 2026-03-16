@@ -419,26 +419,8 @@
                                 v-for="recent of recents"
                                 :key="`${recent.botId}.${recent.tag}.${recent.space}`"
                                 draggable="true"
-                                @dragstart="
-                                    draggingEditorKey = '__dragging-recent__';
-                                    draggingRecentTag = recent;
-                                    $event.dataTransfer &&
-                                        $event.dataTransfer.setData(
-                                            'application/x-system-portal-recent',
-                                            JSON.stringify(recent)
-                                        );
-                                    $event.dataTransfer &&
-                                        $event.dataTransfer.setData(
-                                            'text/plain',
-                                            '__dragging-recent__'
-                                        );
-                                    $event.dataTransfer &&
-                                        ($event.dataTransfer.effectAllowed = 'copyMove');
-                                "
-                                @dragend="
-                                    draggingEditorKey = null;
-                                    draggingRecentTag = null;
-                                "
+                                @dragstart="onRecentTagDragStart(recent, $event)"
+                                @dragend="onRecentTagDragEnd()"
                             >
                                 <md-button
                                     class="editor-recents-item md-raised md-dense"
@@ -446,26 +428,8 @@
                                         selected: isTagSelected(recent),
                                     }"
                                     draggable="true"
-                                    @dragstart.native="
-                                        draggingEditorKey = '__dragging-recent__';
-                                        draggingRecentTag = recent;
-                                        $event.dataTransfer &&
-                                            $event.dataTransfer.setData(
-                                                'application/x-system-portal-recent',
-                                                JSON.stringify(recent)
-                                            );
-                                        $event.dataTransfer &&
-                                            $event.dataTransfer.setData(
-                                                'text/plain',
-                                                '__dragging-recent__'
-                                            );
-                                        $event.dataTransfer &&
-                                            ($event.dataTransfer.effectAllowed = 'copyMove');
-                                    "
-                                    @dragend.native="
-                                        draggingEditorKey = null;
-                                        draggingRecentTag = null;
-                                    "
+                                    @dragstart.native="onRecentTagDragStart(recent, $event)"
+                                    @dragend.native="onRecentTagDragEnd()"
                                     @click="selectRecentTag(recent, $event)"
                                 >
                                     <bot-tag
@@ -565,26 +529,6 @@
                                         </div>
                                     </div>
                                     <div class="editor-pane">
-                                        <div
-                                            v-if="activeEditorForGroup(group)"
-                                            class="editor-pane-debug"
-                                        >
-                                            key={{ activeEditorForGroup(group).key }} | sim={{
-                                                activeEditorForGroup(group).simulationId
-                                            }}
-                                            | bot={{ activeEditorForGroup(group).botId }} | tag={{
-                                                activeEditorForGroup(group).tag
-                                            }}
-                                            | space={{
-                                                activeEditorForGroup(group).space || 'null'
-                                            }}
-                                            | hasBot={{
-                                                !!(
-                                                    activeEditorForGroup(group).bot ||
-                                                    editorBot(activeEditorForGroup(group))
-                                                )
-                                            }}
-                                        </div>
                                         <tag-value-editor
                                             v-if="activeEditorForGroup(group)"
                                             :ref="getEditorRef(group.id)"

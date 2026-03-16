@@ -424,16 +424,6 @@
     min-height: 0;
 }
 
-.editor-pane-debug {
-    font-family: Consolas, 'Courier New', monospace;
-    font-size: 11px;
-    line-height: 1.4;
-    color: #666;
-    padding: 4px 8px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-    word-break: break-all;
-}
-
 .editor-dock-dropzone {
     flex: 0 0 180px;
     border: 2px dashed rgba(47, 141, 254, 0.5);
