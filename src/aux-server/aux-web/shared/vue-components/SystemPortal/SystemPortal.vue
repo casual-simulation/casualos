@@ -565,11 +565,34 @@
                                         </div>
                                     </div>
                                     <div class="editor-pane">
+                                        <div
+                                            v-if="activeEditorForGroup(group)"
+                                            class="editor-pane-debug"
+                                        >
+                                            key={{ activeEditorForGroup(group).key }} | sim={{
+                                                activeEditorForGroup(group).simulationId
+                                            }}
+                                            | bot={{ activeEditorForGroup(group).botId }} | tag={{
+                                                activeEditorForGroup(group).tag
+                                            }}
+                                            | space={{
+                                                activeEditorForGroup(group).space || 'null'
+                                            }}
+                                            | hasBot={{
+                                                !!(
+                                                    activeEditorForGroup(group).bot ||
+                                                    editorBot(activeEditorForGroup(group))
+                                                )
+                                            }}
+                                        </div>
                                         <tag-value-editor
                                             v-if="activeEditorForGroup(group)"
                                             :ref="getEditorRef(group.id)"
                                             :simId="activeEditorForGroup(group).simulationId"
-                                            :bot="editorBot(activeEditorForGroup(group))"
+                                            :bot="
+                                                activeEditorForGroup(group).bot ||
+                                                editorBot(activeEditorForGroup(group))
+                                            "
                                             :tag="activeEditorForGroup(group).tag"
                                             :space="activeEditorForGroup(group).space"
                                             :showDesktopEditor="true"
