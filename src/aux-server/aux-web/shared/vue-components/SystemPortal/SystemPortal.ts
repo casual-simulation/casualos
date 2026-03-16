@@ -65,7 +65,7 @@ import { getSystemArea } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../AppManager';
 import type { SubscriptionLike } from 'rxjs';
 import { Subscription } from 'rxjs';
-import { copyToClipboard } from '../../SharedUtils';
+import { copyToClipboard, navigateToUrl } from '../../SharedUtils';
 import { tap } from 'rxjs/operators';
 import { SystemPortalConfig } from './SystemPortalConfig';
 import TagValueEditor from '../TagValueEditor/TagValueEditor';
@@ -191,6 +191,12 @@ export default class SystemPortal extends Vue {
     private _subs: SubscriptionLike[] = [];
     private _simulationSubs: Map<Simulation, Subscription>;
     private _currentConfig: SystemPortalConfig;
+    private _pendingUrlSelection: {
+        simulationId: string;
+        botId: string;
+        tag: string;
+        space: string;
+    } | null = null;
 
     get selectedBotId() {
         return this.selectedBot?.id;
@@ -304,12 +310,14 @@ export default class SystemPortal extends Vue {
         this._tagSelectionEvents = new Map();
         this._simulationSubs = new Map();
         this._hasSheetPortalMap = new Map();
+        this._loadPendingUrlSelection();
 
         this._subs.push(
             appManager.systemPortal.onItemsUpdated.subscribe((e) => {
                 this.hasPortal = e.hasPortal;
                 if (e.hasPortal) {
                     this.items = e.items;
+                    this._applyPendingUrlSelection();
                 } else {
                     this.items = [];
                 }
@@ -1862,9 +1870,85 @@ export default class SystemPortal extends Vue {
         }
     }
 
+    private _loadPendingUrlSelection() {
+        const url = new URL(window.location.href);
+        const simulationId = url.searchParams.get('systemPortalSimulationId');
+        const botId = url.searchParams.get('systemPortalBotId');
+        const tag = url.searchParams.get('systemPortalTagName');
+        const hasSpace = url.searchParams.has('systemPortalTagSpace');
+        const space = hasSpace
+            ? url.searchParams.get('systemPortalTagSpace')
+            : null;
+
+        if (simulationId && botId && tag) {
+            this._pendingUrlSelection = {
+                simulationId,
+                botId,
+                tag,
+                space,
+            };
+        }
+    }
+
+    private _applyPendingUrlSelection() {
+        if (!this._pendingUrlSelection) {
+            return;
+        }
+
+        const selection = this._pendingUrlSelection;
+        const sim = appManager.simulationManager.simulations.get(
+            selection.simulationId
+        );
+        if (!sim?.helper?.userBot) {
+            return;
+        }
+
+        this._setSimUserBotTags(selection.simulationId, {
+            [SYSTEM_PORTAL]: true,
+            [SYSTEM_PORTAL_BOT]: createBotLink([selection.botId]),
+            [SYSTEM_PORTAL_TAG]: selection.tag,
+            [SYSTEM_PORTAL_TAG_SPACE]: selection.space ?? null,
+            [SYSTEM_PORTAL_PANE]: 'bots',
+        });
+
+        const url = new URL(window.location.href);
+        url.searchParams.delete('systemPortalSimulationId');
+        url.searchParams.delete('systemPortalBotId');
+        url.searchParams.delete('systemPortalTagName');
+        url.searchParams.delete('systemPortalTagSpace');
+        window.history.replaceState({}, '', url.toString());
+
+        this._pendingUrlSelection = null;
+    }
+
+    private _openTagInNewBrowserTab(
+        simulationId: string,
+        botId: string,
+        tag: string,
+        space: string
+    ) {
+        if (!simulationId || !botId || !tag) {
+            return;
+        }
+
+        const url = new URL(window.location.href);
+        url.searchParams.set('systemPortal', 'true');
+        url.searchParams.set('systemPortalSimulationId', simulationId);
+        url.searchParams.set('systemPortalBotId', botId);
+        url.searchParams.set('systemPortalTagName', tag);
+        url.searchParams.set('systemPortalTagSpace', space ?? '');
+
+        navigateToUrl(url.toString(), '_blank', 'noreferrer');
+    }
+
     selectTag(tag: SystemPortalSelectionTag, event?: MouseEvent) {
         if (event?.ctrlKey || event?.metaKey) {
-            this.openTagInAdditionalEditor(tag);
+            this._openTagInNewBrowserTab(
+                this.selectedBotSimId,
+                this.selectedBotId,
+                tag.name,
+                tag.space ?? null
+            );
             return;
         }
 
@@ -1907,7 +1991,12 @@ export default class SystemPortal extends Vue {
 
     selectRecentTag(recent: SystemPortalRecentTag, event?: MouseEvent) {
         if (event?.ctrlKey || event?.metaKey) {
-            this.openRecentInAdditionalEditor(recent);
+            this._openTagInNewBrowserTab(
+                recent.simulationId,
+                recent.botId,
+                recent.tag,
+                recent.space ?? null
+            );
             return;
         }
 
