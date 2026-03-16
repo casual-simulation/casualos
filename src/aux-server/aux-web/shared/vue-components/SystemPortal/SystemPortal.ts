@@ -1133,22 +1133,6 @@ export default class SystemPortal extends Vue {
         }
     }
 
-    private _replaceEditorKey(oldKey: string, newKey: string) {
-        if (oldKey === newKey) {
-            return;
-        }
-
-        for (let group of this.editorGroups) {
-            const index = group.editorKeys.indexOf(oldKey);
-            if (index >= 0) {
-                group.editorKeys.splice(index, 1, newKey);
-            }
-            if (group.activeEditorKey === oldKey) {
-                group.activeEditorKey = newKey;
-            }
-        }
-    }
-
     private _removeEditorKeyFromGroups(editorKey: string) {
         for (let group of this.editorGroups) {
             const index = group.editorKeys.indexOf(editorKey);
@@ -1224,34 +1208,6 @@ export default class SystemPortal extends Vue {
         return null;
     }
 
-    resolvedEditorSimulationId(editor: SystemPortalDockEditor | null): string {
-        if (!editor) {
-            return null;
-        }
-
-        const directSim = appManager.simulationManager.simulations.get(
-            editor.simulationId
-        );
-        if (directSim?.helper.botsState[editor.botId]) {
-            return editor.simulationId;
-        }
-
-        for (let [id, sim] of appManager.simulationManager.simulations) {
-            if (sim.helper.botsState[editor.botId]) {
-                return id;
-            }
-        }
-
-        return editor.simulationId;
-    }
-
-    resolvedEditorBot(editor: SystemPortalDockEditor | null): Bot | null {
-        if (!editor) {
-            return null;
-        }
-        return this.editorBot(editor);
-    }
-
     editorDisplayName(editor: SystemPortalDockEditor): string {
         if (!editor) {
             return '';
@@ -1286,37 +1242,6 @@ export default class SystemPortal extends Vue {
         if (group) {
             group.activeEditorKey = editorKey;
         }
-    }
-
-    openTagInAdditionalEditor(tag: SystemPortalSelectionTag) {
-        if (!this.selectedBotSimId || !this.selectedBotId || !tag?.name) {
-            return;
-        }
-
-        const editor = this._buildEditor(
-            this.selectedBotSimId,
-            this.selectedBotId,
-            tag.name,
-            tag.space ?? null
-        );
-
-        if (editor.key === this.defaultEditorKey) {
-            const group = this._groupForEditorKey(editor.key);
-            if (group) {
-                group.activeEditorKey = editor.key;
-            }
-            return;
-        }
-
-        this._upsertEditor(editor, false);
-        const targetGroup =
-            this.editorGroups.find((g) => g.activeEditorKey) ??
-            this._ensureFirstGroup();
-
-        if (!targetGroup.editorKeys.includes(editor.key)) {
-            targetGroup.editorKeys.push(editor.key);
-        }
-        targetGroup.activeEditorKey = editor.key;
     }
 
     openRecentInAdditionalEditor(
@@ -1363,12 +1288,6 @@ export default class SystemPortal extends Vue {
         // so panes always bind to an additional editor instance.
         editor.key = `recent:${editor.key}`;
         return editor;
-    }
-
-    private _resolveSimulationIdForRecent(
-        recent: SystemPortalRecentTag
-    ): string {
-        return this._resolveRecentContext(recent).simulationId;
     }
 
     private _resolveRecentContext(recent: SystemPortalRecentTag): {
@@ -1800,7 +1719,11 @@ export default class SystemPortal extends Vue {
         url.searchParams.set('systemPortalSimulationId', simulationId);
         url.searchParams.set('systemPortalBotId', botId);
         url.searchParams.set('systemPortalTagName', tag);
-        url.searchParams.set('systemPortalTagSpace', space ?? '');
+        if (space != null && space !== '') {
+            url.searchParams.set('systemPortalTagSpace', space);
+        } else {
+            url.searchParams.delete('systemPortalTagSpace');
+        }
 
         navigateToUrl(url.toString(), '_blank', 'noreferrer');
     }

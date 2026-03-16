@@ -294,7 +294,7 @@
                                     :tag="tag"
                                     :selected="isTagSelected(tag)"
                                     :showCloseButton="true"
-                                    @click="selectTag(tag, $event)"
+                                    @click.native="selectTag(tag, $event)"
                                     @pin="pinTag(tag)"
                                     @close="closeTag(tag)"
                                     @focusChanged="onTagFocusChanged(selectedBotSimId, tag, $event)"
@@ -336,7 +336,7 @@
                                 :bot="selectedBot"
                                 :tag="tag"
                                 :selected="isTagSelected(tag)"
-                                @click="selectTag(tag, $event)"
+                                @click.native="selectTag(tag, $event)"
                                 @pin="pinTag(tag)"
                                 @focusChanged="onTagFocusChanged(selectedBotSimId, tag, $event)"
                             >
@@ -418,9 +418,6 @@
                                 class="editor-recents-item-wrapper"
                                 v-for="recent of recents"
                                 :key="`${recent.botId}.${recent.tag}.${recent.space}`"
-                                draggable="true"
-                                @dragstart="onRecentTagDragStart(recent, $event)"
-                                @dragend="onRecentTagDragEnd()"
                             >
                                 <md-button
                                     class="editor-recents-item md-raised md-dense"
