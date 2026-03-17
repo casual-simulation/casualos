@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V4.2.3
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where CasualOS didn't support the TypeScript `override` keyword.
+
 ## V4.2.2
 
 #### Date: 3/13/2026
