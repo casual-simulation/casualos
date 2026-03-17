@@ -2854,6 +2854,13 @@ export interface RecordFileOptions {
     mimeType?: string;
 
     /**
+     * The file extension to use for the uploaded file.
+     * If specified, this extension will be used instead of deriving one from the MIME type.
+     * Should include the leading dot (e.g. '.spz', '.png').
+     */
+    fileExtension?: string;
+
+    /**
      * The marker that should be applied to the file.
      */
     marker?: string;
@@ -11675,7 +11682,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             options?.description,
             options?.mimeType,
             recordOptions,
-            task.taskId
+            task.taskId,
+            options?.fileExtension
         );
         return addAsyncAction(task, event);
     }

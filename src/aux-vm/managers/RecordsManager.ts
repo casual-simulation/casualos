@@ -1061,6 +1061,7 @@ export class RecordsManager {
                     fileMimeType: mimeType,
                     fileByteLength: byteLength,
                     fileDescription: event.description,
+                    fileExtension: event.fileExtension,
                     markers: event.options?.markers,
                     instances,
                 },

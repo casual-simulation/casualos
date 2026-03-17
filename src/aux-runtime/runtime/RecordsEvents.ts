@@ -811,6 +811,13 @@ export interface RecordFileAction extends RecordsAction {
     mimeType?: string;
 
     /**
+     * The file extension to use for the uploaded file.
+     * If specified, this extension will be used instead of deriving one from the MIME type.
+     * Should include the leading dot (e.g. '.spz', '.png').
+     */
+    fileExtension?: string;
+
+    /**
      * The options for the action.
      */
     options: RecordFileActionOptions;
@@ -2864,7 +2871,7 @@ export type xpContractStatus = 'open' | 'draft' | 'closed';
  * @param data The data to store.
  * @param description The description of the file.
  * @param mimeType The MIME type of the file.
- * @param markers The markers to associate with the file.
+ * @param fileExtension The file extension to use instead of deriving one from the MIME type.
  * @param options The options that should be used for the action.
  */
 export function recordFile(
@@ -2873,7 +2880,8 @@ export function recordFile(
     description: string,
     mimeType: string,
     options: RecordFileActionOptions,
-    taskId?: number | string
+    taskId?: number | string,
+    fileExtension?: string
 ): RecordFileAction {
     return {
         type: 'record_file',
@@ -2881,6 +2889,7 @@ export function recordFile(
         data,
         description,
         mimeType,
+        fileExtension,
         options,
         taskId,
     };
