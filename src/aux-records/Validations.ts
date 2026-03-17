@@ -174,7 +174,18 @@ export const RECORD_FILE_SCHEMA = z.object({
                     : 'fileMimeType must be a string.',
         })
         .min(1)
-        .max(128),
+        .max(128)
+        .optional(),
+    fileExtension: z
+        .string({
+            error: (issue) =>
+                issue.input === undefined
+                    ? 'fileExtension is required.'
+                    : 'fileExtension must be a string.',
+        })
+        .min(1)
+        .max(128)
+        .optional(),
     fileDescription: z
         .string({
             error: (issue) =>

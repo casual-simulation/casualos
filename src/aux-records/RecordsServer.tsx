@@ -8143,6 +8143,7 @@ export class RecordsServer {
             fileSha256Hex,
             fileByteLength,
             fileMimeType,
+            fileExtension,
             fileDescription,
             markers,
             instances,
@@ -8171,11 +8172,26 @@ export class RecordsServer {
                     'fileByteLength is required and must be a number.',
             } as const;
         }
-        if (!fileMimeType || typeof fileMimeType !== 'string') {
+        if (!fileMimeType && !fileExtension) {
             return {
                 success: false,
                 errorCode: 'unacceptable_request',
-                errorMessage: 'fileMimeType is required and must be a string.',
+                errorMessage:
+                    'Either fileMimeType or fileExtension is required.',
+            } as const;
+        }
+        if (!!fileMimeType && typeof fileMimeType !== 'string') {
+            return {
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'fileMimeType must be a string.',
+            } as const;
+        }
+        if (!!fileExtension && typeof fileExtension !== 'string') {
+            return {
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'fileExtension must be a string.',
             } as const;
         }
         if (!!fileDescription && typeof fileDescription !== 'string') {
@@ -8199,6 +8215,7 @@ export class RecordsServer {
             fileSha256Hex,
             fileByteLength,
             fileMimeType,
+            fileExtension,
             fileDescription,
             headers: {},
             markers,
