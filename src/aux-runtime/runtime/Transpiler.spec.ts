@@ -2503,6 +2503,46 @@ describe('Transpiler', () => {
                     `const result = values.map((v) => ((({ a: v.a, b: v.b }))));`
                 );
             });
+
+            it('should support the override keyword', () => {
+                const transpiler = new Transpiler();
+
+                expect(
+                    transpiler.transpile(
+                        `class ABC extends DEF { override myMethod(): void {} }`
+                    )
+                ).toBe(`class ABC extends DEF { myMethod() {} }`);
+
+                expect(
+                    transpiler.transpile(
+                        `class ABC extends DEF { override async myMethod(): void {} }`
+                    )
+                ).toBe(`class ABC extends DEF { async myMethod() {} }`);
+
+                expect(
+                    transpiler.transpile(
+                        `class ABC extends DEF { public override async myMethod(): void {} }`
+                    )
+                ).toBe(`class ABC extends DEF { async myMethod() {} }`);
+
+                expect(
+                    transpiler.transpile(
+                        `class ABC extends DEF { override *myMethod() {} }`
+                    )
+                ).toBe(`class ABC extends DEF { *myMethod() {} }`);
+
+                expect(
+                    transpiler.transpile(
+                        `class ABC extends DEF { override get value() { return 123; } }`
+                    )
+                ).toBe(`class ABC extends DEF { get value() { return 123; } }`);
+
+                expect(
+                    transpiler.transpile(
+                        `class ABC extends DEF { public override get value() { return 123; } }`
+                    )
+                ).toBe(`class ABC extends DEF { get value() { return 123; } }`);
+            });
         });
 
         describe('directives', () => {

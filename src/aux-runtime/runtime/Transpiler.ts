@@ -651,6 +651,9 @@ export class Transpiler {
                     } else if (n.accessibility) {
                         this._removeAccessibility(n, doc, text);
                     }
+                    if (n.override) {
+                        this._removeOverride(n, doc, text);
+                    }
                 } else if (n.type === 'PropertyDefinition') {
                     if (n.accessibility) {
                         this._removeAccessibility(n, doc, text);
@@ -1483,6 +1486,34 @@ export class Transpiler {
         }
 
         text.delete(indexOfAccessibility, accessibility.length);
+    }
+
+    private _removeOverride(node: any, doc: Doc, text: Text): any {
+        doc.clientID += 1;
+        const version = { '0': getClock(doc, 0) };
+
+        const override: string = 'override ';
+        const t = text.toString();
+
+        const relativeStart = createRelativePositionFromStateVector(
+            text,
+            version,
+            node.start,
+            -1,
+            true
+        );
+        const absoluteStart = createAbsolutePositionFromRelativePosition(
+            relativeStart,
+            doc
+        );
+
+        const indexOfOverride = t.indexOf(override, absoluteStart.index);
+
+        if (indexOfOverride < 0 || indexOfOverride > node.key.start) {
+            return;
+        }
+
+        text.delete(indexOfOverride, override.length);
     }
 
     private _removeAsExpression(node: any, doc: Doc, text: Text): any {
