@@ -227,9 +227,11 @@ export default class HtmlApp extends Vue {
             const anyTarget = <any>event.target;
             e.target = anyTarget.__id;
 
-            for (let prop of TARGET_INPUT_PROPERTIES) {
-                if (prop in anyTarget) {
-                    e[`_target${prop}`] = anyTarget[prop];
+            if (event.type === 'input') {
+                for (let prop of TARGET_INPUT_PROPERTIES) {
+                    if (prop in anyTarget) {
+                        e[`_target${prop}`] = anyTarget[prop];
+                    }
                 }
             }
             const propList = ELEMENT_SPECIFIC_PROPERTIES[anyTarget.nodeName];
