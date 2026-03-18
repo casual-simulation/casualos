@@ -2368,6 +2368,37 @@ describe('Transpiler', () => {
                 expect(
                     transpiler.transpile(`const abc = (someValue)![0];`)
                 ).toBe(`const abc = (someValue)[0];`);
+
+                expect(transpiler.transpile(`const abc = someValue[0]!;`)).toBe(
+                    `const abc = someValue[0];`
+                );
+            });
+
+            it('should preserve null-coalescing operators', () => {
+                const transpiler = new Transpiler();
+                expect(
+                    transpiler.transpile(`const abc = someValue ?? "default";`)
+                ).toBe(`const abc = someValue ?? "default";`);
+
+                expect(
+                    transpiler.transpile(`const abc = someValue ?? "default";`)
+                ).toBe(`const abc = someValue ?? "default";`);
+
+                expect(
+                    transpiler.transpile(`const abc = someValue ?? "default";`)
+                ).toBe(`const abc = someValue ?? "default";`);
+
+                expect(
+                    transpiler.transpile(`const abc = someValue?.someProperty;`)
+                ).toBe(`const abc = someValue?.someProperty;`);
+
+                expect(
+                    transpiler.transpile(`const abc = someValue?.[0];`)
+                ).toBe(`const abc = someValue?.[0];`);
+
+                expect(
+                    transpiler.transpile(`const abc = (someValue)?.[0];`)
+                ).toBe(`const abc = (someValue)?.[0];`);
             });
 
             it('should remove definite assignment assertion operators', () => {
@@ -2397,6 +2428,120 @@ describe('Transpiler', () => {
                 expect(
                     transpiler.transpile(`class Test { #myProp!: number; }`)
                 ).toBe(`class Test { #myProp; }`);
+            });
+
+            it('should remove type annotations from arrow functions', () => {
+                const transpiler = new Transpiler();
+
+                expect(
+                    transpiler.transpile(
+                        `const abc = (n: number): number => n;`
+                    )
+                ).toBe(`const abc = (n) => n;`);
+
+                expect(
+                    transpiler.transpile(
+                        `const abc = ({a, b, c}: {a: number, b: number, c: number}): number => a;`
+                    )
+                ).toBe(`const abc = ({a, b, c}) => a;`);
+
+                expect(
+                    transpiler.transpile(`const abc = <T,>(a: T): T => a;`)
+                ).toBe(`const abc = (a) => a;`);
+            });
+
+            it('should support satisfies expressions', () => {
+                const transpiler = new Transpiler();
+
+                expect(
+                    transpiler.transpile(
+                        `const abc: any = { a: 123, b: "hello" } satisfies { a: number, b: string };`
+                    )
+                ).toBe(`const abc = { a: 123, b: "hello" };`);
+
+                expect(
+                    transpiler.transpile(
+                        `const abc: any = ({ a: 123, b: "hello" }) satisfies { a: number, b: string };`
+                    )
+                ).toBe(`const abc = ({ a: 123, b: "hello" });`);
+
+                expect(
+                    transpiler.transpile(
+                        `const abc: any = (({ a: 123, b: "hello" }) satisfies { a: number, b: string });`
+                    )
+                ).toBe(`const abc = (({ a: 123, b: "hello" }));`);
+            });
+
+            it('should support as expressions after initializers', () => {
+                const transpiler = new Transpiler();
+
+                expect(
+                    transpiler.transpile(
+                        `const abc: any = { a: 123, b: "hello" } as { a: number, b: string };`
+                    )
+                ).toBe(`const abc = { a: 123, b: "hello" };`);
+
+                expect(
+                    transpiler.transpile(
+                        `const abc = () => ({ a: 123, b: "hello" }) as { a: number, b: string };`
+                    )
+                ).toBe(`const abc = () => ({ a: 123, b: "hello" });`);
+
+                expect(
+                    transpiler.transpile(
+                        `const result: any = values.map((v) => ({ a: v.a, b: v.b }) as { a: number, b: string });`
+                    )
+                ).toBe(
+                    `const result = values.map((v) => ({ a: v.a, b: v.b }));`
+                );
+
+                expect(
+                    transpiler.transpile(
+                        `const result: any = values.map((v) => ((({ a: v.a, b: v.b })) as { a: number, b: string }));`
+                    )
+                ).toBe(
+                    `const result = values.map((v) => ((({ a: v.a, b: v.b }))));`
+                );
+            });
+
+            it('should support the override keyword', () => {
+                const transpiler = new Transpiler();
+
+                expect(
+                    transpiler.transpile(
+                        `class ABC extends DEF { override myMethod(): void {} }`
+                    )
+                ).toBe(`class ABC extends DEF { myMethod() {} }`);
+
+                expect(
+                    transpiler.transpile(
+                        `class ABC extends DEF { override async myMethod(): void {} }`
+                    )
+                ).toBe(`class ABC extends DEF { async myMethod() {} }`);
+
+                expect(
+                    transpiler.transpile(
+                        `class ABC extends DEF { public override async myMethod(): void {} }`
+                    )
+                ).toBe(`class ABC extends DEF { async myMethod() {} }`);
+
+                expect(
+                    transpiler.transpile(
+                        `class ABC extends DEF { override *myMethod() {} }`
+                    )
+                ).toBe(`class ABC extends DEF { *myMethod() {} }`);
+
+                expect(
+                    transpiler.transpile(
+                        `class ABC extends DEF { override get value() { return 123; } }`
+                    )
+                ).toBe(`class ABC extends DEF { get value() { return 123; } }`);
+
+                expect(
+                    transpiler.transpile(
+                        `class ABC extends DEF { public override get value() { return 123; } }`
+                    )
+                ).toBe(`class ABC extends DEF { get value() { return 123; } }`);
             });
         });
 

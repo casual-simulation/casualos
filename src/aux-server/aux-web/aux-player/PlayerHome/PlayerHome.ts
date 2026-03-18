@@ -748,7 +748,8 @@ export default class PlayerHome extends Vue {
     private _addGridPortalToQuery(update: Dictionary<string | string[]>) {
         if (
             !hasValue(this.query['gridPortal']) &&
-            !('noGridPortal' in this.query)
+            !('noGridPortal' in this.query) &&
+            !appManager.config.noAutomaticGridPortal
         ) {
             update.gridPortal = 'home';
         }

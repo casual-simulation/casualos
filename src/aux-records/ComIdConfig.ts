@@ -48,6 +48,7 @@ export const COM_ID_PLAYER_CONFIG = WEB_CONFIG_SCHEMA.pick({
     disableVM: true,
     postHogApiKey: true,
     postHogApiHost: true,
+    noAutomaticGridPortal: true,
 }).partial();
 
 export type ComIdPlayerConfig = z.infer<typeof COM_ID_PLAYER_CONFIG>;

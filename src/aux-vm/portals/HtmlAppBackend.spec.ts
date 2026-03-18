@@ -405,7 +405,7 @@ describe('HtmlAppBackend', () => {
             expect(updateAction.updates[0].type).toBe('childList');
             expect(updateAction.updates[0].addedNodes.length).toBe(1);
             const h1Node = updateAction.updates[0].addedNodes[0] as any;
-            expect(h1Node.nodeName).toBe('H1');
+            expect(h1Node.nodeName).toBe('h1');
             expect(h1Node.childNodes.length).toBe(1);
             expect(h1Node.childNodes[0].nodeType).toBe(3);
         });
@@ -451,7 +451,7 @@ describe('HtmlAppBackend', () => {
             expect(updateAction.updates[0].type).toBe('childList');
             expect(updateAction.updates[0].addedNodes.length).toBe(1);
             const h1Node = updateAction.updates[0].addedNodes[0] as any;
-            expect(h1Node.nodeName).toBe('H1');
+            expect(h1Node.nodeName).toBe('h1');
             expect(h1Node.childNodes.length).toBe(1);
             expect(h1Node.childNodes[0].nodeType).toBe(3);
         });
@@ -505,7 +505,7 @@ describe('HtmlAppBackend', () => {
             expect(updateAction.updates[1].type).toBe('childList');
             expect(updateAction.updates[1].addedNodes.length).toBe(1);
             const inputNode1 = updateAction.updates[1].addedNodes[0] as any;
-            expect(inputNode1.nodeName).toBe('DIV');
+            expect(inputNode1.nodeName).toBe('div');
 
             portal.handleEvents([
                 setAppOutput(

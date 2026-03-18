@@ -1,8 +1,42 @@
 # CasualOS Changelog
 
-## V4.1.6
+## V4.2.3
 
-#### Date: 3/6/2026
+#### Date: 3/18/2026
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where CasualOS didn't support the TypeScript `override` keyword.
+-   Fixed an issue where CasualOS could sometimes improperly sync state for custom apps when multiple events are dispatched for an `<input>` or `<select>` element at the same time.
+
+## V4.2.2
+
+#### Date: 3/13/2026
+
+### :rocket: Features
+
+-   Updated the default privacy policy.
+-   Added the ability to configure whether the grid portal automatically opens.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where CasualOS didn't support return type annotations on arrow functions.
+-   Fixed an issue where CasualOS didn't support generic type parameters on arrow functions.
+-   Fixed an issue where CasualOS didn't support "satisfies" TypeScript expressions.
+-   Fixed an issue where CasualOS didn't support some parenthesized expressions.
+-   Fixed an issue where the `value` attribute wouldn't work for `<select>` elements in custom apps.
+
+## V4.2.1
+
+#### Date: 3/10/2026
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where some static files weren't being served properly.
+
+## V4.2.0
+
+#### Date: 3/9/2026
 
 ### :rocket: Features
 
@@ -46,6 +80,8 @@
 -   Added the `--aux-version <version>` option to the `pack-aux` CLI command.
 -   Added the [`@preact/signals`](https://www.npmjs.com/package/@preact/signals) library.
     -   This also includes `@preact/signals/utils`.
+-   Added `preact/hooks` as an importable library.
+-   Added `analytics.recordEvent()` to also send events to PostHog when configured and enabled, while continuing to send to Simple Analytics when available, and returning an error when neither analytics provider is available.
 
 ### :bug: Bug Fixes
 

@@ -253,7 +253,8 @@ export class Server {
             // Only allow non-html assets from being served by the static middleware
             // Allow cleanup-indexeddb.html as static file
             const isAsset = (path: string) =>
-                /^[\w/\\\-_+:%.]+\.(?!html)\w+$/gi.test(path) ||
+                // eslint-disable-next-line no-useless-escape
+                /^[\w\/\\\-_+:%.@]+\.(?!html)\w+$/gi.test(path) ||
                 path === '/cleanup-indexeddb.html';
             frontend.use(
                 conditional(

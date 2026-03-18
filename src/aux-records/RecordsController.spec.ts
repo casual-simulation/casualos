@@ -2478,6 +2478,7 @@ describe('RecordsController', () => {
                 subscriptionStatus: 'active',
                 playerConfig: {
                     ab1BootstrapURL: 'https://example.com/ab1',
+                    arcGisApiKey: 'apiKey',
                 },
             });
 
@@ -2487,6 +2488,7 @@ describe('RecordsController', () => {
                     id: 'studioId',
                     playerConfig: {
                         automaticBiosOption: 'free',
+                        arcGisApiKey: null,
                     },
                 },
             });
@@ -2502,45 +2504,12 @@ describe('RecordsController', () => {
                 subscriptionId: 'sub1',
                 subscriptionStatus: 'active',
                 playerConfig: {
+                    ab1BootstrapURL: 'https://example.com/ab1',
                     automaticBiosOption: 'free',
+                    arcGisApiKey: null,
                 },
             });
         });
-        //     await store.updateStudio({
-        //         id: 'studioId',
-        //         displayName: 'studio',
-        //         subscriptionId: 'sub1',
-        //         subscriptionStatus: 'active',
-        //         comIdConfig: {
-        //             allowedStudioCreators: 'anyone',
-        //         },
-        //     });
-
-        //     const result = await manager.updateStudio({
-        //         userId: 'userId',
-        //         studio: {
-        //             id: 'studioId',
-        //             comIdConfig: {
-        //                 allowedStudioCreators: 'only-members',
-        //             },
-        //         },
-        //     });
-
-        //     expect(result).toEqual({
-        //         success: true,
-        //     });
-
-        //     const studio = await store.getStudioById('studioId');
-        //     expect(studio).toEqual({
-        //         id: 'studioId',
-        //         displayName: 'studio',
-        //         subscriptionId: 'sub1',
-        //         subscriptionStatus: 'active',
-        //         comIdConfig: {
-        //             allowedStudioCreators: 'only-members',
-        //         },
-        //     });
-        // });
 
         it('should be able to update the comId config', async () => {
             await store.updateStudio({

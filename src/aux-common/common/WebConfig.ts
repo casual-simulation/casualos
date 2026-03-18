@@ -271,6 +271,11 @@ export interface WebConfig {
      * Whether to enable simple analytics. Defaults to false.
      */
     enableSimpleAnalytics?: boolean | null;
+
+    /**
+     * Whether to disable loading the grid portal by default.
+     */
+    noAutomaticGridPortal?: boolean | null;
 }
 
 /**
@@ -402,6 +407,14 @@ export const WEB_CONFIG_SCHEMA = z.object({
         .nullable()
         .optional()
         .describe('Whether to enable simple analytics. Defaults to false.'),
+
+    noAutomaticGridPortal: z
+        .boolean()
+        .nullable()
+        .optional()
+        .describe(
+            'Whether to disable loading the grid portal by default. Defaults to false.'
+        ),
 });
 
 export function parseWebConfig(

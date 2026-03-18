@@ -53,6 +53,16 @@ const DISALLOWED_EVENTS = new Set([
     'deviceorientationabsolute',
 ]);
 
+/**
+ * The attributes that should be set on nodes after creating child nodes.
+ */
+const AFTER_CHILD_NODE_ATTRIBUTES = new Set([
+    'value',
+    'checked',
+    'selected',
+    'src',
+]);
+
 const ALLOWED_EVENTS = new Set([
     // TODO: Build complete list of allowed events
     // 'click',
@@ -217,9 +227,11 @@ export default class HtmlApp extends Vue {
             const anyTarget = <any>event.target;
             e.target = anyTarget.__id;
 
-            for (let prop of TARGET_INPUT_PROPERTIES) {
-                if (prop in anyTarget) {
-                    e[`_target${prop}`] = anyTarget[prop];
+            if (event.type === 'input') {
+                for (let prop of TARGET_INPUT_PROPERTIES) {
+                    if (prop in anyTarget) {
+                        e[`_target${prop}`] = anyTarget[prop];
+                    }
                 }
             }
             const propList = ELEMENT_SPECIFIC_PROPERTIES[anyTarget.nodeName];
@@ -285,9 +297,14 @@ export default class HtmlApp extends Vue {
                 }
             }
 
+            let postChildAttributes: any[] = [];
             if (skeleton.attributes) {
                 for (let attr of skeleton.attributes) {
-                    this._setElementAttribute(el, attr.name, attr.value);
+                    if (AFTER_CHILD_NODE_ATTRIBUTES.has(attr.name)) {
+                        postChildAttributes.push(attr);
+                    } else {
+                        this._setElementAttribute(el, attr.name, attr.value);
+                    }
                 }
             }
 
@@ -297,6 +314,12 @@ export default class HtmlApp extends Vue {
                     if (newNode) {
                         el.appendChild(newNode);
                     }
+                }
+            }
+
+            if (postChildAttributes.length > 0) {
+                for (let attr of postChildAttributes) {
+                    this._setElementAttribute(el, attr.name, attr.value);
                 }
             }
         }

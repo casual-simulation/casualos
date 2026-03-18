@@ -52,6 +52,7 @@ const importableLibraries = {
         './aux-web/shared/public/import-map/preact.signals.utils',
     '@preact/signals': './aux-web/shared/public/import-map/preact.signals',
     'preact/compat': './aux-web/shared/public/import-map/preact.compat',
+    'preact/hooks': './aux-web/shared/public/import-map/preact.hooks',
     'preact/jsx-runtime':
         './aux-web/shared/public/import-map/preact.jsx-runtime',
     preact: './aux-web/shared/public/import-map/preact',
