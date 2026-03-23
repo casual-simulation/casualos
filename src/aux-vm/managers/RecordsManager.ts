@@ -1058,7 +1058,10 @@ export class RecordsManager {
                 {
                     recordKey: event.recordKey,
                     fileSha256Hex: hash,
-                    fileMimeType: mimeType,
+                    fileMimeType:
+                        event.fileExtension && !event.mimeType
+                            ? undefined
+                            : mimeType,
                     fileByteLength: byteLength,
                     fileDescription: event.description,
                     fileExtension: event.fileExtension,
