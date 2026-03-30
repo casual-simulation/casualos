@@ -56,15 +56,15 @@ Make sure you have all the prerequisite tools installed:
     - The guide may cover more than what is necessary, following along until a cluster is started, is all this step requires to continue.
     - With that in mind, the guide can be found [here][tigerbeetle].
     - To configure the connection details from casualos to the tigerbeetle server, visit the [development server config](./src/aux-server/aux-backend/server/.dev.env.json).
-    - Be sure to set the `_enabled` property in `tigerBeetle` to `true` as it defaults to `false`.
+    - TigerBeetle is enabled by including a `tigerBeetle` object in `SERVER_CONFIG`. There is no `_enabled` flag.
     - All other property keys are their camelcase equivalent in the tigerbeetle CLI.
         ```json
         "tigerBeetle": {
-            "_enabled": true,
             "clusterId": "0",
             "replicaAddresses": ["3100"]
         },
         ```
+    - If you are using the bundled Docker dev stack instead of a manually started TigerBeetle process, use `8101` because [`docker/docker-compose.dev.yml`](./docker/docker-compose.dev.yml) maps host port `8101` to TigerBeetle's internal port `3000`.
 
 7. Start related services:
     - If using `nerdctl`: `npm run nerdctl:dev`
