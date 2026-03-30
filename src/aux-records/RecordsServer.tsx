@@ -8104,7 +8104,7 @@ export class RecordsServer {
         return {
             statusCode: 204,
             headers: {
-                'Access-Control-Allow-Methods': 'POST, PUT, OPTIONS',
+                'Access-Control-Allow-Methods': 'POST, PUT, DELETE, OPTIONS',
                 'Access-Control-Allow-Headers': 'Content-Type, Authorization',
             },
         };
