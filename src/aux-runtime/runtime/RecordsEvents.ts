@@ -813,7 +813,7 @@ export interface RecordFileAction extends RecordsAction {
     /**
      * The file extension to use for the uploaded file.
      * If specified, this extension will be used instead of deriving one from the MIME type.
-     * Should include the leading dot (e.g. '.spz', '.png').
+     * May include the leading dot (e.g. '.spz', '.png') or omit it (e.g. 'spz', 'png').Should include the leading dot (e.g. '.spz', '.png').
      */
     fileExtension?: string;
 

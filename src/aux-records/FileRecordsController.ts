@@ -112,12 +112,33 @@ export class FileRecordsController {
 
             let extension: string | false | null;
             if (request.fileExtension) {
-                // Strip the leading dot if present to normalize the extension
-                const normalizedExtension = request.fileExtension.startsWith(
-                    '.'
-                )
-                    ? request.fileExtension.slice(1)
-                    : request.fileExtension;
+                // Normalize the extension: trim, strip leading dot, and lowercase
+                const trimmedExtension = request.fileExtension.trim();
+                const extensionWithoutDot = trimmedExtension.startsWith('.')
+                    ? trimmedExtension.slice(1)
+                    : trimmedExtension;
+                const normalizedExtension = extensionWithoutDot.toLowerCase();
+                // Reject empty or invalid extensions
+                if (!normalizedExtension) {
+                    return {
+                        success: false,
+                        errorCode: 'unacceptable_request',
+                        errorMessage:
+                            'The specified file extension is invalid.',
+                    };
+                }
+                // Disallow path separators and other unsafe characters
+                if (
+                    normalizedExtension.includes('/') ||
+                    normalizedExtension.includes('\\')
+                ) {
+                    return {
+                        success: false,
+                        errorCode: 'unacceptable_request',
+                        errorMessage:
+                            'The specified file extension contains invalid characters.',
+                    };
+                }
 
                 if (request.fileMimeType) {
                     // Both provided — validate they agree

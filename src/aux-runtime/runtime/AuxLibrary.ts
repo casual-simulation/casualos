@@ -2856,7 +2856,7 @@ export interface RecordFileOptions {
     /**
      * The file extension to use for the uploaded file.
      * If specified, this extension will be used instead of deriving one from the MIME type.
-     * Should include the leading dot (e.g. '.spz', '.png').
+     * May be provided with or without the leading dot (e.g. 'spz', 'png', '.spz', '.png').
      */
     fileExtension?: string;
 

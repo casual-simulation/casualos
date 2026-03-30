@@ -114,6 +114,9 @@ export const NO_SPECIAL_CHARACTERS_MESSAGE =
     'The value cannot not contain special characters.';
 export const NO_SPECIAL_CHARACTERS_REGEX =
     /^[^!@#$%^&*()[\]{}\-_=+`~,./?;:'"\\<>|]*$/g;
+export const FILE_EXTENSION_MESSAGE =
+    'fileExtension must be a valid extension (e.g. .png or .tar.gz) and cannot contain whitespace or path separators.';
+export const FILE_EXTENSION_REGEX = /^\.[a-zA-Z0-9][a-zA-Z0-9.-]*$/;
 
 export const DISPLAY_NAME_VALIDATION = z
     .string()
@@ -183,8 +186,10 @@ export const RECORD_FILE_SCHEMA = z.object({
                     ? 'fileExtension is required.'
                     : 'fileExtension must be a string.',
         })
+        .trim()
         .min(1)
         .max(128)
+        .regex(FILE_EXTENSION_REGEX, FILE_EXTENSION_MESSAGE)
         .optional(),
     fileDescription: z
         .string({

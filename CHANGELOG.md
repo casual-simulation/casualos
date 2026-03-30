@@ -10,7 +10,7 @@
     -   Users can now pass `fileExtension` in the options object to specify the file extension directly, instead of relying on the MIME type to determine the extension. This is useful for file formats that don't have a well-known MIME type (e.g., Gaussian Splat `.spz` files).
     -   Example:
         ```typescript
-        await os.recordFile(recordKey, 'address', data, {
+        await os.recordFile(recordKey, data, {
             fileExtension: '.spz',
         });
         ```
