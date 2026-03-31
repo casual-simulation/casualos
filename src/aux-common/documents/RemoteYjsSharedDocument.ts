@@ -17,7 +17,7 @@
  */
 import { Observable } from 'rxjs';
 import { filter, firstValueFrom, startWith, Subject, Subscription } from 'rxjs';
-import type { RemoteClientEvent, RemoteSharedDocument } from './SharedDocument';
+import type { RemoteClientEvent, SharedDocument } from './SharedDocument';
 
 import type { Doc, Transaction } from 'yjs';
 import { encodeStateAsUpdate } from 'yjs';
@@ -58,7 +58,7 @@ export function createRemoteClientYjsSharedDocument(
  */
 export class RemoteYjsSharedDocument
     extends YjsSharedDocument
-    implements RemoteSharedDocument
+    implements SharedDocument
 {
     protected _static: boolean;
     protected _skipInitialLoad: boolean;

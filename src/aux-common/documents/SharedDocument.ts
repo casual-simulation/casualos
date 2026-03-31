@@ -90,6 +90,22 @@ export interface SharedDocument extends SubscriptionLike {
     onClientError: Observable<ClientError>;
 
     /**
+     * The events that are emitted when remote clients connect or disconnect from the document.
+     *
+     * When subscribed to, this observable will emit an event whenever a remote client connects or disconnects from the document.
+     * Additionally, the current remote clients will be emitted when the subscription is first made.
+     */
+    readonly remoteClients: Observable<RemoteClientEvent>;
+
+    /**
+     * The events that are emitted when remote clients connect or disconnect from the document.
+     *
+     * When subscribed to, this observable will emit an event whenever a remote client connects or disconnects from the document.
+     * Notably, the current remote clients will NOT be emitted when the subscription is first made, so this can be used to only listen for future client connections and disconnections.
+     */
+    readonly remoteClientsRaw: Observable<RemoteClientEvent>;
+
+    /**
      * Tells the document to connect to its backing store.
      */
     connect(): void;
@@ -150,31 +166,6 @@ export interface SharedDocument extends SubscriptionLike {
      * @param updates The updates to apply.
      */
     applyUpdates(updates: string[]): void;
-}
-
-/**
- * Defines an interface for shared documents that can have remote clients.
- *
- * @dochash types/documents
- * @docid RemoteSharedDocument
- * @docname RemoteSharedDocument
- */
-export interface RemoteSharedDocument extends SharedDocument {
-    /**
-     * The events that are emitted when remote clients connect or disconnect from the document.
-     *
-     * When subscribed to, this observable will emit an event whenever a remote client connects or disconnects from the document.
-     * Additionally, the current remote clients will be emitted when the subscription is first made.
-     */
-    readonly remoteClients: Observable<RemoteClientEvent>;
-
-    /**
-     * The events that are emitted when remote clients connect or disconnect from the document.
-     *
-     * When subscribed to, this observable will emit an event whenever a remote client connects or disconnects from the document.
-     * Notably, the current remote clients will NOT be emitted when the subscription is first made, so this can be used to only listen for future client connections and disconnections.
-     */
-    readonly remoteClientsRaw: Observable<RemoteClientEvent>;
 }
 
 /**
