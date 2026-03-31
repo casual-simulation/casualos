@@ -4,6 +4,11 @@
 
 #### Date: TBD
 
+### :rocket: Features
+
+-   Added `remoteClients` to shared documents.
+    -   `remoteClients` is an observable that you can subscribe to to get notified whenever another session (e.g. tab) connects to the document.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where CasualOS didn't support the TypeScript `override` keyword.
