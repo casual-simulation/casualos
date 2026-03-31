@@ -16,7 +16,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import type { ClientError } from '../websockets';
-import type { Action, CurrentVersion, StatusUpdate } from '../common';
+import type {
+    Action,
+    ConnectionInfo,
+    CurrentVersion,
+    StatusUpdate,
+} from '../common';
 import type { Observable, SubscriptionLike } from 'rxjs';
 import type { InstUpdate } from '../bots';
 
@@ -145,6 +150,59 @@ export interface SharedDocument extends SubscriptionLike {
      * @param updates The updates to apply.
      */
     applyUpdates(updates: string[]): void;
+}
+
+/**
+ * Defines an interface for shared documents that can have remote clients.
+ *
+ * @dochash types/documents
+ * @docid RemoteSharedDocument
+ * @docname RemoteSharedDocument
+ */
+export interface RemoteSharedDocument extends SharedDocument {
+    /**
+     * The events that are emitted when remote clients connect or disconnect from the document.
+     *
+     * When subscribed to, this observable will emit an event whenever a remote client connects or disconnects from the document.
+     * Additionally, the current remote clients will be emitted when the subscription is first made.
+     */
+    readonly remoteClients: Observable<RemoteClientEvent>;
+
+    /**
+     * The events that are emitted when remote clients connect or disconnect from the document.
+     *
+     * When subscribed to, this observable will emit an event whenever a remote client connects or disconnects from the document.
+     * Notably, the current remote clients will NOT be emitted when the subscription is first made, so this can be used to only listen for future client connections and disconnections.
+     */
+    readonly remoteClientsRaw: Observable<RemoteClientEvent>;
+}
+
+/**
+ * Defines an event that is emitted when a remote client connects or disconnects from a shared document.
+ *
+ * @dochash types/documents
+ * @docid RemoteClientEvent
+ * @docname RemoteClientEvent
+ */
+export interface RemoteClientEvent {
+    /**
+     * The type of the event.
+     *
+     * "client_connected" is emitted when a new client connects to the document.
+     * "client_disconnected" is emitted when a client disconnects from the document.
+     */
+    type: 'client_connected' | 'client_disconnected';
+
+    /**
+     * The connection info of the client that connected or disconnected.
+     */
+    client: ConnectionInfo;
+
+    /**
+     * Whether this event is for the current client.
+     * This will be true when `client.connectionId` is the same as the `configBot.id` and false otherwise.
+     */
+    isSelf: boolean;
 }
 
 /**
