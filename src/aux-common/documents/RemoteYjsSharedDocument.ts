@@ -15,8 +15,14 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { filter, firstValueFrom, Subscription } from 'rxjs';
-import type { SharedDocument } from './SharedDocument';
+import {
+    filter,
+    firstValueFrom,
+    Observable,
+    Subject,
+    Subscription,
+} from 'rxjs';
+import type { RemoteClientEvent, RemoteSharedDocument } from './SharedDocument';
 
 import type { Doc, Transaction } from 'yjs';
 import { encodeStateAsUpdate } from 'yjs';
@@ -33,6 +39,7 @@ import type { PartitionAuthSource } from '../partitions/PartitionAuthSource';
 import { YjsIndexedDBPersistence } from '../yjs/YjsIndexedDBPersistence';
 import { fromByteArray } from 'base64-js';
 import { getConnectionId } from '../common';
+import type { ConnectionInfo } from '../common';
 import {
     YjsSharedDocument,
     APPLY_UPDATES_TO_INST_TRANSACTION_ORIGIN,
@@ -56,7 +63,7 @@ export function createRemoteClientYjsSharedDocument(
  */
 export class RemoteYjsSharedDocument
     extends YjsSharedDocument
-    implements SharedDocument
+    implements RemoteSharedDocument
 {
     protected _static: boolean;
     protected _skipInitialLoad: boolean;
@@ -68,6 +75,23 @@ export class RemoteYjsSharedDocument
     protected _readOnly: boolean;
     protected _authSource: PartitionAuthSource;
     protected _markers: string[];
+    protected _connectedClients = new Map<string, ConnectionInfo>();
+    protected _remoteClientsRaw = new Subject<RemoteClientEvent>();
+
+    get remoteClients(): Observable<RemoteClientEvent> {
+        return new Observable<RemoteClientEvent>((subscriber) => {
+            for (let client of this._connectedClients.values()) {
+                subscriber.next(this._clientConnectedEvent(client));
+            }
+
+            const sub = this._remoteClientsRaw.subscribe(subscriber);
+            return () => sub.unsubscribe();
+        });
+    }
+
+    get remoteClientsRaw(): Observable<RemoteClientEvent> {
+        return this._remoteClientsRaw;
+    }
 
     unsubscribe(): void {
         this._sub.unsubscribe();
@@ -256,6 +280,28 @@ export class RemoteYjsSharedDocument
                 this._onRateLimitExceeded(event);
             })
         );
+        this._sub.add(
+            this._client
+                .watchBranchDevices(this._recordName, this._inst, this._branch)
+                .subscribe((event) => {
+                    if (event.type === 'repo/connected_to_branch') {
+                        this._connectedClients.set(
+                            event.connection.connectionId,
+                            event.connection
+                        );
+                        this._remoteClientsRaw.next(
+                            this._clientConnectedEvent(event.connection)
+                        );
+                    } else if (event.type === 'repo/disconnected_from_branch') {
+                        this._connectedClients.delete(
+                            event.connection.connectionId
+                        );
+                        this._remoteClientsRaw.next(
+                            this._clientDisconnectedEvent(event.connection)
+                        );
+                    }
+                })
+        );
 
         const updateHandler = (
             update: Uint8Array,
@@ -365,6 +411,30 @@ export class RemoteYjsSharedDocument
      */
     protected _onMaxSizeReached(event: MaxInstSizeReachedClientError) {
         this._onClientError.next(event);
+    }
+
+    private _clientConnectedEvent(client: ConnectionInfo): RemoteClientEvent {
+        return {
+            type: 'client_connected',
+            client,
+            isSelf: this._isSelfClient(client),
+        };
+    }
+
+    private _clientDisconnectedEvent(
+        client: ConnectionInfo
+    ): RemoteClientEvent {
+        return {
+            type: 'client_disconnected',
+            client,
+            isSelf: this._isSelfClient(client),
+        };
+    }
+
+    private _isSelfClient(client: ConnectionInfo): boolean {
+        return (
+            client.connectionId === this._client.connection.info?.connectionId
+        );
     }
 
     private _updateSynced(synced: boolean) {

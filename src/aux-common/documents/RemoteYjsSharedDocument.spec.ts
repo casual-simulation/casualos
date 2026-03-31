@@ -107,6 +107,8 @@ describe('RemoteYjsSharedDocument', () => {
             let addAtoms: Subject<AddUpdatesMessage>;
             let updatesReceived: Subject<UpdatesReceivedMessage>;
             let watchBranchResult: Subject<WatchBranchResultMessage>;
+            let connectedToBranch: Subject<any>;
+            let disconnectedFromBranch: Subject<any>;
             let errors: any[];
             let version: CurrentVersion;
             let sub: Subscription;
@@ -118,12 +120,22 @@ describe('RemoteYjsSharedDocument', () => {
                 addAtoms = new Subject<AddUpdatesMessage>();
                 updatesReceived = new Subject<UpdatesReceivedMessage>();
                 watchBranchResult = new Subject();
+                connectedToBranch = new Subject();
+                disconnectedFromBranch = new Subject();
                 connection.events.set('repo/receive_action', receiveEvent);
                 connection.events.set('repo/add_updates', addAtoms);
                 connection.events.set('repo/updates_received', updatesReceived);
                 connection.events.set(
                     'repo/watch_branch_result',
                     watchBranchResult
+                );
+                connection.events.set(
+                    'repo/connected_to_branch',
+                    connectedToBranch
+                );
+                connection.events.set(
+                    'repo/disconnected_from_branch',
+                    disconnectedFromBranch
                 );
                 client = new InstRecordsClient(connection);
                 connection.connect();
@@ -158,6 +170,148 @@ describe('RemoteYjsSharedDocument', () => {
                         recordName: recordName,
                         inst: 'inst',
                         branch: 'testBranch',
+                    },
+                    {
+                        type: 'repo/watch_branch_devices',
+                        recordName: recordName,
+                        inst: 'inst',
+                        branch: 'testBranch',
+                    },
+                ]);
+            });
+
+            it('should emit current and future remote clients from remoteClients', async () => {
+                setupPartition({
+                    recordName: recordName,
+                    inst: 'inst',
+                    branch: 'testBranch',
+                });
+
+                document.connect();
+                await waitAsync();
+
+                connectedToBranch.next({
+                    type: 'repo/connected_to_branch',
+                    broadcast: false,
+                    branch: {
+                        type: 'repo/watch_branch',
+                        recordName,
+                        inst: 'inst',
+                        branch: 'testBranch',
+                    },
+                    connection: {
+                        connectionId: 'remote-1',
+                        sessionId: 'session-1',
+                        userId: 'user-1',
+                    },
+                });
+
+                await waitAsync();
+
+                const events = [] as any[];
+                sub.add(
+                    document.remoteClients.subscribe((e) => events.push(e))
+                );
+
+                await waitAsync();
+
+                disconnectedFromBranch.next({
+                    type: 'repo/disconnected_from_branch',
+                    broadcast: false,
+                    recordName,
+                    inst: 'inst',
+                    branch: 'testBranch',
+                    connection: {
+                        connectionId: 'remote-1',
+                        sessionId: 'session-1',
+                        userId: 'user-1',
+                    },
+                });
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    {
+                        type: 'client_connected',
+                        client: {
+                            connectionId: 'remote-1',
+                            sessionId: 'session-1',
+                            userId: 'user-1',
+                        },
+                        isSelf: false,
+                    },
+                    {
+                        type: 'client_disconnected',
+                        client: {
+                            connectionId: 'remote-1',
+                            sessionId: 'session-1',
+                            userId: 'user-1',
+                        },
+                        isSelf: false,
+                    },
+                ]);
+            });
+
+            it('should only emit future events from remoteClientsRaw', async () => {
+                setupPartition({
+                    recordName: recordName,
+                    inst: 'inst',
+                    branch: 'testBranch',
+                });
+
+                document.connect();
+                await waitAsync();
+
+                connectedToBranch.next({
+                    type: 'repo/connected_to_branch',
+                    broadcast: false,
+                    branch: {
+                        type: 'repo/watch_branch',
+                        recordName,
+                        inst: 'inst',
+                        branch: 'testBranch',
+                    },
+                    connection: {
+                        connectionId: 'remote-1',
+                        sessionId: 'session-1',
+                        userId: 'user-1',
+                    },
+                });
+
+                await waitAsync();
+
+                const events = [] as any[];
+                sub.add(
+                    document.remoteClientsRaw.subscribe((e) => events.push(e))
+                );
+
+                connectedToBranch.next({
+                    type: 'repo/connected_to_branch',
+                    broadcast: false,
+                    branch: {
+                        type: 'repo/watch_branch',
+                        recordName,
+                        inst: 'inst',
+                        branch: 'testBranch',
+                    },
+                    connection: {
+                        connectionId: 'remote-2',
+                        sessionId: 'session-2',
+                        userId: 'user-2',
+                    },
+                });
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    {
+                        type: 'client_connected',
+                        client: {
+                            connectionId: 'remote-2',
+                            sessionId: 'session-2',
+                            userId: 'user-2',
+                        },
+                        isSelf: false,
                     },
                 ]);
             });
@@ -1082,7 +1236,10 @@ describe('RemoteYjsSharedDocument', () => {
 
                     await waitAsync();
 
-                    expect(connection.sentMessages.slice(1)).toEqual([]);
+                    const updates = connection.sentMessages.filter(
+                        (m) => m.type === 'repo/add_updates'
+                    );
+                    expect(updates).toEqual([]);
                 });
 
                 it('should not send new updates to the server if in static mode', async () => {
@@ -1101,7 +1258,10 @@ describe('RemoteYjsSharedDocument', () => {
                     });
                     await waitAsync();
 
-                    expect(connection.sentMessages.slice(1)).toEqual([]);
+                    const updates = connection.sentMessages.filter(
+                        (m) => m.type === 'repo/add_updates'
+                    );
+                    expect(updates).toEqual([]);
                 });
 
                 it('should handle an ADD_UPDATES event without any updates', async () => {
@@ -1141,9 +1301,12 @@ describe('RemoteYjsSharedDocument', () => {
                     });
                     await waitAsync();
 
-                    expect(connection.sentMessages.slice(1).length).toBe(1);
+                    const updates = connection.sentMessages.filter(
+                        (m) => m.type === 'repo/add_updates'
+                    );
+                    expect(updates.length).toBe(1);
 
-                    const addUpdatesMessage = connection.sentMessages[1];
+                    const addUpdatesMessage = updates[0];
                     expect(addUpdatesMessage.type).toEqual('repo/add_updates');
                     expect((addUpdatesMessage as any).branch).toEqual(
                         'testBranch'
@@ -1271,7 +1434,10 @@ describe('RemoteYjsSharedDocument', () => {
 
                     await waitAsync();
 
-                    expect(connection.sentMessages.slice(1).length).toBe(0);
+                    const sentUpdates = connection.sentMessages.filter(
+                        (m) => m.type === 'repo/add_updates'
+                    );
+                    expect(sentUpdates.length).toBe(0);
                 });
                 //     it('case1: should handle an update that includes updates in addition to adding a bot', async () => {
                 //         document.connect();
