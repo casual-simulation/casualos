@@ -2,7 +2,12 @@
 
 ## V4.2.3
 
-#### Date: 3/30/2026
+#### Date: 3/31/2026
+
+### :rocket: Features
+
+-   Added `remoteClients` to shared documents.
+    -   `remoteClients` is an observable that you can subscribe to to get notified whenever another session (e.g. tab) connects to the document.
 
 ### :bug: Bug Fixes
 
