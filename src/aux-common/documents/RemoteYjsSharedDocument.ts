@@ -15,10 +15,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+import { Observable } from 'rxjs';
 import {
     filter,
     firstValueFrom,
-    Observable,
+    map,
+    share,
+    startWith,
     Subject,
     Subscription,
 } from 'rxjs';
@@ -76,17 +79,14 @@ export class RemoteYjsSharedDocument
     protected _authSource: PartitionAuthSource;
     protected _markers: string[];
     protected _connectedClients = new Map<string, ConnectionInfo>();
-    protected _remoteClientsRaw = new Subject<RemoteClientEvent>();
+    protected _remoteClientsSubject = new Subject<RemoteClientEvent>();
+    protected _remoteClientsRaw: Observable<RemoteClientEvent>;
 
     get remoteClients(): Observable<RemoteClientEvent> {
-        return new Observable<RemoteClientEvent>((subscriber) => {
-            for (let client of this._connectedClients.values()) {
-                subscriber.next(this._clientConnectedEvent(client));
-            }
-
-            const sub = this._remoteClientsRaw.subscribe(subscriber);
-            return () => sub.unsubscribe();
-        });
+        const existingClients = Array.from(this._connectedClients.values()).map(
+            (client) => this._clientConnectedEvent(client)
+        );
+        return this.remoteClientsRaw.pipe(startWith(...existingClients));
     }
 
     get remoteClientsRaw(): Observable<RemoteClientEvent> {
@@ -94,6 +94,9 @@ export class RemoteYjsSharedDocument
     }
 
     unsubscribe(): void {
+        this._remoteClientsSubject?.unsubscribe();
+        this._remoteClientsSubject = null;
+        this._connectedClients.clear();
         this._sub.unsubscribe();
     }
 
@@ -118,6 +121,43 @@ export class RemoteYjsSharedDocument
 
         // static implies read only
         this._readOnly = config.readOnly || this._static || false;
+
+        const watchDevices = new Observable<RemoteClientEvent>((subscriber) => {
+            const watchSubscription = this._client
+                .watchBranchDevices(this._recordName, this._inst, this._branch)
+                .pipe(
+                    map((event) => {
+                        if (event.type === 'repo/connected_to_branch') {
+                            this._connectedClients.set(
+                                event.connection.connectionId,
+                                event.connection
+                            );
+                            return this._clientConnectedEvent(event.connection);
+                        } else if (
+                            event.type === 'repo/disconnected_from_branch'
+                        ) {
+                            this._connectedClients.delete(
+                                event.connection.connectionId
+                            );
+                            return this._clientDisconnectedEvent(
+                                event.connection
+                            );
+                        }
+                    })
+                )
+                .subscribe(subscriber);
+
+            return () => {
+                this._connectedClients.clear();
+                watchSubscription.unsubscribe();
+            };
+        });
+
+        this._remoteClientsRaw = watchDevices.pipe(
+            share({
+                connector: () => this._remoteClientsSubject,
+            })
+        );
     }
 
     connect(): void {
@@ -279,28 +319,6 @@ export class RemoteYjsSharedDocument
             this._client.watchRateLimitExceeded().subscribe((event) => {
                 this._onRateLimitExceeded(event);
             })
-        );
-        this._sub.add(
-            this._client
-                .watchBranchDevices(this._recordName, this._inst, this._branch)
-                .subscribe((event) => {
-                    if (event.type === 'repo/connected_to_branch') {
-                        this._connectedClients.set(
-                            event.connection.connectionId,
-                            event.connection
-                        );
-                        this._remoteClientsRaw.next(
-                            this._clientConnectedEvent(event.connection)
-                        );
-                    } else if (event.type === 'repo/disconnected_from_branch') {
-                        this._connectedClients.delete(
-                            event.connection.connectionId
-                        );
-                        this._remoteClientsRaw.next(
-                            this._clientDisconnectedEvent(event.connection)
-                        );
-                    }
-                })
         );
 
         const updateHandler = (

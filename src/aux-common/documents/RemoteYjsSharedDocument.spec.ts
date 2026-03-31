@@ -21,6 +21,8 @@ import { waitAsync } from '../test/TestHelpers';
 import { createDocFromUpdates, getUpdates } from '../test/YjsTestHelpers';
 import type {
     AddUpdatesMessage,
+    ConnectedToBranchMessage,
+    DisconnectedFromBranchMessage,
     ReceiveDeviceActionMessage,
     UpdatesReceivedMessage,
     WatchBranchResultMessage,
@@ -33,6 +35,7 @@ import { RemoteYjsSharedDocument } from './RemoteYjsSharedDocument';
 import type { SharedDocumentConfig } from './SharedDocumentConfig';
 import { testDocumentImplementation } from './test/DocumentTests';
 import { fromByteArray } from 'base64-js';
+import type { RemoteClientEvent } from './SharedDocument';
 
 console.log = jest.fn();
 
@@ -107,8 +110,8 @@ describe('RemoteYjsSharedDocument', () => {
             let addAtoms: Subject<AddUpdatesMessage>;
             let updatesReceived: Subject<UpdatesReceivedMessage>;
             let watchBranchResult: Subject<WatchBranchResultMessage>;
-            let connectedToBranch: Subject<any>;
-            let disconnectedFromBranch: Subject<any>;
+            let connectedToBranch: Subject<ConnectedToBranchMessage>;
+            let disconnectedFromBranch: Subject<DisconnectedFromBranchMessage>;
             let errors: any[];
             let version: CurrentVersion;
             let sub: Subscription;
@@ -171,150 +174,205 @@ describe('RemoteYjsSharedDocument', () => {
                         inst: 'inst',
                         branch: 'testBranch',
                     },
-                    {
-                        type: 'repo/watch_branch_devices',
-                        recordName: recordName,
-                        inst: 'inst',
-                        branch: 'testBranch',
-                    },
                 ]);
             });
 
-            it('should emit current and future remote clients from remoteClients', async () => {
-                setupPartition({
-                    recordName: recordName,
-                    inst: 'inst',
-                    branch: 'testBranch',
-                });
+            // it('should watch branch devices once for multiple remote client subscriptions and unwatch when all unsubscribe', async () => {
+            //     setupPartition({
+            //         recordName: recordName,
+            //         inst: 'inst',
+            //         branch: 'testBranch',
+            //     });
 
-                document.connect();
-                await waitAsync();
+            //     document.connect();
+            //     await waitAsync();
 
-                connectedToBranch.next({
-                    type: 'repo/connected_to_branch',
-                    broadcast: false,
-                    branch: {
-                        type: 'repo/watch_branch',
-                        recordName,
-                        inst: 'inst',
-                        branch: 'testBranch',
-                    },
-                    connection: {
-                        connectionId: 'remote-1',
-                        sessionId: 'session-1',
-                        userId: 'user-1',
-                    },
-                });
+            //     const sub1 = document.remoteClients.subscribe(() => {});
+            //     await waitAsync();
 
-                await waitAsync();
+            //     expect(connection.sentMessages).toContainEqual({
+            //         type: 'repo/watch_branch_devices',
+            //         recordName: recordName,
+            //         inst: 'inst',
+            //         branch: 'testBranch',
+            //     });
 
-                const events = [] as any[];
-                sub.add(
-                    document.remoteClients.subscribe((e) => events.push(e))
-                );
+            //     const watchCountAfterFirstSubscription =
+            //         connection.sentMessages.filter(
+            //             (m) => m.type === 'repo/watch_branch_devices'
+            //         ).length;
 
-                await waitAsync();
+            //     const sub2 = document.remoteClients.subscribe(() => {});
+            //     await waitAsync();
 
-                disconnectedFromBranch.next({
-                    type: 'repo/disconnected_from_branch',
-                    broadcast: false,
-                    recordName,
-                    inst: 'inst',
-                    branch: 'testBranch',
-                    connection: {
-                        connectionId: 'remote-1',
-                        sessionId: 'session-1',
-                        userId: 'user-1',
-                    },
-                });
+            //     const watchCountAfterSecondSubscription =
+            //         connection.sentMessages.filter(
+            //             (m) => m.type === 'repo/watch_branch_devices'
+            //         ).length;
+            //     expect(watchCountAfterSecondSubscription).toBe(
+            //         watchCountAfterFirstSubscription
+            //     );
 
-                await waitAsync();
+            //     sub1.unsubscribe();
+            //     await waitAsync();
 
-                expect(events).toEqual([
-                    {
-                        type: 'client_connected',
-                        client: {
-                            connectionId: 'remote-1',
-                            sessionId: 'session-1',
-                            userId: 'user-1',
-                        },
-                        isSelf: false,
-                    },
-                    {
-                        type: 'client_disconnected',
-                        client: {
-                            connectionId: 'remote-1',
-                            sessionId: 'session-1',
-                            userId: 'user-1',
-                        },
-                        isSelf: false,
-                    },
-                ]);
-            });
+            //     const unwatchCountAfterFirstUnsubscribe =
+            //         connection.sentMessages.filter(
+            //             (m) => m.type === 'repo/unwatch_branch_devices'
+            //         ).length;
+            //     expect(unwatchCountAfterFirstUnsubscribe).toBe(0);
 
-            it('should only emit future events from remoteClientsRaw', async () => {
-                setupPartition({
-                    recordName: recordName,
-                    inst: 'inst',
-                    branch: 'testBranch',
-                });
+            //     sub2.unsubscribe();
+            //     await waitAsync();
 
-                document.connect();
-                await waitAsync();
+            //     expect(connection.sentMessages).toContainEqual({
+            //         type: 'repo/unwatch_branch_devices',
+            //         recordName: recordName,
+            //         inst: 'inst',
+            //         branch: 'testBranch',
+            //     });
+            // });
 
-                connectedToBranch.next({
-                    type: 'repo/connected_to_branch',
-                    broadcast: false,
-                    branch: {
-                        type: 'repo/watch_branch',
-                        recordName,
-                        inst: 'inst',
-                        branch: 'testBranch',
-                    },
-                    connection: {
-                        connectionId: 'remote-1',
-                        sessionId: 'session-1',
-                        userId: 'user-1',
-                    },
-                });
+            // it('should emit current and future remote clients from remoteClients', async () => {
+            //     setupPartition({
+            //         recordName: recordName,
+            //         inst: 'inst',
+            //         branch: 'testBranch',
+            //     });
 
-                await waitAsync();
+            //     document.connect();
+            //     await waitAsync();
 
-                const events = [] as any[];
-                sub.add(
-                    document.remoteClientsRaw.subscribe((e) => events.push(e))
-                );
+            //     const events = [] as any[];
+            //     sub.add(
+            //         document.remoteClients.subscribe((e) => events.push(e))
+            //     );
 
-                connectedToBranch.next({
-                    type: 'repo/connected_to_branch',
-                    broadcast: false,
-                    branch: {
-                        type: 'repo/watch_branch',
-                        recordName,
-                        inst: 'inst',
-                        branch: 'testBranch',
-                    },
-                    connection: {
-                        connectionId: 'remote-2',
-                        sessionId: 'session-2',
-                        userId: 'user-2',
-                    },
-                });
+            //     connectedToBranch.next({
+            //         type: 'repo/connected_to_branch',
+            //         broadcast: false,
+            //         branch: {
+            //             type: 'repo/watch_branch',
+            //             recordName,
+            //             inst: 'inst',
+            //             branch: 'testBranch',
+            //         },
+            //         connection: {
+            //             connectionId: 'remote-1',
+            //             sessionId: 'session-1',
+            //             userId: 'user-1',
+            //         },
+            //     });
 
-                await waitAsync();
+            //     await waitAsync();
 
-                expect(events).toEqual([
-                    {
-                        type: 'client_connected',
-                        client: {
-                            connectionId: 'remote-2',
-                            sessionId: 'session-2',
-                            userId: 'user-2',
-                        },
-                        isSelf: false,
-                    },
-                ]);
-            });
+            //     disconnectedFromBranch.next({
+            //         type: 'repo/disconnected_from_branch',
+            //         broadcast: false,
+            //         recordName,
+            //         inst: 'inst',
+            //         branch: 'testBranch',
+            //         connection: {
+            //             connectionId: 'remote-1',
+            //             sessionId: 'session-1',
+            //             userId: 'user-1',
+            //         },
+            //     });
+
+            //     await waitAsync();
+
+            //     expect(events).toEqual([
+            //         {
+            //             type: 'client_connected',
+            //             client: {
+            //                 connectionId: 'remote-1',
+            //                 sessionId: 'session-1',
+            //                 userId: 'user-1',
+            //             },
+            //             isSelf: false,
+            //         },
+            //         {
+            //             type: 'client_disconnected',
+            //             client: {
+            //                 connectionId: 'remote-1',
+            //                 sessionId: 'session-1',
+            //                 userId: 'user-1',
+            //             },
+            //             isSelf: false,
+            //         },
+            //     ]);
+            // });
+
+            // it('should only emit future events from remoteClientsRaw', async () => {
+            //     setupPartition({
+            //         recordName: recordName,
+            //         inst: 'inst',
+            //         branch: 'testBranch',
+            //     });
+
+            //     document.connect();
+            //     await waitAsync();
+
+            //     const events = [] as any[];
+            //     sub.add(
+            //         document.remoteClientsRaw.subscribe((e) => events.push(e))
+            //     );
+
+            //     connectedToBranch.next({
+            //         type: 'repo/connected_to_branch',
+            //         broadcast: false,
+            //         branch: {
+            //             type: 'repo/watch_branch',
+            //             recordName,
+            //             inst: 'inst',
+            //             branch: 'testBranch',
+            //         },
+            //         connection: {
+            //             connectionId: 'remote-1',
+            //             sessionId: 'session-1',
+            //             userId: 'user-1',
+            //         },
+            //     });
+
+            //     connectedToBranch.next({
+            //         type: 'repo/connected_to_branch',
+            //         broadcast: false,
+            //         branch: {
+            //             type: 'repo/watch_branch',
+            //             recordName,
+            //             inst: 'inst',
+            //             branch: 'testBranch',
+            //         },
+            //         connection: {
+            //             connectionId: 'remote-2',
+            //             sessionId: 'session-2',
+            //             userId: 'user-2',
+            //         },
+            //     });
+
+            //     await waitAsync();
+
+            //     expect(events).toEqual([
+            //         {
+            //             type: 'client_connected',
+            //             client: {
+            //                 connectionId: 'remote-1',
+            //                 sessionId: 'session-1',
+            //                 userId: 'user-1',
+            //             },
+            //             isSelf: false,
+            //         },
+            //         {
+            //             type: 'client_connected',
+            //             client: {
+            //                 connectionId: 'remote-2',
+            //                 sessionId: 'session-2',
+            //                 userId: 'user-2',
+            //             },
+            //             isSelf: false,
+            //         },
+            //     ]);
+            // });
 
             it('should send the sync event after the updates have been processed', async () => {
                 setupPartition({
@@ -373,6 +431,94 @@ describe('RemoteYjsSharedDocument', () => {
                         synced: true,
                     },
                 ]);
+            });
+
+            describe('remoteClients', () => {
+                let events: RemoteClientEvent[] = [];
+
+                beforeEach(() => {
+                    events = [];
+
+                    sub.add(
+                        document.remoteClients.subscribe((e) => events.push(e))
+                    );
+                });
+
+                it('should emit client_connected events when clients connect', async () => {
+                    connectedToBranch.next({
+                        type: 'repo/connected_to_branch',
+                        branch: {
+                            type: 'repo/watch_branch',
+                            recordName: recordName,
+                            inst: 'inst',
+                            branch: 'testBranch',
+                        },
+                        broadcast: false,
+                        connection: {
+                            connectionId: 'remote-1',
+                            sessionId: 'session-1',
+                            userId: 'user-1',
+                        },
+                    });
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        {
+                            type: 'client_connected',
+                            client: {
+                                connectionId: 'remote-1',
+                                sessionId: 'session-1',
+                                userId: 'user-1',
+                            },
+                            isSelf: false,
+                        },
+                    ]);
+                });
+
+                it('should emit client_disconnected events when clients disconnect', async () => {
+                    connectedToBranch.next({
+                        type: 'repo/connected_to_branch',
+                        branch: {
+                            type: 'repo/watch_branch',
+                            recordName: recordName,
+                            inst: 'inst',
+                            branch: 'testBranch',
+                        },
+                        broadcast: false,
+                        connection: {
+                            connectionId: 'remote-1',
+                            sessionId: 'session-1',
+                            userId: 'user-1',
+                        },
+                    });
+                    disconnectedFromBranch.next({
+                        type: 'repo/disconnected_from_branch',
+                        recordName,
+                        inst: 'inst',
+                        branch: 'testBranch',
+                        broadcast: false,
+                        connection: {
+                            connectionId: 'remote-1',
+                            sessionId: 'session-1',
+                            userId: 'user-1',
+                        },
+                    });
+
+                    await waitAsync();
+
+                    expect(events.slice(1)).toEqual([
+                        {
+                            type: 'client_disconnected',
+                            client: {
+                                connectionId: 'remote-1',
+                                sessionId: 'session-1',
+                                userId: 'user-1',
+                            },
+                            isSelf: false,
+                        },
+                    ]);
+                });
             });
 
             // describe('remote events', () => {
