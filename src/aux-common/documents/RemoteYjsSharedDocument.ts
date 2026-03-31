@@ -16,15 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import { Observable } from 'rxjs';
-import {
-    filter,
-    firstValueFrom,
-    map,
-    share,
-    startWith,
-    Subject,
-    Subscription,
-} from 'rxjs';
+import { filter, firstValueFrom, startWith, Subject, Subscription } from 'rxjs';
 import type { RemoteClientEvent, RemoteSharedDocument } from './SharedDocument';
 
 import type { Doc, Transaction } from 'yjs';
@@ -81,6 +73,8 @@ export class RemoteYjsSharedDocument
     protected _connectedClients = new Map<string, ConnectionInfo>();
     protected _remoteClientsSubject = new Subject<RemoteClientEvent>();
     protected _remoteClientsRaw: Observable<RemoteClientEvent>;
+    protected _watchingBranchDevices: Subscription | null = null;
+    protected _remoteClientSubscribers = 0;
 
     get remoteClients(): Observable<RemoteClientEvent> {
         const existingClients = Array.from(this._connectedClients.values()).map(
@@ -94,9 +88,8 @@ export class RemoteYjsSharedDocument
     }
 
     unsubscribe(): void {
-        this._remoteClientsSubject?.unsubscribe();
-        this._remoteClientsSubject = null;
-        this._connectedClients.clear();
+        this._stopWatchingBranchDevices();
+        this._remoteClientsSubject.unsubscribe();
         this._sub.unsubscribe();
     }
 
@@ -122,41 +115,30 @@ export class RemoteYjsSharedDocument
         // static implies read only
         this._readOnly = config.readOnly || this._static || false;
 
-        const watchDevices = new Observable<RemoteClientEvent>((subscriber) => {
-            const watchSubscription = this._client
-                .watchBranchDevices(this._recordName, this._inst, this._branch)
-                .pipe(
-                    map((event) => {
-                        if (event.type === 'repo/connected_to_branch') {
-                            this._connectedClients.set(
-                                event.connection.connectionId,
-                                event.connection
-                            );
-                            return this._clientConnectedEvent(event.connection);
-                        } else if (
-                            event.type === 'repo/disconnected_from_branch'
-                        ) {
-                            this._connectedClients.delete(
-                                event.connection.connectionId
-                            );
-                            return this._clientDisconnectedEvent(
-                                event.connection
-                            );
-                        }
-                    })
-                )
-                .subscribe(subscriber);
+        this._remoteClientsRaw = new Observable<RemoteClientEvent>(
+            (subscriber) => {
+                if (this._sub.closed) {
+                    return;
+                }
 
-            return () => {
-                this._connectedClients.clear();
-                watchSubscription.unsubscribe();
-            };
-        });
+                const remoteClientsSubscription =
+                    this._remoteClientsSubject.subscribe(subscriber);
+                this._remoteClientSubscribers += 1;
 
-        this._remoteClientsRaw = watchDevices.pipe(
-            share({
-                connector: () => this._remoteClientsSubject,
-            })
+                if (this._remoteClientSubscribers === 1) {
+                    this._startWatchingBranchDevices();
+                }
+
+                return () => {
+                    remoteClientsSubscription.unsubscribe();
+                    this._remoteClientSubscribers -= 1;
+
+                    if (this._remoteClientSubscribers <= 0) {
+                        this._remoteClientSubscribers = 0;
+                        this._stopWatchingBranchDevices();
+                    }
+                };
+            }
         );
     }
 
@@ -453,6 +435,39 @@ export class RemoteYjsSharedDocument
         return (
             client.connectionId === this._client.connection.info?.connectionId
         );
+    }
+
+    private _startWatchingBranchDevices() {
+        if (this._watchingBranchDevices) {
+            return;
+        }
+
+        this._watchingBranchDevices = this._client
+            .watchBranchDevices(this._recordName, this._inst, this._branch)
+            .subscribe((event) => {
+                if (event.type === 'repo/connected_to_branch') {
+                    this._connectedClients.set(
+                        event.connection.connectionId,
+                        event.connection
+                    );
+                    this._remoteClientsSubject.next(
+                        this._clientConnectedEvent(event.connection)
+                    );
+                } else if (event.type === 'repo/disconnected_from_branch') {
+                    this._connectedClients.delete(
+                        event.connection.connectionId
+                    );
+                    this._remoteClientsSubject.next(
+                        this._clientDisconnectedEvent(event.connection)
+                    );
+                }
+            });
+    }
+
+    private _stopWatchingBranchDevices() {
+        this._connectedClients.clear();
+        this._watchingBranchDevices?.unsubscribe();
+        this._watchingBranchDevices = null;
     }
 
     private _updateSynced(synced: boolean) {
