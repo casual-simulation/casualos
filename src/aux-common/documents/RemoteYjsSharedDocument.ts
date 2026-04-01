@@ -18,8 +18,8 @@
 import { filter, firstValueFrom, Subscription } from 'rxjs';
 import type { SharedDocument } from './SharedDocument';
 
-import type { Doc, Transaction } from 'yjs';
-import { encodeStateAsUpdate } from 'yjs';
+import { applyUpdate, Doc, encodeStateAsUpdate, encodeStateVector } from 'yjs';
+import type { Transaction } from 'yjs';
 import type {
     ClientError,
     ClientEvent,
@@ -31,7 +31,7 @@ import type {
 import type { SharedDocumentConfig } from './SharedDocumentConfig';
 import type { PartitionAuthSource } from '../partitions/PartitionAuthSource';
 import { YjsIndexedDBPersistence } from '../yjs/YjsIndexedDBPersistence';
-import { fromByteArray } from 'base64-js';
+import { fromByteArray, toByteArray } from 'base64-js';
 import { getConnectionId } from '../common';
 import {
     YjsSharedDocument,
@@ -97,6 +97,10 @@ export class RemoteYjsSharedDocument
     }
 
     connect(): void {
+        this._connect().catch((err) => this._onError.next(err));
+    }
+
+    private async _connect() {
         if (!this._temporary && this._persistence?.saveToIndexedDb) {
             console.log(
                 '[RemoteYjsSharedDocument] Using IndexedDB persistence'
@@ -105,6 +109,7 @@ export class RemoteYjsSharedDocument
                 this._branch
             }`;
             this._indexeddb = new YjsIndexedDBPersistence(name, this._doc);
+            await this._indexeddb.whenSynced;
         }
 
         if (this._skipInitialLoad) {
@@ -229,6 +234,13 @@ export class RemoteYjsSharedDocument
                                     this._branch,
                                     updates
                                 );
+                            } else if (
+                                event.initial &&
+                                this._persistence?.saveToIndexedDb &&
+                                this._persistence?.syncWithServerOnConnect !==
+                                    false
+                            ) {
+                                this._sendMissingLocalUpdates(event.updates);
                             }
                             this._updateSynced(true);
                         }
@@ -288,6 +300,43 @@ export class RemoteYjsSharedDocument
                 this._doc.off('update', updateHandler);
             })
         );
+    }
+
+    private _sendMissingLocalUpdates(serverUpdates: string[]) {
+        const serverDoc = new Doc();
+
+        for (let update of serverUpdates) {
+            applyUpdate(serverDoc, toByteArray(update));
+        }
+
+        const serverStateVector = encodeStateVector(serverDoc);
+        const missingUpdate = encodeStateAsUpdate(this._doc, serverStateVector);
+        const emptyUpdate = encodeStateAsUpdate(
+            this._doc,
+            encodeStateVector(this._doc)
+        );
+
+        if (this._areByteArraysEqual(missingUpdate, emptyUpdate)) {
+            return;
+        }
+
+        this._client.addUpdates(this._recordName, this._inst, this._branch, [
+            fromByteArray(missingUpdate),
+        ]);
+    }
+
+    private _areByteArraysEqual(a: Uint8Array, b: Uint8Array): boolean {
+        if (a.byteLength !== b.byteLength) {
+            return false;
+        }
+
+        for (let i = 0; i < a.byteLength; i++) {
+            if (a[i] !== b[i]) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**

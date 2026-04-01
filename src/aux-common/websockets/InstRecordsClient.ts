@@ -303,6 +303,7 @@ export class InstRecordsClient {
                                                     ...allUpdates,
                                                     ...event.updates,
                                                 ],
+                                                initial: true,
                                             } as AddUpdatesMessage,
                                         ] as ['event', AddUpdatesMessage];
                                     } else {
@@ -333,6 +334,7 @@ export class InstRecordsClient {
                                 ({
                                     type: 'updates',
                                     updates: e.updates,
+                                    initial: !!e.initial,
                                 } as ClientUpdates)
                         )
                     ),
@@ -838,6 +840,11 @@ export class InstRecordsClient {
 export interface ClientUpdates {
     type: 'updates';
     updates: string[];
+
+    /**
+     * Whether this update batch is the initial state from the server.
+     */
+    initial?: boolean;
 }
 
 export interface ClientUpdatesReceived {
