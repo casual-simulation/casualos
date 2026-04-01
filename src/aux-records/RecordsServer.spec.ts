@@ -1515,7 +1515,8 @@ describe('RecordsServer', () => {
                 statusCode: 204,
                 headers: {
                     ...corsHeaders(apiOrigin),
-                    'Access-Control-Allow-Methods': 'POST, PUT, OPTIONS',
+                    'Access-Control-Allow-Methods':
+                        'POST, PUT, DELETE, OPTIONS',
                     'Access-Control-Allow-Headers':
                         'Content-Type, Authorization',
                 },
@@ -1540,7 +1541,8 @@ describe('RecordsServer', () => {
                 statusCode: 204,
                 headers: {
                     ...corsHeaders(accountOrigin),
-                    'Access-Control-Allow-Methods': 'POST, PUT, OPTIONS',
+                    'Access-Control-Allow-Methods':
+                        'POST, PUT, DELETE, OPTIONS',
                     'Access-Control-Allow-Headers':
                         'Content-Type, Authorization',
                 },
@@ -18379,7 +18381,8 @@ describe('RecordsServer', () => {
                 body: undefined,
                 headers: {
                     'Access-Control-Allow-Origin': apiHeaders['origin'],
-                    'Access-Control-Allow-Methods': 'POST, PUT, OPTIONS',
+                    'Access-Control-Allow-Methods':
+                        'POST, PUT, DELETE, OPTIONS',
                     'Access-Control-Allow-Headers':
                         'Content-Type, Authorization',
                 },

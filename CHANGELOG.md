@@ -2,7 +2,7 @@
 
 ## V4.2.3
 
-#### Date: TBA
+#### Date: TBD
 
 ### :rocket: Features
 
@@ -16,6 +16,15 @@
         ```
     -   If both `fileExtension` and `mimeType` are provided, the server validates that the known extension for the given MIME type matches the specified extension. If they don't match, an error is returned.
     -   `fileMimeType` defaults to `application/octet-stream` when only `fileExtension` is specified.
+-   Added `remoteClients` to shared documents.
+    -   `remoteClients` is an observable that you can subscribe to to get notified whenever another session (e.g. tab) connects to the document.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where CasualOS didn't support the TypeScript `override` keyword.
+-   Fixed an issue where CasualOS could sometimes improperly sync state for custom apps when multiple events are dispatched for an `<input>` or `<select>` element at the same time.
+-   Fixed an issue where custom domain web manifests wouldn't be retrieved correctly.
+-   Fixed an issue where `DELETE` API methods didn't support cross-origin requests.
 
 ## V4.2.2
 

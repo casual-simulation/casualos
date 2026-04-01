@@ -1833,17 +1833,29 @@ export class RecordsController {
     async getPlayerWebManifest(
         hostname: string
     ): Promise<Result<WebManifest, SimpleError>> {
+        console.log(
+            `[RecordsController] [getPlayerWebManifest] Attempting to get web manifest for hostname: ${hostname}`
+        );
         const customDomain = await this._store.getVerifiedCustomDomainByName(
             hostname
         );
 
         if (customDomain?.studio.playerWebManifest) {
+            console.log(
+                `[RecordsController] [getPlayerWebManifest] Found manifest.`
+            );
             return success(customDomain.studio.playerWebManifest);
         }
 
+        console.log(
+            `[RecordsController] [getPlayerWebManifest] No manifest found. Returning default manifest.`
+        );
         const manifest = await this._config.getPlayerWebManifest();
 
         if (!manifest) {
+            console.log(
+                `[RecordsController] [getPlayerWebManifest] No default manifest found in configuration.`
+            );
             return failure({
                 errorCode: 'not_found',
                 errorMessage: 'No web manifest found.',

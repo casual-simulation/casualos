@@ -1686,6 +1686,7 @@ export class ServerBuilder implements SubscriptionLike {
             policies: this._policyStore,
             policyController: null,
             records: this._recordsStore,
+            financial: null,
         };
 
         if (options.ai.chat) {
@@ -2312,6 +2313,7 @@ export class ServerBuilder implements SubscriptionLike {
         if (this._aiConfiguration) {
             // Set the policy controller for the AI controller since it is not set earlier
             this._aiConfiguration.policyController = this._policyController;
+            this._aiConfiguration.financial = this._financialController;
             this._aiController = new AIController(this._aiConfiguration);
         }
 

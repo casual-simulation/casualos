@@ -47,6 +47,7 @@ import type { PrismaClient, Prisma, Studio as PrismaStudio } from './generated';
 import { convertToDate, convertToMillis } from './Utils';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 import type z from 'zod';
+import { WEB_MANIFEST_SCHEMA } from '@casual-simulation/aux-common/common/WebManifest';
 
 const TRACE_NAME = 'PrismaRecordsStore';
 
@@ -811,6 +812,10 @@ export class PrismaRecordsStore implements RecordsStore {
             playerConfig: zodParseConfig(
                 studio.playerConfig,
                 COM_ID_PLAYER_CONFIG
+            ),
+            playerWebManifest: zodParseConfig(
+                studio.playerWebManifest,
+                WEB_MANIFEST_SCHEMA
             ),
             stripeAccountId: studio.stripeAccountId,
             stripeAccountStatus:
