@@ -7652,6 +7652,95 @@ describe('RecordsServer', () => {
             });
         });
 
+        it('should return an unacceptable_request if neither fileMimeType nor fileExtension is given', async () => {
+            const hash = getHash('hello');
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/file`,
+                    JSON.stringify({
+                        recordKey,
+                        fileSha256Hex: hash,
+                        fileByteLength: 10,
+                        fileDescription: 'description',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'Either fileMimeType or fileExtension is required.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should create a file record using fileExtension instead of fileMimeType', async () => {
+            const hash = getHash('hello');
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/file`,
+                    JSON.stringify({
+                        recordKey,
+                        fileSha256Hex: hash,
+                        fileByteLength: 10,
+                        fileExtension: '.spz',
+                        fileDescription: 'description',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    uploadUrl: `http://localhost:9191/${recordName}/${hash}.spz`,
+                    fileName: `${hash}.spz`,
+                    uploadMethod: 'POST',
+                    uploadHeaders: {
+                        'content-type': 'application/octet-stream',
+                        'record-name': recordName,
+                    },
+                    markers: [PUBLIC_READ_MARKER],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request when fileExtension does not match fileMimeType', async () => {
+            const hash = getHash('hello');
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/file`,
+                    JSON.stringify({
+                        recordKey,
+                        fileSha256Hex: hash,
+                        fileByteLength: 10,
+                        fileMimeType: 'image/png',
+                        fileExtension: '.spz',
+                        fileDescription: 'description',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The specified file extension does not match the file extension for the given MIME type.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
         it('should return an unacceptable_request if given a non-string fileDescription', async () => {
             const hash = getHash('hello');
             const result = await server.handleHttpRequest(

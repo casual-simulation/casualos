@@ -953,7 +953,12 @@ Object {
             "optional": true,
             "type": "string",
           },
+          "fileExtension": Object {
+            "optional": true,
+            "type": "string",
+          },
           "fileMimeType": Object {
+            "optional": true,
             "type": "string",
           },
           "fileSha256Hex": Object {
@@ -11181,7 +11186,12 @@ Object {
             "optional": true,
             "type": "string",
           },
+          "fileExtension": Object {
+            "optional": true,
+            "type": "string",
+          },
           "fileMimeType": Object {
+            "optional": true,
             "type": "string",
           },
           "fileSha256Hex": Object {

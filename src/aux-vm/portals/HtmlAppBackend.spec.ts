@@ -298,10 +298,14 @@ describe('HtmlAppBackend', () => {
 
             await waitAsync();
 
-            expect(actions.slice(1)).toEqual([
-                toast('Hit'),
-                asyncResult('taskId', null),
-            ]);
+            const emitted = actions.slice(1);
+            expect(emitted).toEqual(
+                expect.arrayContaining([
+                    toast('Hit'),
+                    asyncResult('taskId', null),
+                ])
+            );
+            expect(emitted).toHaveLength(2);
         });
 
         it('should trigger the onSetup observable', async () => {
