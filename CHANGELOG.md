@@ -4,6 +4,10 @@
 
 #### Date: TBD
 
+### :rocket: Features
+
+-   Added support for remote shared inst local-persistence reconciliation on reconnect. Remote shared docs now wait for local IndexedDB hydration before connecting and only send missing local Yjs updates after the initial server sync payload is received.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where CasualOS didn't support the TypeScript `override` keyword.
