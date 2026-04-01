@@ -14,6 +14,7 @@
 -   Fixed an issue where CasualOS didn't support the TypeScript `override` keyword.
 -   Fixed an issue where CasualOS could sometimes improperly sync state for custom apps when multiple events are dispatched for an `<input>` or `<select>` element at the same time.
 -   Fixed an issue where custom domain web manifests wouldn't be retrieved correctly.
+-   Fixed an issue where `DELETE` API methods didn't support cross-origin requests.
 
 ## V4.2.2
 
