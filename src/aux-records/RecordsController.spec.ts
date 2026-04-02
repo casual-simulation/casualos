@@ -3071,6 +3071,54 @@ describe('RecordsController', () => {
             });
         });
 
+        it('should omit the fee from the hume features', async () => {
+            store.subscriptionConfiguration = buildSubscriptionConfig(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withAIHume({
+                                allowed: true,
+                                creditFeePerAccessToken: 100n,
+                            })
+                    )
+            );
+
+            const result = await manager.getStudio('studioId', 'userId');
+
+            expect(result).toEqual({
+                success: true,
+                studio: {
+                    id: 'studioId',
+                    displayName: 'studio',
+                    logoUrl: 'https://example.com/logo.png',
+                    comId: 'comId1',
+                    comIdConfig: {
+                        allowedStudioCreators: 'anyone',
+                    },
+                    playerConfig: {
+                        ab1BootstrapURL: 'https://example.com/ab1',
+                    },
+                    comIdFeatures: {
+                        allowed: false,
+                    },
+                    loomFeatures: {
+                        allowed: false,
+                    },
+                    humeFeatures: {
+                        allowed: true,
+                    },
+                    storeFeatures: {
+                        allowed: false,
+                        currencyLimits: expect.any(Object),
+                    },
+                    stripeAccountStatus: null,
+                    stripeRequirementsStatus: null,
+                },
+            });
+        });
+
         it('should include the hume config if hume features are allowed', async () => {
             store.subscriptionConfiguration = buildSubscriptionConfig(
                 (config) =>
