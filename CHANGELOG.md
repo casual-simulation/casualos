@@ -25,6 +25,7 @@
 -   Fixed an issue where CasualOS could sometimes improperly sync state for custom apps when multiple events are dispatched for an `<input>` or `<select>` element at the same time.
 -   Fixed an issue where custom domain web manifests wouldn't be retrieved correctly.
 -   Fixed an issue where `DELETE` API methods didn't support cross-origin requests.
+-   Fixed an issue where getting a studio when Hume has been configured with billing fees would fail.
 
 ## V4.2.2
 
