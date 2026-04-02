@@ -352,7 +352,9 @@ export class PolicyController {
             }
         }
 
-        if (request.userId) {
+        if (request.userId === ownerId) {
+            userPrivacyFeatures = recordOwnerPrivacyFeatures;
+        } else if (request.userId) {
             userPrivacyFeatures = await this._policies.getUserPrivacyFeatures(
                 request.userId
             );
