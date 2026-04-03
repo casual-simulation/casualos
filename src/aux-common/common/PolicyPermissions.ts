@@ -43,6 +43,9 @@ export const LOOM_RESOURCE_KIND = 'loom';
 export const SLOYD_RESOURCE_KIND = 'ai.sloyd';
 export const HUME_RESOURCE_KIND = 'ai.hume';
 export const OPENAI_REALTIME_RESOURCE_KIND = 'ai.openai.realtime';
+export const AI_CHAT_RESOURCE_KIND = 'ai.chat';
+export const AI_IMAGE_RESOURCE_KIND = 'ai.image';
+export const AI_SKYBOX_RESOURCE_KIND = 'ai.skybox';
 export const WEBHOOK_RESOURCE_KIND = 'webhook';
 export const NOTIFICATION_RESOURCE_KIND = 'notification';
 export const PACKAGE_RESOURCE_KIND = 'package';
@@ -75,6 +78,9 @@ export type ResourceKinds =
     | 'ai.sloyd'
     | 'ai.hume'
     | 'ai.openai.realtime'
+    | 'ai.chat'
+    | 'ai.image'
+    | 'ai.skybox'
     | 'database'
     | 'purchasableItem'
     | 'contract'
@@ -228,6 +234,30 @@ export type HumeActionKinds = 'create';
 export type OpenAIRealtimeActionKinds = 'create';
 
 /**
+ * The possible types of actions that can be performed on ai.chat resources.
+ *
+ * @dochash types/permissions
+ * @docname AIChatActionKinds
+ */
+export type AIChatActionKinds = 'create';
+
+/**
+ * The possible types of actions that can be performed on ai.image resources.
+ *
+ * @dochash types/permissions
+ * @docname AIImageActionKinds
+ */
+export type AIImageActionKinds = 'create';
+
+/**
+ * The possible types of actions that can be performed on ai.skybox resources.
+ *
+ * @dochash types/permissions
+ * @docname AISkyboxActionKinds
+ */
+export type AISkyboxActionKinds = 'create';
+
+/**
  * The possible types of actions that can be performed on webhook resources.
  *
  * @dochash types/permissions
@@ -377,6 +407,9 @@ export type AvailablePermissions =
     | SloydPermission
     | HumePermission
     | OpenAIRealtimePermission
+    | AIChatPermission
+    | AIImagePermission
+    | AISkyboxPermission
     | WebhookPermission
     | NotificationPermission
     | PackagePermission
@@ -457,6 +490,15 @@ export const HUME_ACTION_KINDS_VALIDATION = memoize(() =>
     z.enum([CREATE_ACTION])
 );
 export const OPENAI_REALTIME_ACTION_KINDS_VALIDATION = memoize(() =>
+    z.enum([CREATE_ACTION])
+);
+export const AI_CHAT_ACTION_KINDS_VALIDATION = memoize(() =>
+    z.enum([CREATE_ACTION])
+);
+export const AI_IMAGE_ACTION_KINDS_VALIDATION = memoize(() =>
+    z.enum([CREATE_ACTION])
+);
+export const AI_SKYBOX_ACTION_KINDS_VALIDATION = memoize(() =>
     z.enum([CREATE_ACTION])
 );
 
@@ -574,6 +616,9 @@ export const RESOURCE_KIND_VALIDATION = memoize(() =>
         SLOYD_RESOURCE_KIND,
         HUME_RESOURCE_KIND,
         OPENAI_REALTIME_RESOURCE_KIND,
+        AI_CHAT_RESOURCE_KIND,
+        AI_IMAGE_RESOURCE_KIND,
+        AI_SKYBOX_RESOURCE_KIND,
         WEBHOOK_RESOURCE_KIND,
         NOTIFICATION_RESOURCE_KIND,
         PACKAGE_RESOURCE_KIND,
@@ -1161,6 +1206,102 @@ type ZodOpenAIRealtimePermission = z.infer<
 type ZodOpenAIRealtimePermissionAssertion = HasType<
     ZodOpenAIRealtimePermission,
     OpenAIRealtimePermission
+>;
+
+/**
+ * Defines an interface that describes common options for all permissions that affect ai.chat resources.
+ *
+ * @dochash types/permissions
+ * @docname AIChatPermission
+ */
+export interface AIChatPermission extends Permission {
+    /**
+     * The kind of the permission.
+     */
+    resourceKind: 'ai.chat';
+
+    /**
+     * The action that is allowed.
+     * If null, then all actions are allowed.
+     */
+    action: AIChatActionKinds | null;
+}
+export const AI_CHAT_PERMISSION_VALIDATION = memoize(() =>
+    PERMISSION_VALIDATION().extend({
+        resourceKind: z.literal(AI_CHAT_RESOURCE_KIND),
+        action: AI_CHAT_ACTION_KINDS_VALIDATION().nullable(),
+    })
+);
+type ZodAIChatPermission = z.infer<
+    ReturnType<typeof AI_CHAT_PERMISSION_VALIDATION>
+>;
+type ZodAIChatPermissionAssertion = HasType<
+    ZodAIChatPermission,
+    AIChatPermission
+>;
+
+/**
+ * Defines an interface that describes common options for all permissions that affect ai.image resources.
+ *
+ * @dochash types/permissions
+ * @docname AIImagePermission
+ */
+export interface AIImagePermission extends Permission {
+    /**
+     * The kind of the permission.
+     */
+    resourceKind: 'ai.image';
+
+    /**
+     * The action that is allowed.
+     * If null, then all actions are allowed.
+     */
+    action: AIImageActionKinds | null;
+}
+export const AI_IMAGE_PERMISSION_VALIDATION = memoize(() =>
+    PERMISSION_VALIDATION().extend({
+        resourceKind: z.literal(AI_IMAGE_RESOURCE_KIND),
+        action: AI_IMAGE_ACTION_KINDS_VALIDATION().nullable(),
+    })
+);
+type ZodAIImagePermission = z.infer<
+    ReturnType<typeof AI_IMAGE_PERMISSION_VALIDATION>
+>;
+type ZodAIImagePermissionAssertion = HasType<
+    ZodAIImagePermission,
+    AIImagePermission
+>;
+
+/**
+ * Defines an interface that describes common options for all permissions that affect ai.skybox resources.
+ *
+ * @dochash types/permissions
+ * @docname AISkyboxPermission
+ */
+export interface AISkyboxPermission extends Permission {
+    /**
+     * The kind of the permission.
+     */
+    resourceKind: 'ai.skybox';
+
+    /**
+     * The action that is allowed.
+     * If null, then all actions are allowed.
+     */
+    action: AISkyboxActionKinds | null;
+}
+export const AI_SKYBOX_PERMISSION_VALIDATION = memoize(() =>
+    PERMISSION_VALIDATION().extend({
+        resourceKind: z.literal(AI_SKYBOX_RESOURCE_KIND),
+        action: AI_SKYBOX_ACTION_KINDS_VALIDATION().nullable(),
+    })
+);
+type ZodAISkyboxPermission = z.infer<
+    ReturnType<typeof AI_SKYBOX_PERMISSION_VALIDATION>
+>;
+type ZodAISkyboxPermissionAssertion = HasType<
+    ZodAISkyboxPermission,
+    AISkyboxPermission
 >;
 
 /**

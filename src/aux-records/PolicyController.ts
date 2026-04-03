@@ -3999,7 +3999,13 @@ function getEntitlementFeatureForAction(
         resourceKind === 'database'
     ) {
         return resourceKind;
-    } else if (resourceKind === 'ai.hume' || resourceKind === 'ai.sloyd') {
+    } else if (
+        resourceKind === 'ai.hume' ||
+        resourceKind === 'ai.sloyd' ||
+        resourceKind === 'ai.chat' ||
+        resourceKind === 'ai.image' ||
+        resourceKind === 'ai.skybox'
+    ) {
         return 'ai';
     } else if (resourceKind === 'marker' || resourceKind === 'role') {
         return 'permissions';
