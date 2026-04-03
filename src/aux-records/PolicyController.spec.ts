@@ -3715,6 +3715,9 @@ describe('PolicyController', () => {
             ['loom'],
             ['ai.sloyd'],
             ['ai.hume'],
+            ['ai.chat'],
+            ['ai.image'],
+            ['ai.skybox'],
             ['webhook'],
             ['notification'],
             ['package'],
@@ -4993,6 +4996,9 @@ describe('PolicyController', () => {
             ['loom', [['create', 'resourceId']]],
             ['ai.sloyd', [['create', 'resourceId']]],
             ['ai.hume', [['create', 'resourceId']]],
+            ['ai.chat', [['create', 'resourceId']]],
+            ['ai.image', [['create', 'resourceId']]],
+            ['ai.skybox', [['create', 'resourceId']]],
             [
                 'webhook',
                 [
@@ -5710,6 +5716,9 @@ describe('PolicyController', () => {
             ],
             ['ai.sloyd', [['create', 'resourceId']]],
             ['ai.hume', [['create', 'resourceId']]],
+            ['ai.chat', [['create', 'resourceId']]],
+            ['ai.image', [['create', 'resourceId']]],
+            ['ai.skybox', [['create', 'resourceId']]],
             [
                 'notification',
                 [
@@ -6790,7 +6799,10 @@ describe('PolicyController', () => {
                 ['package', ['package', 'package.version']],
                 ['permissions', ['role', 'marker']],
                 ['webhook', ['webhook']],
-                ['ai', ['ai.sloyd', 'ai.hume']],
+                [
+                    'ai',
+                    ['ai.sloyd', 'ai.hume', 'ai.chat', 'ai.image', 'ai.skybox'],
+                ],
                 ['search', ['search']],
                 ['database', ['database']],
             ];
