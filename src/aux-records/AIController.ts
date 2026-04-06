@@ -438,10 +438,10 @@ export class AIController {
                 ownerId: request.userId,
             };
             let subscriptionType: 'user' | 'studio' = 'user';
-            let billingUserId = request.userId;
-            let billingStudioId: string | null = null;
-            let metricsRecordUserId: string = request.userId;
-            let metricsRecordStudioId: string | null = null;
+            let billingUserId: string | undefined = request.userId;
+            let billingStudioId: string | undefined = undefined;
+            let metricsRecordUserId: string | undefined = request.userId;
+            let metricsRecordStudioId: string | undefined = undefined;
 
             if (request.recordName && this._policies) {
                 const context =
@@ -477,12 +477,14 @@ export class AIController {
 
                 if (context.context.recordStudioId) {
                     billingStudioId = context.context.recordStudioId;
+                    billingUserId = undefined;
                     metricsFilter = { studioId: billingStudioId };
                     subscriptionType = 'studio';
                     metricsRecordStudioId = billingStudioId;
-                    metricsRecordUserId = null;
+                    metricsRecordUserId = undefined;
                 } else {
                     billingUserId = context.context.recordOwnerId;
+                    billingStudioId = undefined;
                     metricsFilter = { ownerId: billingUserId };
                     metricsRecordUserId = billingUserId;
                 }
@@ -584,8 +586,10 @@ export class AIController {
                     : null;
 
             const billing = await billForUsage(this._financial, {
-                userId: billingUserId,
-                studioId: billingStudioId,
+                userId:
+                    subscriptionType === 'studio' ? undefined : billingUserId,
+                studioId:
+                    subscriptionType === 'studio' ? billingStudioId : undefined,
                 transferCode: TransferCodes.records_usage_fee,
                 billingCode: BillingCodes.ai_chat_tokens,
             });
@@ -842,10 +846,10 @@ export class AIController {
                 ownerId: request.userId,
             };
             let subscriptionType: 'user' | 'studio' = 'user';
-            let billingUserId = request.userId;
-            let billingStudioId: string | null = null;
-            let metricsRecordUserId: string = request.userId;
-            let metricsRecordStudioId: string | null = null;
+            let billingUserId: string | undefined = request.userId;
+            let billingStudioId: string | undefined = undefined;
+            let metricsRecordUserId: string | undefined = request.userId;
+            let metricsRecordStudioId: string | undefined = undefined;
 
             if (request.recordName && this._policies) {
                 const context =
@@ -881,12 +885,14 @@ export class AIController {
 
                 if (context.context.recordStudioId) {
                     billingStudioId = context.context.recordStudioId;
+                    billingUserId = undefined;
                     metricsFilter = { studioId: billingStudioId };
                     subscriptionType = 'studio';
                     metricsRecordStudioId = billingStudioId;
-                    metricsRecordUserId = null;
+                    metricsRecordUserId = undefined;
                 } else {
                     billingUserId = context.context.recordOwnerId;
+                    billingStudioId = undefined;
                     metricsFilter = { ownerId: billingUserId };
                     metricsRecordUserId = billingUserId;
                 }
@@ -1141,10 +1147,10 @@ export class AIController {
                 ownerId: request.userId,
             };
             let subscriptionType: 'user' | 'studio' = 'user';
-            let billingUserId = request.userId;
-            let billingStudioId: string | null = null;
-            let metricsRecordUserId: string = request.userId;
-            let metricsRecordStudioId: string | null = null;
+            let billingUserId: string | undefined = request.userId;
+            let billingStudioId: string | undefined = undefined;
+            let metricsRecordUserId: string | undefined = request.userId;
+            let metricsRecordStudioId: string | undefined = undefined;
 
             if (request.recordName && this._policies) {
                 const context =
@@ -1180,12 +1186,14 @@ export class AIController {
 
                 if (context.context.recordStudioId) {
                     billingStudioId = context.context.recordStudioId;
+                    billingUserId = undefined;
                     metricsFilter = { studioId: billingStudioId };
                     subscriptionType = 'studio';
                     metricsRecordStudioId = billingStudioId;
-                    metricsRecordUserId = null;
+                    metricsRecordUserId = undefined;
                 } else {
                     billingUserId = context.context.recordOwnerId;
+                    billingStudioId = undefined;
                     metricsFilter = { ownerId: billingUserId };
                     metricsRecordUserId = billingUserId;
                 }
@@ -1245,8 +1253,10 @@ export class AIController {
                 : null;
 
             const billing = await billForUsage(this._financial, {
-                userId: billingUserId,
-                studioId: billingStudioId,
+                userId:
+                    subscriptionType === 'studio' ? undefined : billingUserId,
+                studioId:
+                    subscriptionType === 'studio' ? billingStudioId : undefined,
                 transferCode: TransferCodes.records_usage_fee,
                 billingCode: BillingCodes.ai_skybox,
             });
@@ -1528,10 +1538,10 @@ export class AIController {
                 ownerId: request.userId,
             };
             let subscriptionType: 'user' | 'studio' = 'user';
-            let billingUserId = request.userId;
-            let billingStudioId: string | null = null;
-            let metricsRecordUserId: string = request.userId;
-            let metricsRecordStudioId: string | null = null;
+            let billingUserId: string | undefined = request.userId;
+            let billingStudioId: string | undefined = undefined;
+            let metricsRecordUserId: string | undefined = request.userId;
+            let metricsRecordStudioId: string | undefined = undefined;
 
             if (request.recordName && this._policies) {
                 const context =
@@ -1567,12 +1577,14 @@ export class AIController {
 
                 if (context.context.recordStudioId) {
                     billingStudioId = context.context.recordStudioId;
+                    billingUserId = undefined;
                     metricsFilter = { studioId: billingStudioId };
                     subscriptionType = 'studio';
                     metricsRecordStudioId = billingStudioId;
-                    metricsRecordUserId = null;
+                    metricsRecordUserId = undefined;
                 } else {
                     billingUserId = context.context.recordOwnerId;
+                    billingStudioId = undefined;
                     metricsFilter = { ownerId: billingUserId };
                     metricsRecordUserId = billingUserId;
                 }
@@ -1644,8 +1656,8 @@ export class AIController {
                 : null;
 
             const billing = await billForUsage(this._financial, {
-                userId: billingUserId,
-                studioId: billingStudioId,
+                userId: billingStudioId ? undefined : billingUserId,
+                studioId: billingStudioId ?? undefined,
                 transferCode: TransferCodes.records_usage_fee,
                 billingCode: BillingCodes.ai_image_pixels,
             });

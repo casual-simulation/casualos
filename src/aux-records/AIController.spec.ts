@@ -1715,7 +1715,7 @@ describe('AIController', () => {
         });
     });
 
-    describe('chatStream()', () => {
+    describe('chat()', () => {
         describe('record-based authorization', () => {
             const studioId = 'studio-chat-record';
             const otherUserId = 'other-chat-user';
