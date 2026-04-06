@@ -1827,6 +1827,79 @@ describe('AIController', () => {
                 });
             });
 
+            it('should use the record owner subscription for user records', async () => {
+                chatInterface.chat.mockReturnValueOnce(
+                    Promise.resolve({
+                        choices: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                                finishReason: 'stop',
+                            },
+                        ],
+                        totalTokens: 10,
+                    })
+                );
+
+                const permissionResult = await policies.grantMarkerPermission({
+                    recordKeyOrRecordName: userId,
+                    userId: userId,
+                    marker: PUBLIC_READ_MARKER,
+                    permission: {
+                        resourceKind: 'ai.chat',
+                        action: 'create',
+                        expireTimeMs: null,
+                        options: {},
+                        subjectType: 'user',
+                        subjectId: otherUserId,
+                        marker: PUBLIC_READ_MARKER,
+                    },
+                });
+
+                expect(permissionResult).toMatchObject({ success: true });
+
+                const result = await controller.chat({
+                    model: 'test-model1',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                        },
+                    ],
+                    temperature: 0.5,
+                    userId: otherUserId,
+                    userSubscriptionTier,
+                    recordName: userId,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    choices: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                            finishReason: 'stop',
+                        },
+                    ],
+                });
+
+                const ownerMetrics = await store.getSubscriptionAiChatMetrics({
+                    ownerId: userId,
+                });
+                const callerMetrics = await store.getSubscriptionAiChatMetrics({
+                    ownerId: otherUserId,
+                });
+
+                expect(ownerMetrics).toMatchObject({
+                    ownerId: userId,
+                    totalTokensInCurrentPeriod: 10,
+                });
+                expect(callerMetrics).toMatchObject({
+                    ownerId: otherUserId,
+                    totalTokensInCurrentPeriod: 0,
+                });
+            });
+
             it('should allow users granted access to ai.chat resources', async () => {
                 chatInterface.chat.mockReturnValueOnce(
                     Promise.resolve({
@@ -3694,6 +3767,89 @@ describe('AIController', () => {
                 });
             });
 
+            it('should use the record owner subscription for user records', async () => {
+                chatInterface.chatStream.mockReturnValueOnce(
+                    asyncIterable<AIChatInterfaceStreamResponse>([
+                        Promise.resolve({
+                            choices: [
+                                {
+                                    role: 'user',
+                                    content: 'test',
+                                    finishReason: 'stop',
+                                },
+                            ],
+                            totalTokens: 10,
+                        }),
+                    ])
+                );
+
+                const permissionResult = await policies.grantMarkerPermission({
+                    recordKeyOrRecordName: userId,
+                    userId: userId,
+                    marker: PUBLIC_READ_MARKER,
+                    permission: {
+                        resourceKind: 'ai.chat',
+                        action: 'create',
+                        expireTimeMs: null,
+                        options: {},
+                        subjectType: 'user',
+                        subjectId: otherUserId,
+                        marker: PUBLIC_READ_MARKER,
+                    },
+                });
+
+                expect(permissionResult).toMatchObject({ success: true });
+
+                const result = await unwindAndCaptureAsync(
+                    controller.chatStream({
+                        model: 'test-model1',
+                        messages: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                            },
+                        ],
+                        temperature: 0.5,
+                        userId: otherUserId,
+                        userSubscriptionTier,
+                        recordName: userId,
+                    })
+                );
+
+                expect(result).toEqual({
+                    result: {
+                        success: true,
+                    },
+                    states: [
+                        {
+                            choices: [
+                                {
+                                    role: 'user',
+                                    content: 'test',
+                                    finishReason: 'stop',
+                                },
+                            ],
+                        },
+                    ],
+                });
+
+                const ownerMetrics = await store.getSubscriptionAiChatMetrics({
+                    ownerId: userId,
+                });
+                const callerMetrics = await store.getSubscriptionAiChatMetrics({
+                    ownerId: otherUserId,
+                });
+
+                expect(ownerMetrics).toMatchObject({
+                    ownerId: userId,
+                    totalTokensInCurrentPeriod: 10,
+                });
+                expect(callerMetrics).toMatchObject({
+                    ownerId: otherUserId,
+                    totalTokensInCurrentPeriod: 0,
+                });
+            });
+
             it('should allow users granted access to ai.chat resources', async () => {
                 chatInterface.chatStream.mockReturnValueOnce(
                     asyncIterable<AIChatInterfaceStreamResponse>([
@@ -4924,6 +5080,61 @@ describe('AIController', () => {
                 expect(metrics).toMatchObject({
                     studioId,
                     totalSkyboxesInCurrentPeriod: 1,
+                });
+            });
+
+            it('should use the record owner subscription for user records', async () => {
+                generateSkyboxInterface.generateSkybox.mockResolvedValueOnce({
+                    success: true,
+                    skyboxId: 'test-skybox-id',
+                });
+
+                const permissionResult = await policies.grantMarkerPermission({
+                    recordKeyOrRecordName: userId,
+                    userId: userId,
+                    marker: PUBLIC_READ_MARKER,
+                    permission: {
+                        resourceKind: 'ai.skybox',
+                        action: 'create',
+                        expireTimeMs: null,
+                        options: {},
+                        subjectType: 'user',
+                        subjectId: otherUserId,
+                        marker: PUBLIC_READ_MARKER,
+                    },
+                });
+
+                expect(permissionResult).toMatchObject({ success: true });
+
+                const result = await controller.generateSkybox({
+                    prompt: 'test',
+                    userId: otherUserId,
+                    userSubscriptionTier,
+                    recordName: userId,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    skyboxId: 'test-skybox-id',
+                });
+
+                const ownerMetrics = await store.getSubscriptionAiSkyboxMetrics(
+                    {
+                        ownerId: userId,
+                    }
+                );
+                const callerMetrics =
+                    await store.getSubscriptionAiSkyboxMetrics({
+                        ownerId: otherUserId,
+                    });
+
+                expect(ownerMetrics).toMatchObject({
+                    ownerId: userId,
+                    totalSkyboxesInCurrentPeriod: 1,
+                });
+                expect(callerMetrics).toMatchObject({
+                    ownerId: otherUserId,
+                    totalSkyboxesInCurrentPeriod: 0,
                 });
             });
 
@@ -6279,6 +6490,74 @@ describe('AIController', () => {
                 expect(metrics).toMatchObject({
                     studioId,
                     totalSquarePixelsInCurrentPeriod: 512,
+                });
+            });
+
+            it('should use the record owner subscription for user records', async () => {
+                generateImageInterface.generateImage.mockResolvedValueOnce({
+                    success: true,
+                    images: [
+                        {
+                            base64: 'base64',
+                            seed: 123,
+                            mimeType: 'image/png',
+                        },
+                    ],
+                });
+
+                const permissionResult = await policies.grantMarkerPermission({
+                    recordKeyOrRecordName: userId,
+                    userId: userId,
+                    marker: PUBLIC_READ_MARKER,
+                    permission: {
+                        resourceKind: 'ai.image',
+                        action: 'create',
+                        expireTimeMs: null,
+                        options: {},
+                        subjectType: 'user',
+                        subjectId: otherUserId,
+                        marker: PUBLIC_READ_MARKER,
+                    },
+                });
+
+                expect(permissionResult).toMatchObject({ success: true });
+
+                const result = await controller.generateImage({
+                    prompt: 'test',
+                    userId: otherUserId,
+                    userSubscriptionTier,
+                    width: 512,
+                    height: 512,
+                    recordName: userId,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    images: [
+                        {
+                            base64: 'base64',
+                            seed: 123,
+                            mimeType: 'image/png',
+                        },
+                    ],
+                });
+
+                const ownerMetrics = await store.getSubscriptionAiImageMetrics({
+                    ownerId: userId,
+                });
+                const callerMetrics = await store.getSubscriptionAiImageMetrics(
+                    {
+                        ownerId: otherUserId,
+                    }
+                );
+
+                expect(ownerMetrics).toMatchObject({
+                    ownerId: userId,
+                    totalSquarePixelsInCurrentPeriod: 512,
+                });
+                expect(callerMetrics).toMatchObject({
+                    ownerId: otherUserId,
+                    totalSquarePixelsInCurrentPeriod: 0,
                 });
             });
 
