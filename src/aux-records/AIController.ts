@@ -2132,17 +2132,83 @@ export class AIController {
                     }
                 }
 
-                const metrics =
-                    await this._metrics.getSubscriptionAiChatMetrics({
-                        ownerId: request.userId,
+                let metricsFilter: SubscriptionFilter = {
+                    ownerId: request.userId,
+                };
+                let subscriptionType: 'user' | 'studio' = 'user';
+
+                if (request.recordName && !this._policies) {
+                    return failure({
+                        errorCode: 'not_supported',
+                        errorMessage:
+                            'recordName cannot be specified when custom permissions are not supported.',
                     });
+                }
+
+                if (request.recordName && this._policies) {
+                    const context =
+                        await this._policies.constructAuthorizationContext({
+                            recordKeyOrRecordName: request.recordName,
+                            userId: request.userId,
+                        });
+
+                    if (context.success === false) {
+                        return failure({
+                            errorCode: context.errorCode,
+                            errorMessage: context.errorMessage,
+                        });
+                    }
+
+                    const authResult =
+                        await this._policies.authorizeUserAndInstancesForResources(
+                            context.context,
+                            {
+                                userId: request.userId,
+                                instances: [],
+                                resources: [
+                                    {
+                                        resourceKind: 'ai.chat',
+                                        action: 'create',
+                                        resourceId: null,
+                                        markers: [],
+                                    },
+                                ],
+                            }
+                        );
+
+                    if (authResult.success === false) {
+                        return failure({
+                            errorCode: authResult.errorCode,
+                            errorMessage: authResult.errorMessage,
+                            reason: authResult.reason,
+                            recommendedEntitlement:
+                                authResult.recommendedEntitlement,
+                        });
+                    }
+
+                    if (context.context.recordStudioId) {
+                        metricsFilter = {
+                            studioId: context.context.recordStudioId,
+                        };
+                        subscriptionType = 'studio';
+                    } else {
+                        metricsFilter = {
+                            ownerId: context.context.recordOwnerId,
+                        };
+                    }
+                }
+
+                const metrics =
+                    await this._metrics.getSubscriptionAiChatMetrics(
+                        metricsFilter
+                    );
                 const config =
                     await this._config.getSubscriptionConfiguration();
                 const allowedFeatures = getSubscriptionFeatures(
                     config,
                     metrics.subscriptionStatus,
                     metrics.subscriptionId,
-                    'user'
+                    subscriptionType
                 );
 
                 if (!allowedFeatures.ai.chat.allowed) {
@@ -2737,6 +2803,13 @@ export interface ListChatModelsRequest {
      * Null if the user doesn't have a subscription.
      */
     userSubscriptionTier: string | null;
+
+    /**
+     * The name of the record to check subscription and permissions against.
+     * If provided, the subscription of the record owner/studio is used instead of the user's subscription.
+     * The user must be authorized to use ai.chat resources in this record.
+     */
+    recordName?: string | null;
 }
 
 /**

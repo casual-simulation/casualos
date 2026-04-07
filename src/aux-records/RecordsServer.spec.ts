@@ -24487,6 +24487,98 @@ describe('RecordsServer', () => {
             });
         });
 
+        it('should support listing chat models by recordName', async () => {
+            const studioId = 'list-chat-models-studio';
+            await store.createStudioForUser(
+                {
+                    id: studioId,
+                    displayName: 'List Models Studio',
+                    subscriptionId: null,
+                    subscriptionStatus: null,
+                },
+                userId
+            );
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/ai/chat/models?recordName=${encodeURIComponent(
+                        studioId
+                    )}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    items: [
+                        {
+                            name: 'model-1',
+                            provider: 'provider1',
+                            isDefault: false,
+                        },
+                        {
+                            name: 'model-2',
+                            provider: 'provider1',
+                            isDefault: false,
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return not_authorized if the user cannot access the recordName', async () => {
+            const studioId = 'list-chat-models-no-access-studio';
+            const ownerId = 'list-chat-models-owner';
+            await store.saveUser({
+                id: ownerId,
+                email: 'list-chat-models-owner@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+            await store.createStudioForUser(
+                {
+                    id: studioId,
+                    displayName: 'List Models No Access Studio',
+                    subscriptionId: null,
+                    subscriptionStatus: null,
+                },
+                ownerId
+            );
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/ai/chat/models?recordName=${encodeURIComponent(
+                        studioId
+                    )}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        resourceKind: 'ai.chat',
+                        action: 'create',
+                        resourceId: null,
+                        recordName: studioId,
+                        subjectId: userId,
+                        subjectType: 'user',
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
         it('should return not_logged_in if no session key is provided', async () => {
             delete apiHeaders['authorization'];
 

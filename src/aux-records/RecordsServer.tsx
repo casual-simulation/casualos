@@ -4472,8 +4472,13 @@ export class RecordsServer {
             aiListChatModels: procedure()
                 .origins('api')
                 .http('GET', '/api/v2/ai/chat/models')
-                .inputs(z.object({}))
-                .handler(async (_, context) => {
+                .inputs(
+                    z.object({
+                        recordName:
+                            RECORD_NAME_VALIDATION.optional().nullable(),
+                    })
+                )
+                .handler(async ({ recordName }, context) => {
                     if (!this._aiController) {
                         return AI_NOT_SUPPORTED_RESULT;
                     }
@@ -4495,6 +4500,7 @@ export class RecordsServer {
                         userSubscriptionTier:
                             sessionKeyValidation.subscriptionTier,
                         userRole: sessionKeyValidation.role,
+                        recordName,
                     });
 
                     return genericResult(result);
