@@ -5009,7 +5009,13 @@ Object {
         "path": "/api/v2/ai/chat/models",
       },
       "inputs": Object {
-        "schema": Object {},
+        "schema": Object {
+          "recordName": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+        },
         "type": "object",
       },
       "name": "aiListChatModels",
@@ -15388,7 +15394,13 @@ Object {
         "path": "/api/v2/ai/chat/models",
       },
       "inputs": Object {
-        "schema": Object {},
+        "schema": Object {
+          "recordName": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+        },
         "type": "object",
       },
       "name": "aiListChatModels",
