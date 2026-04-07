@@ -23860,6 +23860,33 @@ describe('RecordsServer', () => {
             });
         });
 
+        it('should support recordName', async () => {
+            const chatSpy = jest.spyOn(aiController, 'chat');
+
+            await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/ai/chat`,
+                    JSON.stringify({
+                        model: 'model-1',
+                        recordName: 'record-name',
+                        messages: [
+                            {
+                                role: 'user',
+                                content: 'hello',
+                            },
+                        ],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expect(chatSpy).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    recordName: 'record-name',
+                })
+            );
+        });
+
         it('should support using a default model', async () => {
             chatInterface.chat.mockResolvedValueOnce({
                 choices: [
@@ -24071,6 +24098,33 @@ describe('RecordsServer', () => {
                     'content-type': 'application/x-ndjson',
                 },
             });
+        });
+
+        it('should support recordName', async () => {
+            const chatStreamSpy = jest.spyOn(aiController, 'chatStream');
+
+            await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/ai/chat/stream`,
+                    JSON.stringify({
+                        model: 'model-1',
+                        recordName: 'record-name',
+                        messages: [
+                            {
+                                role: 'user',
+                                content: 'hello',
+                            },
+                        ],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expect(chatStreamSpy).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    recordName: 'record-name',
+                })
+            );
         });
 
         it('should support using a default model', async () => {
@@ -24361,6 +24415,27 @@ describe('RecordsServer', () => {
             });
         });
 
+        it('should support recordName', async () => {
+            const skyboxSpy = jest.spyOn(aiController, 'generateSkybox');
+
+            await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/ai/skybox`,
+                    JSON.stringify({
+                        prompt: 'a blue sky',
+                        recordName: 'record-name',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expect(skyboxSpy).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    recordName: 'record-name',
+                })
+            );
+        });
+
         it('should return a not_supported result if the server has a null AI controller', async () => {
             server = new RecordsServer({
                 allowedAccountOrigins,
@@ -24603,6 +24678,27 @@ describe('RecordsServer', () => {
                 numberOfImages: 1,
                 userId,
             });
+        });
+
+        it('should support recordName', async () => {
+            const imageSpy = jest.spyOn(aiController, 'generateImage');
+
+            await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/ai/image`,
+                    JSON.stringify({
+                        prompt: 'a rabbit riding a bycicle',
+                        recordName: 'record-name',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expect(imageSpy).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    recordName: 'record-name',
+                })
+            );
         });
 
         testOrigin('POST', `/api/v2/ai/image`, () =>
