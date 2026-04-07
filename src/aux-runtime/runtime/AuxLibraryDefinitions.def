@@ -11204,6 +11204,20 @@ export interface AIChatOptions extends RecordActionOptions {
 }
 
 /**
+ * Defines an interface that represents options for {@link ai.listChatModels}.
+ *
+ * @dochash types/ai
+ * @docname AIListChatModelsOptions
+ */
+export interface AIListChatModelsOptions extends RecordActionOptions {
+    /**
+     * The name of the record that should be used.
+     * If omitted, then the user's record is used.
+     */
+    recordName?: string | null;
+}
+
+/**
  * Defines an interface that represents options for {@link ai.generateSkybox-string}.
  *
  * @dochash types/ai
@@ -11299,28 +11313,7 @@ export interface AIGenerateImageOptions {
      */
     recordName?: string | null;
 
-    /**
-     * The description of what the generated image(s) should look like.
-     */
-    prompt: string;
-
-    /**
-     * The description of what the generated image(s) should not look like.
-     */
-    negativePrompt?: string;
-
-    /**
-     * The model that should be used to generate the image(s).
-     */
-    model?: string;
-
-    /**
-     * The desired width of the image(s) in pixels.
-     */
-    width?: number;
-
-    /**
-     * The desired height of the image(s) in pixels.
+) in pixels.
      */
     height?: number;
 
@@ -14008,7 +14001,9 @@ interface Ai {
      * @dochash actions/ai
      * @docname ai.listChatModels
      */
-    listChatModels(options?: RecordActionOptions): Promise<ListedChatModel[]>;
+    listChatModels(
+        options?: AIListChatModelsOptions
+    ): Promise<ListedChatModel[]>;
 
     /**
      * Generates a [skybox image](https://en.wikipedia.org/wiki/Skybox_%28video_games%29) from the given prompt.

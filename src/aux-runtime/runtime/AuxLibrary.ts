@@ -5774,7 +5774,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @docname ai.listChatModels
      */
     function listChatModels(
-        options?: RecordActionOptions
+        options?: RecordActionOptions & { recordName?: string | null }
     ): Promise<ListedChatModel[]> {
         const task = context.createTask();
         const action = aiListChatModels(options, task.taskId);
