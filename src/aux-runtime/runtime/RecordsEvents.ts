@@ -202,6 +202,20 @@ export interface AIChatOptions extends RecordActionOptions {
 }
 
 /**
+ * Defines options for {@link ai.listChatModels}.
+ *
+ * @dochash types/ai
+ * @docname AIListChatModelsOptions
+ */
+export interface AIListChatModelsOptions extends RecordActionOptions {
+    /**
+     * The name of the record that should be used.
+     * If omitted, then the user's record is used.
+     */
+    recordName?: string | null;
+}
+
+/**
  * An event that is used to generate a skybox using AI.
  *
  * @dochash types/ai
@@ -1850,13 +1864,22 @@ export function aiChatStream(
  * @param taskId The ID of the async task.
  */
 export function aiListChatModels(
-    options?: RecordActionOptions,
+    options?: AIListChatModelsOptions,
     taskId?: number | string
 ): RecordsCallProcedureAction {
+    const hasRecordName = Object.prototype.hasOwnProperty.call(
+        options ?? {},
+        'recordName'
+    );
+
     return recordsCallProcedure(
         {
             aiListChatModels: {
-                input: {},
+                input: hasRecordName
+                    ? {
+                          recordName: options.recordName,
+                      }
+                    : {},
             },
         },
         options ?? {},
@@ -3483,6 +3506,158 @@ export function leaveRoom(
  * Creates a new SetRoomOptionsAction.
  * @param roomName The name of the room.
  * @param options The options to use for the event.
+ * @param taskId The ID of the async task.
+ */
+export function setRoomOptions(
+    roomName: string,
+    options: Partial<RoomOptions>,
+    taskId?: number | string
+): SetRoomOptionsAction {
+    return {
+        type: 'set_room_options',
+        roomName,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a new GetRoomOptionsAction.
+ * @param roomName The name of the room.
+ * @param taskId The ID of the async task.
+ */
+export function getRoomOptions(
+    roomName: string,
+    taskId?: number | string
+): GetRoomOptionsAction {
+    return {
+        type: 'get_room_options',
+        roomName,
+        taskId,
+    };
+}
+
+/**
+ * Creates a new GetRoomTrackOptionsAction.
+ * @param roomName The name of the room.
+ * @param address The address of the track.
+ * @param taskId The ID of the task.
+ */
+export function getRoomTrackOptions(
+    roomName: string,
+    address: string,
+    taskId?: number | string
+): GetRoomTrackOptionsAction {
+    return {
+        type: 'get_room_track_options',
+        roomName,
+        address,
+        taskId,
+    };
+}
+
+/**
+ * Creates a new SetRoomTrackOptionsAction.
+ * @param roomName The name of the room.
+ * @param address The address of the track.
+ * @param options The options that should be set.
+ * @param taskId The ID of the task.
+ */
+export function setRoomTrackOptions(
+    roomName: string,
+    address: string,
+    options: SetRoomTrackOptions,
+    taskId?: number | string
+): SetRoomTrackOptionsAction {
+    return {
+        type: 'set_room_track_options',
+        roomName,
+        address,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates an action that is able to list the insts in a record.
+ * @param recordName The name of the record.
+ * @param startingInst The inst that the list should start with.
+ * @param options The options.
+ * @param taskId The ID of the async task.
+ */
+export function listInsts(
+    recordName: string,
+    startingInst?: string | null,
+    options: RecordActionOptions = {},
+    taskId?: number | string
+): RecordsCallProcedureAction {
+    return recordsCallProcedure(
+        {
+            listInsts: {
+                input: {
+                    recordName,
+                    inst: startingInst,
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+/**
+ * Creates an action that is able to list the insts in a record with the given marker.
+ * @param recordName The name of the record.
+ * @param marker The marker.
+ * @param startingInst The inst that the list should start with.
+ * @param options The options.
+ * @param taskId The ID of the async task.
+ */
+export function listInstsByMarker(
+    recordName: string,
+    marker: string,
+    startingInst?: string | null,
+    options: RecordActionOptions = {},
+    taskId?: number | string
+): RecordsCallProcedureAction {
+    return recordsCallProcedure(
+        {
+            listInsts: {
+                input: {
+                    recordName,
+                    inst: startingInst,
+                    marker,
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+/**
+ * Creates a new GetRoomRemoteOptionsAction.
+ * @param roomName The name of the room.
+ * @param remoteId The ID of the remote user.
+ * @param taskId The ID of the task.
+ */
+export function getRoomRemoteOptions(
+    roomName: string,
+    remoteId: string,
+    taskId?: number | string
+): GetRoomRemoteOptionsAction {
+    return {
+        type: 'get_room_remote_options',
+        roomName,
+        remoteId,
+        taskId,
+    };
+}
+
+/**
+ * Creates a new SetRoomOptionsAction.
+ * @param roomName The name of the room.
+ * @param options The options that should be set on the room.
  * @param taskId The ID of the async task.
  */
 export function setRoomOptions(
