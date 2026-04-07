@@ -2911,6 +2911,9 @@ Object {
                   "ai.sloyd",
                   "ai.hume",
                   "ai.openai.realtime",
+                  "ai.chat",
+                  "ai.image",
+                  "ai.skybox",
                   "webhook",
                   "notification",
                   "package",
@@ -3843,6 +3846,126 @@ Object {
                     "type": "enum",
                     "values": Array [
                       "create",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "ai.chat",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
+                    ],
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "ai.image",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
+                    ],
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "ai.skybox",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
+                    ],
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
                       "read",
                       "update",
                       "delete",
@@ -4317,6 +4440,9 @@ Object {
               "ai.sloyd",
               "ai.hume",
               "ai.openai.realtime",
+              "ai.chat",
+              "ai.image",
+              "ai.skybox",
               "webhook",
               "notification",
               "package",
@@ -4702,6 +4828,11 @@ Object {
             "optional": true,
             "type": "number",
           },
+          "recordName": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
           "stopWords": Object {
             "maxLength": 4,
             "nullable": true,
@@ -4837,6 +4968,11 @@ Object {
             "optional": true,
             "type": "number",
           },
+          "recordName": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
           "stopWords": Object {
             "maxLength": 4,
             "nullable": true,
@@ -4921,6 +5057,11 @@ Object {
           "prompt": Object {
             "type": "string",
           },
+          "recordName": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
         },
         "type": "object",
       },
@@ -5001,6 +5142,11 @@ Object {
             "type": "number",
           },
           "prompt": Object {
+            "type": "string",
+          },
+          "recordName": Object {
+            "nullable": true,
+            "optional": true,
             "type": "string",
           },
           "sampler": Object {
@@ -13139,6 +13285,9 @@ Object {
                   "ai.sloyd",
                   "ai.hume",
                   "ai.openai.realtime",
+                  "ai.chat",
+                  "ai.image",
+                  "ai.skybox",
                   "webhook",
                   "notification",
                   "package",
@@ -14071,6 +14220,126 @@ Object {
                     "type": "enum",
                     "values": Array [
                       "create",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "ai.chat",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
+                    ],
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "ai.image",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
+                    ],
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "ai.skybox",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
+                    ],
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
                       "read",
                       "update",
                       "delete",
@@ -14545,6 +14814,9 @@ Object {
               "ai.sloyd",
               "ai.hume",
               "ai.openai.realtime",
+              "ai.chat",
+              "ai.image",
+              "ai.skybox",
               "webhook",
               "notification",
               "package",
@@ -14930,6 +15202,11 @@ Object {
             "optional": true,
             "type": "number",
           },
+          "recordName": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
           "stopWords": Object {
             "maxLength": 4,
             "nullable": true,
@@ -15065,6 +15342,11 @@ Object {
             "optional": true,
             "type": "number",
           },
+          "recordName": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
           "stopWords": Object {
             "maxLength": 4,
             "nullable": true,
@@ -15149,6 +15431,11 @@ Object {
           "prompt": Object {
             "type": "string",
           },
+          "recordName": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
         },
         "type": "object",
       },
@@ -15229,6 +15516,11 @@ Object {
             "type": "number",
           },
           "prompt": Object {
+            "type": "string",
+          },
+          "recordName": Object {
+            "nullable": true,
+            "optional": true,
             "type": "string",
           },
           "sampler": Object {

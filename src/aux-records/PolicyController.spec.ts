@@ -5273,6 +5273,9 @@ describe('PolicyController', () => {
                 ],
             ],
             ['loom', [['create', 'resourceId']]],
+            ['ai.chat', [['create', 'resourceId']]],
+            ['ai.image', [['create', 'resourceId']]],
+            ['ai.skybox', [['create', 'resourceId']]],
             [
                 'marker',
                 [
@@ -5716,9 +5719,6 @@ describe('PolicyController', () => {
             ],
             ['ai.sloyd', [['create', 'resourceId']]],
             ['ai.hume', [['create', 'resourceId']]],
-            ['ai.chat', [['create', 'resourceId']]],
-            ['ai.image', [['create', 'resourceId']]],
-            ['ai.skybox', [['create', 'resourceId']]],
             [
                 'notification',
                 [

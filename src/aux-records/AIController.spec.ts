@@ -1598,6 +1598,109 @@ describe('AIController', () => {
                     ]);
                     expect(chatInterface.chat).toHaveBeenCalled();
                 });
+
+                it('should bill the record owner for chat when caller uses recordName', async () => {
+                    const callerId = 'chat-billing-caller';
+
+                    await store.saveUser({
+                        id: callerId,
+                        email: 'chat-billing-caller@example.com',
+                        phoneNumber: null,
+                        allSessionRevokeTimeMs: null,
+                        currentLoginRequestId: null,
+                    });
+
+                    const callerAccount = unwrap(
+                        await financial.getOrCreateFinancialAccount({
+                            userId: callerId,
+                            ledger: LEDGERS.credits,
+                        })
+                    ).account;
+
+                    unwrap(
+                        await financial.internalTransaction({
+                            transfers: [
+                                {
+                                    debitAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    creditAccountId: callerAccount.id,
+                                    amount: 10000n,
+                                    code: TransferCodes.admin_credit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                            ],
+                        })
+                    );
+
+                    const permissionResult =
+                        await policies.grantMarkerPermission({
+                            recordKeyOrRecordName: userId,
+                            userId,
+                            marker: PUBLIC_READ_MARKER,
+                            permission: {
+                                resourceKind: 'ai.chat',
+                                action: 'create',
+                                expireTimeMs: null,
+                                options: {},
+                                subjectType: 'user',
+                                subjectId: callerId,
+                                marker: PUBLIC_READ_MARKER,
+                            },
+                        });
+                    expect(permissionResult).toMatchObject({ success: true });
+
+                    chatInterface.chat.mockResolvedValueOnce({
+                        choices: [
+                            {
+                                role: 'assistant',
+                                content: 'ok',
+                                finishReason: 'stop',
+                            },
+                        ],
+                        totalTokens: 10,
+                    });
+
+                    const result = await controller.chat({
+                        model: 'test-model1',
+                        messages: [{ role: 'user', content: 'test' }],
+                        userId: callerId,
+                        userSubscriptionTier,
+                        recordName: userId,
+                    });
+
+                    expect(result.success).toBe(true);
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: account1.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 150n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: callerAccount.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+
+                    const ownerMetrics =
+                        await store.getSubscriptionAiChatMetrics({
+                            ownerId: userId,
+                        });
+                    const callerMetrics =
+                        await store.getSubscriptionAiChatMetrics({
+                            ownerId: callerId,
+                        });
+
+                    expect(ownerMetrics.totalTokensInCurrentPeriod).toBe(10);
+                    expect(callerMetrics.totalTokensInCurrentPeriod).toBe(0);
+                });
             });
         });
 
@@ -1820,10 +1923,17 @@ describe('AIController', () => {
                 const metrics = await store.getSubscriptionAiChatMetrics({
                     studioId,
                 });
+                const userMetrics = await store.getSubscriptionAiChatMetrics({
+                    ownerId: userId,
+                });
 
                 expect(metrics).toMatchObject({
                     studioId,
                     totalTokensInCurrentPeriod: 10,
+                });
+                expect(userMetrics).toMatchObject({
+                    ownerId: userId,
+                    totalTokensInCurrentPeriod: 0,
                 });
             });
 
@@ -3521,6 +3631,115 @@ describe('AIController', () => {
                     ]);
                     expect(chatInterface.chatStream).toHaveBeenCalled();
                 });
+
+                it('should bill the record owner for chatStream when caller uses recordName', async () => {
+                    const callerId = 'chat-stream-billing-caller';
+
+                    await store.saveUser({
+                        id: callerId,
+                        email: 'chat-stream-billing-caller@example.com',
+                        phoneNumber: null,
+                        allSessionRevokeTimeMs: null,
+                        currentLoginRequestId: null,
+                    });
+
+                    const callerAccount = unwrap(
+                        await financial.getOrCreateFinancialAccount({
+                            userId: callerId,
+                            ledger: LEDGERS.credits,
+                        })
+                    ).account;
+
+                    unwrap(
+                        await financial.internalTransaction({
+                            transfers: [
+                                {
+                                    debitAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    creditAccountId: callerAccount.id,
+                                    amount: 10000n,
+                                    code: TransferCodes.admin_credit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                            ],
+                        })
+                    );
+
+                    const permissionResult =
+                        await policies.grantMarkerPermission({
+                            recordKeyOrRecordName: userId,
+                            userId,
+                            marker: PUBLIC_READ_MARKER,
+                            permission: {
+                                resourceKind: 'ai.chat',
+                                action: 'create',
+                                expireTimeMs: null,
+                                options: {},
+                                subjectType: 'user',
+                                subjectId: callerId,
+                                marker: PUBLIC_READ_MARKER,
+                            },
+                        });
+                    expect(permissionResult).toMatchObject({ success: true });
+
+                    chatInterface.chatStream.mockReturnValueOnce(
+                        asyncIterable<AIChatInterfaceStreamResponse>([
+                            Promise.resolve({
+                                choices: [
+                                    {
+                                        role: 'assistant',
+                                        content: 'ok',
+                                        finishReason: 'stop',
+                                    },
+                                ],
+                                totalTokens: 10,
+                            }),
+                        ])
+                    );
+
+                    const result = await unwindAndCaptureAsync(
+                        controller.chatStream({
+                            model: 'test-model1',
+                            messages: [{ role: 'user', content: 'test' }],
+                            userId: callerId,
+                            userSubscriptionTier,
+                            recordName: userId,
+                        })
+                    );
+
+                    expect(result.result.success).toBe(true);
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: account1.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 150n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: callerAccount.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+
+                    const ownerMetrics =
+                        await store.getSubscriptionAiChatMetrics({
+                            ownerId: userId,
+                        });
+                    const callerMetrics =
+                        await store.getSubscriptionAiChatMetrics({
+                            ownerId: callerId,
+                        });
+
+                    expect(ownerMetrics.totalTokensInCurrentPeriod).toBe(10);
+                    expect(callerMetrics.totalTokensInCurrentPeriod).toBe(0);
+                });
             });
         });
 
@@ -3645,7 +3864,7 @@ describe('AIController', () => {
         });
     });
 
-    describe('listChatModels()', () => {
+    describe('chatStream()', () => {
         describe('record-based authorization', () => {
             const studioId = 'studio-chatstream-record';
             const otherUserId = 'other-chatstream-user';
@@ -3760,10 +3979,17 @@ describe('AIController', () => {
                 const metrics = await store.getSubscriptionAiChatMetrics({
                     studioId,
                 });
+                const userMetrics = await store.getSubscriptionAiChatMetrics({
+                    ownerId: userId,
+                });
 
                 expect(metrics).toMatchObject({
                     studioId,
                     totalTokensInCurrentPeriod: 10,
+                });
+                expect(userMetrics).toMatchObject({
+                    ownerId: userId,
+                    totalTokensInCurrentPeriod: 0,
                 });
             });
 
@@ -3915,6 +4141,22 @@ describe('AIController', () => {
                         },
                     ],
                 });
+
+                const metrics = await store.getSubscriptionAiChatMetrics({
+                    studioId,
+                });
+                const callerMetrics = await store.getSubscriptionAiChatMetrics({
+                    ownerId: otherUserId,
+                });
+
+                expect(metrics).toMatchObject({
+                    studioId,
+                    totalTokensInCurrentPeriod: 10,
+                });
+                expect(callerMetrics).toMatchObject({
+                    ownerId: otherUserId,
+                    totalTokensInCurrentPeriod: 0,
+                });
             });
 
             it('should return not_authorized if the user is not authorized to access the ai.chat resource', async () => {
@@ -3967,6 +4209,15 @@ describe('AIController', () => {
                         },
                     },
                     states: [],
+                });
+
+                const callerMetrics = await store.getSubscriptionAiChatMetrics({
+                    ownerId: otherUserId,
+                });
+
+                expect(callerMetrics).toMatchObject({
+                    ownerId: otherUserId,
+                    totalTokensInCurrentPeriod: 0,
                 });
 
                 expect(chatInterface.chatStream).not.toHaveBeenCalled();
@@ -4988,6 +5239,104 @@ describe('AIController', () => {
                         generateSkyboxInterface.generateSkybox
                     ).not.toHaveBeenCalled();
                 });
+
+                it('should bill the record owner for skyboxes when caller uses recordName', async () => {
+                    const callerId = 'skybox-billing-caller';
+
+                    await store.saveUser({
+                        id: callerId,
+                        email: 'skybox-billing-caller@example.com',
+                        phoneNumber: null,
+                        allSessionRevokeTimeMs: null,
+                        currentLoginRequestId: null,
+                    });
+
+                    const callerAccount = unwrap(
+                        await financial.getOrCreateFinancialAccount({
+                            userId: callerId,
+                            ledger: LEDGERS.credits,
+                        })
+                    ).account;
+
+                    unwrap(
+                        await financial.internalTransaction({
+                            transfers: [
+                                {
+                                    debitAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    creditAccountId: callerAccount.id,
+                                    amount: 10000n,
+                                    code: TransferCodes.admin_credit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                            ],
+                        })
+                    );
+
+                    const permissionResult =
+                        await policies.grantMarkerPermission({
+                            recordKeyOrRecordName: userId,
+                            userId,
+                            marker: PUBLIC_READ_MARKER,
+                            permission: {
+                                resourceKind: 'ai.skybox',
+                                action: 'create',
+                                expireTimeMs: null,
+                                options: {},
+                                subjectType: 'user',
+                                subjectId: callerId,
+                                marker: PUBLIC_READ_MARKER,
+                            },
+                        });
+                    expect(permissionResult).toMatchObject({ success: true });
+
+                    generateSkyboxInterface.generateSkybox.mockResolvedValueOnce(
+                        {
+                            success: true,
+                            skyboxId: 'test-skybox-id',
+                        }
+                    );
+
+                    const result = await controller.generateSkybox({
+                        prompt: 'test',
+                        userId: callerId,
+                        userSubscriptionTier,
+                        recordName: userId,
+                    });
+
+                    expect(result.success).toBe(true);
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: account1.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 100n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: callerAccount.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+
+                    const ownerMetrics =
+                        await store.getSubscriptionAiSkyboxMetrics({
+                            ownerId: userId,
+                        });
+                    const callerMetrics =
+                        await store.getSubscriptionAiSkyboxMetrics({
+                            ownerId: callerId,
+                        });
+
+                    expect(ownerMetrics.totalSkyboxesInCurrentPeriod).toBe(1);
+                    expect(callerMetrics.totalSkyboxesInCurrentPeriod).toBe(0);
+                });
             });
         });
     });
@@ -5076,10 +5425,17 @@ describe('AIController', () => {
                 const metrics = await store.getSubscriptionAiSkyboxMetrics({
                     studioId,
                 });
+                const userMetrics = await store.getSubscriptionAiSkyboxMetrics({
+                    ownerId: userId,
+                });
 
                 expect(metrics).toMatchObject({
                     studioId,
                     totalSkyboxesInCurrentPeriod: 1,
+                });
+                expect(userMetrics).toMatchObject({
+                    ownerId: userId,
+                    totalSkyboxesInCurrentPeriod: 0,
                 });
             });
 
@@ -5172,6 +5528,23 @@ describe('AIController', () => {
                     success: true,
                     skyboxId: 'test-skybox-id',
                 });
+
+                const metrics = await store.getSubscriptionAiSkyboxMetrics({
+                    studioId,
+                });
+                const callerMetrics =
+                    await store.getSubscriptionAiSkyboxMetrics({
+                        ownerId: otherUserId,
+                    });
+
+                expect(metrics).toMatchObject({
+                    studioId,
+                    totalSkyboxesInCurrentPeriod: 1,
+                });
+                expect(callerMetrics).toMatchObject({
+                    ownerId: otherUserId,
+                    totalSkyboxesInCurrentPeriod: 0,
+                });
             });
 
             it('should return not_authorized if the user is not authorized to access the ai.skybox resource', async () => {
@@ -5202,6 +5575,16 @@ describe('AIController', () => {
                         subjectId: otherUserId,
                         subjectType: 'user',
                     },
+                });
+
+                const callerMetrics =
+                    await store.getSubscriptionAiSkyboxMetrics({
+                        ownerId: otherUserId,
+                    });
+
+                expect(callerMetrics).toMatchObject({
+                    ownerId: otherUserId,
+                    totalSkyboxesInCurrentPeriod: 0,
                 });
 
                 expect(
@@ -6382,11 +6765,119 @@ describe('AIController', () => {
                         generateImageInterface.generateImage
                     ).not.toHaveBeenCalled();
                 });
+
+                it('should bill the record owner for images when caller uses recordName', async () => {
+                    const callerId = 'image-billing-caller';
+
+                    await store.saveUser({
+                        id: callerId,
+                        email: 'image-billing-caller@example.com',
+                        phoneNumber: null,
+                        allSessionRevokeTimeMs: null,
+                        currentLoginRequestId: null,
+                    });
+
+                    const callerAccount = unwrap(
+                        await financial.getOrCreateFinancialAccount({
+                            userId: callerId,
+                            ledger: LEDGERS.credits,
+                        })
+                    ).account;
+
+                    unwrap(
+                        await financial.internalTransaction({
+                            transfers: [
+                                {
+                                    debitAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    creditAccountId: callerAccount.id,
+                                    amount: 10000n,
+                                    code: TransferCodes.admin_credit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                            ],
+                        })
+                    );
+
+                    const permissionResult =
+                        await policies.grantMarkerPermission({
+                            recordKeyOrRecordName: userId,
+                            userId,
+                            marker: PUBLIC_READ_MARKER,
+                            permission: {
+                                resourceKind: 'ai.image',
+                                action: 'create',
+                                expireTimeMs: null,
+                                options: {},
+                                subjectType: 'user',
+                                subjectId: callerId,
+                                marker: PUBLIC_READ_MARKER,
+                            },
+                        });
+                    expect(permissionResult).toMatchObject({ success: true });
+
+                    generateImageInterface.generateImage.mockResolvedValueOnce({
+                        success: true,
+                        images: [
+                            {
+                                base64: 'base64',
+                                seed: 123,
+                                mimeType: 'image/png',
+                            },
+                        ],
+                    });
+
+                    const result = await controller.generateImage({
+                        prompt: 'test',
+                        userId: callerId,
+                        userSubscriptionTier,
+                        width: 512,
+                        height: 512,
+                        recordName: userId,
+                    });
+
+                    expect(result.success).toBe(true);
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: account1.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 512n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: callerAccount.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+
+                    const ownerMetrics =
+                        await store.getSubscriptionAiImageMetrics({
+                            ownerId: userId,
+                        });
+                    const callerMetrics =
+                        await store.getSubscriptionAiImageMetrics({
+                            ownerId: callerId,
+                        });
+
+                    expect(ownerMetrics.totalSquarePixelsInCurrentPeriod).toBe(
+                        512
+                    );
+                    expect(callerMetrics.totalSquarePixelsInCurrentPeriod).toBe(
+                        0
+                    );
+                });
             });
         });
     });
 
-    describe('getHumeAccessToken()', () => {
+    describe('generateImage()', () => {
         describe('record-based authorization', () => {
             const studioId = 'studio-image-record';
             const otherUserId = 'other-image-user';
@@ -6486,10 +6977,17 @@ describe('AIController', () => {
                 const metrics = await store.getSubscriptionAiImageMetrics({
                     studioId,
                 });
+                const userMetrics = await store.getSubscriptionAiImageMetrics({
+                    ownerId: userId,
+                });
 
                 expect(metrics).toMatchObject({
                     studioId,
                     totalSquarePixelsInCurrentPeriod: 512,
+                });
+                expect(userMetrics).toMatchObject({
+                    ownerId: userId,
+                    totalSquarePixelsInCurrentPeriod: 0,
                 });
             });
 
@@ -6654,7 +7152,9 @@ describe('AIController', () => {
                 ).not.toHaveBeenCalled();
             });
         });
+    });
 
+    describe('getHumeAccessToken()', () => {
         beforeEach(() => {
             store.subscriptionConfiguration = buildSubscriptionConfig(
                 (config) =>

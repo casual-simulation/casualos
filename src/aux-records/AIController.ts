@@ -443,6 +443,15 @@ export class AIController {
             let metricsRecordUserId: string | undefined = request.userId;
             let metricsRecordStudioId: string | undefined = undefined;
 
+            if (request.recordName && !this._policies) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'recordName cannot be specified when custom permissions are not supported.',
+                };
+            }
+
             if (request.recordName && this._policies) {
                 const context =
                     await this._policies.constructAuthorizationContext({
@@ -586,10 +595,8 @@ export class AIController {
                     : null;
 
             const billing = await billForUsage(this._financial, {
-                userId:
-                    subscriptionType === 'studio' ? undefined : billingUserId,
-                studioId:
-                    subscriptionType === 'studio' ? billingStudioId : undefined,
+                userId: billingUserId,
+                studioId: billingStudioId,
                 transferCode: TransferCodes.records_usage_fee,
                 billingCode: BillingCodes.ai_chat_tokens,
             });
@@ -850,6 +857,15 @@ export class AIController {
             let billingStudioId: string | undefined = undefined;
             let metricsRecordUserId: string | undefined = request.userId;
             let metricsRecordStudioId: string | undefined = undefined;
+
+            if (request.recordName && !this._policies) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'recordName cannot be specified when custom permissions are not supported.',
+                };
+            }
 
             if (request.recordName && this._policies) {
                 const context =
@@ -1152,6 +1168,15 @@ export class AIController {
             let metricsRecordUserId: string | undefined = request.userId;
             let metricsRecordStudioId: string | undefined = undefined;
 
+            if (request.recordName && !this._policies) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'recordName cannot be specified when custom permissions are not supported.',
+                };
+            }
+
             if (request.recordName && this._policies) {
                 const context =
                     await this._policies.constructAuthorizationContext({
@@ -1253,10 +1278,8 @@ export class AIController {
                 : null;
 
             const billing = await billForUsage(this._financial, {
-                userId:
-                    subscriptionType === 'studio' ? undefined : billingUserId,
-                studioId:
-                    subscriptionType === 'studio' ? billingStudioId : undefined,
+                userId: billingUserId,
+                studioId: billingStudioId,
                 transferCode: TransferCodes.records_usage_fee,
                 billingCode: BillingCodes.ai_skybox,
             });
@@ -1543,6 +1566,15 @@ export class AIController {
             let metricsRecordUserId: string | undefined = request.userId;
             let metricsRecordStudioId: string | undefined = undefined;
 
+            if (request.recordName && !this._policies) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'recordName cannot be specified when custom permissions are not supported.',
+                };
+            }
+
             if (request.recordName && this._policies) {
                 const context =
                     await this._policies.constructAuthorizationContext({
@@ -1656,8 +1688,8 @@ export class AIController {
                 : null;
 
             const billing = await billForUsage(this._financial, {
-                userId: billingStudioId ? undefined : billingUserId,
-                studioId: billingStudioId ?? undefined,
+                userId: billingUserId,
+                studioId: billingStudioId,
                 transferCode: TransferCodes.records_usage_fee,
                 billingCode: BillingCodes.ai_image_pixels,
             });

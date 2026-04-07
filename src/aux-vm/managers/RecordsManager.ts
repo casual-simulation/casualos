@@ -2015,6 +2015,7 @@ export class RecordsManager {
 
             const { endpoint, blockadeLabs, ...rest } = event.options;
             let requestData: any = {
+                ...rest,
                 prompt: event.prompt,
                 negativePrompt: event.negativePrompt,
                 blockadeLabs: blockadeLabs,

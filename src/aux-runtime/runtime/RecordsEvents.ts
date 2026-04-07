@@ -162,6 +162,12 @@ export interface ListedChatModel {
  */
 export interface AIChatOptions extends RecordActionOptions {
     /**
+     * The name of the record that should be used.
+     * If omitted, then the ID of the user will be used.
+     */
+    recordName?: string | null;
+
+    /**
      * The model that should be used.
      *
      * If not specified, then a default will be used.
@@ -232,6 +238,12 @@ export interface AIGenerateSkyboxAction extends AsyncAction {
  */
 export interface AIGenerateSkyboxOptions extends RecordActionOptions {
     /**
+     * The name of the record that should be used.
+     * If omitted, then the ID of the user will be used.
+     */
+    recordName?: string | null;
+
+    /**
      * Options that are specific to blockade-labs.
      */
     blockadeLabs?: AIGenerateSkyboxBlockadeLabsOptions;
@@ -281,6 +293,12 @@ export interface AIGenerateImageAction
  * @docname AIGenerateImageOptions
  */
 export interface AIGenerateImageOptions {
+    /**
+     * The name of the record that should be used.
+     * If omitted, then the ID of the user will be used.
+     */
+    recordName?: string | null;
+
     /**
      * The description of what the generated image(s) should look like.
      */
