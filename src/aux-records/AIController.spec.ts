@@ -1701,6 +1701,125 @@ describe('AIController', () => {
                     expect(ownerMetrics.totalTokensInCurrentPeriod).toBe(10);
                     expect(callerMetrics.totalTokensInCurrentPeriod).toBe(0);
                 });
+
+                it('should bill the studio for chat when a member uses a studio recordName', async () => {
+                    const callerId = 'chat-billing-studio-caller';
+                    const studioId = 'chat-billing-studio';
+
+                    await store.saveUser({
+                        id: callerId,
+                        email: 'chat-billing-studio-caller@example.com',
+                        phoneNumber: null,
+                        allSessionRevokeTimeMs: null,
+                        currentLoginRequestId: null,
+                    });
+
+                    await store.createStudioForUser(
+                        {
+                            id: studioId,
+                            displayName: 'Chat Billing Studio',
+                            subscriptionId: 'sub1',
+                            subscriptionStatus: 'active',
+                        },
+                        userId
+                    );
+
+                    await store.addStudioAssignment({
+                        studioId,
+                        userId: callerId,
+                        isPrimaryContact: false,
+                        role: 'member',
+                    });
+
+                    const studioAccount = unwrap(
+                        await financial.getOrCreateFinancialAccount({
+                            studioId,
+                            ledger: LEDGERS.credits,
+                        })
+                    ).account;
+
+                    const callerAccount = unwrap(
+                        await financial.getOrCreateFinancialAccount({
+                            userId: callerId,
+                            ledger: LEDGERS.credits,
+                        })
+                    ).account;
+
+                    unwrap(
+                        await financial.internalTransaction({
+                            transfers: [
+                                {
+                                    debitAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    creditAccountId: studioAccount.id,
+                                    amount: 10000n,
+                                    code: TransferCodes.admin_credit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                                {
+                                    debitAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    creditAccountId: callerAccount.id,
+                                    amount: 10000n,
+                                    code: TransferCodes.admin_credit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                            ],
+                        })
+                    );
+
+                    chatInterface.chat.mockResolvedValueOnce({
+                        choices: [
+                            {
+                                role: 'assistant',
+                                content: 'ok',
+                                finishReason: 'stop',
+                            },
+                        ],
+                        totalTokens: 10,
+                    });
+
+                    const result = await controller.chat({
+                        model: 'test-model1',
+                        messages: [{ role: 'user', content: 'test' }],
+                        userId: callerId,
+                        userSubscriptionTier,
+                        recordName: studioId,
+                    });
+
+                    expect(result.success).toBe(true);
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: studioAccount.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 150n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: callerAccount.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+
+                    const studioMetrics =
+                        await store.getSubscriptionAiChatMetrics({
+                            studioId,
+                        });
+                    const callerMetrics =
+                        await store.getSubscriptionAiChatMetrics({
+                            ownerId: callerId,
+                        });
+
+                    expect(studioMetrics.totalTokensInCurrentPeriod).toBe(10);
+                    expect(callerMetrics.totalTokensInCurrentPeriod).toBe(0);
+                });
             });
         });
 
@@ -3749,6 +3868,131 @@ describe('AIController', () => {
                     expect(ownerMetrics.totalTokensInCurrentPeriod).toBe(10);
                     expect(callerMetrics.totalTokensInCurrentPeriod).toBe(0);
                 });
+
+                it('should bill the studio for chatStream when a member uses a studio recordName', async () => {
+                    const callerId = 'chat-stream-billing-studio-caller';
+                    const studioId = 'chat-stream-billing-studio';
+
+                    await store.saveUser({
+                        id: callerId,
+                        email: 'chat-stream-billing-studio-caller@example.com',
+                        phoneNumber: null,
+                        allSessionRevokeTimeMs: null,
+                        currentLoginRequestId: null,
+                    });
+
+                    await store.createStudioForUser(
+                        {
+                            id: studioId,
+                            displayName: 'Chat Stream Billing Studio',
+                            subscriptionId: 'sub1',
+                            subscriptionStatus: 'active',
+                        },
+                        userId
+                    );
+
+                    await store.addStudioAssignment({
+                        studioId,
+                        userId: callerId,
+                        isPrimaryContact: false,
+                        role: 'member',
+                    });
+
+                    const studioAccount = unwrap(
+                        await financial.getOrCreateFinancialAccount({
+                            studioId,
+                            ledger: LEDGERS.credits,
+                        })
+                    ).account;
+
+                    const callerAccount = unwrap(
+                        await financial.getOrCreateFinancialAccount({
+                            userId: callerId,
+                            ledger: LEDGERS.credits,
+                        })
+                    ).account;
+
+                    unwrap(
+                        await financial.internalTransaction({
+                            transfers: [
+                                {
+                                    debitAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    creditAccountId: studioAccount.id,
+                                    amount: 10000n,
+                                    code: TransferCodes.admin_credit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                                {
+                                    debitAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    creditAccountId: callerAccount.id,
+                                    amount: 10000n,
+                                    code: TransferCodes.admin_credit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                            ],
+                        })
+                    );
+
+                    chatInterface.chatStream.mockReturnValueOnce(
+                        asyncIterable<AIChatInterfaceStreamResponse>([
+                            Promise.resolve({
+                                choices: [
+                                    {
+                                        role: 'assistant',
+                                        content: 'ok',
+                                        finishReason: 'stop',
+                                    },
+                                ],
+                                totalTokens: 10,
+                            }),
+                        ])
+                    );
+
+                    const result = await unwindAndCaptureAsync(
+                        controller.chatStream({
+                            model: 'test-model1',
+                            messages: [{ role: 'user', content: 'test' }],
+                            userId: callerId,
+                            userSubscriptionTier,
+                            recordName: studioId,
+                        })
+                    );
+
+                    expect(result.result.success).toBe(true);
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: studioAccount.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 150n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: callerAccount.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+
+                    const studioMetrics =
+                        await store.getSubscriptionAiChatMetrics({
+                            studioId,
+                        });
+                    const callerMetrics =
+                        await store.getSubscriptionAiChatMetrics({
+                            ownerId: callerId,
+                        });
+
+                    expect(studioMetrics.totalTokensInCurrentPeriod).toBe(10);
+                    expect(callerMetrics.totalTokensInCurrentPeriod).toBe(0);
+                });
             });
         });
 
@@ -5355,6 +5599,120 @@ describe('AIController', () => {
                     expect(ownerMetrics.totalSkyboxesInCurrentPeriod).toBe(1);
                     expect(callerMetrics.totalSkyboxesInCurrentPeriod).toBe(0);
                 });
+
+                it('should bill the studio for skyboxes when a member uses a studio recordName', async () => {
+                    const callerId = 'skybox-billing-studio-caller';
+                    const studioId = 'skybox-billing-studio';
+
+                    await store.saveUser({
+                        id: callerId,
+                        email: 'skybox-billing-studio-caller@example.com',
+                        phoneNumber: null,
+                        allSessionRevokeTimeMs: null,
+                        currentLoginRequestId: null,
+                    });
+
+                    await store.createStudioForUser(
+                        {
+                            id: studioId,
+                            displayName: 'Skybox Billing Studio',
+                            subscriptionId: 'sub1',
+                            subscriptionStatus: 'active',
+                        },
+                        userId
+                    );
+
+                    await store.addStudioAssignment({
+                        studioId,
+                        userId: callerId,
+                        isPrimaryContact: false,
+                        role: 'member',
+                    });
+
+                    const studioAccount = unwrap(
+                        await financial.getOrCreateFinancialAccount({
+                            studioId,
+                            ledger: LEDGERS.credits,
+                        })
+                    ).account;
+
+                    const callerAccount = unwrap(
+                        await financial.getOrCreateFinancialAccount({
+                            userId: callerId,
+                            ledger: LEDGERS.credits,
+                        })
+                    ).account;
+
+                    unwrap(
+                        await financial.internalTransaction({
+                            transfers: [
+                                {
+                                    debitAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    creditAccountId: studioAccount.id,
+                                    amount: 10000n,
+                                    code: TransferCodes.admin_credit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                                {
+                                    debitAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    creditAccountId: callerAccount.id,
+                                    amount: 10000n,
+                                    code: TransferCodes.admin_credit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                            ],
+                        })
+                    );
+
+                    generateSkyboxInterface.generateSkybox.mockResolvedValueOnce(
+                        {
+                            success: true,
+                            skyboxId: 'test-skybox-id',
+                        }
+                    );
+
+                    const result = await controller.generateSkybox({
+                        prompt: 'test',
+                        userId: callerId,
+                        userSubscriptionTier,
+                        recordName: studioId,
+                    });
+
+                    expect(result.success).toBe(true);
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: studioAccount.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 100n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: callerAccount.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+
+                    const studioMetrics =
+                        await store.getSubscriptionAiSkyboxMetrics({
+                            studioId,
+                        });
+                    const callerMetrics =
+                        await store.getSubscriptionAiSkyboxMetrics({
+                            ownerId: callerId,
+                        });
+
+                    expect(studioMetrics.totalSkyboxesInCurrentPeriod).toBe(1);
+                    expect(callerMetrics.totalSkyboxesInCurrentPeriod).toBe(0);
+                });
             });
         });
     });
@@ -6894,6 +7252,130 @@ describe('AIController', () => {
                         });
 
                     expect(ownerMetrics.totalSquarePixelsInCurrentPeriod).toBe(
+                        512
+                    );
+                    expect(callerMetrics.totalSquarePixelsInCurrentPeriod).toBe(
+                        0
+                    );
+                });
+
+                it('should bill the studio for images when a member uses a studio recordName', async () => {
+                    const callerId = 'image-billing-studio-caller';
+                    const studioId = 'image-billing-studio';
+
+                    await store.saveUser({
+                        id: callerId,
+                        email: 'image-billing-studio-caller@example.com',
+                        phoneNumber: null,
+                        allSessionRevokeTimeMs: null,
+                        currentLoginRequestId: null,
+                    });
+
+                    await store.createStudioForUser(
+                        {
+                            id: studioId,
+                            displayName: 'Image Billing Studio',
+                            subscriptionId: 'sub1',
+                            subscriptionStatus: 'active',
+                        },
+                        userId
+                    );
+
+                    await store.addStudioAssignment({
+                        studioId,
+                        userId: callerId,
+                        isPrimaryContact: false,
+                        role: 'member',
+                    });
+
+                    const studioAccount = unwrap(
+                        await financial.getOrCreateFinancialAccount({
+                            studioId,
+                            ledger: LEDGERS.credits,
+                        })
+                    ).account;
+
+                    const callerAccount = unwrap(
+                        await financial.getOrCreateFinancialAccount({
+                            userId: callerId,
+                            ledger: LEDGERS.credits,
+                        })
+                    ).account;
+
+                    unwrap(
+                        await financial.internalTransaction({
+                            transfers: [
+                                {
+                                    debitAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    creditAccountId: studioAccount.id,
+                                    amount: 10000n,
+                                    code: TransferCodes.admin_credit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                                {
+                                    debitAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    creditAccountId: callerAccount.id,
+                                    amount: 10000n,
+                                    code: TransferCodes.admin_credit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                            ],
+                        })
+                    );
+
+                    generateImageInterface.generateImage.mockResolvedValueOnce({
+                        success: true,
+                        images: [
+                            {
+                                base64: 'base64',
+                                seed: 123,
+                                mimeType: 'image/png',
+                            },
+                        ],
+                    });
+
+                    const result = await controller.generateImage({
+                        prompt: 'test',
+                        userId: callerId,
+                        userSubscriptionTier,
+                        width: 512,
+                        height: 512,
+                        recordName: studioId,
+                    });
+
+                    expect(result.success).toBe(true);
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: studioAccount.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 512n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: callerAccount.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+
+                    const studioMetrics =
+                        await store.getSubscriptionAiImageMetrics({
+                            studioId,
+                        });
+                    const callerMetrics =
+                        await store.getSubscriptionAiImageMetrics({
+                            ownerId: callerId,
+                        });
+
+                    expect(studioMetrics.totalSquarePixelsInCurrentPeriod).toBe(
                         512
                     );
                     expect(callerMetrics.totalSquarePixelsInCurrentPeriod).toBe(
