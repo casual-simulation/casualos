@@ -4343,6 +4343,8 @@ export class RecordsServer {
                     z.object({
                         model: z.string().nonempty().optional().nullable(),
                         messages: z.array(AI_CHAT_MESSAGE_SCHEMA).min(1),
+                        recordName:
+                            RECORD_NAME_VALIDATION.optional().nullable(),
                         instances:
                             INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                         temperature: z
@@ -4373,7 +4375,7 @@ export class RecordsServer {
                 )
                 .handler(
                     async (
-                        { model, messages, instances, ...options },
+                        { model, messages, instances, recordName, ...options },
                         context
                     ) => {
                         if (!this._aiController) {
@@ -4396,6 +4398,7 @@ export class RecordsServer {
                             ...options,
                             model,
                             messages: messages as AIChatMessage[],
+                            recordName,
                             userId: sessionKeyValidation.userId,
                             userSubscriptionTier:
                                 sessionKeyValidation.subscriptionTier,
@@ -4412,6 +4415,8 @@ export class RecordsServer {
                     z.object({
                         model: z.string().nonempty().optional().nullable(),
                         messages: z.array(AI_CHAT_MESSAGE_SCHEMA).min(1),
+                        recordName:
+                            RECORD_NAME_VALIDATION.optional().nullable(),
                         instances:
                             INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                         temperature: z
@@ -4440,34 +4445,40 @@ export class RecordsServer {
                             .nullable(),
                     })
                 )
-                .handler(async ({ model, messages, ...options }, context) => {
-                    if (!this._aiController) {
-                        return AI_NOT_SUPPORTED_RESULT;
-                    }
-
-                    const sessionKeyValidation = await this._validateSessionKey(
-                        context.sessionKey
-                    );
-                    if (sessionKeyValidation.success === false) {
-                        if (
-                            sessionKeyValidation.errorCode === 'no_session_key'
-                        ) {
-                            return NOT_LOGGED_IN_RESULT;
+                .handler(
+                    async (
+                        { model, messages, recordName, ...options },
+                        context
+                    ) => {
+                        if (!this._aiController) {
+                            return AI_NOT_SUPPORTED_RESULT;
                         }
-                        return sessionKeyValidation;
+
+                        const sessionKeyValidation =
+                            await this._validateSessionKey(context.sessionKey);
+                        if (sessionKeyValidation.success === false) {
+                            if (
+                                sessionKeyValidation.errorCode ===
+                                'no_session_key'
+                            ) {
+                                return NOT_LOGGED_IN_RESULT;
+                            }
+                            return sessionKeyValidation;
+                        }
+
+                        const result = this._aiController.chatStream({
+                            ...options,
+                            model,
+                            messages: messages as AIChatMessage[],
+                            recordName,
+                            userId: sessionKeyValidation.userId,
+                            userSubscriptionTier:
+                                sessionKeyValidation.subscriptionTier,
+                        });
+
+                        return result;
                     }
-
-                    const result = this._aiController.chatStream({
-                        ...options,
-                        model,
-                        messages: messages as AIChatMessage[],
-                        userId: sessionKeyValidation.userId,
-                        userSubscriptionTier:
-                            sessionKeyValidation.subscriptionTier,
-                    });
-
-                    return result;
-                }),
+                ),
 
             aiListChatModels: procedure()
                 .origins('api')
@@ -4506,6 +4517,8 @@ export class RecordsServer {
                 .inputs(
                     z.object({
                         prompt: z.string().nonempty().max(600),
+                        recordName:
+                            RECORD_NAME_VALIDATION.optional().nullable(),
                         negativePrompt: z
                             .string()
                             .nonempty()
@@ -4529,7 +4542,13 @@ export class RecordsServer {
                 )
                 .handler(
                     async (
-                        { prompt, negativePrompt, instances, blockadeLabs },
+                        {
+                            prompt,
+                            negativePrompt,
+                            instances,
+                            blockadeLabs,
+                            recordName,
+                        },
                         context
                     ) => {
                         if (!this._aiController) {
@@ -4552,6 +4571,7 @@ export class RecordsServer {
                             prompt,
                             negativePrompt,
                             blockadeLabs,
+                            recordName,
                             userId: sessionKeyValidation.userId,
                             userSubscriptionTier:
                                 sessionKeyValidation.subscriptionTier,
@@ -4618,6 +4638,8 @@ export class RecordsServer {
                                         : 'prompt must be a string.',
                             })
                             .nonempty('prompt must not be empty'),
+                        recordName:
+                            RECORD_NAME_VALIDATION.optional().nullable(),
                         model: z
                             .string({
                                 error: (issue) =>
@@ -4674,6 +4696,7 @@ export class RecordsServer {
                             clipGuidancePreset,
                             stylePreset,
                             instances,
+                            recordName,
                         },
                         context
                     ) => {
@@ -4696,6 +4719,7 @@ export class RecordsServer {
                         const result = await this._aiController.generateImage({
                             model,
                             prompt,
+                            recordName,
                             negativePrompt,
                             width,
                             height,
