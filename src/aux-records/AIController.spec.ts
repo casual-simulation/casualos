@@ -1822,6 +1822,7 @@ describe('AIController', () => {
         describe('record-based authorization', () => {
             const studioId = 'studio-chat-record';
             const otherUserId = 'other-chat-user';
+            const unauthorizedUserId = 'unauthorized-chat-user';
             beforeEach(async () => {
                 store.subscriptionConfiguration = buildSubscriptionConfig(
                     (config) =>
@@ -1868,6 +1869,14 @@ describe('AIController', () => {
                 await store.saveUser({
                     id: otherUserId,
                     email: 'other@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+
+                await store.saveUser({
+                    id: unauthorizedUserId,
+                    email: 'unauthorized@example.com',
                     phoneNumber: null,
                     allSessionRevokeTimeMs: null,
                     currentLoginRequestId: null,
@@ -2090,7 +2099,7 @@ describe('AIController', () => {
                         },
                     ],
                     temperature: 0.5,
-                    userId: otherUserId,
+                    userId: unauthorizedUserId,
                     userSubscriptionTier,
                     recordName: studioId,
                 });
@@ -2107,7 +2116,7 @@ describe('AIController', () => {
                         action: 'create',
                         resourceId: null,
                         recordName: studioId,
-                        subjectId: otherUserId,
+                        subjectId: unauthorizedUserId,
                         subjectType: 'user',
                     },
                 });
@@ -3868,6 +3877,7 @@ describe('AIController', () => {
         describe('record-based authorization', () => {
             const studioId = 'studio-chatstream-record';
             const otherUserId = 'other-chatstream-user';
+            const unauthorizedUserId = 'unauthorized-chatstream-user';
             beforeEach(async () => {
                 store.subscriptionConfiguration = buildSubscriptionConfig(
                     (config) =>
@@ -3914,6 +3924,14 @@ describe('AIController', () => {
                 await store.saveUser({
                     id: otherUserId,
                     email: 'other@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+
+                await store.saveUser({
+                    id: unauthorizedUserId,
+                    email: 'unauthorized@example.com',
                     phoneNumber: null,
                     allSessionRevokeTimeMs: null,
                     currentLoginRequestId: null,
@@ -4185,7 +4203,7 @@ describe('AIController', () => {
                             },
                         ],
                         temperature: 0.5,
-                        userId: otherUserId,
+                        userId: unauthorizedUserId,
                         userSubscriptionTier,
                         recordName: studioId,
                     })
@@ -4204,7 +4222,7 @@ describe('AIController', () => {
                             action: 'create',
                             resourceId: null,
                             recordName: studioId,
-                            subjectId: otherUserId,
+                            subjectId: unauthorizedUserId,
                             subjectType: 'user',
                         },
                     },
@@ -4212,11 +4230,11 @@ describe('AIController', () => {
                 });
 
                 const callerMetrics = await store.getSubscriptionAiChatMetrics({
-                    ownerId: otherUserId,
+                    ownerId: unauthorizedUserId,
                 });
 
                 expect(callerMetrics).toMatchObject({
-                    ownerId: otherUserId,
+                    ownerId: unauthorizedUserId,
                     totalTokensInCurrentPeriod: 0,
                 });
 
@@ -5345,6 +5363,7 @@ describe('AIController', () => {
         describe('record-based authorization', () => {
             const studioId = 'studio-skybox-record';
             const otherUserId = 'other-skybox-user';
+            const unauthorizedUserId = 'unauthorized-skybox-user';
             beforeEach(async () => {
                 store.subscriptionConfiguration = buildSubscriptionConfig(
                     (config) =>
@@ -5391,6 +5410,14 @@ describe('AIController', () => {
                 await store.saveUser({
                     id: otherUserId,
                     email: 'other@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+
+                await store.saveUser({
+                    id: unauthorizedUserId,
+                    email: 'unauthorized@example.com',
                     phoneNumber: null,
                     allSessionRevokeTimeMs: null,
                     currentLoginRequestId: null,
@@ -5555,7 +5582,7 @@ describe('AIController', () => {
 
                 const result = await controller.generateSkybox({
                     prompt: 'test',
-                    userId: otherUserId,
+                    userId: unauthorizedUserId,
                     userSubscriptionTier,
                     recordName: studioId,
                 });
@@ -5572,18 +5599,18 @@ describe('AIController', () => {
                         action: 'create',
                         resourceId: null,
                         recordName: studioId,
-                        subjectId: otherUserId,
+                        subjectId: unauthorizedUserId,
                         subjectType: 'user',
                     },
                 });
 
                 const callerMetrics =
                     await store.getSubscriptionAiSkyboxMetrics({
-                        ownerId: otherUserId,
+                        ownerId: unauthorizedUserId,
                     });
 
                 expect(callerMetrics).toMatchObject({
-                    ownerId: otherUserId,
+                    ownerId: unauthorizedUserId,
                     totalSkyboxesInCurrentPeriod: 0,
                 });
 
@@ -6881,6 +6908,7 @@ describe('AIController', () => {
         describe('record-based authorization', () => {
             const studioId = 'studio-image-record';
             const otherUserId = 'other-image-user';
+            const unauthorizedUserId = 'unauthorized-image-user';
             beforeEach(async () => {
                 store.subscriptionConfiguration = buildSubscriptionConfig(
                     (config) =>
@@ -6929,6 +6957,14 @@ describe('AIController', () => {
                 await store.saveUser({
                     id: otherUserId,
                     email: 'other@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+
+                await store.saveUser({
+                    id: unauthorizedUserId,
+                    email: 'unauthorized@example.com',
                     phoneNumber: null,
                     allSessionRevokeTimeMs: null,
                     currentLoginRequestId: null,
@@ -7123,7 +7159,7 @@ describe('AIController', () => {
 
                 const result = await controller.generateImage({
                     prompt: 'test',
-                    userId: otherUserId,
+                    userId: unauthorizedUserId,
                     userSubscriptionTier,
                     width: 512,
                     height: 512,
@@ -7142,7 +7178,7 @@ describe('AIController', () => {
                         action: 'create',
                         resourceId: null,
                         recordName: studioId,
-                        subjectId: otherUserId,
+                        subjectId: unauthorizedUserId,
                         subjectType: 'user',
                     },
                 });
