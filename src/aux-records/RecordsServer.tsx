@@ -8202,11 +8202,12 @@ export class RecordsServer {
                     'fileByteLength is required and must be a number.',
             } as const;
         }
-        if (!fileMimeType || typeof fileMimeType !== 'string') {
+        if (!fileMimeType && !fileExtension) {
             return {
                 success: false,
                 errorCode: 'unacceptable_request',
-                errorMessage: 'fileMimeType is required and must be a string.',
+                errorMessage:
+                    'Either fileMimeType or fileExtension is required.',
             } as const;
         }
         if (!!fileDescription && typeof fileDescription !== 'string') {
