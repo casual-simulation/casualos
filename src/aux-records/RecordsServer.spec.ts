@@ -1090,6 +1090,34 @@ describe('RecordsServer', () => {
 
             expect(body).toMatchSnapshot();
         });
+
+        it('should include the recordName input schema for aiListChatModels', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet('/api/v2/procedures', defaultHeaders)
+            );
+
+            const body = await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    procedures: expect.any(Object),
+                },
+                headers: corsHeaders(defaultHeaders.origin),
+            });
+
+            const chatModelsProcedure = body.procedures.find(
+                (p: any) => p.name === 'aiListChatModels'
+            );
+
+            expect(chatModelsProcedure).toBeTruthy();
+            expect(chatModelsProcedure.inputs.schema).toEqual({
+                recordName: {
+                    type: 'string',
+                    optional: true,
+                    nullable: true,
+                },
+            });
+        });
     });
 
     describe('GET /api/{userId}/metadata', () => {
@@ -24487,6 +24515,17 @@ describe('RecordsServer', () => {
                     recordName: 'record-name',
                 })
             );
+        });
+
+        it('should omit recordName when not provided', async () => {
+            const listModelsSpy = jest.spyOn(aiController, 'listChatModels');
+
+            await server.handleHttpRequest(
+                httpGet('/api/v2/ai/chat/models', apiHeaders)
+            );
+
+            expect(listModelsSpy).toHaveBeenCalled();
+            expect(listModelsSpy.mock.calls[0][0].recordName).toBeUndefined();
         });
 
         it('should return not_authorized if the user cannot access the recordName', async () => {

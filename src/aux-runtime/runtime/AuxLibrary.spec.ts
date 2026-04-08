@@ -3381,6 +3381,15 @@ describe('AuxLibrary', () => {
                 expect(context.actions).toEqual([expected]);
             });
 
+            it('should not include recordName when an empty options object is provided', () => {
+                const promise: any = library.api.ai.listChatModels({});
+
+                const expected = aiListChatModels({}, context.tasks.size);
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
             it('should return the items from the result', async () => {
                 let result: any;
                 let error: any;
