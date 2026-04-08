@@ -162,7 +162,7 @@ export const TypeScriptVisistorKeys: { [nodeType: string]: string[] } = {
     TSTypeOperator: [],
     TSMethodSignature: [],
     TSPropertySignature: [],
-    TSAsExpression: [],
+    TSAsExpression: ['expression'],
     TSSatisfiesExpression: [],
     TSParameterProperty: ['parameter'],
 
@@ -664,7 +664,7 @@ export class Transpiler {
                 } else if (n.type === 'TSNonNullExpression') {
                     this._removeNonNullExpression(n, doc, text);
                 } else if (n.type === 'TSAsExpression') {
-                    this._removeAsExpression(n, doc, text);
+                    this._removeAsExpression(n, doc, text, metadata);
                 } else if (n.type === 'Identifier' && n.optional === true) {
                     this._removeOptionalFromIdentifier(n, doc, text);
                 } else if (n.type === 'TSSatisfiesExpression') {
@@ -1516,7 +1516,12 @@ export class Transpiler {
         text.delete(indexOfOverride, override.length);
     }
 
-    private _removeAsExpression(node: any, doc: Doc, text: Text): any {
+    private _removeAsExpression(
+        node: any,
+        doc: Doc,
+        text: Text,
+        metadata: any
+    ): any {
         doc.clientID += 1;
         const version = { '0': getClock(doc, 0) };
 

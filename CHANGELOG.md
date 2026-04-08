@@ -2,7 +2,7 @@
 
 ## V4.2.3
 
-#### Date: 4/7/2026
+#### Date: 4/8/2026
 
 ### :rocket: Features
 
@@ -28,6 +28,7 @@
 -   Fixed an issue where custom domain web manifests wouldn't be retrieved correctly.
 -   Fixed an issue where `DELETE` API methods didn't support cross-origin requests.
 -   Fixed an issue where getting a studio when Hume has been configured with billing fees would fail.
+-   Fixed an issue where nested TypeScript "as" expressions weren't supported.
 
 ## V4.2.2
 
