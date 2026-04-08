@@ -512,6 +512,7 @@ import type {
 } from '@casual-simulation/aux-records';
 import SeedRandom from 'seedrandom';
 import { DateTime } from 'luxon';
+import TWEEN from '@tweenjs/tween.js';
 import * as hooks from 'preact/hooks';
 import { render, createRef, createContext } from 'preact';
 import * as compat from 'preact/compat';
@@ -6660,7 +6661,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             easing: 'quadratic',
             ...(options ?? {}),
         };
-        let action: AsyncActions;
+        let action: RuntimeAsyncActions;
         if (botOrPosition === null) {
             action = cancelAnimation(task.taskId);
         } else if (botOrPosition === undefined) {
@@ -15636,7 +15637,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 })
                 .duration(options.duration * 1000)
                 .easing(easing)
-                .onUpdate((obj, elapsed) => {
+                .onUpdate((obj: unknown, elapsed: number) => {
+                    void obj;
                     if (
                         options.tagMaskSpace === false ||
                         options.tagMaskSpace === getBotSpace(bot)
