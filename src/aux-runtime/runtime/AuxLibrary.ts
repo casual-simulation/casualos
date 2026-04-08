@@ -33,7 +33,6 @@ import type {
     PortalType,
     ShowInputOptions,
     LocalFormAnimationAction,
-    AsyncActions,
     ShareOptions,
     Easing,
     BotAnchorPoint,
@@ -318,6 +317,7 @@ import type {
     StoreItem,
     PurchasableItemReference,
     InstallPackageOptions,
+    AIListChatModelsOptions,
 } from './RecordsEvents';
 import {
     aiChat,
@@ -457,7 +457,6 @@ import {
 } from '@casual-simulation/aux-common/bots';
 import { Vector3 as ThreeVector3, Plane, Ray } from '@casual-simulation/three';
 import mime from 'mime';
-import TWEEN from '@tweenjs/tween.js';
 import './PerformanceNowPolyfill';
 import '@casual-simulation/aux-common/BlobPolyfill';
 import type { AuxDevice } from './AuxDevice';
@@ -5774,7 +5773,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @docname ai.listChatModels
      */
     function listChatModels(
-        options?: RecordActionOptions & { recordName?: string | null }
+        options?: AIListChatModelsOptions
     ): Promise<ListedChatModel[]> {
         const task = context.createTask();
         const action = aiListChatModels(options, task.taskId);

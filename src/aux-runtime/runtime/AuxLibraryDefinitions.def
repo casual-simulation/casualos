@@ -11313,7 +11313,24 @@ export interface AIGenerateImageOptions {
      */
     recordName?: string | null;
 
-) in pixels.
+    /**
+     * The prompt that should be used to generate the image.
+     */
+    prompt: string;
+    /**
+     * The negative prompt that should be used to guide what should not be included in the image.
+     */
+    negativePrompt?: string;
+    /**
+     * The model that should be used to generate the image.
+     */
+    model?: string;
+    /**
+     * The width of the generated image(s) in pixels.
+     */
+    width?: number;
+    /**
+     * The height of the generated image(s) in pixels.
      */
     height?: number;
 

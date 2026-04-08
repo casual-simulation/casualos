@@ -8229,6 +8229,7 @@ export class RecordsServer {
             fileSha256Hex,
             fileByteLength,
             fileMimeType,
+            fileExtension,
             fileDescription,
             headers: {},
             markers,

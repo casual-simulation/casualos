@@ -3707,9 +3707,100 @@ describe('AuxLibrary', () => {
                     recordName: 'myRecord',
                 });
 
-                const expected = aiGenerateImage({
+                const expected = aiGenerateImage(
+                    {
+                        prompt: 'cartoon clouds',
+                        recordName: 'myRecord',
+                    },
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should resolve with the data that was generated', async () => {
+                let result: string | null = null;
+                const promise: any =
+                    library.api.ai.generateImage('cartoon clouds');
+
+                promise.then((r: any) => (result = r));
+
+                const expected = aiGenerateImage(
+                    {
+                        prompt: 'cartoon clouds',
+                    },
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                context.resolveTask(
+                    expected.taskId,
+                    {
+                        success: true,
+                        images: [
+                            {
+                                base64: 'base64',
+                                mimeType: 'image/png',
+                            },
+                        ],
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(result).toBe('data:image/png;base64,base64');
+            });
+
+            it('should resolve with the resulting object', async () => {
+                let result: any = null;
+                const promise: any = library.api.ai.generateImage({
                     prompt: 'cartoon clouds',
-                    recordName: 'myRecord',
+                });
+
+                promise.then((r: any) => (result = r));
+
+                const expected = aiGenerateImage(
+                    {
+                        prompt: 'cartoon clouds',
+                    },
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                context.resolveTask(
+                    expected.taskId,
+                    {
+                        success: true,
+                        images: [
+                            {
+                                base64: 'base64',
+                                mimeType: 'image/jpeg',
+                            },
+                        ],
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(result).toEqual({
+                    success: true,
+                    images: [
+                        {
+                            base64: 'base64',
+                            url: 'data:image/jpeg;base64,base64',
+                            mimeType: 'image/jpeg',
+                        },
+                    ],
                 });
             });
         });
@@ -23499,33 +23590,6 @@ describe('AuxLibrary', () => {
     });
 });
 
-describe('createInterpretableFunction()', () => {
-    it('should use the given function as the interpretable function', () => {
-        function abc() {}
-
-        let result = createInterpretableFunction(abc as any);
-
-        expect(typeof result[INTERPRETABLE_FUNCTION]).toBe('function');
-        expect(result === abc).toBe(false);
-        expect(isInterpretableFunction(result)).toBe(true);
-        expect(isInterpretableFunction(abc)).toBe(false);
-        expect(getInterpretableFunction(result) === abc).toBe(true);
-    });
-});
-
-describe('tagAsInterpretableFunction()', () => {
-    it('should use the given functions as the interpretable and normal functions', () => {
-        function abc() {}
-        function def() {}
-
-        let result = tagAsInterpretableFunction(abc as any, def as any);
-
-        expect(result[INTERPRETABLE_FUNCTION] === abc).toBe(true);
-        expect(result === def).toBe(true);
-        expect(isInterpretableFunction(def)).toBe(true);
-        expect(getInterpretableFunction(def) === abc).toBe(true);
-    });
-});
 describe('createInterpretableFunction()', () => {
     it('should use the given function as the interpretable function', () => {
         function abc() {}
