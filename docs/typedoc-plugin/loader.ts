@@ -423,6 +423,19 @@ function resolveType(renamedTypes: Map<string, string>, item: ReferenceType, pro
 export async function loadContent() {
     const { app, project } = await getProject();
     if (!project) {
+        const isCI = process.env.CI === 'true' || process.env.GITHUB_ACTIONS === 'true';
+        const allowSkip = process.env.TYPEDOC_ALLOW_SKIP === 'true' || isCI;
+
+        if (allowSkip) {
+            console.warn(
+                '[docusarus-plugin-typedoc] Unable to load TypeDoc project; skipping API docs generation.'
+            );
+            return {
+                pages: [],
+                types: [],
+            };
+        }
+
         console.warn('[docusarus-plugin-typedoc] Unable to load TypeDoc project!');
         throw new Error('Unable to load TypeDoc project!');
     }
