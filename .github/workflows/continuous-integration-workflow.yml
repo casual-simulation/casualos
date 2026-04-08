@@ -106,7 +106,6 @@ jobs:
                   npm run build
               env:
                   CI: true
-                  TYPEDOC_ALLOW_SKIP: true
     lint:
         name: Lint
         strategy:
