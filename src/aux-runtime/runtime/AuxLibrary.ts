@@ -9649,17 +9649,18 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         options: GetAccountBalancesActionOptions = {}
     ): Promise<GenericResult<JSONAccountBalance, SimpleError>> {
         const task = context.createTask();
+        const { userId, studioId, contractId, ...rest } = options;
         const event = recordsCallProcedure(
             {
                 getBalances: {
                     input: {
-                        userId: options.userId,
-                        studioId: options.studioId,
-                        contractId: options.contractId,
+                        userId,
+                        studioId,
+                        contractId,
                     },
                 },
             },
-            options,
+            rest,
             task.taskId
         );
         return addAsyncAction(task, event);
