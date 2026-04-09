@@ -23586,6 +23586,66 @@ describe('AuxLibrary', () => {
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
+
+            it('should support userId option', async () => {
+                const action: any = library.api.xp.getAccountBalances({
+                    endpoint: 'aux-test',
+                    userId: 'user123',
+                });
+                const expected = recordsCallProcedure(
+                    {
+                        getBalances: {
+                            input: {
+                                userId: 'user123',
+                            },
+                        },
+                    },
+                    { endpoint: 'aux-test' },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support studioId option', async () => {
+                const action: any = library.api.xp.getAccountBalances({
+                    endpoint: 'aux-test',
+                    studioId: 'studio456',
+                });
+                const expected = recordsCallProcedure(
+                    {
+                        getBalances: {
+                            input: {
+                                studioId: 'studio456',
+                            },
+                        },
+                    },
+                    { endpoint: 'aux-test' },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support contractId option', async () => {
+                const action: any = library.api.xp.getAccountBalances({
+                    endpoint: 'aux-test',
+                    contractId: 'contract789',
+                });
+                const expected = recordsCallProcedure(
+                    {
+                        getBalances: {
+                            input: {
+                                contractId: 'contract789',
+                            },
+                        },
+                    },
+                    { endpoint: 'aux-test' },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
         });
     });
 });

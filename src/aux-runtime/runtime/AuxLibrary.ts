@@ -317,6 +317,7 @@ import type {
     StoreItem,
     PurchasableItemReference,
     InstallPackageOptions,
+    GetAccountBalancesActionOptions,
     AIListChatModelsOptions,
 } from './RecordsEvents';
 import {
@@ -9636,7 +9637,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Attempts to retrieve the account balances for the user's account.
+     * Attempts to retrieve the account balances for the account.
      *
      * @param options The options for the request.
      * @returns A promise that resolves with the account balances.
@@ -9645,16 +9646,21 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @docname xp.getAccountBalances
      */
     function xpGetAccountBalances(
-        options: RecordActionOptions = {}
+        options: GetAccountBalancesActionOptions = {}
     ): Promise<GenericResult<JSONAccountBalance, SimpleError>> {
         const task = context.createTask();
+        const { userId, studioId, contractId, ...rest } = options;
         const event = recordsCallProcedure(
             {
                 getBalances: {
-                    input: {},
+                    input: {
+                        userId,
+                        studioId,
+                        contractId,
+                    },
                 },
             },
-            options,
+            rest,
             task.taskId
         );
         return addAsyncAction(task, event);
