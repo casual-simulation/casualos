@@ -9642,6 +9642,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param options The options for the request.
      * @returns A promise that resolves with the account balances.
      *
+     * @example Get the current user's account balances and log them to the console.
+     * const balancesResult = await xp.getAccountBalances();
+     * console.log(balancesResult);
+     *
+     * @example Get the account balances for a studio
+     * const balances = await xp.getAccountBalances({
+     *  studioId: "myStudioId"
+     * });
+     *
+     * @example Get the account balances for a contract
+     * const balances = await xp.getAccountBalances({
+     *  contractId: "myContractId"
+     * });
+     *
      * @dochash actions/xp
      * @docname xp.getAccountBalances
      */
