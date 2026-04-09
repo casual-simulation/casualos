@@ -4839,6 +4839,316 @@ describe('AIController', () => {
             );
         });
 
+        it('should use studio subscription features when recordName is a studio record', async () => {
+            const studioId = 'studio-list-chat-models';
+            const memberId = 'studio-member';
+
+            store.subscriptionConfiguration = buildSubscriptionConfig(
+                (config) =>
+                    config
+                        .addSubscription('sub1', (sub) =>
+                            sub
+                                .withTier('tier1')
+                                .withAllDefaultFeatures()
+                                .withAI()
+                                .withAIChat({
+                                    allowed: true,
+                                    allowedModels: ['test-model2'],
+                                })
+                        )
+                        .withUserDefaultFeatures((features) =>
+                            features.withAIChat({
+                                allowed: false,
+                            })
+                        )
+            );
+
+            await store.saveUser({
+                id: userId,
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await store.saveUser({
+                id: memberId,
+                email: 'member@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await store.createStudioForUser(
+                {
+                    id: studioId,
+                    displayName: 'Studio',
+                    stripeCustomerId: null,
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                    comId: null,
+                },
+                userId
+            );
+
+            await store.addStudioAssignment({
+                studioId,
+                userId: memberId,
+                isPrimaryContact: false,
+                role: 'member',
+            });
+
+            const result = await controller.listChatModels({
+                userId: memberId,
+                userSubscriptionTier,
+                userRole: 'none',
+                recordName: studioId,
+            });
+
+            expect(result).toEqual(
+                success([
+                    {
+                        name: 'test-model2',
+                        provider: 'provider1',
+                        isDefault: false,
+                    },
+                ])
+            );
+        });
+
+        it('should use the record owner subscription for user records', async () => {
+            const otherUserId = 'list-chat-models-other-user';
+
+            store.subscriptionConfiguration = buildSubscriptionConfig(
+                (config) =>
+                    config
+                        .addSubscription('sub1', (sub) =>
+                            sub
+                                .withTier('tier1')
+                                .withAllDefaultFeatures()
+                                .withAI()
+                                .withAIChat({
+                                    allowed: true,
+                                    allowedModels: ['test-model1'],
+                                })
+                        )
+                        .withUserDefaultFeatures((features) =>
+                            features.withAIChat({
+                                allowed: false,
+                            })
+                        )
+            );
+
+            await store.saveUser({
+                id: userId,
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            await store.saveUser({
+                id: otherUserId,
+                email: 'other@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                subscriptionId: null,
+                subscriptionStatus: null,
+            });
+
+            const permissionResult = await policies.grantMarkerPermission({
+                recordKeyOrRecordName: userId,
+                userId,
+                marker: PUBLIC_READ_MARKER,
+                permission: {
+                    resourceKind: 'ai.chat',
+                    action: 'create',
+                    expireTimeMs: null,
+                    options: {},
+                    subjectType: 'user',
+                    subjectId: otherUserId,
+                    marker: PUBLIC_READ_MARKER,
+                },
+            });
+
+            expect(permissionResult).toMatchObject({ success: true });
+
+            const result = await controller.listChatModels({
+                userId: otherUserId,
+                userSubscriptionTier,
+                userRole: 'none',
+                recordName: userId,
+            });
+
+            expect(result).toEqual(
+                success([
+                    {
+                        name: 'test-model1',
+                        provider: 'provider1',
+                        isDefault: false,
+                    },
+                ])
+            );
+        });
+
+        it('should return not_authorized if the user is not authorized for the record', async () => {
+            const studioId = 'studio-list-chat-models-unauthorized';
+            const unauthorizedUserId = 'unauthorized-user';
+
+            await store.saveUser({
+                id: userId,
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await store.saveUser({
+                id: unauthorizedUserId,
+                email: 'unauthorized@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await store.createStudioForUser(
+                {
+                    id: studioId,
+                    displayName: 'Studio',
+                    stripeCustomerId: null,
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                    comId: null,
+                },
+                userId
+            );
+
+            const result = await controller.listChatModels({
+                userId: unauthorizedUserId,
+                userSubscriptionTier,
+                userRole: 'none',
+                recordName: studioId,
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    recommendedEntitlement: undefined,
+                    reason: {
+                        type: 'missing_permission',
+                        resourceKind: 'ai.chat',
+                        action: 'create',
+                        resourceId: null,
+                        recordName: studioId,
+                        subjectId: unauthorizedUserId,
+                        subjectType: 'user',
+                    },
+                })
+            );
+        });
+
+        it('should return not_supported if recordName is provided and policies are unavailable', async () => {
+            controller = new AIController({
+                chat: {
+                    interfaces: {
+                        provider1: chatInterface,
+                        provider2: chatInterface2,
+                    },
+                    options: {
+                        defaultModel: 'default-model',
+                        defaultModelProvider: 'provider1',
+                        allowedChatModels: [
+                            {
+                                provider: 'provider1',
+                                model: 'test-model1',
+                            },
+                        ],
+                        allowedChatSubscriptionTiers: ['test-tier'],
+                        tokenModifierRatio: {},
+                    },
+                },
+                generateSkybox: null,
+                images: null,
+                hume: null,
+                sloyd: null,
+                openai: null,
+                metrics: store,
+                config: store,
+                policies: null,
+                policyController: null,
+                records: store,
+            });
+
+            const result = await controller.listChatModels({
+                userId,
+                userSubscriptionTier,
+                userRole: 'none',
+                recordName: 'some-record',
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'recordName cannot be specified when custom permissions are not supported.',
+                })
+            );
+        });
+
+        it('should still work without recordName when policies are unavailable', async () => {
+            controller = new AIController({
+                chat: {
+                    interfaces: {
+                        provider1: chatInterface,
+                        provider2: chatInterface2,
+                    },
+                    options: {
+                        defaultModel: 'default-model',
+                        defaultModelProvider: 'provider1',
+                        allowedChatModels: [
+                            {
+                                provider: 'provider1',
+                                model: 'test-model1',
+                            },
+                        ],
+                        allowedChatSubscriptionTiers: ['test-tier'],
+                        tokenModifierRatio: {},
+                    },
+                },
+                generateSkybox: null,
+                images: null,
+                hume: null,
+                sloyd: null,
+                openai: null,
+                metrics: store,
+                config: store,
+                policies: null,
+                policyController: null,
+                records: store,
+            });
+
+            const result = await controller.listChatModels({
+                userId,
+                userSubscriptionTier,
+                userRole: 'superUser',
+            });
+
+            expect(result).toEqual(
+                success([
+                    {
+                        name: 'test-model1',
+                        provider: 'provider1',
+                        isDefault: false,
+                    },
+                ])
+            );
+        });
+
         it('should return not_supported if no chat configuration is provided', async () => {
             controller = new AIController({
                 chat: null,

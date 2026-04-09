@@ -202,6 +202,20 @@ export interface AIChatOptions extends RecordActionOptions {
 }
 
 /**
+ * Defines options for {@link ai.listChatModels}.
+ *
+ * @dochash types/ai
+ * @docname AIListChatModelsOptions
+ */
+export interface AIListChatModelsOptions extends RecordActionOptions {
+    /**
+     * The name of the record that should be used.
+     * If omitted, then the user's record is used.
+     */
+    recordName?: string | null;
+}
+
+/**
  * An event that is used to generate a skybox using AI.
  *
  * @dochash types/ai
@@ -1850,13 +1864,22 @@ export function aiChatStream(
  * @param taskId The ID of the async task.
  */
 export function aiListChatModels(
-    options?: RecordActionOptions,
+    options?: AIListChatModelsOptions,
     taskId?: number | string
 ): RecordsCallProcedureAction {
+    const hasRecordName = Object.prototype.hasOwnProperty.call(
+        options ?? {},
+        'recordName'
+    );
+
     return recordsCallProcedure(
         {
             aiListChatModels: {
-                input: {},
+                input: hasRecordName
+                    ? {
+                          recordName: options.recordName,
+                      }
+                    : {},
             },
         },
         options ?? {},

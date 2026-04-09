@@ -4483,8 +4483,13 @@ export class RecordsServer {
             aiListChatModels: procedure()
                 .origins('api')
                 .http('GET', '/api/v2/ai/chat/models')
-                .inputs(z.object({}))
-                .handler(async (_, context) => {
+                .inputs(
+                    z.object({
+                        recordName:
+                            RECORD_NAME_VALIDATION.optional().nullable(),
+                    })
+                )
+                .handler(async ({ recordName }, context) => {
                     if (!this._aiController) {
                         return AI_NOT_SUPPORTED_RESULT;
                     }
@@ -4506,6 +4511,7 @@ export class RecordsServer {
                         userSubscriptionTier:
                             sessionKeyValidation.subscriptionTier,
                         userRole: sessionKeyValidation.role,
+                        recordName,
                     });
 
                     return genericResult(result);
@@ -8202,20 +8208,6 @@ export class RecordsServer {
                 errorCode: 'unacceptable_request',
                 errorMessage:
                     'Either fileMimeType or fileExtension is required.',
-            } as const;
-        }
-        if (!!fileMimeType && typeof fileMimeType !== 'string') {
-            return {
-                success: false,
-                errorCode: 'unacceptable_request',
-                errorMessage: 'fileMimeType must be a string.',
-            } as const;
-        }
-        if (!!fileExtension && typeof fileExtension !== 'string') {
-            return {
-                success: false,
-                errorCode: 'unacceptable_request',
-                errorMessage: 'fileExtension must be a string.',
             } as const;
         }
         if (!!fileDescription && typeof fileDescription !== 'string') {
