@@ -33,7 +33,6 @@ import type {
     PortalType,
     ShowInputOptions,
     LocalFormAnimationAction,
-    AsyncActions,
     ShareOptions,
     Easing,
     BotAnchorPoint,
@@ -318,6 +317,7 @@ import type {
     StoreItem,
     PurchasableItemReference,
     InstallPackageOptions,
+    AIListChatModelsOptions,
 } from './RecordsEvents';
 import {
     aiChat,
@@ -457,7 +457,6 @@ import {
 } from '@casual-simulation/aux-common/bots';
 import { Vector3 as ThreeVector3, Plane, Ray } from '@casual-simulation/three';
 import mime from 'mime';
-import TWEEN from '@tweenjs/tween.js';
 import './PerformanceNowPolyfill';
 import '@casual-simulation/aux-common/BlobPolyfill';
 import type { AuxDevice } from './AuxDevice';
@@ -513,6 +512,7 @@ import type {
 } from '@casual-simulation/aux-records';
 import SeedRandom from 'seedrandom';
 import { DateTime } from 'luxon';
+import TWEEN from '@tweenjs/tween.js';
 import * as hooks from 'preact/hooks';
 import { render, createRef, createContext } from 'preact';
 import * as compat from 'preact/compat';
@@ -5774,7 +5774,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @docname ai.listChatModels
      */
     function listChatModels(
-        options?: RecordActionOptions
+        options?: AIListChatModelsOptions
     ): Promise<ListedChatModel[]> {
         const task = context.createTask();
         const action = aiListChatModels(options, task.taskId);
@@ -6661,7 +6661,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             easing: 'quadratic',
             ...(options ?? {}),
         };
-        let action: AsyncActions;
+        let action: RuntimeAsyncActions;
         if (botOrPosition === null) {
             action = cancelAnimation(task.taskId);
         } else if (botOrPosition === undefined) {
@@ -15637,7 +15637,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 })
                 .duration(options.duration * 1000)
                 .easing(easing)
-                .onUpdate((obj, elapsed) => {
+                .onUpdate((obj: unknown, elapsed: number) => {
+                    void obj;
                     if (
                         options.tagMaskSpace === false ||
                         options.tagMaskSpace === getBotSpace(bot)
