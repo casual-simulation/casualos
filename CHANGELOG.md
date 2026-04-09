@@ -20,6 +20,7 @@
     -   `remoteClients` is an observable that you can subscribe to to get notified whenever another session (e.g. tab) connects to the document.
 -   Added `recordName` support to AI chat, streaming chat, image generation, and skybox generation requests so record-owned subscriptions can be used for authorization, billing, and metrics.
 -   Added the `ai.chat`, `ai.image`, and `ai.skybox` policy resource kinds with `create` permissions.
+-   Improved `xp.getAccountBalances(options?)` to accept one of `userId`, `studioId`, or `contractId` in the `options` parameter object.
 
 ### :bug: Bug Fixes
 
