@@ -473,6 +473,29 @@ export interface RecordActionOptions {
 }
 
 /**
+ * Defines an interface that represents the options for getting account balances.
+ *
+ * @dochash types/records/extra
+ * @docname GetBalancesActionOptions
+ */
+export interface GetAccountBalancesActionOptions extends RecordActionOptions {
+    /**
+     * The ID of the user whose balances should be retrieved.
+     */
+    userId?: string;
+
+    /**
+     * The ID of the studio whose balances should be retrieved.
+     */
+    studioId?: string;
+
+    /**
+     * The ID of the contract whose balances should be retrieved.
+     */
+    contractId?: string;
+}
+
+/**
  * Defines an interface that represents the options for installing a package.
  *
  * @dochash types/records/extra
