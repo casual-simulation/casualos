@@ -56,9 +56,30 @@ export const FINANCIAL_JOB_PERIODIC_BILLING_SCHEMA = z.object({
     nowMs: z.number().optional(),
 });
 
+export const FINANCIAL_JOB_AUTOMATED_SWEEP_SCHEMA = z.object({
+    type: z.literal('financial-automated-sweep'),
+
+    sweeps: z
+        .array(
+            z.object({
+                currency: z.enum(['credits', 'usd']),
+                debitAccountId: z.coerce
+                    .bigint()
+                    .describe('The account to debit.'),
+                creditAccountId: z.coerce
+                    .bigint()
+                    .describe('The account to credit.'),
+            })
+        )
+        .describe(
+            'The list of automated sweeps that should be performed. Each sweep is performed in sequence and in a single transaction, so transfers can depend on each other (e.g. sweeping all from account A to B, then sweeping all from B to C).'
+        ),
+});
+
 export const FINANCIAL_JOB_SCHEMA = z.discriminatedUnion('type', [
     FINANCIAL_JOB_REVENUE_CREDIT_SWEEP_SCHEMA,
     FINANCIAL_JOB_PERIODIC_BILLING_SCHEMA,
+    FINANCIAL_JOB_AUTOMATED_SWEEP_SCHEMA,
 ]);
 
 export type FinancialJob = z.infer<typeof FINANCIAL_JOB_SCHEMA>;
