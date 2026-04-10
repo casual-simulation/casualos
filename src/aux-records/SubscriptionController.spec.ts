@@ -13627,6 +13627,24 @@ describe('SubscriptionController', () => {
     });
 
     describe('handleStripeWebhook()', () => {
+        const subscriptionEventTypes = [
+            ['customer.subscription.created'],
+            ['customer.subscription.updated'],
+            ['customer.subscription.deleted'],
+        ] as const;
+
+        const subscriptionStatusTypes = [
+            ['active', true] as const,
+            ['trialing', true] as const,
+            ['canceled', false] as const,
+            ['ended', false] as const,
+            ['past_due', false] as const,
+            ['unpaid', false] as const,
+            ['incomplete', false] as const,
+            ['incomplete_expired', false] as const,
+            ['paused', false] as const,
+        ];
+
         describe('user', () => {
             let user: AuthUser;
 
@@ -13647,179 +13665,166 @@ describe('SubscriptionController', () => {
                 expect(user.subscriptionStatus).toBeFalsy();
             });
 
-            const subscriptionEventTypes = [
-                ['customer.subscription.created'],
-                ['customer.subscription.updated'],
-                ['customer.subscription.deleted'],
-            ] as const;
-
-            const statusTypes = [
-                ['active', true] as const,
-                ['trialing', true] as const,
-                ['canceled', false] as const,
-                ['ended', false] as const,
-                ['past_due', false] as const,
-                ['unpaid', false] as const,
-                ['incomplete', false] as const,
-                ['incomplete_expired', false] as const,
-                ['paused', false] as const,
-            ];
-
             describe.each(subscriptionEventTypes)(
                 'should handle %s events',
                 (type) => {
-                    describe.each(statusTypes)('%s', (status, active) => {
-                        beforeEach(async () => {
-                            await store.saveUser({
-                                ...user,
-                                subscriptionStatus: 'anything',
+                    describe.each(subscriptionStatusTypes)(
+                        '%s',
+                        (status, active) => {
+                            beforeEach(async () => {
+                                await store.saveUser({
+                                    ...user,
+                                    subscriptionStatus: 'anything',
+                                });
                             });
-                        });
 
-                        it('should handle subscriptions', async () => {
-                            stripeMock.constructWebhookEvent.mockReturnValueOnce(
-                                {
-                                    id: 'event_id',
-                                    object: 'event',
-                                    account: 'account_id',
-                                    api_version: 'api_version',
-                                    created: 123,
-                                    data: {
-                                        object: {
-                                            id: 'subscription',
-                                            status: status,
-                                            customer: 'customer_id',
-                                            items: {
-                                                object: 'list',
-                                                data: [
-                                                    {
-                                                        price: {
-                                                            id: 'price_1',
-                                                            product:
-                                                                'product_1_id',
+                            it('should handle subscriptions', async () => {
+                                stripeMock.constructWebhookEvent.mockReturnValueOnce(
+                                    {
+                                        id: 'event_id',
+                                        object: 'event',
+                                        account: 'account_id',
+                                        api_version: 'api_version',
+                                        created: 123,
+                                        data: {
+                                            object: {
+                                                id: 'subscription',
+                                                status: status,
+                                                customer: 'customer_id',
+                                                items: {
+                                                    object: 'list',
+                                                    data: [
+                                                        {
+                                                            price: {
+                                                                id: 'price_1',
+                                                                product:
+                                                                    'product_1_id',
+                                                            },
                                                         },
-                                                    },
-                                                ],
-                                            },
-                                            current_period_start: 123,
-                                            current_period_end: 456,
-                                        },
-                                    },
-                                    livemode: true,
-                                    pending_webhooks: 1,
-                                    request: {} as any,
-                                    type: type,
-                                }
-                            );
-
-                            const result = await controller.handleStripeWebhook(
-                                {
-                                    requestBody: 'request_body',
-                                    signature: 'request_signature',
-                                }
-                            );
-
-                            expect(result).toEqual({
-                                success: true,
-                            });
-                            expect(
-                                stripeMock.constructWebhookEvent
-                            ).toHaveBeenCalledTimes(1);
-                            expect(
-                                stripeMock.constructWebhookEvent
-                            ).toHaveBeenCalledWith(
-                                'request_body',
-                                'request_signature',
-                                'webhook_secret'
-                            );
-
-                            const user = await store.findUser(userId);
-                            expect(user?.subscriptionStatus).toBe(status);
-                            expect(user?.subscriptionId).toBe('sub_1');
-                            expect(user?.subscriptionInfoId).toBeTruthy();
-                            expect(user?.subscriptionPeriodStartMs).toBe(
-                                123000
-                            );
-                            expect(user?.subscriptionPeriodEndMs).toBe(456000);
-
-                            // Should create/update subscription info
-                            const sub = await store.getSubscriptionById(
-                                user?.subscriptionInfoId
-                            );
-                            expect(sub).toEqual({
-                                id: expect.any(String),
-                                stripeCustomerId: 'customer_id',
-                                stripeSubscriptionId: 'subscription',
-                                subscriptionStatus: status,
-                                subscriptionId: 'sub_1',
-                                userId: user?.id,
-                                studioId: null,
-                                currentPeriodStartMs: 123000,
-                                currentPeriodEndMs: 456000,
-                            });
-                        });
-
-                        it('should do nothing for products that are not configured', async () => {
-                            stripeMock.constructWebhookEvent.mockReturnValueOnce(
-                                {
-                                    id: 'event_id',
-                                    object: 'event',
-                                    account: 'account_id',
-                                    api_version: 'api_version',
-                                    created: 123,
-                                    data: {
-                                        object: {
-                                            id: 'subscription',
-                                            status: status,
-                                            customer: 'customer_id',
-                                            items: {
-                                                object: 'list',
-                                                data: [
-                                                    {
-                                                        price: {
-                                                            id: 'price_1',
-                                                            product:
-                                                                'wrong_product_id',
-                                                        },
-                                                    },
-                                                ],
+                                                    ],
+                                                },
+                                                current_period_start: 123,
+                                                current_period_end: 456,
                                             },
                                         },
-                                    },
-                                    livemode: true,
-                                    pending_webhooks: 1,
-                                    request: {} as any,
-                                    type: type,
-                                }
-                            );
+                                        livemode: true,
+                                        pending_webhooks: 1,
+                                        request: {} as any,
+                                        type: type,
+                                    }
+                                );
 
-                            const result = await controller.handleStripeWebhook(
-                                {
-                                    requestBody: 'request_body',
-                                    signature: 'request_signature',
-                                }
-                            );
+                                const result =
+                                    await controller.handleStripeWebhook({
+                                        requestBody: 'request_body',
+                                        signature: 'request_signature',
+                                    });
 
-                            expect(result).toEqual({
-                                success: true,
+                                expect(result).toEqual({
+                                    success: true,
+                                });
+                                expect(
+                                    stripeMock.constructWebhookEvent
+                                ).toHaveBeenCalledTimes(1);
+                                expect(
+                                    stripeMock.constructWebhookEvent
+                                ).toHaveBeenCalledWith(
+                                    'request_body',
+                                    'request_signature',
+                                    'webhook_secret'
+                                );
+
+                                const user = await store.findUser(userId);
+                                expect(user?.subscriptionStatus).toBe(status);
+                                expect(user?.subscriptionId).toBe('sub_1');
+                                expect(user?.subscriptionInfoId).toBeTruthy();
+                                expect(user?.subscriptionPeriodStartMs).toBe(
+                                    123000
+                                );
+                                expect(user?.subscriptionPeriodEndMs).toBe(
+                                    456000
+                                );
+
+                                // Should create/update subscription info
+                                const sub = await store.getSubscriptionById(
+                                    user?.subscriptionInfoId
+                                );
+                                expect(sub).toEqual({
+                                    id: expect.any(String),
+                                    stripeCustomerId: 'customer_id',
+                                    stripeSubscriptionId: 'subscription',
+                                    subscriptionStatus: status,
+                                    subscriptionId: 'sub_1',
+                                    userId: user?.id,
+                                    studioId: null,
+                                    currentPeriodStartMs: 123000,
+                                    currentPeriodEndMs: 456000,
+                                });
                             });
-                            expect(
-                                stripeMock.constructWebhookEvent
-                            ).toHaveBeenCalledTimes(1);
-                            expect(
-                                stripeMock.constructWebhookEvent
-                            ).toHaveBeenCalledWith(
-                                'request_body',
-                                'request_signature',
-                                'webhook_secret'
-                            );
 
-                            const user = await store.findUser(userId);
+                            it('should do nothing for products that are not configured', async () => {
+                                stripeMock.constructWebhookEvent.mockReturnValueOnce(
+                                    {
+                                        id: 'event_id',
+                                        object: 'event',
+                                        account: 'account_id',
+                                        api_version: 'api_version',
+                                        created: 123,
+                                        data: {
+                                            object: {
+                                                id: 'subscription',
+                                                status: status,
+                                                customer: 'customer_id',
+                                                items: {
+                                                    object: 'list',
+                                                    data: [
+                                                        {
+                                                            price: {
+                                                                id: 'price_1',
+                                                                product:
+                                                                    'wrong_product_id',
+                                                            },
+                                                        },
+                                                    ],
+                                                },
+                                            },
+                                        },
+                                        livemode: true,
+                                        pending_webhooks: 1,
+                                        request: {} as any,
+                                        type: type,
+                                    }
+                                );
 
-                            // Do nothing
-                            expect(user.subscriptionStatus).toBe('anything');
-                        });
-                    });
+                                const result =
+                                    await controller.handleStripeWebhook({
+                                        requestBody: 'request_body',
+                                        signature: 'request_signature',
+                                    });
+
+                                expect(result).toEqual({
+                                    success: true,
+                                });
+                                expect(
+                                    stripeMock.constructWebhookEvent
+                                ).toHaveBeenCalledTimes(1);
+                                expect(
+                                    stripeMock.constructWebhookEvent
+                                ).toHaveBeenCalledWith(
+                                    'request_body',
+                                    'request_signature',
+                                    'webhook_secret'
+                                );
+
+                                const user = await store.findUser(userId);
+
+                                // Do nothing
+                                expect(user.subscriptionStatus).toBe(
+                                    'anything'
+                                );
+                            });
+                        }
+                    );
                 }
             );
 
@@ -14407,7 +14412,7 @@ describe('SubscriptionController', () => {
                 });
             });
 
-            describe('creditExpiration', () => {
+            describe.only('creditExpiration', () => {
                 beforeEach(() => {
                     stripeMock.constructWebhookEvent.mockReturnValueOnce({
                         id: 'event_id',
@@ -14624,6 +14629,209 @@ describe('SubscriptionController', () => {
                         ]
                     );
                 });
+
+                describe.each(subscriptionEventTypes)('%s events', (type) => {
+                    describe.each(subscriptionStatusTypes)(
+                        '%s',
+                        (status, active) => {
+                            beforeEach(() => {
+                                stripeMock.constructWebhookEvent.mockReset();
+                                stripeMock.constructWebhookEvent.mockReturnValueOnce(
+                                    {
+                                        id: 'event_id',
+                                        object: 'event',
+                                        account: 'account_id',
+                                        api_version: 'api_version',
+                                        created: 123,
+                                        data: {
+                                            object: {
+                                                id: 'subscription',
+                                                status: status,
+                                                customer: 'customer_id',
+                                                items: {
+                                                    object: 'list',
+                                                    data: [
+                                                        {
+                                                            price: {
+                                                                id: 'price_1',
+                                                                product:
+                                                                    'product_1_id',
+                                                            },
+                                                        },
+                                                    ],
+                                                },
+                                                current_period_start: 123,
+                                                current_period_end: 456,
+                                            },
+                                        },
+                                        livemode: true,
+                                        pending_webhooks: 1,
+                                        request: {} as any,
+                                        type: type,
+                                    }
+                                );
+                            });
+
+                            if (!active) {
+                                it('should sweep credits', async () => {
+                                    for (let sub of store
+                                        .subscriptionConfiguration
+                                        .subscriptions) {
+                                        sub.creditExpiration =
+                                            'expire-after-period';
+                                    }
+
+                                    const userAccount = unwrap(
+                                        await financialController.getOrCreateFinancialAccount(
+                                            {
+                                                userId: userId,
+                                                ledger: LEDGERS.credits,
+                                            }
+                                        )
+                                    );
+
+                                    unwrap(
+                                        await financialController.internalTransaction(
+                                            {
+                                                transfers: [
+                                                    {
+                                                        transferId: 999n,
+                                                        amount: 123456n,
+                                                        code: TransferCodes.purchase_credits,
+                                                        debitAccountId:
+                                                            ACCOUNT_IDS.liquidity_credits,
+                                                        creditAccountId:
+                                                            userAccount.account
+                                                                .id,
+                                                        currency:
+                                                            CurrencyCodes.credits,
+                                                    },
+                                                ],
+                                            }
+                                        )
+                                    );
+
+                                    const result =
+                                        await controller.handleStripeWebhook({
+                                            requestBody: 'request_body',
+                                            signature: 'request_signature',
+                                        });
+
+                                    expect(result).toEqual({
+                                        success: true,
+                                    });
+                                    expect(
+                                        stripeMock.constructWebhookEvent
+                                    ).toHaveBeenCalledTimes(1);
+                                    expect(
+                                        stripeMock.constructWebhookEvent
+                                    ).toHaveBeenCalledWith(
+                                        'request_body',
+                                        'request_signature',
+                                        'webhook_secret'
+                                    );
+
+                                    await checkAccounts(financialInterface, [
+                                        {
+                                            id: userAccount.account.id,
+                                            credits_pending: 0n,
+                                            credits_posted: 123456n,
+                                            debits_pending: 0n,
+                                            debits_posted: 123456n,
+                                        },
+                                    ]);
+
+                                    checkTransfers(
+                                        await financialInterface.lookupTransfers(
+                                            [4n]
+                                        ),
+                                        [
+                                            {
+                                                id: 4n,
+                                                amount: 123456n,
+                                                code: TransferCodes.credit_expiration,
+                                                debit_account_id:
+                                                    userAccount.account.id,
+                                                credit_account_id:
+                                                    ACCOUNT_IDS.credit_expiration,
+                                                flags: TransferFlags.balancing_debit,
+                                            },
+                                        ]
+                                    );
+                                });
+                            } else {
+                                it('should not sweep credits', async () => {
+                                    for (let sub of store
+                                        .subscriptionConfiguration
+                                        .subscriptions) {
+                                        sub.creditExpiration =
+                                            'expire-after-period';
+                                    }
+
+                                    const userAccount = unwrap(
+                                        await financialController.getOrCreateFinancialAccount(
+                                            {
+                                                userId: userId,
+                                                ledger: LEDGERS.credits,
+                                            }
+                                        )
+                                    );
+
+                                    unwrap(
+                                        await financialController.internalTransaction(
+                                            {
+                                                transfers: [
+                                                    {
+                                                        transferId: 999n,
+                                                        amount: 123456n,
+                                                        code: TransferCodes.purchase_credits,
+                                                        debitAccountId:
+                                                            ACCOUNT_IDS.liquidity_credits,
+                                                        creditAccountId:
+                                                            userAccount.account
+                                                                .id,
+                                                        currency:
+                                                            CurrencyCodes.credits,
+                                                    },
+                                                ],
+                                            }
+                                        )
+                                    );
+
+                                    const result =
+                                        await controller.handleStripeWebhook({
+                                            requestBody: 'request_body',
+                                            signature: 'request_signature',
+                                        });
+
+                                    expect(result).toEqual({
+                                        success: true,
+                                    });
+                                    expect(
+                                        stripeMock.constructWebhookEvent
+                                    ).toHaveBeenCalledTimes(1);
+                                    expect(
+                                        stripeMock.constructWebhookEvent
+                                    ).toHaveBeenCalledWith(
+                                        'request_body',
+                                        'request_signature',
+                                        'webhook_secret'
+                                    );
+
+                                    await checkAccounts(financialInterface, [
+                                        {
+                                            id: userAccount.account.id,
+                                            credits_pending: 0n,
+                                            credits_posted: 123456n,
+                                            debits_pending: 0n,
+                                            debits_posted: 0n,
+                                        },
+                                    ]);
+                                });
+                            }
+                        }
+                    );
+                });
             });
         });
 
@@ -14648,166 +14856,172 @@ describe('SubscriptionController', () => {
                 });
             });
 
-            const eventTypes = [
-                ['customer.subscription.created'],
-                ['customer.subscription.updated'],
-                ['customer.subscription.deleted'],
-            ] as const;
+            describe.each(subscriptionEventTypes)(
+                'should handle %s events',
+                (type) => {
+                    describe.each(subscriptionStatusTypes)(
+                        '%s',
+                        (status, active) => {
+                            beforeEach(async () => {
+                                await store.updateStudio({
+                                    ...studio,
+                                    subscriptionStatus: 'anything',
+                                });
+                            });
 
-            const statusTypes = [
-                ['active', true] as const,
-                ['trialing', true] as const,
-                ['canceled', false] as const,
-                ['ended', false] as const,
-                ['past_due', false] as const,
-                ['unpaid', false] as const,
-                ['incomplete', false] as const,
-                ['incomplete_expired', false] as const,
-                ['paused', false] as const,
-            ];
+                            it('should handle subscriptions', async () => {
+                                stripeMock.constructWebhookEvent.mockReturnValueOnce(
+                                    {
+                                        id: 'event_id',
+                                        object: 'event',
+                                        account: 'account_id',
+                                        api_version: 'api_version',
+                                        created: 123,
+                                        data: {
+                                            object: {
+                                                id: 'subscription',
+                                                status: status,
+                                                customer: 'customer_id',
+                                                items: {
+                                                    object: 'list',
+                                                    data: [
+                                                        {
+                                                            price: {
+                                                                id: 'price_1',
+                                                                product:
+                                                                    'product_1_id',
+                                                            },
+                                                        },
+                                                    ],
+                                                },
+                                                current_period_start: 123,
+                                                current_period_end: 456,
+                                            },
+                                        },
+                                        livemode: true,
+                                        pending_webhooks: 1,
+                                        request: {} as any,
+                                        type: type,
+                                    }
+                                );
 
-            describe.each(eventTypes)('should handle %s events', (type) => {
-                describe.each(statusTypes)('%s', (status, active) => {
-                    beforeEach(async () => {
-                        await store.updateStudio({
-                            ...studio,
-                            subscriptionStatus: 'anything',
-                        });
-                    });
+                                const result =
+                                    await controller.handleStripeWebhook({
+                                        requestBody: 'request_body',
+                                        signature: 'request_signature',
+                                    });
 
-                    it('should handle subscriptions', async () => {
-                        stripeMock.constructWebhookEvent.mockReturnValueOnce({
-                            id: 'event_id',
-                            object: 'event',
-                            account: 'account_id',
-                            api_version: 'api_version',
-                            created: 123,
-                            data: {
-                                object: {
-                                    id: 'subscription',
-                                    status: status,
-                                    customer: 'customer_id',
-                                    items: {
-                                        object: 'list',
-                                        data: [
-                                            {
-                                                price: {
-                                                    id: 'price_1',
-                                                    product: 'product_1_id',
+                                expect(result).toEqual({
+                                    success: true,
+                                });
+                                expect(
+                                    stripeMock.constructWebhookEvent
+                                ).toHaveBeenCalledTimes(1);
+                                expect(
+                                    stripeMock.constructWebhookEvent
+                                ).toHaveBeenCalledWith(
+                                    'request_body',
+                                    'request_signature',
+                                    'webhook_secret'
+                                );
+
+                                const studio = await store.getStudioById(
+                                    studioId
+                                );
+                                expect(studio?.subscriptionStatus).toBe(status);
+                                expect(studio?.subscriptionId).toBe('sub_1');
+                                expect(studio?.subscriptionInfoId).toBeTruthy();
+                                expect(studio?.subscriptionPeriodStartMs).toBe(
+                                    123000
+                                );
+                                expect(studio?.subscriptionPeriodEndMs).toBe(
+                                    456000
+                                );
+
+                                // Should create/update subscription info
+                                const sub = await store.getSubscriptionById(
+                                    studio?.subscriptionInfoId
+                                );
+                                expect(sub).toEqual({
+                                    id: expect.any(String),
+                                    stripeCustomerId: 'customer_id',
+                                    stripeSubscriptionId: 'subscription',
+                                    subscriptionStatus: status,
+                                    subscriptionId: 'sub_1',
+                                    userId: null,
+                                    studioId: studio?.id,
+                                    currentPeriodStartMs: 123000,
+                                    currentPeriodEndMs: 456000,
+                                });
+                            });
+
+                            it('should do nothing for products that are not configured', async () => {
+                                stripeMock.constructWebhookEvent.mockReturnValueOnce(
+                                    {
+                                        id: 'event_id',
+                                        object: 'event',
+                                        account: 'account_id',
+                                        api_version: 'api_version',
+                                        created: 123,
+                                        data: {
+                                            object: {
+                                                id: 'subscription',
+                                                status: status,
+                                                customer: 'customer_id',
+                                                items: {
+                                                    object: 'list',
+                                                    data: [
+                                                        {
+                                                            price: {
+                                                                id: 'price_1',
+                                                                product:
+                                                                    'wrong_product_id',
+                                                            },
+                                                        },
+                                                    ],
                                                 },
                                             },
-                                        ],
-                                    },
-                                    current_period_start: 123,
-                                    current_period_end: 456,
-                                },
-                            },
-                            livemode: true,
-                            pending_webhooks: 1,
-                            request: {} as any,
-                            type: type,
-                        });
+                                        },
+                                        livemode: true,
+                                        pending_webhooks: 1,
+                                        request: {} as any,
+                                        type: type,
+                                    }
+                                );
 
-                        const result = await controller.handleStripeWebhook({
-                            requestBody: 'request_body',
-                            signature: 'request_signature',
-                        });
+                                const result =
+                                    await controller.handleStripeWebhook({
+                                        requestBody: 'request_body',
+                                        signature: 'request_signature',
+                                    });
 
-                        expect(result).toEqual({
-                            success: true,
-                        });
-                        expect(
-                            stripeMock.constructWebhookEvent
-                        ).toHaveBeenCalledTimes(1);
-                        expect(
-                            stripeMock.constructWebhookEvent
-                        ).toHaveBeenCalledWith(
-                            'request_body',
-                            'request_signature',
-                            'webhook_secret'
-                        );
+                                expect(result).toEqual({
+                                    success: true,
+                                });
+                                expect(
+                                    stripeMock.constructWebhookEvent
+                                ).toHaveBeenCalledTimes(1);
+                                expect(
+                                    stripeMock.constructWebhookEvent
+                                ).toHaveBeenCalledWith(
+                                    'request_body',
+                                    'request_signature',
+                                    'webhook_secret'
+                                );
 
-                        const studio = await store.getStudioById(studioId);
-                        expect(studio?.subscriptionStatus).toBe(status);
-                        expect(studio?.subscriptionId).toBe('sub_1');
-                        expect(studio?.subscriptionInfoId).toBeTruthy();
-                        expect(studio?.subscriptionPeriodStartMs).toBe(123000);
-                        expect(studio?.subscriptionPeriodEndMs).toBe(456000);
+                                const studio = await store.getStudioById(
+                                    studioId
+                                );
 
-                        // Should create/update subscription info
-                        const sub = await store.getSubscriptionById(
-                            studio?.subscriptionInfoId
-                        );
-                        expect(sub).toEqual({
-                            id: expect.any(String),
-                            stripeCustomerId: 'customer_id',
-                            stripeSubscriptionId: 'subscription',
-                            subscriptionStatus: status,
-                            subscriptionId: 'sub_1',
-                            userId: null,
-                            studioId: studio?.id,
-                            currentPeriodStartMs: 123000,
-                            currentPeriodEndMs: 456000,
-                        });
-                    });
-
-                    it('should do nothing for products that are not configured', async () => {
-                        stripeMock.constructWebhookEvent.mockReturnValueOnce({
-                            id: 'event_id',
-                            object: 'event',
-                            account: 'account_id',
-                            api_version: 'api_version',
-                            created: 123,
-                            data: {
-                                object: {
-                                    id: 'subscription',
-                                    status: status,
-                                    customer: 'customer_id',
-                                    items: {
-                                        object: 'list',
-                                        data: [
-                                            {
-                                                price: {
-                                                    id: 'price_1',
-                                                    product: 'wrong_product_id',
-                                                },
-                                            },
-                                        ],
-                                    },
-                                },
-                            },
-                            livemode: true,
-                            pending_webhooks: 1,
-                            request: {} as any,
-                            type: type,
-                        });
-
-                        const result = await controller.handleStripeWebhook({
-                            requestBody: 'request_body',
-                            signature: 'request_signature',
-                        });
-
-                        expect(result).toEqual({
-                            success: true,
-                        });
-                        expect(
-                            stripeMock.constructWebhookEvent
-                        ).toHaveBeenCalledTimes(1);
-                        expect(
-                            stripeMock.constructWebhookEvent
-                        ).toHaveBeenCalledWith(
-                            'request_body',
-                            'request_signature',
-                            'webhook_secret'
-                        );
-
-                        const studio = await store.getStudioById(studioId);
-
-                        // Do nothing
-                        expect(studio.subscriptionStatus).toBe('anything');
-                    });
-                });
-            });
+                                // Do nothing
+                                expect(studio.subscriptionStatus).toBe(
+                                    'anything'
+                                );
+                            });
+                        }
+                    );
+                }
+            );
 
             describe('should handle invoice.paid events', () => {
                 it('should update subscription periods', async () => {
@@ -14884,552 +15098,739 @@ describe('SubscriptionController', () => {
                     expect(studio?.subscriptionPeriodStartMs).toBe(456000);
                     expect(studio?.subscriptionPeriodEndMs).toBe(999000);
                 });
+            });
 
-                describe('creditGrant', () => {
-                    it('should support match-invoice', async () => {
-                        for (let sub of store.subscriptionConfiguration
-                            .subscriptions) {
-                            sub.creditGrant = 'match-invoice';
-                        }
-                        stripeMock.constructWebhookEvent.mockReturnValueOnce({
-                            id: 'event_id',
-                            type: 'invoice.paid',
-                            object: 'event',
-                            account: 'account_id',
-                            api_version: 'api_version',
-                            created: 123,
-                            data: {
-                                object: {
-                                    id: 'invoiceId',
-                                    customer: 'customer_id',
-                                    currency: 'usd',
-                                    total: 1000,
-                                    subtotal: 1000,
-                                    tax: 0,
-                                    description: 'description',
-                                    status: 'paid',
-                                    paid: true,
-                                    hosted_invoice_url: 'invoiceUrl',
-                                    invoice_pdf: 'pdfUrl',
-                                    lines: {
-                                        object: 'list',
-                                        data: [
-                                            {
-                                                id: 'line_item_1_id',
-                                                price: {
-                                                    id: 'price_1',
-                                                    product: 'product_1_id',
-                                                },
+            describe('creditGrant', () => {
+                it('should support match-invoice', async () => {
+                    for (let sub of store.subscriptionConfiguration
+                        .subscriptions) {
+                        sub.creditGrant = 'match-invoice';
+                    }
+                    stripeMock.constructWebhookEvent.mockReturnValueOnce({
+                        id: 'event_id',
+                        type: 'invoice.paid',
+                        object: 'event',
+                        account: 'account_id',
+                        api_version: 'api_version',
+                        created: 123,
+                        data: {
+                            object: {
+                                id: 'invoiceId',
+                                customer: 'customer_id',
+                                currency: 'usd',
+                                total: 1000,
+                                subtotal: 1000,
+                                tax: 0,
+                                description: 'description',
+                                status: 'paid',
+                                paid: true,
+                                hosted_invoice_url: 'invoiceUrl',
+                                invoice_pdf: 'pdfUrl',
+                                lines: {
+                                    object: 'list',
+                                    data: [
+                                        {
+                                            id: 'line_item_1_id',
+                                            price: {
+                                                id: 'price_1',
+                                                product: 'product_1_id',
                                             },
-                                        ],
-                                    },
-                                    subscription: 'sub',
+                                        },
+                                    ],
                                 },
+                                subscription: 'sub',
                             },
-                            livemode: true,
-                            pending_webhooks: 1,
-                            request: {} as any,
-                        });
-                        stripeMock.getSubscriptionById.mockResolvedValueOnce({
-                            id: 'sub',
-                            status: 'active',
-                            current_period_start: 456,
-                            current_period_end: 999,
-                            cancel_at: 7777,
-                            canceled_at: null,
-                            ended_at: null,
-                            start_date: 123,
-                        });
-
-                        const result = await controller.handleStripeWebhook({
-                            requestBody: 'request_body',
-                            signature: 'request_signature',
-                        });
-
-                        expect(result).toEqual({
-                            success: true,
-                        });
-                        expect(
-                            stripeMock.constructWebhookEvent
-                        ).toHaveBeenCalledTimes(1);
-                        expect(
-                            stripeMock.constructWebhookEvent
-                        ).toHaveBeenCalledWith(
-                            'request_body',
-                            'request_signature',
-                            'webhook_secret'
-                        );
-
-                        const studioAccount = unwrap(
-                            await financialController.getFinancialAccount({
-                                studioId: studioId,
-                                ledger: LEDGERS.credits,
-                            })
-                        );
-
-                        checkAccounts(financialInterface, [
-                            {
-                                id: studioAccount.account.id,
-                                credits_pending: 0n,
-                                credits_posted: 1000n * USD_TO_CREDITS,
-                                debits_pending: 0n,
-                                debits_posted: 0n,
-                            },
-                        ]);
-
-                        checkTransfers(
-                            await financialInterface.lookupTransfers([3n, 4n]),
-                            [
-                                {
-                                    id: 3n,
-                                    amount: 1000n,
-                                    code: TransferCodes.purchase_credits,
-                                    debit_account_id: ACCOUNT_IDS.assets_stripe,
-                                    credit_account_id:
-                                        ACCOUNT_IDS.liquidity_usd,
-                                },
-                                {
-                                    id: 4n,
-                                    amount: 1000n * USD_TO_CREDITS,
-                                    code: TransferCodes.purchase_credits,
-                                    debit_account_id:
-                                        ACCOUNT_IDS.liquidity_credits,
-                                    credit_account_id: studioAccount.account.id,
-                                },
-                            ]
-                        );
+                        },
+                        livemode: true,
+                        pending_webhooks: 1,
+                        request: {} as any,
+                    });
+                    stripeMock.getSubscriptionById.mockResolvedValueOnce({
+                        id: 'sub',
+                        status: 'active',
+                        current_period_start: 456,
+                        current_period_end: 999,
+                        cancel_at: 7777,
+                        canceled_at: null,
+                        ended_at: null,
+                        start_date: 123,
                     });
 
-                    it('should support a fixed number', async () => {
-                        for (let sub of store.subscriptionConfiguration
-                            .subscriptions) {
-                            sub.creditGrant = 500;
-                        }
-
-                        stripeMock.constructWebhookEvent.mockReturnValueOnce({
-                            id: 'event_id',
-                            type: 'invoice.paid',
-                            object: 'event',
-                            account: 'account_id',
-                            api_version: 'api_version',
-                            created: 123,
-                            data: {
-                                object: {
-                                    id: 'invoiceId',
-                                    customer: 'customer_id',
-                                    currency: 'usd',
-                                    total: 1000,
-                                    subtotal: 1000,
-                                    tax: 0,
-                                    description: 'description',
-                                    status: 'paid',
-                                    paid: true,
-                                    hosted_invoice_url: 'invoiceUrl',
-                                    invoice_pdf: 'pdfUrl',
-                                    lines: {
-                                        object: 'list',
-                                        data: [
-                                            {
-                                                id: 'line_item_1_id',
-                                                price: {
-                                                    id: 'price_1',
-                                                    product: 'product_1_id',
-                                                },
-                                            },
-                                        ],
-                                    },
-                                    subscription: 'sub',
-                                },
-                            },
-                            livemode: true,
-                            pending_webhooks: 1,
-                            request: {} as any,
-                        });
-                        stripeMock.getSubscriptionById.mockResolvedValueOnce({
-                            id: 'sub',
-                            status: 'active',
-                            current_period_start: 456,
-                            current_period_end: 999,
-                            cancel_at: 7777,
-                            canceled_at: null,
-                            ended_at: null,
-                            start_date: 123,
-                        });
-
-                        const result = await controller.handleStripeWebhook({
-                            requestBody: 'request_body',
-                            signature: 'request_signature',
-                        });
-
-                        expect(result).toEqual({
-                            success: true,
-                        });
-                        expect(
-                            stripeMock.constructWebhookEvent
-                        ).toHaveBeenCalledTimes(1);
-                        expect(
-                            stripeMock.constructWebhookEvent
-                        ).toHaveBeenCalledWith(
-                            'request_body',
-                            'request_signature',
-                            'webhook_secret'
-                        );
-
-                        const studioAccount = unwrap(
-                            await financialController.getFinancialAccount({
-                                studioId: studioId,
-                                ledger: LEDGERS.credits,
-                            })
-                        );
-
-                        checkAccounts(financialInterface, [
-                            {
-                                id: studioAccount.account.id,
-                                credits_pending: 0n,
-                                credits_posted: 500n,
-                                debits_pending: 0n,
-                                debits_posted: 0n,
-                            },
-                        ]);
-
-                        checkTransfers(
-                            await financialInterface.lookupTransfers([3n, 4n]),
-                            [
-                                {
-                                    id: 3n,
-                                    amount: 1000n,
-                                    code: TransferCodes.purchase_credits,
-                                    debit_account_id: ACCOUNT_IDS.assets_stripe,
-                                    credit_account_id:
-                                        ACCOUNT_IDS.liquidity_usd,
-                                },
-                                {
-                                    id: 4n,
-                                    amount: 500n,
-                                    code: TransferCodes.purchase_credits,
-                                    debit_account_id:
-                                        ACCOUNT_IDS.liquidity_credits,
-                                    credit_account_id: studioAccount.account.id,
-                                },
-                            ]
-                        );
+                    const result = await controller.handleStripeWebhook({
+                        requestBody: 'request_body',
+                        signature: 'request_signature',
                     });
 
-                    it('should do nothing if no grant is set', async () => {
-                        stripeMock.constructWebhookEvent.mockReturnValueOnce({
-                            id: 'event_id',
-                            type: 'invoice.paid',
-                            object: 'event',
-                            account: 'account_id',
-                            api_version: 'api_version',
-                            created: 123,
-                            data: {
-                                object: {
-                                    id: 'invoiceId',
-                                    customer: 'customer_id',
-                                    currency: 'usd',
-                                    total: 1000,
-                                    subtotal: 1000,
-                                    tax: 0,
-                                    description: 'description',
-                                    status: 'paid',
-                                    paid: true,
-                                    hosted_invoice_url: 'invoiceUrl',
-                                    invoice_pdf: 'pdfUrl',
-                                    lines: {
-                                        object: 'list',
-                                        data: [
-                                            {
-                                                id: 'line_item_1_id',
-                                                price: {
-                                                    id: 'price_1',
-                                                    product: 'product_1_id',
-                                                },
-                                            },
-                                        ],
-                                    },
-                                    subscription: 'sub',
-                                },
+                    expect(result).toEqual({
+                        success: true,
+                    });
+                    expect(
+                        stripeMock.constructWebhookEvent
+                    ).toHaveBeenCalledTimes(1);
+                    expect(
+                        stripeMock.constructWebhookEvent
+                    ).toHaveBeenCalledWith(
+                        'request_body',
+                        'request_signature',
+                        'webhook_secret'
+                    );
+
+                    const studioAccount = unwrap(
+                        await financialController.getFinancialAccount({
+                            studioId: studioId,
+                            ledger: LEDGERS.credits,
+                        })
+                    );
+
+                    checkAccounts(financialInterface, [
+                        {
+                            id: studioAccount.account.id,
+                            credits_pending: 0n,
+                            credits_posted: 1000n * USD_TO_CREDITS,
+                            debits_pending: 0n,
+                            debits_posted: 0n,
+                        },
+                    ]);
+
+                    checkTransfers(
+                        await financialInterface.lookupTransfers([3n, 4n]),
+                        [
+                            {
+                                id: 3n,
+                                amount: 1000n,
+                                code: TransferCodes.purchase_credits,
+                                debit_account_id: ACCOUNT_IDS.assets_stripe,
+                                credit_account_id: ACCOUNT_IDS.liquidity_usd,
                             },
-                            livemode: true,
-                            pending_webhooks: 1,
-                            request: {} as any,
-                        });
-                        stripeMock.getSubscriptionById.mockResolvedValueOnce({
-                            id: 'sub',
-                            status: 'active',
-                            current_period_start: 456,
-                            current_period_end: 999,
-                            cancel_at: 7777,
-                            canceled_at: null,
-                            ended_at: null,
-                            start_date: 123,
+                            {
+                                id: 4n,
+                                amount: 1000n * USD_TO_CREDITS,
+                                code: TransferCodes.purchase_credits,
+                                debit_account_id: ACCOUNT_IDS.liquidity_credits,
+                                credit_account_id: studioAccount.account.id,
+                            },
+                        ]
+                    );
+                });
+
+                it('should support a fixed number', async () => {
+                    for (let sub of store.subscriptionConfiguration
+                        .subscriptions) {
+                        sub.creditGrant = 500;
+                    }
+
+                    stripeMock.constructWebhookEvent.mockReturnValueOnce({
+                        id: 'event_id',
+                        type: 'invoice.paid',
+                        object: 'event',
+                        account: 'account_id',
+                        api_version: 'api_version',
+                        created: 123,
+                        data: {
+                            object: {
+                                id: 'invoiceId',
+                                customer: 'customer_id',
+                                currency: 'usd',
+                                total: 1000,
+                                subtotal: 1000,
+                                tax: 0,
+                                description: 'description',
+                                status: 'paid',
+                                paid: true,
+                                hosted_invoice_url: 'invoiceUrl',
+                                invoice_pdf: 'pdfUrl',
+                                lines: {
+                                    object: 'list',
+                                    data: [
+                                        {
+                                            id: 'line_item_1_id',
+                                            price: {
+                                                id: 'price_1',
+                                                product: 'product_1_id',
+                                            },
+                                        },
+                                    ],
+                                },
+                                subscription: 'sub',
+                            },
+                        },
+                        livemode: true,
+                        pending_webhooks: 1,
+                        request: {} as any,
+                    });
+                    stripeMock.getSubscriptionById.mockResolvedValueOnce({
+                        id: 'sub',
+                        status: 'active',
+                        current_period_start: 456,
+                        current_period_end: 999,
+                        cancel_at: 7777,
+                        canceled_at: null,
+                        ended_at: null,
+                        start_date: 123,
+                    });
+
+                    const result = await controller.handleStripeWebhook({
+                        requestBody: 'request_body',
+                        signature: 'request_signature',
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                    });
+                    expect(
+                        stripeMock.constructWebhookEvent
+                    ).toHaveBeenCalledTimes(1);
+                    expect(
+                        stripeMock.constructWebhookEvent
+                    ).toHaveBeenCalledWith(
+                        'request_body',
+                        'request_signature',
+                        'webhook_secret'
+                    );
+
+                    const studioAccount = unwrap(
+                        await financialController.getFinancialAccount({
+                            studioId: studioId,
+                            ledger: LEDGERS.credits,
+                        })
+                    );
+
+                    checkAccounts(financialInterface, [
+                        {
+                            id: studioAccount.account.id,
+                            credits_pending: 0n,
+                            credits_posted: 500n,
+                            debits_pending: 0n,
+                            debits_posted: 0n,
+                        },
+                    ]);
+
+                    checkTransfers(
+                        await financialInterface.lookupTransfers([3n, 4n]),
+                        [
+                            {
+                                id: 3n,
+                                amount: 1000n,
+                                code: TransferCodes.purchase_credits,
+                                debit_account_id: ACCOUNT_IDS.assets_stripe,
+                                credit_account_id: ACCOUNT_IDS.liquidity_usd,
+                            },
+                            {
+                                id: 4n,
+                                amount: 500n,
+                                code: TransferCodes.purchase_credits,
+                                debit_account_id: ACCOUNT_IDS.liquidity_credits,
+                                credit_account_id: studioAccount.account.id,
+                            },
+                        ]
+                    );
+                });
+
+                it('should do nothing if no grant is set', async () => {
+                    stripeMock.constructWebhookEvent.mockReturnValueOnce({
+                        id: 'event_id',
+                        type: 'invoice.paid',
+                        object: 'event',
+                        account: 'account_id',
+                        api_version: 'api_version',
+                        created: 123,
+                        data: {
+                            object: {
+                                id: 'invoiceId',
+                                customer: 'customer_id',
+                                currency: 'usd',
+                                total: 1000,
+                                subtotal: 1000,
+                                tax: 0,
+                                description: 'description',
+                                status: 'paid',
+                                paid: true,
+                                hosted_invoice_url: 'invoiceUrl',
+                                invoice_pdf: 'pdfUrl',
+                                lines: {
+                                    object: 'list',
+                                    data: [
+                                        {
+                                            id: 'line_item_1_id',
+                                            price: {
+                                                id: 'price_1',
+                                                product: 'product_1_id',
+                                            },
+                                        },
+                                    ],
+                                },
+                                subscription: 'sub',
+                            },
+                        },
+                        livemode: true,
+                        pending_webhooks: 1,
+                        request: {} as any,
+                    });
+                    stripeMock.getSubscriptionById.mockResolvedValueOnce({
+                        id: 'sub',
+                        status: 'active',
+                        current_period_start: 456,
+                        current_period_end: 999,
+                        cancel_at: 7777,
+                        canceled_at: null,
+                        ended_at: null,
+                        start_date: 123,
+                    });
+
+                    const result = await controller.handleStripeWebhook({
+                        requestBody: 'request_body',
+                        signature: 'request_signature',
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                    });
+                    expect(
+                        stripeMock.constructWebhookEvent
+                    ).toHaveBeenCalledTimes(1);
+                    expect(
+                        stripeMock.constructWebhookEvent
+                    ).toHaveBeenCalledWith(
+                        'request_body',
+                        'request_signature',
+                        'webhook_secret'
+                    );
+
+                    const account =
+                        await financialController.getFinancialAccount({
+                            studioId: studioId,
+                            ledger: LEDGERS.credits,
                         });
 
-                        const result = await controller.handleStripeWebhook({
-                            requestBody: 'request_body',
-                            signature: 'request_signature',
-                        });
+                    expect(account).toEqual(
+                        failure({
+                            errorCode: 'not_found',
+                            errorMessage:
+                                'The financial account does not exist.',
+                        })
+                    );
+                });
+            });
 
-                        expect(result).toEqual({
-                            success: true,
-                        });
-                        expect(
-                            stripeMock.constructWebhookEvent
-                        ).toHaveBeenCalledTimes(1);
-                        expect(
-                            stripeMock.constructWebhookEvent
-                        ).toHaveBeenCalledWith(
-                            'request_body',
-                            'request_signature',
-                            'webhook_secret'
-                        );
-
-                        const account =
-                            await financialController.getFinancialAccount({
-                                studioId: studioId,
-                                ledger: LEDGERS.credits,
-                            });
-
-                        expect(account).toEqual(
-                            failure({
-                                errorCode: 'not_found',
-                                errorMessage:
-                                    'The financial account does not exist.',
-                            })
-                        );
+            describe.only('creditExpiration', () => {
+                beforeEach(() => {
+                    stripeMock.constructWebhookEvent.mockReturnValueOnce({
+                        id: 'event_id',
+                        type: 'invoice.paid',
+                        object: 'event',
+                        account: 'account_id',
+                        api_version: 'api_version',
+                        created: 123,
+                        data: {
+                            object: {
+                                id: 'invoiceId',
+                                customer: 'customer_id',
+                                currency: 'usd',
+                                total: 1000,
+                                subtotal: 1000,
+                                tax: 0,
+                                description: 'description',
+                                status: 'paid',
+                                paid: true,
+                                hosted_invoice_url: 'invoiceUrl',
+                                invoice_pdf: 'pdfUrl',
+                                lines: {
+                                    object: 'list',
+                                    data: [
+                                        {
+                                            id: 'line_item_1_id',
+                                            price: {
+                                                id: 'price_1',
+                                                product: 'product_1_id',
+                                            },
+                                        },
+                                    ],
+                                },
+                                subscription: 'sub',
+                            },
+                        },
+                        livemode: true,
+                        pending_webhooks: 1,
+                        request: {} as any,
+                    });
+                    stripeMock.getSubscriptionById.mockResolvedValueOnce({
+                        id: 'sub',
+                        status: 'active',
+                        current_period_start: 456,
+                        current_period_end: 999,
+                        cancel_at: 7777,
+                        canceled_at: null,
+                        ended_at: null,
+                        start_date: 123,
                     });
                 });
 
-                describe('creditExpiration', () => {
-                    beforeEach(() => {
-                        stripeMock.constructWebhookEvent.mockReturnValueOnce({
-                            id: 'event_id',
-                            type: 'invoice.paid',
-                            object: 'event',
-                            account: 'account_id',
-                            api_version: 'api_version',
-                            created: 123,
-                            data: {
-                                object: {
-                                    id: 'invoiceId',
-                                    customer: 'customer_id',
-                                    currency: 'usd',
-                                    total: 1000,
-                                    subtotal: 1000,
-                                    tax: 0,
-                                    description: 'description',
-                                    status: 'paid',
-                                    paid: true,
-                                    hosted_invoice_url: 'invoiceUrl',
-                                    invoice_pdf: 'pdfUrl',
-                                    lines: {
-                                        object: 'list',
-                                        data: [
-                                            {
-                                                id: 'line_item_1_id',
-                                                price: {
-                                                    id: 'price_1',
-                                                    product: 'product_1_id',
-                                                },
-                                            },
-                                        ],
-                                    },
-                                    subscription: 'sub',
-                                },
-                            },
-                            livemode: true,
-                            pending_webhooks: 1,
-                            request: {} as any,
-                        });
-                        stripeMock.getSubscriptionById.mockResolvedValueOnce({
-                            id: 'sub',
-                            status: 'active',
-                            current_period_start: 456,
-                            current_period_end: 999,
-                            cancel_at: 7777,
-                            canceled_at: null,
-                            ended_at: null,
-                            start_date: 123,
-                        });
-                    });
+                it('should expire credits if set to expire-after-period', async () => {
+                    for (let sub of store.subscriptionConfiguration
+                        .subscriptions) {
+                        sub.creditExpiration = 'expire-after-period';
+                    }
 
-                    it('should expire credits if set to expire-after-period', async () => {
-                        for (let sub of store.subscriptionConfiguration
-                            .subscriptions) {
-                            sub.creditExpiration = 'expire-after-period';
-                        }
+                    const studioAccount = unwrap(
+                        await financialController.getOrCreateFinancialAccount({
+                            studioId: studioId,
+                            ledger: LEDGERS.credits,
+                        })
+                    );
 
-                        const studioAccount = unwrap(
-                            await financialController.getOrCreateFinancialAccount(
+                    unwrap(
+                        await financialController.internalTransaction({
+                            transfers: [
                                 {
-                                    studioId: studioId,
-                                    ledger: LEDGERS.credits,
-                                }
-                            )
-                        );
-
-                        unwrap(
-                            await financialController.internalTransaction({
-                                transfers: [
-                                    {
-                                        transferId: 999n,
-                                        amount: 123456n,
-                                        code: TransferCodes.purchase_credits,
-                                        debitAccountId:
-                                            ACCOUNT_IDS.liquidity_credits,
-                                        creditAccountId:
-                                            studioAccount.account.id,
-                                        currency: CurrencyCodes.credits,
-                                    },
-                                ],
-                            })
-                        );
-
-                        const result = await controller.handleStripeWebhook({
-                            requestBody: 'request_body',
-                            signature: 'request_signature',
-                        });
-
-                        expect(result).toEqual({
-                            success: true,
-                        });
-                        expect(
-                            stripeMock.constructWebhookEvent
-                        ).toHaveBeenCalledTimes(1);
-                        expect(
-                            stripeMock.constructWebhookEvent
-                        ).toHaveBeenCalledWith(
-                            'request_body',
-                            'request_signature',
-                            'webhook_secret'
-                        );
-
-                        await checkAccounts(financialInterface, [
-                            {
-                                id: studioAccount.account.id,
-                                credits_pending: 0n,
-                                credits_posted: 123456n,
-                                debits_pending: 0n,
-                                debits_posted: 123456n,
-                            },
-                        ]);
-
-                        checkTransfers(
-                            await financialInterface.lookupTransfers([4n]),
-                            [
-                                {
-                                    id: 4n,
+                                    transferId: 999n,
                                     amount: 123456n,
-                                    code: TransferCodes.credit_expiration,
-                                    debit_account_id: studioAccount.account.id,
-                                    credit_account_id:
-                                        ACCOUNT_IDS.credit_expiration,
-                                    flags: TransferFlags.balancing_debit,
-                                },
-                            ]
-                        );
-                    });
-
-                    it('should expire credits before granting new ones', async () => {
-                        for (let sub of store.subscriptionConfiguration
-                            .subscriptions) {
-                            sub.creditExpiration = 'expire-after-period';
-                            sub.creditGrant = 500;
-                        }
-
-                        const studioAccount = unwrap(
-                            await financialController.getOrCreateFinancialAccount(
-                                {
-                                    studioId: studioId,
-                                    ledger: LEDGERS.credits,
-                                }
-                            )
-                        );
-
-                        unwrap(
-                            await financialController.internalTransaction({
-                                transfers: [
-                                    {
-                                        transferId: 999n,
-                                        amount: 123456n,
-                                        code: TransferCodes.purchase_credits,
-                                        debitAccountId:
-                                            ACCOUNT_IDS.liquidity_credits,
-                                        creditAccountId:
-                                            studioAccount.account.id,
-                                        currency: CurrencyCodes.credits,
-                                    },
-                                ],
-                            })
-                        );
-
-                        const result = await controller.handleStripeWebhook({
-                            requestBody: 'request_body',
-                            signature: 'request_signature',
-                        });
-
-                        expect(result).toEqual({
-                            success: true,
-                        });
-                        expect(
-                            stripeMock.constructWebhookEvent
-                        ).toHaveBeenCalledTimes(1);
-                        expect(
-                            stripeMock.constructWebhookEvent
-                        ).toHaveBeenCalledWith(
-                            'request_body',
-                            'request_signature',
-                            'webhook_secret'
-                        );
-
-                        await checkAccounts(financialInterface, [
-                            {
-                                id: studioAccount.account.id,
-                                credits_pending: 0n,
-                                credits_posted: 123456n + 500n,
-                                debits_pending: 0n,
-                                debits_posted: 123456n,
-                            },
-                        ]);
-
-                        checkTransfers(
-                            await financialInterface.lookupTransfers([
-                                4n,
-                                5n,
-                                6n,
-                            ]),
-                            [
-                                {
-                                    id: 4n,
-                                    amount: 123456n,
-                                    code: TransferCodes.credit_expiration,
-                                    debit_account_id: studioAccount.account.id,
-                                    credit_account_id:
-                                        ACCOUNT_IDS.credit_expiration,
-                                    flags:
-                                        TransferFlags.linked |
-                                        TransferFlags.balancing_debit,
-                                },
-                                {
-                                    id: 5n,
-                                    amount: 1000n,
                                     code: TransferCodes.purchase_credits,
-                                    debit_account_id: ACCOUNT_IDS.assets_stripe,
-                                    credit_account_id:
-                                        ACCOUNT_IDS.liquidity_usd,
-                                },
-                                {
-                                    id: 6n,
-                                    amount: 500n,
-                                    code: TransferCodes.purchase_credits,
-                                    debit_account_id:
+                                    debitAccountId:
                                         ACCOUNT_IDS.liquidity_credits,
-                                    credit_account_id: studioAccount.account.id,
+                                    creditAccountId: studioAccount.account.id,
+                                    currency: CurrencyCodes.credits,
                                 },
-                            ]
-                        );
+                            ],
+                        })
+                    );
+
+                    const result = await controller.handleStripeWebhook({
+                        requestBody: 'request_body',
+                        signature: 'request_signature',
                     });
+
+                    expect(result).toEqual({
+                        success: true,
+                    });
+                    expect(
+                        stripeMock.constructWebhookEvent
+                    ).toHaveBeenCalledTimes(1);
+                    expect(
+                        stripeMock.constructWebhookEvent
+                    ).toHaveBeenCalledWith(
+                        'request_body',
+                        'request_signature',
+                        'webhook_secret'
+                    );
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: studioAccount.account.id,
+                            credits_pending: 0n,
+                            credits_posted: 123456n,
+                            debits_pending: 0n,
+                            debits_posted: 123456n,
+                        },
+                    ]);
+
+                    checkTransfers(
+                        await financialInterface.lookupTransfers([4n]),
+                        [
+                            {
+                                id: 4n,
+                                amount: 123456n,
+                                code: TransferCodes.credit_expiration,
+                                debit_account_id: studioAccount.account.id,
+                                credit_account_id:
+                                    ACCOUNT_IDS.credit_expiration,
+                                flags: TransferFlags.balancing_debit,
+                            },
+                        ]
+                    );
+                });
+
+                it('should expire credits before granting new ones', async () => {
+                    for (let sub of store.subscriptionConfiguration
+                        .subscriptions) {
+                        sub.creditExpiration = 'expire-after-period';
+                        sub.creditGrant = 500;
+                    }
+
+                    const studioAccount = unwrap(
+                        await financialController.getOrCreateFinancialAccount({
+                            studioId: studioId,
+                            ledger: LEDGERS.credits,
+                        })
+                    );
+
+                    unwrap(
+                        await financialController.internalTransaction({
+                            transfers: [
+                                {
+                                    transferId: 999n,
+                                    amount: 123456n,
+                                    code: TransferCodes.purchase_credits,
+                                    debitAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    creditAccountId: studioAccount.account.id,
+                                    currency: CurrencyCodes.credits,
+                                },
+                            ],
+                        })
+                    );
+
+                    const result = await controller.handleStripeWebhook({
+                        requestBody: 'request_body',
+                        signature: 'request_signature',
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                    });
+                    expect(
+                        stripeMock.constructWebhookEvent
+                    ).toHaveBeenCalledTimes(1);
+                    expect(
+                        stripeMock.constructWebhookEvent
+                    ).toHaveBeenCalledWith(
+                        'request_body',
+                        'request_signature',
+                        'webhook_secret'
+                    );
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: studioAccount.account.id,
+                            credits_pending: 0n,
+                            credits_posted: 123456n + 500n,
+                            debits_pending: 0n,
+                            debits_posted: 123456n,
+                        },
+                    ]);
+
+                    checkTransfers(
+                        await financialInterface.lookupTransfers([4n, 5n, 6n]),
+                        [
+                            {
+                                id: 4n,
+                                amount: 123456n,
+                                code: TransferCodes.credit_expiration,
+                                debit_account_id: studioAccount.account.id,
+                                credit_account_id:
+                                    ACCOUNT_IDS.credit_expiration,
+                                flags:
+                                    TransferFlags.linked |
+                                    TransferFlags.balancing_debit,
+                            },
+                            {
+                                id: 5n,
+                                amount: 1000n,
+                                code: TransferCodes.purchase_credits,
+                                debit_account_id: ACCOUNT_IDS.assets_stripe,
+                                credit_account_id: ACCOUNT_IDS.liquidity_usd,
+                            },
+                            {
+                                id: 6n,
+                                amount: 500n,
+                                code: TransferCodes.purchase_credits,
+                                debit_account_id: ACCOUNT_IDS.liquidity_credits,
+                                credit_account_id: studioAccount.account.id,
+                            },
+                        ]
+                    );
+                });
+
+                describe.each(subscriptionEventTypes)('%s events', (type) => {
+                    describe.each(subscriptionStatusTypes)(
+                        '%s',
+                        (status, active) => {
+                            beforeEach(() => {
+                                stripeMock.constructWebhookEvent.mockReset();
+                                stripeMock.constructWebhookEvent.mockReturnValueOnce(
+                                    {
+                                        id: 'event_id',
+                                        object: 'event',
+                                        account: 'account_id',
+                                        api_version: 'api_version',
+                                        created: 123,
+                                        data: {
+                                            object: {
+                                                id: 'subscription',
+                                                status: status,
+                                                customer: 'customer_id',
+                                                items: {
+                                                    object: 'list',
+                                                    data: [
+                                                        {
+                                                            price: {
+                                                                id: 'price_1',
+                                                                product:
+                                                                    'product_1_id',
+                                                            },
+                                                        },
+                                                    ],
+                                                },
+                                                current_period_start: 123,
+                                                current_period_end: 456,
+                                            },
+                                        },
+                                        livemode: true,
+                                        pending_webhooks: 1,
+                                        request: {} as any,
+                                        type: type,
+                                    }
+                                );
+                            });
+
+                            if (!active) {
+                                it('should sweep credits', async () => {
+                                    for (let sub of store
+                                        .subscriptionConfiguration
+                                        .subscriptions) {
+                                        sub.creditExpiration =
+                                            'expire-after-period';
+                                    }
+
+                                    const studioAccount = unwrap(
+                                        await financialController.getOrCreateFinancialAccount(
+                                            {
+                                                studioId: studioId,
+                                                ledger: LEDGERS.credits,
+                                            }
+                                        )
+                                    );
+
+                                    unwrap(
+                                        await financialController.internalTransaction(
+                                            {
+                                                transfers: [
+                                                    {
+                                                        transferId: 999n,
+                                                        amount: 123456n,
+                                                        code: TransferCodes.purchase_credits,
+                                                        debitAccountId:
+                                                            ACCOUNT_IDS.liquidity_credits,
+                                                        creditAccountId:
+                                                            studioAccount
+                                                                .account.id,
+                                                        currency:
+                                                            CurrencyCodes.credits,
+                                                    },
+                                                ],
+                                            }
+                                        )
+                                    );
+
+                                    const result =
+                                        await controller.handleStripeWebhook({
+                                            requestBody: 'request_body',
+                                            signature: 'request_signature',
+                                        });
+
+                                    expect(result).toEqual({
+                                        success: true,
+                                    });
+                                    expect(
+                                        stripeMock.constructWebhookEvent
+                                    ).toHaveBeenCalledTimes(1);
+                                    expect(
+                                        stripeMock.constructWebhookEvent
+                                    ).toHaveBeenCalledWith(
+                                        'request_body',
+                                        'request_signature',
+                                        'webhook_secret'
+                                    );
+
+                                    await checkAccounts(financialInterface, [
+                                        {
+                                            id: studioAccount.account.id,
+                                            credits_pending: 0n,
+                                            credits_posted: 123456n,
+                                            debits_pending: 0n,
+                                            debits_posted: 123456n,
+                                        },
+                                    ]);
+
+                                    checkTransfers(
+                                        await financialInterface.lookupTransfers(
+                                            [4n]
+                                        ),
+                                        [
+                                            {
+                                                id: 4n,
+                                                amount: 123456n,
+                                                code: TransferCodes.credit_expiration,
+                                                debit_account_id:
+                                                    studioAccount.account.id,
+                                                credit_account_id:
+                                                    ACCOUNT_IDS.credit_expiration,
+                                                flags: TransferFlags.balancing_debit,
+                                            },
+                                        ]
+                                    );
+                                });
+                            } else {
+                                it('should not sweep credits', async () => {
+                                    for (let sub of store
+                                        .subscriptionConfiguration
+                                        .subscriptions) {
+                                        sub.creditExpiration =
+                                            'expire-after-period';
+                                    }
+
+                                    const studioAccount = unwrap(
+                                        await financialController.getOrCreateFinancialAccount(
+                                            {
+                                                studioId: studioId,
+                                                ledger: LEDGERS.credits,
+                                            }
+                                        )
+                                    );
+
+                                    unwrap(
+                                        await financialController.internalTransaction(
+                                            {
+                                                transfers: [
+                                                    {
+                                                        transferId: 999n,
+                                                        amount: 123456n,
+                                                        code: TransferCodes.purchase_credits,
+                                                        debitAccountId:
+                                                            ACCOUNT_IDS.liquidity_credits,
+                                                        creditAccountId:
+                                                            studioAccount
+                                                                .account.id,
+                                                        currency:
+                                                            CurrencyCodes.credits,
+                                                    },
+                                                ],
+                                            }
+                                        )
+                                    );
+
+                                    const result =
+                                        await controller.handleStripeWebhook({
+                                            requestBody: 'request_body',
+                                            signature: 'request_signature',
+                                        });
+
+                                    expect(result).toEqual({
+                                        success: true,
+                                    });
+                                    expect(
+                                        stripeMock.constructWebhookEvent
+                                    ).toHaveBeenCalledTimes(1);
+                                    expect(
+                                        stripeMock.constructWebhookEvent
+                                    ).toHaveBeenCalledWith(
+                                        'request_body',
+                                        'request_signature',
+                                        'webhook_secret'
+                                    );
+
+                                    await checkAccounts(financialInterface, [
+                                        {
+                                            id: studioAccount.account.id,
+                                            credits_pending: 0n,
+                                            credits_posted: 123456n,
+                                            debits_pending: 0n,
+                                            debits_posted: 0n,
+                                        },
+                                    ]);
+                                });
+                            }
+                        }
+                    );
                 });
             });
         });

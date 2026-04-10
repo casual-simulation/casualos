@@ -4722,6 +4722,86 @@ export class SubscriptionController {
         return success();
     }
 
+    private async _internalTransactionSweepCredits(
+        sub: APISubscription,
+        accountFilter: Omit<UniqueFinancialAccountFilter, 'ledger'>
+    ): Promise<
+        Result<
+            void,
+            {
+                errorCode: HandleStripeWebhookFailure['errorCode'];
+                errorMessage: string;
+            }
+        >
+    > {
+        if (!this._financialController) {
+            return success();
+        }
+
+        if (sub.creditExpiration === 'never-expire') {
+            return success();
+        }
+
+        const account =
+            await this._financialController.getOrCreateFinancialAccount({
+                ...accountFilter,
+                ledger: LEDGERS.credits,
+            });
+
+        if (isFailure(account)) {
+            logError(
+                account.error,
+                `[SubscriptionController] [_internalTransactionSweepCredits] Unable to get or create credit account!`
+            );
+            return failure({
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            });
+        }
+
+        const accountId = account.value.account.id;
+
+        const transfers: InternalTransfer[] = [];
+
+        if (sub.creditExpiration === 'expire-after-period') {
+            transfers.push({
+                amount: AMOUNT_MAX,
+                code: TransferCodes.credit_expiration,
+                debitAccountId: accountId,
+                creditAccountId: ACCOUNT_IDS.credit_expiration,
+                currency: CurrencyCodes.credits,
+                balancingDebit: true,
+            });
+            console.log(
+                `[SubscriptionController] [_internalTransactionSweepCredits account: ${accountId}] Expiring subscription credits before new credit grant.`
+            );
+        }
+
+        if (transfers.length > 0) {
+            const transactionResult =
+                await this._financialController.internalTransaction({
+                    transfers,
+                });
+
+            if (isFailure(transactionResult)) {
+                logError(
+                    transactionResult.error,
+                    `[SubscriptionController] [_internalTransactionSweepCredits account: ${accountId}] Unable to sweep credits!`
+                );
+                return failure({
+                    errorCode: 'server_error',
+                    errorMessage: 'Unable to sweep credits.',
+                });
+            }
+
+            console.log(
+                `[SubscriptionController] [_internalTransactionSweepCredits account: ${accountId}] Successfully swept credits.`
+            );
+        }
+
+        return success();
+    }
+
     @traced(TRACE_NAME)
     private async _handleStripeSubscriptionEvent(
         config: SubscriptionConfiguration,
@@ -4805,6 +4885,20 @@ export class SubscriptionController {
                 console.log(
                     `[SubscriptionController] [handleStripeWebhook] No studio found for Customer ID (${customerId})`
                 );
+            }
+        }
+
+        if (!active && sub.creditExpiration === 'expire-after-period') {
+            const result = user
+                ? await this._internalTransactionSweepCredits(sub, {
+                      userId: user.id,
+                  })
+                : await this._internalTransactionSweepCredits(sub, {
+                      studioId: studio.id,
+                  });
+
+            if (isFailure(result)) {
+                return genericResult(result);
             }
         }
 
