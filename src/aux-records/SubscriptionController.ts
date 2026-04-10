@@ -4610,8 +4610,13 @@ export class SubscriptionController {
             }
         >
     > {
+        if (!this._financialController) {
+            return success();
+        }
+
         const creditGrant = sub.creditGrant ?? 0;
-        if (creditGrant === 0 || !this._financialController) {
+
+        if (creditGrant === 0 && sub.creditExpiration === 'never-expire') {
             return success();
         }
 
@@ -4650,25 +4655,52 @@ export class SubscriptionController {
             creditAmount = BigInt(creditGrant);
         }
 
+        const transfers: InternalTransfer[] = [];
+
+        if (sub.creditExpiration === 'expire-after-period') {
+            transfers.push({
+                amount: AMOUNT_MAX,
+                code: TransferCodes.credit_expiration,
+                debitAccountId: accountId,
+                creditAccountId: ACCOUNT_IDS.credit_expiration,
+                currency: CurrencyCodes.credits,
+                balancingDebit: true,
+            });
+            console.log(
+                `[SubscriptionController] [_internalTransactionPurchaseCreditsStripe invoice: ${invoice.id} account: ${accountId}] Expiring subscription credits before new credit grant.`
+            );
+        }
+
         if (creditAmount > 0) {
+            console.log(
+                `[SubscriptionController] [_internalTransactionPurchaseCreditsStripe invoice: ${invoice.id} account: ${accountId}] Granting ${creditAmount} credits for invoice (${invoice.id}).`
+            );
+            transfers.push(
+                {
+                    amount: invoice.total,
+                    code: TransferCodes.purchase_credits,
+                    debitAccountId: ACCOUNT_IDS.assets_stripe,
+                    creditAccountId: ACCOUNT_IDS.liquidity_usd,
+                    currency: 'usd',
+                },
+                {
+                    amount: creditAmount,
+                    code: TransferCodes.purchase_credits,
+                    debitAccountId: ACCOUNT_IDS.liquidity_credits,
+                    creditAccountId: accountId,
+                    currency: 'credits',
+                }
+            );
+        } else {
+            console.warn(
+                `[SubscriptionController] [_internalTransactionPurchaseCreditsStripe invoice: ${invoice.id} account: ${accountId}] No credits granted for invoice (${invoice.id}).`
+            );
+        }
+
+        if (transfers.length > 0) {
             const transactionResult =
                 await this._financialController.internalTransaction({
-                    transfers: [
-                        {
-                            amount: invoice.total,
-                            code: TransferCodes.purchase_credits,
-                            debitAccountId: ACCOUNT_IDS.assets_stripe,
-                            creditAccountId: ACCOUNT_IDS.liquidity_usd,
-                            currency: 'usd',
-                        },
-                        {
-                            amount: creditAmount,
-                            code: TransferCodes.purchase_credits,
-                            debitAccountId: ACCOUNT_IDS.liquidity_credits,
-                            creditAccountId: accountId,
-                            currency: 'credits',
-                        },
-                    ],
+                    transfers,
                 });
 
             if (isFailure(transactionResult)) {
@@ -4684,10 +4716,6 @@ export class SubscriptionController {
 
             console.log(
                 `[SubscriptionController] [_internalTransactionPurchaseCreditsStripe invoice: ${invoice.id} account: ${accountId}] Granted ${creditAmount} credits for invoice (${invoice.id}).`
-            );
-        } else {
-            console.warn(
-                `[SubscriptionController] [_internalTransactionPurchaseCreditsStripe invoice: ${invoice.id} account: ${accountId}] No credits granted for invoice (${invoice.id}).`
             );
         }
 

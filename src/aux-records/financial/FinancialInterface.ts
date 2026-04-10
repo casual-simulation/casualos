@@ -306,6 +306,11 @@ export const ACCOUNT_IDS = {
     revenue_records_usage_credits: 4104n,
 
     /**
+     * The ID of the credit expiration account.
+     */
+    credit_expiration: 7001n,
+
+    /**
      * The ID of the USD liquidity account.
      */
     liquidity_usd: 6001n,
@@ -355,6 +360,7 @@ export function getLiquidityAccountByLedger(
  * * * * [4101] revenue from xp platform fees
  * * [5000] expenses
  * * [6000] Liquidity
+ * * [7000] Misc. (for accounts that don't always fit into one of the above categories or for tracking special things like credit expirations)
  */
 export enum AccountCodes {
     /**
@@ -396,6 +402,13 @@ export enum AccountCodes {
      * Liquidity pool account for currency exchanges.
      */
     liquidity_pool = 6001,
+
+    /**
+     * A account for tracking credit expirations.
+     *
+     * Depending on setup and usage, this account could be used for tracking revenue from credit expirations or tracking liabilities (to charities) from credit expirations.
+     */
+    credit_expiration = 7001,
 }
 
 /**
@@ -501,6 +514,11 @@ export enum TransferCodes {
      * A credit to the records usage revenue account and a debit from the user's account.
      */
     records_usage_fee = 3004,
+
+    /**
+     * A credit to the credit expiration account and a debit from the user's account.
+     */
+    credit_expiration = 3005,
 
     // /**
     //  * A credit to the user from external entities (e.g. deposit to system via stripe / balance reload)
@@ -654,6 +672,7 @@ export function getFlagsForAccountCode(code: AccountCodes): AccountFlags {
         case AccountCodes.liabilities_studio:
         case AccountCodes.liabilities_contract:
         case AccountCodes.revenue_platform_fees:
+        case AccountCodes.credit_expiration:
             return (
                 AccountFlags.debits_must_not_exceed_credits |
                 AccountFlags.history

@@ -46,7 +46,10 @@ import type {
     ContractFeaturesSchema,
     DataFeaturesSchema,
 } from './SubscriptionConfiguration';
-import { aiChatFeaturesSchema } from './SubscriptionConfiguration';
+import {
+    aiChatFeaturesSchema,
+    getSubscriptionSchema,
+} from './SubscriptionConfiguration';
 import {
     getStoreFeaturesSchema,
     getContractFeaturesSchema,
@@ -409,10 +412,10 @@ export class SubscriptionBuilder extends FeaturesBuilder {
 
     constructor(id: string) {
         super();
-        this._sub = {
+        this._sub = getSubscriptionSchema().parse({
             id,
             featureList: [],
-        };
+        });
     }
 
     isStudioOnly(studioOnly: boolean): this {

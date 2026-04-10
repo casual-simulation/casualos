@@ -185,6 +185,21 @@ export class FinancialController {
                 reserved: 0,
             },
             {
+                id: ACCOUNT_IDS.credit_expiration,
+                code: AccountCodes.credit_expiration,
+                flags: getFlagsForAccountCode(AccountCodes.credit_expiration),
+                credits_pending: 0n,
+                credits_posted: 0n,
+                debits_pending: 0n,
+                debits_posted: 0n,
+                user_data_128: 0n,
+                user_data_64: 0n,
+                user_data_32: 0,
+                timestamp: 0n,
+                ledger: LEDGERS.credits,
+                reserved: 0,
+            },
+            {
                 id: ACCOUNT_IDS.liquidity_usd,
                 code: AccountCodes.liquidity_pool,
                 flags:

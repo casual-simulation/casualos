@@ -155,6 +155,7 @@ describe('SubscriptionController', () => {
                             'product_3_id',
                         ],
                         featureList: ['Feature 1', 'Feature 2', 'Feature 3'],
+                        creditExpiration: 'never-expire',
                     },
                     {
                         id: 'sub_2',
@@ -166,6 +167,7 @@ describe('SubscriptionController', () => {
                             'Feature 3000',
                         ],
                         purchasable: false,
+                        creditExpiration: 'never-expire',
                     },
                 ],
                 webhookSecret: 'webhook_secret',
@@ -382,6 +384,7 @@ describe('SubscriptionController', () => {
                         product: 'product_99_id',
                         studioOnly: true,
                         featureList: ['Feature 1'],
+                        creditExpiration: 'never-expire',
                     },
                     {
                         id: 'sub_4',
@@ -389,6 +392,7 @@ describe('SubscriptionController', () => {
                         product: 'product_1000_id',
                         userOnly: true,
                         featureList: ['Feature 1'],
+                        creditExpiration: 'never-expire',
                     },
                 ];
 
@@ -450,6 +454,7 @@ describe('SubscriptionController', () => {
                         product: 'product_99_id',
                         studioOnly: true,
                         featureList: ['Feature 1'],
+                        creditExpiration: 'never-expire',
                     },
                     {
                         id: 'sub_4',
@@ -457,6 +462,7 @@ describe('SubscriptionController', () => {
                         product: 'product_1000_id',
                         userOnly: true,
                         featureList: ['Feature 1'],
+                        creditExpiration: 'never-expire',
                     },
                     {
                         id: 'sub_5',
@@ -464,6 +470,7 @@ describe('SubscriptionController', () => {
                         description: 'A default product.',
                         featureList: ['Feature 1'],
                         defaultSubscription: true,
+                        creditExpiration: 'never-expire',
                     },
                 ];
 
@@ -1213,6 +1220,7 @@ describe('SubscriptionController', () => {
                         product: 'product_99_id',
                         studioOnly: true,
                         featureList: ['Feature 1'],
+                        creditExpiration: 'never-expire',
                     },
                     {
                         id: 'sub_4',
@@ -1220,6 +1228,7 @@ describe('SubscriptionController', () => {
                         product: 'product_1000_id',
                         userOnly: true,
                         featureList: ['Feature 1'],
+                        creditExpiration: 'never-expire',
                     },
                 ];
 
@@ -3835,6 +3844,7 @@ describe('SubscriptionController', () => {
                                     'Feature 2',
                                     'Feature 3',
                                 ],
+                                creditExpiration: 'never-expire',
                             },
                             {
                                 id: 'sub_2',
@@ -3845,6 +3855,7 @@ describe('SubscriptionController', () => {
                                     'Feature 2',
                                     'Feature 3',
                                 ],
+                                creditExpiration: 'never-expire',
                             },
                         ],
                         webhookSecret: 'webhook_secret',
@@ -4459,6 +4470,7 @@ describe('SubscriptionController', () => {
                                 'Feature 2',
                                 'Feature 3',
                             ],
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     checkoutConfig: {
@@ -4574,6 +4586,7 @@ describe('SubscriptionController', () => {
                                 'Feature 2',
                                 'Feature 3',
                             ],
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     portalConfig: {
@@ -5165,6 +5178,7 @@ describe('SubscriptionController', () => {
                                     'Feature 2',
                                     'Feature 3',
                                 ],
+                                creditExpiration: 'never-expire',
                             },
                             {
                                 id: 'sub_2',
@@ -5175,6 +5189,7 @@ describe('SubscriptionController', () => {
                                     'Feature 2',
                                     'Feature 3',
                                 ],
+                                creditExpiration: 'never-expire',
                             },
                         ],
                         webhookSecret: 'webhook_secret',
@@ -5740,6 +5755,7 @@ describe('SubscriptionController', () => {
                                 'Feature 2',
                                 'Feature 3',
                             ],
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     checkoutConfig: {
@@ -5861,6 +5877,7 @@ describe('SubscriptionController', () => {
                                 'Feature 2',
                                 'Feature 3',
                             ],
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     portalConfig: {
@@ -6336,6 +6353,7 @@ describe('SubscriptionController', () => {
                             product: '',
                             featureList: [],
                             tier: 'tier1',
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     tiers: {
@@ -6548,6 +6566,7 @@ describe('SubscriptionController', () => {
                             product: '',
                             featureList: [],
                             tier: 'tier1',
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     tiers: {
@@ -6883,6 +6902,7 @@ describe('SubscriptionController', () => {
                             product: '',
                             featureList: [],
                             tier: 'tier1',
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     tiers: {
@@ -7143,6 +7163,7 @@ describe('SubscriptionController', () => {
                             product: '',
                             featureList: [],
                             tier: 'tier1',
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     tiers: {
@@ -7272,6 +7293,7 @@ describe('SubscriptionController', () => {
                             product: '',
                             featureList: [],
                             tier: 'tier1',
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     tiers: {
@@ -7401,6 +7423,7 @@ describe('SubscriptionController', () => {
                             product: '',
                             featureList: [],
                             tier: 'tier1',
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     tiers: {
@@ -7606,6 +7629,7 @@ describe('SubscriptionController', () => {
                             product: '',
                             featureList: [],
                             tier: 'tier1',
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     tiers: {
@@ -7760,6 +7784,7 @@ describe('SubscriptionController', () => {
                             product: '',
                             featureList: [],
                             tier: 'tier1',
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     tiers: {
@@ -7832,6 +7857,7 @@ describe('SubscriptionController', () => {
                             product: '',
                             featureList: [],
                             tier: 'tier1',
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     tiers: {
@@ -7905,6 +7931,7 @@ describe('SubscriptionController', () => {
                             product: '',
                             featureList: [],
                             tier: 'tier1',
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     tiers: {
@@ -10197,6 +10224,7 @@ describe('SubscriptionController', () => {
                             product: '',
                             featureList: [],
                             tier: 'tier1',
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     tiers: {
@@ -12544,6 +12572,7 @@ describe('SubscriptionController', () => {
                             product: '',
                             featureList: [],
                             tier: 'tier1',
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     tiers: {
@@ -13246,6 +13275,7 @@ describe('SubscriptionController', () => {
                             product: '',
                             featureList: [],
                             tier: 'tier1',
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     tiers: {
@@ -14376,6 +14406,225 @@ describe('SubscriptionController', () => {
                     );
                 });
             });
+
+            describe('creditExpiration', () => {
+                beforeEach(() => {
+                    stripeMock.constructWebhookEvent.mockReturnValueOnce({
+                        id: 'event_id',
+                        type: 'invoice.paid',
+                        object: 'event',
+                        account: 'account_id',
+                        api_version: 'api_version',
+                        created: 123,
+                        data: {
+                            object: {
+                                id: 'invoiceId',
+                                customer: 'customer_id',
+                                currency: 'usd',
+                                total: 1000,
+                                subtotal: 1000,
+                                tax: 0,
+                                description: 'description',
+                                status: 'paid',
+                                paid: true,
+                                hosted_invoice_url: 'invoiceUrl',
+                                invoice_pdf: 'pdfUrl',
+                                lines: {
+                                    object: 'list',
+                                    data: [
+                                        {
+                                            id: 'line_item_1_id',
+                                            price: {
+                                                id: 'price_1',
+                                                product: 'product_1_id',
+                                            },
+                                        },
+                                    ],
+                                },
+                                subscription: 'sub',
+                            },
+                        },
+                        livemode: true,
+                        pending_webhooks: 1,
+                        request: {} as any,
+                    });
+                    stripeMock.getSubscriptionById.mockResolvedValueOnce({
+                        id: 'sub',
+                        status: 'active',
+                        current_period_start: 456,
+                        current_period_end: 999,
+                        cancel_at: 7777,
+                        canceled_at: null,
+                        ended_at: null,
+                        start_date: 123,
+                    });
+                });
+
+                it('should expire credits if set to expire-after-period', async () => {
+                    for (let sub of store.subscriptionConfiguration
+                        .subscriptions) {
+                        sub.creditExpiration = 'expire-after-period';
+                    }
+
+                    const userAccount = unwrap(
+                        await financialController.getOrCreateFinancialAccount({
+                            userId: userId,
+                            ledger: LEDGERS.credits,
+                        })
+                    );
+
+                    unwrap(
+                        await financialController.internalTransaction({
+                            transfers: [
+                                {
+                                    transferId: 999n,
+                                    amount: 123456n,
+                                    code: TransferCodes.purchase_credits,
+                                    debitAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    creditAccountId: userAccount.account.id,
+                                    currency: CurrencyCodes.credits,
+                                },
+                            ],
+                        })
+                    );
+
+                    const result = await controller.handleStripeWebhook({
+                        requestBody: 'request_body',
+                        signature: 'request_signature',
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                    });
+                    expect(
+                        stripeMock.constructWebhookEvent
+                    ).toHaveBeenCalledTimes(1);
+                    expect(
+                        stripeMock.constructWebhookEvent
+                    ).toHaveBeenCalledWith(
+                        'request_body',
+                        'request_signature',
+                        'webhook_secret'
+                    );
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: userAccount.account.id,
+                            credits_pending: 0n,
+                            credits_posted: 123456n,
+                            debits_pending: 0n,
+                            debits_posted: 123456n,
+                        },
+                    ]);
+
+                    checkTransfers(
+                        await financialInterface.lookupTransfers([4n]),
+                        [
+                            {
+                                id: 4n,
+                                amount: 123456n,
+                                code: TransferCodes.credit_expiration,
+                                debit_account_id: userAccount.account.id,
+                                credit_account_id:
+                                    ACCOUNT_IDS.credit_expiration,
+                                flags: TransferFlags.balancing_debit,
+                            },
+                        ]
+                    );
+                });
+
+                it('should expire credits before granting new ones', async () => {
+                    for (let sub of store.subscriptionConfiguration
+                        .subscriptions) {
+                        sub.creditExpiration = 'expire-after-period';
+                        sub.creditGrant = 500;
+                    }
+
+                    const userAccount = unwrap(
+                        await financialController.getOrCreateFinancialAccount({
+                            userId: userId,
+                            ledger: LEDGERS.credits,
+                        })
+                    );
+
+                    unwrap(
+                        await financialController.internalTransaction({
+                            transfers: [
+                                {
+                                    transferId: 999n,
+                                    amount: 123456n,
+                                    code: TransferCodes.purchase_credits,
+                                    debitAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    creditAccountId: userAccount.account.id,
+                                    currency: CurrencyCodes.credits,
+                                },
+                            ],
+                        })
+                    );
+
+                    const result = await controller.handleStripeWebhook({
+                        requestBody: 'request_body',
+                        signature: 'request_signature',
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                    });
+                    expect(
+                        stripeMock.constructWebhookEvent
+                    ).toHaveBeenCalledTimes(1);
+                    expect(
+                        stripeMock.constructWebhookEvent
+                    ).toHaveBeenCalledWith(
+                        'request_body',
+                        'request_signature',
+                        'webhook_secret'
+                    );
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: userAccount.account.id,
+                            credits_pending: 0n,
+                            credits_posted: 123456n + 500n,
+                            debits_pending: 0n,
+                            debits_posted: 123456n,
+                        },
+                    ]);
+
+                    checkTransfers(
+                        await financialInterface.lookupTransfers([4n, 5n, 6n]),
+                        [
+                            {
+                                id: 4n,
+                                amount: 123456n,
+                                code: TransferCodes.credit_expiration,
+                                debit_account_id: userAccount.account.id,
+                                credit_account_id:
+                                    ACCOUNT_IDS.credit_expiration,
+                                flags:
+                                    TransferFlags.linked |
+                                    TransferFlags.balancing_debit,
+                            },
+                            {
+                                id: 5n,
+                                amount: 1000n,
+                                code: TransferCodes.purchase_credits,
+                                debit_account_id: ACCOUNT_IDS.assets_stripe,
+                                credit_account_id: ACCOUNT_IDS.liquidity_usd,
+                            },
+                            {
+                                id: 6n,
+                                amount: 500n,
+                                code: TransferCodes.purchase_credits,
+                                debit_account_id: ACCOUNT_IDS.liquidity_credits,
+                                credit_account_id: userAccount.account.id,
+                            },
+                        ]
+                    );
+                });
+            });
         });
 
         describe('studio', () => {
@@ -14951,6 +15200,237 @@ describe('SubscriptionController', () => {
                         );
                     });
                 });
+
+                describe('creditExpiration', () => {
+                    beforeEach(() => {
+                        stripeMock.constructWebhookEvent.mockReturnValueOnce({
+                            id: 'event_id',
+                            type: 'invoice.paid',
+                            object: 'event',
+                            account: 'account_id',
+                            api_version: 'api_version',
+                            created: 123,
+                            data: {
+                                object: {
+                                    id: 'invoiceId',
+                                    customer: 'customer_id',
+                                    currency: 'usd',
+                                    total: 1000,
+                                    subtotal: 1000,
+                                    tax: 0,
+                                    description: 'description',
+                                    status: 'paid',
+                                    paid: true,
+                                    hosted_invoice_url: 'invoiceUrl',
+                                    invoice_pdf: 'pdfUrl',
+                                    lines: {
+                                        object: 'list',
+                                        data: [
+                                            {
+                                                id: 'line_item_1_id',
+                                                price: {
+                                                    id: 'price_1',
+                                                    product: 'product_1_id',
+                                                },
+                                            },
+                                        ],
+                                    },
+                                    subscription: 'sub',
+                                },
+                            },
+                            livemode: true,
+                            pending_webhooks: 1,
+                            request: {} as any,
+                        });
+                        stripeMock.getSubscriptionById.mockResolvedValueOnce({
+                            id: 'sub',
+                            status: 'active',
+                            current_period_start: 456,
+                            current_period_end: 999,
+                            cancel_at: 7777,
+                            canceled_at: null,
+                            ended_at: null,
+                            start_date: 123,
+                        });
+                    });
+
+                    it('should expire credits if set to expire-after-period', async () => {
+                        for (let sub of store.subscriptionConfiguration
+                            .subscriptions) {
+                            sub.creditExpiration = 'expire-after-period';
+                        }
+
+                        const studioAccount = unwrap(
+                            await financialController.getOrCreateFinancialAccount(
+                                {
+                                    studioId: studioId,
+                                    ledger: LEDGERS.credits,
+                                }
+                            )
+                        );
+
+                        unwrap(
+                            await financialController.internalTransaction({
+                                transfers: [
+                                    {
+                                        transferId: 999n,
+                                        amount: 123456n,
+                                        code: TransferCodes.purchase_credits,
+                                        debitAccountId:
+                                            ACCOUNT_IDS.liquidity_credits,
+                                        creditAccountId:
+                                            studioAccount.account.id,
+                                        currency: CurrencyCodes.credits,
+                                    },
+                                ],
+                            })
+                        );
+
+                        const result = await controller.handleStripeWebhook({
+                            requestBody: 'request_body',
+                            signature: 'request_signature',
+                        });
+
+                        expect(result).toEqual({
+                            success: true,
+                        });
+                        expect(
+                            stripeMock.constructWebhookEvent
+                        ).toHaveBeenCalledTimes(1);
+                        expect(
+                            stripeMock.constructWebhookEvent
+                        ).toHaveBeenCalledWith(
+                            'request_body',
+                            'request_signature',
+                            'webhook_secret'
+                        );
+
+                        await checkAccounts(financialInterface, [
+                            {
+                                id: studioAccount.account.id,
+                                credits_pending: 0n,
+                                credits_posted: 123456n,
+                                debits_pending: 0n,
+                                debits_posted: 123456n,
+                            },
+                        ]);
+
+                        checkTransfers(
+                            await financialInterface.lookupTransfers([4n]),
+                            [
+                                {
+                                    id: 4n,
+                                    amount: 123456n,
+                                    code: TransferCodes.credit_expiration,
+                                    debit_account_id: studioAccount.account.id,
+                                    credit_account_id:
+                                        ACCOUNT_IDS.credit_expiration,
+                                    flags: TransferFlags.balancing_debit,
+                                },
+                            ]
+                        );
+                    });
+
+                    it('should expire credits before granting new ones', async () => {
+                        for (let sub of store.subscriptionConfiguration
+                            .subscriptions) {
+                            sub.creditExpiration = 'expire-after-period';
+                            sub.creditGrant = 500;
+                        }
+
+                        const studioAccount = unwrap(
+                            await financialController.getOrCreateFinancialAccount(
+                                {
+                                    studioId: studioId,
+                                    ledger: LEDGERS.credits,
+                                }
+                            )
+                        );
+
+                        unwrap(
+                            await financialController.internalTransaction({
+                                transfers: [
+                                    {
+                                        transferId: 999n,
+                                        amount: 123456n,
+                                        code: TransferCodes.purchase_credits,
+                                        debitAccountId:
+                                            ACCOUNT_IDS.liquidity_credits,
+                                        creditAccountId:
+                                            studioAccount.account.id,
+                                        currency: CurrencyCodes.credits,
+                                    },
+                                ],
+                            })
+                        );
+
+                        const result = await controller.handleStripeWebhook({
+                            requestBody: 'request_body',
+                            signature: 'request_signature',
+                        });
+
+                        expect(result).toEqual({
+                            success: true,
+                        });
+                        expect(
+                            stripeMock.constructWebhookEvent
+                        ).toHaveBeenCalledTimes(1);
+                        expect(
+                            stripeMock.constructWebhookEvent
+                        ).toHaveBeenCalledWith(
+                            'request_body',
+                            'request_signature',
+                            'webhook_secret'
+                        );
+
+                        await checkAccounts(financialInterface, [
+                            {
+                                id: studioAccount.account.id,
+                                credits_pending: 0n,
+                                credits_posted: 123456n + 500n,
+                                debits_pending: 0n,
+                                debits_posted: 123456n,
+                            },
+                        ]);
+
+                        checkTransfers(
+                            await financialInterface.lookupTransfers([
+                                4n,
+                                5n,
+                                6n,
+                            ]),
+                            [
+                                {
+                                    id: 4n,
+                                    amount: 123456n,
+                                    code: TransferCodes.credit_expiration,
+                                    debit_account_id: studioAccount.account.id,
+                                    credit_account_id:
+                                        ACCOUNT_IDS.credit_expiration,
+                                    flags:
+                                        TransferFlags.linked |
+                                        TransferFlags.balancing_debit,
+                                },
+                                {
+                                    id: 5n,
+                                    amount: 1000n,
+                                    code: TransferCodes.purchase_credits,
+                                    debit_account_id: ACCOUNT_IDS.assets_stripe,
+                                    credit_account_id:
+                                        ACCOUNT_IDS.liquidity_usd,
+                                },
+                                {
+                                    id: 6n,
+                                    amount: 500n,
+                                    code: TransferCodes.purchase_credits,
+                                    debit_account_id:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    credit_account_id: studioAccount.account.id,
+                                },
+                            ]
+                        );
+                    });
+                });
             });
         });
 
@@ -15034,6 +15514,7 @@ describe('SubscriptionController', () => {
                                 product: '',
                                 featureList: [],
                                 tier: 'tier1',
+                                creditExpiration: 'never-expire',
                             },
                         ],
                         tiers: {
