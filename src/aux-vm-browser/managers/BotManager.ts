@@ -333,11 +333,19 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         );
 
         for (let space in defaultPartitions) {
-            if (defaultPartitions[space].type !== 'memory') {
+            if (
+                defaultPartitions[space] &&
+                defaultPartitions[space].type !== 'memory'
+            ) {
+                const partition = defaultPartitions[space];
+                const isPrivate =
+                    partition.type === 'proxy'
+                        ? partition.partition.private
+                        : partition.private;
                 defaultPartitions[space] = {
                     type: 'memory',
                     initialState: {},
-                    private: defaultPartitions[space].private,
+                    private: isPrivate,
                 };
             }
         }
