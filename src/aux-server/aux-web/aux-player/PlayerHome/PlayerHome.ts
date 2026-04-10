@@ -1112,18 +1112,22 @@ export default class PlayerHome extends Vue {
             changes.record = recordName;
             hasChange = true;
         }
+        const desiredStaticInst = this.query['staticInst'] as string | string[];
+        const desiredTempInst = this.query['tempInst'] as string | string[];
         if (
             hasChange &&
             isStatic(botManager.origin) &&
-            changes.staticInst !== bot.tags.inst
+            hasValue(desiredStaticInst) &&
+            !areEqualInstLists(desiredStaticInst, bot.tags.inst as any)
         ) {
-            changes.inst = changes.staticInst;
+            changes.inst = desiredStaticInst;
         } else if (
             hasChange &&
             isTemp(botManager.origin) &&
-            changes.tempInst !== bot.tags.inst
+            hasValue(desiredTempInst) &&
+            !areEqualInstLists(desiredTempInst, bot.tags.inst as any)
         ) {
-            changes.inst = changes.tempInst;
+            changes.inst = desiredTempInst;
         }
         if (hasChange && hasValue(changes.inst)) {
             changes.inst = sortInsts(changes.inst, botManager.inst);
