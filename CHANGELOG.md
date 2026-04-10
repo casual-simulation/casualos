@@ -21,6 +21,7 @@
 -   Added `recordName` support to AI chat, streaming chat, image generation, and skybox generation requests so record-owned subscriptions can be used for authorization, billing, and metrics.
 -   Added the `ai.chat`, `ai.image`, and `ai.skybox` policy resource kinds with `create` permissions.
 -   Improved `xp.getAccountBalances(options?)` to accept one of `userId`, `studioId`, or `contractId` in the `options` parameter object.
+-   Added the `temp` BIOS option to the player and studio configuration UI, and updated temp insts to use in-memory-only partitions with no persistence across refreshes.
 
 ### :bug: Bug Fixes
 
