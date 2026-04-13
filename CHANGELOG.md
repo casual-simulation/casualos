@@ -86,6 +86,8 @@
                 }
             }
             ```
+-   Included Subscription info in the `xp.getAccountBalances()` result.
+    -   Successful results now include a `subscription` property which contains information about the user/studio's current subscription and includes information like: subscription tier, credit expiration policy, and subscription period (start and end).
 
 ### :bug: Bug Fixes
 
