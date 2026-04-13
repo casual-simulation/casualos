@@ -21,6 +21,70 @@
 -   Added `recordName` support to AI chat, streaming chat, image generation, and skybox generation requests so record-owned subscriptions can be used for authorization, billing, and metrics.
 -   Added the `ai.chat`, `ai.image`, and `ai.skybox` policy resource kinds with `create` permissions.
 -   Improved `xp.getAccountBalances(options?)` to accept one of `userId`, `studioId`, or `contractId` in the `options` parameter object.
+-   Added support for configuring credit expiration.
+    -   By default, credits never expire.
+    -   Credit expiration can be configured via the `SERVER_CONFIG.subscriptions.subscriptions[i].creditExpiration` key, and can be set to one of the following options:
+        -   `never-expire` (Default) - Credits never expire.
+        -   `expire-after-period` - Credits expire when the user's subscription period ends. This can happen either just before renewal, or upon cancellation of the subscription. This will move all the credits from the user/studio account to the credit expiration account.
+    -   When credits expire, they are moved to the `credit_expiration` account (`7001`) with transfer code `credit_expiration` (`3005`).
+    -   Expired credits can be configured to automatically transfer to an arbitrary account via the `SERVER_CONFIG.jobs.financial.automatedSweep` key.
+        -   WARNING: financial jobs currently only work for server-based deployments (not serverless like Lambda).
+        -   To configure expired credits to sweep to the revenue account:
+            ```json
+            {
+                "jobs": {
+                    "financial": {
+                        "automatedSweep": {
+                            "repeatOptions": {
+                                "pattern": "0 3 15 * *"
+                            },
+                            "jobTemplate": {
+                                "data": {
+                                    "type": "financial-automated-sweep",
+                                    "sweeps": [
+                                        {
+                                            "code": 8,
+                                            "currency": "credits",
+                                            "debitAccountId": "7001",
+                                            "creditAccountId": "4104"
+                                        }
+                                    ]
+                                },
+                                "name": "financial-automated-sweep"
+                            }
+                        }
+                    }
+                }
+            }
+            ```
+        -   To configure expired credits to sweep to another account:
+            ```json
+            {
+                "jobs": {
+                    "financial": {
+                        "automatedSweep": {
+                            "repeatOptions": {
+                                "pattern": "0 3 15 * *"
+                            },
+                            "jobTemplate": {
+                                "data": {
+                                    "type": "financial-automated-sweep",
+                                    "sweeps": [
+                                        {
+                                            "code": 3,
+                                            "currency": "credits",
+                                            "debitAccountId": "7001",
+                                            "creditAccountId": "99999999"
+                                        }
+                                    ]
+                                },
+                                "name": "financial-automated-sweep"
+                            }
+                        }
+                    }
+                }
+            }
+            ```
 
 ### :bug: Bug Fixes
 
