@@ -1571,6 +1571,43 @@ Because repo/add_updates is a very common permission, we periodically cache perm
                                 .describe(
                                     'A scheduled job that periodically sweeps value from one account to another. If null, then automated credit sweeps will be disabled.'
                                 ),
+
+                            extraJobs: z
+                                .array(
+                                    z.object({
+                                        id: z
+                                            .string()
+                                            .min(1)
+                                            .describe(
+                                                'The unique ID of the job.'
+                                            ),
+                                        job: z
+                                            .union([
+                                                z.literal('removed'),
+                                                bullmqScheduledJobSchema(
+                                                    z.discriminatedUnion(
+                                                        'type',
+                                                        [
+                                                            FINANCIAL_JOB_AUTOMATED_SWEEP_SCHEMA,
+                                                            FINANCIAL_JOB_PERIODIC_BILLING_SCHEMA.omit(
+                                                                {
+                                                                    nowMs: true,
+                                                                }
+                                                            ),
+                                                            FINANCIAL_JOB_REVENUE_CREDIT_SWEEP_SCHEMA,
+                                                        ]
+                                                    )
+                                                ),
+                                            ])
+                                            .describe(
+                                                'The job to be added. If set to "removed", then the job with the corresponding ID will be removed from the schedule. This allows for dynamically adding and removing jobs without needing to redeploy the server.'
+                                            ),
+                                    })
+                                )
+                                .optional()
+                                .describe(
+                                    'A list of extra scheduled jobs that should be added to the financial processor.'
+                                ),
                         }),
                     ])
                     .prefault({

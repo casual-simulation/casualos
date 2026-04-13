@@ -4722,7 +4722,7 @@ export class SubscriptionController {
         return success();
     }
 
-    private async _internalTransactionSweepCredits(
+    private async _internalTransactionExpireCredits(
         sub: APISubscription,
         accountFilter: Omit<UniqueFinancialAccountFilter, 'ledger'>
     ): Promise<
@@ -4890,10 +4890,10 @@ export class SubscriptionController {
 
         if (!active && sub.creditExpiration === 'expire-after-period') {
             const result = user
-                ? await this._internalTransactionSweepCredits(sub, {
+                ? await this._internalTransactionExpireCredits(sub, {
                       userId: user.id,
                   })
-                : await this._internalTransactionSweepCredits(sub, {
+                : await this._internalTransactionExpireCredits(sub, {
                       studioId: studio.id,
                   });
 
