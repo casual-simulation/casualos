@@ -5716,6 +5716,7 @@ export class RecordsServer {
                                 ? {
                                       usd: balance.usd?.toJSON(),
                                       credits: balance.credits?.toJSON(),
+                                      subscription: balance.subscription,
                                   }
                                 : undefined
                         )
@@ -5789,6 +5790,7 @@ export class RecordsServer {
                             intervalCost: s.intervalCost,
                             currency: s.currency,
                             featureList: s.featureList,
+                            creditExpiration: s.creditExpiration,
                         })),
                         purchasableSubscriptions:
                             result.purchasableSubscriptions.map((s) => ({
@@ -8630,6 +8632,7 @@ export class RecordsServer {
                 intervalCost: s.intervalCost,
                 currency: s.currency,
                 featureList: s.featureList,
+                creditExpiration: s.creditExpiration,
             })),
             purchasableSubscriptions: result.purchasableSubscriptions.map(
                 (s) => ({

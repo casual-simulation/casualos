@@ -16,6 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import type {
+    JSONAccountBalance,
     MultiError,
     Result,
     ServerError,
@@ -1804,6 +1805,12 @@ export interface AccountBalances {
      */
     credits: AccountBalance | undefined;
 }
+
+export type JSONAccountBalances = {
+    [key in keyof AccountBalances]: AccountBalances[key] extends AccountBalance
+        ? JSONAccountBalance
+        : AccountBalances[key];
+};
 
 export interface UsageBillingOptions {
     /**

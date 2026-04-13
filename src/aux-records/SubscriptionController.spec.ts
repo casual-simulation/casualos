@@ -2004,6 +2004,100 @@ describe('SubscriptionController', () => {
                     })
                 );
             });
+
+            describe('subscriptions', () => {
+                it('should include subscription info when the user has a subscription', async () => {
+                    nowMock.mockReturnValue(150);
+
+                    await store.saveUser({
+                        ...user,
+                        subscriptionId: 'sub_1',
+                        subscriptionStatus: 'active',
+                        subscriptionPeriodStartMs: 100,
+                        subscriptionPeriodEndMs: 200,
+                    });
+
+                    const result = await controller.getBalances({
+                        userId,
+                        filter: {
+                            userId,
+                        },
+                    });
+
+                    expect(result).toEqual(
+                        success({
+                            usd: new AccountBalance({
+                                pendingCredits: 99n,
+                                pendingDebits: 0n,
+                                credits: 5123n,
+                                debits: 500n,
+                                displayFactor: 100n,
+                                accountId: account.account.id.toString(),
+                                currency: 'usd',
+                            }),
+                            subscription: {
+                                subscriptionId: 'sub_1',
+                                periodStartMs: 100,
+                                periodEndMs: 200,
+                                hasActiveSubscription: true,
+                                subscriptionTier: undefined,
+                                creditExpiration: 'never-expire',
+                            },
+                        })
+                    );
+                });
+
+                it('should include subscription the tier and expiration info', async () => {
+                    nowMock.mockReturnValue(150);
+
+                    store.subscriptionConfiguration =
+                        createTestSubConfiguration((config) =>
+                            config.addSubscription('sub_1', (sub) =>
+                                sub
+                                    .withTier('tier_1')
+                                    .withAllDefaultFeatures()
+                                    .withCreditExpiration('expire-after-period')
+                            )
+                        );
+
+                    await store.saveUser({
+                        ...user,
+                        subscriptionId: 'sub_1',
+                        subscriptionStatus: 'active',
+                        subscriptionPeriodStartMs: 100,
+                        subscriptionPeriodEndMs: 200,
+                    });
+
+                    const result = await controller.getBalances({
+                        userId,
+                        filter: {
+                            userId,
+                        },
+                    });
+
+                    expect(result).toEqual(
+                        success({
+                            usd: new AccountBalance({
+                                pendingCredits: 99n,
+                                pendingDebits: 0n,
+                                credits: 5123n,
+                                debits: 500n,
+                                displayFactor: 100n,
+                                accountId: account.account.id.toString(),
+                                currency: 'usd',
+                            }),
+                            subscription: {
+                                subscriptionId: 'sub_1',
+                                periodStartMs: 100,
+                                periodEndMs: 200,
+                                hasActiveSubscription: true,
+                                subscriptionTier: 'tier_1',
+                                creditExpiration: 'expire-after-period',
+                            },
+                        })
+                    );
+                });
+            });
         });
 
         describe('studio', () => {
@@ -2167,6 +2261,102 @@ describe('SubscriptionController', () => {
                             'You are not authorized to perform this action.',
                     })
                 );
+            });
+
+            describe('subscriptions', () => {
+                it('should include subscription info when the studio has a subscription', async () => {
+                    nowMock.mockReturnValue(150);
+
+                    const studio = await store.getStudioById(studioId);
+                    await store.updateStudio({
+                        ...studio,
+                        subscriptionId: 'sub_1',
+                        subscriptionStatus: 'active',
+                        subscriptionPeriodStartMs: 100,
+                        subscriptionPeriodEndMs: 200,
+                    });
+
+                    const result = await controller.getBalances({
+                        userId,
+                        filter: {
+                            studioId,
+                        },
+                    });
+
+                    expect(result).toEqual(
+                        success({
+                            usd: new AccountBalance({
+                                pendingCredits: 99n,
+                                pendingDebits: 0n,
+                                credits: 5123n,
+                                debits: 500n,
+                                displayFactor: 100n,
+                                accountId: account.account.id.toString(),
+                                currency: 'usd',
+                            }),
+                            subscription: {
+                                subscriptionId: 'sub_1',
+                                periodStartMs: 100,
+                                periodEndMs: 200,
+                                hasActiveSubscription: true,
+                                subscriptionTier: undefined,
+                                creditExpiration: 'never-expire',
+                            },
+                        })
+                    );
+                });
+
+                it('should include subscription the tier and expiration info', async () => {
+                    nowMock.mockReturnValue(150);
+
+                    store.subscriptionConfiguration =
+                        createTestSubConfiguration((config) =>
+                            config.addSubscription('sub_1', (sub) =>
+                                sub
+                                    .withTier('tier_1')
+                                    .withAllDefaultFeatures()
+                                    .withCreditExpiration('expire-after-period')
+                            )
+                        );
+
+                    const studio = await store.getStudioById(studioId);
+                    await store.updateStudio({
+                        ...studio,
+                        subscriptionId: 'sub_1',
+                        subscriptionStatus: 'active',
+                        subscriptionPeriodStartMs: 100,
+                        subscriptionPeriodEndMs: 200,
+                    });
+
+                    const result = await controller.getBalances({
+                        userId,
+                        filter: {
+                            studioId,
+                        },
+                    });
+
+                    expect(result).toEqual(
+                        success({
+                            usd: new AccountBalance({
+                                pendingCredits: 99n,
+                                pendingDebits: 0n,
+                                credits: 5123n,
+                                debits: 500n,
+                                displayFactor: 100n,
+                                accountId: account.account.id.toString(),
+                                currency: 'usd',
+                            }),
+                            subscription: {
+                                subscriptionId: 'sub_1',
+                                periodStartMs: 100,
+                                periodEndMs: 200,
+                                hasActiveSubscription: true,
+                                subscriptionTier: 'tier_1',
+                                creditExpiration: 'expire-after-period',
+                            },
+                        })
+                    );
+                });
             });
         });
 
@@ -14412,7 +14602,7 @@ describe('SubscriptionController', () => {
                 });
             });
 
-            describe.only('creditExpiration', () => {
+            describe('creditExpiration', () => {
                 beforeEach(() => {
                     stripeMock.constructWebhookEvent.mockReturnValueOnce({
                         id: 'event_id',
@@ -15412,7 +15602,7 @@ describe('SubscriptionController', () => {
                 });
             });
 
-            describe.only('creditExpiration', () => {
+            describe('creditExpiration', () => {
                 beforeEach(() => {
                     stripeMock.constructWebhookEvent.mockReturnValueOnce({
                         id: 'event_id',

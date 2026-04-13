@@ -467,6 +467,13 @@ export class SubscriptionBuilder extends FeaturesBuilder {
         this._sub.featureList = list;
         return this;
     }
+
+    withCreditExpiration(
+        expiration: 'never-expire' | 'expire-after-period'
+    ): this {
+        this._sub.creditExpiration = expiration;
+        return this;
+    }
 }
 
 export class SubscriptionConfigBuilder {

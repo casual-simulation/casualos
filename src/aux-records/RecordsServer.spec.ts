@@ -1827,6 +1827,7 @@ describe('RecordsServer', () => {
                             intervalCost: 123,
                             currency: 'usd',
                             featureList: ['Feature 1', 'Feature 2'],
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     purchasableSubscriptions: [],
@@ -1921,6 +1922,7 @@ describe('RecordsServer', () => {
                             intervalCost: 123,
                             currency: 'usd',
                             featureList: ['Feature 1', 'Feature 2'],
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     purchasableSubscriptions: [],
@@ -2009,6 +2011,7 @@ describe('RecordsServer', () => {
                             intervalCost: 123,
                             currency: 'usd',
                             featureList: ['Feature 1', 'Feature 2'],
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     purchasableSubscriptions: [],
@@ -22496,6 +22499,7 @@ describe('RecordsServer', () => {
                             product: '',
                             featureList: [],
                             tier: 'tier1',
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     tiers: {
@@ -22908,6 +22912,7 @@ describe('RecordsServer', () => {
                             product: '',
                             featureList: [],
                             tier: 'tier1',
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     tiers: {
@@ -23086,6 +23091,7 @@ describe('RecordsServer', () => {
                             product: '',
                             featureList: [],
                             tier: 'tier1',
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     tiers: {
@@ -23292,6 +23298,7 @@ describe('RecordsServer', () => {
                             product: '',
                             featureList: [],
                             tier: 'tier1',
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     tiers: {
@@ -23542,6 +23549,7 @@ describe('RecordsServer', () => {
                             product: '',
                             featureList: [],
                             tier: 'tier1',
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     tiers: {
@@ -28670,6 +28678,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                                 intervalCost: 123,
                                 currency: 'usd',
                                 featureList: ['Feature 1', 'Feature 2'],
+                                creditExpiration: 'never-expire',
                             },
                         ],
                         purchasableSubscriptions: [],
@@ -28764,6 +28773,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                                 intervalCost: 123,
                                 currency: 'usd',
                                 featureList: ['Feature 1', 'Feature 2'],
+                                creditExpiration: 'never-expire',
                             },
                         ],
                         purchasableSubscriptions: [],
@@ -28832,6 +28842,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         eligibleProducts: ['product_id'],
                         featureList: ['Feature 1', 'Feature 2'],
                         product: 'product_id',
+                        creditExpiration: 'never-expire',
                     },
                     {
                         id: 'default',
@@ -28839,6 +28850,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         description: 'description',
                         defaultSubscription: true,
                         featureList: ['default feature 1'],
+                        creditExpiration: 'never-expire',
                     },
                 ];
                 stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
@@ -29049,6 +29061,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                                 intervalCost: 123,
                                 currency: 'usd',
                                 featureList: ['Feature 1', 'Feature 2'],
+                                creditExpiration: 'never-expire',
                             },
                         ],
                         purchasableSubscriptions: [],
@@ -29142,6 +29155,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                                 intervalCost: 123,
                                 currency: 'usd',
                                 featureList: ['Feature 1', 'Feature 2'],
+                                creditExpiration: 'never-expire',
                             },
                         ],
                         purchasableSubscriptions: [],
@@ -29199,6 +29213,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         eligibleProducts: ['product_id'],
                         featureList: ['Feature 1', 'Feature 2'],
                         product: 'product_id',
+                        creditExpiration: 'never-expire',
                     },
                     {
                         id: 'default',
@@ -29206,6 +29221,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         description: 'description',
                         defaultSubscription: true,
                         featureList: ['default feature 1'],
+                        creditExpiration: 'never-expire',
                     },
                 ];
                 stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
@@ -29416,6 +29432,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                                 intervalCost: 123,
                                 currency: 'usd',
                                 featureList: ['Feature 1', 'Feature 2'],
+                                creditExpiration: 'never-expire',
                             },
                         ],
                         purchasableSubscriptions: [],
