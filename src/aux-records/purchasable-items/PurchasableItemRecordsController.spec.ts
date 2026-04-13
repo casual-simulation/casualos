@@ -98,6 +98,7 @@ describe('PurchasableItemRecordsController', () => {
                     product: '',
                     featureList: [],
                     tier: 'tier1',
+                    creditExpiration: 'never-expire',
                 },
             ],
             tiers: {
@@ -179,6 +180,7 @@ describe('PurchasableItemRecordsController', () => {
                             product: '',
                             featureList: [],
                             tier: 'tier1',
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     tiers: {
@@ -233,6 +235,7 @@ describe('PurchasableItemRecordsController', () => {
                             product: '',
                             featureList: [],
                             tier: 'tier1',
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     tiers: {
@@ -294,6 +297,7 @@ describe('PurchasableItemRecordsController', () => {
                             product: '',
                             featureList: [],
                             tier: 'tier1',
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     tiers: {
@@ -362,6 +366,7 @@ describe('PurchasableItemRecordsController', () => {
                             product: '',
                             featureList: [],
                             tier: 'tier1',
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     tiers: {
@@ -444,6 +449,7 @@ describe('PurchasableItemRecordsController', () => {
                             product: '',
                             featureList: [],
                             tier: 'tier1',
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     tiers: {
@@ -534,6 +540,7 @@ describe('PurchasableItemRecordsController', () => {
                             product: '',
                             featureList: [],
                             tier: 'tier1',
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     tiers: {
@@ -626,6 +633,7 @@ describe('PurchasableItemRecordsController', () => {
                             product: '',
                             featureList: [],
                             tier: 'tier1',
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     tiers: {
@@ -695,6 +703,7 @@ describe('PurchasableItemRecordsController', () => {
                             product: '',
                             featureList: [],
                             tier: 'tier1',
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     tiers: {
@@ -831,6 +840,7 @@ describe('PurchasableItemRecordsController', () => {
                             product: '',
                             featureList: [],
                             tier: 'tier1',
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     tiers: {

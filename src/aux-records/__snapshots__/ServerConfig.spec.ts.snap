@@ -375,6 +375,7 @@ Object {
       "returnUrl": "https://example.com/",
       "subscriptions": Array [
         Object {
+          "creditExpiration": "never-expire",
           "defaultSubscription": true,
           "description": "Play Personalized 3D Experiences from your Favorite Brands for FREE",
           "featureList": Array [
@@ -387,6 +388,7 @@ Object {
           "userOnly": true,
         },
         Object {
+          "creditExpiration": "never-expire",
           "defaultSubscription": false,
           "description": "Play Personalized 3D Experiences from your Favorite Brands for FREE",
           "featureList": Array [
@@ -400,6 +402,7 @@ Object {
           "userOnly": true,
         },
         Object {
+          "creditExpiration": "never-expire",
           "defaultSubscription": false,
           "description": "Play Personalized 3D Experiences from your Favorite Brands for FREE",
           "featureList": Array [
@@ -413,6 +416,7 @@ Object {
           "userOnly": true,
         },
         Object {
+          "creditExpiration": "never-expire",
           "defaultSubscription": false,
           "eligibleProducts": Array [
             "prod_OrbyQz0UFHLQQO",
@@ -429,6 +433,7 @@ Object {
           "userOnly": true,
         },
         Object {
+          "creditExpiration": "never-expire",
           "defaultSubscription": false,
           "eligibleProducts": Array [
             "prod_OrXGgxeKpv94BF",
@@ -447,6 +452,7 @@ Object {
           "userOnly": true,
         },
         Object {
+          "creditExpiration": "never-expire",
           "defaultSubscription": false,
           "eligibleProducts": Array [
             "prod_Orrnj0pqlTj02P",
@@ -465,6 +471,7 @@ Object {
           "userOnly": false,
         },
         Object {
+          "creditExpiration": "never-expire",
           "defaultSubscription": false,
           "eligibleProducts": Array [
             "prod_Orro9s8Gqqey9Y",
@@ -483,6 +490,7 @@ Object {
           "userOnly": false,
         },
         Object {
+          "creditExpiration": "never-expire",
           "defaultSubscription": false,
           "eligibleProducts": Array [
             "prod_Orrqb0wFsDfUwg",
@@ -501,6 +509,7 @@ Object {
           "userOnly": false,
         },
         Object {
+          "creditExpiration": "never-expire",
           "defaultSubscription": false,
           "eligibleProducts": Array [
             "prod_OrrsITJLnxo7Po",
@@ -519,6 +528,7 @@ Object {
           "userOnly": false,
         },
         Object {
+          "creditExpiration": "never-expire",
           "defaultSubscription": false,
           "eligibleProducts": Array [
             "prod_prod_pubrecnotinstripe",
@@ -2415,6 +2425,7 @@ Object {
       "returnUrl": "https://example.com/",
       "subscriptions": Array [
         Object {
+          "creditExpiration": "never-expire",
           "defaultSubscription": true,
           "description": "Play Personalized 3D Experiences from your Favorite Brands for FREE",
           "featureList": Array [
@@ -2427,6 +2438,7 @@ Object {
           "userOnly": true,
         },
         Object {
+          "creditExpiration": "never-expire",
           "defaultSubscription": false,
           "description": "Play Personalized 3D Experiences from your Favorite Brands for FREE",
           "featureList": Array [
@@ -2440,6 +2452,7 @@ Object {
           "userOnly": true,
         },
         Object {
+          "creditExpiration": "never-expire",
           "defaultSubscription": false,
           "description": "Play Personalized 3D Experiences from your Favorite Brands for FREE",
           "featureList": Array [
@@ -2453,6 +2466,7 @@ Object {
           "userOnly": true,
         },
         Object {
+          "creditExpiration": "never-expire",
           "defaultSubscription": false,
           "eligibleProducts": Array [
             "prod_OrbyQz0UFHLQQO",
@@ -2469,6 +2483,7 @@ Object {
           "userOnly": true,
         },
         Object {
+          "creditExpiration": "never-expire",
           "defaultSubscription": false,
           "eligibleProducts": Array [
             "prod_OrXGgxeKpv94BF",
@@ -2487,6 +2502,7 @@ Object {
           "userOnly": true,
         },
         Object {
+          "creditExpiration": "never-expire",
           "defaultSubscription": false,
           "eligibleProducts": Array [
             "prod_Orrnj0pqlTj02P",
@@ -2505,6 +2521,7 @@ Object {
           "userOnly": false,
         },
         Object {
+          "creditExpiration": "never-expire",
           "defaultSubscription": false,
           "eligibleProducts": Array [
             "prod_Orro9s8Gqqey9Y",
@@ -2523,6 +2540,7 @@ Object {
           "userOnly": false,
         },
         Object {
+          "creditExpiration": "never-expire",
           "defaultSubscription": false,
           "eligibleProducts": Array [
             "prod_Orrqb0wFsDfUwg",
@@ -2541,6 +2559,7 @@ Object {
           "userOnly": false,
         },
         Object {
+          "creditExpiration": "never-expire",
           "defaultSubscription": false,
           "eligibleProducts": Array [
             "prod_OrrsITJLnxo7Po",
@@ -2559,6 +2578,7 @@ Object {
           "userOnly": false,
         },
         Object {
+          "creditExpiration": "never-expire",
           "defaultSubscription": false,
           "eligibleProducts": Array [
             "prod_prod_pubrecnotinstripe",
