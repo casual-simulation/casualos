@@ -30,6 +30,16 @@ export interface ViewParams {
     head?: JSX.Element;
 
     /**
+     * The content to be placed inside the title tag.
+     */
+    title?: JSX.Element;
+
+    /**
+     * The content to be placed where the description meta tag is located.
+     */
+    description?: JSX.Element;
+
+    /**
      * The main application content.
      * This matches up with what the client renders.
      *

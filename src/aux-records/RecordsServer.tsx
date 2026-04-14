@@ -629,11 +629,19 @@ export class RecordsServer {
                     const config = await this._records.getWebConfig(
                         context.url.hostname
                     );
+                    const requestedComId =
+                        context.httpRequest.query?.comId ?? null;
 
                     const postApp: JSX.Element[] = [];
                     const icons: JSX.Element[] = [];
+                    let pageTitle = 'CasualOS';
+                    let pageDescription = 'Casual Open Simulation for the Web';
 
                     if (isSuccess(config) && config.value) {
+                        pageTitle = config.value.pageTitle ?? pageTitle;
+                        pageDescription =
+                            config.value.pageDescription ?? pageDescription;
+
                         postApp.push(
                             <script
                                 type="application/json"
@@ -739,7 +747,28 @@ export class RecordsServer {
                         }
                     }
 
+                    if (requestedComId) {
+                        const playerConfigResult =
+                            await this._records.getPlayerConfig(requestedComId);
+
+                        if (playerConfigResult.success) {
+                            pageTitle =
+                                playerConfigResult.playerConfig.pageTitle ??
+                                pageTitle;
+                            pageDescription =
+                                playerConfigResult.playerConfig
+                                    .pageDescription ?? pageDescription;
+                        }
+                    }
+
                     const result = success<ViewParams>({
+                        title: <>{pageTitle}</>,
+                        description: (
+                            <meta
+                                name="description"
+                                content={pageDescription}
+                            />
+                        ),
                         icons: <>{icons}</>,
                         postApp: <>{postApp}</>,
                     });
