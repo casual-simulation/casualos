@@ -752,12 +752,11 @@ export class RecordsServer {
                             await this._records.getPlayerConfig(requestedComId);
 
                         if (playerConfigResult.success) {
-                            pageTitle =
-                                playerConfigResult.playerConfig.pageTitle ??
-                                pageTitle;
+                            const playerConfig =
+                                playerConfigResult.playerConfig ?? {};
+                            pageTitle = playerConfig.pageTitle ?? pageTitle;
                             pageDescription =
-                                playerConfigResult.playerConfig
-                                    .pageDescription ?? pageDescription;
+                                playerConfig.pageDescription ?? pageDescription;
                         }
                     }
 
