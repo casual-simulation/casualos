@@ -1003,6 +1003,34 @@ export const getSubscriptionConfigSchema = memoize(() =>
                 'Additional options that should be passed to stripe.checkout.sessions.create().'
             ),
 
+        purchaseCreditsConfig: z
+            .object({
+                product: z
+                    .string()
+                    .optional()
+                    .nullable()
+                    .describe(
+                        'The Stripe product that should be used for purchasing credits. If omitted, then purchasing credits will not be supported. The product\'s prices should have the following metadata properties: "casualos.credits" (The number of credits to grant when purchasing).'
+                    ),
+                adjustableQuantity: z
+                    .boolean()
+                    .default(true)
+                    .describe(
+                        'Whether the quantity of the line item should be adjustable by the user during checkout. Defaults to true.'
+                    ),
+                defaultQuantity: z
+                    .int()
+                    .positive()
+                    .default(1)
+                    .describe(
+                        'The default quantity of the line item during checkout. Defaults to 1.'
+                    ),
+            })
+            .prefault({})
+            .describe(
+                'Configuration for purchasing credits. Defaults to an empty object, which means that purchasing credits is not supported.'
+            ),
+
         subscriptions: z
             .array(getSubscriptionSchema())
             .describe('The list of subscriptions that are in use.'),
@@ -1144,6 +1172,12 @@ export interface SubscriptionConfiguration {
      * The features that should be used when a tier does not have a features configuration.
      */
     defaultFeatures: DefaultFeaturesConfiguration;
+
+    purchaseCreditsConfig?: {
+        product?: string;
+        adjustableQuantity?: boolean;
+        defaultQuantity?: number;
+    };
 }
 
 // export interface APISubscription {

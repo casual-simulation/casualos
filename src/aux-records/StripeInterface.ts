@@ -182,6 +182,11 @@ export interface StripePrice {
      * The amount of units that are charged for each renewal.
      */
     unit_amount: number;
+
+    /**
+     * The metadata for the price.
+     */
+    metadata?: Record<string, string>;
 }
 
 /**
@@ -192,6 +197,11 @@ export interface StripeCheckoutRequest {
      * The ID of the product that the checkout request is for.
      */
     line_items: {
+        /**
+         * Wether the quantity of the line item can be adjusted by the user in the checkout page.
+         */
+        adjustable_quantity?: boolean;
+
         /**
          * The ID of the price for the line item.
          */
@@ -248,6 +258,11 @@ export interface StripeCheckoutRequest {
          * The quantity to purchase.
          */
         quantity?: number;
+
+        /**
+         * The metadata for the line item.
+         */
+        metadata?: Record<string, string>;
     }[];
 
     /**
@@ -645,6 +660,11 @@ export interface StripeProduct {
      * The default price for the product.
      */
     default_price: StripePrice;
+
+    /**
+     * The metadata for the product.
+     */
+    metadata?: Record<string, string>;
 }
 
 export interface StripeCreateAccountLinkRequest {
@@ -947,6 +967,27 @@ export const STRIPE_EVENT_CHECKOUT_SESSION_SCHEMA = z.object({
             object: z.literal('checkout.session'),
             status: z.enum(['complete', 'expired', 'open']),
             payment_status: z.enum(['no_payment_required', 'paid', 'unpaid']),
+            line_items: z
+                .object({
+                    object: z.literal('list'),
+                    data: z.array(
+                        z.object({
+                            id: z.string(),
+                            amount_subtotal: z.number().positive(),
+                            amount_total: z.number().positive(),
+                            quantity: z.number(),
+                            price: z
+                                .object({
+                                    id: z.string(),
+                                    product: z.string(),
+                                })
+                                .nullable(),
+                            metadata: z.record(z.string(), z.string()),
+                        })
+                    ),
+                })
+                .nullable()
+                .optional(),
         }),
     }),
 });
