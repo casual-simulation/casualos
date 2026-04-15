@@ -7032,6 +7032,45 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
     Object {
       "http": Object {
         "method": "POST",
+        "path": "/api/v2/credits/purchase",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "nullable": true,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "returnUrl": Object {
+            "type": "string",
+          },
+          "successUrl": Object {
+            "type": "string",
+          },
+          "targetStudioId": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "targetUserId": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "purchaseCredits",
+      "origins": "self",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
         "path": "/api/v2/records/contract/pricing",
       },
       "inputs": Object {
@@ -17461,6 +17500,45 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
       },
       "name": "purchaseContract",
       "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/credits/purchase",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "nullable": true,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "returnUrl": Object {
+            "type": "string",
+          },
+          "successUrl": Object {
+            "type": "string",
+          },
+          "targetStudioId": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "targetUserId": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "purchaseCredits",
+      "origins": "self",
     },
     Object {
       "http": Object {
