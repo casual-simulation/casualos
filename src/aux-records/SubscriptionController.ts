@@ -3392,6 +3392,11 @@ export class SubscriptionController {
                             enabled:
                                 config.purchaseCreditsConfig
                                     .adjustableQuantity ?? true,
+                            maximum:
+                                config.purchaseCreditsConfig.maxQuantity ??
+                                999_999,
+                            minimum:
+                                config.purchaseCreditsConfig.minQuantity ?? 0,
                         },
                         price: product.default_price.id,
                         quantity:

@@ -571,11 +571,9 @@ export class SubscriptionConfigBuilder {
         return this;
     }
 
-    withCreditPurchaseConfig(config: {
-        product?: string;
-        adjustableQuantity?: boolean;
-        defaultQuantity?: number;
-    }): this {
+    withCreditPurchaseConfig(
+        config: SubscriptionConfiguration['purchaseCreditsConfig']
+    ): this {
         this._config.purchaseCreditsConfig = config;
         return this;
     }

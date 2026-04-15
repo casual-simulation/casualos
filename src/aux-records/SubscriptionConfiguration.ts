@@ -1025,6 +1025,25 @@ export const getSubscriptionConfigSchema = memoize(() =>
                     .describe(
                         'The default quantity of the line item during checkout. Defaults to 1.'
                     ),
+
+                maxQuantity: z
+                    .int()
+                    .positive()
+                    .min(1)
+                    .max(999_999)
+                    .default(999_999)
+                    .describe(
+                        'The maximum quantity that the user can purchase at once. Must be between 1 and 999,999. Defaults to 999,999.'
+                    ),
+
+                minQuantity: z
+                    .int()
+                    .nonnegative()
+                    .min(0)
+                    .default(0)
+                    .describe(
+                        'The minimum quantity that the user can purchase at once. Must be at least 0. Defaults to 0.'
+                    ),
             })
             .prefault({})
             .describe(
@@ -1177,6 +1196,8 @@ export interface SubscriptionConfiguration {
         product?: string;
         adjustableQuantity?: boolean;
         defaultQuantity?: number;
+        maxQuantity?: number;
+        minQuantity?: number;
     };
 }
 

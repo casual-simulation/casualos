@@ -10800,6 +10800,8 @@ describe('SubscriptionController', () => {
                     {
                         adjustable_quantity: {
                             enabled: true,
+                            maximum: 999_999,
+                            minimum: 0,
                         },
                         price: 'price_123',
                         quantity: 1,
@@ -10874,6 +10876,8 @@ describe('SubscriptionController', () => {
                     {
                         adjustable_quantity: {
                             enabled: true,
+                            maximum: 999_999,
+                            minimum: 0,
                         },
                         price: 'price_123',
                         quantity: 5,
@@ -10948,9 +10952,89 @@ describe('SubscriptionController', () => {
                     {
                         adjustable_quantity: {
                             enabled: false,
+                            maximum: 999_999,
+                            minimum: 0,
                         },
                         price: 'price_123',
                         quantity: 1,
+                        metadata: {
+                            targetUserId: userId,
+                            targetStudioId: null,
+                        },
+                    },
+                ],
+                // should redirect the user to the success URL because it is automatically fulfilled
+                success_url: 'success-url',
+                cancel_url: 'return-url',
+                customer: 'customer_id',
+                metadata: {
+                    userId: userId,
+                },
+            });
+
+            expect(store.checkoutSessions).toEqual([]);
+        });
+
+        it('should use the configured maximum and minimum quantities', async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.withCreditPurchaseConfig({
+                        product: 'prod_123',
+                        adjustableQuantity: true,
+                        defaultQuantity: 5,
+                        maxQuantity: 100,
+                        minQuantity: 2,
+                    })
+            );
+
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            stripeMock.getProductAndPriceInfo.mockResolvedValueOnce({
+                id: 'prod_123',
+                name: 'Credits',
+                description: '100 credits',
+                default_price: {
+                    id: 'price_123',
+                    currency: 'usd',
+                    recurring: null,
+                    unit_amount: 100,
+                    metadata: {
+                        'casualos.credits': '500',
+                    },
+                },
+            });
+
+            const result = await controller.purchaseCredits({
+                userId: userId,
+                targetUserId: userId,
+                targetStudioId: null,
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                success({
+                    url: 'checkout_url',
+                })
+            );
+
+            expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
+                mode: 'payment',
+                line_items: [
+                    {
+                        adjustable_quantity: {
+                            enabled: true,
+                            maximum: 100,
+                            minimum: 2,
+                        },
+                        price: 'price_123',
+                        quantity: 5,
                         metadata: {
                             targetUserId: userId,
                             targetStudioId: null,
