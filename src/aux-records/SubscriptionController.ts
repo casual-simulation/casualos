@@ -30,6 +30,7 @@ import type {
 import type {
     StripeAccount,
     StripeCheckoutRequest,
+    StripeCheckoutSession,
     StripeCreateAccountLinkRequest,
     StripeEvent,
     StripeEventAccountUpdated,
@@ -3402,8 +3403,8 @@ export class SubscriptionController {
                         quantity:
                             config.purchaseCreditsConfig.defaultQuantity || 1,
                         metadata: {
-                            targetUserId: request.targetUserId,
-                            targetStudioId: request.targetStudioId,
+                            targetUserId: request.targetUserId ?? undefined,
+                            targetStudioId: request.targetStudioId ?? undefined,
                         },
                     },
                 ],
@@ -4530,8 +4531,8 @@ export class SubscriptionController {
         event: StripeEvent,
         sessionEvent: StripeEventCheckoutSession
     ): Promise<HandleStripeWebhookResponse> {
-        const stripeSession = sessionEvent.data.object;
-        const sessionId = stripeSession.client_reference_id;
+        // const stripeSession = sessionEvent.data.object;
+        const sessionId = sessionEvent.data.object.client_reference_id;
 
         if (sessionId) {
             const session = await this._authStore.getCheckoutSessionById(
@@ -4540,7 +4541,7 @@ export class SubscriptionController {
 
             if (session) {
                 return await this._fulfillTrackedStripeCheckoutSession(
-                    stripeSession,
+                    sessionEvent.data.object,
                     session,
                     event,
                     sessionId
@@ -4564,7 +4565,7 @@ export class SubscriptionController {
 
         return await this._fulfillUntrackedStripeCheckoutSession(
             config,
-            stripeSession
+            sessionEvent.data.object
         );
     }
 
@@ -4575,8 +4576,13 @@ export class SubscriptionController {
      */
     private async _fulfillUntrackedStripeCheckoutSession(
         config: SubscriptionConfiguration,
-        stripeSession: StripeEventCheckoutSession['data']['object']
+        stripeSession: StripeCheckoutSession
     ): Promise<HandleStripeWebhookResponse> {
+        // Get the full session data from stripe
+        stripeSession = await this._stripe.getCheckoutSessionById(
+            stripeSession.id
+        );
+
         const purchaseCreditsProductId = config.purchaseCreditsConfig?.product;
         const productData = purchaseCreditsProductId
             ? await this._stripe.getProductAndPriceInfo(
@@ -4608,12 +4614,23 @@ export class SubscriptionController {
                 const totalCredits = creditsPerUnit * BigInt(quantity);
                 const totalUsd = amount;
 
-                const targetStudioId = lineItem.metadata.targetStudioId;
-                const targetUserId = lineItem.metadata.targetUserId;
+                const targetStudioId =
+                    lineItem.metadata.targetStudioId || undefined;
+                const targetUserId =
+                    lineItem.metadata.targetUserId || undefined;
 
                 if (targetStudioId && targetUserId) {
                     console.error(
                         `[SubscriptionController] [handleStripeWebhook] Both targetStudioId and targetUserId are set for a credits purchase. This is not supported. studioId: ${targetStudioId} userId: ${targetUserId}`
+                    );
+                    return {
+                        success: false,
+                        errorCode: 'invalid_request',
+                        errorMessage: 'Invalid metadata for credits purchase.',
+                    };
+                } else if (!targetStudioId && !targetUserId) {
+                    console.error(
+                        `[SubscriptionController] [handleStripeWebhook] Neither targetStudioId nor targetUserId is set for a credits purchase. This is not supported. lineItemId: ${lineItem.id}`
                     );
                     return {
                         success: false,
@@ -4639,6 +4656,7 @@ export class SubscriptionController {
                     return {
                         success: false,
                         errorCode: 'server_error',
+
                         errorMessage: 'A server error occurred.',
                     };
                 }

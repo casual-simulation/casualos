@@ -42,6 +42,7 @@ import {
 } from '@casual-simulation/aux-common';
 import type {
     StripeAccountStatus,
+    StripeCheckoutSession,
     StripeInterface,
     StripeProduct,
 } from './StripeInterface';
@@ -17664,6 +17665,38 @@ describe('SubscriptionController', () => {
             describe('checkout.session.completed', () => {
                 describe('user', () => {
                     it('should transfer credits to the user', async () => {
+                        const checkoutSession: StripeCheckoutSession = {
+                            id: 'checkout_id',
+                            object: 'checkout.session',
+                            client_reference_id: null,
+                            payment_status: 'paid',
+                            status: 'complete',
+                            line_items: {
+                                object: 'list',
+                                data: [
+                                    {
+                                        id: 'line_item_1_id',
+                                        amount_subtotal: 123,
+                                        amount_total: 133,
+                                        amount_tax: 10,
+                                        amount_discount: 0,
+                                        currency: 'usd',
+                                        quantity: 1,
+                                        price: {
+                                            id: 'price_123',
+                                            product: 'prod_123',
+                                            unit_amount: 100,
+                                        },
+                                        metadata: {
+                                            targetUserId: userId,
+                                        },
+                                    },
+                                ],
+                            },
+                            metadata: {
+                                userId: 'test',
+                            },
+                        };
                         stripeMock.constructWebhookEvent.mockReturnValueOnce({
                             id: 'event_id',
                             type: 'checkout.session.completed',
@@ -17672,43 +17705,15 @@ describe('SubscriptionController', () => {
                             api_version: 'api_version',
                             created: 123,
                             data: {
-                                object: {
-                                    id: 'checkout_id',
-                                    object: 'checkout.session',
-                                    client_reference_id: null,
-                                    payment_status: 'paid',
-                                    status: 'complete',
-                                    line_items: {
-                                        object: 'list',
-                                        data: [
-                                            {
-                                                id: 'line_item_1_id',
-                                                amount_subtotal: 123,
-                                                amount_total: 133,
-                                                amount_tax: 10,
-                                                amount_discount: 0,
-                                                currency: 'usd',
-                                                quantity: 1,
-                                                price: {
-                                                    id: 'price_123',
-                                                    product: 'prod_123',
-                                                    unit_amount: 100,
-                                                },
-                                                metadata: {
-                                                    targetUserId: userId,
-                                                },
-                                            },
-                                        ],
-                                    },
-                                    metadata: {
-                                        userId: 'test',
-                                    },
-                                },
+                                object: checkoutSession,
                             },
                             livemode: true,
                             pending_webhooks: 1,
                             request: {} as any,
                         });
+                        stripeMock.getCheckoutSessionById.mockResolvedValueOnce(
+                            checkoutSession
+                        );
 
                         stripeMock.getProductAndPriceInfo.mockResolvedValueOnce(
                             {
@@ -17815,6 +17820,38 @@ describe('SubscriptionController', () => {
                     });
 
                     it('should transfer credits to the studio', async () => {
+                        const checkoutSession: StripeCheckoutSession = {
+                            id: 'checkout_id',
+                            object: 'checkout.session',
+                            client_reference_id: null,
+                            payment_status: 'paid',
+                            status: 'complete',
+                            line_items: {
+                                object: 'list',
+                                data: [
+                                    {
+                                        id: 'line_item_1_id',
+                                        amount_subtotal: 123,
+                                        amount_total: 133,
+                                        amount_tax: 10,
+                                        amount_discount: 0,
+                                        currency: 'usd',
+                                        quantity: 1,
+                                        price: {
+                                            id: 'price_123',
+                                            product: 'prod_123',
+                                            unit_amount: 100,
+                                        },
+                                        metadata: {
+                                            targetStudioId: studioId,
+                                        },
+                                    },
+                                ],
+                            },
+                            metadata: {
+                                userId: 'test',
+                            },
+                        };
                         stripeMock.constructWebhookEvent.mockReturnValueOnce({
                             id: 'event_id',
                             type: 'checkout.session.completed',
@@ -17823,43 +17860,15 @@ describe('SubscriptionController', () => {
                             api_version: 'api_version',
                             created: 123,
                             data: {
-                                object: {
-                                    id: 'checkout_id',
-                                    object: 'checkout.session',
-                                    client_reference_id: null,
-                                    payment_status: 'paid',
-                                    status: 'complete',
-                                    line_items: {
-                                        object: 'list',
-                                        data: [
-                                            {
-                                                id: 'line_item_1_id',
-                                                amount_subtotal: 123,
-                                                amount_total: 133,
-                                                amount_tax: 10,
-                                                amount_discount: 0,
-                                                currency: 'usd',
-                                                quantity: 1,
-                                                price: {
-                                                    id: 'price_123',
-                                                    product: 'prod_123',
-                                                    unit_amount: 100,
-                                                },
-                                                metadata: {
-                                                    targetStudioId: studioId,
-                                                },
-                                            },
-                                        ],
-                                    },
-                                    metadata: {
-                                        userId: 'test',
-                                    },
-                                },
+                                object: checkoutSession,
                             },
                             livemode: true,
                             pending_webhooks: 1,
                             request: {} as any,
                         });
+                        stripeMock.getCheckoutSessionById.mockResolvedValueOnce(
+                            checkoutSession
+                        );
 
                         stripeMock.getProductAndPriceInfo.mockResolvedValueOnce(
                             {

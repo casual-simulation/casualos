@@ -56,7 +56,7 @@ export interface StripeInterface {
      * Gets the checkout session with the given ID.
      * @param id The ID of the checkout session.
      */
-    getCheckoutSessionById(id: string): Promise<StripeCheckoutResponse>;
+    getCheckoutSessionById(id: string): Promise<StripeCheckoutSession>;
 
     /**
      * Creates a new portal session for a user.
@@ -974,41 +974,47 @@ export type StripeEventAccountUpdated = z.infer<
     typeof STRIPE_EVENT_ACCOUNT_UPDATED_SCHEMA
 >;
 
+export const STRIPE_CHECKOUT_SESSION_SCHEMA = z.object({
+    id: z.string(),
+    client_reference_id: z.string().nullable(),
+    object: z.literal('checkout.session'),
+    status: z.enum(['complete', 'expired', 'open']),
+    payment_status: z.enum(['no_payment_required', 'paid', 'unpaid']),
+    line_items: z
+        .object({
+            object: z.literal('list'),
+            data: z.array(
+                z.object({
+                    id: z.string(),
+                    amount_subtotal: z.number().positive(),
+                    amount_total: z.number().positive(),
+                    quantity: z.number(),
+                    price: z
+                        .object({
+                            id: z.string(),
+                            product: z.string(),
+                        })
+                        .nullable(),
+                    metadata: z.record(z.string(), z.string()).optional(),
+                })
+            ),
+        })
+        .nullable()
+        .optional(),
+});
+
 export const STRIPE_EVENT_CHECKOUT_SESSION_SCHEMA = z.object({
     data: z.object({
-        object: z.object({
-            id: z.string(),
-            client_reference_id: z.string().nullable(),
-            object: z.literal('checkout.session'),
-            status: z.enum(['complete', 'expired', 'open']),
-            payment_status: z.enum(['no_payment_required', 'paid', 'unpaid']),
-            line_items: z
-                .object({
-                    object: z.literal('list'),
-                    data: z.array(
-                        z.object({
-                            id: z.string(),
-                            amount_subtotal: z.number().positive(),
-                            amount_total: z.number().positive(),
-                            quantity: z.number(),
-                            price: z
-                                .object({
-                                    id: z.string(),
-                                    product: z.string(),
-                                })
-                                .nullable(),
-                            metadata: z.record(z.string(), z.string()),
-                        })
-                    ),
-                })
-                .nullable()
-                .optional(),
-        }),
+        object: STRIPE_CHECKOUT_SESSION_SCHEMA,
     }),
 });
 
 export type StripeEventCheckoutSession = z.infer<
     typeof STRIPE_EVENT_CHECKOUT_SESSION_SCHEMA
+>;
+
+export type StripeCheckoutSession = z.infer<
+    typeof STRIPE_CHECKOUT_SESSION_SCHEMA
 >;
 
 /**
