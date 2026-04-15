@@ -3388,9 +3388,11 @@ export class SubscriptionController {
                 mode: 'payment',
                 line_items: [
                     {
-                        adjustable_quantity:
-                            config.purchaseCreditsConfig.adjustableQuantity ??
-                            true,
+                        adjustable_quantity: {
+                            enabled:
+                                config.purchaseCreditsConfig
+                                    .adjustableQuantity ?? true,
+                        },
                         price: product.default_price.id,
                         quantity:
                             config.purchaseCreditsConfig.defaultQuantity || 1,

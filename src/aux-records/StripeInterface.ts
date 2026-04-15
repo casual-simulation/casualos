@@ -200,7 +200,22 @@ export interface StripeCheckoutRequest {
         /**
          * Wether the quantity of the line item can be adjusted by the user in the checkout page.
          */
-        adjustable_quantity?: boolean;
+        adjustable_quantity?: {
+            /**
+             * Whether the quantity can be adjusted by the user in the checkout page.
+             */
+            enabled: boolean;
+
+            /**
+             * The maximum quantity the customer can purchase for the Checkout Session. By default this value is 99. You can specify a value up to 999999.
+             */
+            maximum?: number;
+
+            /**
+             * The minimum quantity the customer must purchase for the Checkout Session. By default this value is 0.
+             */
+            minimum?: number;
+        };
 
         /**
          * The ID of the price for the line item.

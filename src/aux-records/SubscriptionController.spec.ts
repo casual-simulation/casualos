@@ -10798,7 +10798,9 @@ describe('SubscriptionController', () => {
                 mode: 'payment',
                 line_items: [
                     {
-                        adjustable_quantity: true,
+                        adjustable_quantity: {
+                            enabled: true,
+                        },
                         price: 'price_123',
                         quantity: 1,
                         metadata: {
@@ -10870,7 +10872,9 @@ describe('SubscriptionController', () => {
                 mode: 'payment',
                 line_items: [
                     {
-                        adjustable_quantity: true,
+                        adjustable_quantity: {
+                            enabled: true,
+                        },
                         price: 'price_123',
                         quantity: 5,
                         metadata: {
@@ -10942,7 +10946,9 @@ describe('SubscriptionController', () => {
                 mode: 'payment',
                 line_items: [
                     {
-                        adjustable_quantity: false,
+                        adjustable_quantity: {
+                            enabled: false,
+                        },
                         price: 'price_123',
                         quantity: 1,
                         metadata: {
