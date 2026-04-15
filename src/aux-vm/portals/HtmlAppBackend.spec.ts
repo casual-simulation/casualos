@@ -499,6 +499,7 @@ describe('HtmlAppBackend', () => {
 
             const updateAction = actions[1] as UpdateHtmlAppAction;
 
+            expect(updateAction).toMatchSnapshot();
             expect(updateAction.type).toBe('update_html_app');
             expect(updateAction.appId).toBe('testPortal');
             expect(updateAction.updates.length).toBe(2);
@@ -525,6 +526,7 @@ describe('HtmlAppBackend', () => {
 
             const updateAction2 = actions[2] as UpdateHtmlAppAction;
 
+            expect(updateAction2).toMatchSnapshot();
             expect(updateAction2.type).toBe('update_html_app');
             expect(updateAction2.appId).toBe('testPortal');
             expect(updateAction2.updates.length).toBe(1);
