@@ -19409,6 +19409,76 @@ export interface JSONAccountBalance {
     currency: string;
 }
 
+
+/**
+ * Defines the subscription information for a user or studio.
+ * This includes information about the subscription period, the subscription tier, and the credit expiration policy.
+ * 
+ * @dochash types/records/extra
+ * @docname SubscriptionInfo
+ * @docid SubscriptionInfo
+ */
+export interface SubscriptionInfo {
+    /**
+     * The unix time in miliseconds that the user/studio's subscription period started at.
+     * Null if the subscription does not have a start date.
+     */
+    periodStartMs: number | null;
+
+    /**
+     * The unix time in miliseconds that the user/studio's subscription period ends at.
+     * Null if the subscription never ends.
+     */
+    periodEndMs: number | null;
+
+    /**
+     * Whether the user has an active subscription.
+     * If false, then the user had a subscription, but it is not currently active.
+     */
+    hasActiveSubscription: boolean;
+
+    /**
+     * The ID of the subscription that the user has.
+     */
+    subscriptionId: string;
+
+    /**
+     * The tier of the subscription that the user has.
+     */
+    subscriptionTier: string;
+
+    /**
+     * The configuration for credit expiration for the user/studio.
+     *
+     * - `never-expire` indicates that credits never expire.
+     * - `expire-after-period` indicates that credits expire after the subscription period ends or if the subscription is not active.
+     */
+    creditExpiration: 'never-expire' | 'expire-after-period';
+}
+
+/**
+ * Defines an interface that represents the options for getting account balances.
+ *
+ * @dochash types/records/extra
+ * @docname GetBalancesActionOptions
+ */
+export interface GetAccountBalancesActionOptions extends RecordActionOptions {
+    /**
+     * The ID of the user whose balances should be retrieved.
+     */
+    userId?: string;
+
+    /**
+     * The ID of the studio whose balances should be retrieved.
+     */
+    studioId?: string;
+
+    /**
+     * The ID of the contract whose balances should be retrieved.
+     */
+    contractId?: string;
+}
+
 /**
  * Defines an interface for contract record input.
  */
@@ -19791,8 +19861,26 @@ interface Xp {
      * @dochash actions/xp
      * @docname xp.getAccountBalances
      */
-    getAccountBalances(options?: RecordActionOptions): Promise<GenericResult<{
-        [key: string]: JSONAccountBalance;
+    getAccountBalances(options?: GetAccountBalancesActionOptions): Promise<GenericResult<{
+        /**
+         * The USD account balance.
+         *
+         * This will be undefined if the user does not have a USD account.
+         */
+        usd: JSONAccountBalance | undefined;
+    
+        /**
+         * The credits account balance.
+         *
+         * This will be undefined if the user does not have a credits account.
+         */
+        credits: JSONAccountBalance | undefined;
+
+        /**
+         * The information for the subscription the user has.
+         * Undefined if the user does not have a subscription.
+         */
+        subscription?: SubscriptionInfo;
     }, SimpleError>>;
 }
 

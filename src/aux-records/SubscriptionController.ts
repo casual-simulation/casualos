@@ -55,6 +55,7 @@ import type {
 import {
     getContractFeatures,
     getPurchasableItemsFeatures,
+    getSubscription,
 } from './SubscriptionConfiguration';
 import type {
     ListedStudioAssignment,
@@ -113,6 +114,7 @@ import type {
     FinancialController,
     FinancialStore,
     InternalTransfer,
+    JSONAccountBalances,
     PayoutDestination,
     UniqueFinancialAccountFilter,
 } from './financial';
@@ -137,6 +139,7 @@ import type {
 } from './contracts/ContractRecordsStore';
 import type { Account, Transfer } from 'tigerbeetle-node';
 import { TransferFlags } from 'tigerbeetle-node';
+import type { SubscriptionFilter } from './MetricsStore';
 
 /**
  * The number of bytes that the access key secret should be.
@@ -396,6 +399,9 @@ export class SubscriptionController {
                         currency: item.price.currency,
                         productName: item.price.product.name,
                         featureList,
+                        creditExpiration:
+                            subscriptionInfo?.creditExpiration ??
+                            'never-expire',
                     };
                 });
 
@@ -430,6 +436,83 @@ export class SubscriptionController {
         }
     }
 
+    @traced(TRACE_NAME)
+    private async _getSubscriptionInfoForFilter(
+        filter: SubscriptionFilter
+    ): Promise<Result<SubscriptionInfo | null, SimpleError>> {
+        const config = await this._getConfig();
+        if (filter.ownerId) {
+            const user = await this._authStore.findUser(filter.ownerId);
+            if (!user) {
+                return failure({
+                    errorCode: 'user_not_found',
+                    errorMessage: 'The user was not found.',
+                });
+            }
+
+            const sub = getSubscription(
+                config,
+                user.subscriptionStatus,
+                user.subscriptionId,
+                'user',
+                user.subscriptionPeriodStartMs,
+                user.subscriptionPeriodEndMs
+            );
+
+            if (!sub) {
+                return success(null);
+            }
+
+            return success({
+                subscriptionId: sub.id,
+                periodStartMs: user.subscriptionPeriodStartMs,
+                periodEndMs: user.subscriptionPeriodEndMs,
+                hasActiveSubscription: isActiveSubscription(
+                    user.subscriptionStatus
+                ),
+                subscriptionTier: sub.tier,
+                creditExpiration: sub.creditExpiration,
+            });
+        } else if (filter.studioId) {
+            const config = await this._getConfig();
+            const studio = await this._recordsStore.getStudioById(
+                filter.studioId
+            );
+            if (!studio) {
+                return failure({
+                    errorCode: 'studio_not_found',
+                    errorMessage: 'The studio was not found.',
+                });
+            }
+
+            const sub = getSubscription(
+                config,
+                studio.subscriptionStatus,
+                studio.subscriptionId,
+                'studio',
+                studio.subscriptionPeriodStartMs,
+                studio.subscriptionPeriodEndMs
+            );
+
+            if (!sub) {
+                return success(null);
+            }
+
+            return success({
+                subscriptionId: sub.id,
+                periodStartMs: studio.subscriptionPeriodStartMs,
+                periodEndMs: studio.subscriptionPeriodEndMs,
+                hasActiveSubscription: isActiveSubscription(
+                    studio.subscriptionStatus
+                ),
+                subscriptionTier: sub.tier,
+                creditExpiration: sub.creditExpiration,
+            });
+        }
+
+        return success(null);
+    }
+
     /**
      * Gets the account balances for the user/studio/contract.
      * @param request
@@ -437,7 +520,7 @@ export class SubscriptionController {
     @traced(TRACE_NAME)
     async getBalances(
         request: GetBalancesRequest
-    ): Promise<Result<AccountBalances, SimpleError>> {
+    ): Promise<Result<AccountBalancesAndSubscriptionInfo, SimpleError>> {
         if (!this._financialController) {
             return failure({
                 errorCode: 'not_supported',
@@ -455,9 +538,29 @@ export class SubscriptionController {
             return authorizationResult;
         }
 
-        return await this._financialController.getAccountBalances(
+        const balances = await this._financialController.getAccountBalances(
             request.filter
         );
+
+        if (isFailure(balances)) {
+            return balances;
+        }
+
+        const subscriptionInfoResult = await this._getSubscriptionInfoForFilter(
+            {
+                ownerId: request.filter.userId,
+                studioId: request.filter.studioId,
+            }
+        );
+
+        if (isFailure(subscriptionInfoResult)) {
+            return subscriptionInfoResult;
+        }
+
+        return success({
+            ...balances.value,
+            subscription: subscriptionInfoResult.value ?? undefined,
+        });
     }
 
     private async _checkAuthorizationForFilter(
@@ -4610,8 +4713,13 @@ export class SubscriptionController {
             }
         >
     > {
+        if (!this._financialController) {
+            return success();
+        }
+
         const creditGrant = sub.creditGrant ?? 0;
-        if (creditGrant === 0 || !this._financialController) {
+
+        if (creditGrant === 0 && sub.creditExpiration === 'never-expire') {
             return success();
         }
 
@@ -4650,25 +4758,52 @@ export class SubscriptionController {
             creditAmount = BigInt(creditGrant);
         }
 
+        const transfers: InternalTransfer[] = [];
+
+        if (sub.creditExpiration === 'expire-after-period') {
+            transfers.push({
+                amount: AMOUNT_MAX,
+                code: TransferCodes.credit_expiration,
+                debitAccountId: accountId,
+                creditAccountId: ACCOUNT_IDS.credit_expiration,
+                currency: CurrencyCodes.credits,
+                balancingDebit: true,
+            });
+            console.log(
+                `[SubscriptionController] [_internalTransactionPurchaseCreditsStripe invoice: ${invoice.id} account: ${accountId}] Expiring subscription credits before new credit grant.`
+            );
+        }
+
         if (creditAmount > 0) {
+            console.log(
+                `[SubscriptionController] [_internalTransactionPurchaseCreditsStripe invoice: ${invoice.id} account: ${accountId}] Granting ${creditAmount} credits for invoice (${invoice.id}).`
+            );
+            transfers.push(
+                {
+                    amount: invoice.total,
+                    code: TransferCodes.purchase_credits,
+                    debitAccountId: ACCOUNT_IDS.assets_stripe,
+                    creditAccountId: ACCOUNT_IDS.liquidity_usd,
+                    currency: 'usd',
+                },
+                {
+                    amount: creditAmount,
+                    code: TransferCodes.purchase_credits,
+                    debitAccountId: ACCOUNT_IDS.liquidity_credits,
+                    creditAccountId: accountId,
+                    currency: 'credits',
+                }
+            );
+        } else {
+            console.warn(
+                `[SubscriptionController] [_internalTransactionPurchaseCreditsStripe invoice: ${invoice.id} account: ${accountId}] No credits granted for invoice (${invoice.id}).`
+            );
+        }
+
+        if (transfers.length > 0) {
             const transactionResult =
                 await this._financialController.internalTransaction({
-                    transfers: [
-                        {
-                            amount: invoice.total,
-                            code: TransferCodes.purchase_credits,
-                            debitAccountId: ACCOUNT_IDS.assets_stripe,
-                            creditAccountId: ACCOUNT_IDS.liquidity_usd,
-                            currency: 'usd',
-                        },
-                        {
-                            amount: creditAmount,
-                            code: TransferCodes.purchase_credits,
-                            debitAccountId: ACCOUNT_IDS.liquidity_credits,
-                            creditAccountId: accountId,
-                            currency: 'credits',
-                        },
-                    ],
+                    transfers,
                 });
 
             if (isFailure(transactionResult)) {
@@ -4685,9 +4820,85 @@ export class SubscriptionController {
             console.log(
                 `[SubscriptionController] [_internalTransactionPurchaseCreditsStripe invoice: ${invoice.id} account: ${accountId}] Granted ${creditAmount} credits for invoice (${invoice.id}).`
             );
-        } else {
-            console.warn(
-                `[SubscriptionController] [_internalTransactionPurchaseCreditsStripe invoice: ${invoice.id} account: ${accountId}] No credits granted for invoice (${invoice.id}).`
+        }
+
+        return success();
+    }
+
+    private async _internalTransactionExpireCredits(
+        sub: APISubscription,
+        accountFilter: Omit<UniqueFinancialAccountFilter, 'ledger'>
+    ): Promise<
+        Result<
+            void,
+            {
+                errorCode: HandleStripeWebhookFailure['errorCode'];
+                errorMessage: string;
+            }
+        >
+    > {
+        if (!this._financialController) {
+            return success();
+        }
+
+        if (sub.creditExpiration === 'never-expire') {
+            return success();
+        }
+
+        const account =
+            await this._financialController.getOrCreateFinancialAccount({
+                ...accountFilter,
+                ledger: LEDGERS.credits,
+            });
+
+        if (isFailure(account)) {
+            logError(
+                account.error,
+                `[SubscriptionController] [_internalTransactionSweepCredits] Unable to get or create credit account!`
+            );
+            return failure({
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            });
+        }
+
+        const accountId = account.value.account.id;
+
+        const transfers: InternalTransfer[] = [];
+
+        if (sub.creditExpiration === 'expire-after-period') {
+            transfers.push({
+                amount: AMOUNT_MAX,
+                code: TransferCodes.credit_expiration,
+                debitAccountId: accountId,
+                creditAccountId: ACCOUNT_IDS.credit_expiration,
+                currency: CurrencyCodes.credits,
+                balancingDebit: true,
+            });
+            console.log(
+                `[SubscriptionController] [_internalTransactionSweepCredits account: ${accountId}] Expiring subscription credits before new credit grant.`
+            );
+        }
+
+        if (transfers.length > 0) {
+            const transactionResult =
+                await this._financialController.internalTransaction({
+                    transfers,
+                });
+
+            if (isFailure(transactionResult)) {
+                logError(
+                    transactionResult.error,
+                    `[SubscriptionController] [_internalTransactionSweepCredits account: ${accountId}] Unable to sweep credits!`
+                );
+                return failure({
+                    errorCode: 'server_error',
+                    errorMessage: 'Unable to sweep credits.',
+                });
+            }
+
+            console.log(
+                `[SubscriptionController] [_internalTransactionSweepCredits account: ${accountId}] Successfully swept credits.`
             );
         }
 
@@ -4777,6 +4988,20 @@ export class SubscriptionController {
                 console.log(
                     `[SubscriptionController] [handleStripeWebhook] No studio found for Customer ID (${customerId})`
                 );
+            }
+        }
+
+        if (!active && sub.creditExpiration === 'expire-after-period') {
+            const result = user
+                ? await this._internalTransactionExpireCredits(sub, {
+                      userId: user.id,
+                  })
+                : await this._internalTransactionExpireCredits(sub, {
+                      studioId: studio.id,
+                  });
+
+            if (isFailure(result)) {
+                return genericResult(result);
             }
         }
 
@@ -5210,6 +5435,11 @@ export interface SubscriptionStatus {
      * The feature list for the subscription.
      */
     featureList?: string[];
+
+    /**
+     * The credit expiration policy for the subscription.
+     */
+    creditExpiration?: 'never-expire' | 'expire-after-period';
 }
 
 export interface PurchasableSubscription {
@@ -6266,4 +6496,74 @@ export interface CancelInvoiceRequest {
      * The ID of the invoice to cancel.
      */
     invoiceId: string;
+}
+
+/**
+ * Defines the subscription information for a user or studio.
+ * This includes information about the subscription period, the subscription tier, and the credit expiration policy.
+ *
+ * @dochash types/records/extra
+ * @docname SubscriptionInfo
+ * @docid SubscriptionInfo
+ */
+export interface SubscriptionInfo {
+    /**
+     * The unix time in miliseconds that the user/studio's subscription period started at.
+     * Null if the subscription does not have a start date.
+     */
+    periodStartMs: number | null;
+
+    /**
+     * The unix time in miliseconds that the user/studio's subscription period ends at.
+     * Null if the subscription never ends.
+     */
+    periodEndMs: number | null;
+
+    /**
+     * Whether the user has an active subscription.
+     * If false, then the user had a subscription, but it is not currently active.
+     */
+    hasActiveSubscription: boolean;
+
+    /**
+     * The ID of the subscription that the user has.
+     */
+    subscriptionId: string;
+
+    /**
+     * The tier of the subscription that the user has.
+     */
+    subscriptionTier: string;
+
+    /**
+     * The configuration for credit expiration for the user/studio.
+     *
+     * - `never-expire` indicates that credits never expire.
+     * - `expire-after-period` indicates that credits expire after the subscription period ends or if the subscription is not active.
+     */
+    creditExpiration: 'never-expire' | 'expire-after-period';
+}
+
+export interface AccountBalancesAndSubscriptionInfo extends AccountBalances {
+    /**
+     * The information for the subscription the user has.
+     * Undefined if the user does not have a subscription.
+     */
+    subscription?: SubscriptionInfo;
+}
+
+/**
+ * Defines an interface that includes both account balance information and subscription information.
+ *
+ * @dochash types/records/extra
+ * @docname AccountBalancesAndSubscriptionInfo
+ * @docid AccountBalancesAndSubscriptionInfo
+ */
+export interface JSONAccountBalancesAndSubscriptionInfo
+    extends JSONAccountBalances {
+    /**
+     * The information for the subscription the user has.
+     * Undefined if the user does not have a subscription.
+     */
+    subscription?: SubscriptionInfo;
 }

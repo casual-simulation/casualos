@@ -8724,6 +8724,16 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                     "description": "The list of subscriptions that are in use.",
                     "schema": Object {
                       "schema": Object {
+                        "creditExpiration": Object {
+                          "defaultValue": "never-expire",
+                          "description": "The expiration policy for the credits that are granted by this subscription. If set to \\"expire-after-period\\", then the credits will expire either after the invoice for the new period is paid, if the subscription is marked as unpaid, or if the subscription is canceled. Defaults to \\"never-expire\\".",
+                          "hasDefault": true,
+                          "type": "enum",
+                          "values": Array [
+                            "never-expire",
+                            "expire-after-period",
+                          ],
+                        },
                         "creditGrant": Object {
                           "description": "The number of credits that should be granted to the user/studio upon purchasing (and renewal) of this subscription. Defaults to 0.",
                           "nullable": true,
@@ -19109,6 +19119,16 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                     "description": "The list of subscriptions that are in use.",
                     "schema": Object {
                       "schema": Object {
+                        "creditExpiration": Object {
+                          "defaultValue": "never-expire",
+                          "description": "The expiration policy for the credits that are granted by this subscription. If set to \\"expire-after-period\\", then the credits will expire either after the invoice for the new period is paid, if the subscription is marked as unpaid, or if the subscription is canceled. Defaults to \\"never-expire\\".",
+                          "hasDefault": true,
+                          "type": "enum",
+                          "values": Array [
+                            "never-expire",
+                            "expire-after-period",
+                          ],
+                        },
                         "creditGrant": Object {
                           "description": "The number of credits that should be granted to the user/studio upon purchasing (and renewal) of this subscription. Defaults to 0.",
                           "nullable": true,

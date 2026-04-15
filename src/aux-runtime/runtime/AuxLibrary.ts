@@ -407,7 +407,6 @@ import type {
     GenericResult,
     SimpleError,
     GenericSuccess,
-    JSONAccountBalance,
 } from '@casual-simulation/aux-common';
 import {
     remote as calcRemote,
@@ -510,6 +509,7 @@ import type {
     PurchasableItem,
     PayoutDestination,
     ContractPricing,
+    JSONAccountBalancesAndSubscriptionInfo,
 } from '@casual-simulation/aux-records';
 import SeedRandom from 'seedrandom';
 import { DateTime } from 'luxon';
@@ -9661,7 +9661,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function xpGetAccountBalances(
         options: GetAccountBalancesActionOptions = {}
-    ): Promise<GenericResult<JSONAccountBalance, SimpleError>> {
+    ): Promise<
+        GenericResult<JSONAccountBalancesAndSubscriptionInfo, SimpleError>
+    > {
         const task = context.createTask();
         const { userId, studioId, contractId, ...rest } = options;
         const event = recordsCallProcedure(

@@ -2137,6 +2137,44 @@ export class ServerBuilder implements SubscriptionLike {
                                 periodicBillingJobId
                             );
                         }
+
+                        const automatedSweepJobId = 'aux-automated-sweep-job';
+                        if (options.jobs.financial.automatedSweep) {
+                            console.log(
+                                '[ServerBuilder] Setting up Automated Sweep job schedule.'
+                            );
+                            queue.queue.upsertJobScheduler(
+                                automatedSweepJobId,
+                                options.jobs.financial.automatedSweep
+                                    .repeatOptions,
+                                options.jobs.financial.automatedSweep
+                                    .jobTemplate
+                            );
+                        } else {
+                            console.log(
+                                '[ServerBuilder] No Automated Sweep job schedule configured.'
+                            );
+                            queue.queue.removeJobScheduler(automatedSweepJobId);
+                        }
+
+                        if (options.jobs.financial.extraJobs) {
+                            for (const extraJob of options.jobs.financial
+                                .extraJobs) {
+                                const id = `aux-financial-job-${extraJob.id}`;
+                                console.log(
+                                    `[ServerBuilder] Setting up extra financial job schedule: ${extraJob.id}.`
+                                );
+                                if (extraJob.job !== 'removed') {
+                                    queue.queue.upsertJobScheduler(
+                                        id,
+                                        extraJob.job.repeatOptions,
+                                        extraJob.job.jobTemplate
+                                    );
+                                } else {
+                                    queue.queue.removeJobScheduler(id);
+                                }
+                            }
+                        }
                     }
                 },
             });
