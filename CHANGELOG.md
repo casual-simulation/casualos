@@ -88,6 +88,21 @@
             ```
 -   Included Subscription info in the `xp.getAccountBalances()` result.
     -   Successful results now include a `subscription` property which contains information about the user/studio's current subscription and includes information like: subscription tier, credit expiration policy, and subscription period (start and end).
+-   Added the `xp.purchaseCredits(request)` function.
+    -   Creates and returns a checkout session URL that grants a user/studio credits.
+    -   `request` should be an object that has the following properties:
+        -   `targetUserId` - The ID of the user that the purchased credits should be granted to. Currently must be the ID of the user. Can be omitted if `targetStudioId` is specified.
+        -   `targetStudioId` - The ID of the studio that the purchased credits should be granted to. Currently only studio admins are allowed to purchase credits for a studio.
+        -   `returnUrl` - The URL that the user should be redirected to when they cancel the checkout session.
+        -   `successUrl` - The URL that the user should be redirected to when the complete the checkout session.
+    -   Before purchasing credits is supported, the following must be configured:
+        -   `SERVER_CONFIG.subscriptions.purchaseCreditsConfig` must be set to an object with the following properties:
+            -   `product` (string) - The ID of the stripe product. Must have a price with the following metadata:
+                -   `casualos.credits` - The number of credits that will be granted for each unit purchased.
+            -   `adjustableQuantity` (boolean; optional) - Whether the quantity can be adjusted by the user. Defaults to true.
+            -   `defaultQuantity` (number; optional) - The default quantity of the product to purchase. Defaults to 1.
+            -   `maxQuantity` (number; optional) - The maximum allowed quantity. Defaults to 999,999 (Stripe max).
+            -   `minQuantity` (number; optional) - The minimum allowed quantity. Defaults to 0.
 
 ### :bug: Bug Fixes
 
