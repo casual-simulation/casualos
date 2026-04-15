@@ -144,6 +144,21 @@ if (typeof Element !== 'undefined') {
 
 let globalIdCounter = 0;
 let registeredMethodHandlers = false;
+const SYNCHRONIZED_FORM_ELEMENT_ATTRIBUTES = new Set([
+    'value',
+    'checked',
+    'selected',
+    'selectedIndex',
+]);
+
+function isSynchronizedFormElementAttribute(
+    attributeName: string | null | undefined
+) {
+    return (
+        !!attributeName &&
+        SYNCHRONIZED_FORM_ELEMENT_ATTRIBUTES.has(attributeName)
+    );
+}
 
 /**
  * Defines a class that is used to communicate HTML changes for a custom html portal.
@@ -374,7 +389,28 @@ export class HtmlAppBackend implements AppBackend {
                 globalThis.document = this._document;
             }
             if (this._document) {
+                const isInitialMount =
+                    !!this._body && this._body.childNodes.length <= 0;
+
                 render(content, this._body);
+
+                if (isInitialMount && this._mutationObserver) {
+                    const mutations = this._mutationObserver.takeRecords();
+                    const filteredMutations = mutations.filter(
+                        (mutation) =>
+                            !(
+                                mutation.type === 'attributes' &&
+                                mutation.oldValue === null &&
+                                isSynchronizedFormElementAttribute(
+                                    mutation.attributeName
+                                )
+                            )
+                    );
+
+                    if (filteredMutations.length > 0) {
+                        this._processMutations(filteredMutations);
+                    }
+                }
             }
         } catch (err) {
             console.error(err);
