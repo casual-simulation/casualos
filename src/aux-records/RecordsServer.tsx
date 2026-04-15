@@ -6851,7 +6851,7 @@ export class RecordsServer {
 
             purchaseCredits: procedure()
                 .origins('self')
-                .http('POST', '/api/v2/records/credits/purchase')
+                .http('POST', '/api/v2/credits/purchase')
                 .inputs(
                     z.object({
                         targetUserId: z
@@ -6883,10 +6883,14 @@ export class RecordsServer {
                     ) => {
                         const sessionKeyValidation =
                             await this._validateSessionKey(context.sessionKey);
-                        if (
-                            sessionKeyValidation.success === false &&
-                            sessionKeyValidation.errorCode !== 'no_session_key'
-                        ) {
+
+                        if (sessionKeyValidation.success === false) {
+                            if (
+                                sessionKeyValidation.errorCode ===
+                                'no_session_key'
+                            ) {
+                                return NOT_LOGGED_IN_RESULT;
+                            }
                             return sessionKeyValidation;
                         }
 

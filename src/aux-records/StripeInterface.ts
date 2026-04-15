@@ -986,13 +986,17 @@ export const STRIPE_CHECKOUT_SESSION_SCHEMA = z.object({
             data: z.array(
                 z.object({
                     id: z.string(),
-                    amount_subtotal: z.number().positive(),
-                    amount_total: z.number().positive(),
-                    quantity: z.number(),
+                    amount_subtotal: z.number().nonnegative(),
+                    amount_total: z.number().nonnegative(),
+                    amount_tax: z.number().nonnegative().nullable(),
+                    amount_discount: z.number().nonnegative().nullable(),
+                    quantity: z.number().nonnegative(),
+                    currency: z.string(),
                     price: z
                         .object({
                             id: z.string(),
                             product: z.string(),
+                            unit_amount: z.number().nonnegative().optional(),
                         })
                         .nullable(),
                     metadata: z.record(z.string(), z.string()).optional(),
@@ -1001,6 +1005,7 @@ export const STRIPE_CHECKOUT_SESSION_SCHEMA = z.object({
         })
         .nullable()
         .optional(),
+    metadata: z.record(z.string(), z.string()).optional(),
 });
 
 export const STRIPE_EVENT_CHECKOUT_SESSION_SCHEMA = z.object({
