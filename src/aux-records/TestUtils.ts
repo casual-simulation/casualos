@@ -62,6 +62,8 @@ export function createTestSubConfiguration(
                     defaultQuantity: 1,
                     adjustableQuantity: true,
                     product: 'prod_123',
+                    maxQuantity: 999_999,
+                    minQuantity: 0,
                 })
                 .withWebhookSecret('webhook-secret')
                 .withUserDefaultFeatures((f) => f.withAllDefaultFeatures())
