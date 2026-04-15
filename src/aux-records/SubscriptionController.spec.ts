@@ -10808,7 +10808,6 @@ describe('SubscriptionController', () => {
                         quantity: 1,
                         metadata: {
                             targetUserId: userId,
-                            targetStudioId: null,
                         },
                     },
                 ],
@@ -10884,7 +10883,6 @@ describe('SubscriptionController', () => {
                         quantity: 5,
                         metadata: {
                             targetUserId: userId,
-                            targetStudioId: null,
                         },
                     },
                 ],
@@ -10960,7 +10958,6 @@ describe('SubscriptionController', () => {
                         quantity: 1,
                         metadata: {
                             targetUserId: userId,
-                            targetStudioId: null,
                         },
                     },
                 ],
@@ -11038,7 +11035,6 @@ describe('SubscriptionController', () => {
                         quantity: 5,
                         metadata: {
                             targetUserId: userId,
-                            targetStudioId: null,
                         },
                     },
                 ],
