@@ -16,11 +16,11 @@ Object {
     Object {
       "addedNodes": Array [
         Object {
-          "__id": "6",
+          "__id": "0",
           "attributes": Array [],
           "childNodes": Array [
             Object {
-              "__id": "7",
+              "__id": "1",
               "attributes": Array [
                 Object {
                   "name": "value",
@@ -54,11 +54,11 @@ Object {
         "attributes": Array [],
         "childNodes": Array [
           Object {
-            "__id": "6",
+            "__id": "0",
             "attributes": Array [],
             "childNodes": Array [
               Object {
-                "__id": "7",
+                "__id": "1",
                 "attributes": Array [
                   Object {
                     "name": "value",
@@ -102,7 +102,7 @@ Object {
       "listenerName": undefined,
       "oldValue": "",
       "target": Object {
-        "__id": "7",
+        "__id": "1",
         "attributes": Array [
           Object {
             "name": "value",
