@@ -88,6 +88,9 @@
             ```
 -   Included Subscription info in the `xp.getAccountBalances()` result.
     -   Successful results now include a `subscription` property which contains information about the user/studio's current subscription and includes information like: subscription tier, credit expiration policy, and subscription period (start and end).
+-   Added support for file path-style imports:
+    -   Instead of `.otherTag`, now you can use `./otherTag`
+    -   Instead of `:parent.tag`, now you can use `../parent/tag`
 
 ### :bug: Bug Fixes
 
