@@ -19563,6 +19563,55 @@ export interface APIInvoiceContractRequest {
     payoutDestination: InvoicePayoutDestination;
 }
 
+
+/**
+ * Defines an interface that represents the options for purchasing credits for an account.
+ *
+ * @dochash types/records/extra
+ * @docname PurchaseCreditsRequest
+ * @docid PurchaseCreditsRequest
+ */
+export interface APIPurchaseCreditsRequest {
+    /**
+     * The ID of the user that the credits should be purchased for.
+     * Currently, credits can only be purchased for yourself.
+     */
+    targetUserId?: string;
+
+    /**
+     * The ID of the studio that the credits should be purchased for.
+     * Currently, only studio admins can purchase credits.
+     */
+    targetStudioId?: string;
+
+    /**
+     * The URL that the user should be sent to if they cancel the purchase.
+     */
+    returnUrl: string;
+
+    /**
+     * The URL that the user should be sent to if the purchase completes successfully.
+     */
+    successUrl: string;
+}
+
+/**
+ * Defines an interface that represents the result of a request to purchase credits for an account.
+ * 
+ * @dochash types/records/extra
+ * @docname PurchaseCreditsResult
+ * @docid PurchaseCreditsResult
+ */
+export type PurchaseCreditsResult = GenericResult<
+    {
+        /**
+         * The URL that the user should be directed to to complete the purchase.
+         */
+        url?: string;
+    },
+    SimpleError
+>;
+
 /**
  * The destination for the payout of an invoice.
  * - "stripe" means that the invoiced amount will be transfered to the users Stripe account once paid.
@@ -19882,6 +19931,44 @@ interface Xp {
          */
         subscription?: SubscriptionInfo;
     }, SimpleError>>;
+
+    /**
+     * Creates a new checkout session that can be used to purchase credits for an account. Returns a promise which resolves with the URL that the user should be redirected to in order to complete the purchase.
+     *
+     * @param options The options for the request.
+     * @returns A promise that resolves with the account balances.
+     *
+     * @example Purchase credits for the current user.
+     * const purchaseResult = await xp.purchaseCredits({
+     *   targetUserId: authBot.id,
+     *   returnUrl: configBot.tags.url,
+     *   successUrl: configBot.tags.url
+     * });
+     * if (purchaseResult.success) {
+     *   os.goToURL(purchaseResult.url);
+     * } else {
+     *   os.toast("Failed to create checkout session")
+     * }
+     *
+     * @example Purchase credits for a studio.
+     * const purchaseResult = await xp.purchaseCredits({
+     *   targetUserId: "studioId",
+     *   returnUrl: configBot.tags.url,
+     *   successUrl: configBot.tags.url
+     * });
+     * if (purchaseResult.success) {
+     *   os.goToURL(purchaseResult.url);
+     * } else {
+     *   os.toast("Failed to create checkout session")
+     * }
+     *
+     * @dochash actions/xp
+     * @docname xp.purchaseCredits
+     */
+    purchaseCredits(
+        request: APIPurchaseCreditsRequest,
+        options?: RecordActionOptions
+    ): Promise<PurchaseCreditsResult>;
 }
 
 interface Perf {

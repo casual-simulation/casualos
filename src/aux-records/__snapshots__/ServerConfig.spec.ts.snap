@@ -372,6 +372,12 @@ Object {
           },
         },
       },
+      "purchaseCreditsConfig": Object {
+        "adjustableQuantity": true,
+        "defaultQuantity": 1,
+        "maxQuantity": 999999,
+        "minQuantity": 0,
+      },
       "returnUrl": "https://example.com/",
       "subscriptions": Array [
         Object {
@@ -2010,6 +2016,12 @@ Object {
           },
         },
       },
+      "purchaseCreditsConfig": Object {
+        "adjustableQuantity": true,
+        "defaultQuantity": 1,
+        "maxQuantity": 999999,
+        "minQuantity": 0,
+      },
       "returnUrl": "https://example.com/",
       "subscriptions": Array [],
       "successUrl": "https://example.com/",
@@ -2421,6 +2433,12 @@ Object {
             "tokenLifetimeMs": 300000,
           },
         },
+      },
+      "purchaseCreditsConfig": Object {
+        "adjustableQuantity": true,
+        "defaultQuantity": 1,
+        "maxQuantity": 999999,
+        "minQuantity": 0,
       },
       "returnUrl": "https://example.com/",
       "subscriptions": Array [
