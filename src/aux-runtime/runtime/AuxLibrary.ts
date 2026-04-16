@@ -642,6 +642,24 @@ export interface APIPurchaseCreditsRequest {
      */
     successUrl: string;
 }
+
+/**
+ * Defines an interface that represents the result of a request to purchase credits for an account.
+ *
+ * @dochash types/records/extra
+ * @docname PurchaseCreditsResult
+ * @docid PurchaseCreditsResult
+ */
+export type PurchaseCreditsResult = GenericResult<
+    {
+        /**
+         * The URL that the user should be directed to to complete the purchase.
+         */
+        url?: string;
+    },
+    SimpleError
+>;
+
 export interface APIInvoiceContractRequest {
     contractId: string;
     amount: number;
@@ -9750,9 +9768,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function xpPurchaseCredits(
         request: APIPurchaseCreditsRequest,
         options: RecordActionOptions = {}
-    ): Promise<
-        GenericResult<JSONAccountBalancesAndSubscriptionInfo, SimpleError>
-    > {
+    ): Promise<PurchaseCreditsResult> {
         const task = context.createTask();
         const event = recordsCallProcedure(
             {
