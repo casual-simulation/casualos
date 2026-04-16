@@ -7038,6 +7038,13 @@ export interface PurchaseCreditsRequest {
     nowMs?: number;
 }
 
+/**
+ * Defines an interface that represents the result of a request to purchase credits for an account.
+ *
+ * @dochash types/records/extra
+ * @docname PurchaseCreditsResult
+ * @docid PurchaseCreditsResult
+ */
 export type PurchaseCreditsResult = Result<
     {
         /**

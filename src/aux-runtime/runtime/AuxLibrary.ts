@@ -510,6 +510,7 @@ import type {
     PayoutDestination,
     ContractPricing,
     JSONAccountBalancesAndSubscriptionInfo,
+    PurchaseCreditsResult,
 } from '@casual-simulation/aux-records';
 import SeedRandom from 'seedrandom';
 import { DateTime } from 'luxon';
@@ -642,23 +643,6 @@ export interface APIPurchaseCreditsRequest {
      */
     successUrl: string;
 }
-
-/**
- * Defines an interface that represents the result of a request to purchase credits for an account.
- *
- * @dochash types/records/extra
- * @docname PurchaseCreditsResult
- * @docid PurchaseCreditsResult
- */
-export type PurchaseCreditsResult = GenericResult<
-    {
-        /**
-         * The URL that the user should be directed to to complete the purchase.
-         */
-        url?: string;
-    },
-    SimpleError
->;
 
 export interface APIInvoiceContractRequest {
     contractId: string;
