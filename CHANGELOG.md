@@ -103,6 +103,9 @@
             -   `defaultQuantity` (number; optional) - The default quantity of the product to purchase. Defaults to 1.
             -   `maxQuantity` (number; optional) - The maximum allowed quantity. Defaults to 999,999 (Stripe max).
             -   `minQuantity` (number; optional) - The minimum allowed quantity. Defaults to 0.
+-   Added support for file path-style imports:
+    -   Instead of `.otherTag`, now you can use `./otherTag`
+    -   Instead of `:parent.tag`, now you can use `../parent/tag`
 
 ### :bug: Bug Fixes
 
