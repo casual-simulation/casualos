@@ -151,6 +151,14 @@ const SYNCHRONIZED_FORM_ELEMENT_ATTRIBUTES = new Set([
     'selectedIndex',
 ]);
 
+/**
+ * Resets the global node ID counter used for serializing DOM node references.
+ * Intended for tests that need deterministic snapshot output.
+ */
+export function resetGlobalIdCounter() {
+    globalIdCounter = 0;
+}
+
 function isSynchronizedFormElementAttribute(
     attributeName: string | null | undefined
 ) {

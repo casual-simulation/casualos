@@ -38,7 +38,7 @@ import type { RuntimeActions } from '@casual-simulation/aux-runtime';
 import { AuxRuntime } from '@casual-simulation/aux-runtime';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import { Subscription } from 'rxjs';
-import { HtmlAppBackend } from './HtmlAppBackend';
+import { HtmlAppBackend, resetGlobalIdCounter } from './HtmlAppBackend';
 import { v4 as uuid } from 'uuid';
 import { AuxHelper } from '../vm';
 import { tap } from 'rxjs/operators';
@@ -57,6 +57,7 @@ describe('HtmlAppBackend', () => {
     let sub: Subscription;
 
     beforeEach(async () => {
+        resetGlobalIdCounter();
         actions = [];
         sub = new Subscription();
         runtime = new AuxRuntime(
@@ -259,10 +260,23 @@ describe('HtmlAppBackend', () => {
 
             await waitAsync();
 
+            const setupUpdate = actions.find(
+                (a) =>
+                    a.type === 'update_html_app' &&
+                    a.appId === 'testPortal' &&
+                    (a as UpdateHtmlAppAction).updates.some(
+                        (u) => u.type === 'childList'
+                    )
+            ) as UpdateHtmlAppAction;
+            const childListUpdate = setupUpdate.updates.find(
+                (u) => u.type === 'childList'
+            ) as any;
+            const targetId = childListUpdate.addedNodes[0].__id as string;
+
             portal.handleEvents([
                 htmlAppEvent('testPortal', {
                     type: 'click',
-                    target: '1',
+                    target: targetId,
                 }),
             ]);
 
@@ -499,6 +513,7 @@ describe('HtmlAppBackend', () => {
 
             const updateAction = actions[1] as UpdateHtmlAppAction;
 
+            expect(updateAction).toMatchSnapshot();
             expect(updateAction.type).toBe('update_html_app');
             expect(updateAction.appId).toBe('testPortal');
             expect(updateAction.updates.length).toBe(2);
@@ -525,6 +540,7 @@ describe('HtmlAppBackend', () => {
 
             const updateAction2 = actions[2] as UpdateHtmlAppAction;
 
+            expect(updateAction2).toMatchSnapshot();
             expect(updateAction2.type).toBe('update_html_app');
             expect(updateAction2.appId).toBe('testPortal');
             expect(updateAction2.updates.length).toBe(1);
