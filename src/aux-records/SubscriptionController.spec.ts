@@ -42,6 +42,7 @@ import {
 } from '@casual-simulation/aux-common';
 import type {
     StripeAccountStatus,
+    StripeCheckoutSession,
     StripeInterface,
     StripeProduct,
 } from './StripeInterface';
@@ -10715,6 +10716,341 @@ describe('SubscriptionController', () => {
         });
     });
 
+    describe('purchaseCredits()', () => {
+        const recordName = 'recordName';
+
+        beforeEach(async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withContracts()
+                            .withContractsCurrencyLimit('usd', {
+                                maxCost: 10000,
+                                minCost: 10,
+                                fee: {
+                                    type: 'fixed',
+                                    amount: 10,
+                                },
+                            })
+                    )
+            );
+
+            nowMock.mockReturnValue(101);
+
+            await store.addRecord({
+                name: recordName,
+                ownerId: userId,
+                studioId: null,
+                secretHashes: [],
+                secretSalt: '',
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customer_id',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+        });
+
+        it('should create a new checkout session', async () => {
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            stripeMock.getProductAndPriceInfo.mockResolvedValueOnce({
+                id: 'prod_123',
+                name: 'Credits',
+                description: '100 credits',
+                default_price: {
+                    id: 'price_123',
+                    currency: 'usd',
+                    recurring: null,
+                    unit_amount: 100,
+                    metadata: {
+                        'casualos.credits': '500',
+                    },
+                },
+            });
+
+            const result = await controller.purchaseCredits({
+                userId: userId,
+                targetUserId: userId,
+                targetStudioId: null,
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                success({
+                    url: 'checkout_url',
+                })
+            );
+
+            expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
+                mode: 'payment',
+                line_items: [
+                    {
+                        adjustable_quantity: {
+                            enabled: true,
+                            maximum: 999_999,
+                            minimum: 0,
+                        },
+                        price: 'price_123',
+                        quantity: 1,
+                        metadata: {
+                            targetUserId: userId,
+                        },
+                    },
+                ],
+                // should redirect the user to the success URL because it is automatically fulfilled
+                success_url: 'success-url',
+                cancel_url: 'return-url',
+                customer: 'customer_id',
+                metadata: {
+                    userId: userId,
+                },
+            });
+
+            expect(store.checkoutSessions).toEqual([]);
+        });
+
+        it('should use the configured default quantity', async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.withCreditPurchaseConfig({
+                        product: 'prod_123',
+                        adjustableQuantity: true,
+                        defaultQuantity: 5,
+                    })
+            );
+
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            stripeMock.getProductAndPriceInfo.mockResolvedValueOnce({
+                id: 'prod_123',
+                name: 'Credits',
+                description: '100 credits',
+                default_price: {
+                    id: 'price_123',
+                    currency: 'usd',
+                    recurring: null,
+                    unit_amount: 100,
+                    metadata: {
+                        'casualos.credits': '500',
+                    },
+                },
+            });
+
+            const result = await controller.purchaseCredits({
+                userId: userId,
+                targetUserId: userId,
+                targetStudioId: null,
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                success({
+                    url: 'checkout_url',
+                })
+            );
+
+            expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
+                mode: 'payment',
+                line_items: [
+                    {
+                        adjustable_quantity: {
+                            enabled: true,
+                            maximum: 999_999,
+                            minimum: 0,
+                        },
+                        price: 'price_123',
+                        quantity: 5,
+                        metadata: {
+                            targetUserId: userId,
+                        },
+                    },
+                ],
+                // should redirect the user to the success URL because it is automatically fulfilled
+                success_url: 'success-url',
+                cancel_url: 'return-url',
+                customer: 'customer_id',
+                metadata: {
+                    userId: userId,
+                },
+            });
+
+            expect(store.checkoutSessions).toEqual([]);
+        });
+
+        it('should disallow adjusting quantity if configured', async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.withCreditPurchaseConfig({
+                        product: 'prod_123',
+                        adjustableQuantity: false,
+                        defaultQuantity: 1,
+                    })
+            );
+
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            stripeMock.getProductAndPriceInfo.mockResolvedValueOnce({
+                id: 'prod_123',
+                name: 'Credits',
+                description: '100 credits',
+                default_price: {
+                    id: 'price_123',
+                    currency: 'usd',
+                    recurring: null,
+                    unit_amount: 100,
+                    metadata: {
+                        'casualos.credits': '500',
+                    },
+                },
+            });
+
+            const result = await controller.purchaseCredits({
+                userId: userId,
+                targetUserId: userId,
+                targetStudioId: null,
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                success({
+                    url: 'checkout_url',
+                })
+            );
+
+            expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
+                mode: 'payment',
+                line_items: [
+                    {
+                        adjustable_quantity: {
+                            enabled: false,
+                            maximum: 999_999,
+                            minimum: 0,
+                        },
+                        price: 'price_123',
+                        quantity: 1,
+                        metadata: {
+                            targetUserId: userId,
+                        },
+                    },
+                ],
+                // should redirect the user to the success URL because it is automatically fulfilled
+                success_url: 'success-url',
+                cancel_url: 'return-url',
+                customer: 'customer_id',
+                metadata: {
+                    userId: userId,
+                },
+            });
+
+            expect(store.checkoutSessions).toEqual([]);
+        });
+
+        it('should use the configured maximum and minimum quantities', async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.withCreditPurchaseConfig({
+                        product: 'prod_123',
+                        adjustableQuantity: true,
+                        defaultQuantity: 5,
+                        maxQuantity: 100,
+                        minQuantity: 2,
+                    })
+            );
+
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            stripeMock.getProductAndPriceInfo.mockResolvedValueOnce({
+                id: 'prod_123',
+                name: 'Credits',
+                description: '100 credits',
+                default_price: {
+                    id: 'price_123',
+                    currency: 'usd',
+                    recurring: null,
+                    unit_amount: 100,
+                    metadata: {
+                        'casualos.credits': '500',
+                    },
+                },
+            });
+
+            const result = await controller.purchaseCredits({
+                userId: userId,
+                targetUserId: userId,
+                targetStudioId: null,
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                success({
+                    url: 'checkout_url',
+                })
+            );
+
+            expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
+                mode: 'payment',
+                line_items: [
+                    {
+                        adjustable_quantity: {
+                            enabled: true,
+                            maximum: 100,
+                            minimum: 2,
+                        },
+                        price: 'price_123',
+                        quantity: 5,
+                        metadata: {
+                            targetUserId: userId,
+                        },
+                    },
+                ],
+                // should redirect the user to the success URL because it is automatically fulfilled
+                success_url: 'success-url',
+                cancel_url: 'return-url',
+                customer: 'customer_id',
+                metadata: {
+                    userId: userId,
+                },
+            });
+
+            expect(store.checkoutSessions).toEqual([]);
+        });
+    });
+
     describe('cancelContract()', () => {
         const recordName = 'recordName';
 
@@ -17285,6 +17621,346 @@ describe('SubscriptionController', () => {
             //         });
             //     });
             // });
+        });
+
+        describe('purchaseCredits', () => {
+            let user: AuthUser;
+            const recordName = 'recordName';
+
+            beforeEach(async () => {
+                store.subscriptionConfiguration = createTestSubConfiguration();
+
+                const userAccount = unwrap(
+                    await financialController.getOrCreateFinancialAccount({
+                        userId: userId,
+                        ledger: LEDGERS.usd,
+                    })
+                );
+                user = await store.findUser(userId);
+
+                user = {
+                    ...user,
+                    stripeAccountId: 'account_id',
+                    stripeAccountRequirementsStatus: null,
+                    stripeAccountStatus: null,
+                };
+
+                await store.saveUser(user);
+
+                await store.addRecord({
+                    name: recordName,
+                    ownerId: userId,
+                    secretHashes: [],
+                    secretSalt: '',
+                    studioId: null,
+                });
+
+                nowMock.mockReturnValue(200);
+            });
+
+            describe('checkout.session.completed', () => {
+                describe('user', () => {
+                    it('should transfer credits to the user', async () => {
+                        const checkoutSession: StripeCheckoutSession = {
+                            id: 'checkout_id',
+                            object: 'checkout.session',
+                            client_reference_id: null,
+                            payment_status: 'paid',
+                            status: 'complete',
+                            line_items: {
+                                object: 'list',
+                                data: [
+                                    {
+                                        id: 'line_item_1_id',
+                                        amount_subtotal: 123,
+                                        amount_total: 133,
+                                        amount_tax: 10,
+                                        amount_discount: 0,
+                                        currency: 'usd',
+                                        quantity: 1,
+                                        price: {
+                                            id: 'price_123',
+                                            product: 'prod_123',
+                                            unit_amount: 100,
+                                        },
+                                        metadata: {
+                                            targetUserId: userId,
+                                        },
+                                    },
+                                ],
+                            },
+                            metadata: {
+                                userId: 'test',
+                            },
+                        };
+                        stripeMock.constructWebhookEvent.mockReturnValueOnce({
+                            id: 'event_id',
+                            type: 'checkout.session.completed',
+                            object: 'event',
+                            account: 'account_id',
+                            api_version: 'api_version',
+                            created: 123,
+                            data: {
+                                object: checkoutSession,
+                            },
+                            livemode: true,
+                            pending_webhooks: 1,
+                            request: {} as any,
+                        });
+                        stripeMock.getCheckoutSessionById.mockResolvedValueOnce(
+                            checkoutSession
+                        );
+
+                        stripeMock.getProductAndPriceInfo.mockResolvedValueOnce(
+                            {
+                                id: 'prod_123',
+                                name: '100 Credits',
+                                description: '100 Credits',
+                                default_price: {
+                                    id: 'price_123',
+                                    unit_amount: 123,
+                                    currency: 'usd',
+                                    recurring: null,
+                                    metadata: {
+                                        'casualos.credits': '100',
+                                    },
+                                },
+                            }
+                        );
+
+                        const result = await controller.handleStripeWebhook({
+                            requestBody: 'request_body',
+                            signature: 'request_signature',
+                        });
+
+                        expect(result).toEqual({
+                            success: true,
+                        });
+
+                        expect(
+                            stripeMock.constructWebhookEvent
+                        ).toHaveBeenCalledWith(
+                            'request_body',
+                            'request_signature',
+                            'webhook-secret'
+                        );
+
+                        const userAccount = unwrap(
+                            await financialController.getOrCreateFinancialAccount(
+                                {
+                                    userId: userId,
+                                    ledger: LEDGERS.credits,
+                                }
+                            )
+                        );
+
+                        await checkAccounts(financialInterface, [
+                            {
+                                id: userAccount.account.id,
+                                credits_pending: 0n,
+                                credits_posted: 100n,
+                                debits_pending: 0n,
+                                debits_posted: 0n,
+                            },
+                            {
+                                id: ACCOUNT_IDS.assets_stripe,
+                                credits_pending: 0n,
+                                credits_posted: 0n,
+                                debits_pending: 0n,
+                                debits_posted: 123n,
+                            },
+                            {
+                                id: ACCOUNT_IDS.liquidity_usd,
+                                credits_pending: 0n,
+                                credits_posted: 123n,
+                                debits_pending: 0n,
+                                debits_posted: 0n,
+                            },
+                        ]);
+
+                        checkTransfers(
+                            await financialInterface.lookupTransfers([4n, 5n]),
+                            [
+                                {
+                                    id: 4n,
+                                    amount: 123n,
+                                    code: TransferCodes.purchase_credits,
+                                    credit_account_id:
+                                        ACCOUNT_IDS.liquidity_usd,
+                                    debit_account_id: ACCOUNT_IDS.assets_stripe,
+                                    ledger: LEDGERS.usd,
+                                    flags: TransferFlags.linked,
+                                },
+                                {
+                                    id: 5n,
+                                    amount: 100n,
+                                    code: TransferCodes.purchase_credits,
+                                    debit_account_id:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    credit_account_id: userAccount.account.id,
+                                    ledger: LEDGERS.credits,
+                                    flags: TransferFlags.none,
+                                },
+                            ]
+                        );
+                    });
+                });
+
+                describe('studio', () => {
+                    const studioId = 'studioId';
+                    beforeEach(async () => {
+                        await store.addStudio({
+                            id: studioId,
+                            displayName: 'test studio',
+                        });
+                    });
+
+                    it('should transfer credits to the studio', async () => {
+                        const checkoutSession: StripeCheckoutSession = {
+                            id: 'checkout_id',
+                            object: 'checkout.session',
+                            client_reference_id: null,
+                            payment_status: 'paid',
+                            status: 'complete',
+                            line_items: {
+                                object: 'list',
+                                data: [
+                                    {
+                                        id: 'line_item_1_id',
+                                        amount_subtotal: 123,
+                                        amount_total: 133,
+                                        amount_tax: 10,
+                                        amount_discount: 0,
+                                        currency: 'usd',
+                                        quantity: 1,
+                                        price: {
+                                            id: 'price_123',
+                                            product: 'prod_123',
+                                            unit_amount: 100,
+                                        },
+                                        metadata: {
+                                            targetStudioId: studioId,
+                                        },
+                                    },
+                                ],
+                            },
+                            metadata: {
+                                userId: 'test',
+                            },
+                        };
+                        stripeMock.constructWebhookEvent.mockReturnValueOnce({
+                            id: 'event_id',
+                            type: 'checkout.session.completed',
+                            object: 'event',
+                            account: 'account_id',
+                            api_version: 'api_version',
+                            created: 123,
+                            data: {
+                                object: checkoutSession,
+                            },
+                            livemode: true,
+                            pending_webhooks: 1,
+                            request: {} as any,
+                        });
+                        stripeMock.getCheckoutSessionById.mockResolvedValueOnce(
+                            checkoutSession
+                        );
+
+                        stripeMock.getProductAndPriceInfo.mockResolvedValueOnce(
+                            {
+                                id: 'prod_123',
+                                name: '100 Credits',
+                                description: '100 Credits',
+                                default_price: {
+                                    id: 'price_123',
+                                    unit_amount: 123,
+                                    currency: 'usd',
+                                    recurring: null,
+                                    metadata: {
+                                        'casualos.credits': '100',
+                                    },
+                                },
+                            }
+                        );
+
+                        const result = await controller.handleStripeWebhook({
+                            requestBody: 'request_body',
+                            signature: 'request_signature',
+                        });
+
+                        expect(result).toEqual({
+                            success: true,
+                        });
+
+                        expect(
+                            stripeMock.constructWebhookEvent
+                        ).toHaveBeenCalledWith(
+                            'request_body',
+                            'request_signature',
+                            'webhook-secret'
+                        );
+
+                        const studioAccount = unwrap(
+                            await financialController.getOrCreateFinancialAccount(
+                                {
+                                    studioId,
+                                    ledger: LEDGERS.credits,
+                                }
+                            )
+                        );
+
+                        await checkAccounts(financialInterface, [
+                            {
+                                id: studioAccount.account.id,
+                                credits_pending: 0n,
+                                credits_posted: 100n,
+                                debits_pending: 0n,
+                                debits_posted: 0n,
+                            },
+                            {
+                                id: ACCOUNT_IDS.assets_stripe,
+                                credits_pending: 0n,
+                                credits_posted: 0n,
+                                debits_pending: 0n,
+                                debits_posted: 123n,
+                            },
+                            {
+                                id: ACCOUNT_IDS.liquidity_usd,
+                                credits_pending: 0n,
+                                credits_posted: 123n,
+                                debits_pending: 0n,
+                                debits_posted: 0n,
+                            },
+                        ]);
+
+                        checkTransfers(
+                            await financialInterface.lookupTransfers([4n, 5n]),
+                            [
+                                {
+                                    id: 4n,
+                                    amount: 123n,
+                                    code: TransferCodes.purchase_credits,
+                                    credit_account_id:
+                                        ACCOUNT_IDS.liquidity_usd,
+                                    debit_account_id: ACCOUNT_IDS.assets_stripe,
+                                    ledger: LEDGERS.usd,
+                                    flags: TransferFlags.linked,
+                                },
+                                {
+                                    id: 5n,
+                                    amount: 100n,
+                                    code: TransferCodes.purchase_credits,
+                                    debit_account_id:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    credit_account_id: studioAccount.account.id,
+                                    ledger: LEDGERS.credits,
+                                    flags: TransferFlags.none,
+                                },
+                            ]
+                        );
+                    });
+                });
+            });
         });
     });
 });

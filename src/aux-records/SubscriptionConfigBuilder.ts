@@ -571,6 +571,13 @@ export class SubscriptionConfigBuilder {
         return this;
     }
 
+    withCreditPurchaseConfig(
+        config: SubscriptionConfiguration['purchaseCreditsConfig']
+    ): this {
+        this._config.purchaseCreditsConfig = config;
+        return this;
+    }
+
     addSubscription(
         id: string,
         build: (sub: SubscriptionBuilder) => SubscriptionBuilder

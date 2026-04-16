@@ -1003,6 +1003,53 @@ export const getSubscriptionConfigSchema = memoize(() =>
                 'Additional options that should be passed to stripe.checkout.sessions.create().'
             ),
 
+        purchaseCreditsConfig: z
+            .object({
+                product: z
+                    .string()
+                    .optional()
+                    .nullable()
+                    .describe(
+                        'The Stripe product that should be used for purchasing credits. If omitted, then purchasing credits will not be supported. The product\'s prices should have the following metadata properties: "casualos.credits" (The number of credits to grant when purchasing).'
+                    ),
+                adjustableQuantity: z
+                    .boolean()
+                    .default(true)
+                    .describe(
+                        'Whether the quantity of the line item should be adjustable by the user during checkout. Defaults to true.'
+                    ),
+                defaultQuantity: z
+                    .int()
+                    .positive()
+                    .default(1)
+                    .describe(
+                        'The default quantity of the line item during checkout. Defaults to 1.'
+                    ),
+
+                maxQuantity: z
+                    .int()
+                    .positive()
+                    .min(1)
+                    .max(999_999)
+                    .default(999_999)
+                    .describe(
+                        'The maximum quantity that the user can purchase at once. Must be between 1 and 999,999. Defaults to 999,999.'
+                    ),
+
+                minQuantity: z
+                    .int()
+                    .nonnegative()
+                    .min(0)
+                    .default(0)
+                    .describe(
+                        'The minimum quantity that the user can purchase at once. Must be at least 0. Defaults to 0.'
+                    ),
+            })
+            .prefault({})
+            .describe(
+                'Configuration for purchasing credits. Defaults to an empty object, which means that purchasing credits is not supported.'
+            ),
+
         subscriptions: z
             .array(getSubscriptionSchema())
             .describe('The list of subscriptions that are in use.'),
@@ -1144,6 +1191,14 @@ export interface SubscriptionConfiguration {
      * The features that should be used when a tier does not have a features configuration.
      */
     defaultFeatures: DefaultFeaturesConfiguration;
+
+    purchaseCreditsConfig?: {
+        product?: string;
+        adjustableQuantity?: boolean;
+        defaultQuantity?: number;
+        maxQuantity?: number;
+        minQuantity?: number;
+    };
 }
 
 // export interface APISubscription {

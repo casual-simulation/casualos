@@ -6849,6 +6849,66 @@ export class RecordsServer {
                     }
                 ),
 
+            purchaseCredits: procedure()
+                .origins('self')
+                .http('POST', '/api/v2/credits/purchase')
+                .inputs(
+                    z.object({
+                        targetUserId: z
+                            .string()
+                            .nonempty()
+                            .optional()
+                            .nullable(),
+                        targetStudioId: z
+                            .string()
+                            .nonempty()
+                            .optional()
+                            .nullable(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
+                        returnUrl: z.url(),
+                        successUrl: z.url(),
+                    })
+                )
+                .handler(
+                    async (
+                        {
+                            targetUserId,
+                            targetStudioId,
+                            instances,
+                            returnUrl,
+                            successUrl,
+                        },
+                        context
+                    ) => {
+                        const sessionKeyValidation =
+                            await this._validateSessionKey(context.sessionKey);
+
+                        if (sessionKeyValidation.success === false) {
+                            if (
+                                sessionKeyValidation.errorCode ===
+                                'no_session_key'
+                            ) {
+                                return NOT_LOGGED_IN_RESULT;
+                            }
+                            return sessionKeyValidation;
+                        }
+
+                        const result =
+                            await this._subscriptions.purchaseCredits({
+                                userId: sessionKeyValidation.userId,
+                                targetUserId,
+                                targetStudioId,
+
+                                returnUrl,
+                                successUrl,
+                                instances,
+                            });
+
+                        return genericResult(result);
+                    }
+                ),
+
             getContractPricing: procedure()
                 .origins('api')
                 .http('POST', '/api/v2/records/contract/pricing')

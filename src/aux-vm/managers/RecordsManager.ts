@@ -228,6 +228,10 @@ export class RecordsManager {
     private _httpRequestId: number = 0;
     private _client: ReturnType<typeof createRecordsClient>;
 
+    /**
+     * A map of procedure names to whether or not they require the user to be logged in to call.
+     * Procedures that are not in this map are not allowed to be called from the simulation.
+     */
     private _allowedProcedures = new Map<keyof RecordsClientActions, boolean>([
         ['createRecord', true],
         ['recordWebhook', true],
@@ -282,6 +286,7 @@ export class RecordsManager {
         ['payContractInvoice', true],
         ['payoutAccount', true],
         ['getBalances', true],
+        ['purchaseCredits', true],
     ]);
 
     /**

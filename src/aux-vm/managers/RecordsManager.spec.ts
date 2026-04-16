@@ -7881,6 +7881,22 @@ describe('RecordsManager', () => {
                         1
                     ),
                 ] as const,
+                [
+                    'purchaseCredits',
+                    recordsCallProcedure(
+                        {
+                            purchaseCredits: {
+                                input: {
+                                    targetUserId: 'user123',
+                                    returnUrl: 'https://example.com/return',
+                                    successUrl: 'https://example.com/success',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
             ];
 
             describe.each(allowedProcedures)('%s', (name, event) => {
