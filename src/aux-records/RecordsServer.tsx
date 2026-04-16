@@ -5716,6 +5716,7 @@ export class RecordsServer {
                                 ? {
                                       usd: balance.usd?.toJSON(),
                                       credits: balance.credits?.toJSON(),
+                                      subscription: balance.subscription,
                                   }
                                 : undefined
                         )
@@ -5789,6 +5790,7 @@ export class RecordsServer {
                             intervalCost: s.intervalCost,
                             currency: s.currency,
                             featureList: s.featureList,
+                            creditExpiration: s.creditExpiration,
                         })),
                         purchasableSubscriptions:
                             result.purchasableSubscriptions.map((s) => ({
@@ -6838,6 +6840,66 @@ export class RecordsServer {
                                     currency: contract.currency,
                                     expectedCost: contract.expectedCost,
                                 },
+                                returnUrl,
+                                successUrl,
+                                instances,
+                            });
+
+                        return genericResult(result);
+                    }
+                ),
+
+            purchaseCredits: procedure()
+                .origins('self')
+                .http('POST', '/api/v2/credits/purchase')
+                .inputs(
+                    z.object({
+                        targetUserId: z
+                            .string()
+                            .nonempty()
+                            .optional()
+                            .nullable(),
+                        targetStudioId: z
+                            .string()
+                            .nonempty()
+                            .optional()
+                            .nullable(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
+                        returnUrl: z.url(),
+                        successUrl: z.url(),
+                    })
+                )
+                .handler(
+                    async (
+                        {
+                            targetUserId,
+                            targetStudioId,
+                            instances,
+                            returnUrl,
+                            successUrl,
+                        },
+                        context
+                    ) => {
+                        const sessionKeyValidation =
+                            await this._validateSessionKey(context.sessionKey);
+
+                        if (sessionKeyValidation.success === false) {
+                            if (
+                                sessionKeyValidation.errorCode ===
+                                'no_session_key'
+                            ) {
+                                return NOT_LOGGED_IN_RESULT;
+                            }
+                            return sessionKeyValidation;
+                        }
+
+                        const result =
+                            await this._subscriptions.purchaseCredits({
+                                userId: sessionKeyValidation.userId,
+                                targetUserId,
+                                targetStudioId,
+
                                 returnUrl,
                                 successUrl,
                                 instances,
@@ -8630,6 +8692,7 @@ export class RecordsServer {
                 intervalCost: s.intervalCost,
                 currency: s.currency,
                 featureList: s.featureList,
+                creditExpiration: s.creditExpiration,
             })),
             purchasableSubscriptions: result.purchasableSubscriptions.map(
                 (s) => ({

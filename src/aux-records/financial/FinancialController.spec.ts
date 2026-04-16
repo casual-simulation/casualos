@@ -130,6 +130,7 @@ describe('FinancialController', () => {
                 ACCOUNT_IDS.revenue_store_platform_fees,
                 ACCOUNT_IDS.liquidity_usd,
                 ACCOUNT_IDS.liquidity_credits,
+                ACCOUNT_IDS.credit_expiration,
                 ACCOUNT_IDS.USD_SETUP,
                 ACCOUNT_IDS.USD_LIMIT_CREDITS,
                 ACCOUNT_IDS.USD_LIMIT_DEBITS,

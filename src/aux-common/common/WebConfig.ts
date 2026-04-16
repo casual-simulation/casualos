@@ -183,6 +183,7 @@ export interface WebConfig {
      *
      * Possible options are:
      * - "enter join code"
+     * - "temp"
      * - "static inst"
      * - "public inst"
      * - "private inst"

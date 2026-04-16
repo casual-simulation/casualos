@@ -2,7 +2,7 @@
 
 ## V4.2.3
 
-#### Date: 4/9/2026
+#### Date: 4/16/2026
 
 ### :rocket: Features
 
@@ -20,6 +20,92 @@
     -   `remoteClients` is an observable that you can subscribe to to get notified whenever another session (e.g. tab) connects to the document.
 -   Added `recordName` support to AI chat, streaming chat, image generation, and skybox generation requests so record-owned subscriptions can be used for authorization, billing, and metrics.
 -   Added the `ai.chat`, `ai.image`, and `ai.skybox` policy resource kinds with `create` permissions.
+-   Improved `xp.getAccountBalances(options?)` to accept one of `userId`, `studioId`, or `contractId` in the `options` parameter object.
+-   Added the `temp` BIOS option to the player and studio configuration UI, and updated temp insts to use in-memory-only partitions with no persistence across refreshes.
+-   Added support for configuring credit expiration.
+    -   By default, credits never expire.
+    -   Credit expiration can be configured via the `SERVER_CONFIG.subscriptions.subscriptions[i].creditExpiration` key, and can be set to one of the following options:
+        -   `never-expire` (Default) - Credits never expire.
+        -   `expire-after-period` - Credits expire when the user's subscription period ends. This can happen either just before renewal, or upon cancellation of the subscription. This will move all the credits from the user/studio account to the credit expiration account.
+    -   When credits expire, they are moved to the `credit_expiration` account (`7001`) with transfer code `credit_expiration` (`3005`).
+    -   Expired credits can be configured to automatically transfer to an arbitrary account via the `SERVER_CONFIG.jobs.financial.automatedSweep` key.
+        -   WARNING: financial jobs currently only work for server-based deployments (not serverless like Lambda).
+        -   To configure expired credits to sweep to the revenue account:
+            ```json
+            {
+                "jobs": {
+                    "financial": {
+                        "automatedSweep": {
+                            "repeatOptions": {
+                                "pattern": "0 3 15 * *"
+                            },
+                            "jobTemplate": {
+                                "data": {
+                                    "type": "financial-automated-sweep",
+                                    "sweeps": [
+                                        {
+                                            "code": 8,
+                                            "currency": "credits",
+                                            "debitAccountId": "7001",
+                                            "creditAccountId": "4104"
+                                        }
+                                    ]
+                                },
+                                "name": "financial-automated-sweep"
+                            }
+                        }
+                    }
+                }
+            }
+            ```
+        -   To configure expired credits to sweep to another account:
+            ```json
+            {
+                "jobs": {
+                    "financial": {
+                        "automatedSweep": {
+                            "repeatOptions": {
+                                "pattern": "0 3 15 * *"
+                            },
+                            "jobTemplate": {
+                                "data": {
+                                    "type": "financial-automated-sweep",
+                                    "sweeps": [
+                                        {
+                                            "code": 3,
+                                            "currency": "credits",
+                                            "debitAccountId": "7001",
+                                            "creditAccountId": "99999999"
+                                        }
+                                    ]
+                                },
+                                "name": "financial-automated-sweep"
+                            }
+                        }
+                    }
+                }
+            }
+            ```
+-   Included Subscription info in the `xp.getAccountBalances()` result.
+    -   Successful results now include a `subscription` property which contains information about the user/studio's current subscription and includes information like: subscription tier, credit expiration policy, and subscription period (start and end).
+-   Added the `xp.purchaseCredits(request)` function.
+    -   Creates and returns a checkout session URL that grants a user/studio credits.
+    -   `request` should be an object that has the following properties:
+        -   `targetUserId` - The ID of the user that the purchased credits should be granted to. Currently must be the ID of the user. Can be omitted if `targetStudioId` is specified.
+        -   `targetStudioId` - The ID of the studio that the purchased credits should be granted to. Currently only studio admins are allowed to purchase credits for a studio.
+        -   `returnUrl` - The URL that the user should be redirected to when they cancel the checkout session.
+        -   `successUrl` - The URL that the user should be redirected to when the complete the checkout session.
+    -   Before purchasing credits is supported, the following must be configured:
+        -   `SERVER_CONFIG.subscriptions.purchaseCreditsConfig` must be set to an object with the following properties:
+            -   `product` (string) - The ID of the stripe product. Must have a price with the following metadata:
+                -   `casualos.credits` - The number of credits that will be granted for each unit purchased.
+            -   `adjustableQuantity` (boolean; optional) - Whether the quantity can be adjusted by the user. Defaults to true.
+            -   `defaultQuantity` (number; optional) - The default quantity of the product to purchase. Defaults to 1.
+            -   `maxQuantity` (number; optional) - The maximum allowed quantity. Defaults to 999,999 (Stripe max).
+            -   `minQuantity` (number; optional) - The minimum allowed quantity. Defaults to 0.
+-   Added support for file path-style imports:
+    -   Instead of `.otherTag`, now you can use `./otherTag`
+    -   Instead of `:parent.tag`, now you can use `../parent/tag`
 
 ### :bug: Bug Fixes
 

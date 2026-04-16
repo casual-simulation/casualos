@@ -23647,6 +23647,61 @@ describe('AuxLibrary', () => {
                 expect(context.actions).toEqual([expected]);
             });
         });
+
+        describe('xp.purchaseCredits()', () => {
+            it('should emit a recordsCallProcedure action with getAccountBalances', async () => {
+                const action: any = library.api.xp.purchaseCredits({
+                    targetUserId: 'user123',
+                    returnUrl: 'abc',
+                    successUrl: 'def',
+                });
+                const expected = recordsCallProcedure(
+                    {
+                        purchaseCredits: {
+                            input: {
+                                targetUserId: 'user123',
+                                returnUrl: 'abc',
+                                successUrl: 'def',
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should accept options', async () => {
+                const action: any = library.api.xp.purchaseCredits(
+                    {
+                        targetUserId: 'user123',
+                        returnUrl: 'abc',
+                        successUrl: 'def',
+                    },
+                    {
+                        endpoint: 'my-endpoint',
+                    }
+                );
+                const expected = recordsCallProcedure(
+                    {
+                        purchaseCredits: {
+                            input: {
+                                targetUserId: 'user123',
+                                returnUrl: 'abc',
+                                successUrl: 'def',
+                            },
+                        },
+                    },
+                    {
+                        endpoint: 'my-endpoint',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
     });
 });
 

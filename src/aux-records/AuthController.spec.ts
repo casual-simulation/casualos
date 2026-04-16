@@ -164,6 +164,7 @@ describe('AuthController', () => {
                         featureList: [],
                         purchasable: true,
                         tier: 'alpha',
+                        creditExpiration: 'never-expire',
                     },
                     {
                         id: 'sub_1',
@@ -172,6 +173,7 @@ describe('AuthController', () => {
                         featureList: [],
                         purchasable: true,
                         tier: 'beta',
+                        creditExpiration: 'never-expire',
                     },
                 ],
                 webhookSecret: 'webhook',

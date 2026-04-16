@@ -407,7 +407,6 @@ import type {
     GenericResult,
     SimpleError,
     GenericSuccess,
-    JSONAccountBalance,
 } from '@casual-simulation/aux-common';
 import {
     remote as calcRemote,
@@ -510,6 +509,8 @@ import type {
     PurchasableItem,
     PayoutDestination,
     ContractPricing,
+    JSONAccountBalancesAndSubscriptionInfo,
+    PurchaseCreditsResult,
 } from '@casual-simulation/aux-records';
 import SeedRandom from 'seedrandom';
 import { DateTime } from 'luxon';
@@ -611,6 +612,38 @@ export interface APIPurchaseContractRequest {
     returnUrl: string;
     successUrl: string;
 }
+
+/**
+ * Defines an interface that represents the options for purchasing credits for an account.
+ *
+ * @dochash types/records/extra
+ * @docname PurchaseCreditsRequest
+ * @docid PurchaseCreditsRequest
+ */
+export interface APIPurchaseCreditsRequest {
+    /**
+     * The ID of the user that the credits should be purchased for.
+     * Currently, credits can only be purchased for yourself.
+     */
+    targetUserId?: string;
+
+    /**
+     * The ID of the studio that the credits should be purchased for.
+     * Currently, only studio admins can purchase credits.
+     */
+    targetStudioId?: string;
+
+    /**
+     * The URL that the user should be sent to if they cancel the purchase.
+     */
+    returnUrl: string;
+
+    /**
+     * The URL that the user should be sent to if the purchase completes successfully.
+     */
+    successUrl: string;
+}
+
 export interface APIInvoiceContractRequest {
     contractId: string;
     amount: number;
@@ -3902,6 +3935,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 payInvoice: xpPayInvoice,
                 payout: xpPayout,
                 getAccountBalances: xpGetAccountBalances,
+                purchaseCredits: xpPurchaseCredits,
             },
 
             portal: {
@@ -9642,12 +9676,28 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param options The options for the request.
      * @returns A promise that resolves with the account balances.
      *
+     * @example Get the current user's account balances and log them to the console.
+     * const balancesResult = await xp.getAccountBalances();
+     * console.log(balancesResult);
+     *
+     * @example Get the account balances for a studio
+     * const balances = await xp.getAccountBalances({
+     *  studioId: "myStudioId"
+     * });
+     *
+     * @example Get the account balances for a contract
+     * const balances = await xp.getAccountBalances({
+     *  contractId: "myContractId"
+     * });
+     *
      * @dochash actions/xp
      * @docname xp.getAccountBalances
      */
     function xpGetAccountBalances(
         options: GetAccountBalancesActionOptions = {}
-    ): Promise<GenericResult<JSONAccountBalance, SimpleError>> {
+    ): Promise<
+        GenericResult<JSONAccountBalancesAndSubscriptionInfo, SimpleError>
+    > {
         const task = context.createTask();
         const { userId, studioId, contractId, ...rest } = options;
         const event = recordsCallProcedure(
@@ -9661,6 +9711,61 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 },
             },
             rest,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Creates a new checkout session that can be used to purchase credits for an account. Returns a promise which resolves with the URL that the user should be redirected to in order to complete the purchase.
+     *
+     * @param options The options for the request.
+     * @returns A promise that resolves with the account balances.
+     *
+     * @example Purchase credits for the current user.
+     * const purchaseResult = await xp.purchaseCredits({
+     *   targetUserId: authBot.id,
+     *   returnUrl: configBot.tags.url,
+     *   successUrl: configBot.tags.url
+     * });
+     * if (purchaseResult.success) {
+     *   os.goToURL(purchaseResult.url);
+     * } else {
+     *   os.toast("Failed to create checkout session")
+     * }
+     *
+     * @example Purchase credits for a studio.
+     * const purchaseResult = await xp.purchaseCredits({
+     *   targetUserId: "studioId",
+     *   returnUrl: configBot.tags.url,
+     *   successUrl: configBot.tags.url
+     * });
+     * if (purchaseResult.success) {
+     *   os.goToURL(purchaseResult.url);
+     * } else {
+     *   os.toast("Failed to create checkout session")
+     * }
+     *
+     * @dochash actions/xp
+     * @docname xp.purchaseCredits
+     */
+    function xpPurchaseCredits(
+        request: APIPurchaseCreditsRequest,
+        options: RecordActionOptions = {}
+    ): Promise<PurchaseCreditsResult> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                purchaseCredits: {
+                    input: {
+                        targetUserId: request.targetUserId,
+                        targetStudioId: request.targetStudioId,
+                        returnUrl: request.returnUrl,
+                        successUrl: request.successUrl,
+                    },
+                },
+            },
+            options,
             task.taskId
         );
         return addAsyncAction(task, event);

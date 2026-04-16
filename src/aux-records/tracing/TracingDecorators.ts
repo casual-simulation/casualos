@@ -123,6 +123,15 @@ export function traced(
     options: SpanOptions = {},
     metricOptions: MetricOptions = {}
 ) {
+    if (process.env.NODE_ENV === 'test') {
+        return function (
+            target: any,
+            propertyKey: string,
+            descriptor: PropertyDescriptor
+        ) {
+            return descriptor;
+        };
+    }
     const tracer = trace.getTracer(
         tracerName,
         typeof GIT_TAG === 'undefined' ? undefined : GIT_TAG
