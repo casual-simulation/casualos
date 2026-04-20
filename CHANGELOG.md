@@ -106,6 +106,7 @@
 -   Added support for file path-style imports:
     -   Instead of `.otherTag`, now you can use `./otherTag`
     -   Instead of `:parent.tag`, now you can use `../parent/tag`
+-   Updated the [`typesense`](https://typesense.org/) library to v3.0.5.
 
 ### :bug: Bug Fixes
 
@@ -115,6 +116,7 @@
 -   Fixed an issue where `DELETE` API methods didn't support cross-origin requests.
 -   Fixed an issue where getting a studio when Hume has been configured with billing fees would fail.
 -   Fixed an issue where nested TypeScript "as" expressions weren't supported.
+-   Fixed an issue where it was impossible to import `typesense` because of a broken import map.
 
 ## V4.2.2
 
