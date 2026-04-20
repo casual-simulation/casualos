@@ -1827,6 +1827,7 @@ describe('RecordsServer', () => {
                             intervalCost: 123,
                             currency: 'usd',
                             featureList: ['Feature 1', 'Feature 2'],
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     purchasableSubscriptions: [],
@@ -1921,6 +1922,7 @@ describe('RecordsServer', () => {
                             intervalCost: 123,
                             currency: 'usd',
                             featureList: ['Feature 1', 'Feature 2'],
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     purchasableSubscriptions: [],
@@ -2009,6 +2011,7 @@ describe('RecordsServer', () => {
                             intervalCost: 123,
                             currency: 'usd',
                             featureList: ['Feature 1', 'Feature 2'],
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     purchasableSubscriptions: [],
@@ -22496,6 +22499,7 @@ describe('RecordsServer', () => {
                             product: '',
                             featureList: [],
                             tier: 'tier1',
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     tiers: {
@@ -22908,6 +22912,7 @@ describe('RecordsServer', () => {
                             product: '',
                             featureList: [],
                             tier: 'tier1',
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     tiers: {
@@ -23086,6 +23091,7 @@ describe('RecordsServer', () => {
                             product: '',
                             featureList: [],
                             tier: 'tier1',
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     tiers: {
@@ -23292,6 +23298,7 @@ describe('RecordsServer', () => {
                             product: '',
                             featureList: [],
                             tier: 'tier1',
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     tiers: {
@@ -23542,6 +23549,7 @@ describe('RecordsServer', () => {
                             product: '',
                             featureList: [],
                             tier: 'tier1',
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     tiers: {
@@ -28670,6 +28678,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                                 intervalCost: 123,
                                 currency: 'usd',
                                 featureList: ['Feature 1', 'Feature 2'],
+                                creditExpiration: 'never-expire',
                             },
                         ],
                         purchasableSubscriptions: [],
@@ -28764,6 +28773,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                                 intervalCost: 123,
                                 currency: 'usd',
                                 featureList: ['Feature 1', 'Feature 2'],
+                                creditExpiration: 'never-expire',
                             },
                         ],
                         purchasableSubscriptions: [],
@@ -28832,6 +28842,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         eligibleProducts: ['product_id'],
                         featureList: ['Feature 1', 'Feature 2'],
                         product: 'product_id',
+                        creditExpiration: 'never-expire',
                     },
                     {
                         id: 'default',
@@ -28839,6 +28850,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         description: 'description',
                         defaultSubscription: true,
                         featureList: ['default feature 1'],
+                        creditExpiration: 'never-expire',
                     },
                 ];
                 stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
@@ -29049,6 +29061,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                                 intervalCost: 123,
                                 currency: 'usd',
                                 featureList: ['Feature 1', 'Feature 2'],
+                                creditExpiration: 'never-expire',
                             },
                         ],
                         purchasableSubscriptions: [],
@@ -29142,6 +29155,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                                 intervalCost: 123,
                                 currency: 'usd',
                                 featureList: ['Feature 1', 'Feature 2'],
+                                creditExpiration: 'never-expire',
                             },
                         ],
                         purchasableSubscriptions: [],
@@ -29199,6 +29213,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         eligibleProducts: ['product_id'],
                         featureList: ['Feature 1', 'Feature 2'],
                         product: 'product_id',
+                        creditExpiration: 'never-expire',
                     },
                     {
                         id: 'default',
@@ -29206,6 +29221,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         description: 'description',
                         defaultSubscription: true,
                         featureList: ['default feature 1'],
+                        creditExpiration: 'never-expire',
                     },
                 ];
                 stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
@@ -29416,6 +29432,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                                 intervalCost: 123,
                                 currency: 'usd',
                                 featureList: ['Feature 1', 'Feature 2'],
+                                creditExpiration: 'never-expire',
                             },
                         ],
                         purchasableSubscriptions: [],
@@ -31374,6 +31391,250 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         expectedCost: 1000,
                         currency: 'usd',
                     },
+                    returnUrl: 'http://example.com',
+                    successUrl: 'http://example.com/success',
+                }),
+                defaultHeaders
+            )
+        );
+    });
+
+    describe('POST /api/v2/credits/purchase', () => {
+        const studioId = 'studioId';
+
+        beforeEach(async () => {
+            await financialController.init();
+
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub.withTier('tier1').withAllDefaultFeatures()
+                    )
+            );
+
+            const owner = await store.findUser(ownerId);
+            await store.saveUser({
+                ...owner,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customerId',
+            });
+
+            await store.createStudioForUser(
+                {
+                    id: studioId,
+                    displayName: 'my studio',
+                    comId: 'comId',
+                    logoUrl: 'logoUrl',
+                    comIdConfig: {
+                        allowedStudioCreators: 'anyone',
+                    },
+                    playerConfig: {
+                        ab1BootstrapURL: 'ab1BootstrapURL',
+                    },
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                    stripeCustomerId: 'studioCustomerId',
+                    stripeAccountId: 'accountId',
+                    stripeAccountStatus: 'active',
+                    stripeAccountRequirementsStatus: 'complete',
+                },
+                userId
+            );
+
+            stripeMock.createCheckoutSession.mockResolvedValue({
+                id: 'sessionId',
+                url: 'checkoutUrl',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            stripeMock.getProductAndPriceInfo.mockResolvedValue({
+                id: 'productId',
+                default_price: {
+                    id: 'priceId',
+                    currency: 'usd',
+                    recurring: null,
+                    unit_amount: 1000,
+                    metadata: {
+                        'casualos.credits': '100',
+                    },
+                },
+                name: 'Credits Package',
+                description: '100 credits for $10',
+            });
+        });
+
+        it('should return the checkout URL when purchasing a contract', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/credits/purchase`,
+                    JSON.stringify({
+                        targetStudioId: studioId,
+                        returnUrl: 'http://example.com',
+                        successUrl: 'http://example.com/success',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    url: 'checkoutUrl',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return not_logged_in when the user is not logged in', async () => {
+            stripeMock.createCheckoutSession.mockResolvedValue({
+                id: 'sessionId',
+                url: 'checkoutUrl',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            delete apiHeaders['authorization'];
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/credits/purchase`,
+                    JSON.stringify({
+                        targetStudioId: studioId,
+                        returnUrl: 'http://example.com',
+                        successUrl: 'http://example.com/success',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 401,
+                body: {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user is not logged in. A session key must be provided for this operation.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return not_authorized when another user is specified as the target', async () => {
+            stripeMock.createCheckoutSession.mockResolvedValue({
+                id: 'sessionId',
+                url: 'checkoutUrl',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/credits/purchase`,
+                    JSON.stringify({
+                        targetUserId: 'wrong-user',
+                        returnUrl: 'http://example.com',
+                        successUrl: 'http://example.com/success',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You cannot purchase credits for other users.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return not_authorized when the user is not an admin of the studio', async () => {
+            stripeMock.createCheckoutSession.mockResolvedValue({
+                id: 'sessionId',
+                url: 'checkoutUrl',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            await store.createStudioForUser(
+                {
+                    id: 'otherStudioId',
+                    displayName: 'my studio',
+                    comId: 'comId',
+                    logoUrl: 'logoUrl',
+                    comIdConfig: {
+                        allowedStudioCreators: 'anyone',
+                    },
+                    playerConfig: {
+                        ab1BootstrapURL: 'ab1BootstrapURL',
+                    },
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                    stripeCustomerId: 'customerId',
+                    stripeAccountId: 'accountId',
+                    stripeAccountStatus: 'active',
+                    stripeAccountRequirementsStatus: 'complete',
+                },
+                ownerId
+            );
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/credits/purchase`,
+                    JSON.stringify({
+                        targetStudioId: 'otherStudioId',
+                        returnUrl: 'http://example.com',
+                        successUrl: 'http://example.com/success',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to purchase credits for this studio.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin('POST', `/api/v2/credits/purchase`, () =>
+            JSON.stringify({
+                targetStudioId: studioId,
+                returnUrl: 'http://example.com',
+                successUrl: 'http://example.com/success',
+            })
+        );
+        testCustomOrigin('POST', `/api/v2/credits/purchase`, () =>
+            JSON.stringify({
+                targetStudioId: studioId,
+                returnUrl: 'http://example.com',
+                successUrl: 'http://example.com/success',
+            })
+        );
+        testBodyIsJson((body) =>
+            httpPost(`/api/v2/credits/purchase`, body, apiHeaders)
+        );
+        testRateLimit(() =>
+            httpPost(
+                `/api/v2/credits/purchase`,
+                JSON.stringify({
+                    targetStudioId: studioId,
                     returnUrl: 'http://example.com',
                     successUrl: 'http://example.com/success',
                 }),

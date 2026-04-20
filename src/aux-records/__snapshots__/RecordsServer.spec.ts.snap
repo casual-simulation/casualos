@@ -4615,6 +4615,45 @@ Object {
     Object {
       "http": Object {
         "method": "POST",
+        "path": "/api/v2/credits/purchase",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "nullable": true,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "returnUrl": Object {
+            "type": "string",
+          },
+          "successUrl": Object {
+            "type": "string",
+          },
+          "targetStudioId": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "targetUserId": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "purchaseCredits",
+      "origins": "self",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
         "path": "/api/v2/records/purchasableItems/purchase",
       },
       "inputs": Object {
@@ -8080,6 +8119,44 @@ Object {
                     "schema": Object {},
                     "type": "object",
                   },
+                  "purchaseCreditsConfig": Object {
+                    "defaultValue": Object {},
+                    "description": "Configuration for purchasing credits. Defaults to an empty object, which means that purchasing credits is not supported.",
+                    "hasDefault": true,
+                    "schema": Object {
+                      "adjustableQuantity": Object {
+                        "defaultValue": true,
+                        "description": "Whether the quantity of the line item should be adjustable by the user during checkout. Defaults to true.",
+                        "hasDefault": true,
+                        "type": "boolean",
+                      },
+                      "defaultQuantity": Object {
+                        "defaultValue": 1,
+                        "description": "The default quantity of the line item during checkout. Defaults to 1.",
+                        "hasDefault": true,
+                        "type": "number",
+                      },
+                      "maxQuantity": Object {
+                        "defaultValue": 999999,
+                        "description": "The maximum quantity that the user can purchase at once. Must be between 1 and 999,999. Defaults to 999,999.",
+                        "hasDefault": true,
+                        "type": "number",
+                      },
+                      "minQuantity": Object {
+                        "defaultValue": 0,
+                        "description": "The minimum quantity that the user can purchase at once. Must be at least 0. Defaults to 0.",
+                        "hasDefault": true,
+                        "type": "number",
+                      },
+                      "product": Object {
+                        "description": "The Stripe product that should be used for purchasing credits. If omitted, then purchasing credits will not be supported. The product's prices should have the following metadata properties: \\"casualos.credits\\" (The number of credits to grant when purchasing).",
+                        "nullable": true,
+                        "optional": true,
+                        "type": "string",
+                      },
+                    },
+                    "type": "object",
+                  },
                   "returnUrl": Object {
                     "description": "The URL that users should be redirected to when exiting the Stripe subscription management customer portal.",
                     "type": "string",
@@ -8088,6 +8165,16 @@ Object {
                     "description": "The list of subscriptions that are in use.",
                     "schema": Object {
                       "schema": Object {
+                        "creditExpiration": Object {
+                          "defaultValue": "never-expire",
+                          "description": "The expiration policy for the credits that are granted by this subscription. If set to \\"expire-after-period\\", then the credits will expire either after the invoice for the new period is paid, if the subscription is marked as unpaid, or if the subscription is canceled. Defaults to \\"never-expire\\".",
+                          "hasDefault": true,
+                          "type": "enum",
+                          "values": Array [
+                            "never-expire",
+                            "expire-after-period",
+                          ],
+                        },
                         "creditGrant": Object {
                           "description": "The number of credits that should be granted to the user/studio upon purchasing (and renewal) of this subscription. Defaults to 0.",
                           "nullable": true,
@@ -15022,6 +15109,45 @@ Object {
     Object {
       "http": Object {
         "method": "POST",
+        "path": "/api/v2/credits/purchase",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "nullable": true,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "returnUrl": Object {
+            "type": "string",
+          },
+          "successUrl": Object {
+            "type": "string",
+          },
+          "targetStudioId": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "targetUserId": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "purchaseCredits",
+      "origins": "self",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
         "path": "/api/v2/records/purchasableItems/purchase",
       },
       "inputs": Object {
@@ -18487,6 +18613,44 @@ Object {
                     "schema": Object {},
                     "type": "object",
                   },
+                  "purchaseCreditsConfig": Object {
+                    "defaultValue": Object {},
+                    "description": "Configuration for purchasing credits. Defaults to an empty object, which means that purchasing credits is not supported.",
+                    "hasDefault": true,
+                    "schema": Object {
+                      "adjustableQuantity": Object {
+                        "defaultValue": true,
+                        "description": "Whether the quantity of the line item should be adjustable by the user during checkout. Defaults to true.",
+                        "hasDefault": true,
+                        "type": "boolean",
+                      },
+                      "defaultQuantity": Object {
+                        "defaultValue": 1,
+                        "description": "The default quantity of the line item during checkout. Defaults to 1.",
+                        "hasDefault": true,
+                        "type": "number",
+                      },
+                      "maxQuantity": Object {
+                        "defaultValue": 999999,
+                        "description": "The maximum quantity that the user can purchase at once. Must be between 1 and 999,999. Defaults to 999,999.",
+                        "hasDefault": true,
+                        "type": "number",
+                      },
+                      "minQuantity": Object {
+                        "defaultValue": 0,
+                        "description": "The minimum quantity that the user can purchase at once. Must be at least 0. Defaults to 0.",
+                        "hasDefault": true,
+                        "type": "number",
+                      },
+                      "product": Object {
+                        "description": "The Stripe product that should be used for purchasing credits. If omitted, then purchasing credits will not be supported. The product's prices should have the following metadata properties: \\"casualos.credits\\" (The number of credits to grant when purchasing).",
+                        "nullable": true,
+                        "optional": true,
+                        "type": "string",
+                      },
+                    },
+                    "type": "object",
+                  },
                   "returnUrl": Object {
                     "description": "The URL that users should be redirected to when exiting the Stripe subscription management customer portal.",
                     "type": "string",
@@ -18495,6 +18659,16 @@ Object {
                     "description": "The list of subscriptions that are in use.",
                     "schema": Object {
                       "schema": Object {
+                        "creditExpiration": Object {
+                          "defaultValue": "never-expire",
+                          "description": "The expiration policy for the credits that are granted by this subscription. If set to \\"expire-after-period\\", then the credits will expire either after the invoice for the new period is paid, if the subscription is marked as unpaid, or if the subscription is canceled. Defaults to \\"never-expire\\".",
+                          "hasDefault": true,
+                          "type": "enum",
+                          "values": Array [
+                            "never-expire",
+                            "expire-after-period",
+                          ],
+                        },
                         "creditGrant": Object {
                           "description": "The number of credits that should be granted to the user/studio upon purchasing (and renewal) of this subscription. Defaults to 0.",
                           "nullable": true,

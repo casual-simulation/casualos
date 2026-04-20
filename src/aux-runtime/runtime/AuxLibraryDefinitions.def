@@ -19409,6 +19409,76 @@ export interface JSONAccountBalance {
     currency: string;
 }
 
+
+/**
+ * Defines the subscription information for a user or studio.
+ * This includes information about the subscription period, the subscription tier, and the credit expiration policy.
+ * 
+ * @dochash types/records/extra
+ * @docname SubscriptionInfo
+ * @docid SubscriptionInfo
+ */
+export interface SubscriptionInfo {
+    /**
+     * The unix time in miliseconds that the user/studio's subscription period started at.
+     * Null if the subscription does not have a start date.
+     */
+    periodStartMs: number | null;
+
+    /**
+     * The unix time in miliseconds that the user/studio's subscription period ends at.
+     * Null if the subscription never ends.
+     */
+    periodEndMs: number | null;
+
+    /**
+     * Whether the user has an active subscription.
+     * If false, then the user had a subscription, but it is not currently active.
+     */
+    hasActiveSubscription: boolean;
+
+    /**
+     * The ID of the subscription that the user has.
+     */
+    subscriptionId: string;
+
+    /**
+     * The tier of the subscription that the user has.
+     */
+    subscriptionTier: string;
+
+    /**
+     * The configuration for credit expiration for the user/studio.
+     *
+     * - `never-expire` indicates that credits never expire.
+     * - `expire-after-period` indicates that credits expire after the subscription period ends or if the subscription is not active.
+     */
+    creditExpiration: 'never-expire' | 'expire-after-period';
+}
+
+/**
+ * Defines an interface that represents the options for getting account balances.
+ *
+ * @dochash types/records/extra
+ * @docname GetBalancesActionOptions
+ */
+export interface GetAccountBalancesActionOptions extends RecordActionOptions {
+    /**
+     * The ID of the user whose balances should be retrieved.
+     */
+    userId?: string;
+
+    /**
+     * The ID of the studio whose balances should be retrieved.
+     */
+    studioId?: string;
+
+    /**
+     * The ID of the contract whose balances should be retrieved.
+     */
+    contractId?: string;
+}
+
 /**
  * Defines an interface for contract record input.
  */
@@ -19492,6 +19562,55 @@ export interface APIInvoiceContractRequest {
     note?: string;
     payoutDestination: InvoicePayoutDestination;
 }
+
+
+/**
+ * Defines an interface that represents the options for purchasing credits for an account.
+ *
+ * @dochash types/records/extra
+ * @docname PurchaseCreditsRequest
+ * @docid PurchaseCreditsRequest
+ */
+export interface APIPurchaseCreditsRequest {
+    /**
+     * The ID of the user that the credits should be purchased for.
+     * Currently, credits can only be purchased for yourself.
+     */
+    targetUserId?: string;
+
+    /**
+     * The ID of the studio that the credits should be purchased for.
+     * Currently, only studio admins can purchase credits.
+     */
+    targetStudioId?: string;
+
+    /**
+     * The URL that the user should be sent to if they cancel the purchase.
+     */
+    returnUrl: string;
+
+    /**
+     * The URL that the user should be sent to if the purchase completes successfully.
+     */
+    successUrl: string;
+}
+
+/**
+ * Defines an interface that represents the result of a request to purchase credits for an account.
+ * 
+ * @dochash types/records/extra
+ * @docname PurchaseCreditsResult
+ * @docid PurchaseCreditsResult
+ */
+export type PurchaseCreditsResult = GenericResult<
+    {
+        /**
+         * The URL that the user should be directed to to complete the purchase.
+         */
+        url?: string;
+    },
+    SimpleError
+>;
 
 /**
  * The destination for the payout of an invoice.
@@ -19791,9 +19910,65 @@ interface Xp {
      * @dochash actions/xp
      * @docname xp.getAccountBalances
      */
-    getAccountBalances(options?: RecordActionOptions): Promise<GenericResult<{
-        [key: string]: JSONAccountBalance;
+    getAccountBalances(options?: GetAccountBalancesActionOptions): Promise<GenericResult<{
+        /**
+         * The USD account balance.
+         *
+         * This will be undefined if the user does not have a USD account.
+         */
+        usd: JSONAccountBalance | undefined;
+    
+        /**
+         * The credits account balance.
+         *
+         * This will be undefined if the user does not have a credits account.
+         */
+        credits: JSONAccountBalance | undefined;
+
+        /**
+         * The information for the subscription the user has.
+         * Undefined if the user does not have a subscription.
+         */
+        subscription?: SubscriptionInfo;
     }, SimpleError>>;
+
+    /**
+     * Creates a new checkout session that can be used to purchase credits for an account. Returns a promise which resolves with the URL that the user should be redirected to in order to complete the purchase.
+     *
+     * @param options The options for the request.
+     * @returns A promise that resolves with the account balances.
+     *
+     * @example Purchase credits for the current user.
+     * const purchaseResult = await xp.purchaseCredits({
+     *   targetUserId: authBot.id,
+     *   returnUrl: configBot.tags.url,
+     *   successUrl: configBot.tags.url
+     * });
+     * if (purchaseResult.success) {
+     *   os.goToURL(purchaseResult.url);
+     * } else {
+     *   os.toast("Failed to create checkout session")
+     * }
+     *
+     * @example Purchase credits for a studio.
+     * const purchaseResult = await xp.purchaseCredits({
+     *   targetUserId: "studioId",
+     *   returnUrl: configBot.tags.url,
+     *   successUrl: configBot.tags.url
+     * });
+     * if (purchaseResult.success) {
+     *   os.goToURL(purchaseResult.url);
+     * } else {
+     *   os.toast("Failed to create checkout session")
+     * }
+     *
+     * @dochash actions/xp
+     * @docname xp.purchaseCredits
+     */
+    purchaseCredits(
+        request: APIPurchaseCreditsRequest,
+        options?: RecordActionOptions
+    ): Promise<PurchaseCreditsResult>;
 }
 
 interface Perf {

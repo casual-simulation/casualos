@@ -21,6 +21,7 @@ import type {
 } from './AuthController';
 import { INVALID_KEY_ERROR_MESSAGE } from './AuthController';
 import type {
+    AuthCheckoutSession,
     AuthStore,
     AuthUser,
     UpdateCheckoutSessionRequest,
@@ -29,6 +30,7 @@ import type {
 import type {
     StripeAccount,
     StripeCheckoutRequest,
+    StripeCheckoutSession,
     StripeCreateAccountLinkRequest,
     StripeEvent,
     StripeEventAccountUpdated,
@@ -55,6 +57,7 @@ import type {
 import {
     getContractFeatures,
     getPurchasableItemsFeatures,
+    getSubscription,
 } from './SubscriptionConfiguration';
 import type {
     ListedStudioAssignment,
@@ -113,6 +116,7 @@ import type {
     FinancialController,
     FinancialStore,
     InternalTransfer,
+    JSONAccountBalances,
     PayoutDestination,
     UniqueFinancialAccountFilter,
 } from './financial';
@@ -137,6 +141,8 @@ import type {
 } from './contracts/ContractRecordsStore';
 import type { Account, Transfer } from 'tigerbeetle-node';
 import { TransferFlags } from 'tigerbeetle-node';
+import type { SubscriptionFilter } from './MetricsStore';
+import z from 'zod';
 
 /**
  * The number of bytes that the access key secret should be.
@@ -396,6 +402,9 @@ export class SubscriptionController {
                         currency: item.price.currency,
                         productName: item.price.product.name,
                         featureList,
+                        creditExpiration:
+                            subscriptionInfo?.creditExpiration ??
+                            'never-expire',
                     };
                 });
 
@@ -430,6 +439,83 @@ export class SubscriptionController {
         }
     }
 
+    @traced(TRACE_NAME)
+    private async _getSubscriptionInfoForFilter(
+        filter: SubscriptionFilter
+    ): Promise<Result<SubscriptionInfo | null, SimpleError>> {
+        const config = await this._getConfig();
+        if (filter.ownerId) {
+            const user = await this._authStore.findUser(filter.ownerId);
+            if (!user) {
+                return failure({
+                    errorCode: 'user_not_found',
+                    errorMessage: 'The user was not found.',
+                });
+            }
+
+            const sub = getSubscription(
+                config,
+                user.subscriptionStatus,
+                user.subscriptionId,
+                'user',
+                user.subscriptionPeriodStartMs,
+                user.subscriptionPeriodEndMs
+            );
+
+            if (!sub) {
+                return success(null);
+            }
+
+            return success({
+                subscriptionId: sub.id,
+                periodStartMs: user.subscriptionPeriodStartMs,
+                periodEndMs: user.subscriptionPeriodEndMs,
+                hasActiveSubscription: isActiveSubscription(
+                    user.subscriptionStatus
+                ),
+                subscriptionTier: sub.tier,
+                creditExpiration: sub.creditExpiration,
+            });
+        } else if (filter.studioId) {
+            const config = await this._getConfig();
+            const studio = await this._recordsStore.getStudioById(
+                filter.studioId
+            );
+            if (!studio) {
+                return failure({
+                    errorCode: 'studio_not_found',
+                    errorMessage: 'The studio was not found.',
+                });
+            }
+
+            const sub = getSubscription(
+                config,
+                studio.subscriptionStatus,
+                studio.subscriptionId,
+                'studio',
+                studio.subscriptionPeriodStartMs,
+                studio.subscriptionPeriodEndMs
+            );
+
+            if (!sub) {
+                return success(null);
+            }
+
+            return success({
+                subscriptionId: sub.id,
+                periodStartMs: studio.subscriptionPeriodStartMs,
+                periodEndMs: studio.subscriptionPeriodEndMs,
+                hasActiveSubscription: isActiveSubscription(
+                    studio.subscriptionStatus
+                ),
+                subscriptionTier: sub.tier,
+                creditExpiration: sub.creditExpiration,
+            });
+        }
+
+        return success(null);
+    }
+
     /**
      * Gets the account balances for the user/studio/contract.
      * @param request
@@ -437,7 +523,7 @@ export class SubscriptionController {
     @traced(TRACE_NAME)
     async getBalances(
         request: GetBalancesRequest
-    ): Promise<Result<AccountBalances, SimpleError>> {
+    ): Promise<Result<AccountBalancesAndSubscriptionInfo, SimpleError>> {
         if (!this._financialController) {
             return failure({
                 errorCode: 'not_supported',
@@ -455,9 +541,29 @@ export class SubscriptionController {
             return authorizationResult;
         }
 
-        return await this._financialController.getAccountBalances(
+        const balances = await this._financialController.getAccountBalances(
             request.filter
         );
+
+        if (isFailure(balances)) {
+            return balances;
+        }
+
+        const subscriptionInfoResult = await this._getSubscriptionInfoForFilter(
+            {
+                ownerId: request.filter.userId,
+                studioId: request.filter.studioId,
+            }
+        );
+
+        if (isFailure(subscriptionInfoResult)) {
+            return subscriptionInfoResult;
+        }
+
+        return success({
+            ...balances.value,
+            subscription: subscriptionInfoResult.value ?? undefined,
+        });
     }
 
     private async _checkAuthorizationForFilter(
@@ -3093,6 +3199,247 @@ export class SubscriptionController {
         }
     }
 
+    /**
+     * Attempts to purchase credits for the given account.
+     */
+    @traced(TRACE_NAME)
+    async purchaseCredits(
+        request: PurchaseCreditsRequest
+    ): Promise<PurchaseCreditsResult> {
+        if (!this._financialController) {
+            return failure({
+                errorCode: 'not_supported',
+                errorMessage: 'This operation is not supported.',
+            });
+        }
+
+        if (request.targetStudioId && request.targetUserId) {
+            return failure({
+                errorCode: 'invalid_request',
+                errorMessage:
+                    'Cannot purchase credits for both a user and a studio at the same time.',
+            });
+        }
+
+        const config = await this._getConfig();
+
+        if (!config.purchaseCreditsConfig?.product) {
+            console.warn(
+                '[SubscriptionController] [purchaseCredits] Attempted to purchase credits but no product is configured for purchasing credits.'
+            );
+            return failure({
+                errorCode: 'not_supported',
+                errorMessage: 'Purchasing credits is not supported.',
+            });
+        }
+
+        let customerId: string;
+        if (request.targetUserId) {
+            if (request.targetUserId !== request.userId) {
+                return failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You cannot purchase credits for other users.',
+                });
+            }
+
+            const user = await this._authStore.findUser(request.targetUserId);
+
+            if (!user) {
+                return failure({
+                    errorCode: 'not_found',
+                    errorMessage: 'The user could not be found.',
+                });
+            }
+
+            if (
+                !user.subscriptionId ||
+                !isActiveSubscription(
+                    user.subscriptionStatus,
+                    user.subscriptionPeriodStartMs,
+                    user.subscriptionPeriodEndMs
+                )
+            ) {
+                console.log(
+                    `[SubscriptionController] [purchaseCredits] User ${user.id} does not have an active subscription and cannot purchase credits.`
+                );
+                return failure({
+                    errorCode: 'invalid_request',
+                    errorMessage:
+                        'Credits can only be purchased for users with an active subscription.',
+                });
+            }
+
+            if (!user.stripeCustomerId) {
+                console.log(
+                    `[SubscriptionController] [purchaseCredits] User ${user.id} does not have a Stripe customer account and cannot purchase credits.`
+                );
+                return failure({
+                    errorCode: 'invalid_request',
+                    errorMessage:
+                        'The user does not have a Stripe customer account.',
+                });
+            }
+
+            console.log(
+                `[SubscriptionController] [purchaseCredits] User ${user.id} is attempting to purchase credits.`
+            );
+            customerId = user.stripeCustomerId;
+        } else if (request.targetStudioId) {
+            const studioAssignments =
+                await this._recordsStore.listStudioAssignments(
+                    request.targetStudioId,
+                    {
+                        role: 'admin',
+                        userId: request.userId,
+                    }
+                );
+
+            if (studioAssignments.length === 0) {
+                return failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to purchase credits for this studio.',
+                });
+            }
+
+            const studio = await this._recordsStore.getStudioById(
+                request.targetStudioId
+            );
+
+            if (!studio) {
+                return failure({
+                    errorCode: 'not_found',
+                    errorMessage: 'The studio could not be found.',
+                });
+            }
+
+            if (
+                !studio.subscriptionId ||
+                !isActiveSubscription(
+                    studio.subscriptionStatus,
+                    studio.subscriptionPeriodStartMs,
+                    studio.subscriptionPeriodEndMs
+                )
+            ) {
+                console.log(
+                    `[SubscriptionController] [purchaseCredits] Studio ${studio.id} does not have an active subscription and cannot purchase credits.`
+                );
+                return failure({
+                    errorCode: 'invalid_request',
+                    errorMessage:
+                        'Credits can only be purchased for studios with an active subscription.',
+                });
+            }
+
+            if (!studio.stripeCustomerId) {
+                console.log(
+                    `[SubscriptionController] [purchaseCredits] Studio ${studio.id} does not have a Stripe customer account and cannot purchase credits.`
+                );
+                return failure({
+                    errorCode: 'invalid_request',
+                    errorMessage:
+                        'The studio does not have a Stripe customer account.',
+                });
+            }
+
+            console.log(
+                `[SubscriptionController] [purchaseCredits] User ${request.userId} is attempting to purchase credits for studio ${studio.id}.`
+            );
+            customerId = studio.stripeCustomerId;
+        }
+
+        const productInfo = await wrap(
+            async () =>
+                await this._stripe.getProductAndPriceInfo(
+                    config.purchaseCreditsConfig.product
+                )
+        );
+
+        if (isFailure(productInfo)) {
+            logError(
+                productInfo.error,
+                `[SubscriptionController] [purchaseCredits] Failed to retrieve product info for credits purchase:`
+            );
+            return failure({
+                errorCode: 'server_error',
+                errorMessage: 'The server encountered an error.',
+            });
+        }
+
+        const product = productInfo.value;
+
+        const parseResult = getCreditsFromMetadata(
+            product.default_price.metadata,
+            product.metadata
+        );
+
+        if (!parseResult) {
+            console.error(
+                `[SubscriptionController] [purchaseCredits] Failed to parse product metadata for credits purchase! The "casualos.credits" field is required in the product or price metadata and must be a string or number that can be parsed into a bigint.`
+            );
+            return failure({
+                errorCode: 'server_error',
+                errorMessage: 'The server encountered an error.',
+            });
+        }
+
+        const sessionResult = await wrap(() =>
+            this._stripe.createCheckoutSession({
+                mode: 'payment',
+                line_items: [
+                    {
+                        adjustable_quantity: {
+                            enabled:
+                                config.purchaseCreditsConfig
+                                    .adjustableQuantity ?? true,
+                            maximum:
+                                config.purchaseCreditsConfig.maxQuantity ??
+                                999_999,
+                            minimum:
+                                config.purchaseCreditsConfig.minQuantity ?? 0,
+                        },
+                        price: product.default_price.id,
+                        quantity:
+                            config.purchaseCreditsConfig.defaultQuantity || 1,
+                        metadata: {
+                            targetUserId: request.targetUserId ?? undefined,
+                            targetStudioId: request.targetStudioId ?? undefined,
+                        },
+                    },
+                ],
+                success_url: request.successUrl,
+                cancel_url: request.returnUrl,
+                customer: customerId,
+                metadata: {
+                    userId: request.userId,
+                },
+            })
+        );
+
+        if (isFailure(sessionResult)) {
+            logError(
+                sessionResult.error,
+                `[SubscriptionController] [purchaseCredits] Failed to create checkout session for credits purchase:`
+            );
+            return failure({
+                errorCode: 'server_error',
+                errorMessage: 'The server encountered an error.',
+            });
+        }
+        const session = sessionResult.value;
+
+        console.log(
+            `[SubscriptionController] [purchaseCredits] Successfully created checkout session (${session.id}) for credits purchase.`
+        );
+
+        // We don't create a checkout session because we fulfill credit purchases immediately in the Stripe webhook handler.
+
+        return success({
+            url: session.url,
+        });
+    }
+
     @traced(TRACE_NAME)
     private async _payoutToStripe(
         request: InternalPayoutRequest
@@ -4184,31 +4531,204 @@ export class SubscriptionController {
         event: StripeEvent,
         sessionEvent: StripeEventCheckoutSession
     ): Promise<HandleStripeWebhookResponse> {
-        const stripeSession = sessionEvent.data.object;
-        const sessionId = stripeSession.client_reference_id;
+        // const stripeSession = sessionEvent.data.object;
+        const sessionId = sessionEvent.data.object.client_reference_id;
 
-        if (!sessionId) {
-            console.log(
-                `[SubscriptionController] [handleStripeWebhook] No client_reference_id found in the event.`
+        if (sessionId) {
+            const session = await this._authStore.getCheckoutSessionById(
+                sessionId
             );
-            return {
-                success: true,
-            };
+
+            if (session) {
+                return await this._fulfillTrackedStripeCheckoutSession(
+                    sessionEvent.data.object,
+                    session,
+                    event,
+                    sessionId
+                );
+            } else {
+                console.error(
+                    `[SubscriptionController] [handleStripeWebhook] No session found for the client_reference_id (${sessionId}).`
+                );
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage:
+                        'No checkout session was found with the provided client_reference_id.',
+                };
+            }
         }
 
-        const session = await this._authStore.getCheckoutSessionById(sessionId);
+        console.log(
+            `[SubscriptionController] [handleStripeWebhook] Received checkout session event for credits purchase, but no session was found with the provided client_reference_id (${sessionId}). This may be due to the session being created before the purchaseCreditsConfig was added to the configuration.`
+        );
 
-        if (!session) {
-            console.log(
-                `[SubscriptionController] [handleStripeWebhook] Could not find session with ID (${sessionId}).`
-            );
-            return {
-                success: false,
-                errorCode: 'invalid_request',
-                errorMessage: 'The session could not be found.',
-            };
+        return await this._fulfillUntrackedStripeCheckoutSession(
+            config,
+            sessionEvent.data.object
+        );
+    }
+
+    /**
+     * Some stripe checkout sessions are "untracked". This means that we don't create a checkout session in our database for them. These ones should be fulfilled by looking directly at the line items in the stripe checkout session data.
+     * @param config The current subscription config.
+     * @param stripeSession The checkout session data from the stripe webhook event.
+     */
+    private async _fulfillUntrackedStripeCheckoutSession(
+        config: SubscriptionConfiguration,
+        stripeSession: StripeCheckoutSession
+    ): Promise<HandleStripeWebhookResponse> {
+        // Get the full session data from stripe
+        stripeSession = await this._stripe.getCheckoutSessionById(
+            stripeSession.id
+        );
+
+        const purchaseCreditsProductId = config.purchaseCreditsConfig?.product;
+        const productData = purchaseCreditsProductId
+            ? await this._stripe.getProductAndPriceInfo(
+                  purchaseCreditsProductId
+              )
+            : null;
+
+        const creditsMetadata = productData
+            ? getCreditsFromMetadata(
+                  productData.default_price.metadata,
+                  productData.metadata
+              )
+            : null;
+        const creditsPerUnit = creditsMetadata?.data['casualos.credits'] ?? 0n;
+
+        const transfers: InternalTransfer[] = [];
+
+        for (let lineItem of stripeSession.line_items.data) {
+            if (
+                purchaseCreditsProductId &&
+                lineItem.price?.product === purchaseCreditsProductId
+            ) {
+                console.log(
+                    `[SubscriptionController] [handleStripeWebhook] Processing line item for credits purchase. lineItemId: ${lineItem.id} priceId: ${lineItem.price.id} productId: ${lineItem.price.product}`
+                );
+
+                const amount = lineItem.amount_subtotal;
+                const quantity = lineItem.quantity ?? 1;
+                const totalCredits = creditsPerUnit * BigInt(quantity);
+                const totalUsd = amount;
+
+                const targetStudioId =
+                    lineItem.metadata.targetStudioId || undefined;
+                const targetUserId =
+                    lineItem.metadata.targetUserId || undefined;
+
+                if (targetStudioId && targetUserId) {
+                    console.error(
+                        `[SubscriptionController] [handleStripeWebhook] Both targetStudioId and targetUserId are set for a credits purchase. This is not supported. studioId: ${targetStudioId} userId: ${targetUserId}`
+                    );
+                    return {
+                        success: false,
+                        errorCode: 'invalid_request',
+                        errorMessage: 'Invalid metadata for credits purchase.',
+                    };
+                } else if (!targetStudioId && !targetUserId) {
+                    console.error(
+                        `[SubscriptionController] [handleStripeWebhook] Neither targetStudioId nor targetUserId is set for a credits purchase. This is not supported. lineItemId: ${lineItem.id}`
+                    );
+                    return {
+                        success: false,
+                        errorCode: 'invalid_request',
+                        errorMessage: 'Invalid metadata for credits purchase.',
+                    };
+                }
+
+                const account =
+                    await this._financialController.getOrCreateFinancialAccount(
+                        {
+                            ledger: LEDGERS.credits,
+                            studioId: targetStudioId,
+                            userId: targetUserId,
+                        }
+                    );
+
+                if (isFailure(account)) {
+                    logError(
+                        account.error,
+                        `[SubscriptionController] [handleStripeWebhook] Failed to get or create financial account for credits purchase:`
+                    );
+                    return {
+                        success: false,
+                        errorCode: 'server_error',
+
+                        errorMessage: 'A server error occurred.',
+                    };
+                }
+
+                console.log(
+                    `[SubscriptionController] [handleStripeWebhook] Adding transfers for credits purchase. totalUsd: ${totalUsd} totalCredits: ${totalCredits} targetStudioId: ${targetStudioId} targetUserId: ${targetUserId} accountId: ${account.value.account.id}`
+                );
+
+                transfers.push(
+                    {
+                        amount: totalUsd,
+                        code: TransferCodes.purchase_credits,
+                        currency: CurrencyCodes.usd,
+                        debitAccountId: ACCOUNT_IDS.assets_stripe,
+                        creditAccountId: ACCOUNT_IDS.liquidity_usd,
+                    },
+                    {
+                        amount: totalCredits,
+                        code: TransferCodes.purchase_credits,
+                        currency: CurrencyCodes.credits,
+                        debitAccountId: ACCOUNT_IDS.liquidity_credits,
+                        creditAccountId: account.value.account.id, // This will be updated to the correct user account during fulfillment
+                    }
+                );
+            } else {
+                console.warn(
+                    `[SubscriptionController] [handleStripeWebhook lineItem: ${lineItem.id} priceId: ${lineItem.price.id}] Skipping unrecognized line item!`
+                );
+            }
         }
 
+        if (transfers.length > 0) {
+            const transactionResult =
+                await this._financialController.internalTransaction({
+                    transfers,
+                });
+
+            if (isFailure(transactionResult)) {
+                logError(
+                    transactionResult.error,
+                    `[SubscriptionController] [handleStripeWebhook] Failed to create internal transaction for credits purchase:`
+                );
+                return {
+                    success: false,
+                    errorCode: 'server_error',
+                    errorMessage: 'A server error occurred.',
+                };
+            }
+        } else {
+            console.log(
+                `[SubscriptionController] [handleStripeWebhook] No line items found for credits purchase in checkout session.`
+            );
+        }
+
+        return {
+            success: true,
+        };
+    }
+
+    /**
+     * Some stripe checkout sessions are also tracked in our database. For these, we update the data in our database based on the data from the stripe webhook event, and then fulfill the checkout session if it has been paid for and should be automatically fulfilled.
+     * @param stripeSession The stripe checkout session data.
+     * @param session The checkout session data from our database.
+     * @param event The stripe webhook event.
+     * @param sessionId The ID of the checkout session in our database.
+     */
+    private async _fulfillTrackedStripeCheckoutSession(
+        stripeSession: StripeEventCheckoutSession['data']['object'],
+        session: AuthCheckoutSession,
+        event: StripeEvent,
+        sessionId: string
+    ): Promise<HandleStripeWebhookResponse> {
         if (session.stripeCheckoutSessionId !== stripeSession.id) {
             console.log(
                 `[SubscriptionController] [handleStripeWebhook] Stripe checkout session ID (${stripeSession.id}) does not match stored ID (${session.stripeCheckoutSessionId}).`
@@ -4610,8 +5130,13 @@ export class SubscriptionController {
             }
         >
     > {
+        if (!this._financialController) {
+            return success();
+        }
+
         const creditGrant = sub.creditGrant ?? 0;
-        if (creditGrant === 0 || !this._financialController) {
+
+        if (creditGrant === 0 && sub.creditExpiration === 'never-expire') {
             return success();
         }
 
@@ -4650,25 +5175,52 @@ export class SubscriptionController {
             creditAmount = BigInt(creditGrant);
         }
 
+        const transfers: InternalTransfer[] = [];
+
+        if (sub.creditExpiration === 'expire-after-period') {
+            transfers.push({
+                amount: AMOUNT_MAX,
+                code: TransferCodes.credit_expiration,
+                debitAccountId: accountId,
+                creditAccountId: ACCOUNT_IDS.credit_expiration,
+                currency: CurrencyCodes.credits,
+                balancingDebit: true,
+            });
+            console.log(
+                `[SubscriptionController] [_internalTransactionPurchaseCreditsStripe invoice: ${invoice.id} account: ${accountId}] Expiring subscription credits before new credit grant.`
+            );
+        }
+
         if (creditAmount > 0) {
+            console.log(
+                `[SubscriptionController] [_internalTransactionPurchaseCreditsStripe invoice: ${invoice.id} account: ${accountId}] Granting ${creditAmount} credits for invoice (${invoice.id}).`
+            );
+            transfers.push(
+                {
+                    amount: invoice.total,
+                    code: TransferCodes.purchase_credits,
+                    debitAccountId: ACCOUNT_IDS.assets_stripe,
+                    creditAccountId: ACCOUNT_IDS.liquidity_usd,
+                    currency: 'usd',
+                },
+                {
+                    amount: creditAmount,
+                    code: TransferCodes.purchase_credits,
+                    debitAccountId: ACCOUNT_IDS.liquidity_credits,
+                    creditAccountId: accountId,
+                    currency: 'credits',
+                }
+            );
+        } else {
+            console.warn(
+                `[SubscriptionController] [_internalTransactionPurchaseCreditsStripe invoice: ${invoice.id} account: ${accountId}] No credits granted for invoice (${invoice.id}).`
+            );
+        }
+
+        if (transfers.length > 0) {
             const transactionResult =
                 await this._financialController.internalTransaction({
-                    transfers: [
-                        {
-                            amount: invoice.total,
-                            code: TransferCodes.purchase_credits,
-                            debitAccountId: ACCOUNT_IDS.assets_stripe,
-                            creditAccountId: ACCOUNT_IDS.liquidity_usd,
-                            currency: 'usd',
-                        },
-                        {
-                            amount: creditAmount,
-                            code: TransferCodes.purchase_credits,
-                            debitAccountId: ACCOUNT_IDS.liquidity_credits,
-                            creditAccountId: accountId,
-                            currency: 'credits',
-                        },
-                    ],
+                    transfers,
                 });
 
             if (isFailure(transactionResult)) {
@@ -4685,9 +5237,85 @@ export class SubscriptionController {
             console.log(
                 `[SubscriptionController] [_internalTransactionPurchaseCreditsStripe invoice: ${invoice.id} account: ${accountId}] Granted ${creditAmount} credits for invoice (${invoice.id}).`
             );
-        } else {
-            console.warn(
-                `[SubscriptionController] [_internalTransactionPurchaseCreditsStripe invoice: ${invoice.id} account: ${accountId}] No credits granted for invoice (${invoice.id}).`
+        }
+
+        return success();
+    }
+
+    private async _internalTransactionExpireCredits(
+        sub: APISubscription,
+        accountFilter: Omit<UniqueFinancialAccountFilter, 'ledger'>
+    ): Promise<
+        Result<
+            void,
+            {
+                errorCode: HandleStripeWebhookFailure['errorCode'];
+                errorMessage: string;
+            }
+        >
+    > {
+        if (!this._financialController) {
+            return success();
+        }
+
+        if (sub.creditExpiration === 'never-expire') {
+            return success();
+        }
+
+        const account =
+            await this._financialController.getOrCreateFinancialAccount({
+                ...accountFilter,
+                ledger: LEDGERS.credits,
+            });
+
+        if (isFailure(account)) {
+            logError(
+                account.error,
+                `[SubscriptionController] [_internalTransactionSweepCredits] Unable to get or create credit account!`
+            );
+            return failure({
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            });
+        }
+
+        const accountId = account.value.account.id;
+
+        const transfers: InternalTransfer[] = [];
+
+        if (sub.creditExpiration === 'expire-after-period') {
+            transfers.push({
+                amount: AMOUNT_MAX,
+                code: TransferCodes.credit_expiration,
+                debitAccountId: accountId,
+                creditAccountId: ACCOUNT_IDS.credit_expiration,
+                currency: CurrencyCodes.credits,
+                balancingDebit: true,
+            });
+            console.log(
+                `[SubscriptionController] [_internalTransactionSweepCredits account: ${accountId}] Expiring subscription credits before new credit grant.`
+            );
+        }
+
+        if (transfers.length > 0) {
+            const transactionResult =
+                await this._financialController.internalTransaction({
+                    transfers,
+                });
+
+            if (isFailure(transactionResult)) {
+                logError(
+                    transactionResult.error,
+                    `[SubscriptionController] [_internalTransactionSweepCredits account: ${accountId}] Unable to sweep credits!`
+                );
+                return failure({
+                    errorCode: 'server_error',
+                    errorMessage: 'Unable to sweep credits.',
+                });
+            }
+
+            console.log(
+                `[SubscriptionController] [_internalTransactionSweepCredits account: ${accountId}] Successfully swept credits.`
             );
         }
 
@@ -4780,11 +5408,38 @@ export class SubscriptionController {
             }
         }
 
+        if (!active && sub.creditExpiration === 'expire-after-period') {
+            const result = user
+                ? await this._internalTransactionExpireCredits(sub, {
+                      userId: user.id,
+                  })
+                : await this._internalTransactionExpireCredits(sub, {
+                      studioId: studio.id,
+                  });
+
+            if (isFailure(result)) {
+                return genericResult(result);
+            }
+        }
+
         return {
             success: true,
         };
     }
 }
+
+const productMetadataSchema = z.object({
+    'casualos.credits': z.coerce.bigint(),
+});
+const getCreditsFromMetadata = (...values: unknown[]) => {
+    for (const value of values) {
+        const result = productMetadataSchema.safeParse(value);
+        if (result.success) {
+            return result;
+        }
+    }
+    return null;
+};
 
 /**
  * Gets the account status for the given stripe account.
@@ -5210,6 +5865,11 @@ export interface SubscriptionStatus {
      * The feature list for the subscription.
      */
     featureList?: string[];
+
+    /**
+     * The credit expiration policy for the subscription.
+     */
+    creditExpiration?: 'never-expire' | 'expire-after-period';
 }
 
 export interface PurchasableSubscription {
@@ -6267,3 +6927,130 @@ export interface CancelInvoiceRequest {
      */
     invoiceId: string;
 }
+
+/**
+ * Defines the subscription information for a user or studio.
+ * This includes information about the subscription period, the subscription tier, and the credit expiration policy.
+ *
+ * @dochash types/records/extra
+ * @docname SubscriptionInfo
+ * @docid SubscriptionInfo
+ */
+export interface SubscriptionInfo {
+    /**
+     * The unix time in miliseconds that the user/studio's subscription period started at.
+     * Null if the subscription does not have a start date.
+     */
+    periodStartMs: number | null;
+
+    /**
+     * The unix time in miliseconds that the user/studio's subscription period ends at.
+     * Null if the subscription never ends.
+     */
+    periodEndMs: number | null;
+
+    /**
+     * Whether the user has an active subscription.
+     * If false, then the user had a subscription, but it is not currently active.
+     */
+    hasActiveSubscription: boolean;
+
+    /**
+     * The ID of the subscription that the user has.
+     */
+    subscriptionId: string;
+
+    /**
+     * The tier of the subscription that the user has.
+     */
+    subscriptionTier: string;
+
+    /**
+     * The configuration for credit expiration for the user/studio.
+     *
+     * - `never-expire` indicates that credits never expire.
+     * - `expire-after-period` indicates that credits expire after the subscription period ends or if the subscription is not active.
+     */
+    creditExpiration: 'never-expire' | 'expire-after-period';
+}
+
+export interface AccountBalancesAndSubscriptionInfo extends AccountBalances {
+    /**
+     * The information for the subscription the user has.
+     * Undefined if the user does not have a subscription.
+     */
+    subscription?: SubscriptionInfo;
+}
+
+/**
+ * Defines an interface that includes both account balance information and subscription information.
+ *
+ * @dochash types/records/extra
+ * @docname AccountBalancesAndSubscriptionInfo
+ * @docid AccountBalancesAndSubscriptionInfo
+ */
+export interface JSONAccountBalancesAndSubscriptionInfo
+    extends JSONAccountBalances {
+    /**
+     * The information for the subscription the user has.
+     * Undefined if the user does not have a subscription.
+     */
+    subscription?: SubscriptionInfo;
+}
+
+export interface PurchaseCreditsRequest {
+    /**
+     * The ID of the user that is currently logged in.
+     * Null if the user is not logged in.
+     */
+    userId: string | null;
+
+    /**
+     * The instances that the request is being made from.
+     */
+    instances: string[];
+
+    /**
+     * The ID of the studio that the credits are being purchased for.
+     * Must be null when targetUserId is specified, and must be specified when targetUserId is null.
+     */
+    targetStudioId: string | null;
+
+    /**
+     * The ID of the user that the credits are being purchased for.
+     * Must be null when targetStudioId is specified, and must be specified when targetStudioId is null.
+     */
+    targetUserId: string | null;
+
+    /**
+     * The URL that the user should be redirected to if the purchase is canceled.
+     */
+    returnUrl: string;
+
+    /**
+     * The URL that the user should be redirected to if the purchase is unsuccessful.
+     */
+    successUrl: string;
+
+    /**
+     * The current unix time in miliseconds. This should only be used when testing.
+     */
+    nowMs?: number;
+}
+
+/**
+ * Defines an interface that represents the result of a request to purchase credits for an account.
+ *
+ * @dochash types/records/extra
+ * @docname PurchaseCreditsResult
+ * @docid PurchaseCreditsResult
+ */
+export type PurchaseCreditsResult = Result<
+    {
+        /**
+         * The URL that the user should be directed to to complete the purchase.
+         */
+        url?: string;
+    },
+    SimpleError
+>;

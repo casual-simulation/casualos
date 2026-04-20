@@ -56,7 +56,7 @@ export interface StripeInterface {
      * Gets the checkout session with the given ID.
      * @param id The ID of the checkout session.
      */
-    getCheckoutSessionById(id: string): Promise<StripeCheckoutResponse>;
+    getCheckoutSessionById(id: string): Promise<StripeCheckoutSession>;
 
     /**
      * Creates a new portal session for a user.
@@ -182,6 +182,11 @@ export interface StripePrice {
      * The amount of units that are charged for each renewal.
      */
     unit_amount: number;
+
+    /**
+     * The metadata for the price.
+     */
+    metadata?: Record<string, string>;
 }
 
 /**
@@ -192,6 +197,26 @@ export interface StripeCheckoutRequest {
      * The ID of the product that the checkout request is for.
      */
     line_items: {
+        /**
+         * Wether the quantity of the line item can be adjusted by the user in the checkout page.
+         */
+        adjustable_quantity?: {
+            /**
+             * Whether the quantity can be adjusted by the user in the checkout page.
+             */
+            enabled: boolean;
+
+            /**
+             * The maximum quantity the customer can purchase for the Checkout Session. By default this value is 99. You can specify a value up to 999999.
+             */
+            maximum?: number;
+
+            /**
+             * The minimum quantity the customer must purchase for the Checkout Session. By default this value is 0.
+             */
+            minimum?: number;
+        };
+
         /**
          * The ID of the price for the line item.
          */
@@ -248,6 +273,11 @@ export interface StripeCheckoutRequest {
          * The quantity to purchase.
          */
         quantity?: number;
+
+        /**
+         * The metadata for the line item.
+         */
+        metadata?: Record<string, string>;
     }[];
 
     /**
@@ -645,6 +675,11 @@ export interface StripeProduct {
      * The default price for the product.
      */
     default_price: StripePrice;
+
+    /**
+     * The metadata for the product.
+     */
+    metadata?: Record<string, string>;
 }
 
 export interface StripeCreateAccountLinkRequest {
@@ -939,20 +974,52 @@ export type StripeEventAccountUpdated = z.infer<
     typeof STRIPE_EVENT_ACCOUNT_UPDATED_SCHEMA
 >;
 
+export const STRIPE_CHECKOUT_SESSION_SCHEMA = z.object({
+    id: z.string(),
+    client_reference_id: z.string().nullable(),
+    object: z.literal('checkout.session'),
+    status: z.enum(['complete', 'expired', 'open']),
+    payment_status: z.enum(['no_payment_required', 'paid', 'unpaid']),
+    line_items: z
+        .object({
+            object: z.literal('list'),
+            data: z.array(
+                z.object({
+                    id: z.string(),
+                    amount_subtotal: z.number().nonnegative(),
+                    amount_total: z.number().nonnegative(),
+                    amount_tax: z.number().nonnegative().nullable(),
+                    amount_discount: z.number().nonnegative().nullable(),
+                    quantity: z.number().nonnegative(),
+                    currency: z.string(),
+                    price: z
+                        .object({
+                            id: z.string(),
+                            product: z.string(),
+                            unit_amount: z.number().nonnegative().optional(),
+                        })
+                        .nullable(),
+                    metadata: z.record(z.string(), z.string()).optional(),
+                })
+            ),
+        })
+        .nullable()
+        .optional(),
+    metadata: z.record(z.string(), z.string()).optional(),
+});
+
 export const STRIPE_EVENT_CHECKOUT_SESSION_SCHEMA = z.object({
     data: z.object({
-        object: z.object({
-            id: z.string(),
-            client_reference_id: z.string().nullable(),
-            object: z.literal('checkout.session'),
-            status: z.enum(['complete', 'expired', 'open']),
-            payment_status: z.enum(['no_payment_required', 'paid', 'unpaid']),
-        }),
+        object: STRIPE_CHECKOUT_SESSION_SCHEMA,
     }),
 });
 
 export type StripeEventCheckoutSession = z.infer<
     typeof STRIPE_EVENT_CHECKOUT_SESSION_SCHEMA
+>;
+
+export type StripeCheckoutSession = z.infer<
+    typeof STRIPE_CHECKOUT_SESSION_SCHEMA
 >;
 
 /**
