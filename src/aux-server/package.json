@@ -175,7 +175,7 @@
         "tigerbeetle-node": "0.16.44",
         "troika-three-text": "0.52.4",
         "typescript": "^5.0.2",
-        "typesense": "2.1.0-13",
+        "typesense": "3.0.5",
         "unique-names-generator": "4.2.0",
         "uuid": "10.0.0",
         "vhost": "^3.0.2",
