@@ -65,7 +65,7 @@
         "preact-render-to-string": "6.6.3",
         "tigerbeetle-node": "0.16.44",
         "tweetnacl": "1.0.3",
-        "typesense": "2.1.0-13",
+        "typesense": "3.0.5",
         "uuid": "10.0.0",
         "yjs": "13.6.8",
         "zod": "4.1.12"
