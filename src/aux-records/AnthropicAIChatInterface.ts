@@ -63,7 +63,7 @@ export class AnthropicAIChatInterface implements AIChatInterface {
         request: AIChatInterfaceRequest
     ): Promise<AIChatInterfaceResponse> {
         try {
-            let maxTokens = Math.min(request.maxTokens, 4096);
+            let maxTokens = Math.min(request.maxTokens ?? 4096, 4096);
 
             // TODO: Support 8192 tokens for sonnet
             // See https://docs.anthropic.com/en/docs/about-claude/models
@@ -78,6 +78,13 @@ export class AnthropicAIChatInterface implements AIChatInterface {
                 stop_sequences: request.stopWords,
                 model: request.model,
                 messages: request.messages.map((m) => mapMessage(m)),
+                ...(request.enableCaching
+                    ? {
+                          cache_control: {
+                              type: 'ephemeral',
+                          },
+                      }
+                    : {}),
             });
 
             return {
@@ -94,10 +101,10 @@ export class AnthropicAIChatInterface implements AIChatInterface {
             };
         } catch (err) {
             const span = trace.getActiveSpan();
-            span?.recordException(err);
             span?.setStatus({ code: SpanStatusCode.ERROR });
 
             if (err instanceof Error) {
+                span?.recordException(err);
                 console.error(
                     '[AnthropicAIChatInterface] Error occurred while generating content.',
                     err
@@ -121,7 +128,7 @@ export class AnthropicAIChatInterface implements AIChatInterface {
         request: AIChatInterfaceRequest
     ): AsyncIterable<AIChatInterfaceStreamResponse> {
         try {
-            let maxTokens = Math.min(request.maxTokens, 4096);
+            let maxTokens = Math.min(request.maxTokens ?? 4096, 4096);
 
             // TODO: Support 8192 tokens for sonnet
             // See https://docs.anthropic.com/en/docs/about-claude/models
@@ -136,6 +143,13 @@ export class AnthropicAIChatInterface implements AIChatInterface {
                 stop_sequences: request.stopWords,
                 model: request.model,
                 messages: request.messages.map((m) => mapMessage(m)),
+                ...(request.enableCaching
+                    ? {
+                          cache_control: {
+                              type: 'ephemeral',
+                          },
+                      }
+                    : {}),
             });
 
             for await (const chunk of response) {
@@ -169,10 +183,10 @@ export class AnthropicAIChatInterface implements AIChatInterface {
             };
         } catch (err) {
             const span = trace.getActiveSpan();
-            span?.recordException(err);
             span?.setStatus({ code: SpanStatusCode.ERROR });
 
             if (err instanceof Error) {
+                span?.recordException(err);
                 console.error(
                     '[AnthropicAIChatInterface] Error occurred while generating content.',
                     err

@@ -623,6 +623,11 @@ export class AIController {
                         stopWords: request.stopWords,
                         userId: request.userId,
                         maxTokens,
+                        ...(typeof request.enableCaching === 'boolean'
+                            ? {
+                                  enableCaching: request.enableCaching,
+                              }
+                            : {}),
                     })
             );
 
@@ -1036,6 +1041,11 @@ export class AIController {
                 stopWords: request.stopWords,
                 userId: request.userId,
                 maxTokens,
+                ...(typeof request.enableCaching === 'boolean'
+                    ? {
+                          enableCaching: request.enableCaching,
+                      }
+                    : {}),
             });
 
             let totalTokens = 0;
@@ -2610,6 +2620,11 @@ export interface AIChatRequest {
      * The maximum number of tokens that should be generated.
      */
     totalTokens?: number;
+
+    /**
+     * Whether prompt caching should be enabled for providers that support it.
+     */
+    enableCaching?: boolean;
 }
 
 export type AIChatResponse = AIChatSuccess | AIChatFailure;
