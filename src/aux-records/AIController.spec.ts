@@ -343,6 +343,48 @@ describe('AIController', () => {
             });
         });
 
+        it('should pass prompt caching options to the chat interface', async () => {
+            chatInterface.chat.mockReturnValueOnce(
+                Promise.resolve({
+                    choices: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                            finishReason: 'stop',
+                        },
+                    ],
+                    totalTokens: 1,
+                })
+            );
+
+            await controller.chat({
+                model: 'test-model1',
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'test',
+                    },
+                ],
+                temperature: 0.5,
+                enableCaching: true,
+                userId,
+                userSubscriptionTier,
+            });
+
+            expect(chatInterface.chat).toHaveBeenCalledWith({
+                model: 'test-model1',
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'test',
+                    },
+                ],
+                temperature: 0.5,
+                enableCaching: true,
+                userId: 'test-user',
+            });
+        });
+
         it('should use the default model if none is specified', async () => {
             chatInterface.chat.mockReturnValueOnce(
                 Promise.resolve({
@@ -2362,6 +2404,52 @@ describe('AIController', () => {
                     },
                 ],
                 temperature: 0.5,
+                userId: 'test-user',
+            });
+        });
+
+        it('should pass prompt caching options to the chat stream interface', async () => {
+            chatInterface.chatStream.mockReturnValueOnce(
+                asyncIterable<AIChatInterfaceStreamResponse>([
+                    Promise.resolve({
+                        choices: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                                finishReason: 'stop',
+                            },
+                        ],
+                        totalTokens: 1,
+                    }),
+                ])
+            );
+
+            await unwindAndCaptureAsync(
+                controller.chatStream({
+                    model: 'test-model1',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                        },
+                    ],
+                    temperature: 0.5,
+                    enableCaching: true,
+                    userId,
+                    userSubscriptionTier,
+                })
+            );
+
+            expect(chatInterface.chatStream).toHaveBeenCalledWith({
+                model: 'test-model1',
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'test',
+                    },
+                ],
+                temperature: 0.5,
+                enableCaching: true,
                 userId: 'test-user',
             });
         });
