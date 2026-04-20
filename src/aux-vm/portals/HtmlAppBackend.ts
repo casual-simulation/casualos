@@ -144,12 +144,6 @@ if (typeof Element !== 'undefined') {
 
 let globalIdCounter = 0;
 let registeredMethodHandlers = false;
-const SYNCHRONIZED_FORM_ELEMENT_ATTRIBUTES = new Set([
-    'value',
-    'checked',
-    'selected',
-    'selectedIndex',
-]);
 
 /**
  * Resets the global node ID counter used for serializing DOM node references.
@@ -157,15 +151,6 @@ const SYNCHRONIZED_FORM_ELEMENT_ATTRIBUTES = new Set([
  */
 export function resetGlobalIdCounter() {
     globalIdCounter = 0;
-}
-
-function isSynchronizedFormElementAttribute(
-    attributeName: string | null | undefined
-) {
-    return (
-        !!attributeName &&
-        SYNCHRONIZED_FORM_ELEMENT_ATTRIBUTES.has(attributeName)
-    );
 }
 
 /**
