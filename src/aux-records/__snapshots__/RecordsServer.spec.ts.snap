@@ -15212,6 +15212,11 @@ Object {
       },
       "inputs": Object {
         "schema": Object {
+          "enableCaching": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "boolean",
+          },
           "frequencyPenalty": Object {
             "nullable": true,
             "optional": true,
@@ -15352,6 +15357,11 @@ Object {
       },
       "inputs": Object {
         "schema": Object {
+          "enableCaching": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "boolean",
+          },
           "frequencyPenalty": Object {
             "nullable": true,
             "optional": true,
