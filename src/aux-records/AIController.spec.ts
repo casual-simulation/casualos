@@ -290,6 +290,8 @@ describe('AIController', () => {
                 ],
                 temperature: 0.5,
                 userId: 'test-user',
+                enableCaching: true,
+                maxTokens: undefined,
             });
         });
 
@@ -340,6 +342,8 @@ describe('AIController', () => {
                 ],
                 temperature: 0.5,
                 userId: 'test-user',
+                enableCaching: true,
+                maxTokens: undefined,
             });
         });
 
@@ -431,6 +435,8 @@ describe('AIController', () => {
                 ],
                 temperature: 0.5,
                 userId: 'test-user',
+                enableCaching: true,
+                maxTokens: undefined,
             });
         });
 
@@ -609,6 +615,8 @@ describe('AIController', () => {
                 ],
                 temperature: 0.5,
                 userId: 'test-user',
+                enableCaching: true,
+                maxTokens: undefined,
             });
         });
 
@@ -694,6 +702,8 @@ describe('AIController', () => {
                 ],
                 temperature: 0.5,
                 userId: 'test-user',
+                enableCaching: true,
+                maxTokens: undefined,
             });
 
             const metrics = await store.getSubscriptionAiChatMetrics({
@@ -758,6 +768,8 @@ describe('AIController', () => {
                 ],
                 temperature: 0.5,
                 userId: 'test-user',
+                enableCaching: true,
+                maxTokens: undefined,
             });
 
             const metrics = await store.getSubscriptionAiChatMetrics({
@@ -1013,6 +1025,7 @@ describe('AIController', () => {
                     ],
                     temperature: 0.5,
                     userId: 'test-user',
+                    enableCaching: true,
                     maxTokens: 50,
                 });
 
@@ -1082,6 +1095,7 @@ describe('AIController', () => {
                     ],
                     temperature: 0.5,
                     userId: 'test-user',
+                    enableCaching: true,
                     maxTokens: 75,
                 });
 
@@ -2345,6 +2359,8 @@ describe('AIController', () => {
                 ],
                 temperature: 0.5,
                 userId: 'test-user',
+                enableCaching: true,
+                maxTokens: undefined,
             });
         });
 
@@ -2405,6 +2421,8 @@ describe('AIController', () => {
                 ],
                 temperature: 0.5,
                 userId: 'test-user',
+                enableCaching: true,
+                maxTokens: undefined,
             });
         });
 
@@ -2510,6 +2528,8 @@ describe('AIController', () => {
                 ],
                 temperature: 0.5,
                 userId: 'test-user',
+                enableCaching: true,
+                maxTokens: undefined,
             });
         });
 
@@ -2718,6 +2738,8 @@ describe('AIController', () => {
                 ],
                 temperature: 0.5,
                 userId: 'test-user',
+                enableCaching: true,
+                maxTokens: undefined,
             });
         });
 
@@ -2818,6 +2840,8 @@ describe('AIController', () => {
                 ],
                 temperature: 0.5,
                 userId: 'test-user',
+                enableCaching: true,
+                maxTokens: undefined,
             });
 
             const metrics = await store.getSubscriptionAiChatMetrics({
@@ -2892,6 +2916,8 @@ describe('AIController', () => {
                 ],
                 temperature: 0.5,
                 userId: 'test-user',
+                enableCaching: true,
+                maxTokens: undefined,
             });
 
             const metrics = await store.getSubscriptionAiChatMetrics({
@@ -3146,6 +3172,7 @@ describe('AIController', () => {
                     ],
                     temperature: 0.5,
                     userId: 'test-user',
+                    enableCaching: true,
                     maxTokens: 50,
                 });
 
@@ -3225,6 +3252,7 @@ describe('AIController', () => {
                     ],
                     temperature: 0.5,
                     userId: 'test-user',
+                    enableCaching: true,
                     maxTokens: 75,
                 });
 
