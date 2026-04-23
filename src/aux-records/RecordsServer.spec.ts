@@ -192,6 +192,7 @@ import { MemoryDatabaseInterface } from './database/MemoryDatabaseInterface';
 import type { FinancialInterface } from './financial';
 import {
     ACCOUNT_IDS,
+    BillingCodes,
     CurrencyCodes,
     FinancialController,
     LEDGERS,
@@ -1747,6 +1748,323 @@ describe('RecordsServer', () => {
                         accountId: account.id.toString(),
                         displayFactor: USD_DISPLAY_FACTOR.toString(),
                     },
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+    });
+
+    describe('GET /api/v2/transfers', () => {
+        beforeEach(async () => {
+            await financialController.init();
+        });
+
+        it('should return transfers for a user account', async () => {
+            const { account } = unwrap(
+                await financialController.getOrCreateFinancialAccount({
+                    ledger: LEDGERS.usd,
+                    userId,
+                })
+            );
+
+            unwrap(
+                await financialController.internalTransaction({
+                    transfers: [
+                        {
+                            amount: 500,
+                            code: TransferCodes.admin_credit,
+                            billingCode: BillingCodes.data_read,
+                            creditAccountId: account.id,
+                            debitAccountId: ACCOUNT_IDS.assets_stripe,
+                            currency: 'usd',
+                        },
+                    ],
+                })
+            );
+
+            const transfers = unwrap(
+                await financialController.listTransfers(account.id)
+            ).sort((a, b) => Number(a.id - b.id));
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/transfers?accountId=${encodeURIComponent(
+                        account.id.toString()
+                    )}&minTimeMs=0`,
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    balance: {
+                        credits: '500',
+                        debits: '0',
+                        pendingCredits: '0',
+                        pendingDebits: '0',
+                        currency: 'usd',
+                        accountId: account.id.toString(),
+                        displayFactor: USD_DISPLAY_FACTOR.toString(),
+                    },
+                    transfers: transfers.map((transfer) => ({
+                        id: transfer.id.toString(),
+                        transactionId: transfer.user_data_128.toString(),
+                        debitAccountId: transfer.debit_account_id.toString(),
+                        debitAccountDescription: 'Stripe',
+                        creditAccountId: transfer.credit_account_id.toString(),
+                        creditAccountDescription: `User (${userId})`,
+                        amount: transfer.amount.toString(),
+                        code: transfer.code,
+                        billingCode: BillingCodes.data_read,
+                        timeMs: Number(transfer.timestamp / 1000000n),
+                        pending: false,
+                        pendingTimeoutMs: null as number | null,
+                        balance: null as string | null,
+                        description: 'Admin credit from Stripe',
+                    })),
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return transfers for a studio account in credits', async () => {
+            await store.addStudio({
+                id: 'studio1',
+                displayName: 'Test Studio',
+            });
+
+            await store.addStudioAssignment({
+                studioId: 'studio1',
+                isPrimaryContact: true,
+                role: 'admin',
+                userId,
+            });
+
+            const { account } = unwrap(
+                await financialController.getOrCreateFinancialAccount({
+                    ledger: LEDGERS.credits,
+                    studioId: 'studio1',
+                })
+            );
+
+            unwrap(
+                await financialController.internalTransaction({
+                    transfers: [
+                        {
+                            amount: 200,
+                            code: TransferCodes.admin_credit,
+                            creditAccountId: account.id,
+                            debitAccountId: ACCOUNT_IDS.liquidity_credits,
+                            currency: CurrencyCodes.credits,
+                        },
+                    ],
+                })
+            );
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/transfers?accountId=${encodeURIComponent(
+                        account.id.toString()
+                    )}&minTimeMs=0`,
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    balance: {
+                        credits: '200',
+                        debits: '0',
+                        pendingCredits: '0',
+                        pendingDebits: '0',
+                        currency: 'credits',
+                        accountId: account.id.toString(),
+                        displayFactor: '1',
+                    },
+                    transfers: [
+                        {
+                            id: expect.any(String),
+                            transactionId: expect.any(String),
+                            debitAccountId:
+                                ACCOUNT_IDS.liquidity_credits.toString(),
+                            debitAccountDescription: 'Credits',
+                            creditAccountId: account.id.toString(),
+                            creditAccountDescription: 'Studio (studio1)',
+                            amount: '200',
+                            code: TransferCodes.admin_credit,
+                            billingCode: null,
+                            timeMs: expect.any(Number),
+                            pending: false,
+                            pendingTimeoutMs: null,
+                            balance: null,
+                            description: 'Admin credit from Credits',
+                        },
+                    ],
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return transfers for a contract account', async () => {
+            await contractRecordsStore.createItem(recordName, {
+                id: 'contract1',
+                address: 'test',
+                holdingUserId: userId,
+                initialValue: 1000,
+                rate: 10,
+                issuedAtMs: 123,
+                markers: [PUBLIC_READ_MARKER],
+                issuingUserId: userId,
+                status: 'open',
+            });
+
+            const { account } = unwrap(
+                await financialController.getOrCreateFinancialAccount({
+                    ledger: LEDGERS.usd,
+                    contractId: 'contract1',
+                })
+            );
+
+            unwrap(
+                await financialController.internalTransaction({
+                    transfers: [
+                        {
+                            amount: 99,
+                            code: TransferCodes.admin_credit,
+                            creditAccountId: account.id,
+                            debitAccountId: ACCOUNT_IDS.assets_cash,
+                            currency: CurrencyCodes.usd,
+                        },
+                    ],
+                })
+            );
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/transfers?accountId=${encodeURIComponent(
+                        account.id.toString()
+                    )}&minTimeMs=0`,
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    balance: {
+                        credits: '99',
+                        debits: '0',
+                        pendingCredits: '0',
+                        pendingDebits: '0',
+                        currency: 'usd',
+                        accountId: account.id.toString(),
+                        displayFactor: USD_DISPLAY_FACTOR.toString(),
+                    },
+                    transfers: [
+                        {
+                            id: expect.any(String),
+                            transactionId: expect.any(String),
+                            debitAccountId: ACCOUNT_IDS.assets_cash.toString(),
+                            debitAccountDescription: 'Cash',
+                            creditAccountId: account.id.toString(),
+                            creditAccountDescription: 'Contract (contract1)',
+                            amount: '99',
+                            code: TransferCodes.admin_credit,
+                            billingCode: null,
+                            timeMs: expect.any(Number),
+                            pending: false,
+                            pendingTimeoutMs: null,
+                            balance: null,
+                            description: 'Admin credit from Cash',
+                        },
+                    ],
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should apply the limit filter', async () => {
+            const { account } = unwrap(
+                await financialController.getOrCreateFinancialAccount({
+                    ledger: LEDGERS.usd,
+                    userId,
+                })
+            );
+
+            unwrap(
+                await financialController.internalTransaction({
+                    transfers: [
+                        {
+                            amount: 100,
+                            code: TransferCodes.admin_credit,
+                            creditAccountId: account.id,
+                            debitAccountId: ACCOUNT_IDS.assets_stripe,
+                            currency: CurrencyCodes.usd,
+                        },
+                    ],
+                })
+            );
+
+            unwrap(
+                await financialController.internalTransaction({
+                    transfers: [
+                        {
+                            amount: 101,
+                            code: TransferCodes.admin_credit,
+                            creditAccountId: account.id,
+                            debitAccountId: ACCOUNT_IDS.assets_stripe,
+                            currency: CurrencyCodes.usd,
+                        },
+                    ],
+                })
+            );
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/transfers?accountId=${encodeURIComponent(
+                        account.id.toString()
+                    )}&minTimeMs=0&limit=1`,
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    balance: {
+                        credits: '201',
+                        debits: '0',
+                        pendingCredits: '0',
+                        pendingDebits: '0',
+                        currency: 'usd',
+                        accountId: account.id.toString(),
+                        displayFactor: USD_DISPLAY_FACTOR.toString(),
+                    },
+                    transfers: [
+                        {
+                            id: expect.any(String),
+                            transactionId: expect.any(String),
+                            debitAccountId:
+                                ACCOUNT_IDS.assets_stripe.toString(),
+                            debitAccountDescription: 'Stripe',
+                            creditAccountId: account.id.toString(),
+                            creditAccountDescription: `User (${userId})`,
+                            amount: expect.any(String),
+                            code: TransferCodes.admin_credit,
+                            billingCode: null,
+                            timeMs: expect.any(Number),
+                            pending: false,
+                            pendingTimeoutMs: null,
+                            balance: null,
+                            description: 'Admin credit from Stripe',
+                        },
+                    ],
                 },
                 headers: accountCorsHeaders,
             });

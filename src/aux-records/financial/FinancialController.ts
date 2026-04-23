@@ -843,19 +843,34 @@ export class FinancialController {
 
     @traced(TRACE_NAME)
     async listTransfers(
-        accountId: bigint | string
+        accountId: bigint | string,
+        options?: {
+            minTimeMs?: number;
+            maxTimeMs?: number;
+            limit?: number;
+        }
     ): Promise<Result<Transfer[], SimpleError>> {
         if (typeof accountId === 'string') {
             accountId = BigInt(accountId);
         }
 
+        const minTime =
+            typeof options?.minTimeMs === 'number'
+                ? BigInt(Math.floor(options.minTimeMs)) * 1000000n
+                : 0n;
+        const maxTime =
+            typeof options?.maxTimeMs === 'number'
+                ? BigInt(Math.floor(options.maxTimeMs)) * 1000000n
+                : 0n;
+        const limit = Math.max(1, options?.limit ?? 1000);
+
         const transfers = await this._financialInterface.getAccountTransfers({
             account_id: accountId,
             code: 0, // 0 means all codes
             flags: AccountFilterFlags.credits | AccountFilterFlags.debits,
-            limit: 1000, // Limit to 1000 transfers
-            timestamp_max: 0n, // No timestamp limit
-            timestamp_min: 0n, // No timestamp limit
+            limit,
+            timestamp_max: maxTime,
+            timestamp_min: minTime,
             user_data_128: 0n, // No user data filter
             user_data_64: 0n, // No user data filter
             user_data_32: 0, // No user data filter
