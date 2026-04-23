@@ -623,11 +623,7 @@ export class AIController {
                         stopWords: request.stopWords,
                         userId: request.userId,
                         maxTokens,
-                        ...(typeof request.enableCaching === 'boolean'
-                            ? {
-                                  enableCaching: request.enableCaching,
-                              }
-                            : {}),
+                        enableCaching: request.enableCaching ?? true,
                     })
             );
 
@@ -1041,11 +1037,7 @@ export class AIController {
                 stopWords: request.stopWords,
                 userId: request.userId,
                 maxTokens,
-                ...(typeof request.enableCaching === 'boolean'
-                    ? {
-                          enableCaching: request.enableCaching,
-                      }
-                    : {}),
+                enableCaching: request.enableCaching ?? true,
             });
 
             let totalTokens = 0;
