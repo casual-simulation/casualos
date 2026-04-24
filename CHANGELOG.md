@@ -22,6 +22,7 @@
 -   Added the `ai.chat`, `ai.image`, and `ai.skybox` policy resource kinds with `create` permissions.
 -   Improved `xp.getAccountBalances(options?)` to accept one of `userId`, `studioId`, or `contractId` in the `options` parameter object.
 -   Added the `temp` BIOS option to the player and studio configuration UI, and updated temp insts to use in-memory-only partitions with no persistence across refreshes.
+-   Added support for configuring the initial player page title and description in server deployments, including comId-specific overrides for link previews and other server-rendered metadata.
 -   Added support for configuring credit expiration.
     -   By default, credits never expire.
     -   Credit expiration can be configured via the `SERVER_CONFIG.subscriptions.subscriptions[i].creditExpiration` key, and can be set to one of the following options:
