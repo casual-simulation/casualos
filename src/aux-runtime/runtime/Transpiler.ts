@@ -2082,19 +2082,27 @@ export class Transpiler {
         let endIndex: number;
 
         if (!this._jsxPreserveWhitespace) {
-            // Find the first non-whitespace character for the start index
-            const startMatch = /\S/.exec(node.raw);
+            const isMultiLine = /\r|\n/.test(node.raw);
 
-            if (!startMatch) {
-                // If there are no non-whitespace characters, we can skip processing this node
-                return;
+            if (isMultiLine) {
+                // Find the first non-whitespace character for the start index
+                const startMatch = /\S/.exec(node.raw);
+
+                if (!startMatch) {
+                    // If there are no non-whitespace characters, we can skip processing this node
+                    return;
+                }
+
+                startIndex = startMatch.index + node.start;
+
+                // Find the last non-whitespace character for the end index
+                const endMatch = /\S\s*$/.exec(node.raw);
+                endIndex = endMatch.index + 1 + node.start;
+            } else {
+                // For single line text, we preserve the whitespace
+                startIndex = node.start;
+                endIndex = node.end;
             }
-
-            startIndex = startMatch.index + node.start;
-
-            // Find the last non-whitespace character for the end index
-            const endMatch = /\S\s*$/.exec(node.raw);
-            endIndex = endMatch.index + 1 + node.start;
         } else {
             startIndex = node.start;
             endIndex = node.end;

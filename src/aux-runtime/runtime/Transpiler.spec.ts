@@ -396,6 +396,24 @@ describe('Transpiler', () => {
                 );
             });
 
+            it('should preserve inline whitespace between elements', () => {
+                const result = transpiler.transpile(
+                    [
+                        `<div>`,
+                        `  <span>Hello</span> <span>World</span>`,
+                        `</div>`,
+                    ].join('\n')
+                );
+
+                expect(result).toBe(
+                    [
+                        `h("div",null,`,
+                        '  h("span",null,`Hello`,),` `,h("span",null,`World`,),',
+                        `)`,
+                    ].join('\n')
+                );
+            });
+
             it('should ignore empty sections of whitespace', () => {
                 const result = transpiler.transpile(
                     [`<div>`, `  <span>Hello!</span>`, `</div>`].join('\n')
