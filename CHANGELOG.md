@@ -21,11 +21,20 @@
             </div>
         );
 
-        // Previously, the output would be this:
-        // <div> <span>Hello</span> <span>World</span> </div>
+        // Previously, the output would be like this:
+        let originalOutput = (
+            <div>
+                {' '}
+                <span>Hello</span> <span>World</span>{' '}
+            </div>
+        );
 
         // Now, the output is like this:
-        // <div><span>Hello</span> <span>World</span></div>
+        let newOutput = (
+            <div>
+                <span>Hello</span> <span>World</span>
+            </div>
+        );
         // Notice the spacing between the <div> and <span> tags
         ```
 
