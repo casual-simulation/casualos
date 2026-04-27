@@ -305,6 +305,8 @@ export class Transpiler {
     private _insertEnergyChecks: boolean;
     private _cache: LRUCache<string, TranspilerResult>;
 
+    private _jsxPreserveWhitespace: boolean = false;
+
     get forceSync() {
         return this._forceSync;
     }
@@ -427,6 +429,7 @@ export class Transpiler {
         if (cached) {
             return cached;
         }
+        this._jsxPreserveWhitespace = directives.jsxPreserveWhitespace ?? false;
         const macroed = replaceMacros(code);
         const node = this._parse(macroed);
         const isAsync = directives.isAsync || this._isAsyncNode(node);
@@ -2039,21 +2042,35 @@ export class Transpiler {
         const version = { '0': getClock(doc, 0) };
 
         for (let child of children) {
-            const pos = createRelativePositionFromStateVector(
-                text,
-                version,
-                child.end,
-                undefined,
-                true
-            );
-            this._replace(child, doc, text, metadata);
+            let changed = false;
+            const changeHandler = () => {
+                changed = true;
+            };
+            try {
+                text.observe(changeHandler);
+                const pos = createRelativePositionFromStateVector(
+                    text,
+                    version,
+                    child.end,
+                    undefined,
+                    true
+                );
+                this._replace(child, doc, text, metadata);
 
-            doc.clientID += 1;
-            const absoluteEnd = createAbsolutePositionFromRelativePosition(
-                pos,
-                doc
-            );
-            text.insert(absoluteEnd.index, ',');
+                if (!changed) {
+                    // Skip inserting comma if nothing was changed
+                    continue;
+                }
+
+                doc.clientID += 1;
+                const absoluteEnd = createAbsolutePositionFromRelativePosition(
+                    pos,
+                    doc
+                );
+                text.insert(absoluteEnd.index, ',');
+            } finally {
+                text.unobserve(changeHandler);
+            }
         }
     }
 
@@ -2061,8 +2078,27 @@ export class Transpiler {
         doc.clientID += 1;
         const version = { '0': getClock(doc, 0) };
 
-        const startIndex = node.start;
-        const endIndex = node.end;
+        let startIndex: number;
+        let endIndex: number;
+
+        if (!this._jsxPreserveWhitespace) {
+            // Find the first non-whitespace character for the start index
+            const startMatch = /\S/.exec(node.raw);
+
+            if (!startMatch) {
+                // If there are no non-whitespace characters, we can skip processing this node
+                return;
+            }
+
+            startIndex = startMatch.index + node.start;
+
+            // Find the last non-whitespace character for the end index
+            const endMatch = /\S\s*$/.exec(node.raw);
+            endIndex = endMatch.index + 1 + node.start;
+        } else {
+            startIndex = node.start;
+            endIndex = node.end;
+        }
 
         const absoluteStart = createAbsolutePositionFromStateVector(
             doc,
@@ -2523,6 +2559,16 @@ export interface TranspilerDirectives {
     noParse: boolean;
     isAsync: boolean;
     isModule: boolean;
+    /**
+     * Whether to preserve whitespace during JSX compilation.
+     * This is useful for cases where whitespace is significant, but is non-standard.
+     *
+     * If set to true, then whitespace in JSX nodes will be preserved in the output.
+     * If false, then whitespace will be removed unless explicitly added with `{" "}` or `{"\n"}`.
+     *
+     * Defaults to false.
+     */
+    jsxPreserveWhitespace?: boolean;
 
     startIndex?: number;
     endIndex?: number;
@@ -2569,6 +2615,8 @@ export function parseDirectives(code: string): TranspilerDirectives {
             directives.isAsync = true;
         } else if (part === 'module') {
             directives.isModule = true;
+        } else if (part === 'jsx-preserve-whitespace') {
+            directives.jsxPreserveWhitespace = true;
         }
     }
     return directives;
@@ -2600,6 +2648,9 @@ export function addDirectives(
     }
     if (directives.isModule) {
         directiveString += 'module ';
+    }
+    if (directives.jsxPreserveWhitespace) {
+        directiveString += 'jsx-preserve-whitespace ';
     }
     directiveString = directiveString.trim() + '";';
     return directiveString + code;
