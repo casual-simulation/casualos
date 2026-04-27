@@ -1090,6 +1090,34 @@ describe('RecordsServer', () => {
 
             expect(body).toMatchSnapshot();
         });
+
+        it('should include the recordName input schema for aiListChatModels', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet('/api/v2/procedures', defaultHeaders)
+            );
+
+            const body = await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    procedures: expect.any(Object),
+                },
+                headers: corsHeaders(defaultHeaders.origin),
+            });
+
+            const chatModelsProcedure = body.procedures.find(
+                (p: any) => p.name === 'aiListChatModels'
+            );
+
+            expect(chatModelsProcedure).toBeTruthy();
+            expect(chatModelsProcedure.inputs.schema).toEqual({
+                recordName: {
+                    type: 'string',
+                    optional: true,
+                    nullable: true,
+                },
+            });
+        });
     });
 
     describe('GET /api/{userId}/metadata', () => {
@@ -1515,7 +1543,8 @@ describe('RecordsServer', () => {
                 statusCode: 204,
                 headers: {
                     ...corsHeaders(apiOrigin),
-                    'Access-Control-Allow-Methods': 'POST, PUT, OPTIONS',
+                    'Access-Control-Allow-Methods':
+                        'POST, PUT, DELETE, OPTIONS',
                     'Access-Control-Allow-Headers':
                         'Content-Type, Authorization',
                 },
@@ -1540,7 +1569,8 @@ describe('RecordsServer', () => {
                 statusCode: 204,
                 headers: {
                     ...corsHeaders(accountOrigin),
-                    'Access-Control-Allow-Methods': 'POST, PUT, OPTIONS',
+                    'Access-Control-Allow-Methods':
+                        'POST, PUT, DELETE, OPTIONS',
                     'Access-Control-Allow-Headers':
                         'Content-Type, Authorization',
                 },
@@ -1797,6 +1827,7 @@ describe('RecordsServer', () => {
                             intervalCost: 123,
                             currency: 'usd',
                             featureList: ['Feature 1', 'Feature 2'],
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     purchasableSubscriptions: [],
@@ -1891,6 +1922,7 @@ describe('RecordsServer', () => {
                             intervalCost: 123,
                             currency: 'usd',
                             featureList: ['Feature 1', 'Feature 2'],
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     purchasableSubscriptions: [],
@@ -1979,6 +2011,7 @@ describe('RecordsServer', () => {
                             intervalCost: 123,
                             currency: 'usd',
                             featureList: ['Feature 1', 'Feature 2'],
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     purchasableSubscriptions: [],
@@ -7645,6 +7678,95 @@ describe('RecordsServer', () => {
                             path: ['fileMimeType'],
                         },
                     ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request if neither fileMimeType nor fileExtension is given', async () => {
+            const hash = getHash('hello');
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/file`,
+                    JSON.stringify({
+                        recordKey,
+                        fileSha256Hex: hash,
+                        fileByteLength: 10,
+                        fileDescription: 'description',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'Either fileMimeType or fileExtension is required.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should create a file record using fileExtension instead of fileMimeType', async () => {
+            const hash = getHash('hello');
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/file`,
+                    JSON.stringify({
+                        recordKey,
+                        fileSha256Hex: hash,
+                        fileByteLength: 10,
+                        fileExtension: '.spz',
+                        fileDescription: 'description',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    uploadUrl: `http://localhost:9191/${recordName}/${hash}.spz`,
+                    fileName: `${hash}.spz`,
+                    uploadMethod: 'POST',
+                    uploadHeaders: {
+                        'content-type': 'application/octet-stream',
+                        'record-name': recordName,
+                    },
+                    markers: [PUBLIC_READ_MARKER],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request when fileExtension does not match fileMimeType', async () => {
+            const hash = getHash('hello');
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/file`,
+                    JSON.stringify({
+                        recordKey,
+                        fileSha256Hex: hash,
+                        fileByteLength: 10,
+                        fileMimeType: 'image/png',
+                        fileExtension: '.spz',
+                        fileDescription: 'description',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The specified file extension does not match the file extension for the given MIME type.',
                 },
                 headers: apiCorsHeaders,
             });
@@ -18290,7 +18412,8 @@ describe('RecordsServer', () => {
                 body: undefined,
                 headers: {
                     'Access-Control-Allow-Origin': apiHeaders['origin'],
-                    'Access-Control-Allow-Methods': 'POST, PUT, OPTIONS',
+                    'Access-Control-Allow-Methods':
+                        'POST, PUT, DELETE, OPTIONS',
                     'Access-Control-Allow-Headers':
                         'Content-Type, Authorization',
                 },
@@ -22376,6 +22499,7 @@ describe('RecordsServer', () => {
                             product: '',
                             featureList: [],
                             tier: 'tier1',
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     tiers: {
@@ -22788,6 +22912,7 @@ describe('RecordsServer', () => {
                             product: '',
                             featureList: [],
                             tier: 'tier1',
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     tiers: {
@@ -22966,6 +23091,7 @@ describe('RecordsServer', () => {
                             product: '',
                             featureList: [],
                             tier: 'tier1',
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     tiers: {
@@ -23172,6 +23298,7 @@ describe('RecordsServer', () => {
                             product: '',
                             featureList: [],
                             tier: 'tier1',
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     tiers: {
@@ -23422,6 +23549,7 @@ describe('RecordsServer', () => {
                             product: '',
                             featureList: [],
                             tier: 'tier1',
+                            creditExpiration: 'never-expire',
                         },
                     ],
                     tiers: {
@@ -23768,6 +23896,33 @@ describe('RecordsServer', () => {
             });
         });
 
+        it('should support recordName', async () => {
+            const chatSpy = jest.spyOn(aiController, 'chat');
+
+            await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/ai/chat`,
+                    JSON.stringify({
+                        model: 'model-1',
+                        recordName: 'record-name',
+                        messages: [
+                            {
+                                role: 'user',
+                                content: 'hello',
+                            },
+                        ],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expect(chatSpy).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    recordName: 'record-name',
+                })
+            );
+        });
+
         it('should support using a default model', async () => {
             chatInterface.chat.mockResolvedValueOnce({
                 choices: [
@@ -23979,6 +24134,33 @@ describe('RecordsServer', () => {
                     'content-type': 'application/x-ndjson',
                 },
             });
+        });
+
+        it('should support recordName', async () => {
+            const chatStreamSpy = jest.spyOn(aiController, 'chatStream');
+
+            await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/ai/chat/stream`,
+                    JSON.stringify({
+                        model: 'model-1',
+                        recordName: 'record-name',
+                        messages: [
+                            {
+                                role: 'user',
+                                content: 'hello',
+                            },
+                        ],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expect(chatStreamSpy).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    recordName: 'record-name',
+                })
+            );
         });
 
         it('should support using a default model', async () => {
@@ -24269,6 +24451,27 @@ describe('RecordsServer', () => {
             });
         });
 
+        it('should support recordName', async () => {
+            const skyboxSpy = jest.spyOn(aiController, 'generateSkybox');
+
+            await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/ai/skybox`,
+                    JSON.stringify({
+                        prompt: 'a blue sky',
+                        recordName: 'record-name',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expect(skyboxSpy).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    recordName: 'record-name',
+                })
+            );
+        });
+
         it('should return a not_supported result if the server has a null AI controller', async () => {
             server = new RecordsServer({
                 allowedAccountOrigins,
@@ -24395,6 +24598,71 @@ describe('RecordsServer', () => {
             });
         });
 
+        it('should support listing chat models by recordName', async () => {
+            const listModelsSpy = jest.spyOn(aiController, 'listChatModels');
+
+            await server.handleHttpRequest(
+                httpGet('/api/v2/ai/chat/models?recordName=record-name', {
+                    ...apiHeaders,
+                })
+            );
+
+            expect(listModelsSpy).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    recordName: 'record-name',
+                })
+            );
+        });
+
+        it('should omit recordName when not provided', async () => {
+            const listModelsSpy = jest.spyOn(aiController, 'listChatModels');
+
+            await server.handleHttpRequest(
+                httpGet('/api/v2/ai/chat/models', apiHeaders)
+            );
+
+            expect(listModelsSpy).toHaveBeenCalled();
+            expect(listModelsSpy.mock.calls[0][0].recordName).toBeUndefined();
+        });
+
+        it('should return not_authorized if the user cannot access the recordName', async () => {
+            const studioResult = await recordsController.createStudio(
+                'myStudio',
+                ownerId
+            );
+
+            if (!studioResult.success) {
+                throw new Error('Unable to create studio');
+            }
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/ai/chat/models?recordName=${studioResult.studioId}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        resourceKind: 'ai.chat',
+                        action: 'create',
+                        resourceId: null,
+                        recordName: studioResult.studioId,
+                        subjectId: userId,
+                        subjectType: 'user',
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
         it('should return not_logged_in if no session key is provided', async () => {
             delete apiHeaders['authorization'];
 
@@ -24511,6 +24779,27 @@ describe('RecordsServer', () => {
                 numberOfImages: 1,
                 userId,
             });
+        });
+
+        it('should support recordName', async () => {
+            const imageSpy = jest.spyOn(aiController, 'generateImage');
+
+            await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/ai/image`,
+                    JSON.stringify({
+                        prompt: 'a rabbit riding a bycicle',
+                        recordName: 'record-name',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expect(imageSpy).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    recordName: 'record-name',
+                })
+            );
         });
 
         testOrigin('POST', `/api/v2/ai/image`, () =>
@@ -26610,7 +26899,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
 
             await store.setConfiguration(METADATA_KEY, {
                 apiOrigin: apiOrigin,
-                frontendOrigin: 'https://frontend.example.com'
+                frontendOrigin: 'https://frontend.example.com',
             });
         });
 
@@ -28389,6 +28678,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                                 intervalCost: 123,
                                 currency: 'usd',
                                 featureList: ['Feature 1', 'Feature 2'],
+                                creditExpiration: 'never-expire',
                             },
                         ],
                         purchasableSubscriptions: [],
@@ -28483,6 +28773,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                                 intervalCost: 123,
                                 currency: 'usd',
                                 featureList: ['Feature 1', 'Feature 2'],
+                                creditExpiration: 'never-expire',
                             },
                         ],
                         purchasableSubscriptions: [],
@@ -28551,6 +28842,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         eligibleProducts: ['product_id'],
                         featureList: ['Feature 1', 'Feature 2'],
                         product: 'product_id',
+                        creditExpiration: 'never-expire',
                     },
                     {
                         id: 'default',
@@ -28558,6 +28850,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         description: 'description',
                         defaultSubscription: true,
                         featureList: ['default feature 1'],
+                        creditExpiration: 'never-expire',
                     },
                 ];
                 stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
@@ -28768,6 +29061,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                                 intervalCost: 123,
                                 currency: 'usd',
                                 featureList: ['Feature 1', 'Feature 2'],
+                                creditExpiration: 'never-expire',
                             },
                         ],
                         purchasableSubscriptions: [],
@@ -28861,6 +29155,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                                 intervalCost: 123,
                                 currency: 'usd',
                                 featureList: ['Feature 1', 'Feature 2'],
+                                creditExpiration: 'never-expire',
                             },
                         ],
                         purchasableSubscriptions: [],
@@ -28918,6 +29213,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         eligibleProducts: ['product_id'],
                         featureList: ['Feature 1', 'Feature 2'],
                         product: 'product_id',
+                        creditExpiration: 'never-expire',
                     },
                     {
                         id: 'default',
@@ -28925,6 +29221,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         description: 'description',
                         defaultSubscription: true,
                         featureList: ['default feature 1'],
+                        creditExpiration: 'never-expire',
                     },
                 ];
                 stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
@@ -29135,6 +29432,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                                 intervalCost: 123,
                                 currency: 'usd',
                                 featureList: ['Feature 1', 'Feature 2'],
+                                creditExpiration: 'never-expire',
                             },
                         ],
                         purchasableSubscriptions: [],
@@ -31093,6 +31391,250 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         expectedCost: 1000,
                         currency: 'usd',
                     },
+                    returnUrl: 'http://example.com',
+                    successUrl: 'http://example.com/success',
+                }),
+                defaultHeaders
+            )
+        );
+    });
+
+    describe('POST /api/v2/credits/purchase', () => {
+        const studioId = 'studioId';
+
+        beforeEach(async () => {
+            await financialController.init();
+
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub.withTier('tier1').withAllDefaultFeatures()
+                    )
+            );
+
+            const owner = await store.findUser(ownerId);
+            await store.saveUser({
+                ...owner,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customerId',
+            });
+
+            await store.createStudioForUser(
+                {
+                    id: studioId,
+                    displayName: 'my studio',
+                    comId: 'comId',
+                    logoUrl: 'logoUrl',
+                    comIdConfig: {
+                        allowedStudioCreators: 'anyone',
+                    },
+                    playerConfig: {
+                        ab1BootstrapURL: 'ab1BootstrapURL',
+                    },
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                    stripeCustomerId: 'studioCustomerId',
+                    stripeAccountId: 'accountId',
+                    stripeAccountStatus: 'active',
+                    stripeAccountRequirementsStatus: 'complete',
+                },
+                userId
+            );
+
+            stripeMock.createCheckoutSession.mockResolvedValue({
+                id: 'sessionId',
+                url: 'checkoutUrl',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            stripeMock.getProductAndPriceInfo.mockResolvedValue({
+                id: 'productId',
+                default_price: {
+                    id: 'priceId',
+                    currency: 'usd',
+                    recurring: null,
+                    unit_amount: 1000,
+                    metadata: {
+                        'casualos.credits': '100',
+                    },
+                },
+                name: 'Credits Package',
+                description: '100 credits for $10',
+            });
+        });
+
+        it('should return the checkout URL when purchasing a contract', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/credits/purchase`,
+                    JSON.stringify({
+                        targetStudioId: studioId,
+                        returnUrl: 'http://example.com',
+                        successUrl: 'http://example.com/success',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    url: 'checkoutUrl',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return not_logged_in when the user is not logged in', async () => {
+            stripeMock.createCheckoutSession.mockResolvedValue({
+                id: 'sessionId',
+                url: 'checkoutUrl',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            delete apiHeaders['authorization'];
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/credits/purchase`,
+                    JSON.stringify({
+                        targetStudioId: studioId,
+                        returnUrl: 'http://example.com',
+                        successUrl: 'http://example.com/success',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 401,
+                body: {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user is not logged in. A session key must be provided for this operation.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return not_authorized when another user is specified as the target', async () => {
+            stripeMock.createCheckoutSession.mockResolvedValue({
+                id: 'sessionId',
+                url: 'checkoutUrl',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/credits/purchase`,
+                    JSON.stringify({
+                        targetUserId: 'wrong-user',
+                        returnUrl: 'http://example.com',
+                        successUrl: 'http://example.com/success',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You cannot purchase credits for other users.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return not_authorized when the user is not an admin of the studio', async () => {
+            stripeMock.createCheckoutSession.mockResolvedValue({
+                id: 'sessionId',
+                url: 'checkoutUrl',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            await store.createStudioForUser(
+                {
+                    id: 'otherStudioId',
+                    displayName: 'my studio',
+                    comId: 'comId',
+                    logoUrl: 'logoUrl',
+                    comIdConfig: {
+                        allowedStudioCreators: 'anyone',
+                    },
+                    playerConfig: {
+                        ab1BootstrapURL: 'ab1BootstrapURL',
+                    },
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                    stripeCustomerId: 'customerId',
+                    stripeAccountId: 'accountId',
+                    stripeAccountStatus: 'active',
+                    stripeAccountRequirementsStatus: 'complete',
+                },
+                ownerId
+            );
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/credits/purchase`,
+                    JSON.stringify({
+                        targetStudioId: 'otherStudioId',
+                        returnUrl: 'http://example.com',
+                        successUrl: 'http://example.com/success',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to purchase credits for this studio.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin('POST', `/api/v2/credits/purchase`, () =>
+            JSON.stringify({
+                targetStudioId: studioId,
+                returnUrl: 'http://example.com',
+                successUrl: 'http://example.com/success',
+            })
+        );
+        testCustomOrigin('POST', `/api/v2/credits/purchase`, () =>
+            JSON.stringify({
+                targetStudioId: studioId,
+                returnUrl: 'http://example.com',
+                successUrl: 'http://example.com/success',
+            })
+        );
+        testBodyIsJson((body) =>
+            httpPost(`/api/v2/credits/purchase`, body, apiHeaders)
+        );
+        testRateLimit(() =>
+            httpPost(
+                `/api/v2/credits/purchase`,
+                JSON.stringify({
+                    targetStudioId: studioId,
                     returnUrl: 'http://example.com',
                     successUrl: 'http://example.com/success',
                 }),

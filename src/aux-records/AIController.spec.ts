@@ -1598,6 +1598,228 @@ describe('AIController', () => {
                     ]);
                     expect(chatInterface.chat).toHaveBeenCalled();
                 });
+
+                it('should bill the record owner for chat when caller uses recordName', async () => {
+                    const callerId = 'chat-billing-caller';
+
+                    await store.saveUser({
+                        id: callerId,
+                        email: 'chat-billing-caller@example.com',
+                        phoneNumber: null,
+                        allSessionRevokeTimeMs: null,
+                        currentLoginRequestId: null,
+                    });
+
+                    const callerAccount = unwrap(
+                        await financial.getOrCreateFinancialAccount({
+                            userId: callerId,
+                            ledger: LEDGERS.credits,
+                        })
+                    ).account;
+
+                    unwrap(
+                        await financial.internalTransaction({
+                            transfers: [
+                                {
+                                    debitAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    creditAccountId: callerAccount.id,
+                                    amount: 10000n,
+                                    code: TransferCodes.admin_credit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                            ],
+                        })
+                    );
+
+                    const permissionResult =
+                        await policies.grantMarkerPermission({
+                            recordKeyOrRecordName: userId,
+                            userId,
+                            marker: PUBLIC_READ_MARKER,
+                            permission: {
+                                resourceKind: 'ai.chat',
+                                action: 'create',
+                                expireTimeMs: null,
+                                options: {},
+                                subjectType: 'user',
+                                subjectId: callerId,
+                                marker: PUBLIC_READ_MARKER,
+                            },
+                        });
+                    expect(permissionResult).toMatchObject({ success: true });
+
+                    chatInterface.chat.mockResolvedValueOnce({
+                        choices: [
+                            {
+                                role: 'assistant',
+                                content: 'ok',
+                                finishReason: 'stop',
+                            },
+                        ],
+                        totalTokens: 10,
+                    });
+
+                    const result = await controller.chat({
+                        model: 'test-model1',
+                        messages: [{ role: 'user', content: 'test' }],
+                        userId: callerId,
+                        userSubscriptionTier,
+                        recordName: userId,
+                    });
+
+                    expect(result.success).toBe(true);
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: account1.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 150n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: callerAccount.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+
+                    const ownerMetrics =
+                        await store.getSubscriptionAiChatMetrics({
+                            ownerId: userId,
+                        });
+                    const callerMetrics =
+                        await store.getSubscriptionAiChatMetrics({
+                            ownerId: callerId,
+                        });
+
+                    expect(ownerMetrics.totalTokensInCurrentPeriod).toBe(10);
+                    expect(callerMetrics.totalTokensInCurrentPeriod).toBe(0);
+                });
+
+                it('should bill the studio for chat when a member uses a studio recordName', async () => {
+                    const callerId = 'chat-billing-studio-caller';
+                    const studioId = 'chat-billing-studio';
+
+                    await store.saveUser({
+                        id: callerId,
+                        email: 'chat-billing-studio-caller@example.com',
+                        phoneNumber: null,
+                        allSessionRevokeTimeMs: null,
+                        currentLoginRequestId: null,
+                    });
+
+                    await store.createStudioForUser(
+                        {
+                            id: studioId,
+                            displayName: 'Chat Billing Studio',
+                            subscriptionId: 'sub1',
+                            subscriptionStatus: 'active',
+                        },
+                        userId
+                    );
+
+                    await store.addStudioAssignment({
+                        studioId,
+                        userId: callerId,
+                        isPrimaryContact: false,
+                        role: 'member',
+                    });
+
+                    const studioAccount = unwrap(
+                        await financial.getOrCreateFinancialAccount({
+                            studioId,
+                            ledger: LEDGERS.credits,
+                        })
+                    ).account;
+
+                    const callerAccount = unwrap(
+                        await financial.getOrCreateFinancialAccount({
+                            userId: callerId,
+                            ledger: LEDGERS.credits,
+                        })
+                    ).account;
+
+                    unwrap(
+                        await financial.internalTransaction({
+                            transfers: [
+                                {
+                                    debitAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    creditAccountId: studioAccount.id,
+                                    amount: 10000n,
+                                    code: TransferCodes.admin_credit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                                {
+                                    debitAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    creditAccountId: callerAccount.id,
+                                    amount: 10000n,
+                                    code: TransferCodes.admin_credit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                            ],
+                        })
+                    );
+
+                    chatInterface.chat.mockResolvedValueOnce({
+                        choices: [
+                            {
+                                role: 'assistant',
+                                content: 'ok',
+                                finishReason: 'stop',
+                            },
+                        ],
+                        totalTokens: 10,
+                    });
+
+                    const result = await controller.chat({
+                        model: 'test-model1',
+                        messages: [{ role: 'user', content: 'test' }],
+                        userId: callerId,
+                        userSubscriptionTier,
+                        recordName: studioId,
+                    });
+
+                    expect(result.success).toBe(true);
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: studioAccount.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 150n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: callerAccount.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+
+                    const studioMetrics =
+                        await store.getSubscriptionAiChatMetrics({
+                            studioId,
+                        });
+                    const callerMetrics =
+                        await store.getSubscriptionAiChatMetrics({
+                            ownerId: callerId,
+                        });
+
+                    expect(studioMetrics.totalTokensInCurrentPeriod).toBe(10);
+                    expect(callerMetrics.totalTokensInCurrentPeriod).toBe(0);
+                });
             });
         });
 
@@ -1712,6 +1934,314 @@ describe('AIController', () => {
                 errorMessage: 'AI Access is not allowed',
             });
             expect(chatInterface.chat).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('chat()', () => {
+        describe('record-based authorization', () => {
+            const studioId = 'studio-chat-record';
+            const otherUserId = 'other-chat-user';
+            const unauthorizedUserId = 'unauthorized-chat-user';
+            beforeEach(async () => {
+                store.subscriptionConfiguration = buildSubscriptionConfig(
+                    (config) =>
+                        config
+                            .withUserDefaultFeatures((features) =>
+                                features
+                                    .withAllDefaultFeatures()
+                                    .withAI()
+                                    .withAIChat({
+                                        allowed: true,
+                                        maxTokensPerPeriod: 100,
+                                    })
+                            )
+                            .addSubscription('sub1', (sub) =>
+                                sub
+                                    .withTier('tier1')
+                                    .withAllDefaultFeatures()
+                                    .withAI()
+                                    .withAIChat({
+                                        allowed: true,
+                                        maxTokensPerPeriod: 100,
+                                    })
+                            )
+                );
+
+                await store.saveUser({
+                    id: userId,
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+
+                await store.createStudioForUser(
+                    {
+                        id: studioId,
+                        displayName: 'studio',
+                        subscriptionId: 'sub1',
+                        subscriptionStatus: 'active',
+                    },
+                    userId
+                );
+
+                await store.saveUser({
+                    id: otherUserId,
+                    email: 'other@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+
+                await store.saveUser({
+                    id: unauthorizedUserId,
+                    email: 'unauthorized@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+
+                await store.addStudioAssignment({
+                    studioId: studioId,
+                    userId: otherUserId,
+                    isPrimaryContact: false,
+                    role: 'member',
+                });
+            });
+
+            it('should use studio subscription when recordName is a studio record', async () => {
+                chatInterface.chat.mockReturnValueOnce(
+                    Promise.resolve({
+                        choices: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                                finishReason: 'stop',
+                            },
+                        ],
+                        totalTokens: 10,
+                    })
+                );
+
+                const result = await controller.chat({
+                    model: 'test-model1',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                        },
+                    ],
+                    temperature: 0.5,
+                    userId,
+                    userSubscriptionTier,
+                    recordName: studioId,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    choices: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                            finishReason: 'stop',
+                        },
+                    ],
+                });
+
+                const metrics = await store.getSubscriptionAiChatMetrics({
+                    studioId,
+                });
+                const userMetrics = await store.getSubscriptionAiChatMetrics({
+                    ownerId: userId,
+                });
+
+                expect(metrics).toMatchObject({
+                    studioId,
+                    totalTokensInCurrentPeriod: 10,
+                });
+                expect(userMetrics).toMatchObject({
+                    ownerId: userId,
+                    totalTokensInCurrentPeriod: 0,
+                });
+            });
+
+            it('should use the record owner subscription for user records', async () => {
+                chatInterface.chat.mockReturnValueOnce(
+                    Promise.resolve({
+                        choices: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                                finishReason: 'stop',
+                            },
+                        ],
+                        totalTokens: 10,
+                    })
+                );
+
+                const permissionResult = await policies.grantMarkerPermission({
+                    recordKeyOrRecordName: userId,
+                    userId: userId,
+                    marker: PUBLIC_READ_MARKER,
+                    permission: {
+                        resourceKind: 'ai.chat',
+                        action: 'create',
+                        expireTimeMs: null,
+                        options: {},
+                        subjectType: 'user',
+                        subjectId: otherUserId,
+                        marker: PUBLIC_READ_MARKER,
+                    },
+                });
+
+                expect(permissionResult).toMatchObject({ success: true });
+
+                const result = await controller.chat({
+                    model: 'test-model1',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                        },
+                    ],
+                    temperature: 0.5,
+                    userId: otherUserId,
+                    userSubscriptionTier,
+                    recordName: userId,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    choices: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                            finishReason: 'stop',
+                        },
+                    ],
+                });
+
+                const ownerMetrics = await store.getSubscriptionAiChatMetrics({
+                    ownerId: userId,
+                });
+                const callerMetrics = await store.getSubscriptionAiChatMetrics({
+                    ownerId: otherUserId,
+                });
+
+                expect(ownerMetrics).toMatchObject({
+                    ownerId: userId,
+                    totalTokensInCurrentPeriod: 10,
+                });
+                expect(callerMetrics).toMatchObject({
+                    ownerId: otherUserId,
+                    totalTokensInCurrentPeriod: 0,
+                });
+            });
+
+            it('should allow users granted access to ai.chat resources', async () => {
+                chatInterface.chat.mockReturnValueOnce(
+                    Promise.resolve({
+                        choices: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                                finishReason: 'stop',
+                            },
+                        ],
+                        totalTokens: 10,
+                    })
+                );
+
+                const permissionResult = await policies.grantMarkerPermission({
+                    recordKeyOrRecordName: studioId,
+                    userId: userId,
+                    marker: PUBLIC_READ_MARKER,
+                    permission: {
+                        resourceKind: 'ai.chat',
+                        action: 'create',
+                        expireTimeMs: null,
+                        options: {},
+                        subjectType: 'user',
+                        subjectId: otherUserId,
+                        marker: PUBLIC_READ_MARKER,
+                    },
+                });
+
+                expect(permissionResult).toMatchObject({ success: true });
+
+                const result = await controller.chat({
+                    model: 'test-model1',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                        },
+                    ],
+                    temperature: 0.5,
+                    userId: otherUserId,
+                    userSubscriptionTier,
+                    recordName: studioId,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    choices: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                            finishReason: 'stop',
+                        },
+                    ],
+                });
+            });
+
+            it('should return not_authorized if the user is not authorized to access the ai.chat resource', async () => {
+                chatInterface.chat.mockReturnValueOnce(
+                    Promise.resolve({
+                        choices: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                                finishReason: 'stop',
+                            },
+                        ],
+                        totalTokens: 10,
+                    })
+                );
+
+                const result = await controller.chat({
+                    model: 'test-model1',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                        },
+                    ],
+                    temperature: 0.5,
+                    userId: unauthorizedUserId,
+                    userSubscriptionTier,
+                    recordName: studioId,
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    recommendedEntitlement: undefined,
+                    reason: {
+                        type: 'missing_permission',
+                        resourceKind: 'ai.chat',
+                        action: 'create',
+                        resourceId: null,
+                        recordName: studioId,
+                        subjectId: unauthorizedUserId,
+                        subjectType: 'user',
+                    },
+                });
+
+                expect(chatInterface.chat).not.toHaveBeenCalled();
+            });
         });
     });
 
@@ -3229,6 +3759,240 @@ describe('AIController', () => {
                     ]);
                     expect(chatInterface.chatStream).toHaveBeenCalled();
                 });
+
+                it('should bill the record owner for chatStream when caller uses recordName', async () => {
+                    const callerId = 'chat-stream-billing-caller';
+
+                    await store.saveUser({
+                        id: callerId,
+                        email: 'chat-stream-billing-caller@example.com',
+                        phoneNumber: null,
+                        allSessionRevokeTimeMs: null,
+                        currentLoginRequestId: null,
+                    });
+
+                    const callerAccount = unwrap(
+                        await financial.getOrCreateFinancialAccount({
+                            userId: callerId,
+                            ledger: LEDGERS.credits,
+                        })
+                    ).account;
+
+                    unwrap(
+                        await financial.internalTransaction({
+                            transfers: [
+                                {
+                                    debitAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    creditAccountId: callerAccount.id,
+                                    amount: 10000n,
+                                    code: TransferCodes.admin_credit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                            ],
+                        })
+                    );
+
+                    const permissionResult =
+                        await policies.grantMarkerPermission({
+                            recordKeyOrRecordName: userId,
+                            userId,
+                            marker: PUBLIC_READ_MARKER,
+                            permission: {
+                                resourceKind: 'ai.chat',
+                                action: 'create',
+                                expireTimeMs: null,
+                                options: {},
+                                subjectType: 'user',
+                                subjectId: callerId,
+                                marker: PUBLIC_READ_MARKER,
+                            },
+                        });
+                    expect(permissionResult).toMatchObject({ success: true });
+
+                    chatInterface.chatStream.mockReturnValueOnce(
+                        asyncIterable<AIChatInterfaceStreamResponse>([
+                            Promise.resolve({
+                                choices: [
+                                    {
+                                        role: 'assistant',
+                                        content: 'ok',
+                                        finishReason: 'stop',
+                                    },
+                                ],
+                                totalTokens: 10,
+                            }),
+                        ])
+                    );
+
+                    const result = await unwindAndCaptureAsync(
+                        controller.chatStream({
+                            model: 'test-model1',
+                            messages: [{ role: 'user', content: 'test' }],
+                            userId: callerId,
+                            userSubscriptionTier,
+                            recordName: userId,
+                        })
+                    );
+
+                    expect(result.result.success).toBe(true);
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: account1.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 150n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: callerAccount.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+
+                    const ownerMetrics =
+                        await store.getSubscriptionAiChatMetrics({
+                            ownerId: userId,
+                        });
+                    const callerMetrics =
+                        await store.getSubscriptionAiChatMetrics({
+                            ownerId: callerId,
+                        });
+
+                    expect(ownerMetrics.totalTokensInCurrentPeriod).toBe(10);
+                    expect(callerMetrics.totalTokensInCurrentPeriod).toBe(0);
+                });
+
+                it('should bill the studio for chatStream when a member uses a studio recordName', async () => {
+                    const callerId = 'chat-stream-billing-studio-caller';
+                    const studioId = 'chat-stream-billing-studio';
+
+                    await store.saveUser({
+                        id: callerId,
+                        email: 'chat-stream-billing-studio-caller@example.com',
+                        phoneNumber: null,
+                        allSessionRevokeTimeMs: null,
+                        currentLoginRequestId: null,
+                    });
+
+                    await store.createStudioForUser(
+                        {
+                            id: studioId,
+                            displayName: 'Chat Stream Billing Studio',
+                            subscriptionId: 'sub1',
+                            subscriptionStatus: 'active',
+                        },
+                        userId
+                    );
+
+                    await store.addStudioAssignment({
+                        studioId,
+                        userId: callerId,
+                        isPrimaryContact: false,
+                        role: 'member',
+                    });
+
+                    const studioAccount = unwrap(
+                        await financial.getOrCreateFinancialAccount({
+                            studioId,
+                            ledger: LEDGERS.credits,
+                        })
+                    ).account;
+
+                    const callerAccount = unwrap(
+                        await financial.getOrCreateFinancialAccount({
+                            userId: callerId,
+                            ledger: LEDGERS.credits,
+                        })
+                    ).account;
+
+                    unwrap(
+                        await financial.internalTransaction({
+                            transfers: [
+                                {
+                                    debitAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    creditAccountId: studioAccount.id,
+                                    amount: 10000n,
+                                    code: TransferCodes.admin_credit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                                {
+                                    debitAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    creditAccountId: callerAccount.id,
+                                    amount: 10000n,
+                                    code: TransferCodes.admin_credit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                            ],
+                        })
+                    );
+
+                    chatInterface.chatStream.mockReturnValueOnce(
+                        asyncIterable<AIChatInterfaceStreamResponse>([
+                            Promise.resolve({
+                                choices: [
+                                    {
+                                        role: 'assistant',
+                                        content: 'ok',
+                                        finishReason: 'stop',
+                                    },
+                                ],
+                                totalTokens: 10,
+                            }),
+                        ])
+                    );
+
+                    const result = await unwindAndCaptureAsync(
+                        controller.chatStream({
+                            model: 'test-model1',
+                            messages: [{ role: 'user', content: 'test' }],
+                            userId: callerId,
+                            userSubscriptionTier,
+                            recordName: studioId,
+                        })
+                    );
+
+                    expect(result.result.success).toBe(true);
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: studioAccount.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 150n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: callerAccount.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+
+                    const studioMetrics =
+                        await store.getSubscriptionAiChatMetrics({
+                            studioId,
+                        });
+                    const callerMetrics =
+                        await store.getSubscriptionAiChatMetrics({
+                            ownerId: callerId,
+                        });
+
+                    expect(studioMetrics.totalTokensInCurrentPeriod).toBe(10);
+                    expect(callerMetrics.totalTokensInCurrentPeriod).toBe(0);
+                });
             });
         });
 
@@ -3350,6 +4114,376 @@ describe('AIController', () => {
                 states: [],
             });
             expect(chatInterface.chatStream).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('chatStream()', () => {
+        describe('record-based authorization', () => {
+            const studioId = 'studio-chatstream-record';
+            const otherUserId = 'other-chatstream-user';
+            const unauthorizedUserId = 'unauthorized-chatstream-user';
+            beforeEach(async () => {
+                store.subscriptionConfiguration = buildSubscriptionConfig(
+                    (config) =>
+                        config
+                            .withUserDefaultFeatures((features) =>
+                                features
+                                    .withAllDefaultFeatures()
+                                    .withAI()
+                                    .withAIChat({
+                                        allowed: true,
+                                        maxTokensPerPeriod: 100,
+                                    })
+                            )
+                            .addSubscription('sub1', (sub) =>
+                                sub
+                                    .withTier('tier1')
+                                    .withAllDefaultFeatures()
+                                    .withAI()
+                                    .withAIChat({
+                                        allowed: true,
+                                        maxTokensPerPeriod: 100,
+                                    })
+                            )
+                );
+
+                await store.saveUser({
+                    id: userId,
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+
+                await store.createStudioForUser(
+                    {
+                        id: studioId,
+                        displayName: 'studio',
+                        subscriptionId: 'sub1',
+                        subscriptionStatus: 'active',
+                    },
+                    userId
+                );
+
+                await store.saveUser({
+                    id: otherUserId,
+                    email: 'other@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+
+                await store.saveUser({
+                    id: unauthorizedUserId,
+                    email: 'unauthorized@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+
+                await store.addStudioAssignment({
+                    studioId: studioId,
+                    userId: otherUserId,
+                    isPrimaryContact: false,
+                    role: 'member',
+                });
+            });
+
+            it('should use studio subscription when recordName is a studio record', async () => {
+                chatInterface.chatStream.mockReturnValueOnce(
+                    asyncIterable<AIChatInterfaceStreamResponse>([
+                        Promise.resolve({
+                            choices: [
+                                {
+                                    role: 'user',
+                                    content: 'test',
+                                    finishReason: 'stop',
+                                },
+                            ],
+                            totalTokens: 10,
+                        }),
+                    ])
+                );
+
+                const result = await unwindAndCaptureAsync(
+                    controller.chatStream({
+                        model: 'test-model1',
+                        messages: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                            },
+                        ],
+                        temperature: 0.5,
+                        userId,
+                        userSubscriptionTier,
+                        recordName: studioId,
+                    })
+                );
+
+                expect(result).toEqual({
+                    result: {
+                        success: true,
+                    },
+                    states: [
+                        {
+                            choices: [
+                                {
+                                    role: 'user',
+                                    content: 'test',
+                                    finishReason: 'stop',
+                                },
+                            ],
+                        },
+                    ],
+                });
+
+                const metrics = await store.getSubscriptionAiChatMetrics({
+                    studioId,
+                });
+                const userMetrics = await store.getSubscriptionAiChatMetrics({
+                    ownerId: userId,
+                });
+
+                expect(metrics).toMatchObject({
+                    studioId,
+                    totalTokensInCurrentPeriod: 10,
+                });
+                expect(userMetrics).toMatchObject({
+                    ownerId: userId,
+                    totalTokensInCurrentPeriod: 0,
+                });
+            });
+
+            it('should use the record owner subscription for user records', async () => {
+                chatInterface.chatStream.mockReturnValueOnce(
+                    asyncIterable<AIChatInterfaceStreamResponse>([
+                        Promise.resolve({
+                            choices: [
+                                {
+                                    role: 'user',
+                                    content: 'test',
+                                    finishReason: 'stop',
+                                },
+                            ],
+                            totalTokens: 10,
+                        }),
+                    ])
+                );
+
+                const permissionResult = await policies.grantMarkerPermission({
+                    recordKeyOrRecordName: userId,
+                    userId: userId,
+                    marker: PUBLIC_READ_MARKER,
+                    permission: {
+                        resourceKind: 'ai.chat',
+                        action: 'create',
+                        expireTimeMs: null,
+                        options: {},
+                        subjectType: 'user',
+                        subjectId: otherUserId,
+                        marker: PUBLIC_READ_MARKER,
+                    },
+                });
+
+                expect(permissionResult).toMatchObject({ success: true });
+
+                const result = await unwindAndCaptureAsync(
+                    controller.chatStream({
+                        model: 'test-model1',
+                        messages: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                            },
+                        ],
+                        temperature: 0.5,
+                        userId: otherUserId,
+                        userSubscriptionTier,
+                        recordName: userId,
+                    })
+                );
+
+                expect(result).toEqual({
+                    result: {
+                        success: true,
+                    },
+                    states: [
+                        {
+                            choices: [
+                                {
+                                    role: 'user',
+                                    content: 'test',
+                                    finishReason: 'stop',
+                                },
+                            ],
+                        },
+                    ],
+                });
+
+                const ownerMetrics = await store.getSubscriptionAiChatMetrics({
+                    ownerId: userId,
+                });
+                const callerMetrics = await store.getSubscriptionAiChatMetrics({
+                    ownerId: otherUserId,
+                });
+
+                expect(ownerMetrics).toMatchObject({
+                    ownerId: userId,
+                    totalTokensInCurrentPeriod: 10,
+                });
+                expect(callerMetrics).toMatchObject({
+                    ownerId: otherUserId,
+                    totalTokensInCurrentPeriod: 0,
+                });
+            });
+
+            it('should allow users granted access to ai.chat resources', async () => {
+                chatInterface.chatStream.mockReturnValueOnce(
+                    asyncIterable<AIChatInterfaceStreamResponse>([
+                        Promise.resolve({
+                            choices: [
+                                {
+                                    role: 'user',
+                                    content: 'test',
+                                    finishReason: 'stop',
+                                },
+                            ],
+                            totalTokens: 10,
+                        }),
+                    ])
+                );
+
+                const permissionResult = await policies.grantMarkerPermission({
+                    recordKeyOrRecordName: studioId,
+                    userId: userId,
+                    marker: PUBLIC_READ_MARKER,
+                    permission: {
+                        resourceKind: 'ai.chat',
+                        action: 'create',
+                        expireTimeMs: null,
+                        options: {},
+                        subjectType: 'user',
+                        subjectId: otherUserId,
+                        marker: PUBLIC_READ_MARKER,
+                    },
+                });
+
+                expect(permissionResult).toMatchObject({ success: true });
+
+                const result = await unwindAndCaptureAsync(
+                    controller.chatStream({
+                        model: 'test-model1',
+                        messages: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                            },
+                        ],
+                        temperature: 0.5,
+                        userId: otherUserId,
+                        userSubscriptionTier,
+                        recordName: studioId,
+                    })
+                );
+
+                expect(result).toEqual({
+                    result: {
+                        success: true,
+                    },
+                    states: [
+                        {
+                            choices: [
+                                {
+                                    role: 'user',
+                                    content: 'test',
+                                    finishReason: 'stop',
+                                },
+                            ],
+                        },
+                    ],
+                });
+
+                const metrics = await store.getSubscriptionAiChatMetrics({
+                    studioId,
+                });
+                const callerMetrics = await store.getSubscriptionAiChatMetrics({
+                    ownerId: otherUserId,
+                });
+
+                expect(metrics).toMatchObject({
+                    studioId,
+                    totalTokensInCurrentPeriod: 10,
+                });
+                expect(callerMetrics).toMatchObject({
+                    ownerId: otherUserId,
+                    totalTokensInCurrentPeriod: 0,
+                });
+            });
+
+            it('should return not_authorized if the user is not authorized to access the ai.chat resource', async () => {
+                chatInterface.chatStream.mockReturnValueOnce(
+                    asyncIterable<AIChatInterfaceStreamResponse>([
+                        Promise.resolve({
+                            choices: [
+                                {
+                                    role: 'user',
+                                    content: 'test',
+                                    finishReason: 'stop',
+                                },
+                            ],
+                            totalTokens: 10,
+                        }),
+                    ])
+                );
+
+                const result = await unwindAndCaptureAsync(
+                    controller.chatStream({
+                        model: 'test-model1',
+                        messages: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                            },
+                        ],
+                        temperature: 0.5,
+                        userId: unauthorizedUserId,
+                        userSubscriptionTier,
+                        recordName: studioId,
+                    })
+                );
+
+                expect(result).toEqual({
+                    result: {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        recommendedEntitlement: undefined,
+                        reason: {
+                            type: 'missing_permission',
+                            resourceKind: 'ai.chat',
+                            action: 'create',
+                            resourceId: null,
+                            recordName: studioId,
+                            subjectId: unauthorizedUserId,
+                            subjectType: 'user',
+                        },
+                    },
+                    states: [],
+                });
+
+                const callerMetrics = await store.getSubscriptionAiChatMetrics({
+                    ownerId: unauthorizedUserId,
+                });
+
+                expect(callerMetrics).toMatchObject({
+                    ownerId: unauthorizedUserId,
+                    totalTokensInCurrentPeriod: 0,
+                });
+
+                expect(chatInterface.chatStream).not.toHaveBeenCalled();
+            });
         });
     });
 
@@ -3702,6 +4836,316 @@ describe('AIController', () => {
                     allowedSubscriptionTiers: ['test-tier'],
                     currentSubscriptionTier: 'other-tier',
                 })
+            );
+        });
+
+        it('should use studio subscription features when recordName is a studio record', async () => {
+            const studioId = 'studio-list-chat-models';
+            const memberId = 'studio-member';
+
+            store.subscriptionConfiguration = buildSubscriptionConfig(
+                (config) =>
+                    config
+                        .addSubscription('sub1', (sub) =>
+                            sub
+                                .withTier('tier1')
+                                .withAllDefaultFeatures()
+                                .withAI()
+                                .withAIChat({
+                                    allowed: true,
+                                    allowedModels: ['test-model2'],
+                                })
+                        )
+                        .withUserDefaultFeatures((features) =>
+                            features.withAIChat({
+                                allowed: false,
+                            })
+                        )
+            );
+
+            await store.saveUser({
+                id: userId,
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await store.saveUser({
+                id: memberId,
+                email: 'member@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await store.createStudioForUser(
+                {
+                    id: studioId,
+                    displayName: 'Studio',
+                    stripeCustomerId: null,
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                    comId: null,
+                },
+                userId
+            );
+
+            await store.addStudioAssignment({
+                studioId,
+                userId: memberId,
+                isPrimaryContact: false,
+                role: 'member',
+            });
+
+            const result = await controller.listChatModels({
+                userId: memberId,
+                userSubscriptionTier,
+                userRole: 'none',
+                recordName: studioId,
+            });
+
+            expect(result).toEqual(
+                success([
+                    {
+                        name: 'test-model2',
+                        provider: 'provider1',
+                        isDefault: false,
+                    },
+                ])
+            );
+        });
+
+        it('should use the record owner subscription for user records', async () => {
+            const otherUserId = 'list-chat-models-other-user';
+
+            store.subscriptionConfiguration = buildSubscriptionConfig(
+                (config) =>
+                    config
+                        .addSubscription('sub1', (sub) =>
+                            sub
+                                .withTier('tier1')
+                                .withAllDefaultFeatures()
+                                .withAI()
+                                .withAIChat({
+                                    allowed: true,
+                                    allowedModels: ['test-model1'],
+                                })
+                        )
+                        .withUserDefaultFeatures((features) =>
+                            features.withAIChat({
+                                allowed: false,
+                            })
+                        )
+            );
+
+            await store.saveUser({
+                id: userId,
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            await store.saveUser({
+                id: otherUserId,
+                email: 'other@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                subscriptionId: null,
+                subscriptionStatus: null,
+            });
+
+            const permissionResult = await policies.grantMarkerPermission({
+                recordKeyOrRecordName: userId,
+                userId,
+                marker: PUBLIC_READ_MARKER,
+                permission: {
+                    resourceKind: 'ai.chat',
+                    action: 'create',
+                    expireTimeMs: null,
+                    options: {},
+                    subjectType: 'user',
+                    subjectId: otherUserId,
+                    marker: PUBLIC_READ_MARKER,
+                },
+            });
+
+            expect(permissionResult).toMatchObject({ success: true });
+
+            const result = await controller.listChatModels({
+                userId: otherUserId,
+                userSubscriptionTier,
+                userRole: 'none',
+                recordName: userId,
+            });
+
+            expect(result).toEqual(
+                success([
+                    {
+                        name: 'test-model1',
+                        provider: 'provider1',
+                        isDefault: false,
+                    },
+                ])
+            );
+        });
+
+        it('should return not_authorized if the user is not authorized for the record', async () => {
+            const studioId = 'studio-list-chat-models-unauthorized';
+            const unauthorizedUserId = 'unauthorized-user';
+
+            await store.saveUser({
+                id: userId,
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await store.saveUser({
+                id: unauthorizedUserId,
+                email: 'unauthorized@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await store.createStudioForUser(
+                {
+                    id: studioId,
+                    displayName: 'Studio',
+                    stripeCustomerId: null,
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                    comId: null,
+                },
+                userId
+            );
+
+            const result = await controller.listChatModels({
+                userId: unauthorizedUserId,
+                userSubscriptionTier,
+                userRole: 'none',
+                recordName: studioId,
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    recommendedEntitlement: undefined,
+                    reason: {
+                        type: 'missing_permission',
+                        resourceKind: 'ai.chat',
+                        action: 'create',
+                        resourceId: null,
+                        recordName: studioId,
+                        subjectId: unauthorizedUserId,
+                        subjectType: 'user',
+                    },
+                })
+            );
+        });
+
+        it('should return not_supported if recordName is provided and policies are unavailable', async () => {
+            controller = new AIController({
+                chat: {
+                    interfaces: {
+                        provider1: chatInterface,
+                        provider2: chatInterface2,
+                    },
+                    options: {
+                        defaultModel: 'default-model',
+                        defaultModelProvider: 'provider1',
+                        allowedChatModels: [
+                            {
+                                provider: 'provider1',
+                                model: 'test-model1',
+                            },
+                        ],
+                        allowedChatSubscriptionTiers: ['test-tier'],
+                        tokenModifierRatio: {},
+                    },
+                },
+                generateSkybox: null,
+                images: null,
+                hume: null,
+                sloyd: null,
+                openai: null,
+                metrics: store,
+                config: store,
+                policies: null,
+                policyController: null,
+                records: store,
+            });
+
+            const result = await controller.listChatModels({
+                userId,
+                userSubscriptionTier,
+                userRole: 'none',
+                recordName: 'some-record',
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'recordName cannot be specified when custom permissions are not supported.',
+                })
+            );
+        });
+
+        it('should still work without recordName when policies are unavailable', async () => {
+            controller = new AIController({
+                chat: {
+                    interfaces: {
+                        provider1: chatInterface,
+                        provider2: chatInterface2,
+                    },
+                    options: {
+                        defaultModel: 'default-model',
+                        defaultModelProvider: 'provider1',
+                        allowedChatModels: [
+                            {
+                                provider: 'provider1',
+                                model: 'test-model1',
+                            },
+                        ],
+                        allowedChatSubscriptionTiers: ['test-tier'],
+                        tokenModifierRatio: {},
+                    },
+                },
+                generateSkybox: null,
+                images: null,
+                hume: null,
+                sloyd: null,
+                openai: null,
+                metrics: store,
+                config: store,
+                policies: null,
+                policyController: null,
+                records: store,
+            });
+
+            const result = await controller.listChatModels({
+                userId,
+                userSubscriptionTier,
+                userRole: 'superUser',
+            });
+
+            expect(result).toEqual(
+                success([
+                    {
+                        name: 'test-model1',
+                        provider: 'provider1',
+                        isDefault: false,
+                    },
+                ])
             );
         });
 
@@ -4367,6 +5811,480 @@ describe('AIController', () => {
                         generateSkyboxInterface.generateSkybox
                     ).not.toHaveBeenCalled();
                 });
+
+                it('should bill the record owner for skyboxes when caller uses recordName', async () => {
+                    const callerId = 'skybox-billing-caller';
+
+                    await store.saveUser({
+                        id: callerId,
+                        email: 'skybox-billing-caller@example.com',
+                        phoneNumber: null,
+                        allSessionRevokeTimeMs: null,
+                        currentLoginRequestId: null,
+                    });
+
+                    const callerAccount = unwrap(
+                        await financial.getOrCreateFinancialAccount({
+                            userId: callerId,
+                            ledger: LEDGERS.credits,
+                        })
+                    ).account;
+
+                    unwrap(
+                        await financial.internalTransaction({
+                            transfers: [
+                                {
+                                    debitAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    creditAccountId: callerAccount.id,
+                                    amount: 10000n,
+                                    code: TransferCodes.admin_credit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                            ],
+                        })
+                    );
+
+                    const permissionResult =
+                        await policies.grantMarkerPermission({
+                            recordKeyOrRecordName: userId,
+                            userId,
+                            marker: PUBLIC_READ_MARKER,
+                            permission: {
+                                resourceKind: 'ai.skybox',
+                                action: 'create',
+                                expireTimeMs: null,
+                                options: {},
+                                subjectType: 'user',
+                                subjectId: callerId,
+                                marker: PUBLIC_READ_MARKER,
+                            },
+                        });
+                    expect(permissionResult).toMatchObject({ success: true });
+
+                    generateSkyboxInterface.generateSkybox.mockResolvedValueOnce(
+                        {
+                            success: true,
+                            skyboxId: 'test-skybox-id',
+                        }
+                    );
+
+                    const result = await controller.generateSkybox({
+                        prompt: 'test',
+                        userId: callerId,
+                        userSubscriptionTier,
+                        recordName: userId,
+                    });
+
+                    expect(result.success).toBe(true);
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: account1.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 100n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: callerAccount.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+
+                    const ownerMetrics =
+                        await store.getSubscriptionAiSkyboxMetrics({
+                            ownerId: userId,
+                        });
+                    const callerMetrics =
+                        await store.getSubscriptionAiSkyboxMetrics({
+                            ownerId: callerId,
+                        });
+
+                    expect(ownerMetrics.totalSkyboxesInCurrentPeriod).toBe(1);
+                    expect(callerMetrics.totalSkyboxesInCurrentPeriod).toBe(0);
+                });
+
+                it('should bill the studio for skyboxes when a member uses a studio recordName', async () => {
+                    const callerId = 'skybox-billing-studio-caller';
+                    const studioId = 'skybox-billing-studio';
+
+                    await store.saveUser({
+                        id: callerId,
+                        email: 'skybox-billing-studio-caller@example.com',
+                        phoneNumber: null,
+                        allSessionRevokeTimeMs: null,
+                        currentLoginRequestId: null,
+                    });
+
+                    await store.createStudioForUser(
+                        {
+                            id: studioId,
+                            displayName: 'Skybox Billing Studio',
+                            subscriptionId: 'sub1',
+                            subscriptionStatus: 'active',
+                        },
+                        userId
+                    );
+
+                    await store.addStudioAssignment({
+                        studioId,
+                        userId: callerId,
+                        isPrimaryContact: false,
+                        role: 'member',
+                    });
+
+                    const studioAccount = unwrap(
+                        await financial.getOrCreateFinancialAccount({
+                            studioId,
+                            ledger: LEDGERS.credits,
+                        })
+                    ).account;
+
+                    const callerAccount = unwrap(
+                        await financial.getOrCreateFinancialAccount({
+                            userId: callerId,
+                            ledger: LEDGERS.credits,
+                        })
+                    ).account;
+
+                    unwrap(
+                        await financial.internalTransaction({
+                            transfers: [
+                                {
+                                    debitAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    creditAccountId: studioAccount.id,
+                                    amount: 10000n,
+                                    code: TransferCodes.admin_credit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                                {
+                                    debitAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    creditAccountId: callerAccount.id,
+                                    amount: 10000n,
+                                    code: TransferCodes.admin_credit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                            ],
+                        })
+                    );
+
+                    generateSkyboxInterface.generateSkybox.mockResolvedValueOnce(
+                        {
+                            success: true,
+                            skyboxId: 'test-skybox-id',
+                        }
+                    );
+
+                    const result = await controller.generateSkybox({
+                        prompt: 'test',
+                        userId: callerId,
+                        userSubscriptionTier,
+                        recordName: studioId,
+                    });
+
+                    expect(result.success).toBe(true);
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: studioAccount.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 100n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: callerAccount.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+
+                    const studioMetrics =
+                        await store.getSubscriptionAiSkyboxMetrics({
+                            studioId,
+                        });
+                    const callerMetrics =
+                        await store.getSubscriptionAiSkyboxMetrics({
+                            ownerId: callerId,
+                        });
+
+                    expect(studioMetrics.totalSkyboxesInCurrentPeriod).toBe(1);
+                    expect(callerMetrics.totalSkyboxesInCurrentPeriod).toBe(0);
+                });
+            });
+        });
+    });
+
+    describe('getSkybox()', () => {
+        describe('record-based authorization', () => {
+            const studioId = 'studio-skybox-record';
+            const otherUserId = 'other-skybox-user';
+            const unauthorizedUserId = 'unauthorized-skybox-user';
+            beforeEach(async () => {
+                store.subscriptionConfiguration = buildSubscriptionConfig(
+                    (config) =>
+                        config
+                            .withUserDefaultFeatures((features) =>
+                                features
+                                    .withAllDefaultFeatures()
+                                    .withAI()
+                                    .withAISkyboxes({
+                                        allowed: true,
+                                        maxSkyboxesPerPeriod: 4,
+                                    })
+                            )
+                            .addSubscription('sub1', (sub) =>
+                                sub
+                                    .withTier('tier1')
+                                    .withAllDefaultFeatures()
+                                    .withAI()
+                                    .withAISkyboxes({
+                                        allowed: true,
+                                        maxSkyboxesPerPeriod: 4,
+                                    })
+                            )
+                );
+
+                await store.saveUser({
+                    id: userId,
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+
+                await store.createStudioForUser(
+                    {
+                        id: studioId,
+                        displayName: 'studio',
+                        subscriptionId: 'sub1',
+                        subscriptionStatus: 'active',
+                    },
+                    userId
+                );
+
+                await store.saveUser({
+                    id: otherUserId,
+                    email: 'other@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+
+                await store.saveUser({
+                    id: unauthorizedUserId,
+                    email: 'unauthorized@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+
+                await store.addStudioAssignment({
+                    studioId: studioId,
+                    userId: otherUserId,
+                    isPrimaryContact: false,
+                    role: 'member',
+                });
+            });
+
+            it('should use studio subscription when recordName is a studio record', async () => {
+                generateSkyboxInterface.generateSkybox.mockResolvedValueOnce({
+                    success: true,
+                    skyboxId: 'test-skybox-id',
+                });
+
+                const result = await controller.generateSkybox({
+                    prompt: 'test',
+                    userId,
+                    userSubscriptionTier,
+                    recordName: studioId,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    skyboxId: 'test-skybox-id',
+                });
+
+                const metrics = await store.getSubscriptionAiSkyboxMetrics({
+                    studioId,
+                });
+                const userMetrics = await store.getSubscriptionAiSkyboxMetrics({
+                    ownerId: userId,
+                });
+
+                expect(metrics).toMatchObject({
+                    studioId,
+                    totalSkyboxesInCurrentPeriod: 1,
+                });
+                expect(userMetrics).toMatchObject({
+                    ownerId: userId,
+                    totalSkyboxesInCurrentPeriod: 0,
+                });
+            });
+
+            it('should use the record owner subscription for user records', async () => {
+                generateSkyboxInterface.generateSkybox.mockResolvedValueOnce({
+                    success: true,
+                    skyboxId: 'test-skybox-id',
+                });
+
+                const permissionResult = await policies.grantMarkerPermission({
+                    recordKeyOrRecordName: userId,
+                    userId: userId,
+                    marker: PUBLIC_READ_MARKER,
+                    permission: {
+                        resourceKind: 'ai.skybox',
+                        action: 'create',
+                        expireTimeMs: null,
+                        options: {},
+                        subjectType: 'user',
+                        subjectId: otherUserId,
+                        marker: PUBLIC_READ_MARKER,
+                    },
+                });
+
+                expect(permissionResult).toMatchObject({ success: true });
+
+                const result = await controller.generateSkybox({
+                    prompt: 'test',
+                    userId: otherUserId,
+                    userSubscriptionTier,
+                    recordName: userId,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    skyboxId: 'test-skybox-id',
+                });
+
+                const ownerMetrics = await store.getSubscriptionAiSkyboxMetrics(
+                    {
+                        ownerId: userId,
+                    }
+                );
+                const callerMetrics =
+                    await store.getSubscriptionAiSkyboxMetrics({
+                        ownerId: otherUserId,
+                    });
+
+                expect(ownerMetrics).toMatchObject({
+                    ownerId: userId,
+                    totalSkyboxesInCurrentPeriod: 1,
+                });
+                expect(callerMetrics).toMatchObject({
+                    ownerId: otherUserId,
+                    totalSkyboxesInCurrentPeriod: 0,
+                });
+            });
+
+            it('should allow users granted access to ai.skybox resources', async () => {
+                generateSkyboxInterface.generateSkybox.mockResolvedValueOnce({
+                    success: true,
+                    skyboxId: 'test-skybox-id',
+                });
+
+                const permissionResult = await policies.grantMarkerPermission({
+                    recordKeyOrRecordName: studioId,
+                    userId: userId,
+                    marker: PUBLIC_READ_MARKER,
+                    permission: {
+                        resourceKind: 'ai.skybox',
+                        action: 'create',
+                        expireTimeMs: null,
+                        options: {},
+                        subjectType: 'user',
+                        subjectId: otherUserId,
+                        marker: PUBLIC_READ_MARKER,
+                    },
+                });
+
+                expect(permissionResult).toMatchObject({ success: true });
+
+                const result = await controller.generateSkybox({
+                    prompt: 'test',
+                    userId: otherUserId,
+                    userSubscriptionTier,
+                    recordName: studioId,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    skyboxId: 'test-skybox-id',
+                });
+
+                const metrics = await store.getSubscriptionAiSkyboxMetrics({
+                    studioId,
+                });
+                const callerMetrics =
+                    await store.getSubscriptionAiSkyboxMetrics({
+                        ownerId: otherUserId,
+                    });
+
+                expect(metrics).toMatchObject({
+                    studioId,
+                    totalSkyboxesInCurrentPeriod: 1,
+                });
+                expect(callerMetrics).toMatchObject({
+                    ownerId: otherUserId,
+                    totalSkyboxesInCurrentPeriod: 0,
+                });
+            });
+
+            it('should return not_authorized if the user is not authorized to access the ai.skybox resource', async () => {
+                generateSkyboxInterface.generateSkybox.mockResolvedValueOnce({
+                    success: true,
+                    skyboxId: 'test-skybox-id',
+                });
+
+                const result = await controller.generateSkybox({
+                    prompt: 'test',
+                    userId: unauthorizedUserId,
+                    userSubscriptionTier,
+                    recordName: studioId,
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    recommendedEntitlement: undefined,
+                    reason: {
+                        type: 'missing_permission',
+                        resourceKind: 'ai.skybox',
+                        action: 'create',
+                        resourceId: null,
+                        recordName: studioId,
+                        subjectId: unauthorizedUserId,
+                        subjectType: 'user',
+                    },
+                });
+
+                const callerMetrics =
+                    await store.getSubscriptionAiSkyboxMetrics({
+                        ownerId: unauthorizedUserId,
+                    });
+
+                expect(callerMetrics).toMatchObject({
+                    ownerId: unauthorizedUserId,
+                    totalSkyboxesInCurrentPeriod: 0,
+                });
+
+                expect(
+                    generateSkyboxInterface.generateSkybox
+                ).not.toHaveBeenCalled();
             });
         });
     });
@@ -5542,6 +7460,524 @@ describe('AIController', () => {
                         generateImageInterface.generateImage
                     ).not.toHaveBeenCalled();
                 });
+
+                it('should bill the record owner for images when caller uses recordName', async () => {
+                    const callerId = 'image-billing-caller';
+
+                    await store.saveUser({
+                        id: callerId,
+                        email: 'image-billing-caller@example.com',
+                        phoneNumber: null,
+                        allSessionRevokeTimeMs: null,
+                        currentLoginRequestId: null,
+                    });
+
+                    const callerAccount = unwrap(
+                        await financial.getOrCreateFinancialAccount({
+                            userId: callerId,
+                            ledger: LEDGERS.credits,
+                        })
+                    ).account;
+
+                    unwrap(
+                        await financial.internalTransaction({
+                            transfers: [
+                                {
+                                    debitAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    creditAccountId: callerAccount.id,
+                                    amount: 10000n,
+                                    code: TransferCodes.admin_credit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                            ],
+                        })
+                    );
+
+                    const permissionResult =
+                        await policies.grantMarkerPermission({
+                            recordKeyOrRecordName: userId,
+                            userId,
+                            marker: PUBLIC_READ_MARKER,
+                            permission: {
+                                resourceKind: 'ai.image',
+                                action: 'create',
+                                expireTimeMs: null,
+                                options: {},
+                                subjectType: 'user',
+                                subjectId: callerId,
+                                marker: PUBLIC_READ_MARKER,
+                            },
+                        });
+                    expect(permissionResult).toMatchObject({ success: true });
+
+                    generateImageInterface.generateImage.mockResolvedValueOnce({
+                        success: true,
+                        images: [
+                            {
+                                base64: 'base64',
+                                seed: 123,
+                                mimeType: 'image/png',
+                            },
+                        ],
+                    });
+
+                    const result = await controller.generateImage({
+                        prompt: 'test',
+                        userId: callerId,
+                        userSubscriptionTier,
+                        width: 512,
+                        height: 512,
+                        recordName: userId,
+                    });
+
+                    expect(result.success).toBe(true);
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: account1.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 512n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: callerAccount.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+
+                    const ownerMetrics =
+                        await store.getSubscriptionAiImageMetrics({
+                            ownerId: userId,
+                        });
+                    const callerMetrics =
+                        await store.getSubscriptionAiImageMetrics({
+                            ownerId: callerId,
+                        });
+
+                    expect(ownerMetrics.totalSquarePixelsInCurrentPeriod).toBe(
+                        512
+                    );
+                    expect(callerMetrics.totalSquarePixelsInCurrentPeriod).toBe(
+                        0
+                    );
+                });
+
+                it('should bill the studio for images when a member uses a studio recordName', async () => {
+                    const callerId = 'image-billing-studio-caller';
+                    const studioId = 'image-billing-studio';
+
+                    await store.saveUser({
+                        id: callerId,
+                        email: 'image-billing-studio-caller@example.com',
+                        phoneNumber: null,
+                        allSessionRevokeTimeMs: null,
+                        currentLoginRequestId: null,
+                    });
+
+                    await store.createStudioForUser(
+                        {
+                            id: studioId,
+                            displayName: 'Image Billing Studio',
+                            subscriptionId: 'sub1',
+                            subscriptionStatus: 'active',
+                        },
+                        userId
+                    );
+
+                    await store.addStudioAssignment({
+                        studioId,
+                        userId: callerId,
+                        isPrimaryContact: false,
+                        role: 'member',
+                    });
+
+                    const studioAccount = unwrap(
+                        await financial.getOrCreateFinancialAccount({
+                            studioId,
+                            ledger: LEDGERS.credits,
+                        })
+                    ).account;
+
+                    const callerAccount = unwrap(
+                        await financial.getOrCreateFinancialAccount({
+                            userId: callerId,
+                            ledger: LEDGERS.credits,
+                        })
+                    ).account;
+
+                    unwrap(
+                        await financial.internalTransaction({
+                            transfers: [
+                                {
+                                    debitAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    creditAccountId: studioAccount.id,
+                                    amount: 10000n,
+                                    code: TransferCodes.admin_credit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                                {
+                                    debitAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    creditAccountId: callerAccount.id,
+                                    amount: 10000n,
+                                    code: TransferCodes.admin_credit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                            ],
+                        })
+                    );
+
+                    generateImageInterface.generateImage.mockResolvedValueOnce({
+                        success: true,
+                        images: [
+                            {
+                                base64: 'base64',
+                                seed: 123,
+                                mimeType: 'image/png',
+                            },
+                        ],
+                    });
+
+                    const result = await controller.generateImage({
+                        prompt: 'test',
+                        userId: callerId,
+                        userSubscriptionTier,
+                        width: 512,
+                        height: 512,
+                        recordName: studioId,
+                    });
+
+                    expect(result.success).toBe(true);
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: studioAccount.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 512n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: callerAccount.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+
+                    const studioMetrics =
+                        await store.getSubscriptionAiImageMetrics({
+                            studioId,
+                        });
+                    const callerMetrics =
+                        await store.getSubscriptionAiImageMetrics({
+                            ownerId: callerId,
+                        });
+
+                    expect(studioMetrics.totalSquarePixelsInCurrentPeriod).toBe(
+                        512
+                    );
+                    expect(callerMetrics.totalSquarePixelsInCurrentPeriod).toBe(
+                        0
+                    );
+                });
+            });
+        });
+    });
+
+    describe('generateImage()', () => {
+        describe('record-based authorization', () => {
+            const studioId = 'studio-image-record';
+            const otherUserId = 'other-image-user';
+            const unauthorizedUserId = 'unauthorized-image-user';
+            beforeEach(async () => {
+                store.subscriptionConfiguration = buildSubscriptionConfig(
+                    (config) =>
+                        config
+                            .withUserDefaultFeatures((features) =>
+                                features
+                                    .withAllDefaultFeatures()
+                                    .withAI()
+                                    .withAIImages({
+                                        allowed: true,
+                                        maxSquarePixelsPerRequest: 512,
+                                        maxSquarePixelsPerPeriod: 2048,
+                                    })
+                            )
+                            .addSubscription('sub1', (sub) =>
+                                sub
+                                    .withTier('tier1')
+                                    .withAllDefaultFeatures()
+                                    .withAI()
+                                    .withAIImages({
+                                        allowed: true,
+                                        maxSquarePixelsPerRequest: 512,
+                                        maxSquarePixelsPerPeriod: 2048,
+                                    })
+                            )
+                );
+
+                await store.saveUser({
+                    id: userId,
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+
+                await store.createStudioForUser(
+                    {
+                        id: studioId,
+                        displayName: 'studio',
+                        subscriptionId: 'sub1',
+                        subscriptionStatus: 'active',
+                    },
+                    userId
+                );
+
+                await store.saveUser({
+                    id: otherUserId,
+                    email: 'other@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+
+                await store.saveUser({
+                    id: unauthorizedUserId,
+                    email: 'unauthorized@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+
+                await store.addStudioAssignment({
+                    studioId: studioId,
+                    userId: otherUserId,
+                    isPrimaryContact: false,
+                    role: 'member',
+                });
+            });
+
+            it('should use studio subscription when recordName is a studio record', async () => {
+                generateImageInterface.generateImage.mockResolvedValueOnce({
+                    success: true,
+                    images: [
+                        {
+                            base64: 'base64',
+                            seed: 123,
+                            mimeType: 'image/png',
+                        },
+                    ],
+                });
+
+                const result = await controller.generateImage({
+                    prompt: 'test',
+                    userId,
+                    userSubscriptionTier,
+                    width: 512,
+                    height: 512,
+                    recordName: studioId,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    images: [
+                        {
+                            base64: 'base64',
+                            seed: 123,
+                            mimeType: 'image/png',
+                        },
+                    ],
+                });
+
+                const metrics = await store.getSubscriptionAiImageMetrics({
+                    studioId,
+                });
+                const userMetrics = await store.getSubscriptionAiImageMetrics({
+                    ownerId: userId,
+                });
+
+                expect(metrics).toMatchObject({
+                    studioId,
+                    totalSquarePixelsInCurrentPeriod: 512,
+                });
+                expect(userMetrics).toMatchObject({
+                    ownerId: userId,
+                    totalSquarePixelsInCurrentPeriod: 0,
+                });
+            });
+
+            it('should use the record owner subscription for user records', async () => {
+                generateImageInterface.generateImage.mockResolvedValueOnce({
+                    success: true,
+                    images: [
+                        {
+                            base64: 'base64',
+                            seed: 123,
+                            mimeType: 'image/png',
+                        },
+                    ],
+                });
+
+                const permissionResult = await policies.grantMarkerPermission({
+                    recordKeyOrRecordName: userId,
+                    userId: userId,
+                    marker: PUBLIC_READ_MARKER,
+                    permission: {
+                        resourceKind: 'ai.image',
+                        action: 'create',
+                        expireTimeMs: null,
+                        options: {},
+                        subjectType: 'user',
+                        subjectId: otherUserId,
+                        marker: PUBLIC_READ_MARKER,
+                    },
+                });
+
+                expect(permissionResult).toMatchObject({ success: true });
+
+                const result = await controller.generateImage({
+                    prompt: 'test',
+                    userId: otherUserId,
+                    userSubscriptionTier,
+                    width: 512,
+                    height: 512,
+                    recordName: userId,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    images: [
+                        {
+                            base64: 'base64',
+                            seed: 123,
+                            mimeType: 'image/png',
+                        },
+                    ],
+                });
+
+                const ownerMetrics = await store.getSubscriptionAiImageMetrics({
+                    ownerId: userId,
+                });
+                const callerMetrics = await store.getSubscriptionAiImageMetrics(
+                    {
+                        ownerId: otherUserId,
+                    }
+                );
+
+                expect(ownerMetrics).toMatchObject({
+                    ownerId: userId,
+                    totalSquarePixelsInCurrentPeriod: 512,
+                });
+                expect(callerMetrics).toMatchObject({
+                    ownerId: otherUserId,
+                    totalSquarePixelsInCurrentPeriod: 0,
+                });
+            });
+
+            it('should allow users granted access to ai.image resources', async () => {
+                generateImageInterface.generateImage.mockResolvedValueOnce({
+                    success: true,
+                    images: [
+                        {
+                            base64: 'base64',
+                            seed: 123,
+                            mimeType: 'image/png',
+                        },
+                    ],
+                });
+
+                const permissionResult = await policies.grantMarkerPermission({
+                    recordKeyOrRecordName: studioId,
+                    userId: userId,
+                    marker: PUBLIC_READ_MARKER,
+                    permission: {
+                        resourceKind: 'ai.image',
+                        action: 'create',
+                        expireTimeMs: null,
+                        options: {},
+                        subjectType: 'user',
+                        subjectId: otherUserId,
+                        marker: PUBLIC_READ_MARKER,
+                    },
+                });
+
+                expect(permissionResult).toMatchObject({ success: true });
+
+                const result = await controller.generateImage({
+                    prompt: 'test',
+                    userId: otherUserId,
+                    userSubscriptionTier,
+                    width: 512,
+                    height: 512,
+                    recordName: studioId,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    images: [
+                        {
+                            base64: 'base64',
+                            seed: 123,
+                            mimeType: 'image/png',
+                        },
+                    ],
+                });
+            });
+
+            it('should return not_authorized if the user is not authorized to access the ai.image resource', async () => {
+                generateImageInterface.generateImage.mockResolvedValueOnce({
+                    success: true,
+                    images: [
+                        {
+                            base64: 'base64',
+                            seed: 123,
+                            mimeType: 'image/png',
+                        },
+                    ],
+                });
+
+                const result = await controller.generateImage({
+                    prompt: 'test',
+                    userId: unauthorizedUserId,
+                    userSubscriptionTier,
+                    width: 512,
+                    height: 512,
+                    recordName: studioId,
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    recommendedEntitlement: undefined,
+                    reason: {
+                        type: 'missing_permission',
+                        resourceKind: 'ai.image',
+                        action: 'create',
+                        resourceId: null,
+                        recordName: studioId,
+                        subjectId: unauthorizedUserId,
+                        subjectType: 'user',
+                    },
+                });
+
+                expect(
+                    generateImageInterface.generateImage
+                ).not.toHaveBeenCalled();
             });
         });
     });

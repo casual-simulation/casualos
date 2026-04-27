@@ -494,7 +494,9 @@ export function getProcedureMetadata(
     procedures: Procedures
 ): ProceduresMetadata {
     let metadatas: ProcedureMetadata[] = [];
-    for (let procedure of Object.keys(procedures)) {
+    for (let procedure of Object.keys(procedures).sort((a, b) =>
+        a.localeCompare(b)
+    )) {
         const proc = procedures[procedure];
         metadatas.push({
             name: procedure,

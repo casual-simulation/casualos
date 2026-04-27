@@ -434,15 +434,80 @@ export class AIController {
                 );
             }
 
-            const metrics = await this._metrics.getSubscriptionAiChatMetrics({
+            let metricsFilter: SubscriptionFilter = {
                 ownerId: request.userId,
-            });
+            };
+            let subscriptionType: 'user' | 'studio' = 'user';
+            let billingUserId: string | undefined = request.userId;
+            let billingStudioId: string | undefined = undefined;
+            let metricsRecordUserId: string | undefined = request.userId;
+            let metricsRecordStudioId: string | undefined = undefined;
+
+            if (request.recordName && !this._policies) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'recordName cannot be specified when custom permissions are not supported.',
+                };
+            }
+
+            if (request.recordName && this._policies) {
+                const context =
+                    await this._policies.constructAuthorizationContext({
+                        recordKeyOrRecordName: request.recordName,
+                        userId: request.userId,
+                    });
+
+                if (context.success === false) {
+                    return context;
+                }
+
+                const authResult =
+                    await this._policies.authorizeUserAndInstancesForResources(
+                        context.context,
+                        {
+                            userId: request.userId,
+                            instances: [],
+                            resources: [
+                                {
+                                    resourceKind: 'ai.chat',
+                                    action: 'create',
+                                    resourceId: null,
+                                    markers: [],
+                                },
+                            ],
+                        }
+                    );
+
+                if (authResult.success === false) {
+                    return authResult;
+                }
+
+                if (context.context.recordStudioId) {
+                    billingStudioId = context.context.recordStudioId;
+                    billingUserId = undefined;
+                    metricsFilter = { studioId: billingStudioId };
+                    subscriptionType = 'studio';
+                    metricsRecordStudioId = billingStudioId;
+                    metricsRecordUserId = undefined;
+                } else {
+                    billingUserId = context.context.recordOwnerId;
+                    billingStudioId = undefined;
+                    metricsFilter = { ownerId: billingUserId };
+                    metricsRecordUserId = billingUserId;
+                }
+            }
+
+            const metrics = await this._metrics.getSubscriptionAiChatMetrics(
+                metricsFilter
+            );
             const config = await this._config.getSubscriptionConfiguration();
             const allowedFeatures = getSubscriptionFeatures(
                 config,
                 metrics.subscriptionStatus,
                 metrics.subscriptionId,
-                'user'
+                subscriptionType
             );
 
             if (!allowedFeatures.ai.chat.allowed) {
@@ -530,7 +595,8 @@ export class AIController {
                     : null;
 
             const billing = await billForUsage(this._financial, {
-                userId: request.userId,
+                userId: billingUserId,
+                studioId: billingStudioId,
                 transferCode: TransferCodes.records_usage_fee,
                 billingCode: BillingCodes.ai_chat_tokens,
             });
@@ -591,7 +657,8 @@ export class AIController {
                 );
 
                 await this._metrics.recordChatMetrics({
-                    userId: request.userId,
+                    userId: metricsRecordUserId,
+                    studioId: metricsRecordStudioId,
                     createdAtMs: Date.now(),
                     tokens: adjustedTotalTokens,
                 });
@@ -782,15 +849,80 @@ export class AIController {
                 );
             }
 
-            const metrics = await this._metrics.getSubscriptionAiChatMetrics({
+            let metricsFilter: SubscriptionFilter = {
                 ownerId: request.userId,
-            });
+            };
+            let subscriptionType: 'user' | 'studio' = 'user';
+            let billingUserId: string | undefined = request.userId;
+            let billingStudioId: string | undefined = undefined;
+            let metricsRecordUserId: string | undefined = request.userId;
+            let metricsRecordStudioId: string | undefined = undefined;
+
+            if (request.recordName && !this._policies) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'recordName cannot be specified when custom permissions are not supported.',
+                };
+            }
+
+            if (request.recordName && this._policies) {
+                const context =
+                    await this._policies.constructAuthorizationContext({
+                        recordKeyOrRecordName: request.recordName,
+                        userId: request.userId,
+                    });
+
+                if (context.success === false) {
+                    return context;
+                }
+
+                const authResult =
+                    await this._policies.authorizeUserAndInstancesForResources(
+                        context.context,
+                        {
+                            userId: request.userId,
+                            instances: [],
+                            resources: [
+                                {
+                                    resourceKind: 'ai.chat',
+                                    action: 'create',
+                                    resourceId: null,
+                                    markers: [],
+                                },
+                            ],
+                        }
+                    );
+
+                if (authResult.success === false) {
+                    return authResult;
+                }
+
+                if (context.context.recordStudioId) {
+                    billingStudioId = context.context.recordStudioId;
+                    billingUserId = undefined;
+                    metricsFilter = { studioId: billingStudioId };
+                    subscriptionType = 'studio';
+                    metricsRecordStudioId = billingStudioId;
+                    metricsRecordUserId = undefined;
+                } else {
+                    billingUserId = context.context.recordOwnerId;
+                    billingStudioId = undefined;
+                    metricsFilter = { ownerId: billingUserId };
+                    metricsRecordUserId = billingUserId;
+                }
+            }
+
+            const metrics = await this._metrics.getSubscriptionAiChatMetrics(
+                metricsFilter
+            );
             const config = await this._config.getSubscriptionConfiguration();
             const allowedFeatures = getSubscriptionFeatures(
                 config,
                 metrics.subscriptionStatus,
                 metrics.subscriptionId,
-                'user'
+                subscriptionType
             );
 
             if (!allowedFeatures.ai.chat.allowed) {
@@ -878,7 +1010,8 @@ export class AIController {
                     : null;
 
             const billing = await billForUsage(this._financial, {
-                userId: request.userId,
+                userId: billingUserId,
+                studioId: billingStudioId,
                 transferCode: TransferCodes.records_usage_fee,
                 billingCode: BillingCodes.ai_chat_tokens,
             });
@@ -919,7 +1052,8 @@ export class AIController {
                         model
                     );
                     await this._metrics.recordChatMetrics({
-                        userId: request.userId,
+                        userId: metricsRecordUserId,
+                        studioId: metricsRecordStudioId,
                         createdAtMs: Date.now(),
                         tokens: adjustedTokens,
                     });
@@ -1025,15 +1159,80 @@ export class AIController {
                 }
             }
 
-            const metrics = await this._metrics.getSubscriptionAiSkyboxMetrics({
+            let metricsFilter: SubscriptionFilter = {
                 ownerId: request.userId,
-            });
+            };
+            let subscriptionType: 'user' | 'studio' = 'user';
+            let billingUserId: string | undefined = request.userId;
+            let billingStudioId: string | undefined = undefined;
+            let metricsRecordUserId: string | undefined = request.userId;
+            let metricsRecordStudioId: string | undefined = undefined;
+
+            if (request.recordName && !this._policies) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'recordName cannot be specified when custom permissions are not supported.',
+                };
+            }
+
+            if (request.recordName && this._policies) {
+                const context =
+                    await this._policies.constructAuthorizationContext({
+                        recordKeyOrRecordName: request.recordName,
+                        userId: request.userId,
+                    });
+
+                if (context.success === false) {
+                    return context;
+                }
+
+                const authResult =
+                    await this._policies.authorizeUserAndInstancesForResources(
+                        context.context,
+                        {
+                            userId: request.userId,
+                            instances: [],
+                            resources: [
+                                {
+                                    resourceKind: 'ai.skybox',
+                                    action: 'create',
+                                    resourceId: null,
+                                    markers: [],
+                                },
+                            ],
+                        }
+                    );
+
+                if (authResult.success === false) {
+                    return authResult;
+                }
+
+                if (context.context.recordStudioId) {
+                    billingStudioId = context.context.recordStudioId;
+                    billingUserId = undefined;
+                    metricsFilter = { studioId: billingStudioId };
+                    subscriptionType = 'studio';
+                    metricsRecordStudioId = billingStudioId;
+                    metricsRecordUserId = undefined;
+                } else {
+                    billingUserId = context.context.recordOwnerId;
+                    billingStudioId = undefined;
+                    metricsFilter = { ownerId: billingUserId };
+                    metricsRecordUserId = billingUserId;
+                }
+            }
+
+            const metrics = await this._metrics.getSubscriptionAiSkyboxMetrics(
+                metricsFilter
+            );
             const config = await this._config.getSubscriptionConfiguration();
             const allowedFeatures = getSubscriptionFeatures(
                 config,
                 metrics.subscriptionStatus,
                 metrics.subscriptionId,
-                'user'
+                subscriptionType
             );
 
             if (!allowedFeatures.ai.skyboxes.allowed) {
@@ -1079,7 +1278,8 @@ export class AIController {
                 : null;
 
             const billing = await billForUsage(this._financial, {
-                userId: request.userId,
+                userId: billingUserId,
+                studioId: billingStudioId,
                 transferCode: TransferCodes.records_usage_fee,
                 billingCode: BillingCodes.ai_skybox,
             });
@@ -1126,7 +1326,8 @@ export class AIController {
 
             if (result.value.success === true) {
                 await this._metrics.recordSkyboxMetrics({
-                    userId: request.userId,
+                    userId: metricsRecordUserId,
+                    studioId: metricsRecordStudioId,
                     createdAtMs: Date.now(),
                     skyboxes: 1,
                 });
@@ -1356,15 +1557,80 @@ export class AIController {
 
             const totalSquarePixels = Math.max(width, height) * numberOfImages;
 
-            const metrics = await this._metrics.getSubscriptionAiImageMetrics({
+            let metricsFilter: SubscriptionFilter = {
                 ownerId: request.userId,
-            });
+            };
+            let subscriptionType: 'user' | 'studio' = 'user';
+            let billingUserId: string | undefined = request.userId;
+            let billingStudioId: string | undefined = undefined;
+            let metricsRecordUserId: string | undefined = request.userId;
+            let metricsRecordStudioId: string | undefined = undefined;
+
+            if (request.recordName && !this._policies) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'recordName cannot be specified when custom permissions are not supported.',
+                };
+            }
+
+            if (request.recordName && this._policies) {
+                const context =
+                    await this._policies.constructAuthorizationContext({
+                        recordKeyOrRecordName: request.recordName,
+                        userId: request.userId,
+                    });
+
+                if (context.success === false) {
+                    return context;
+                }
+
+                const authResult =
+                    await this._policies.authorizeUserAndInstancesForResources(
+                        context.context,
+                        {
+                            userId: request.userId,
+                            instances: [],
+                            resources: [
+                                {
+                                    resourceKind: 'ai.image',
+                                    action: 'create',
+                                    resourceId: null,
+                                    markers: [],
+                                },
+                            ],
+                        }
+                    );
+
+                if (authResult.success === false) {
+                    return authResult;
+                }
+
+                if (context.context.recordStudioId) {
+                    billingStudioId = context.context.recordStudioId;
+                    billingUserId = undefined;
+                    metricsFilter = { studioId: billingStudioId };
+                    subscriptionType = 'studio';
+                    metricsRecordStudioId = billingStudioId;
+                    metricsRecordUserId = undefined;
+                } else {
+                    billingUserId = context.context.recordOwnerId;
+                    billingStudioId = undefined;
+                    metricsFilter = { ownerId: billingUserId };
+                    metricsRecordUserId = billingUserId;
+                }
+            }
+
+            const metrics = await this._metrics.getSubscriptionAiImageMetrics(
+                metricsFilter
+            );
             const config = await this._config.getSubscriptionConfiguration();
             const allowedFeatures = getSubscriptionFeatures(
                 config,
                 metrics.subscriptionStatus,
                 metrics.subscriptionId,
-                'user'
+                subscriptionType
             );
 
             if (!allowedFeatures.ai.images.allowed) {
@@ -1422,7 +1688,8 @@ export class AIController {
                 : null;
 
             const billing = await billForUsage(this._financial, {
-                userId: request.userId,
+                userId: billingUserId,
+                studioId: billingStudioId,
                 transferCode: TransferCodes.records_usage_fee,
                 billingCode: BillingCodes.ai_image_pixels,
             });
@@ -1485,7 +1752,8 @@ export class AIController {
             }
 
             await this._metrics.recordImageMetrics({
-                userId: request.userId,
+                userId: metricsRecordUserId,
+                studioId: metricsRecordStudioId,
                 createdAtMs: Date.now(),
                 squarePixels: totalSquarePixels,
             });
@@ -2098,6 +2366,72 @@ export class AIController {
                 });
             }
 
+            let metricsFilter: SubscriptionFilter = {
+                ownerId: request.userId,
+            };
+            let subscriptionType: 'user' | 'studio' = 'user';
+
+            if (request.recordName && !this._policies) {
+                return failure({
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'recordName cannot be specified when custom permissions are not supported.',
+                });
+            }
+
+            if (request.recordName && this._policies) {
+                const context =
+                    await this._policies.constructAuthorizationContext({
+                        recordKeyOrRecordName: request.recordName,
+                        userId: request.userId,
+                    });
+
+                if (context.success === false) {
+                    return failure({
+                        errorCode: context.errorCode,
+                        errorMessage: context.errorMessage,
+                    });
+                }
+
+                const authResult =
+                    await this._policies.authorizeUserAndInstancesForResources(
+                        context.context,
+                        {
+                            userId: request.userId,
+                            instances: [],
+                            resources: [
+                                {
+                                    resourceKind: 'ai.chat',
+                                    action: 'create',
+                                    resourceId: null,
+                                    markers: [],
+                                },
+                            ],
+                        }
+                    );
+
+                if (authResult.success === false) {
+                    return failure({
+                        errorCode: authResult.errorCode,
+                        errorMessage: authResult.errorMessage,
+                        reason: authResult.reason,
+                        recommendedEntitlement:
+                            authResult.recommendedEntitlement,
+                    });
+                }
+
+                if (context.context.recordStudioId) {
+                    metricsFilter = {
+                        studioId: context.context.recordStudioId,
+                    };
+                    subscriptionType = 'studio';
+                } else {
+                    metricsFilter = {
+                        ownerId: context.context.recordOwnerId,
+                    };
+                }
+            }
+
             let allowedModels;
             if (!isSuperUserRole(request.userRole)) {
                 if (
@@ -2133,16 +2467,16 @@ export class AIController {
                 }
 
                 const metrics =
-                    await this._metrics.getSubscriptionAiChatMetrics({
-                        ownerId: request.userId,
-                    });
+                    await this._metrics.getSubscriptionAiChatMetrics(
+                        metricsFilter
+                    );
                 const config =
                     await this._config.getSubscriptionConfiguration();
                 const allowedFeatures = getSubscriptionFeatures(
                     config,
                     metrics.subscriptionStatus,
                     metrics.subscriptionId,
-                    'user'
+                    subscriptionType
                 );
 
                 if (!allowedFeatures.ai.chat.allowed) {
@@ -2235,6 +2569,13 @@ export interface AIChatRequest {
     userSubscriptionTier: string;
 
     /**
+     * The name of the record to check subscription and permissions against.
+     * If provided, the subscription of the record owner/studio is used instead of the user's subscription.
+     * The user must be authorized to use ai.chat resources in this record.
+     */
+    recordName?: string | null;
+
+    /**
      * The temperature of the request.
      */
     temperature?: number;
@@ -2319,6 +2660,13 @@ export interface AIGenerateSkyboxRequest {
      * Options specific to blockade labs.
      */
     blockadeLabs?: AIGenerateSkyboxInterfaceBlockadeLabsOptions;
+
+    /**
+     * The name of the record to check subscription and permissions against.
+     * If provided, the subscription of the record owner/studio is used instead of the user's subscription.
+     * The user must be authorized to use ai.skybox resources in this record.
+     */
+    recordName?: string | null;
 }
 
 export type AIGenerateSkyboxResponse =
@@ -2392,6 +2740,13 @@ export interface AIGenerateImageRequest {
      * Should be null if the user is not logged in or if they do not have a subscription.
      */
     userSubscriptionTier: string;
+
+    /**
+     * The name of the record to check subscription and permissions against.
+     * If provided, the subscription of the record owner/studio is used instead of the user's subscription.
+     * The user must be authorized to use ai.image resources in this record.
+     */
+    recordName?: string | null;
 
     /**
      * The description of what the generated image(s) should look like.
@@ -2737,6 +3092,13 @@ export interface ListChatModelsRequest {
      * Null if the user doesn't have a subscription.
      */
     userSubscriptionTier: string | null;
+
+    /**
+     * The name of the record to check subscription and permissions against.
+     * If provided, the subscription of the record owner/studio is used instead of the user's subscription.
+     * The user must be authorized to use ai.chat resources in this record.
+     */
+    recordName?: string | null;
 }
 
 /**

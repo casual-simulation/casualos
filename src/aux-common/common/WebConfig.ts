@@ -183,6 +183,7 @@ export interface WebConfig {
      *
      * Possible options are:
      * - "enter join code"
+     * - "temp"
      * - "static inst"
      * - "public inst"
      * - "private inst"
@@ -229,6 +230,16 @@ export interface WebConfig {
      * The URL of the logo to display in the loading screen.
      */
     logoUrl?: string | null;
+
+    /**
+     * The title that should be used for the player page.
+     */
+    pageTitle?: string | null;
+
+    /**
+     * The description that should be used for the player page.
+     */
+    pageDescription?: string | null;
 
     /**
      * The title of the logo to display in the loading screen.
@@ -359,6 +370,22 @@ export const WEB_CONFIG_SCHEMA = z.object({
         .describe(
             'The title text that accompanies the logo in the loading screen.'
         ),
+
+    pageTitle: z
+        .string()
+        .min(1)
+        .max(128)
+        .nullable()
+        .optional()
+        .describe('The title that should be used for the player page.'),
+
+    pageDescription: z
+        .string()
+        .min(1)
+        .max(512)
+        .nullable()
+        .optional()
+        .describe('The description that should be used for the player page.'),
 
     icons: z
         .object({

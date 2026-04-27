@@ -1272,7 +1272,10 @@ export class RecordsController {
             let loomFeatures: StudioLoomFeaturesConfiguration = {
                 allowed: false,
             };
-            let humeFeatures: AIHumeFeaturesConfiguration = {
+            let humeFeatures: Omit<
+                AIHumeFeaturesConfiguration,
+                'creditFeePerAccessToken'
+            > = {
                 allowed: false,
             };
             let loomConfig: LoomConfig = undefined;
@@ -1305,7 +1308,7 @@ export class RecordsController {
                     );
                 }
 
-                humeFeatures = getHumeAiFeatures(
+                const humeAiFeatures = getHumeAiFeatures(
                     config,
                     studio.subscriptionStatus,
                     studio.subscriptionId,
@@ -1313,6 +1316,11 @@ export class RecordsController {
                     studio.subscriptionPeriodStartMs,
                     studio.subscriptionPeriodEndMs
                 );
+                if (humeAiFeatures) {
+                    humeFeatures = {
+                        allowed: humeAiFeatures.allowed,
+                    };
+                }
 
                 if (humeFeatures.allowed) {
                     humeConfig = await this._store.getStudioHumeConfig(
@@ -1833,17 +1841,29 @@ export class RecordsController {
     async getPlayerWebManifest(
         hostname: string
     ): Promise<Result<WebManifest, SimpleError>> {
+        console.log(
+            `[RecordsController] [getPlayerWebManifest] Attempting to get web manifest for hostname: ${hostname}`
+        );
         const customDomain = await this._store.getVerifiedCustomDomainByName(
             hostname
         );
 
         if (customDomain?.studio.playerWebManifest) {
+            console.log(
+                `[RecordsController] [getPlayerWebManifest] Found manifest.`
+            );
             return success(customDomain.studio.playerWebManifest);
         }
 
+        console.log(
+            `[RecordsController] [getPlayerWebManifest] No manifest found. Returning default manifest.`
+        );
         const manifest = await this._config.getPlayerWebManifest();
 
         if (!manifest) {
+            console.log(
+                `[RecordsController] [getPlayerWebManifest] No default manifest found in configuration.`
+            );
             return failure({
                 errorCode: 'not_found',
                 errorMessage: 'No web manifest found.',
@@ -3045,7 +3065,7 @@ export interface StudioData {
     /**
      * The hume features that this studio has access to.
      */
-    humeFeatures: AIHumeFeaturesConfiguration;
+    humeFeatures: Omit<AIHumeFeaturesConfiguration, 'creditFeePerAccessToken'>;
 
     /**
      * The store features that this studio has access to.

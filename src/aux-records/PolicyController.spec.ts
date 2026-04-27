@@ -3715,6 +3715,9 @@ describe('PolicyController', () => {
             ['loom'],
             ['ai.sloyd'],
             ['ai.hume'],
+            ['ai.chat'],
+            ['ai.image'],
+            ['ai.skybox'],
             ['webhook'],
             ['notification'],
             ['package'],
@@ -4993,6 +4996,9 @@ describe('PolicyController', () => {
             ['loom', [['create', 'resourceId']]],
             ['ai.sloyd', [['create', 'resourceId']]],
             ['ai.hume', [['create', 'resourceId']]],
+            ['ai.chat', [['create', 'resourceId']]],
+            ['ai.image', [['create', 'resourceId']]],
+            ['ai.skybox', [['create', 'resourceId']]],
             [
                 'webhook',
                 [
@@ -5267,6 +5273,9 @@ describe('PolicyController', () => {
                 ],
             ],
             ['loom', [['create', 'resourceId']]],
+            ['ai.chat', [['create', 'resourceId']]],
+            ['ai.image', [['create', 'resourceId']]],
+            ['ai.skybox', [['create', 'resourceId']]],
             [
                 'marker',
                 [
@@ -6790,7 +6799,10 @@ describe('PolicyController', () => {
                 ['package', ['package', 'package.version']],
                 ['permissions', ['role', 'marker']],
                 ['webhook', ['webhook']],
-                ['ai', ['ai.sloyd', 'ai.hume']],
+                [
+                    'ai',
+                    ['ai.sloyd', 'ai.hume', 'ai.chat', 'ai.image', 'ai.skybox'],
+                ],
                 ['search', ['search']],
                 ['database', ['database']],
             ];
@@ -8328,6 +8340,89 @@ describe('PolicyController', () => {
 
     describe('authorizeUserAndInstancesForResources()', () => {
         const marker = 'marker';
+
+        it('should authorize ai.chat create for the record owner', async () => {
+            const context = await controller.constructAuthorizationContext({
+                recordKeyOrRecordName: recordName,
+                userId: ownerId,
+            });
+
+            if (context.success === false) {
+                throw new Error('Failed to construct authorization context.');
+            }
+
+            const result =
+                await controller.authorizeUserAndInstancesForResources(
+                    context.context,
+                    {
+                        userId: ownerId,
+                        instances: [],
+                        resources: [
+                            {
+                                resourceKind: 'ai.chat',
+                                action: 'create',
+                                resourceId: null,
+                                markers: [],
+                            },
+                        ],
+                    }
+                );
+
+            expect(result).toEqual({
+                success: true,
+                recordName,
+                results: [
+                    {
+                        success: true,
+                        recordName,
+                        resourceKind: 'ai.chat',
+                        action: 'create',
+                        resourceId: null,
+                        markers: [],
+                        user: {
+                            success: true,
+                            recordName,
+                            subjectType: 'user',
+                            subjectId: ownerId,
+                            permission: {
+                                id: null,
+                                recordName,
+                                userId: null,
+                                subjectType: 'role',
+                                subjectId: ADMIN_ROLE_NAME,
+                                resourceKind: null,
+                                action: null,
+                                marker: PUBLIC_READ_MARKER,
+                                options: {},
+                                expireTimeMs: null,
+                            },
+                            explanation: 'User is the owner of the record.',
+                        },
+                        results: [
+                            {
+                                success: true,
+                                recordName,
+                                subjectType: 'user',
+                                subjectId: ownerId,
+                                permission: {
+                                    id: null,
+                                    recordName,
+                                    userId: null,
+                                    subjectType: 'role',
+                                    subjectId: ADMIN_ROLE_NAME,
+                                    resourceKind: null,
+                                    action: null,
+                                    marker: PUBLIC_READ_MARKER,
+                                    options: {},
+                                    expireTimeMs: null,
+                                },
+                                explanation: 'User is the owner of the record.',
+                            },
+                        ],
+                    },
+                ],
+            });
+        });
 
         it('should be able to authorize a user and inst for a resource', async () => {
             await store.assignSubjectRole(recordName, '/myInst', 'inst', {

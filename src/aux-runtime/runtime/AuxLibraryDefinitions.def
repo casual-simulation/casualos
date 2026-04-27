@@ -11157,6 +11157,12 @@ export interface AIUrlContent {
  */
 export interface AIChatOptions extends RecordActionOptions {
     /**
+     * The name of the record that should be used.
+     * If omitted, then the ID of the user will be used.
+     */
+    recordName?: string | null;
+
+    /**
      * The model that should be used.
      *
      * If not specified, then a default will be used.
@@ -11198,12 +11204,32 @@ export interface AIChatOptions extends RecordActionOptions {
 }
 
 /**
+ * Defines an interface that represents options for {@link ai.listChatModels}.
+ *
+ * @dochash types/ai
+ * @docname AIListChatModelsOptions
+ */
+export interface AIListChatModelsOptions extends RecordActionOptions {
+    /**
+     * The name of the record that should be used.
+     * If omitted, then the user's record is used.
+     */
+    recordName?: string | null;
+}
+
+/**
  * Defines an interface that represents options for {@link ai.generateSkybox-string}.
  *
  * @dochash types/ai
  * @docname AIGenerateSkyboxOptions
  */
 export interface AIGenerateSkyboxOptions extends RecordActionOptions {
+    /**
+     * The name of the record that should be used.
+     * If omitted, then the ID of the user will be used.
+     */
+    recordName?: string | null;
+
     /**
      * Options that are specific to blockade-labs.
      */
@@ -11282,27 +11308,29 @@ export interface AIGenerateSkyboxResult {
  */
 export interface AIGenerateImageOptions {
     /**
-     * The description of what the generated image(s) should look like.
+     * The name of the record that should be used.
+     * If omitted, then the ID of the user will be used.
+     */
+    recordName?: string | null;
+
+    /**
+     * The prompt that should be used to generate the image.
      */
     prompt: string;
-
     /**
-     * The description of what the generated image(s) should not look like.
+     * The negative prompt that should be used to guide what should not be included in the image.
      */
     negativePrompt?: string;
-
     /**
-     * The model that should be used to generate the image(s).
+     * The model that should be used to generate the image.
      */
     model?: string;
-
     /**
-     * The desired width of the image(s) in pixels.
+     * The width of the generated image(s) in pixels.
      */
     width?: number;
-
     /**
-     * The desired height of the image(s) in pixels.
+     * The height of the generated image(s) in pixels.
      */
     height?: number;
 
@@ -12522,6 +12550,22 @@ export interface SharedDocument extends SubscriptionLike {
     onClientError: Observable<ClientError>;
 
     /**
+     * The events that are emitted when remote clients connect or disconnect from the document.
+     *
+     * When subscribed to, this observable will emit an event whenever a remote client connects or disconnects from the document.
+     * Additionally, the current remote clients will be emitted when the subscription is first made.
+     */
+    readonly remoteClients: Observable<RemoteClientEvent>;
+
+    /**
+     * The events that are emitted when remote clients connect or disconnect from the document.
+     *
+     * When subscribed to, this observable will emit an event whenever a remote client connects or disconnects from the document.
+     * Notably, the current remote clients will NOT be emitted when the subscription is first made, so this can be used to only listen for future client connections and disconnections.
+     */
+    readonly remoteClientsRaw: Observable<RemoteClientEvent>;
+
+    /**
      * Tells the document to connect to its backing store.
      */
     connect(): void;
@@ -12578,6 +12622,59 @@ export interface SharedDocument extends SubscriptionLike {
      */
     applyUpdates(updates: string[]): void;
 }
+
+/**
+ * Information about a connection.
+ * 
+ * @dochash types/documents
+ * @docid ConnectionInfo
+ * @docname ConnectionInfo
+ */
+export interface ConnectionInfo {
+    /**
+     * The ID of the connection.
+     */
+    connectionId: string;
+
+    /**
+     * The ID of the session.
+     */
+    sessionId: string | null;
+
+    /**
+     * The ID of the user that is associated with the connection.
+     */
+    userId: string | null;
+}
+
+/**
+ * Defines an event that is emitted when a remote client connects or disconnects from a shared document.
+ *
+ * @dochash types/documents
+ * @docid RemoteClientEvent
+ * @docname RemoteClientEvent
+ */
+export interface RemoteClientEvent {
+    /**
+     * The type of the event.
+     *
+     * "client_connected" is emitted when a new client connects to the document.
+     * "client_disconnected" is emitted when a client disconnects from the document.
+     */
+    type: 'client_connected' | 'client_disconnected';
+
+    /**
+     * The connection info of the client that connected or disconnected.
+     */
+    client: ConnectionInfo;
+
+    /**
+     * Whether this event is for the current client.
+     * This will be true when `client.connectionId` is the same as the `configBot.id` and false otherwise.
+     */
+    isSelf: boolean;
+}
+
 
 export type SharedType = SharedMap | SharedArray | SharedText;
 
@@ -13921,7 +14018,9 @@ interface Ai {
      * @dochash actions/ai
      * @docname ai.listChatModels
      */
-    listChatModels(options?: RecordActionOptions): Promise<ListedChatModel[]>;
+    listChatModels(
+        options?: AIListChatModelsOptions
+    ): Promise<ListedChatModel[]>;
 
     /**
      * Generates a [skybox image](https://en.wikipedia.org/wiki/Skybox_%28video_games%29) from the given prompt.
@@ -19310,6 +19409,76 @@ export interface JSONAccountBalance {
     currency: string;
 }
 
+
+/**
+ * Defines the subscription information for a user or studio.
+ * This includes information about the subscription period, the subscription tier, and the credit expiration policy.
+ * 
+ * @dochash types/records/extra
+ * @docname SubscriptionInfo
+ * @docid SubscriptionInfo
+ */
+export interface SubscriptionInfo {
+    /**
+     * The unix time in miliseconds that the user/studio's subscription period started at.
+     * Null if the subscription does not have a start date.
+     */
+    periodStartMs: number | null;
+
+    /**
+     * The unix time in miliseconds that the user/studio's subscription period ends at.
+     * Null if the subscription never ends.
+     */
+    periodEndMs: number | null;
+
+    /**
+     * Whether the user has an active subscription.
+     * If false, then the user had a subscription, but it is not currently active.
+     */
+    hasActiveSubscription: boolean;
+
+    /**
+     * The ID of the subscription that the user has.
+     */
+    subscriptionId: string;
+
+    /**
+     * The tier of the subscription that the user has.
+     */
+    subscriptionTier: string;
+
+    /**
+     * The configuration for credit expiration for the user/studio.
+     *
+     * - `never-expire` indicates that credits never expire.
+     * - `expire-after-period` indicates that credits expire after the subscription period ends or if the subscription is not active.
+     */
+    creditExpiration: 'never-expire' | 'expire-after-period';
+}
+
+/**
+ * Defines an interface that represents the options for getting account balances.
+ *
+ * @dochash types/records/extra
+ * @docname GetBalancesActionOptions
+ */
+export interface GetAccountBalancesActionOptions extends RecordActionOptions {
+    /**
+     * The ID of the user whose balances should be retrieved.
+     */
+    userId?: string;
+
+    /**
+     * The ID of the studio whose balances should be retrieved.
+     */
+    studioId?: string;
+
+    /**
+     * The ID of the contract whose balances should be retrieved.
+     */
+    contractId?: string;
+}
+
 /**
  * Defines an interface for contract record input.
  */
@@ -19393,6 +19562,55 @@ export interface APIInvoiceContractRequest {
     note?: string;
     payoutDestination: InvoicePayoutDestination;
 }
+
+
+/**
+ * Defines an interface that represents the options for purchasing credits for an account.
+ *
+ * @dochash types/records/extra
+ * @docname PurchaseCreditsRequest
+ * @docid PurchaseCreditsRequest
+ */
+export interface APIPurchaseCreditsRequest {
+    /**
+     * The ID of the user that the credits should be purchased for.
+     * Currently, credits can only be purchased for yourself.
+     */
+    targetUserId?: string;
+
+    /**
+     * The ID of the studio that the credits should be purchased for.
+     * Currently, only studio admins can purchase credits.
+     */
+    targetStudioId?: string;
+
+    /**
+     * The URL that the user should be sent to if they cancel the purchase.
+     */
+    returnUrl: string;
+
+    /**
+     * The URL that the user should be sent to if the purchase completes successfully.
+     */
+    successUrl: string;
+}
+
+/**
+ * Defines an interface that represents the result of a request to purchase credits for an account.
+ * 
+ * @dochash types/records/extra
+ * @docname PurchaseCreditsResult
+ * @docid PurchaseCreditsResult
+ */
+export type PurchaseCreditsResult = GenericResult<
+    {
+        /**
+         * The URL that the user should be directed to to complete the purchase.
+         */
+        url?: string;
+    },
+    SimpleError
+>;
 
 /**
  * The destination for the payout of an invoice.
@@ -19692,9 +19910,65 @@ interface Xp {
      * @dochash actions/xp
      * @docname xp.getAccountBalances
      */
-    getAccountBalances(options?: RecordActionOptions): Promise<GenericResult<{
-        [key: string]: JSONAccountBalance;
+    getAccountBalances(options?: GetAccountBalancesActionOptions): Promise<GenericResult<{
+        /**
+         * The USD account balance.
+         *
+         * This will be undefined if the user does not have a USD account.
+         */
+        usd: JSONAccountBalance | undefined;
+    
+        /**
+         * The credits account balance.
+         *
+         * This will be undefined if the user does not have a credits account.
+         */
+        credits: JSONAccountBalance | undefined;
+
+        /**
+         * The information for the subscription the user has.
+         * Undefined if the user does not have a subscription.
+         */
+        subscription?: SubscriptionInfo;
     }, SimpleError>>;
+
+    /**
+     * Creates a new checkout session that can be used to purchase credits for an account. Returns a promise which resolves with the URL that the user should be redirected to in order to complete the purchase.
+     *
+     * @param options The options for the request.
+     * @returns A promise that resolves with the account balances.
+     *
+     * @example Purchase credits for the current user.
+     * const purchaseResult = await xp.purchaseCredits({
+     *   targetUserId: authBot.id,
+     *   returnUrl: configBot.tags.url,
+     *   successUrl: configBot.tags.url
+     * });
+     * if (purchaseResult.success) {
+     *   os.goToURL(purchaseResult.url);
+     * } else {
+     *   os.toast("Failed to create checkout session")
+     * }
+     *
+     * @example Purchase credits for a studio.
+     * const purchaseResult = await xp.purchaseCredits({
+     *   targetUserId: "studioId",
+     *   returnUrl: configBot.tags.url,
+     *   successUrl: configBot.tags.url
+     * });
+     * if (purchaseResult.success) {
+     *   os.goToURL(purchaseResult.url);
+     * } else {
+     *   os.toast("Failed to create checkout session")
+     * }
+     *
+     * @dochash actions/xp
+     * @docname xp.purchaseCredits
+     */
+    purchaseCredits(
+        request: APIPurchaseCreditsRequest,
+        options?: RecordActionOptions
+    ): Promise<PurchaseCreditsResult>;
 }
 
 interface Perf {

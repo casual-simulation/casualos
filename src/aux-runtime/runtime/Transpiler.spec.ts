@@ -1898,6 +1898,38 @@ describe('Transpiler', () => {
                 expect(transpiler.transpile(`let abc = 123 as any;`)).toBe(
                     `let abc = 123;`
                 );
+
+                expect(
+                    transpiler.transpile(
+                        `let abc = value.map(v => v as number);`
+                    )
+                ).toBe(`let abc = value.map(v => v);`);
+
+                expect(
+                    transpiler.transpile(
+                        `let abc = value as unknown as string;`
+                    )
+                ).toBe(`let abc = value;`);
+
+                expect(
+                    transpiler.transpile(
+                        `let abc = func(value as unknown) as string;`
+                    )
+                ).toBe(`let abc = func(value);`);
+
+                expect(
+                    transpiler.transpile(`
+    const extensions1 = orderBy(
+      extensionsToDownload.map((ext) => ext.extension as any),
+      [(ext) => ext.meta.id],
+      ["asc"]
+    ) as UploadedExtension[];`)
+                ).toBe(`
+    const extensions1 = orderBy(
+      extensionsToDownload.map((ext) => ext.extension),
+      [(ext) => ext.meta.id],
+      ["asc"]
+    );`);
             });
 
             it('should remove implements expressions from class declarations and expressions', () => {
@@ -2372,6 +2404,24 @@ describe('Transpiler', () => {
                 expect(transpiler.transpile(`const abc = someValue[0]!;`)).toBe(
                     `const abc = someValue[0];`
                 );
+
+                expect(
+                    transpiler.transpile(`const abc = arr.map(v => v!);`)
+                ).toBe(`const abc = arr.map(v => v);`);
+
+                expect(
+                    transpiler.transpile(`
+    const extensions1 = orderBy(
+      extensionsToDownload.map((ext) => ext.extension!),
+      [(ext) => ext.meta.id],
+      ["asc"]
+    ) as UploadedExtension[];`)
+                ).toBe(`
+    const extensions1 = orderBy(
+      extensionsToDownload.map((ext) => ext.extension),
+      [(ext) => ext.meta.id],
+      ["asc"]
+    );`);
             });
 
             it('should preserve null-coalescing operators', () => {
@@ -2502,6 +2552,46 @@ describe('Transpiler', () => {
                 ).toBe(
                     `const result = values.map((v) => ((({ a: v.a, b: v.b }))));`
                 );
+            });
+
+            it('should support the override keyword', () => {
+                const transpiler = new Transpiler();
+
+                expect(
+                    transpiler.transpile(
+                        `class ABC extends DEF { override myMethod(): void {} }`
+                    )
+                ).toBe(`class ABC extends DEF { myMethod() {} }`);
+
+                expect(
+                    transpiler.transpile(
+                        `class ABC extends DEF { override async myMethod(): void {} }`
+                    )
+                ).toBe(`class ABC extends DEF { async myMethod() {} }`);
+
+                expect(
+                    transpiler.transpile(
+                        `class ABC extends DEF { public override async myMethod(): void {} }`
+                    )
+                ).toBe(`class ABC extends DEF { async myMethod() {} }`);
+
+                expect(
+                    transpiler.transpile(
+                        `class ABC extends DEF { override *myMethod() {} }`
+                    )
+                ).toBe(`class ABC extends DEF { *myMethod() {} }`);
+
+                expect(
+                    transpiler.transpile(
+                        `class ABC extends DEF { override get value() { return 123; } }`
+                    )
+                ).toBe(`class ABC extends DEF { get value() { return 123; } }`);
+
+                expect(
+                    transpiler.transpile(
+                        `class ABC extends DEF { public override get value() { return 123; } }`
+                    )
+                ).toBe(`class ABC extends DEF { get value() { return 123; } }`);
             });
         });
 

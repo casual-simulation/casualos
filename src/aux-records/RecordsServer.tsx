@@ -629,11 +629,19 @@ export class RecordsServer {
                     const config = await this._records.getWebConfig(
                         context.url.hostname
                     );
+                    const requestedComId =
+                        context.httpRequest.query?.comId ?? null;
 
                     const postApp: JSX.Element[] = [];
                     const icons: JSX.Element[] = [];
+                    let pageTitle = 'CasualOS';
+                    let pageDescription = 'Casual Open Simulation for the Web';
 
                     if (isSuccess(config) && config.value) {
+                        pageTitle = config.value.pageTitle ?? pageTitle;
+                        pageDescription =
+                            config.value.pageDescription ?? pageDescription;
+
                         postApp.push(
                             <script
                                 type="application/json"
@@ -739,7 +747,27 @@ export class RecordsServer {
                         }
                     }
 
+                    if (requestedComId) {
+                        const playerConfigResult =
+                            await this._records.getPlayerConfig(requestedComId);
+
+                        if (playerConfigResult.success) {
+                            const playerConfig =
+                                playerConfigResult.playerConfig ?? {};
+                            pageTitle = playerConfig.pageTitle ?? pageTitle;
+                            pageDescription =
+                                playerConfig.pageDescription ?? pageDescription;
+                        }
+                    }
+
                     const result = success<ViewParams>({
+                        title: <>{pageTitle}</>,
+                        description: (
+                            <meta
+                                name="description"
+                                content={pageDescription}
+                            />
+                        ),
                         icons: <>{icons}</>,
                         postApp: <>{postApp}</>,
                     });
@@ -4343,6 +4371,8 @@ export class RecordsServer {
                     z.object({
                         model: z.string().nonempty().optional().nullable(),
                         messages: z.array(AI_CHAT_MESSAGE_SCHEMA).min(1),
+                        recordName:
+                            RECORD_NAME_VALIDATION.optional().nullable(),
                         instances:
                             INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                         temperature: z
@@ -4373,7 +4403,7 @@ export class RecordsServer {
                 )
                 .handler(
                     async (
-                        { model, messages, instances, ...options },
+                        { model, messages, instances, recordName, ...options },
                         context
                     ) => {
                         if (!this._aiController) {
@@ -4396,6 +4426,7 @@ export class RecordsServer {
                             ...options,
                             model,
                             messages: messages as AIChatMessage[],
+                            recordName,
                             userId: sessionKeyValidation.userId,
                             userSubscriptionTier:
                                 sessionKeyValidation.subscriptionTier,
@@ -4412,6 +4443,8 @@ export class RecordsServer {
                     z.object({
                         model: z.string().nonempty().optional().nullable(),
                         messages: z.array(AI_CHAT_MESSAGE_SCHEMA).min(1),
+                        recordName:
+                            RECORD_NAME_VALIDATION.optional().nullable(),
                         instances:
                             INSTANCES_ARRAY_VALIDATION.optional().nullable(),
                         temperature: z
@@ -4440,40 +4473,51 @@ export class RecordsServer {
                             .nullable(),
                     })
                 )
-                .handler(async ({ model, messages, ...options }, context) => {
-                    if (!this._aiController) {
-                        return AI_NOT_SUPPORTED_RESULT;
-                    }
-
-                    const sessionKeyValidation = await this._validateSessionKey(
-                        context.sessionKey
-                    );
-                    if (sessionKeyValidation.success === false) {
-                        if (
-                            sessionKeyValidation.errorCode === 'no_session_key'
-                        ) {
-                            return NOT_LOGGED_IN_RESULT;
+                .handler(
+                    async (
+                        { model, messages, recordName, ...options },
+                        context
+                    ) => {
+                        if (!this._aiController) {
+                            return AI_NOT_SUPPORTED_RESULT;
                         }
-                        return sessionKeyValidation;
+
+                        const sessionKeyValidation =
+                            await this._validateSessionKey(context.sessionKey);
+                        if (sessionKeyValidation.success === false) {
+                            if (
+                                sessionKeyValidation.errorCode ===
+                                'no_session_key'
+                            ) {
+                                return NOT_LOGGED_IN_RESULT;
+                            }
+                            return sessionKeyValidation;
+                        }
+
+                        const result = this._aiController.chatStream({
+                            ...options,
+                            model,
+                            messages: messages as AIChatMessage[],
+                            recordName,
+                            userId: sessionKeyValidation.userId,
+                            userSubscriptionTier:
+                                sessionKeyValidation.subscriptionTier,
+                        });
+
+                        return result;
                     }
-
-                    const result = this._aiController.chatStream({
-                        ...options,
-                        model,
-                        messages: messages as AIChatMessage[],
-                        userId: sessionKeyValidation.userId,
-                        userSubscriptionTier:
-                            sessionKeyValidation.subscriptionTier,
-                    });
-
-                    return result;
-                }),
+                ),
 
             aiListChatModels: procedure()
                 .origins('api')
                 .http('GET', '/api/v2/ai/chat/models')
-                .inputs(z.object({}))
-                .handler(async (_, context) => {
+                .inputs(
+                    z.object({
+                        recordName:
+                            RECORD_NAME_VALIDATION.optional().nullable(),
+                    })
+                )
+                .handler(async ({ recordName }, context) => {
                     if (!this._aiController) {
                         return AI_NOT_SUPPORTED_RESULT;
                     }
@@ -4495,6 +4539,7 @@ export class RecordsServer {
                         userSubscriptionTier:
                             sessionKeyValidation.subscriptionTier,
                         userRole: sessionKeyValidation.role,
+                        recordName,
                     });
 
                     return genericResult(result);
@@ -4506,6 +4551,8 @@ export class RecordsServer {
                 .inputs(
                     z.object({
                         prompt: z.string().nonempty().max(600),
+                        recordName:
+                            RECORD_NAME_VALIDATION.optional().nullable(),
                         negativePrompt: z
                             .string()
                             .nonempty()
@@ -4529,7 +4576,13 @@ export class RecordsServer {
                 )
                 .handler(
                     async (
-                        { prompt, negativePrompt, instances, blockadeLabs },
+                        {
+                            prompt,
+                            negativePrompt,
+                            instances,
+                            blockadeLabs,
+                            recordName,
+                        },
                         context
                     ) => {
                         if (!this._aiController) {
@@ -4552,6 +4605,7 @@ export class RecordsServer {
                             prompt,
                             negativePrompt,
                             blockadeLabs,
+                            recordName,
                             userId: sessionKeyValidation.userId,
                             userSubscriptionTier:
                                 sessionKeyValidation.subscriptionTier,
@@ -4618,6 +4672,8 @@ export class RecordsServer {
                                         : 'prompt must be a string.',
                             })
                             .nonempty('prompt must not be empty'),
+                        recordName:
+                            RECORD_NAME_VALIDATION.optional().nullable(),
                         model: z
                             .string({
                                 error: (issue) =>
@@ -4674,6 +4730,7 @@ export class RecordsServer {
                             clipGuidancePreset,
                             stylePreset,
                             instances,
+                            recordName,
                         },
                         context
                     ) => {
@@ -4696,6 +4753,7 @@ export class RecordsServer {
                         const result = await this._aiController.generateImage({
                             model,
                             prompt,
+                            recordName,
                             negativePrompt,
                             width,
                             height,
@@ -5686,6 +5744,7 @@ export class RecordsServer {
                                 ? {
                                       usd: balance.usd?.toJSON(),
                                       credits: balance.credits?.toJSON(),
+                                      subscription: balance.subscription,
                                   }
                                 : undefined
                         )
@@ -5759,6 +5818,7 @@ export class RecordsServer {
                             intervalCost: s.intervalCost,
                             currency: s.currency,
                             featureList: s.featureList,
+                            creditExpiration: s.creditExpiration,
                         })),
                         purchasableSubscriptions:
                             result.purchasableSubscriptions.map((s) => ({
@@ -6808,6 +6868,66 @@ export class RecordsServer {
                                     currency: contract.currency,
                                     expectedCost: contract.expectedCost,
                                 },
+                                returnUrl,
+                                successUrl,
+                                instances,
+                            });
+
+                        return genericResult(result);
+                    }
+                ),
+
+            purchaseCredits: procedure()
+                .origins('self')
+                .http('POST', '/api/v2/credits/purchase')
+                .inputs(
+                    z.object({
+                        targetUserId: z
+                            .string()
+                            .nonempty()
+                            .optional()
+                            .nullable(),
+                        targetStudioId: z
+                            .string()
+                            .nonempty()
+                            .optional()
+                            .nullable(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
+                        returnUrl: z.url(),
+                        successUrl: z.url(),
+                    })
+                )
+                .handler(
+                    async (
+                        {
+                            targetUserId,
+                            targetStudioId,
+                            instances,
+                            returnUrl,
+                            successUrl,
+                        },
+                        context
+                    ) => {
+                        const sessionKeyValidation =
+                            await this._validateSessionKey(context.sessionKey);
+
+                        if (sessionKeyValidation.success === false) {
+                            if (
+                                sessionKeyValidation.errorCode ===
+                                'no_session_key'
+                            ) {
+                                return NOT_LOGGED_IN_RESULT;
+                            }
+                            return sessionKeyValidation;
+                        }
+
+                        const result =
+                            await this._subscriptions.purchaseCredits({
+                                userId: sessionKeyValidation.userId,
+                                targetUserId,
+                                targetStudioId,
+
                                 returnUrl,
                                 successUrl,
                                 instances,
@@ -8104,7 +8224,7 @@ export class RecordsServer {
         return {
             statusCode: 204,
             headers: {
-                'Access-Control-Allow-Methods': 'POST, PUT, OPTIONS',
+                'Access-Control-Allow-Methods': 'POST, PUT, DELETE, OPTIONS',
                 'Access-Control-Allow-Headers': 'Content-Type, Authorization',
             },
         };
@@ -8143,6 +8263,7 @@ export class RecordsServer {
             fileSha256Hex,
             fileByteLength,
             fileMimeType,
+            fileExtension,
             fileDescription,
             markers,
             instances,
@@ -8171,11 +8292,12 @@ export class RecordsServer {
                     'fileByteLength is required and must be a number.',
             } as const;
         }
-        if (!fileMimeType || typeof fileMimeType !== 'string') {
+        if (!fileMimeType && !fileExtension) {
             return {
                 success: false,
                 errorCode: 'unacceptable_request',
-                errorMessage: 'fileMimeType is required and must be a string.',
+                errorMessage:
+                    'Either fileMimeType or fileExtension is required.',
             } as const;
         }
         if (!!fileDescription && typeof fileDescription !== 'string') {
@@ -8199,6 +8321,7 @@ export class RecordsServer {
             fileSha256Hex,
             fileByteLength,
             fileMimeType,
+            fileExtension,
             fileDescription,
             headers: {},
             markers,
@@ -8597,6 +8720,7 @@ export class RecordsServer {
                 intervalCost: s.intervalCost,
                 currency: s.currency,
                 featureList: s.featureList,
+                creditExpiration: s.creditExpiration,
             })),
             purchasableSubscriptions: result.purchasableSubscriptions.map(
                 (s) => ({

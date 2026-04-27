@@ -162,6 +162,12 @@ export interface ListedChatModel {
  */
 export interface AIChatOptions extends RecordActionOptions {
     /**
+     * The name of the record that should be used.
+     * If omitted, then the ID of the user will be used.
+     */
+    recordName?: string | null;
+
+    /**
      * The model that should be used.
      *
      * If not specified, then a default will be used.
@@ -193,6 +199,20 @@ export interface AIChatOptions extends RecordActionOptions {
      * Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
      */
     frequencyPenalty?: number;
+}
+
+/**
+ * Defines options for {@link ai.listChatModels}.
+ *
+ * @dochash types/ai
+ * @docname AIListChatModelsOptions
+ */
+export interface AIListChatModelsOptions extends RecordActionOptions {
+    /**
+     * The name of the record that should be used.
+     * If omitted, then the user's record is used.
+     */
+    recordName?: string | null;
 }
 
 /**
@@ -231,6 +251,12 @@ export interface AIGenerateSkyboxAction extends AsyncAction {
  * @docname AIGenerateSkyboxOptions
  */
 export interface AIGenerateSkyboxOptions extends RecordActionOptions {
+    /**
+     * The name of the record that should be used.
+     * If omitted, then the ID of the user will be used.
+     */
+    recordName?: string | null;
+
     /**
      * Options that are specific to blockade-labs.
      */
@@ -281,6 +307,12 @@ export interface AIGenerateImageAction
  * @docname AIGenerateImageOptions
  */
 export interface AIGenerateImageOptions {
+    /**
+     * The name of the record that should be used.
+     * If omitted, then the ID of the user will be used.
+     */
+    recordName?: string | null;
+
     /**
      * The description of what the generated image(s) should look like.
      */
@@ -438,6 +470,29 @@ export interface RecordActionOptions {
      * The HTTP endpoint that the request should interface with.
      */
     endpoint?: string;
+}
+
+/**
+ * Defines an interface that represents the options for getting account balances.
+ *
+ * @dochash types/records/extra
+ * @docname GetBalancesActionOptions
+ */
+export interface GetAccountBalancesActionOptions extends RecordActionOptions {
+    /**
+     * The ID of the user whose balances should be retrieved.
+     */
+    userId?: string;
+
+    /**
+     * The ID of the studio whose balances should be retrieved.
+     */
+    studioId?: string;
+
+    /**
+     * The ID of the contract whose balances should be retrieved.
+     */
+    contractId?: string;
 }
 
 /**
@@ -809,6 +864,13 @@ export interface RecordFileAction extends RecordsAction {
      * The MIME type of the uploaded file.
      */
     mimeType?: string;
+
+    /**
+     * The file extension to use for the uploaded file.
+     * If specified, this extension will be used instead of deriving one from the MIME type.
+     * May include the leading dot (e.g. '.spz', '.png') or omit it (e.g. 'spz', 'png').Should include the leading dot (e.g. '.spz', '.png').
+     */
+    fileExtension?: string;
 
     /**
      * The options for the action.
@@ -1825,13 +1887,22 @@ export function aiChatStream(
  * @param taskId The ID of the async task.
  */
 export function aiListChatModels(
-    options?: RecordActionOptions,
+    options?: AIListChatModelsOptions,
     taskId?: number | string
 ): RecordsCallProcedureAction {
+    const hasRecordName = Object.prototype.hasOwnProperty.call(
+        options ?? {},
+        'recordName'
+    );
+
     return recordsCallProcedure(
         {
             aiListChatModels: {
-                input: {},
+                input: hasRecordName
+                    ? {
+                          recordName: options.recordName,
+                      }
+                    : {},
             },
         },
         options ?? {},
@@ -2864,7 +2935,7 @@ export type xpContractStatus = 'open' | 'draft' | 'closed';
  * @param data The data to store.
  * @param description The description of the file.
  * @param mimeType The MIME type of the file.
- * @param markers The markers to associate with the file.
+ * @param fileExtension The file extension to use instead of deriving one from the MIME type.
  * @param options The options that should be used for the action.
  */
 export function recordFile(
@@ -2873,7 +2944,8 @@ export function recordFile(
     description: string,
     mimeType: string,
     options: RecordFileActionOptions,
-    taskId?: number | string
+    taskId?: number | string,
+    fileExtension?: string
 ): RecordFileAction {
     return {
         type: 'record_file',
@@ -2881,6 +2953,7 @@ export function recordFile(
         data,
         description,
         mimeType,
+        fileExtension,
         options,
         taskId,
     };

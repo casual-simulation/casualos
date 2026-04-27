@@ -27,10 +27,14 @@ import type { TestServices } from '../TestUtils';
 import {
     checkAccounts,
     checkBillingTotals,
+    checkTransfers,
     createTestControllers,
     createTestSubConfiguration,
 } from '../TestUtils';
-import type { FinancialPeriodicBillingJob } from './FinancialProcessor';
+import type {
+    FinancialAutomatedSweepJob,
+    FinancialPeriodicBillingJob,
+} from './FinancialProcessor';
 import { FinancialProcessor } from './FinancialProcessor';
 import {
     ACCOUNT_IDS,
@@ -39,7 +43,7 @@ import {
     LEDGERS,
     TransferCodes,
 } from './FinancialInterface';
-import type { Account } from 'tigerbeetle-node';
+import { TransferFlags, type Account } from 'tigerbeetle-node';
 import { MemoryNotificationRecordsStore } from '../notifications';
 
 console.log = jest.fn();
@@ -1929,6 +1933,297 @@ describe('FinancialProcessor', () => {
                     ]);
                 });
             });
+        });
+    });
+
+    describe('financial-automated-sweep', () => {
+        beforeEach(async () => {
+            // Seed some revenue credit balance
+            unwrap(
+                await services.financialController.internalTransaction({
+                    transfers: [
+                        {
+                            // 1USD = 1,000,000 credits
+                            amount: 10n,
+                            debitAccountId: ACCOUNT_IDS.assets_cash,
+                            creditAccountId: ACCOUNT_IDS.liquidity_usd,
+                            code: TransferCodes.admin_credit,
+                            currency: 'usd',
+                        },
+                        {
+                            // 1USD = 1,000,000 credits
+                            amount: 1_150_000n, // 1,150,000 credits
+                            debitAccountId: ACCOUNT_IDS.liquidity_credits,
+                            creditAccountId: ACCOUNT_IDS.credit_expiration,
+                            code: TransferCodes.admin_credit,
+                            currency: 'credits',
+                        },
+                    ],
+                })
+            );
+        });
+
+        it('should sweep from the given account to the given account', async () => {
+            const job: FinancialAutomatedSweepJob = {
+                type: 'financial-automated-sweep',
+                sweeps: [
+                    {
+                        code: TransferCodes.revenue_credit_sweep,
+                        currency: 'credits',
+                        debitAccountId: ACCOUNT_IDS.credit_expiration,
+                        creditAccountId:
+                            ACCOUNT_IDS.revenue_records_usage_credits,
+                    },
+                ],
+            };
+
+            const result = await processor.process(job);
+            expect(result).toEqual(success());
+
+            await checkAccounts(services.financialInterface, [
+                {
+                    id: ACCOUNT_IDS.credit_expiration,
+                    credits_pending: 0n,
+                    credits_posted: 1_150_000n,
+                    debits_pending: 0n,
+                    debits_posted: 1_150_000n,
+                },
+                {
+                    id: ACCOUNT_IDS.revenue_records_usage_credits,
+                    credits_posted: 1_150_000n,
+                    credits_pending: 0n,
+                    debits_posted: 0n,
+                    debits_pending: 0n,
+                },
+            ]);
+        });
+
+        it('should sweep between multiple accounts', async () => {
+            const userId = 'user1';
+            let account: Account;
+
+            await services.store.saveUser({
+                id: userId,
+                allSessionRevokeTimeMs: null,
+                email: 'user1@example.com',
+                phoneNumber: null,
+                currentLoginRequestId: null,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                subscriptionPeriodStartMs: 0,
+                subscriptionPeriodEndMs: 123,
+            });
+
+            const userAccount = unwrap(
+                await services.financialController.getOrCreateFinancialAccount({
+                    userId,
+                    ledger: LEDGERS.credits,
+                })
+            );
+            account = userAccount.account;
+
+            unwrap(
+                await services.financialController.internalTransaction({
+                    transfers: [
+                        {
+                            // 1USD = 1,000,000 credits
+                            transferId: 999n,
+                            amount: 1_000_000n,
+                            debitAccountId: ACCOUNT_IDS.liquidity_credits,
+                            creditAccountId: account.id,
+                            code: TransferCodes.admin_credit,
+                            currency: CurrencyCodes.credits,
+                        },
+                    ],
+                })
+            );
+
+            const job: FinancialAutomatedSweepJob = {
+                type: 'financial-automated-sweep',
+                sweeps: [
+                    {
+                        code: TransferCodes.credit_expiration,
+                        currency: 'credits',
+                        debitAccountId: account.id,
+                        creditAccountId: ACCOUNT_IDS.credit_expiration,
+                    },
+                    {
+                        code: TransferCodes.revenue_credit_sweep,
+                        currency: 'credits',
+                        debitAccountId: ACCOUNT_IDS.credit_expiration,
+                        creditAccountId:
+                            ACCOUNT_IDS.revenue_records_usage_credits,
+                    },
+                ],
+            };
+
+            const result = await processor.process(job);
+            expect(result).toEqual(success());
+
+            await checkAccounts(services.financialInterface, [
+                {
+                    id: account.id,
+                    credits_pending: 0n,
+                    credits_posted: 1_000_000n,
+                    debits_pending: 0n,
+                    debits_posted: 1_000_000n,
+                },
+                {
+                    id: ACCOUNT_IDS.credit_expiration,
+                    credits_pending: 0n,
+                    credits_posted: 2_150_000n,
+                    debits_pending: 0n,
+                    debits_posted: 2_150_000n,
+                },
+                {
+                    id: ACCOUNT_IDS.revenue_records_usage_credits,
+                    credits_posted: 2_150_000n,
+                    credits_pending: 0n,
+                    debits_posted: 0n,
+                    debits_pending: 0n,
+                },
+            ]);
+
+            checkTransfers(
+                await services.financialInterface.lookupTransfers([7n, 8n]),
+                [
+                    {
+                        id: 7n,
+                        amount: 1_000_000n,
+                        debit_account_id: account.id,
+                        credit_account_id: ACCOUNT_IDS.credit_expiration,
+                        code: TransferCodes.credit_expiration,
+                        ledger: LEDGERS.credits,
+                        flags:
+                            TransferFlags.balancing_debit |
+                            TransferFlags.linked,
+                    },
+                    {
+                        id: 8n,
+                        amount: 2_150_000n,
+                        debit_account_id: ACCOUNT_IDS.credit_expiration,
+                        credit_account_id:
+                            ACCOUNT_IDS.revenue_records_usage_credits,
+                        code: TransferCodes.revenue_credit_sweep,
+                        ledger: LEDGERS.credits,
+                        flags: TransferFlags.balancing_debit,
+                    },
+                ]
+            );
+        });
+
+        it('should perform sweeps in the correct order', async () => {
+            const userId = 'user1';
+            let account: Account;
+
+            await services.store.saveUser({
+                id: userId,
+                allSessionRevokeTimeMs: null,
+                email: 'user1@example.com',
+                phoneNumber: null,
+                currentLoginRequestId: null,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                subscriptionPeriodStartMs: 0,
+                subscriptionPeriodEndMs: 123,
+            });
+
+            const userAccount = unwrap(
+                await services.financialController.getOrCreateFinancialAccount({
+                    userId,
+                    ledger: LEDGERS.credits,
+                })
+            );
+            account = userAccount.account;
+
+            unwrap(
+                await services.financialController.internalTransaction({
+                    transfers: [
+                        {
+                            transferId: 999n,
+                            // 1USD = 1,000,000 credits
+                            amount: 1_000_000n,
+                            debitAccountId: ACCOUNT_IDS.liquidity_credits,
+                            creditAccountId: account.id,
+                            code: TransferCodes.admin_credit,
+                            currency: CurrencyCodes.credits,
+                        },
+                    ],
+                })
+            );
+
+            const job: FinancialAutomatedSweepJob = {
+                type: 'financial-automated-sweep',
+                sweeps: [
+                    {
+                        code: TransferCodes.credit_expiration,
+                        currency: 'credits',
+                        debitAccountId: account.id,
+                        creditAccountId:
+                            ACCOUNT_IDS.revenue_records_usage_credits,
+                    },
+                    {
+                        code: TransferCodes.admin_credit,
+                        currency: 'credits',
+                        debitAccountId: ACCOUNT_IDS.credit_expiration,
+                        creditAccountId: account.id,
+                    },
+                ],
+            };
+
+            const result = await processor.process(job);
+            expect(result).toEqual(success());
+
+            await checkAccounts(services.financialInterface, [
+                {
+                    id: account.id,
+                    credits_pending: 0n,
+                    credits_posted: 2_150_000n,
+                    debits_pending: 0n,
+                    debits_posted: 1_000_000n,
+                },
+                {
+                    id: ACCOUNT_IDS.credit_expiration,
+                    credits_pending: 0n,
+                    credits_posted: 1_150_000n,
+                    debits_pending: 0n,
+                    debits_posted: 1_150_000n,
+                },
+                {
+                    id: ACCOUNT_IDS.revenue_records_usage_credits,
+                    credits_posted: 1_000_000n,
+                    credits_pending: 0n,
+                    debits_posted: 0n,
+                    debits_pending: 0n,
+                },
+            ]);
+
+            checkTransfers(
+                await services.financialInterface.lookupTransfers([7n, 8n]),
+                [
+                    {
+                        id: 7n,
+                        amount: 1_000_000n,
+                        debit_account_id: account.id,
+                        credit_account_id:
+                            ACCOUNT_IDS.revenue_records_usage_credits,
+                        code: TransferCodes.credit_expiration,
+                        ledger: LEDGERS.credits,
+                        flags:
+                            TransferFlags.balancing_debit |
+                            TransferFlags.linked,
+                    },
+                    {
+                        id: 8n,
+                        amount: 1_150_000n,
+                        debit_account_id: ACCOUNT_IDS.credit_expiration,
+                        credit_account_id: account.id,
+                        code: TransferCodes.admin_credit,
+                        ledger: LEDGERS.credits,
+                        flags: TransferFlags.balancing_debit,
+                    },
+                ]
+            );
         });
     });
 });

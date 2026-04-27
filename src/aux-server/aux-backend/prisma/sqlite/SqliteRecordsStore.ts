@@ -50,6 +50,7 @@ import type {
 } from '../generated-sqlite';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 import type z from 'zod';
+import { WEB_MANIFEST_SCHEMA } from '@casual-simulation/aux-common/common/WebManifest';
 
 const TRACE_NAME = 'SqliteRecordsStore';
 
@@ -828,6 +829,10 @@ export class SqliteRecordsStore implements RecordsStore {
             playerConfig: zodParseConfig(
                 studio.playerConfig,
                 COM_ID_PLAYER_CONFIG
+            ),
+            playerWebManifest: zodParseConfig(
+                studio.playerWebManifest,
+                WEB_MANIFEST_SCHEMA
             ),
             stripeAccountId: studio.stripeAccountId,
             stripeAccountStatus:

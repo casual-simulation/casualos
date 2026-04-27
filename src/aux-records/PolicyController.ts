@@ -114,6 +114,9 @@ const ALLOWED_STUDIO_MEMBER_RESOURCES: [ResourceKinds, ActionKinds[]][] = [
         ],
     ],
     ['loom', ['create']],
+    ['ai.chat', ['create']],
+    ['ai.image', ['create']],
+    ['ai.skybox', ['create']],
     ['webhook', ['read', 'create', 'delete', 'update', 'list', 'run']],
     ['package', ['read', 'create', 'delete', 'update', 'list']],
     ['package.version', ['read', 'create', 'delete', 'update', 'list', 'run']],
@@ -352,7 +355,9 @@ export class PolicyController {
             }
         }
 
-        if (request.userId) {
+        if (request.userId === ownerId) {
+            userPrivacyFeatures = recordOwnerPrivacyFeatures;
+        } else if (request.userId) {
             userPrivacyFeatures = await this._policies.getUserPrivacyFeatures(
                 request.userId
             );
@@ -3999,7 +4004,13 @@ function getEntitlementFeatureForAction(
         resourceKind === 'database'
     ) {
         return resourceKind;
-    } else if (resourceKind === 'ai.hume' || resourceKind === 'ai.sloyd') {
+    } else if (
+        resourceKind === 'ai.hume' ||
+        resourceKind === 'ai.sloyd' ||
+        resourceKind === 'ai.chat' ||
+        resourceKind === 'ai.image' ||
+        resourceKind === 'ai.skybox'
+    ) {
         return 'ai';
     } else if (resourceKind === 'marker' || resourceKind === 'role') {
         return 'permissions';
