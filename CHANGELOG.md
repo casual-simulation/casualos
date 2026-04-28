@@ -1,8 +1,8 @@
 # CasualOS Changelog
 
-## V4.2.3
+## V4.2.4
 
-#### Date: 4/27/2026
+#### Date: TBD
 
 ### :boom: Breaking Changes
 
@@ -37,6 +37,10 @@
         );
         // Notice the spacing between the <div> and <span> tags
         ```
+
+## V4.2.3
+
+#### Date: 4/27/2026
 
 ### :rocket: Features
 
