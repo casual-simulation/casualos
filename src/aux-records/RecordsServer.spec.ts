@@ -1058,6 +1058,15 @@ describe('RecordsServer', () => {
     }
 
     describe('GET /api/v2/procedures', () => {
+        function sortProceduresForSnapshot(body: any) {
+            return {
+                ...body,
+                procedures: [...body.procedures].sort((a, b) =>
+                    a.name.localeCompare(b.name)
+                ),
+            };
+        }
+
         it('should return the list of procedures', async () => {
             const result = await server.handleHttpRequest(
                 httpGet('/api/v2/procedures', defaultHeaders)
@@ -1072,7 +1081,7 @@ describe('RecordsServer', () => {
                 headers: corsHeaders(defaultHeaders.origin),
             });
 
-            expect(body).toMatchSnapshot();
+            expect(sortProceduresForSnapshot(body)).toMatchSnapshot();
         });
 
         it('should support procedures', async () => {
@@ -1089,7 +1098,7 @@ describe('RecordsServer', () => {
                 headers: corsHeaders(defaultHeaders.origin),
             });
 
-            expect(body).toMatchSnapshot();
+            expect(sortProceduresForSnapshot(body)).toMatchSnapshot();
         });
 
         it('should include the recordName input schema for aiListChatModels', async () => {
