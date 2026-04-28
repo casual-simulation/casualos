@@ -16,11 +16,11 @@ Object {
     Object {
       "addedNodes": Array [
         Object {
-          "__id": "6",
+          "__id": "0",
           "attributes": Array [],
           "childNodes": Array [
             Object {
-              "__id": "7",
+              "__id": "1",
               "attributes": Array [
                 Object {
                   "name": "value",
@@ -54,11 +54,11 @@ Object {
         "attributes": Array [],
         "childNodes": Array [
           Object {
-            "__id": "6",
+            "__id": "0",
             "attributes": Array [],
             "childNodes": Array [
               Object {
-                "__id": "7",
+                "__id": "1",
                 "attributes": Array [
                   Object {
                     "name": "value",
@@ -102,7 +102,7 @@ Object {
       "listenerName": undefined,
       "oldValue": "",
       "target": Object {
-        "__id": "7",
+        "__id": "1",
         "attributes": Array [
           Object {
             "name": "value",
@@ -125,11 +125,11 @@ Object {
     Object {
       "addedNodes": Array [
         Object {
-          "__id": "4",
+          "__id": "0",
           "attributes": Array [],
           "childNodes": Array [
             Object {
-              "__id": "5",
+              "__id": "1",
               "data": "Hello",
               "nodeType": 3,
             },
@@ -153,11 +153,11 @@ Object {
         "attributes": Array [],
         "childNodes": Array [
           Object {
-            "__id": "4",
+            "__id": "0",
             "attributes": Array [],
             "childNodes": Array [
               Object {
-                "__id": "5",
+                "__id": "1",
                 "data": "Hello",
                 "nodeType": 3,
               },
@@ -187,11 +187,11 @@ Object {
     Object {
       "addedNodes": Array [
         Object {
-          "__id": "2",
+          "__id": "0",
           "attributes": Array [],
           "childNodes": Array [
             Object {
-              "__id": "3",
+              "__id": "1",
               "data": "Hello",
               "nodeType": 3,
             },
@@ -215,11 +215,11 @@ Object {
         "attributes": Array [],
         "childNodes": Array [
           Object {
-            "__id": "2",
+            "__id": "0",
             "attributes": Array [],
             "childNodes": Array [
               Object {
-                "__id": "3",
+                "__id": "1",
                 "data": "Hello",
                 "nodeType": 3,
               },

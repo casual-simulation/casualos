@@ -1,8 +1,46 @@
 # CasualOS Changelog
 
+## V4.2.4
+
+#### Date: 4/28/2026
+
+### :boom: Breaking Changes
+
+-   Changed how whitespace is handled in JSX expressions by default.
+
+    -   Previously, whitespace was preserved as much as possible. This meant that all spaces and newlines which were in the JSX expression were preserved in the JSX output. It also meant that formatting JSX could change the output.
+    -   Now, whitespace is removed unless explicitly added. This means that formatting will no longer change the JSX output. Additionally, this behavior matches the whitespace behavior of other JSX compilers (React, Babel, etc.).
+    -   If you want to preserve the previous behavior, you can add the `"jsx-preserve-whitespace";` directive at the start of the script(s) you want JSX whitespace preservation on.
+    -   Here's an example of the changed behavior:
+
+        ```typescript
+        let jsx = (
+            <div>
+                <span>Hello</span>
+                <span>World</span>
+            </div>
+        );
+
+        // Previously, the output would be like this:
+        let originalOutput = (
+            <div>
+                {' '}
+                <span>Hello</span> <span>World</span>{' '}
+            </div>
+        );
+
+        // Now, the output is like this:
+        let newOutput = (
+            <div>
+                <span>Hello</span> <span>World</span>
+            </div>
+        );
+        // Notice the spacing between the <div> and <span> tags
+        ```
+
 ## V4.2.3
 
-#### Date: 4/20/2026
+#### Date: 4/27/2026
 
 ### :rocket: Features
 
@@ -22,6 +60,7 @@
 -   Added the `ai.chat`, `ai.image`, and `ai.skybox` policy resource kinds with `create` permissions.
 -   Improved `xp.getAccountBalances(options?)` to accept one of `userId`, `studioId`, or `contractId` in the `options` parameter object.
 -   Added the `temp` BIOS option to the player and studio configuration UI, and updated temp insts to use in-memory-only partitions with no persistence across refreshes.
+-   Added support for configuring the initial player page title and description in server deployments, including comId-specific overrides for link previews and other server-rendered metadata.
 -   Added support for configuring credit expiration.
     -   By default, credits never expire.
     -   Credit expiration can be configured via the `SERVER_CONFIG.subscriptions.subscriptions[i].creditExpiration` key, and can be set to one of the following options:
