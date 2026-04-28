@@ -4,6 +4,40 @@
 
 #### Date: TBD
 
+### :boom: Breaking Changes
+
+-   Changed how whitespace is handled in JSX expressions by default.
+
+    -   Previously, whitespace was preserved as much as possible. This meant that all spaces and newlines which were in the JSX expression were preserved in the JSX output. It also meant that formatting JSX could change the output.
+    -   Now, whitespace is removed unless explicitly added. This means that formatting will no longer change the JSX output. Additionally, this behavior matches the whitespace behavior of other JSX compilers (React, Babel, etc.).
+    -   If you want to preserve the previous behavior, you can add the `"jsx-preserve-whitespace";` directive at the start of the script(s) you want JSX whitespace preservation on.
+    -   Here's an example of the changed behavior:
+
+        ```typescript
+        let jsx = (
+            <div>
+                <span>Hello</span>
+                <span>World</span>
+            </div>
+        );
+
+        // Previously, the output would be like this:
+        let originalOutput = (
+            <div>
+                {' '}
+                <span>Hello</span> <span>World</span>{' '}
+            </div>
+        );
+
+        // Now, the output is like this:
+        let newOutput = (
+            <div>
+                <span>Hello</span> <span>World</span>
+            </div>
+        );
+        // Notice the spacing between the <div> and <span> tags
+        ```
+
 ### :rocket: Features
 
 -   Added support for specifying a custom file extension when recording files via `os.recordFile()`.
