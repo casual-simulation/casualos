@@ -150,6 +150,7 @@
     -   Instead of `.otherTag`, now you can use `./otherTag`
     -   Instead of `:parent.tag`, now you can use `../parent/tag`
 -   Updated the [`typesense`](https://typesense.org/) library to v3.0.5.
+-   Added support for AI chat prompt caching via `enableCaching` in `ai.chat()` and `ai.stream.chat()` options, including forwarding to Claude/Anthropic requests using prompt cache control.
 
 ### :bug: Bug Fixes
 

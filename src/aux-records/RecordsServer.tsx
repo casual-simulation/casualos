@@ -4394,6 +4394,7 @@ export class RecordsServer {
                             .max(2)
                             .optional()
                             .nullable(),
+                        enableCaching: z.boolean().optional().nullable(),
                         stopWords: z
                             .array(z.string())
                             .max(4)
@@ -4466,6 +4467,7 @@ export class RecordsServer {
                             .max(2)
                             .optional()
                             .nullable(),
+                        enableCaching: z.boolean().optional().nullable(),
                         stopWords: z
                             .array(z.string())
                             .max(4)
