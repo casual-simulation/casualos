@@ -104,7 +104,10 @@ export class TigerBeetleFinancialInterface implements FinancialInterface {
         offset: bigint
     ): AccountFilter {
         if (offset === 0n) {
-            return filter;
+            return {
+                ...filter,
+                limit: this._normalizeLimitForTigerBeetle(filter.limit),
+            };
         }
 
         return {
@@ -123,7 +126,17 @@ export class TigerBeetleFinancialInterface implements FinancialInterface {
                 filter.user_data_32 !== 0
                     ? filter.user_data_32 + Number(offset % 2n ** 32n)
                     : 0,
+            limit: this._normalizeLimitForTigerBeetle(filter.limit),
         };
+    }
+
+    /**
+     * Converts limit = 0 (our "no limit" sentinel) to UINT32_MAX before
+     * handing the filter to TigerBeetle, which treats limit = 0 as
+     * "return 0 results" rather than "no limit."
+     */
+    private _normalizeLimitForTigerBeetle(limit: number): number {
+        return limit === 0 ? 4294967295 : limit;
     }
 
     private _mapQueryFilter(filter: QueryFilter, offset: bigint): QueryFilter {

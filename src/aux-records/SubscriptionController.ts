@@ -790,6 +790,39 @@ export class SubscriptionController {
             a.timestamp < b.timestamp ? -1 : a.timestamp > b.timestamp ? 1 : 0
         );
 
+        const balanceHistoryResult =
+            await this._financialController.listBalanceHistory(
+                request.accountId,
+                {
+                    minTimeMs: request.minTimeMs,
+                    maxTimeMs,
+                    limit: request.limit ?? undefined,
+                }
+            );
+
+        if (isFailure(balanceHistoryResult)) {
+            return balanceHistoryResult;
+        }
+
+        const balanceByTimestamp = new Map<bigint, string>();
+        for (const balance of balanceHistoryResult.value) {
+            const accountAtTime: Account = {
+                ...account,
+                credits_pending: balance.credits_pending,
+                credits_posted: balance.credits_posted,
+                debits_pending: balance.debits_pending,
+                debits_posted: balance.debits_posted,
+                timestamp: balance.timestamp,
+            };
+            balanceByTimestamp.set(
+                balance.timestamp,
+                this._financialController
+                    .convertToAccountBalance(accountAtTime)
+                    .freeCreditBalance()
+                    .toString()
+            );
+        }
+
         const descriptions = new Map<bigint, string>();
         const getDescription = async (accountId: bigint): Promise<string> => {
             const existing = descriptions.get(accountId);
@@ -822,9 +855,21 @@ export class SubscriptionController {
             return description;
         };
 
+        const resolvedPendingIds = new Set<bigint>();
+        for (const t of transfers) {
+            const isResolutionTransfer =
+                (t.flags & TransferFlags.post_pending_transfer) !== 0 ||
+                (t.flags & TransferFlags.void_pending_transfer) !== 0;
+            if (isResolutionTransfer && t.pending_id !== 0n) {
+                resolvedPendingIds.add(t.pending_id);
+            }
+        }
+
         const listedTransfers: ListedTransfer[] = await Promise.all(
             transfers.map(async (transfer) => {
-                const pending = (transfer.flags & TransferFlags.pending) !== 0;
+                const pending =
+                    (transfer.flags & TransferFlags.pending) !== 0 &&
+                    !resolvedPendingIds.has(transfer.id);
                 const transactionId = transfer.user_data_128.toString();
 
                 return {
@@ -847,7 +892,7 @@ export class SubscriptionController {
                     timeMs: Number(transfer.timestamp / 1000000n),
                     pending,
                     pendingTimeoutMs: pending ? transfer.timeout * 1000 : null,
-                    balance: null as string | null,
+                    balance: balanceByTimestamp.get(transfer.timestamp) ?? null,
                     description: charactarizeTransfer(transfer),
                 };
             })

@@ -200,6 +200,7 @@ import {
     TransferCodes,
     USD_DISPLAY_FACTOR,
 } from './financial';
+import { TransferFlags } from 'tigerbeetle-node';
 import { PurchasableItemRecordsController } from './purchasable-items/PurchasableItemRecordsController';
 import type { PurchasableItemRecordsStore } from './purchasable-items/PurchasableItemRecordsStore';
 import { MemoryPurchasableItemRecordsStore } from './purchasable-items/MemoryPurchasableItemRecordsStore';
@@ -1830,7 +1831,7 @@ describe('RecordsServer', () => {
                         timeMs: Number(transfer.timestamp / 1000000n),
                         pending: false,
                         pendingTimeoutMs: null as number | null,
-                        balance: null as string | null,
+                        balance: expect.any(String),
                         description: 'Admin credit from Stripe',
                     })),
                 },
@@ -1909,7 +1910,7 @@ describe('RecordsServer', () => {
                             timeMs: expect.any(Number),
                             pending: false,
                             pendingTimeoutMs: null,
-                            balance: null,
+                            balance: expect.any(String),
                             description: 'Admin credit from Credits',
                         },
                     ],
@@ -1988,13 +1989,73 @@ describe('RecordsServer', () => {
                             timeMs: expect.any(Number),
                             pending: false,
                             pendingTimeoutMs: null,
-                            balance: null,
+                            balance: expect.any(String),
                             description: 'Admin credit from Cash',
                         },
                     ],
                 },
                 headers: accountCorsHeaders,
             });
+        });
+
+        it('should mark a pending transfer as not pending once it has been posted', async () => {
+            const { account } = unwrap(
+                await financialController.getOrCreateFinancialAccount({
+                    ledger: LEDGERS.usd,
+                    userId,
+                })
+            );
+
+            // Create a pending transfer
+            const txResult = unwrap(
+                await financialController.internalTransaction({
+                    transfers: [
+                        {
+                            amount: 100,
+                            code: TransferCodes.admin_credit,
+                            creditAccountId: account.id,
+                            debitAccountId: ACCOUNT_IDS.assets_stripe,
+                            currency: 'usd',
+                            pending: true,
+                            timeoutSeconds: 300,
+                        },
+                    ],
+                })
+            );
+
+            // Post (complete) the pending transfer so it is no longer pending
+            unwrap(
+                await financialController.completePendingTransfers({
+                    transfers: txResult.transferIds,
+                    flags: TransferFlags.post_pending_transfer,
+                })
+            );
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/transfers?accountId=${encodeURIComponent(
+                        account.id.toString()
+                    )}&minTimeMs=0`,
+                    authenticatedHeaders
+                )
+            );
+
+            const body = await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: expect.objectContaining({
+                    success: true,
+                }),
+                headers: accountCorsHeaders,
+            });
+
+            // The original pending transfer should be resolved (pending === false)
+            // because the companion post transfer is in the same result set.
+            const pendingTransfer = (body as any)?.transfers?.find(
+                (t: any) =>
+                    t.amount === '100' && t.code === TransferCodes.admin_credit
+            );
+            expect(pendingTransfer).toBeDefined();
+            expect(pendingTransfer.pending).toBe(false);
         });
 
         it('should apply the limit filter', async () => {
@@ -2070,7 +2131,7 @@ describe('RecordsServer', () => {
                             timeMs: expect.any(Number),
                             pending: false,
                             pendingTimeoutMs: null,
-                            balance: null,
+                            balance: expect.any(String),
                             description: 'Admin credit from Stripe',
                         },
                     ],

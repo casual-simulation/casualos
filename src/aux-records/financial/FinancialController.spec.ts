@@ -1253,6 +1253,22 @@ describe('FinancialController', () => {
                 },
             ]);
         });
+
+        it('should use no limit when limit is omitted', async () => {
+            const getTransfersSpy = jest.spyOn(
+                financialInterface,
+                'getAccountTransfers'
+            );
+
+            unwrap(await controller.listTransfers(account1Id));
+
+            expect(getTransfersSpy).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    account_id: BigInt(account1Id),
+                    limit: 0,
+                })
+            );
+        });
     });
 
     describe('internalTransaction()', () => {

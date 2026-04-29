@@ -53,7 +53,12 @@ import {
     USD_DISPLAY_FACTOR,
     type FinancialInterface,
 } from './FinancialInterface';
-import type { Account, CreateTransferError, Transfer } from 'tigerbeetle-node';
+import type {
+    Account,
+    AccountBalance as TigerBeetleAccountBalance,
+    CreateTransferError,
+    Transfer,
+} from 'tigerbeetle-node';
 import {
     AccountFilterFlags,
     AccountFlags,
@@ -862,7 +867,8 @@ export class FinancialController {
             typeof options?.maxTimeMs === 'number'
                 ? BigInt(Math.floor(options.maxTimeMs)) * 1000000n
                 : 0n;
-        const limit = Math.max(1, options?.limit ?? 1000);
+        // In account filters, a limit of 0 means no limit.
+        const limit = Math.max(0, options?.limit ?? 0);
 
         const transfers = await this._financialInterface.getAccountTransfers({
             account_id: accountId,
@@ -877,6 +883,49 @@ export class FinancialController {
         });
 
         return success(transfers);
+    }
+
+    /**
+     * Lists account balance history entries for the given account.
+     * @param accountId The account ID.
+     * @param options The options.
+     */
+    @traced(TRACE_NAME)
+    async listBalanceHistory(
+        accountId: bigint | string,
+        options?: {
+            minTimeMs?: number;
+            maxTimeMs?: number;
+            limit?: number;
+        }
+    ): Promise<Result<TigerBeetleAccountBalance[], SimpleError>> {
+        if (typeof accountId === 'string') {
+            accountId = BigInt(accountId);
+        }
+
+        const minTime =
+            typeof options?.minTimeMs === 'number'
+                ? BigInt(Math.floor(options.minTimeMs)) * 1000000n
+                : 0n;
+        const maxTime =
+            typeof options?.maxTimeMs === 'number'
+                ? BigInt(Math.floor(options.maxTimeMs)) * 1000000n
+                : 0n;
+        const limit = Math.max(0, options?.limit ?? 0);
+
+        const balances = await this._financialInterface.getAccountBalances({
+            account_id: accountId,
+            code: 0, // 0 means all codes
+            flags: AccountFilterFlags.credits | AccountFilterFlags.debits,
+            limit,
+            timestamp_max: maxTime,
+            timestamp_min: minTime,
+            user_data_128: 0n, // No user data filter
+            user_data_64: 0n, // No user data filter
+            user_data_32: 0, // No user data filter
+        });
+
+        return success(balances);
     }
 
     @traced(TRACE_NAME)
