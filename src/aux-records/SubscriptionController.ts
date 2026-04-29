@@ -786,9 +786,7 @@ export class SubscriptionController {
             return transfersResult;
         }
 
-        const transfers = [...transfersResult.value].sort((a, b) =>
-            a.timestamp < b.timestamp ? -1 : a.timestamp > b.timestamp ? 1 : 0
-        );
+        const transfers = transfersResult.value;
 
         const balanceHistoryResult =
             await this._financialController.listBalanceHistory(
