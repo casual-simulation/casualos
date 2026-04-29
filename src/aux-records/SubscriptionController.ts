@@ -6953,7 +6953,7 @@ export interface ListedTransfer {
     creditAccountDescription: string;
 
     /**
-     * The amount that was transfered.
+     * The amount that was transferred.
      */
     amount: string;
 
