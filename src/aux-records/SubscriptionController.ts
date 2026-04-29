@@ -821,38 +821,6 @@ export class SubscriptionController {
             );
         }
 
-        const descriptions = new Map<bigint, string>();
-        const getDescription = async (accountId: bigint): Promise<string> => {
-            const existing = descriptions.get(accountId);
-            if (existing) {
-                return existing;
-            }
-
-            const builtInName = ACCOUNT_NAMES.get(accountId);
-            if (builtInName) {
-                descriptions.set(accountId, builtInName);
-                return builtInName;
-            }
-
-            const accountIdString = accountId.toString();
-            const financialAccount = this._financialStore
-                ? await this._financialStore.getAccountById(accountIdString)
-                : null;
-
-            const description = financialAccount
-                ? financialAccount.userId
-                    ? `User (${financialAccount.userId})`
-                    : financialAccount.studioId
-                    ? `Studio (${financialAccount.studioId})`
-                    : financialAccount.contractId
-                    ? `Contract (${financialAccount.contractId})`
-                    : 'Account'
-                : 'Account';
-
-            descriptions.set(accountId, description);
-            return description;
-        };
-
         const resolvedPendingIds = new Set<bigint>();
         for (const t of transfers) {
             const isResolutionTransfer =
@@ -874,11 +842,11 @@ export class SubscriptionController {
                     id: transfer.id.toString(),
                     transactionId,
                     debitAccountId: transfer.debit_account_id.toString(),
-                    debitAccountDescription: await getDescription(
+                    debitAccountDescription: await this.getAccountDescription(
                         transfer.debit_account_id
                     ),
                     creditAccountId: transfer.credit_account_id.toString(),
-                    creditAccountDescription: await getDescription(
+                    creditAccountDescription: await this.getAccountDescription(
                         transfer.credit_account_id
                     ),
                     amount: transfer.amount.toString(),
@@ -900,6 +868,39 @@ export class SubscriptionController {
             balance: this._financialController.convertToAccountBalance(account),
             transfers: listedTransfers,
         });
+    }
+
+    async getAccountDescription(accountId: bigint | string): Promise<string> {
+        if (typeof accountId === 'string') {
+            accountId = BigInt(accountId);
+        }
+
+        const builtInName = ACCOUNT_NAMES.get(accountId);
+        if (builtInName) {
+            return builtInName;
+        }
+
+        const financialAccount = this._financialStore
+            ? await this._financialStore.getAccountById(accountId.toString())
+            : null;
+
+        if (!financialAccount) {
+            return 'Account';
+        }
+
+        if (financialAccount.userId) {
+            return `User (${financialAccount.userId})`;
+        }
+
+        if (financialAccount.studioId) {
+            return `Studio (${financialAccount.studioId})`;
+        }
+
+        if (financialAccount.contractId) {
+            return `Contract (${financialAccount.contractId})`;
+        }
+
+        return 'Account';
     }
 
     /**

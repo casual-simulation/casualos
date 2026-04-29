@@ -3908,6 +3908,87 @@ describe('SubscriptionController', () => {
         });
     });
 
+    describe('getAccountDescription()', () => {
+        it('should return the built-in name for a built-in account', async () => {
+            await expect(
+                controller.getAccountDescription(ACCOUNT_IDS.assets_stripe)
+            ).resolves.toBe('Stripe');
+        });
+
+        it('should return the user description for a user financial account', async () => {
+            const account = unwrap(
+                await financialController.getOrCreateFinancialAccount({
+                    userId,
+                    ledger: LEDGERS.usd,
+                })
+            );
+
+            await expect(
+                controller.getAccountDescription(account.account.id)
+            ).resolves.toBe(`User (${userId})`);
+        });
+
+        it('should return the studio description for a studio financial account', async () => {
+            await store.createStudioForUser(
+                {
+                    id: 'studioId',
+                    displayName: 'Test Studio',
+                },
+                userId
+            );
+
+            const account = unwrap(
+                await financialController.getOrCreateFinancialAccount({
+                    studioId: 'studioId',
+                    ledger: LEDGERS.usd,
+                })
+            );
+
+            await expect(
+                controller.getAccountDescription(account.account.id)
+            ).resolves.toBe('Studio (studioId)');
+        });
+
+        it('should return the contract description for a contract financial account', async () => {
+            await store.addRecord({
+                name: 'testRecord',
+                ownerId: userId,
+                studioId: null,
+                secretHashes: [],
+                secretSalt: '',
+            });
+
+            await contractStore.putItem('testRecord', {
+                id: 'contractId',
+                address: 'item1',
+                initialValue: 100,
+                holdingUserId: userId,
+                issuingUserId: userId,
+                issuedAtMs: 100,
+                rate: 1,
+                status: 'open',
+                markers: [PRIVATE_MARKER],
+            });
+
+            const account = unwrap(
+                await financialController.getOrCreateFinancialAccount({
+                    contractId: 'contractId',
+                    ledger: LEDGERS.usd,
+                })
+            );
+
+            await expect(
+                controller.getAccountDescription(account.account.id)
+            ).resolves.toBe('Contract (contractId)');
+        });
+
+        it('should return Account for unknown accounts', async () => {
+            await expect(
+                controller.getAccountDescription(999999n)
+            ).resolves.toBe('Account');
+        });
+    });
+
     describe('updateSubscription()', () => {
         describe('user', () => {
             let user: AuthUser;
