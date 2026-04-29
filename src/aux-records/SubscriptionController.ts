@@ -6172,13 +6172,13 @@ export interface UpdateSubscriptionRequest {
     subscriptionStatus: SubscriptionStatus['statusCode'] | null;
 
     /**
-     * The unix time in miliseconds that the subscription period starts.
+     * The unix time in milliseconds that the subscription period starts.
      * If null, then the subscription does not have a start date. This means that the subscription has already started.
      */
     subscriptionPeriodStartMs: number | null;
 
     /**
-     * The unix time in miliseconds that the subscription period ends.
+     * The unix time in milliseconds that the subscription period ends.
      * If null, then the subscription does not have an end date. This means that the subscription will never end.
      */
     subscriptionPeriodEndMs: number | null;
@@ -6894,12 +6894,12 @@ export interface ListTransfersRequest {
     accountId: string | bigint;
 
     /**
-     * The unix time in miliseconds of the oldest transfers to include (inclusive).
+     * The unix time in milliseconds of the oldest transfers to include (inclusive).
      */
     minTimeMs: number;
 
     /**
-     * The unix time in miliseconds of the newest transfers to include (inclusive).
+     * The unix time in milliseconds of the newest transfers to include (inclusive).
      */
     maxTimeMs?: number | null;
 
@@ -6968,7 +6968,7 @@ export interface ListedTransfer {
     billingCode: BillingCodes | null;
 
     /**
-     * The unix time in miliseconds of the transfer.
+     * The unix time in milliseconds of the transfer.
      */
     timeMs: number;
 
@@ -7031,7 +7031,7 @@ export interface AccountTransfer {
     code: TransferCodes;
 
     /**
-     * The time of the transfer in miliseconds since the Unix epoch.
+     * The time of the transfer in milliseconds since the Unix epoch.
      */
     timeMs: number;
 
@@ -7224,13 +7224,13 @@ export interface CancelInvoiceRequest {
  */
 export interface SubscriptionInfo {
     /**
-     * The unix time in miliseconds that the user/studio's subscription period started at.
+     * The unix time in milliseconds that the user/studio's subscription period started at.
      * Null if the subscription does not have a start date.
      */
     periodStartMs: number | null;
 
     /**
-     * The unix time in miliseconds that the user/studio's subscription period ends at.
+     * The unix time in milliseconds that the user/studio's subscription period ends at.
      * Null if the subscription never ends.
      */
     periodEndMs: number | null;
@@ -7319,7 +7319,7 @@ export interface PurchaseCreditsRequest {
     successUrl: string;
 
     /**
-     * The current unix time in miliseconds. This should only be used when testing.
+     * The current unix time in milliseconds. This should only be used when testing.
      */
     nowMs?: number;
 }
