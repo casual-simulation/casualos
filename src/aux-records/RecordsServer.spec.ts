@@ -1792,10 +1792,6 @@ describe('RecordsServer', () => {
                 })
             );
 
-            const transfers = unwrap(
-                await financialController.listTransfers(account.id)
-            ).sort((a, b) => Number(a.id - b.id));
-
             const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/transfers?accountId=${encodeURIComponent(
@@ -1818,22 +1814,25 @@ describe('RecordsServer', () => {
                         accountId: account.id.toString(),
                         displayFactor: USD_DISPLAY_FACTOR.toString(),
                     },
-                    transfers: transfers.map((transfer) => ({
-                        id: transfer.id.toString(),
-                        transactionId: transfer.user_data_128.toString(),
-                        debitAccountId: transfer.debit_account_id.toString(),
-                        debitAccountDescription: 'Stripe',
-                        creditAccountId: transfer.credit_account_id.toString(),
-                        creditAccountDescription: `User (${userId})`,
-                        amount: transfer.amount.toString(),
-                        code: transfer.code,
-                        billingCode: BillingCodes.data_read,
-                        timeMs: Number(transfer.timestamp / 1000000n),
-                        pending: false,
-                        pendingTimeoutMs: null as number | null,
-                        balance: expect.any(String),
-                        description: 'Admin credit from Stripe',
-                    })),
+                    transfers: [
+                        {
+                            id: expect.any(String),
+                            transactionId: expect.any(String),
+                            debitAccountId:
+                                ACCOUNT_IDS.assets_stripe.toString(),
+                            debitAccountDescription: 'Stripe',
+                            creditAccountId: account.id.toString(),
+                            creditAccountDescription: `User (${userId})`,
+                            amount: '500',
+                            code: TransferCodes.admin_credit,
+                            billingCode: BillingCodes.data_read,
+                            timeMs: expect.any(Number),
+                            pending: false,
+                            pendingTimeoutMs: null,
+                            balance: expect.any(String),
+                            description: 'Admin credit from Stripe',
+                        },
+                    ],
                 },
                 headers: accountCorsHeaders,
             });
