@@ -6658,13 +6658,7 @@ describe('AuxRuntime', () => {
 
                 await waitAsync();
 
-                expect(events).toEqual(
-                    expect.arrayContaining([
-                        expect.arrayContaining([
-                            expect.objectContaining(toast('hello')),
-                        ]),
-                    ])
-                );
+                expect(events).toEqual([[toast('hello')]]);
             });
 
             it('should emit an error if the script has a syntax error', async () => {
