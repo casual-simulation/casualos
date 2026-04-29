@@ -761,7 +761,7 @@ export class RecordsServer {
                     }
 
                     const result = success<ViewParams>({
-                        title: <>{pageTitle}</>,
+                        title: <title>{pageTitle}</title>,
                         description: (
                             <meta
                                 name="description"
