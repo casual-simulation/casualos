@@ -38,6 +38,10 @@
         // Notice the spacing between the <div> and <span> tags
         ```
 
+### :bug: Bug Fixes
+
+-   Fixed an issue where the default page title contained HTML comments used for replacing it on server-based deployments.
+
 ## V4.2.3
 
 #### Date: 4/27/2026
