@@ -18,6 +18,7 @@
 import type {
     ClaimActivationKeySuccess,
     FulfillCheckoutSessionSuccess,
+    ListedTransfer,
 } from './SubscriptionController';
 import {
     SubscriptionController,
@@ -3421,6 +3422,488 @@ describe('SubscriptionController', () => {
                         },
                     })
                 );
+            });
+        });
+    });
+
+    describe('listTransfers()', () => {
+        let user: AuthUser;
+
+        beforeEach(async () => {
+            user = await store.findUserByAddress('test@example.com', 'email');
+            expect(user.stripeCustomerId).toBeFalsy();
+        });
+
+        describe('filters', () => {
+            let account: AccountWithDetails;
+
+            beforeEach(async () => {
+                account = unwrap(
+                    await financialController.getOrCreateFinancialAccount({
+                        userId,
+                        ledger: LEDGERS.usd,
+                    })
+                );
+
+                unwrap(
+                    await financialController.internalTransaction({
+                        transfers: [
+                            {
+                                amount: 100,
+                                debitAccountId: ACCOUNT_IDS.assets_stripe,
+                                creditAccountId: account.account.id,
+                                code: TransferCodes.admin_credit,
+                                currency: CurrencyCodes.usd,
+                            },
+                        ],
+                    })
+                );
+
+                unwrap(
+                    await financialController.internalTransaction({
+                        transfers: [
+                            {
+                                amount: 200,
+                                debitAccountId: ACCOUNT_IDS.assets_stripe,
+                                creditAccountId: account.account.id,
+                                code: TransferCodes.admin_credit,
+                                currency: CurrencyCodes.usd,
+                            },
+                        ],
+                    })
+                );
+
+                unwrap(
+                    await financialController.internalTransaction({
+                        transfers: [
+                            {
+                                amount: 300,
+                                debitAccountId: ACCOUNT_IDS.assets_stripe,
+                                creditAccountId: account.account.id,
+                                code: TransferCodes.admin_credit,
+                                currency: CurrencyCodes.usd,
+                            },
+                        ],
+                    })
+                );
+            });
+
+            it('should list transfers and apply minTimeMs/maxTimeMs and limit filters', async () => {
+                const allResult = await controller.listTransfers({
+                    userId,
+                    accountId: account.account.id,
+                    minTimeMs: 0,
+                });
+
+                expect(allResult.success).toBe(true);
+                if (!allResult.success) {
+                    return;
+                }
+
+                const allTransfers = allResult.value.transfers;
+
+                expect(allTransfers.length).toBeGreaterThanOrEqual(3);
+                expect(
+                    allTransfers.every((transfer: ListedTransfer) => {
+                        return transfer.balance !== null;
+                    })
+                ).toBe(true);
+
+                const middleIndex = Math.floor(allTransfers.length / 2);
+                const middleTimeMs = allTransfers[middleIndex].timeMs;
+
+                const minFilteredResult = await controller.listTransfers({
+                    userId,
+                    accountId: account.account.id,
+                    minTimeMs: middleTimeMs,
+                });
+
+                expect(minFilteredResult.success).toBe(true);
+                if (!minFilteredResult.success) {
+                    return;
+                }
+
+                const minFilteredTransfers = minFilteredResult.value.transfers;
+
+                expect(
+                    minFilteredTransfers.every(
+                        (transfer: ListedTransfer) =>
+                            transfer.timeMs >= middleTimeMs
+                    )
+                ).toBe(true);
+
+                const maxFilteredResult = await controller.listTransfers({
+                    userId,
+                    accountId: account.account.id,
+                    minTimeMs: 0,
+                    maxTimeMs: middleTimeMs,
+                });
+
+                expect(maxFilteredResult.success).toBe(true);
+                if (!maxFilteredResult.success) {
+                    return;
+                }
+
+                const maxFilteredTransfers = maxFilteredResult.value.transfers;
+
+                expect(
+                    maxFilteredTransfers.every(
+                        (transfer: ListedTransfer) =>
+                            transfer.timeMs <= middleTimeMs
+                    )
+                ).toBe(true);
+
+                const limitedResult = await controller.listTransfers({
+                    userId,
+                    accountId: account.account.id,
+                    minTimeMs: 0,
+                    limit: 1,
+                });
+
+                expect(limitedResult.success).toBe(true);
+                if (!limitedResult.success) {
+                    return;
+                }
+
+                expect(limitedResult.value.transfers).toHaveLength(1);
+            });
+        });
+
+        describe('authorization', () => {
+            it('should allow users to access their own user account transfers', async () => {
+                const account = unwrap(
+                    await financialController.getOrCreateFinancialAccount({
+                        userId,
+                        ledger: LEDGERS.usd,
+                    })
+                );
+
+                const result = await controller.listTransfers({
+                    userId,
+                    accountId: account.account.id,
+                    minTimeMs: 0,
+                });
+
+                expect(result.success).toBe(true);
+            });
+
+            it('should allow super users to access any user account transfers', async () => {
+                const account = unwrap(
+                    await financialController.getOrCreateFinancialAccount({
+                        userId,
+                        ledger: LEDGERS.usd,
+                    })
+                );
+
+                const result = await controller.listTransfers({
+                    userId: 'other_user',
+                    userRole: 'superUser',
+                    accountId: account.account.id,
+                    minTimeMs: 0,
+                });
+
+                expect(result.success).toBe(true);
+            });
+
+            it('should reject users that do not own a user account', async () => {
+                const account = unwrap(
+                    await financialController.getOrCreateFinancialAccount({
+                        userId,
+                        ledger: LEDGERS.usd,
+                    })
+                );
+
+                const result = await controller.listTransfers({
+                    userId: 'other_user',
+                    accountId: account.account.id,
+                    minTimeMs: 0,
+                });
+
+                expect(result).toEqual(
+                    failure({
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                    })
+                );
+            });
+
+            it('should allow studio admins to access studio account transfers', async () => {
+                const studioId = 'studioId';
+                await store.createStudioForUser(
+                    {
+                        id: studioId,
+                        displayName: 'Test Studio',
+                    },
+                    userId
+                );
+
+                const account = unwrap(
+                    await financialController.getOrCreateFinancialAccount({
+                        studioId,
+                        ledger: LEDGERS.usd,
+                    })
+                );
+
+                const result = await controller.listTransfers({
+                    userId,
+                    accountId: account.account.id,
+                    minTimeMs: 0,
+                });
+
+                expect(result.success).toBe(true);
+            });
+
+            it('should reject studio members that are not admins', async () => {
+                const studioId = 'studioId';
+                const otherUserId = 'other_user';
+                await store.createStudioForUser(
+                    {
+                        id: studioId,
+                        displayName: 'Test Studio',
+                    },
+                    userId
+                );
+
+                await store.saveUser({
+                    id: otherUserId,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                    email: 'other_user@example.com',
+                    phoneNumber: null,
+                });
+
+                await store.addStudioAssignment({
+                    userId: otherUserId,
+                    studioId,
+                    role: 'member',
+                    isPrimaryContact: false,
+                });
+
+                const account = unwrap(
+                    await financialController.getOrCreateFinancialAccount({
+                        studioId,
+                        ledger: LEDGERS.usd,
+                    })
+                );
+
+                const result = await controller.listTransfers({
+                    userId: otherUserId,
+                    accountId: account.account.id,
+                    minTimeMs: 0,
+                });
+
+                expect(result).toEqual(
+                    failure({
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                    })
+                );
+            });
+
+            it('should allow contract issuing users to access contract account transfers', async () => {
+                const contractId = 'contractId';
+                const recordName = 'testRecord';
+                const xpUserId = 'xpUserId';
+                nowMock.mockReturnValue(101);
+
+                await store.addRecord({
+                    name: recordName,
+                    ownerId: userId,
+                    studioId: null,
+                    secretHashes: [],
+                    secretSalt: '',
+                });
+
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                });
+
+                await store.saveUser({
+                    id: xpUserId,
+                    email: 'xpUser@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                    stripeAccountId: 'accountId',
+                    stripeAccountStatus: 'active',
+                    stripeAccountRequirementsStatus: 'complete',
+                });
+
+                await contractStore.putItem(recordName, {
+                    id: contractId,
+                    address: 'item1',
+                    initialValue: 100,
+                    holdingUserId: xpUserId,
+                    issuingUserId: userId,
+                    issuedAtMs: 100,
+                    rate: 1,
+                    status: 'open',
+                    markers: [PRIVATE_MARKER],
+                });
+
+                const account = unwrap(
+                    await financialController.getOrCreateFinancialAccount({
+                        contractId,
+                        ledger: LEDGERS.usd,
+                    })
+                );
+
+                const result = await controller.listTransfers({
+                    userId,
+                    accountId: account.account.id,
+                    minTimeMs: 0,
+                });
+
+                expect(result.success).toBe(true);
+            });
+
+            it('should allow contract holding users to access contract account transfers', async () => {
+                const contractId = 'contractId';
+                const recordName = 'testRecord';
+                const xpUserId = 'xpUserId';
+                nowMock.mockReturnValue(101);
+
+                await store.addRecord({
+                    name: recordName,
+                    ownerId: userId,
+                    studioId: null,
+                    secretHashes: [],
+                    secretSalt: '',
+                });
+
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                });
+
+                await store.saveUser({
+                    id: xpUserId,
+                    email: 'xpUser@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                    stripeAccountId: 'accountId',
+                    stripeAccountStatus: 'active',
+                    stripeAccountRequirementsStatus: 'complete',
+                });
+
+                await contractStore.putItem(recordName, {
+                    id: contractId,
+                    address: 'item1',
+                    initialValue: 100,
+                    holdingUserId: xpUserId,
+                    issuingUserId: userId,
+                    issuedAtMs: 100,
+                    rate: 1,
+                    status: 'open',
+                    markers: [PRIVATE_MARKER],
+                });
+
+                const account = unwrap(
+                    await financialController.getOrCreateFinancialAccount({
+                        contractId,
+                        ledger: LEDGERS.usd,
+                    })
+                );
+
+                const result = await controller.listTransfers({
+                    userId: xpUserId,
+                    accountId: account.account.id,
+                    minTimeMs: 0,
+                });
+
+                expect(result.success).toBe(true);
+            });
+
+            it('should reject users without contract access and allow super users', async () => {
+                const contractId = 'contractId';
+                const recordName = 'testRecord';
+                const xpUserId = 'xpUserId';
+                nowMock.mockReturnValue(101);
+
+                await store.addRecord({
+                    name: recordName,
+                    ownerId: userId,
+                    studioId: null,
+                    secretHashes: [],
+                    secretSalt: '',
+                });
+
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                });
+
+                await store.saveUser({
+                    id: xpUserId,
+                    email: 'xpUser@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                    stripeAccountId: 'accountId',
+                    stripeAccountStatus: 'active',
+                    stripeAccountRequirementsStatus: 'complete',
+                });
+
+                await contractStore.putItem(recordName, {
+                    id: contractId,
+                    address: 'item1',
+                    initialValue: 100,
+                    holdingUserId: xpUserId,
+                    issuingUserId: userId,
+                    issuedAtMs: 100,
+                    rate: 1,
+                    status: 'open',
+                    markers: [PRIVATE_MARKER],
+                });
+
+                const account = unwrap(
+                    await financialController.getOrCreateFinancialAccount({
+                        contractId,
+                        ledger: LEDGERS.usd,
+                    })
+                );
+
+                const unauthorized = await controller.listTransfers({
+                    userId: 'other_user',
+                    accountId: account.account.id,
+                    minTimeMs: 0,
+                });
+
+                expect(unauthorized).toEqual(
+                    failure({
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            action: 'read',
+                            recordName: 'testRecord',
+                            resourceId: 'item1',
+                            resourceKind: 'contract',
+                            subjectId: 'other_user',
+                            subjectType: 'user',
+                            type: 'missing_permission',
+                        },
+                    })
+                );
+
+                const superUser = await controller.listTransfers({
+                    userId: 'other_user',
+                    userRole: 'superUser',
+                    accountId: account.account.id,
+                    minTimeMs: 0,
+                });
+
+                expect(superUser.success).toBe(true);
             });
         });
     });
