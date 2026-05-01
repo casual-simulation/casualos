@@ -129,7 +129,7 @@ export class GoogleAIChatInterface implements AIChatInterface {
                     {
                         role: 'assistant',
                         content: response.text(),
-                        google: response,
+                        google: toSerializableGoogleResponse(response),
                     },
                 ],
                 totalTokens: tokens.totalTokens,
@@ -220,7 +220,7 @@ export class GoogleAIChatInterface implements AIChatInterface {
                         {
                             role: 'assistant',
                             content: chunk.text(),
-                            google: chunk,
+                            google: toSerializableGoogleResponse(chunk),
                         },
                     ],
                     totalTokens: 0,
@@ -297,4 +297,21 @@ function mapParts(content: AIChatMessage['content']): Part[] {
             'URL content is not supported for Google Gemini models'
         );
     });
+}
+
+function toSerializableGoogleResponse(response: unknown): unknown {
+    try {
+        return JSON.parse(JSON.stringify(response));
+    } catch {
+        if (response && typeof response === 'object') {
+            const obj = response as Record<string, unknown>;
+            return {
+                candidates: obj['candidates'],
+                promptFeedback: obj['promptFeedback'],
+                usageMetadata: obj['usageMetadata'],
+            };
+        }
+
+        return response;
+    }
 }
