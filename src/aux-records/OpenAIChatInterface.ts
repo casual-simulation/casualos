@@ -79,6 +79,10 @@ export class OpenAIChatInterface implements AIChatInterface {
         return this._options.name ?? 'OpenAIChatInterface';
     }
 
+    private get _providerName() {
+        return this._options.name ?? 'openai';
+    }
+
     constructor(options: OpenAIChatOptions) {
         this._options = options;
         this._client = new OpenAI({
@@ -167,7 +171,8 @@ export class OpenAIChatInterface implements AIChatInterface {
                     content: c.message.content,
                     author: c.message.name,
                     functionCall: c.message.function_call,
-                    finishReason: c.finishReason,
+                    finishReason: c.finishReason ?? c.finish_reason,
+                    [this._providerName]: result.data,
                 })
             );
 
@@ -260,6 +265,7 @@ export class OpenAIChatInterface implements AIChatInterface {
                     finishReason: c.finish_reason,
                     functionCall: c.delta
                         .function_call as unknown as AIFunctionCall,
+                    [this._providerName]: chunk,
                 })),
                 totalTokens: chunk.usage?.total_tokens ?? 0,
                 inputTokens: chunk.usage?.prompt_tokens,
@@ -270,7 +276,8 @@ export class OpenAIChatInterface implements AIChatInterface {
 }
 
 interface ChatChoice {
-    finishReason: string;
+    finishReason?: string;
+    finish_reason?: string;
     message: {
         role: string;
         content: string;

@@ -129,6 +129,7 @@ export class GoogleAIChatInterface implements AIChatInterface {
                     {
                         role: 'assistant',
                         content: response.text(),
+                        google: response,
                     },
                 ],
                 totalTokens: tokens.totalTokens,
@@ -219,6 +220,7 @@ export class GoogleAIChatInterface implements AIChatInterface {
                         {
                             role: 'assistant',
                             content: chunk.text(),
+                            google: chunk,
                         },
                     ],
                     totalTokens: 0,

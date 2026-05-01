@@ -87,6 +87,7 @@ export class AnthropicAIChatInterface implements AIChatInterface {
                     {
                         content: mapOutputContent(response.content),
                         role: response.role,
+                        anthropic: response,
                     },
                 ],
                 totalTokens:
@@ -158,6 +159,7 @@ export class AnthropicAIChatInterface implements AIChatInterface {
                                 {
                                     content: chunk.delta.text,
                                     role: 'assistant',
+                                    anthropic: chunk,
                                 },
                             ],
                             totalTokens: 0,
