@@ -577,15 +577,19 @@ export class AIController {
             const creditFeePerOutputToken =
                 allowedFeatures.ai.chat.creditFeePerOutputToken ?? null;
             const preChargeInputTokens = BigInt(
-                this._calculateTokenCost(
-                    allowedFeatures.ai.chat.preChargeInputTokens ?? 100,
-                    model
+                Math.ceil(
+                    this._calculateTokenCost(
+                        allowedFeatures.ai.chat.preChargeInputTokens ?? 100,
+                        model
+                    )
                 )
             );
             const preChargeOutputTokens = BigInt(
-                this._calculateTokenCost(
-                    allowedFeatures.ai.chat.preChargeOutputTokens ?? 100,
-                    model
+                Math.ceil(
+                    this._calculateTokenCost(
+                        allowedFeatures.ai.chat.preChargeOutputTokens ?? 100,
+                        model
+                    )
                 )
             );
             const initialAmount =
@@ -723,7 +727,8 @@ export class AIController {
                 chatResult.inputTokens,
                 model
             );
-            cost += BigInt(adjustedInputTokens) * creditFeePerInputToken;
+            cost +=
+                BigInt(Math.ceil(adjustedInputTokens)) * creditFeePerInputToken;
         }
 
         if (chatResult.outputTokens > 0 && creditFeePerOutputToken) {
@@ -731,7 +736,9 @@ export class AIController {
                 chatResult.outputTokens,
                 model
             );
-            cost += BigInt(adjustedOutputTokens) * creditFeePerOutputToken;
+            cost +=
+                BigInt(Math.ceil(adjustedOutputTokens)) *
+                creditFeePerOutputToken;
         }
 
         if (
@@ -745,7 +752,7 @@ export class AIController {
                 model
             );
             cost =
-                BigInt(adjustedTokens) *
+                BigInt(Math.ceil(adjustedTokens)) *
                 (creditFeePerOutputToken ?? creditFeePerInputToken ?? 0n);
         }
         return cost;
