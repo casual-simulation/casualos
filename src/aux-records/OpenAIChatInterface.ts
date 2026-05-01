@@ -58,6 +58,12 @@ export interface OpenAIChatOptions {
     name?: string;
 
     /**
+     * The provider key to include on provider-native response payloads.
+     * Defaults to "openai".
+     */
+    providerName?: string;
+
+    /**
      * The additional properties that should be included in requests.
      */
     additionalProperties?: Record<string, any>;
@@ -80,7 +86,7 @@ export class OpenAIChatInterface implements AIChatInterface {
     }
 
     private get _providerName() {
-        return this._options.name ?? 'openai';
+        return this._options.providerName ?? this._options.name ?? 'openai';
     }
 
     constructor(options: OpenAIChatOptions) {
