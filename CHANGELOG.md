@@ -45,10 +45,10 @@
     -   For custom OpenAI-compatible providers the property is keyed by the configured provider name.
     -   Example:
         ```typescript
-        const result = await ai.chat('Hello!');
-        const nativeOpenAIResponse = result.choices[0].openai;
-        const nativeAnthropicResponse = result.choices[0].anthropic;
-        const nativeGoogleResponse = result.choices[0].google;
+        const response = await ai.chat('Hello!');
+        const nativeOpenAIResponse = response.openai;
+        const nativeAnthropicResponse = response.anthropic;
+        const nativeGoogleResponse = response.google;
         ```
     -   The existing normalized fields (`role`, `content`, `finishReason`, etc.) are unchanged.
 
