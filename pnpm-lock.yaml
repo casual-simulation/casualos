@@ -565,19 +565,19 @@ importers:
         specifier: ^4.2.3
         version: link:../aux-common
       '@casual-simulation/aux-vm':
-        specifier: ^4.2.3
+        specifier: ^4.2.4-alpha.25223847785
         version: link:../aux-vm
       '@casual-simulation/aux-vm-browser':
-        specifier: ^4.2.3
+        specifier: ^4.2.4-alpha.25223847785
         version: link:../aux-vm-browser
       '@casual-simulation/aux-vm-client':
-        specifier: ^4.2.3
+        specifier: ^4.2.4-alpha.25223847785
         version: link:../aux-vm-client
       '@casual-simulation/aux-vm-deno':
-        specifier: ^4.2.3
+        specifier: ^4.2.4-alpha.25223847785
         version: link:../aux-vm-deno
       '@casual-simulation/aux-vm-node':
-        specifier: ^4.2.3
+        specifier: ^4.2.4-alpha.25223847785
         version: link:../aux-vm-node
       '@casual-simulation/crypto':
         specifier: ^4.0.5
@@ -860,7 +860,7 @@ importers:
         specifier: ^4.2.3
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^4.2.3
+        specifier: ^4.2.4-alpha.25223847785
         version: link:../aux-records
       axios:
         specifier: 1.7.7
@@ -884,7 +884,7 @@ importers:
         specifier: ^4.2.3
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^4.2.3
+        specifier: ^4.2.4-alpha.25223847785
         version: link:../aux-records
       '@casual-simulation/crypto':
         specifier: ^4.0.5
@@ -1047,28 +1047,28 @@ importers:
         specifier: ^4.2.3
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^4.2.3
+        specifier: ^4.2.4-alpha.25223847785
         version: link:../aux-records
       '@casual-simulation/aux-records-aws':
-        specifier: ^4.2.3
+        specifier: ^4.2.4-alpha.25223847785
         version: link:../aux-records-aws
       '@casual-simulation/aux-runtime':
-        specifier: ^4.2.3
+        specifier: ^4.2.4-alpha.25223847785
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^4.2.3
+        specifier: ^4.2.4-alpha.25223847785
         version: link:../aux-vm
       '@casual-simulation/aux-vm-browser':
-        specifier: ^4.2.3
+        specifier: ^4.2.4-alpha.25223847785
         version: link:../aux-vm-browser
       '@casual-simulation/aux-vm-client':
-        specifier: ^4.2.3
+        specifier: ^4.2.4-alpha.25223847785
         version: link:../aux-vm-client
       '@casual-simulation/aux-vm-deno':
-        specifier: ^4.2.3
+        specifier: ^4.2.4-alpha.25223847785
         version: link:../aux-vm-deno
       '@casual-simulation/aux-vm-node':
-        specifier: ^4.2.3
+        specifier: ^4.2.4-alpha.25223847785
         version: link:../aux-vm-node
       '@casual-simulation/crypto':
         specifier: ^4.0.5
@@ -1420,7 +1420,7 @@ importers:
         version: 4.1.12
     devDependencies:
       '@casual-simulation/aux-components':
-        specifier: ^4.2.3
+        specifier: ^4.2.4-alpha.25223847785
         version: link:../aux-components
       '@rollup/plugin-virtual':
         specifier: 3.0.2
@@ -1510,10 +1510,10 @@ importers:
         specifier: ^4.2.3
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^4.2.3
+        specifier: ^4.2.4-alpha.25223847785
         version: link:../aux-records
       '@casual-simulation/aux-runtime':
-        specifier: ^4.2.3
+        specifier: ^4.2.4-alpha.25223847785
         version: link:../aux-runtime
       '@casual-simulation/crypto':
         specifier: ^4.0.5
@@ -1561,16 +1561,16 @@ importers:
         specifier: ^4.2.3
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^4.2.3
+        specifier: ^4.2.4-alpha.25223847785
         version: link:../aux-records
       '@casual-simulation/aux-runtime':
-        specifier: ^4.2.3
+        specifier: ^4.2.4-alpha.25223847785
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^4.2.3
+        specifier: ^4.2.4-alpha.25223847785
         version: link:../aux-vm
       '@casual-simulation/aux-vm-client':
-        specifier: ^4.2.3
+        specifier: ^4.2.4-alpha.25223847785
         version: link:../aux-vm-client
       '@casual-simulation/aux-websocket':
         specifier: ^4.2.3
@@ -1619,10 +1619,10 @@ importers:
         specifier: ^4.2.3
         version: link:../aux-common
       '@casual-simulation/aux-runtime':
-        specifier: ^4.2.3
+        specifier: ^4.2.4-alpha.25223847785
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^4.2.3
+        specifier: ^4.2.4-alpha.25223847785
         version: link:../aux-vm
       '@casual-simulation/aux-websocket':
         specifier: ^4.2.3
@@ -1661,13 +1661,13 @@ importers:
         specifier: ^4.2.3
         version: link:../aux-common
       '@casual-simulation/aux-runtime':
-        specifier: ^4.2.3
+        specifier: ^4.2.4-alpha.25223847785
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^4.2.3
+        specifier: ^4.2.4-alpha.25223847785
         version: link:../aux-vm
       '@casual-simulation/aux-vm-client':
-        specifier: ^4.2.3
+        specifier: ^4.2.4-alpha.25223847785
         version: link:../aux-vm-client
       '@casual-simulation/crypto':
         specifier: ^4.0.5
@@ -1697,13 +1697,13 @@ importers:
         specifier: ^4.2.3
         version: link:../aux-common
       '@casual-simulation/aux-runtime':
-        specifier: ^4.2.3
+        specifier: ^4.2.4-alpha.25223847785
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^4.2.3
+        specifier: ^4.2.4-alpha.25223847785
         version: link:../aux-vm
       '@casual-simulation/aux-vm-client':
-        specifier: ^4.2.3
+        specifier: ^4.2.4-alpha.25223847785
         version: link:../aux-vm-client
       '@casual-simulation/crypto':
         specifier: ^4.0.5
@@ -1754,13 +1754,13 @@ importers:
         specifier: ^4.2.3
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^4.2.3
+        specifier: ^4.2.4-alpha.25223847785
         version: link:../aux-records
       '@casual-simulation/aux-runtime':
-        specifier: ^4.2.3
+        specifier: ^4.2.4-alpha.25223847785
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^4.2.3
+        specifier: ^4.2.4-alpha.25223847785
         version: link:../aux-vm
       '@octokit/app':
         specifier: ^15.1.0
@@ -15563,23 +15563,27 @@ packages:
 
   uuid@10.0.0:
     resolution: {integrity: sha512-8XkAphELsDnEGrDxUOHB3RGvXz6TeuYSGEZBOjtTtPm2lwhGBjLgOzLHB63IUWfBpNucQjND6d3AOudO+H3RWQ==}
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   uuid@3.4.0:
     resolution: {integrity: sha512-HjSDRw6gZE5JMggctHBcjVak08+KEVhSIiDzFnT9S9aegmp85S/bReBVTb4QTFaRNptJ9kuYaNhnbNEOkbKb/A==}
-    deprecated: Please upgrade  to version 7 or higher.  Older versions may use Math.random() in certain circumstances, which is known to be problematic.  See https://v8.dev/blog/math-random for details.
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   uuid@8.0.0:
     resolution: {integrity: sha512-jOXGuXZAWdsTH7eZLtyXMqUb9EcWMGZNbL9YcGBJl4MH4nrxHmZJhEHvyLFrkxo+28uLb/NYRcStH48fnD0Vzw==}
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   uuid@8.3.2:
     resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   uuid@9.0.1:
     resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   v8-to-istanbul@9.3.0:

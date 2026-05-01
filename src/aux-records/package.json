@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-records",
-    "version": "4.2.3",
+    "version": "4.2.4-alpha.25223847785",
     "description": "Helpers and managers used by the CasualOS records system.",
     "keywords": [],
     "author": "Casual Simulation, Inc.",
