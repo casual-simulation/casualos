@@ -41,6 +41,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where the default page title contained HTML comments used for replacing it on server-based deployments.
+-   Fixed an issue where fractional `tokenModifierRatio` values could cause the server to error because of mishandling of fractional values for AI chat billing.
 
 ## V4.2.3
 
