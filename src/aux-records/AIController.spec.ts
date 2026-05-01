@@ -290,6 +290,8 @@ describe('AIController', () => {
                 ],
                 temperature: 0.5,
                 userId: 'test-user',
+                enableCaching: true,
+                maxTokens: undefined,
             });
         });
 
@@ -340,6 +342,50 @@ describe('AIController', () => {
                 ],
                 temperature: 0.5,
                 userId: 'test-user',
+                enableCaching: true,
+                maxTokens: undefined,
+            });
+        });
+
+        it('should pass prompt caching options to the chat interface', async () => {
+            chatInterface.chat.mockReturnValueOnce(
+                Promise.resolve({
+                    choices: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                            finishReason: 'stop',
+                        },
+                    ],
+                    totalTokens: 1,
+                })
+            );
+
+            await controller.chat({
+                model: 'test-model1',
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'test',
+                    },
+                ],
+                temperature: 0.5,
+                enableCaching: true,
+                userId,
+                userSubscriptionTier,
+            });
+
+            expect(chatInterface.chat).toHaveBeenCalledWith({
+                model: 'test-model1',
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'test',
+                    },
+                ],
+                temperature: 0.5,
+                enableCaching: true,
+                userId: 'test-user',
             });
         });
 
@@ -389,6 +435,8 @@ describe('AIController', () => {
                 ],
                 temperature: 0.5,
                 userId: 'test-user',
+                enableCaching: true,
+                maxTokens: undefined,
             });
         });
 
@@ -567,6 +615,8 @@ describe('AIController', () => {
                 ],
                 temperature: 0.5,
                 userId: 'test-user',
+                enableCaching: true,
+                maxTokens: undefined,
             });
         });
 
@@ -652,6 +702,8 @@ describe('AIController', () => {
                 ],
                 temperature: 0.5,
                 userId: 'test-user',
+                enableCaching: true,
+                maxTokens: undefined,
             });
 
             const metrics = await store.getSubscriptionAiChatMetrics({
@@ -716,6 +768,8 @@ describe('AIController', () => {
                 ],
                 temperature: 0.5,
                 userId: 'test-user',
+                enableCaching: true,
+                maxTokens: undefined,
             });
 
             const metrics = await store.getSubscriptionAiChatMetrics({
@@ -971,6 +1025,7 @@ describe('AIController', () => {
                     ],
                     temperature: 0.5,
                     userId: 'test-user',
+                    enableCaching: true,
                     maxTokens: 50,
                 });
 
@@ -1040,6 +1095,7 @@ describe('AIController', () => {
                     ],
                     temperature: 0.5,
                     userId: 'test-user',
+                    enableCaching: true,
                     maxTokens: 75,
                 });
 
@@ -2303,6 +2359,8 @@ describe('AIController', () => {
                 ],
                 temperature: 0.5,
                 userId: 'test-user',
+                enableCaching: true,
+                maxTokens: undefined,
             });
         });
 
@@ -2363,6 +2421,54 @@ describe('AIController', () => {
                 ],
                 temperature: 0.5,
                 userId: 'test-user',
+                enableCaching: true,
+                maxTokens: undefined,
+            });
+        });
+
+        it('should pass prompt caching options to the chat stream interface', async () => {
+            chatInterface.chatStream.mockReturnValueOnce(
+                asyncIterable<AIChatInterfaceStreamResponse>([
+                    Promise.resolve({
+                        choices: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                                finishReason: 'stop',
+                            },
+                        ],
+                        totalTokens: 1,
+                    }),
+                ])
+            );
+
+            await unwindAndCaptureAsync(
+                controller.chatStream({
+                    model: 'test-model1',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                        },
+                    ],
+                    temperature: 0.5,
+                    enableCaching: true,
+                    userId,
+                    userSubscriptionTier,
+                })
+            );
+
+            expect(chatInterface.chatStream).toHaveBeenCalledWith({
+                model: 'test-model1',
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'test',
+                    },
+                ],
+                temperature: 0.5,
+                enableCaching: true,
+                userId: 'test-user',
             });
         });
 
@@ -2422,6 +2528,8 @@ describe('AIController', () => {
                 ],
                 temperature: 0.5,
                 userId: 'test-user',
+                enableCaching: true,
+                maxTokens: undefined,
             });
         });
 
@@ -2630,6 +2738,8 @@ describe('AIController', () => {
                 ],
                 temperature: 0.5,
                 userId: 'test-user',
+                enableCaching: true,
+                maxTokens: undefined,
             });
         });
 
@@ -2730,6 +2840,8 @@ describe('AIController', () => {
                 ],
                 temperature: 0.5,
                 userId: 'test-user',
+                enableCaching: true,
+                maxTokens: undefined,
             });
 
             const metrics = await store.getSubscriptionAiChatMetrics({
@@ -2804,6 +2916,8 @@ describe('AIController', () => {
                 ],
                 temperature: 0.5,
                 userId: 'test-user',
+                enableCaching: true,
+                maxTokens: undefined,
             });
 
             const metrics = await store.getSubscriptionAiChatMetrics({
@@ -3058,6 +3172,7 @@ describe('AIController', () => {
                     ],
                     temperature: 0.5,
                     userId: 'test-user',
+                    enableCaching: true,
                     maxTokens: 50,
                 });
 
@@ -3137,6 +3252,7 @@ describe('AIController', () => {
                     ],
                     temperature: 0.5,
                     userId: 'test-user',
+                    enableCaching: true,
                     maxTokens: 75,
                 });
 

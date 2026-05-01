@@ -2,7 +2,7 @@
 
 ## V4.2.4
 
-#### Date: 4/28/2026
+#### Date: 5/1/2026
 
 ### :boom: Breaking Changes
 
@@ -37,6 +37,10 @@
         );
         // Notice the spacing between the <div> and <span> tags
         ```
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the default page title contained HTML comments used for replacing it on server-based deployments.
 
 ## V4.2.3
 
@@ -146,6 +150,7 @@
     -   Instead of `.otherTag`, now you can use `./otherTag`
     -   Instead of `:parent.tag`, now you can use `../parent/tag`
 -   Updated the [`typesense`](https://typesense.org/) library to v3.0.5.
+-   Added support for AI chat prompt caching via `enableCaching` in `ai.chat()` and `ai.stream.chat()` options, including forwarding to Claude/Anthropic requests using prompt cache control.
 
 ### :bug: Bug Fixes
 

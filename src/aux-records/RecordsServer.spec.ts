@@ -23970,6 +23970,9 @@ describe('RecordsServer', () => {
                         content: 'hello',
                     },
                 ],
+                temperature: 1,
+                enableCaching: true,
+                maxTokens: undefined,
                 userId,
             });
         });
@@ -24217,6 +24220,9 @@ describe('RecordsServer', () => {
                         content: 'hello',
                     },
                 ],
+                temperature: 1,
+                enableCaching: true,
+                maxTokens: undefined,
                 userId,
             });
         });
