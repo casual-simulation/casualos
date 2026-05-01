@@ -178,7 +178,7 @@ export class OpenAIChatInterface implements AIChatInterface {
                     author: c.message.name,
                     functionCall: c.message.function_call,
                     finishReason: c.finishReason ?? c.finish_reason,
-                    [this._providerName]: result.data,
+                    [this._providerName]: c,
                 })
             );
 
@@ -271,7 +271,7 @@ export class OpenAIChatInterface implements AIChatInterface {
                     finishReason: c.finish_reason,
                     functionCall: c.delta
                         .function_call as unknown as AIFunctionCall,
-                    [this._providerName]: chunk,
+                    [this._providerName]: c,
                 })),
                 totalTokens: chunk.usage?.total_tokens ?? 0,
                 inputTokens: chunk.usage?.prompt_tokens,
