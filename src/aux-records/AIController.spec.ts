@@ -310,6 +310,10 @@ describe('AIController', () => {
                         } as any,
                     ],
                     totalTokens: 1,
+                    anthropic: {
+                        id: 'msg_123',
+                        model: 'claude',
+                    },
                 })
             );
 
@@ -339,6 +343,10 @@ describe('AIController', () => {
                         },
                     },
                 ],
+                anthropic: {
+                    id: 'msg_123',
+                    model: 'claude',
+                },
             });
         });
 
@@ -2593,6 +2601,9 @@ describe('AIController', () => {
                             } as any,
                         ],
                         totalTokens: 1,
+                        'my-custom-provider': {
+                            requestId: 'req_123',
+                        },
                     }),
                 ])
             );
@@ -2628,6 +2639,9 @@ describe('AIController', () => {
                                 },
                             },
                         ],
+                        'my-custom-provider': {
+                            requestId: 'req_123',
+                        },
                     },
                 ],
             });

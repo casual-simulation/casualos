@@ -187,6 +187,7 @@ export class OpenAIChatInterface implements AIChatInterface {
                 totalTokens: result.data.usage?.total_tokens ?? 0,
                 inputTokens: result.data.usage?.prompt_tokens,
                 outputTokens: result.data.usage?.completion_tokens,
+                [this._providerName]: result.data,
             };
         } catch (err) {
             if (axios.isAxiosError(err)) {
@@ -276,6 +277,7 @@ export class OpenAIChatInterface implements AIChatInterface {
                 totalTokens: chunk.usage?.total_tokens ?? 0,
                 inputTokens: chunk.usage?.prompt_tokens,
                 outputTokens: chunk.usage?.completion_tokens,
+                [this._providerName]: chunk,
             };
         }
     }
