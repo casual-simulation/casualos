@@ -295,6 +295,61 @@ describe('AIController', () => {
             });
         });
 
+        it('should include provider-native payloads in chat choices', async () => {
+            chatInterface.chat.mockReturnValueOnce(
+                Promise.resolve({
+                    choices: [
+                        {
+                            role: 'assistant',
+                            content: 'test',
+                            finishReason: 'stop',
+                            anthropic: {
+                                id: 'msg_123',
+                                model: 'claude',
+                            },
+                        } as any,
+                    ],
+                    totalTokens: 1,
+                    anthropic: {
+                        id: 'msg_123',
+                        model: 'claude',
+                    },
+                })
+            );
+
+            const result = await controller.chat({
+                model: 'test-model1',
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'test',
+                    },
+                ],
+                temperature: 0.5,
+                userId,
+                userSubscriptionTier,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                choices: [
+                    {
+                        role: 'assistant',
+                        content: 'test',
+                        finishReason: 'stop',
+                        anthropic: {
+                            id: 'msg_123',
+                            model: 'claude',
+                        },
+                    },
+                ],
+                anthropic: {
+                    id: 'msg_123',
+                    model: 'claude',
+                },
+            });
+        });
+
         it('should support using another provider based on the chosen model', async () => {
             chatInterface2.chat.mockReturnValueOnce(
                 Promise.resolve({
@@ -2528,6 +2583,67 @@ describe('AIController', () => {
                 userId: 'test-user',
                 enableCaching: true,
                 maxTokens: undefined,
+            });
+        });
+
+        it('should include provider-native payloads in stream chunks', async () => {
+            chatInterface.chatStream.mockReturnValueOnce(
+                asyncIterable<AIChatInterfaceStreamResponse>([
+                    Promise.resolve({
+                        choices: [
+                            {
+                                role: 'assistant',
+                                content: 'test',
+                                finishReason: 'stop',
+                                'my-custom-provider': {
+                                    requestId: 'req_123',
+                                },
+                            } as any,
+                        ],
+                        totalTokens: 1,
+                        'my-custom-provider': {
+                            requestId: 'req_123',
+                        },
+                    }),
+                ])
+            );
+
+            const result = await unwindAndCaptureAsync(
+                controller.chatStream({
+                    model: 'test-model1',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                        },
+                    ],
+                    temperature: 0.5,
+                    userId,
+                    userSubscriptionTier,
+                })
+            );
+
+            expect(result).toEqual({
+                result: {
+                    success: true,
+                },
+                states: [
+                    {
+                        choices: [
+                            {
+                                role: 'assistant',
+                                content: 'test',
+                                finishReason: 'stop',
+                                'my-custom-provider': {
+                                    requestId: 'req_123',
+                                },
+                            },
+                        ],
+                        'my-custom-provider': {
+                            requestId: 'req_123',
+                        },
+                    },
+                ],
             });
         });
 

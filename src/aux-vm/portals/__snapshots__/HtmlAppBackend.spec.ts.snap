@@ -16,11 +16,11 @@ Object {
     Object {
       "addedNodes": Array [
         Object {
-          "__id": "0",
+          "__id": "1",
           "attributes": Array [],
           "childNodes": Array [
             Object {
-              "__id": "1",
+              "__id": "2",
               "attributes": Array [
                 Object {
                   "name": "value",
@@ -50,15 +50,15 @@ Object {
       "previousSibling": undefined,
       "removedNodes": Array [],
       "target": Object {
-        "__id": "testPortal",
+        "__id": "0",
         "attributes": Array [],
         "childNodes": Array [
           Object {
-            "__id": "0",
+            "__id": "1",
             "attributes": Array [],
             "childNodes": Array [
               Object {
-                "__id": "1",
+                "__id": "2",
                 "attributes": Array [
                   Object {
                     "name": "value",
@@ -102,7 +102,7 @@ Object {
       "listenerName": undefined,
       "oldValue": "",
       "target": Object {
-        "__id": "1",
+        "__id": "2",
         "attributes": Array [
           Object {
             "name": "value",
@@ -125,11 +125,11 @@ Object {
     Object {
       "addedNodes": Array [
         Object {
-          "__id": "0",
+          "__id": "1",
           "attributes": Array [],
           "childNodes": Array [
             Object {
-              "__id": "1",
+              "__id": "2",
               "data": "Hello",
               "nodeType": 3,
             },
@@ -149,15 +149,15 @@ Object {
       "previousSibling": undefined,
       "removedNodes": Array [],
       "target": Object {
-        "__id": "testPortal",
+        "__id": "0",
         "attributes": Array [],
         "childNodes": Array [
           Object {
-            "__id": "0",
+            "__id": "1",
             "attributes": Array [],
             "childNodes": Array [
               Object {
-                "__id": "1",
+                "__id": "2",
                 "data": "Hello",
                 "nodeType": 3,
               },
@@ -187,11 +187,11 @@ Object {
     Object {
       "addedNodes": Array [
         Object {
-          "__id": "0",
+          "__id": "1",
           "attributes": Array [],
           "childNodes": Array [
             Object {
-              "__id": "1",
+              "__id": "2",
               "data": "Hello",
               "nodeType": 3,
             },
@@ -211,15 +211,15 @@ Object {
       "previousSibling": undefined,
       "removedNodes": Array [],
       "target": Object {
-        "__id": "testPortal",
+        "__id": "0",
         "attributes": Array [],
         "childNodes": Array [
           Object {
-            "__id": "0",
+            "__id": "1",
             "attributes": Array [],
             "childNodes": Array [
               Object {
-                "__id": "1",
+                "__id": "2",
                 "data": "Hello",
                 "nodeType": 3,
               },

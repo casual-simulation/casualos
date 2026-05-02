@@ -2589,6 +2589,59 @@ describe('AuxLibrary', () => {
                 });
             });
 
+            it('should return provider-native payloads on chat choices', async () => {
+                let result: any;
+                const promise: any = library.api.ai.chat({
+                    role: 'user',
+                    content: 'hello, world!',
+                });
+
+                promise.then((r: any) => (result = r));
+
+                const expected = aiChat(
+                    [
+                        {
+                            role: 'user',
+                            content: 'hello, world!',
+                        },
+                    ],
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                context.resolveTask(
+                    expected.taskId,
+                    {
+                        success: true,
+                        choices: [
+                            {
+                                role: 'assistant',
+                                content: 'Hello to you!',
+                                finishReason: 'stop',
+                                anthropic: {
+                                    id: 'msg_123',
+                                },
+                            },
+                        ],
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(result).toEqual({
+                    role: 'assistant',
+                    content: 'Hello to you!',
+                    finishReason: 'stop',
+                    anthropic: {
+                        id: 'msg_123',
+                    },
+                });
+            });
+
             it('should return a string when a string was given', async () => {
                 let result: any;
                 const promise: any = library.api.ai.chat('hello, world!');
@@ -2983,6 +3036,73 @@ describe('AuxLibrary', () => {
                         {
                             role: 'assistant',
                             content: 'This is fun!',
+                        },
+                    ],
+                });
+            });
+
+            it('should include provider-native payloads in streamed messages', async () => {
+                const promise: any = library.api.ai.stream.chat({
+                    role: 'user',
+                    content: 'hello, world!',
+                });
+
+                const expected = aiChatStream(
+                    [
+                        {
+                            role: 'user',
+                            content: 'hello, world!',
+                        },
+                    ],
+                    undefined,
+                    context.iterableTasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                let resolved: any;
+                promise.then((r: any) => (resolved = r));
+                expect(resolved).toBeUndefined();
+
+                context.resolveTask(
+                    context.iterableTasks.size,
+                    { success: true },
+                    false
+                );
+                context.iterableNext(
+                    context.iterableTasks.size,
+                    {
+                        choices: [
+                            {
+                                role: 'assistant',
+                                content: 'Hello!',
+                                openai: {
+                                    id: 'chatcmpl_123',
+                                },
+                            },
+                        ],
+                        totalTokens: 0,
+                    } as AIChatInterfaceStreamResponse,
+                    false
+                );
+                context.iterableComplete(context.iterableTasks.size, false);
+
+                await waitAsync();
+
+                expect(Symbol.asyncIterator in resolved).toBe(true);
+
+                const iterator = resolved[Symbol.asyncIterator]();
+                const result = await unwindAndCaptureAsync(iterator);
+
+                expect(result).toEqual({
+                    states: [
+                        {
+                            role: 'assistant',
+                            content: 'Hello!',
+                            openai: {
+                                id: 'chatcmpl_123',
+                            },
                         },
                     ],
                 });

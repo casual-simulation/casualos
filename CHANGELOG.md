@@ -38,6 +38,20 @@
         // Notice the spacing between the <div> and <span> tags
         ```
 
+### :rocket: Features
+
+-   `ai.chat()` and `ai.stream.chat()` now include the provider-native response object on each returned choice.
+    -   The raw response from the underlying provider is available as a property named after the provider (e.g. `openai`, `anthropic`, `google`).
+    -   For custom OpenAI-compatible providers the property is keyed by the configured provider name.
+    -   Example:
+        ```typescript
+        const response = await ai.chat('Hello!');
+        const nativeOpenAIResponse = response.openai;
+        const nativeAnthropicResponse = response.anthropic;
+        const nativeGoogleResponse = response.google;
+        ```
+    -   The existing normalized fields (`role`, `content`, `finishReason`, etc.) are unchanged.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where the default page title contained HTML comments used for replacing it on server-based deployments.
