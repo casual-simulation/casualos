@@ -308,6 +308,7 @@
                         multiple
                     >
                         <md-option value="join inst">join inst</md-option>
+                        <md-option value="temp">temp</md-option>
                         <md-option value="local inst">local inst</md-option>
                         <md-option value="free inst">free inst</md-option>
                         <md-option value="studio inst">studio inst</md-option>
@@ -327,6 +328,7 @@
                     >
                         <md-option :value="0">(default)</md-option>
                         <md-option value="join inst">join inst</md-option>
+                        <md-option value="temp">temp</md-option>
                         <md-option value="local inst">local inst</md-option>
                         <md-option value="free inst">free inst</md-option>
                         <md-option value="studio inst">studio inst</md-option>
@@ -346,6 +348,7 @@
                     >
                         <md-option :value="0">(default)</md-option>
                         <md-option value="join inst">join inst</md-option>
+                        <md-option value="temp">temp</md-option>
                         <md-option value="local inst">local inst</md-option>
                         <md-option value="free inst">free inst</md-option>
                         <md-option value="studio inst">studio inst</md-option>

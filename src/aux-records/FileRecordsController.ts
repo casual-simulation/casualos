@@ -110,7 +110,57 @@ export class FileRecordsController {
                 return contextResult;
             }
 
-            const extension = getExtension(request.fileMimeType);
+            let extension: string | false | null;
+            if (request.fileExtension) {
+                // Normalize the extension: trim, strip leading dot, and lowercase
+                const trimmedExtension = request.fileExtension.trim();
+                const extensionWithoutDot = trimmedExtension.startsWith('.')
+                    ? trimmedExtension.slice(1)
+                    : trimmedExtension;
+                const normalizedExtension = extensionWithoutDot.toLowerCase();
+                // Reject empty or invalid extensions
+                if (!normalizedExtension) {
+                    return {
+                        success: false,
+                        errorCode: 'unacceptable_request',
+                        errorMessage:
+                            'The specified file extension is invalid.',
+                    };
+                }
+                // Disallow path separators and other unsafe characters
+                if (
+                    normalizedExtension.includes('/') ||
+                    normalizedExtension.includes('\\')
+                ) {
+                    return {
+                        success: false,
+                        errorCode: 'unacceptable_request',
+                        errorMessage:
+                            'The specified file extension contains invalid characters.',
+                    };
+                }
+
+                if (request.fileMimeType) {
+                    // Both provided — validate they agree
+                    const mimeExtension = getExtension(request.fileMimeType);
+                    if (
+                        mimeExtension &&
+                        mimeExtension !== normalizedExtension
+                    ) {
+                        return {
+                            success: false,
+                            errorCode: 'unacceptable_request',
+                            errorMessage:
+                                'The specified file extension does not match the file extension for the given MIME type.',
+                        };
+                    }
+                }
+
+                extension = normalizedExtension;
+            } else {
+                extension = getExtension(request.fileMimeType);
+            }
+
             const fileName = extension
                 ? `${request.fileSha256Hex}.${extension}`
                 : request.fileSha256Hex;
@@ -354,7 +404,8 @@ export class FileRecordsController {
                 recordName,
                 fileName: fileName,
                 fileSha256Hex: request.fileSha256Hex,
-                fileMimeType: request.fileMimeType,
+                fileMimeType:
+                    request.fileMimeType ?? 'application/octet-stream',
                 fileByteLength: request.fileByteLength,
                 markers: rootMarkers,
                 headers: request.headers,
@@ -890,7 +941,16 @@ export interface RecordFileRequest {
     /**
      * The MIME type of the file.
      */
-    fileMimeType: string;
+    fileMimeType?: string;
+
+    /**
+     * The file extension to use for the uploaded file.
+     * If specified, this will be used as the file extension instead of deriving one from the MIME type.
+     * Should include the leading dot (e.g. '.spz', '.png').
+     * If both fileExtension and fileMimeType are provided, the server will validate that the known
+     * extension for the MIME type matches the specified extension.
+     */
+    fileExtension?: string;
 
     /**
      * The description of the file.

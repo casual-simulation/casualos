@@ -1,8 +1,158 @@
 # CasualOS Changelog
 
-## V4.2.3
+## V4.2.4
 
 #### Date: TBD
+
+### :boom: Breaking Changes
+
+-   Changed how whitespace is handled in JSX expressions by default.
+
+    -   Previously, whitespace was preserved as much as possible. This meant that all spaces and newlines which were in the JSX expression were preserved in the JSX output. It also meant that formatting JSX could change the output.
+    -   Now, whitespace is removed unless explicitly added. This means that formatting will no longer change the JSX output. Additionally, this behavior matches the whitespace behavior of other JSX compilers (React, Babel, etc.).
+    -   If you want to preserve the previous behavior, you can add the `"jsx-preserve-whitespace";` directive at the start of the script(s) you want JSX whitespace preservation on.
+    -   Here's an example of the changed behavior:
+
+        ```typescript
+        let jsx = (
+            <div>
+                <span>Hello</span>
+                <span>World</span>
+            </div>
+        );
+
+        // Previously, the output would be like this:
+        let originalOutput = (
+            <div>
+                {' '}
+                <span>Hello</span> <span>World</span>{' '}
+            </div>
+        );
+
+        // Now, the output is like this:
+        let newOutput = (
+            <div>
+                <span>Hello</span> <span>World</span>
+            </div>
+        );
+        // Notice the spacing between the <div> and <span> tags
+        ```
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the default page title contained HTML comments used for replacing it on server-based deployments.
+-   Fixed an issue where fractional `tokenModifierRatio` values could cause the server to error because of mishandling of fractional values for AI chat billing.
+-   Fixed an issue where Anthropic models would not be allowed to output more than `4096` tokens.
+
+## V4.2.3
+
+#### Date: 4/27/2026
+
+### :rocket: Features
+
+-   Added support for specifying a custom file extension when recording files via `os.recordFile()`.
+    -   Users can now pass `fileExtension` in the options object to specify the file extension directly, instead of relying on the MIME type to determine the extension. This is useful for file formats that don't have a well-known MIME type (e.g., Gaussian Splat `.spz` files).
+    -   Example:
+        ```typescript
+        await os.recordFile(recordKey, data, {
+            fileExtension: '.spz',
+        });
+        ```
+    -   If both `fileExtension` and `mimeType` are provided, the server validates that the known extension for the given MIME type matches the specified extension. If they don't match, an error is returned.
+    -   `fileMimeType` defaults to `application/octet-stream` when only `fileExtension` is specified.
+-   Added `remoteClients` to shared documents.
+    -   `remoteClients` is an observable that you can subscribe to to get notified whenever another session (e.g. tab) connects to the document.
+-   Added `recordName` support to AI chat, streaming chat, image generation, and skybox generation requests so record-owned subscriptions can be used for authorization, billing, and metrics.
+-   Added the `ai.chat`, `ai.image`, and `ai.skybox` policy resource kinds with `create` permissions.
+-   Improved `xp.getAccountBalances(options?)` to accept one of `userId`, `studioId`, or `contractId` in the `options` parameter object.
+-   Added the `temp` BIOS option to the player and studio configuration UI, and updated temp insts to use in-memory-only partitions with no persistence across refreshes.
+-   Added support for configuring the initial player page title and description in server deployments, including comId-specific overrides for link previews and other server-rendered metadata.
+-   Added support for configuring credit expiration.
+    -   By default, credits never expire.
+    -   Credit expiration can be configured via the `SERVER_CONFIG.subscriptions.subscriptions[i].creditExpiration` key, and can be set to one of the following options:
+        -   `never-expire` (Default) - Credits never expire.
+        -   `expire-after-period` - Credits expire when the user's subscription period ends. This can happen either just before renewal, or upon cancellation of the subscription. This will move all the credits from the user/studio account to the credit expiration account.
+    -   When credits expire, they are moved to the `credit_expiration` account (`7001`) with transfer code `credit_expiration` (`3005`).
+    -   Expired credits can be configured to automatically transfer to an arbitrary account via the `SERVER_CONFIG.jobs.financial.automatedSweep` key.
+        -   WARNING: financial jobs currently only work for server-based deployments (not serverless like Lambda).
+        -   To configure expired credits to sweep to the revenue account:
+            ```json
+            {
+                "jobs": {
+                    "financial": {
+                        "automatedSweep": {
+                            "repeatOptions": {
+                                "pattern": "0 3 15 * *"
+                            },
+                            "jobTemplate": {
+                                "data": {
+                                    "type": "financial-automated-sweep",
+                                    "sweeps": [
+                                        {
+                                            "code": 8,
+                                            "currency": "credits",
+                                            "debitAccountId": "7001",
+                                            "creditAccountId": "4104"
+                                        }
+                                    ]
+                                },
+                                "name": "financial-automated-sweep"
+                            }
+                        }
+                    }
+                }
+            }
+            ```
+        -   To configure expired credits to sweep to another account:
+            ```json
+            {
+                "jobs": {
+                    "financial": {
+                        "automatedSweep": {
+                            "repeatOptions": {
+                                "pattern": "0 3 15 * *"
+                            },
+                            "jobTemplate": {
+                                "data": {
+                                    "type": "financial-automated-sweep",
+                                    "sweeps": [
+                                        {
+                                            "code": 3,
+                                            "currency": "credits",
+                                            "debitAccountId": "7001",
+                                            "creditAccountId": "99999999"
+                                        }
+                                    ]
+                                },
+                                "name": "financial-automated-sweep"
+                            }
+                        }
+                    }
+                }
+            }
+            ```
+-   Included Subscription info in the `xp.getAccountBalances()` result.
+    -   Successful results now include a `subscription` property which contains information about the user/studio's current subscription and includes information like: subscription tier, credit expiration policy, and subscription period (start and end).
+-   Added the `xp.purchaseCredits(request)` function.
+    -   Creates and returns a checkout session URL that grants a user/studio credits.
+    -   `request` should be an object that has the following properties:
+        -   `targetUserId` - The ID of the user that the purchased credits should be granted to. Currently must be the ID of the user. Can be omitted if `targetStudioId` is specified.
+        -   `targetStudioId` - The ID of the studio that the purchased credits should be granted to. Currently only studio admins are allowed to purchase credits for a studio.
+        -   `returnUrl` - The URL that the user should be redirected to when they cancel the checkout session.
+        -   `successUrl` - The URL that the user should be redirected to when the complete the checkout session.
+    -   Before purchasing credits is supported, the following must be configured:
+        -   `SERVER_CONFIG.subscriptions.purchaseCreditsConfig` must be set to an object with the following properties:
+            -   `product` (string) - The ID of the stripe product. Must have a price with the following metadata:
+                -   `casualos.credits` - The number of credits that will be granted for each unit purchased.
+            -   `adjustableQuantity` (boolean; optional) - Whether the quantity can be adjusted by the user. Defaults to true.
+            -   `defaultQuantity` (number; optional) - The default quantity of the product to purchase. Defaults to 1.
+            -   `maxQuantity` (number; optional) - The maximum allowed quantity. Defaults to 999,999 (Stripe max).
+            -   `minQuantity` (number; optional) - The minimum allowed quantity. Defaults to 0.
+-   Added support for file path-style imports:
+    -   Instead of `.otherTag`, now you can use `./otherTag`
+    -   Instead of `:parent.tag`, now you can use `../parent/tag`
+-   Updated the [`typesense`](https://typesense.org/) library to v3.0.5.
+-   Added support for AI chat prompt caching via `enableCaching` in `ai.chat()` and `ai.stream.chat()` options, including forwarding to Claude/Anthropic requests using prompt cache control.
 
 ### :rocket: Features
 
@@ -13,6 +163,10 @@
 -   Fixed an issue where CasualOS didn't support the TypeScript `override` keyword.
 -   Fixed an issue where CasualOS could sometimes improperly sync state for custom apps when multiple events are dispatched for an `<input>` or `<select>` element at the same time.
 -   Fixed an issue where custom domain web manifests wouldn't be retrieved correctly.
+-   Fixed an issue where `DELETE` API methods didn't support cross-origin requests.
+-   Fixed an issue where getting a studio when Hume has been configured with billing fees would fail.
+-   Fixed an issue where nested TypeScript "as" expressions weren't supported.
+-   Fixed an issue where it was impossible to import `typesense` because of a broken import map.
 
 ## V4.2.2
 

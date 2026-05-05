@@ -15,30 +15,32 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import type {
-    CreateStripeAccountSessionRequest,
-    StripeAccount,
-    StripeAccountLink,
-    StripeAccountSession,
-    StripeCheckoutRequest,
-    StripeCheckoutResponse,
-    StripeCreateAccountLinkRequest,
-    StripeCreateAccountRequest,
-    StripeCreateCustomerRequest,
-    StripeCreateCustomerResponse,
-    StripeCreateLoginLinkRequest,
-    StripeCreateTransferRequest,
-    StripeEvent,
-    StripeInterface,
-    StripeListActiveSubscriptionsResponse,
-    StripePaymentIntent,
-    StripePortalRequest,
-    StripePortalResponse,
-    StripePrice,
-    StripeProduct,
-    StripeSubscription,
-    StripeSubscriptionItem,
-    StripeTransfer,
+import type { StripeCheckoutSession } from '@casual-simulation/aux-records';
+import {
+    STRIPE_CHECKOUT_SESSION_SCHEMA,
+    type CreateStripeAccountSessionRequest,
+    type StripeAccount,
+    type StripeAccountLink,
+    type StripeAccountSession,
+    type StripeCheckoutRequest,
+    type StripeCheckoutResponse,
+    type StripeCreateAccountLinkRequest,
+    type StripeCreateAccountRequest,
+    type StripeCreateCustomerRequest,
+    type StripeCreateCustomerResponse,
+    type StripeCreateLoginLinkRequest,
+    type StripeCreateTransferRequest,
+    type StripeEvent,
+    type StripeInterface,
+    type StripeListActiveSubscriptionsResponse,
+    type StripePaymentIntent,
+    type StripePortalRequest,
+    type StripePortalResponse,
+    type StripePrice,
+    type StripeProduct,
+    type StripeSubscription,
+    type StripeSubscriptionItem,
+    type StripeTransfer,
 } from '@casual-simulation/aux-records';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 import type { SpanOptions } from '@opentelemetry/api';
@@ -83,12 +85,12 @@ export class StripeIntegration implements StripeInterface {
     test?: StripeInterface;
 
     @traced(TRACE_NAME, SPAN_OPTIONS)
-    async getCheckoutSessionById(id: string): Promise<StripeCheckoutResponse> {
+    async getCheckoutSessionById(id: string): Promise<StripeCheckoutSession> {
         const session = await this._stripe.checkout.sessions.retrieve(id, {
-            expand: ['invoice'],
+            expand: ['line_items'],
         });
 
-        return this._convertCheckoutSession(session);
+        return STRIPE_CHECKOUT_SESSION_SCHEMA.parse(session);
     }
 
     @traced(TRACE_NAME, SPAN_OPTIONS)

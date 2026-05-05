@@ -19,9 +19,13 @@
 import { traced } from '../tracing/TracingDecorators';
 import z from 'zod';
 import { v7 as uuidv7 } from 'uuid';
-import type { FinancialController } from './FinancialController';
+import type {
+    FinancialController,
+    InternalTransfer,
+} from './FinancialController';
 import {
     ACCOUNT_IDS,
+    AMOUNT_MAX,
     BillingCodes,
     convertBetweenLedgers,
     CurrencyCodes,
@@ -56,9 +60,33 @@ export const FINANCIAL_JOB_PERIODIC_BILLING_SCHEMA = z.object({
     nowMs: z.number().optional(),
 });
 
+export const FINANCIAL_JOB_AUTOMATED_SWEEP_SCHEMA = z.object({
+    type: z.literal('financial-automated-sweep'),
+
+    sweeps: z
+        .array(
+            z.object({
+                code: z
+                    .int()
+                    .describe('The transfer code to use for this sweep.'),
+                currency: z.enum(['credits', 'usd']),
+                debitAccountId: z.coerce
+                    .bigint()
+                    .describe('The account to debit.'),
+                creditAccountId: z.coerce
+                    .bigint()
+                    .describe('The account to credit.'),
+            })
+        )
+        .describe(
+            'The list of automated sweeps that should be performed. Each sweep is performed in sequence and in a single transaction, so transfers can depend on each other (e.g. sweeping all from account A to B, then sweeping all from B to C).'
+        ),
+});
+
 export const FINANCIAL_JOB_SCHEMA = z.discriminatedUnion('type', [
     FINANCIAL_JOB_REVENUE_CREDIT_SWEEP_SCHEMA,
     FINANCIAL_JOB_PERIODIC_BILLING_SCHEMA,
+    FINANCIAL_JOB_AUTOMATED_SWEEP_SCHEMA,
 ]);
 
 export type FinancialJob = z.infer<typeof FINANCIAL_JOB_SCHEMA>;
@@ -67,6 +95,9 @@ export type FinancialRevenueCreditSweepJob = z.infer<
 >;
 export type FinancialPeriodicBillingJob = z.infer<
     typeof FINANCIAL_JOB_PERIODIC_BILLING_SCHEMA
+>;
+export type FinancialAutomatedSweepJob = z.infer<
+    typeof FINANCIAL_JOB_AUTOMATED_SWEEP_SCHEMA
 >;
 
 export interface FinancialProcessorConfig {
@@ -102,6 +133,8 @@ export class FinancialProcessor {
             return await this._sweepRevenueCredits(job);
         } else if (job.type === 'financial-periodic-billing') {
             return await this._periodicBilling(job);
+        } else if (job.type === 'financial-automated-sweep') {
+            return await this._automatedSweep(job);
         }
     }
 
@@ -755,5 +788,51 @@ export class FinancialProcessor {
         );
 
         return success();
+    }
+
+    @traced(TRACE_NAME)
+    private async _automatedSweep(
+        job: FinancialAutomatedSweepJob
+    ): Promise<Result<void, SimpleError>> {
+        const transfers = job.sweeps.map(
+            (sweep) =>
+                ({
+                    debitAccountId: sweep.debitAccountId,
+                    creditAccountId: sweep.creditAccountId,
+                    code: sweep.code,
+                    amount: AMOUNT_MAX, // Sweep all available balance
+                    balancingDebit: true, // Ensure we only sweep available balance
+                    currency: sweep.currency,
+                } satisfies InternalTransfer)
+        );
+
+        console.log(
+            `[${TRACE_NAME}] [_automatedSweep] Performing automated sweep with ${transfers.length} transfers:`
+        );
+        for (const transfer of transfers) {
+            console.log(
+                `    - TRANSFER ALL ${transfer.currency} from account ${transfer.debitAccountId} to account ${transfer.creditAccountId} with code ${transfer.code}`
+            );
+        }
+
+        const result = await this._financial.internalTransaction({
+            transfers,
+        });
+
+        if (isFailure(result)) {
+            logError(
+                result.error,
+                `[${TRACE_NAME}] [_automatedSweep] Failed to perform automated sweep:`
+            );
+            return failure({
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            });
+        } else {
+            console.log(
+                `[${TRACE_NAME}] [_automatedSweep] Successfully performed automated sweep.`
+            );
+            return success();
+        }
     }
 }

@@ -1383,7 +1383,8 @@ export interface AuthCheckoutSession {
 
 export type AuthCheckoutSessionItem =
     | AuthCheckoutSessionRoleItem
-    | AuthCheckoutSessionContractItem;
+    | AuthCheckoutSessionContractItem
+    | AuthCheckoutSessionCreditsItem;
 
 export interface AuthCheckoutSessionRoleItem {
     /**
@@ -1434,6 +1435,25 @@ export interface AuthCheckoutSessionContractItem {
      * The value of the contract being purchased.
      */
     value: number;
+}
+
+export interface AuthCheckoutSessionCreditsItem {
+    type: 'credits';
+
+    /**
+     * The ID of the user that is purchasing the credits.
+     */
+    userId: string;
+
+    /**
+     * The ID of the studio that the credits are being purchased for.
+     */
+    targetStudioId: string | null;
+
+    /**
+     * The ID of the user that the credits are being purchased for.
+     */
+    targetUserId: string | null;
 }
 
 /**

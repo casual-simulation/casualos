@@ -350,7 +350,31 @@ describe('Transpiler', () => {
                 );
             });
 
-            it('should preserve whitespace as much as possible', () => {
+            it('should preserve whitespace as much as possible if the jsx-preserve-whitespace directive is present', () => {
+                const result = transpiler.transpile(
+                    [
+                        `"jsx-preserve-whitespace";`,
+                        `<div `,
+                        `  val="123" `,
+                        `  other="str">`,
+                        `  Hello`,
+                        `</div>`,
+                    ].join('\n')
+                );
+
+                expect(result).toBe(
+                    [
+                        `"jsx-preserve-whitespace";`,
+                        `h("div",{ `,
+                        `  "val":"123" `,
+                        `  ,"other":"str"},\``,
+                        `  Hello`,
+                        `\`,)`,
+                    ].join('\n')
+                );
+            });
+
+            it('should not preserve whitespace if the jsx-preserve-whitespace directive is not present', () => {
                 const result = transpiler.transpile(
                     [
                         `<div `,
@@ -365,9 +389,61 @@ describe('Transpiler', () => {
                     [
                         `h("div",{ `,
                         `  "val":"123" `,
-                        `  ,"other":"str"},\``,
-                        `  Hello`,
-                        `\`,)`,
+                        `  ,"other":"str"},`,
+                        `  \`Hello\``,
+                        `,)`,
+                    ].join('\n')
+                );
+            });
+
+            it('should preserve inline whitespace between elements', () => {
+                const result = transpiler.transpile(
+                    [
+                        `<div>`,
+                        `  <span>Hello</span> <span>World</span>`,
+                        `</div>`,
+                    ].join('\n')
+                );
+
+                expect(result).toBe(
+                    [
+                        `h("div",null,`,
+                        '  h("span",null,`Hello`,),` `,h("span",null,`World`,),',
+                        `)`,
+                    ].join('\n')
+                );
+            });
+
+            it('should preserve inline whitespace at the end of text nodes', () => {
+                const result = transpiler.transpile(
+                    [`<div>`, `  text {abc}`, `</div>`].join('\n')
+                );
+
+                expect(result).toBe(
+                    [`h("div",null,`, '  `text `,abc,', `)`].join('\n')
+                );
+            });
+
+            it('should preserve inline whitespace at the start of text nodes', () => {
+                const result = transpiler.transpile(
+                    [`<div>`, `  {abc} text`, `</div>`].join('\n')
+                );
+
+                expect(result).toBe(
+                    [`h("div",null,`, '  abc,` text`', `,)`].join('\n')
+                );
+            });
+
+            it('should ignore empty sections of whitespace', () => {
+                const result = transpiler.transpile(
+                    [`<div>`, `  <span>Hello!</span>`, `</div>`].join('\n')
+                );
+
+                expect(result).toBe(
+                    [
+                        `h("div",null,`,
+                        `  h("span",null,\`Hello!\`,),`,
+                        `)`,
                     ].join('\n')
                 );
             });
@@ -379,6 +455,28 @@ describe('Transpiler', () => {
 
                 expect(result).toBe(
                     `h("div",null,h("h1",null,\`Hello, World!\`,),)`
+                );
+            });
+
+            it('should be able to preserve whitespace for elements with text and other elements', () => {
+                const result = transpiler.transpile(
+                    [
+                        `"jsx-preserve-whitespace";`,
+                        `<div>`,
+                        `  Some text`,
+                        `  <h1>Hello, World!</h1>`,
+                        `</div>`,
+                    ].join('\n')
+                );
+
+                expect(result).toBe(
+                    [
+                        `"jsx-preserve-whitespace";`,
+                        'h("div",null,`',
+                        '  Some text',
+                        '  `,h("h1",null,`Hello, World!`,),`',
+                        '`,)',
+                    ].join('\n')
                 );
             });
 
@@ -394,10 +492,10 @@ describe('Transpiler', () => {
 
                 expect(result).toBe(
                     [
-                        'h("div",null,`',
-                        `  Some text`,
-                        '  `,h("h1",null,`Hello, World!`,),`',
-                        '`,)',
+                        'h("div",null,',
+                        '  `Some text`',
+                        '  ,h("h1",null,`Hello, World!`,),',
+                        ')',
                     ].join('\n')
                 );
             });
@@ -575,10 +673,10 @@ describe('Transpiler', () => {
 
                 expect(result).toBe(
                     [
-                        'let el = h("div",null,`',
-                        `  Some text`,
-                        '  `,h("h1",null,`Hello, World!`,),`',
-                        '`,)',
+                        'let el = h("div",null,',
+                        '  `Some text`',
+                        '  ,h("h1",null,`Hello, World!`,),',
+                        ')',
                         `for(let abc of def) {__energyCheck();`,
                         `  let test = {`,
                         `    value: abc`,
@@ -601,10 +699,10 @@ describe('Transpiler', () => {
 
                 expect(result).toBe(
                     [
-                        'let el = h("div",null,`',
-                        `  Some text`,
-                        '  `,h("h1",null,`Hello, World!`,),`',
-                        '`,)',
+                        'let el = h("div",null,',
+                        '  `Some text`',
+                        '  ,h("h1",null,`Hello, World!`,),',
+                        ')',
                         `for(let abc of def) {__energyCheck();console.log("abc")}`,
                     ].join('\n')
                 );
@@ -624,10 +722,10 @@ describe('Transpiler', () => {
 
                 expect(result).toBe(
                     [
-                        'let el = h("div",null,`',
-                        `  Some text`,
-                        '  `,h("h1",null,`Hello, World!`,),`',
-                        '`,)',
+                        'let el = h("div",null,',
+                        '  `Some text`',
+                        '  ,h("h1",null,`Hello, World!`,),',
+                        ')',
                         `for(let abc of def)`,
                         `  {__energyCheck();console.log("abc")}`,
                     ].join('\n')
@@ -1898,6 +1996,38 @@ describe('Transpiler', () => {
                 expect(transpiler.transpile(`let abc = 123 as any;`)).toBe(
                     `let abc = 123;`
                 );
+
+                expect(
+                    transpiler.transpile(
+                        `let abc = value.map(v => v as number);`
+                    )
+                ).toBe(`let abc = value.map(v => v);`);
+
+                expect(
+                    transpiler.transpile(
+                        `let abc = value as unknown as string;`
+                    )
+                ).toBe(`let abc = value;`);
+
+                expect(
+                    transpiler.transpile(
+                        `let abc = func(value as unknown) as string;`
+                    )
+                ).toBe(`let abc = func(value);`);
+
+                expect(
+                    transpiler.transpile(`
+    const extensions1 = orderBy(
+      extensionsToDownload.map((ext) => ext.extension as any),
+      [(ext) => ext.meta.id],
+      ["asc"]
+    ) as UploadedExtension[];`)
+                ).toBe(`
+    const extensions1 = orderBy(
+      extensionsToDownload.map((ext) => ext.extension),
+      [(ext) => ext.meta.id],
+      ["asc"]
+    );`);
             });
 
             it('should remove implements expressions from class declarations and expressions', () => {
@@ -2372,6 +2502,24 @@ describe('Transpiler', () => {
                 expect(transpiler.transpile(`const abc = someValue[0]!;`)).toBe(
                     `const abc = someValue[0];`
                 );
+
+                expect(
+                    transpiler.transpile(`const abc = arr.map(v => v!);`)
+                ).toBe(`const abc = arr.map(v => v);`);
+
+                expect(
+                    transpiler.transpile(`
+    const extensions1 = orderBy(
+      extensionsToDownload.map((ext) => ext.extension!),
+      [(ext) => ext.meta.id],
+      ["asc"]
+    ) as UploadedExtension[];`)
+                ).toBe(`
+    const extensions1 = orderBy(
+      extensionsToDownload.map((ext) => ext.extension),
+      [(ext) => ext.meta.id],
+      ["asc"]
+    );`);
             });
 
             it('should preserve null-coalescing operators', () => {
@@ -2912,6 +3060,28 @@ describe('parseDirectives()', () => {
                 endIndex: 22,
             },
         ] as const,
+        [
+            '"jsx-preserve-whitespace"; const abc = 123;',
+            {
+                noParse: false,
+                isAsync: false,
+                isModule: false,
+                jsxPreserveWhitespace: true,
+                startIndex: 0,
+                endIndex: 26,
+            },
+        ] as const,
+        [
+            '"module async -parse jsx-preserve-whitespace"; const abc = 123;',
+            {
+                noParse: true,
+                isAsync: true,
+                isModule: true,
+                jsxPreserveWhitespace: true,
+                startIndex: 0,
+                endIndex: 46,
+            },
+        ] as const,
     ];
 
     it.each(cases)('%s', (code, expected) => {
@@ -2946,6 +3116,16 @@ describe('addDirectives()', () => {
             '-parse async module',
             { noParse: true, isAsync: true, isModule: true },
             '"-parse async module";',
+        ] as const,
+        [
+            '-parse async module jsx-preserve-whitespace',
+            {
+                noParse: true,
+                isAsync: true,
+                isModule: true,
+                jsxPreserveWhitespace: true,
+            },
+            '"-parse async module jsx-preserve-whitespace";',
         ] as const,
     ];
 

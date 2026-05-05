@@ -864,6 +864,103 @@ export type SubscriptionFeaturesSchema = ReturnType<
     typeof getSubscriptionFeaturesSchema
 >;
 
+export const getSubscriptionSchema = memoize(() =>
+    z.object({
+        id: z
+            .string()
+            .describe(
+                'The ID of the subscription. Can be anything, but it must be unique to each subscription and never change.'
+            ),
+        product: z
+            .string()
+            .optional()
+            .describe(
+                'The ID of the Stripe product that is being offered by this subscription. If omitted, then this subscription will be shown but not able to be purchased.'
+            ),
+        featureList: z
+            .array(z.string())
+            .describe(
+                'The list of features that should be shown for this subscription tier.'
+            ),
+        eligibleProducts: z
+            .array(z.string())
+            .optional()
+            .describe(
+                'The list of Stripe product IDs that count as eligible for this subscription. Useful if you want to change the product of this subscription, but grandfather in existing users.'
+            ),
+        defaultSubscription: z
+            .boolean()
+            .optional()
+            .describe(
+                "Whether this subscription should be granted to users if they don't already have a subscription. The first in the list of subscriptions that is marked as the default will be used. Defaults to false"
+            ),
+        purchasable: z
+            .boolean()
+            .optional()
+            .describe(
+                'Whether this subscription is purchasable and should be offered to users who do not already have a subscription. If false, then this subscription will not be shown to users unless they already have an active subscription for it. Defaults to true.'
+            ),
+        name: z
+            .string()
+            .optional()
+            .describe(
+                'The name of the subscription. Ignored if a Stripe product is specified.'
+            ),
+        description: z
+            .string()
+            .optional()
+            .describe(
+                'The description of the subscription. Ignored if a Stripe product is specified.'
+            ),
+        tier: z
+            .string()
+            .optional()
+            .describe(
+                'The tier of this subscription. Useful for grouping multiple subscriptions into the same set of features. Defaults to "beta"'
+            ),
+        userOnly: z
+            .boolean()
+            .optional()
+            .describe(
+                'Whether this subscription can only be purchased by individual users. Defaults to false.'
+            ),
+        studioOnly: z
+            .boolean()
+            .optional()
+            .describe(
+                'Whether this subscription can only be purchased by studios. Defaults to false.'
+            ),
+
+        creditGrant: z
+            .union([
+                z
+                    .int()
+                    .positive()
+                    .describe(
+                        'The number of credits that should be granted to the user/studio upon purchasing (and renewal) of this subscription.'
+                    ),
+                z.enum([
+                    'match-invoice', // Grants credits equal to the total of the invoice that pays for the subscription.
+                ]),
+            ])
+            .optional()
+            .nullable()
+            .describe(
+                'The number of credits that should be granted to the user/studio upon purchasing (and renewal) of this subscription. Defaults to 0.'
+            ),
+
+        creditExpiration: z
+            .enum(['never-expire', 'expire-after-period'])
+            .default('never-expire')
+            .describe(
+                'The expiration policy for the credits that are granted by this subscription. If set to "expire-after-period", then the credits will expire either after the invoice for the new period is paid, if the subscription is marked as unpaid, or if the subscription is canceled. Defaults to "never-expire".'
+            ),
+    })
+);
+
+export type SubscriptionSchema = ReturnType<typeof getSubscriptionSchema>;
+export type APISubscription = z.infer<SubscriptionSchema>;
+
 export const getSubscriptionConfigSchema = memoize(() =>
     z.object({
         webhookSecret: z
@@ -906,93 +1003,55 @@ export const getSubscriptionConfigSchema = memoize(() =>
                 'Additional options that should be passed to stripe.checkout.sessions.create().'
             ),
 
-        subscriptions: z
-            .array(
-                z.object({
-                    id: z
-                        .string()
-                        .describe(
-                            'The ID of the subscription. Can be anything, but it must be unique to each subscription and never change.'
-                        ),
-                    product: z
-                        .string()
-                        .optional()
-                        .describe(
-                            'The ID of the Stripe product that is being offered by this subscription. If omitted, then this subscription will be shown but not able to be purchased.'
-                        ),
-                    featureList: z
-                        .array(z.string())
-                        .describe(
-                            'The list of features that should be shown for this subscription tier.'
-                        ),
-                    eligibleProducts: z
-                        .array(z.string())
-                        .optional()
-                        .describe(
-                            'The list of Stripe product IDs that count as eligible for this subscription. Useful if you want to change the product of this subscription, but grandfather in existing users.'
-                        ),
-                    defaultSubscription: z
-                        .boolean()
-                        .optional()
-                        .describe(
-                            "Whether this subscription should be granted to users if they don't already have a subscription. The first in the list of subscriptions that is marked as the default will be used. Defaults to false"
-                        ),
-                    purchasable: z
-                        .boolean()
-                        .optional()
-                        .describe(
-                            'Whether this subscription is purchasable and should be offered to users who do not already have a subscription. If false, then this subscription will not be shown to users unless they already have an active subscription for it. Defaults to true.'
-                        ),
-                    name: z
-                        .string()
-                        .optional()
-                        .describe(
-                            'The name of the subscription. Ignored if a Stripe product is specified.'
-                        ),
-                    description: z
-                        .string()
-                        .optional()
-                        .describe(
-                            'The description of the subscription. Ignored if a Stripe product is specified.'
-                        ),
-                    tier: z
-                        .string()
-                        .optional()
-                        .describe(
-                            'The tier of this subscription. Useful for grouping multiple subscriptions into the same set of features. Defaults to "beta"'
-                        ),
-                    userOnly: z
-                        .boolean()
-                        .optional()
-                        .describe(
-                            'Whether this subscription can only be purchased by individual users. Defaults to false.'
-                        ),
-                    studioOnly: z
-                        .boolean()
-                        .optional()
-                        .describe(
-                            'Whether this subscription can only be purchased by studios. Defaults to false.'
-                        ),
+        purchaseCreditsConfig: z
+            .object({
+                product: z
+                    .string()
+                    .optional()
+                    .nullable()
+                    .describe(
+                        'The Stripe product that should be used for purchasing credits. If omitted, then purchasing credits will not be supported. The product\'s prices should have the following metadata properties: "casualos.credits" (The number of credits to grant when purchasing).'
+                    ),
+                adjustableQuantity: z
+                    .boolean()
+                    .default(true)
+                    .describe(
+                        'Whether the quantity of the line item should be adjustable by the user during checkout. Defaults to true.'
+                    ),
+                defaultQuantity: z
+                    .int()
+                    .positive()
+                    .default(1)
+                    .describe(
+                        'The default quantity of the line item during checkout. Defaults to 1.'
+                    ),
 
-                    creditGrant: z
-                        .union([
-                            z
-                                .int()
-                                .positive()
-                                .describe(
-                                    'The number of credits that should be granted to the user/studio upon purchasing (and renewal) of this subscription.'
-                                ),
-                            z.enum([
-                                'match-invoice', // Grants credits equal to the total of the invoice that pays for the subscription.
-                            ]),
-                        ])
-                        .optional()
-                        .nullable()
-                        .describe(
-                            'The number of credits that should be granted to the user/studio upon purchasing (and renewal) of this subscription. Defaults to 0.'
-                        ),
-                })
-            )
+                maxQuantity: z
+                    .int()
+                    .positive()
+                    .min(1)
+                    .max(999_999)
+                    .default(999_999)
+                    .describe(
+                        'The maximum quantity that the user can purchase at once. Must be between 1 and 999,999. Defaults to 999,999.'
+                    ),
+
+                minQuantity: z
+                    .int()
+                    .nonnegative()
+                    .min(0)
+                    .default(0)
+                    .describe(
+                        'The minimum quantity that the user can purchase at once. Must be at least 0. Defaults to 0.'
+                    ),
+            })
+            .prefault({})
+            .describe(
+                'Configuration for purchasing credits. Defaults to an empty object, which means that purchasing credits is not supported.'
+            ),
+
+        subscriptions: z
+            .array(getSubscriptionSchema())
             .describe('The list of subscriptions that are in use.'),
 
         tiers: z
@@ -1132,76 +1191,89 @@ export interface SubscriptionConfiguration {
      * The features that should be used when a tier does not have a features configuration.
      */
     defaultFeatures: DefaultFeaturesConfiguration;
+
+    purchaseCreditsConfig?: {
+        product?: string;
+        adjustableQuantity?: boolean;
+        defaultQuantity?: number;
+        maxQuantity?: number;
+        minQuantity?: number;
+    };
 }
 
-export interface APISubscription {
-    /**
-     * The ID of the subscription.
-     * Only used for the API.
-     */
-    id: string;
+// export interface APISubscription {
+//     /**
+//      * The ID of the subscription.
+//      * Only used for the API.
+//      */
+//     id: string;
 
-    /**
-     * The ID of the product that needs to be purchased for the subscription.
-     * If omitted, then this subscription will be shown but not able to be purchased.
-     */
-    product?: string;
+//     /**
+//      * The ID of the product that needs to be purchased for the subscription.
+//      * If omitted, then this subscription will be shown but not able to be purchased.
+//      */
+//     product?: string;
 
-    /**
-     * The list of features that should be shown for this subscription tier.
-     */
-    featureList: string[];
+//     /**
+//      * The list of features that should be shown for this subscription tier.
+//      */
+//     featureList: string[];
 
-    /**
-     * The list of products that are eligible for this subscription tier.
-     */
-    eligibleProducts?: string[];
+//     /**
+//      * The list of products that are eligible for this subscription tier.
+//      */
+//     eligibleProducts?: string[];
 
-    /**
-     * Whether this subscription should be the default.
-     */
-    defaultSubscription?: boolean;
+//     /**
+//      * Whether this subscription should be the default.
+//      */
+//     defaultSubscription?: boolean;
 
-    /**
-     * The name of the subscription.
-     * Ignored if a Stripe product is specified.
-     */
-    name?: string;
+//     /**
+//      * The name of the subscription.
+//      * Ignored if a Stripe product is specified.
+//      */
+//     name?: string;
 
-    /**
-     * The description of the subscription.
-     * Ignored if a Stripe product is specified.
-     */
-    description?: string;
+//     /**
+//      * The description of the subscription.
+//      * Ignored if a Stripe product is specified.
+//      */
+//     description?: string;
 
-    /**
-     * Whether the subscription should be offered for purchase.
-     * Defaults to true.
-     */
-    purchasable?: boolean;
+//     /**
+//      * Whether the subscription should be offered for purchase.
+//      * Defaults to true.
+//      */
+//     purchasable?: boolean;
 
-    /**
-     * Whether the subscription is only purchasable by users.
-     */
-    userOnly?: boolean;
+//     /**
+//      * Whether the subscription is only purchasable by users.
+//      */
+//     userOnly?: boolean;
 
-    /**
-     * Whether the subscription is only purchasable by studios.
-     */
-    studioOnly?: boolean;
+//     /**
+//      * Whether the subscription is only purchasable by studios.
+//      */
+//     studioOnly?: boolean;
 
-    /**
-     * The tier that the subscription represents.
-     * Defaults to "beta".
-     */
-    tier?: string;
+//     /**
+//      * The tier that the subscription represents.
+//      * Defaults to "beta".
+//      */
+//     tier?: string;
 
-    /**
-     * The number of credits that should be granted to the user/studio upon purchasing (and renewal) of this subscription.
-     * Defaults to 0.
-     */
-    creditGrant?: number | 'match-invoice';
-}
+//     /**
+//      * The number of credits that should be granted to the user/studio upon purchasing (and renewal) of this subscription.
+//      * Defaults to 0.
+//      */
+//     creditGrant?: number | 'match-invoice';
+
+//     /**
+//      * The expiration policy for the credits that are granted by this subscription.
+//      */
+//     creditExpiration: 'never-expire' | 'expire-after-period';
+// }
 
 export interface TiersConfiguration {
     [tier: string]: TierConfiguration;

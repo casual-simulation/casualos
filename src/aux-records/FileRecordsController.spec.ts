@@ -179,6 +179,124 @@ describe('FileRecordsController', () => {
             });
         });
 
+        it('should use fileExtension to determine the file name when provided', async () => {
+            presignUrlMock.mockResolvedValueOnce({
+                success: true,
+                uploadUrl: 'testUrl',
+                uploadMethod: 'POST',
+                uploadHeaders: {
+                    myHeader: 'myValue',
+                },
+            });
+
+            const result = (await manager.recordFile(key, 'subjectId', {
+                fileSha256Hex: 'testSha256',
+                fileByteLength: 100,
+                fileExtension: '.spz',
+                fileDescription: 'testDescription',
+                headers: {},
+            })) as RecordFileSuccess;
+
+            expect(result).toEqual({
+                success: true,
+                uploadUrl: 'testUrl',
+                uploadMethod: 'POST',
+                uploadHeaders: {
+                    myHeader: 'myValue',
+                },
+                fileName: 'testSha256.spz',
+                markers: [PUBLIC_READ_MARKER],
+            });
+            expect(presignUrlMock).toHaveBeenCalledWith({
+                recordName: recordName,
+                fileName: 'testSha256.spz',
+                fileSha256Hex: 'testSha256',
+                fileByteLength: 100,
+                fileMimeType: 'application/octet-stream',
+                headers: {},
+                markers: [PUBLIC_READ_MARKER],
+            });
+        });
+
+        it('should accept fileExtension without a leading dot', async () => {
+            presignUrlMock.mockResolvedValueOnce({
+                success: true,
+                uploadUrl: 'testUrl',
+                uploadMethod: 'POST',
+                uploadHeaders: {
+                    myHeader: 'myValue',
+                },
+            });
+
+            const result = (await manager.recordFile(key, 'subjectId', {
+                fileSha256Hex: 'testSha256',
+                fileByteLength: 100,
+                fileExtension: 'spz',
+                fileDescription: 'testDescription',
+                headers: {},
+            })) as RecordFileSuccess;
+
+            expect(result).toEqual({
+                success: true,
+                uploadUrl: 'testUrl',
+                uploadMethod: 'POST',
+                uploadHeaders: {
+                    myHeader: 'myValue',
+                },
+                fileName: 'testSha256.spz',
+                markers: [PUBLIC_READ_MARKER],
+            });
+        });
+
+        it('should allow fileExtension with a matching fileMimeType', async () => {
+            presignUrlMock.mockResolvedValueOnce({
+                success: true,
+                uploadUrl: 'testUrl',
+                uploadMethod: 'POST',
+                uploadHeaders: {
+                    myHeader: 'myValue',
+                },
+            });
+
+            const result = (await manager.recordFile(key, 'subjectId', {
+                fileSha256Hex: 'testSha256',
+                fileByteLength: 100,
+                fileMimeType: 'image/png',
+                fileExtension: '.png',
+                fileDescription: 'testDescription',
+                headers: {},
+            })) as RecordFileSuccess;
+
+            expect(result).toEqual({
+                success: true,
+                uploadUrl: 'testUrl',
+                uploadMethod: 'POST',
+                uploadHeaders: {
+                    myHeader: 'myValue',
+                },
+                fileName: 'testSha256.png',
+                markers: [PUBLIC_READ_MARKER],
+            });
+        });
+
+        it('should return an error when fileExtension does not match fileMimeType', async () => {
+            const result = await manager.recordFile(key, 'subjectId', {
+                fileSha256Hex: 'testSha256',
+                fileByteLength: 100,
+                fileMimeType: 'image/png',
+                fileExtension: '.spz',
+                fileDescription: 'testDescription',
+                headers: {},
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage:
+                    'The specified file extension does not match the file extension for the given MIME type.',
+            });
+        });
+
         it('should set publisher to null if the system is publishing to a studio', async () => {
             await store.addStudio({
                 id: 'studio1',

@@ -46,7 +46,10 @@ import type {
     ContractFeaturesSchema,
     DataFeaturesSchema,
 } from './SubscriptionConfiguration';
-import { aiChatFeaturesSchema } from './SubscriptionConfiguration';
+import {
+    aiChatFeaturesSchema,
+    getSubscriptionSchema,
+} from './SubscriptionConfiguration';
 import {
     getStoreFeaturesSchema,
     getContractFeaturesSchema,
@@ -409,10 +412,10 @@ export class SubscriptionBuilder extends FeaturesBuilder {
 
     constructor(id: string) {
         super();
-        this._sub = {
+        this._sub = getSubscriptionSchema().parse({
             id,
             featureList: [],
-        };
+        });
     }
 
     isStudioOnly(studioOnly: boolean): this {
@@ -462,6 +465,13 @@ export class SubscriptionBuilder extends FeaturesBuilder {
 
     withFeaturesList(list: string[]): this {
         this._sub.featureList = list;
+        return this;
+    }
+
+    withCreditExpiration(
+        expiration: 'never-expire' | 'expire-after-period'
+    ): this {
+        this._sub.creditExpiration = expiration;
         return this;
     }
 }
@@ -558,6 +568,13 @@ export class SubscriptionConfigBuilder {
 
     withTiers(tiers: TiersConfiguration): this {
         this._config.tiers = tiers;
+        return this;
+    }
+
+    withCreditPurchaseConfig(
+        config: SubscriptionConfiguration['purchaseCreditsConfig']
+    ): this {
+        this._config.purchaseCreditsConfig = config;
         return this;
     }
 

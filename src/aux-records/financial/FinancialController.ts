@@ -16,6 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import type {
+    JSONAccountBalance,
     MultiError,
     Result,
     ServerError,
@@ -173,6 +174,21 @@ export class FinancialController {
                 flags: getFlagsForAccountCode(
                     AccountCodes.revenue_platform_fees
                 ),
+                credits_pending: 0n,
+                credits_posted: 0n,
+                debits_pending: 0n,
+                debits_posted: 0n,
+                user_data_128: 0n,
+                user_data_64: 0n,
+                user_data_32: 0,
+                timestamp: 0n,
+                ledger: LEDGERS.credits,
+                reserved: 0,
+            },
+            {
+                id: ACCOUNT_IDS.credit_expiration,
+                code: AccountCodes.credit_expiration,
+                flags: getFlagsForAccountCode(AccountCodes.credit_expiration),
                 credits_pending: 0n,
                 credits_posted: 0n,
                 debits_pending: 0n,
@@ -1789,6 +1805,12 @@ export interface AccountBalances {
      */
     credits: AccountBalance | undefined;
 }
+
+export type JSONAccountBalances = {
+    [key in keyof AccountBalances]: AccountBalances[key] extends AccountBalance
+        ? JSONAccountBalance
+        : AccountBalances[key];
+};
 
 export interface UsageBillingOptions {
     /**

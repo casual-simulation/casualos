@@ -18,6 +18,13 @@
 import { memoize } from 'es-toolkit';
 import { z } from 'zod';
 
+/**
+ * Information about a connection.
+ *
+ * @dochash types/documents
+ * @docid ConnectionInfo
+ * @docname ConnectionInfo
+ */
 export interface ConnectionInfo {
     /**
      * The ID of the connection.

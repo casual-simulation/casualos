@@ -434,7 +434,7 @@ importers:
   src/aux-benchmarks:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-common
       benchmark:
         specifier: 2.1.4
@@ -562,22 +562,22 @@ importers:
   src/aux-components:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-common
       '@casual-simulation/aux-vm':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-vm
       '@casual-simulation/aux-vm-browser':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-vm-browser
       '@casual-simulation/aux-vm-client':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-vm-client
       '@casual-simulation/aux-vm-deno':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-vm-deno
       '@casual-simulation/aux-vm-node':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-vm-node
       '@casual-simulation/crypto':
         specifier: ^4.0.5
@@ -737,10 +737,10 @@ importers:
   src/aux-records:
     dependencies:
       '@anthropic-ai/sdk':
-        specifier: 0.24.3
-        version: 0.24.3(encoding@0.1.13)
+        specifier: 0.92.0
+        version: 0.92.0(zod@4.1.12)
       '@casual-simulation/aux-common':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-common
       '@casual-simulation/crypto':
         specifier: ^4.0.5
@@ -821,8 +821,8 @@ importers:
         specifier: 1.0.3
         version: 1.0.3
       typesense:
-        specifier: 2.1.0-13
-        version: 2.1.0-13(@babel/runtime@7.27.1)
+        specifier: 3.0.5
+        version: 3.0.5(@babel/runtime@7.27.1)
       uuid:
         specifier: 10.0.0
         version: 10.0.0
@@ -857,10 +857,10 @@ importers:
         specifier: ^3.609.0
         version: 3.862.0
       '@casual-simulation/aux-common':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-records
       axios:
         specifier: 1.7.7
@@ -881,10 +881,10 @@ importers:
   src/aux-runtime:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-records
       '@casual-simulation/crypto':
         specifier: ^4.0.5
@@ -980,8 +980,8 @@ importers:
         specifier: ^0.182.0
         version: 0.182.0
       typesense:
-        specifier: 2.0.3
-        version: 2.0.3(@babel/runtime@7.27.1)
+        specifier: 3.0.5
+        version: 3.0.5(@babel/runtime@7.27.1)
       uuid:
         specifier: 10.0.0
         version: 10.0.0
@@ -1044,31 +1044,31 @@ importers:
         specifier: ^3.609.0
         version: 3.862.0
       '@casual-simulation/aux-common':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-records
       '@casual-simulation/aux-records-aws':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-records-aws
       '@casual-simulation/aux-runtime':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-vm
       '@casual-simulation/aux-vm-browser':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-vm-browser
       '@casual-simulation/aux-vm-client':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-vm-client
       '@casual-simulation/aux-vm-deno':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-vm-deno
       '@casual-simulation/aux-vm-node':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-vm-node
       '@casual-simulation/crypto':
         specifier: ^4.0.5
@@ -1374,8 +1374,8 @@ importers:
         specifier: ^5.0.2
         version: 5.8.3
       typesense:
-        specifier: 2.1.0-13
-        version: 2.1.0-13(@babel/runtime@7.27.1)
+        specifier: 3.0.5
+        version: 3.0.5(@babel/runtime@7.27.1)
       unique-names-generator:
         specifier: 4.2.0
         version: 4.2.0
@@ -1420,7 +1420,7 @@ importers:
         version: 4.1.12
     devDependencies:
       '@casual-simulation/aux-components':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-components
       '@rollup/plugin-virtual':
         specifier: 3.0.2
@@ -1507,13 +1507,13 @@ importers:
   src/aux-vm:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-records
       '@casual-simulation/aux-runtime':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-runtime
       '@casual-simulation/crypto':
         specifier: ^4.0.5
@@ -1558,25 +1558,25 @@ importers:
   src/aux-vm-browser:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-records
       '@casual-simulation/aux-runtime':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-vm
       '@casual-simulation/aux-vm-client':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-vm-client
       '@casual-simulation/aux-websocket':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-websocket
       '@casual-simulation/aux-websocket-aws':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-websocket-aws
       '@casual-simulation/crypto':
         specifier: ^4.0.5
@@ -1616,19 +1616,19 @@ importers:
   src/aux-vm-client:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-common
       '@casual-simulation/aux-runtime':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-vm
       '@casual-simulation/aux-websocket':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-websocket
       '@casual-simulation/aux-websocket-aws':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-websocket-aws
       '@casual-simulation/crypto':
         specifier: ^4.0.5
@@ -1658,16 +1658,16 @@ importers:
   src/aux-vm-deno:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-common
       '@casual-simulation/aux-runtime':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-vm
       '@casual-simulation/aux-vm-client':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-vm-client
       '@casual-simulation/crypto':
         specifier: ^4.0.5
@@ -1694,16 +1694,16 @@ importers:
   src/aux-vm-node:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-common
       '@casual-simulation/aux-runtime':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-vm
       '@casual-simulation/aux-vm-client':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-vm-client
       '@casual-simulation/crypto':
         specifier: ^4.0.5
@@ -1724,7 +1724,7 @@ importers:
   src/aux-websocket:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-common
       '@casual-simulation/websocket':
         specifier: ^4.0.0
@@ -1736,7 +1736,7 @@ importers:
   src/aux-websocket-aws:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-common
       '@casual-simulation/websocket':
         specifier: ^4.0.0
@@ -1751,16 +1751,16 @@ importers:
   src/casualos-cli:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-records
       '@casual-simulation/aux-runtime':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^4.2.2
+        specifier: ^4.2.3
         version: link:../aux-vm
       '@octokit/app':
         specifier: ^15.1.0
@@ -2109,8 +2109,14 @@ packages:
   '@algolia/transporter@4.24.0':
     resolution: {integrity: sha512-86nI7w6NzWxd1Zp9q3413dRshDqAzSbsQjhcDhPIatEFiZrL1/TjnHL8S7jVKFePlIMzDsZWXAXwXzcok9c5oA==}
 
-  '@anthropic-ai/sdk@0.24.3':
-    resolution: {integrity: sha512-916wJXO6T6k8R6BAAcLhLPv/pnLGy7YSEBZXZ1XTFbLcTZE8oTy3oDW9WJf9KKZwMvVcePIfoTSvzXHRcGxkQQ==}
+  '@anthropic-ai/sdk@0.92.0':
+    resolution: {integrity: sha512-l653JFC83wCglH8H83t1xpgDurCyPyslYW1maPRdCsfuNuGbLvQjQ81sWd3Go3LWRm0jNspzAhuqAYV8r9joSw==}
+    hasBin: true
+    peerDependencies:
+      zod: ^3.25.0 || ^4.0.0
+    peerDependenciesMeta:
+      zod:
+        optional: true
 
   '@apideck/better-ajv-errors@0.3.6':
     resolution: {integrity: sha512-P+ZygBLZtkp0qqOAJJVX4oX/sFo5JR3eBWwwuqHHhK0GIgQOKWrAfiAaWX0aArHkRWHMuggFEgAZNxVPwPZYaA==}
@@ -7635,8 +7641,8 @@ packages:
   aws4@1.13.2:
     resolution: {integrity: sha512-lHe62zvbTB5eEABUVi/AwVh0ZKY9rMMDhmm+eeyuuUQbQ3+J+fONVQOZyj+DdrvD4BY33uYniyRJ4UJIaSKAfw==}
 
-  axios@1.11.0:
-    resolution: {integrity: sha512-1Lx3WLFQWm3ooKDYZD1eXmoGO9fxYQjrycfHFC8P0sCfQVXyROp0p9PFWBehewBOdCwHc+f/b8I0fMto5eSfwA==}
+  axios@1.13.5:
+    resolution: {integrity: sha512-cz4ur7Vb0xS4/KUN0tPWe44eqxrIu31me+fbang3ijiNscE129POzipJJA6zniq2C/Z6sJCjMimjS8Lc/GAs8Q==}
 
   axios@1.7.7:
     resolution: {integrity: sha512-S4kL7XrjgBmvdGut0sN3yJxqYzrDOnivkBiN0OFs6hLiUam3UPvswUo0kqGyhqUZGEOytHyumEdXsAkgCOUf3Q==}
@@ -9763,6 +9769,15 @@ packages:
       debug:
         optional: true
 
+  follow-redirects@1.16.0:
+    resolution: {integrity: sha512-y5rN/uOsadFT/JfYwhxRS5R7Qce+g3zG97+JrtFZlC9klX/W5hD7iiLzScI4nZqUS7DNUdhPgw4xI8W2LuXlUw==}
+    engines: {node: '>=4.0'}
+    peerDependencies:
+      debug: '*'
+    peerDependenciesMeta:
+      debug:
+        optional: true
+
   for-each@0.3.5:
     resolution: {integrity: sha512-dKx12eRCVIzqCxFGplyFKJMPvLEWgmNtUrpTiJIR5u97zEhRG8ySrtboPHZXx7daLxQVrl643cTzbab2tkQjxg==}
     engines: {node: '>= 0.4'}
@@ -9805,6 +9820,10 @@ packages:
 
   form-data@4.0.4:
     resolution: {integrity: sha512-KrGhL9Q4zjj0kiUt5OO4Mr/A/jlI2jDYs5eHBpYHPcBEVSiipAvn2Ko2HnPe20rmcuuvMHNdZFp+4IlGTMF0Ow==}
+    engines: {node: '>= 6'}
+
+  form-data@4.0.5:
+    resolution: {integrity: sha512-8RipRLol37bNs2bhoV67fiTEvdTrbMUYcFTiy3+wuuOnUog2QBHCZWXDRijWQfAkhBj2Uf5UnVaiWwA5vdd82w==}
     engines: {node: '>= 6'}
 
   format-thousands@1.1.1:
@@ -11331,6 +11350,10 @@ packages:
   json-parse-even-better-errors@3.0.2:
     resolution: {integrity: sha512-fi0NG4bPjCHunUJffmLd0gxssIgkNmArMvis4iNah6Owg1MCJjWhEcDLmsK6iGkJq3tHwbDkTlce70/tmXN4cQ==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
+
+  json-schema-to-ts@3.1.1:
+    resolution: {integrity: sha512-+DWg8jCJG2TEnpy7kOm/7/AxaYoaRbjVB4LFZLySZlWn8exGs3A4OLJR966cVvU26N7X9TWxl+Jsw7dzAqKT6g==}
+    engines: {node: '>=16'}
 
   json-schema-traverse@0.4.1:
     resolution: {integrity: sha512-xbbCH5dCYU5T8LcEhhuh7HJ88HXuW3qsI3Y0zOZFKfZEHcpWiHU/Jxzk629Brsab/mMiHQti9wMP+845RPe3Vg==}
@@ -15114,6 +15137,9 @@ packages:
   trough@2.2.0:
     resolution: {integrity: sha512-tmMpK00BjZiUyVyvrBK7knerNgmgvcV/KLVyuma/SC+TQN167GrMRciANTz09+k3zW8L8t60jWO1GpfkZdjTaw==}
 
+  ts-algebra@2.0.0:
+    resolution: {integrity: sha512-FPAhNPFMrkwz76P7cdjdmiShwMynZYN6SgOujD1urY4oNm80Ou9oMdmbR45LotcKOXoy7wSmHkRFE6Mxbrhefw==}
+
   ts-api-utils@2.1.0:
     resolution: {integrity: sha512-CUgTZL1irw8u29bzrOD/nH85jqyc74D6SshFgujOIA7osm2Rz7dYH77agkx7H4FBNxDq7Cjf+IjaX/8zwFW+ZQ==}
     engines: {node: '>=18.12'}
@@ -15307,14 +15333,8 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
-  typesense@2.0.3:
-    resolution: {integrity: sha512-fRJjFdDNZn6qF9XzIk+bB8n8cm0fiAx1SGcpLDfNcsGtp8znITfG+SO+l/qk63GCRXZwJGq7wrMDLFUvblJSHA==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      '@babel/runtime': ^7.23.2
-
-  typesense@2.1.0-13:
-    resolution: {integrity: sha512-J7Y+gqIAyPejjAfyQ5rqeAGRuRM6CTZw7VSgSq9F5esWnCAMSFI62GW9gpaG8QtbY00ELdx7nFq96TY2ezHS8Q==}
+  typesense@3.0.5:
+    resolution: {integrity: sha512-Pw/yWosbqEOFMM/wQDsnS8FA6r3Qp5ilxuqZTMBoUc95SGCEBflMd39kvDEZZFoTORzNDxCLiiQ+LfYJTl1ulQ==}
     engines: {node: '>=18'}
     peerDependencies:
       '@babel/runtime': ^7.23.2
@@ -16415,18 +16435,11 @@ snapshots:
       '@algolia/logger-common': 4.24.0
       '@algolia/requester-common': 4.24.0
 
-  '@anthropic-ai/sdk@0.24.3(encoding@0.1.13)':
+  '@anthropic-ai/sdk@0.92.0(zod@4.1.12)':
     dependencies:
-      '@types/node': 18.19.98
-      '@types/node-fetch': 2.6.12
-      abort-controller: 3.0.0
-      agentkeepalive: 4.6.0
-      form-data-encoder: 1.7.2
-      formdata-node: 4.4.1
-      node-fetch: 2.7.0(encoding@0.1.13)
-      web-streams-polyfill: 3.3.3
-    transitivePeerDependencies:
-      - encoding
+      json-schema-to-ts: 3.1.1
+    optionalDependencies:
+      zod: 4.1.12
 
   '@apideck/better-ajv-errors@0.3.6(ajv@8.17.1)':
     dependencies:
@@ -25287,10 +25300,10 @@ snapshots:
 
   aws4@1.13.2: {}
 
-  axios@1.11.0:
+  axios@1.13.5:
     dependencies:
-      follow-redirects: 1.15.9
-      form-data: 4.0.4
+      follow-redirects: 1.16.0
+      form-data: 4.0.5
       proxy-from-env: 1.1.0
     transitivePeerDependencies:
       - debug
@@ -27961,6 +27974,8 @@ snapshots:
 
   follow-redirects@1.15.9: {}
 
+  follow-redirects@1.16.0: {}
+
   for-each@0.3.5:
     dependencies:
       is-callable: 1.2.7
@@ -28011,6 +28026,14 @@ snapshots:
       mime-types: 2.1.35
 
   form-data@4.0.4:
+    dependencies:
+      asynckit: 0.4.0
+      combined-stream: 1.0.8
+      es-set-tostringtag: 2.1.0
+      hasown: 2.0.2
+      mime-types: 2.1.35
+
+  form-data@4.0.5:
     dependencies:
       asynckit: 0.4.0
       combined-stream: 1.0.8
@@ -29989,6 +30012,11 @@ snapshots:
   json-parse-even-better-errors@2.3.1: {}
 
   json-parse-even-better-errors@3.0.2: {}
+
+  json-schema-to-ts@3.1.1:
+    dependencies:
+      '@babel/runtime': 7.27.1
+      ts-algebra: 2.0.0
 
   json-schema-traverse@0.4.1: {}
 
@@ -34648,6 +34676,8 @@ snapshots:
 
   trough@2.2.0: {}
 
+  ts-algebra@2.0.0: {}
+
   ts-api-utils@2.1.0(typescript@5.8.3):
     dependencies:
       typescript: 5.8.3
@@ -34844,19 +34874,10 @@ snapshots:
 
   typescript@5.8.3: {}
 
-  typesense@2.0.3(@babel/runtime@7.27.1):
+  typesense@3.0.5(@babel/runtime@7.27.1):
     dependencies:
       '@babel/runtime': 7.27.1
-      axios: 1.7.7
-      loglevel: 1.9.2
-      tslib: 2.8.1
-    transitivePeerDependencies:
-      - debug
-
-  typesense@2.1.0-13(@babel/runtime@7.27.1):
-    dependencies:
-      '@babel/runtime': 7.27.1
-      axios: 1.11.0
+      axios: 1.13.5
       loglevel: 1.9.2
       tslib: 2.8.1
     transitivePeerDependencies:

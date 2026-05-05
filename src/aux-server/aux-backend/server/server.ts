@@ -688,7 +688,22 @@ export class Server {
             const value = args[key];
             if (value) {
                 const rendered = await renderToStringAsync(value);
-                template = template.replace(`<!--ssr-${key}-->`, rendered);
+
+                // Try to replace between start/end markers first
+                const startMarker = `<!--ssr-${key}-start-->`;
+                const endMarker = `<!--ssr-${key}-end-->`;
+                if (
+                    template.includes(startMarker) &&
+                    template.includes(endMarker)
+                ) {
+                    template = template.replace(
+                        new RegExp(`${startMarker}[\\s\\S]*?${endMarker}`),
+                        `${startMarker}${rendered}${endMarker}`
+                    );
+                } else {
+                    // Fall back to simple placeholder replacement for backward compatibility
+                    template = template.replace(`<!--ssr-${key}-->`, rendered);
+                }
             }
         }
         return template;

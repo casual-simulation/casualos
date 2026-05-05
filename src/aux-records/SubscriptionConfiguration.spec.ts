@@ -40,6 +40,7 @@ describe('getSubscription()', () => {
                 eligibleProducts: [],
                 featureList: [],
                 product: '',
+                creditExpiration: 'never-expire',
             },
         ],
         tiers: {
@@ -156,6 +157,7 @@ describe('getSubscription()', () => {
                     eligibleProducts: [],
                     featureList: [],
                     product: '',
+                    creditExpiration: 'never-expire',
                 },
             ],
             tiers: {
@@ -279,6 +281,7 @@ describe('getSubscription()', () => {
                 tier: 'beta',
                 featureList: [],
                 defaultSubscription: true,
+                creditExpiration: 'never-expire',
             },
         ];
 
@@ -294,6 +297,7 @@ describe('getSubscription()', () => {
                 tier: 'beta',
                 featureList: [],
                 defaultSubscription: true,
+                creditExpiration: 'never-expire',
             },
         ];
 
@@ -310,6 +314,7 @@ describe('getSubscription()', () => {
                 featureList: [],
                 studioOnly: true,
                 defaultSubscription: true,
+                creditExpiration: 'never-expire',
             },
         ];
 
@@ -326,6 +331,7 @@ describe('getSubscription()', () => {
                 featureList: [],
                 userOnly: true,
                 defaultSubscription: true,
+                creditExpiration: 'never-expire',
             },
         ];
 
@@ -423,6 +429,7 @@ describe('getSubscriptionFeatures()', () => {
                 eligibleProducts: [],
                 featureList: [],
                 product: '',
+                creditExpiration: 'never-expire',
             },
         ],
         tiers: {
@@ -539,6 +546,7 @@ describe('getSubscriptionFeatures()', () => {
                     eligibleProducts: [],
                     featureList: [],
                     product: '',
+                    creditExpiration: 'never-expire',
                 },
             ],
             tiers: {
@@ -672,6 +680,7 @@ describe('getSubscriptionFeatures()', () => {
                 tier: 'beta',
                 featureList: [],
                 defaultSubscription: true,
+                creditExpiration: 'never-expire',
             },
         ];
 
@@ -687,6 +696,7 @@ describe('getSubscriptionFeatures()', () => {
                 tier: 'beta',
                 featureList: [],
                 defaultSubscription: true,
+                creditExpiration: 'never-expire',
             },
         ];
 
@@ -703,6 +713,7 @@ describe('getSubscriptionFeatures()', () => {
                 featureList: [],
                 studioOnly: true,
                 defaultSubscription: true,
+                creditExpiration: 'never-expire',
             },
         ];
 
@@ -719,6 +730,7 @@ describe('getSubscriptionFeatures()', () => {
                 featureList: [],
                 userOnly: true,
                 defaultSubscription: true,
+                creditExpiration: 'never-expire',
             },
         ];
 
@@ -883,6 +895,7 @@ describe('subscriptionMatchesRole()', () => {
                     id: 'sub',
                     userOnly: true,
                     featureList: [],
+                    creditExpiration: 'never-expire',
                 },
                 role === 'user',
             ],
@@ -892,6 +905,7 @@ describe('subscriptionMatchesRole()', () => {
                     id: 'sub',
                     studioOnly: true,
                     featureList: [],
+                    creditExpiration: 'never-expire',
                 },
                 role === 'studio',
             ],
@@ -900,6 +914,7 @@ describe('subscriptionMatchesRole()', () => {
                 {
                     id: 'sub',
                     featureList: [],
+                    creditExpiration: 'never-expire',
                 },
                 true,
             ],
@@ -932,6 +947,7 @@ describe('getSubscriptionTier()', () => {
                 eligibleProducts: [],
                 featureList: [],
                 product: '',
+                creditExpiration: 'never-expire',
             },
             {
                 id: 'subId',
@@ -939,6 +955,7 @@ describe('getSubscriptionTier()', () => {
                 eligibleProducts: [],
                 featureList: [],
                 product: '',
+                creditExpiration: 'never-expire',
             },
         ],
         tiers: {},
@@ -1021,6 +1038,7 @@ describe('getSubscriptionTier()', () => {
                     eligibleProducts: [],
                     featureList: [],
                     product: '',
+                    creditExpiration: 'never-expire',
                 },
                 {
                     id: 'subId',
@@ -1028,6 +1046,7 @@ describe('getSubscriptionTier()', () => {
                     eligibleProducts: [],
                     featureList: [],
                     product: '',
+                    creditExpiration: 'never-expire',
                 },
             ],
             tiers: {},

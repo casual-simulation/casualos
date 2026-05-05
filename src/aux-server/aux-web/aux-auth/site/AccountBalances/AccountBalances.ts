@@ -86,12 +86,18 @@ export default class AccountBalancesVue extends Vue {
         value: bigint,
         displayFactor: bigint
     ): string {
-        let remainder = value % displayFactor;
-        let displayValue = value / displayFactor;
         const symbol = currency === 'usd' ? '$' : '';
 
         // Format to 2 decimal places
         const sign = value < 0n ? '-' : '';
+
+        if (displayFactor === 1n && currency === 'credits') {
+            // For credits, we want to show the full value without decimal places
+            return `${sign}${value.toString()}`;
+        }
+
+        let remainder = value % displayFactor;
+        let displayValue = value / displayFactor;
 
         if (remainder < 0n) {
             remainder = -remainder;

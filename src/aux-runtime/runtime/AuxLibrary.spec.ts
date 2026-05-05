@@ -2520,6 +2520,28 @@ describe('AuxLibrary', () => {
                 expect(context.actions).toEqual([expected]);
             });
 
+            it('should include recordName in options', () => {
+                const promise: any = library.api.ai.chat('hello, world!', {
+                    recordName: 'myRecord',
+                });
+
+                const expected = aiChat(
+                    [
+                        {
+                            role: 'user',
+                            content: 'hello, world!',
+                        },
+                    ],
+                    {
+                        recordName: 'myRecord',
+                    },
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
             it('should return the first chat choice', async () => {
                 let result: any;
                 const promise: any = library.api.ai.chat({
@@ -2705,6 +2727,31 @@ describe('AuxLibrary', () => {
                     {
                         preferredModel: 'gpt-3.5-turbo',
                         temperature: 0.5,
+                    },
+                    context.iterableTasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should include recordName in options', () => {
+                const promise: any = library.api.ai.stream.chat(
+                    'hello, world!',
+                    {
+                        recordName: 'myRecord',
+                    }
+                );
+
+                const expected = aiChatStream(
+                    [
+                        {
+                            role: 'user',
+                            content: 'hello, world!',
+                        },
+                    ],
+                    {
+                        recordName: 'myRecord',
                     },
                     context.iterableTasks.size
                 );
@@ -3318,6 +3365,31 @@ describe('AuxLibrary', () => {
                 expect(context.actions).toEqual([expected]);
             });
 
+            it('should include recordName in options', () => {
+                const promise: any = library.api.ai.listChatModels({
+                    recordName: 'myRecord',
+                });
+
+                const expected = aiListChatModels(
+                    {
+                        recordName: 'myRecord',
+                    },
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should not include recordName when an empty options object is provided', () => {
+                const promise: any = library.api.ai.listChatModels({});
+
+                const expected = aiListChatModels({}, context.tasks.size);
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
             it('should return the items from the result', async () => {
                 let result: any;
                 let error: any;
@@ -3483,6 +3555,28 @@ describe('AuxLibrary', () => {
                 expect(context.actions).toEqual([expected]);
             });
 
+            it('should include recordName in options', () => {
+                const promise: any = library.api.ai.generateSkybox(
+                    'cartoon clouds',
+                    undefined,
+                    {
+                        recordName: 'myRecord',
+                    }
+                );
+
+                const expected = aiGenerateSkybox(
+                    'cartoon clouds',
+                    undefined,
+                    {
+                        recordName: 'myRecord',
+                    },
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
             it('should resolve with the address that was generated', async () => {
                 let result: string | null = null;
                 const promise: any =
@@ -3598,6 +3692,25 @@ describe('AuxLibrary', () => {
                     {
                         prompt: 'cartoon clouds',
                         negativePrompt: 'realistic',
+                    },
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should include recordName in request objects', () => {
+                const promise: any = library.api.ai.generateImage({
+                    prompt: 'cartoon clouds',
+                    recordName: 'myRecord',
+                });
+
+                const expected = aiGenerateImage(
+                    {
+                        prompt: 'cartoon clouds',
+                        recordName: 'myRecord',
                     },
                     undefined,
                     context.tasks.size
@@ -23468,6 +23581,121 @@ describe('AuxLibrary', () => {
                         },
                     },
                     { endpoint: 'aux-test' },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support userId option', async () => {
+                const action: any = library.api.xp.getAccountBalances({
+                    endpoint: 'aux-test',
+                    userId: 'user123',
+                });
+                const expected = recordsCallProcedure(
+                    {
+                        getBalances: {
+                            input: {
+                                userId: 'user123',
+                            },
+                        },
+                    },
+                    { endpoint: 'aux-test' },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support studioId option', async () => {
+                const action: any = library.api.xp.getAccountBalances({
+                    endpoint: 'aux-test',
+                    studioId: 'studio456',
+                });
+                const expected = recordsCallProcedure(
+                    {
+                        getBalances: {
+                            input: {
+                                studioId: 'studio456',
+                            },
+                        },
+                    },
+                    { endpoint: 'aux-test' },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support contractId option', async () => {
+                const action: any = library.api.xp.getAccountBalances({
+                    endpoint: 'aux-test',
+                    contractId: 'contract789',
+                });
+                const expected = recordsCallProcedure(
+                    {
+                        getBalances: {
+                            input: {
+                                contractId: 'contract789',
+                            },
+                        },
+                    },
+                    { endpoint: 'aux-test' },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('xp.purchaseCredits()', () => {
+            it('should emit a recordsCallProcedure action with getAccountBalances', async () => {
+                const action: any = library.api.xp.purchaseCredits({
+                    targetUserId: 'user123',
+                    returnUrl: 'abc',
+                    successUrl: 'def',
+                });
+                const expected = recordsCallProcedure(
+                    {
+                        purchaseCredits: {
+                            input: {
+                                targetUserId: 'user123',
+                                returnUrl: 'abc',
+                                successUrl: 'def',
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should accept options', async () => {
+                const action: any = library.api.xp.purchaseCredits(
+                    {
+                        targetUserId: 'user123',
+                        returnUrl: 'abc',
+                        successUrl: 'def',
+                    },
+                    {
+                        endpoint: 'my-endpoint',
+                    }
+                );
+                const expected = recordsCallProcedure(
+                    {
+                        purchaseCredits: {
+                            input: {
+                                targetUserId: 'user123',
+                                returnUrl: 'abc',
+                                successUrl: 'def',
+                            },
+                        },
+                    },
+                    {
+                        endpoint: 'my-endpoint',
+                    },
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);

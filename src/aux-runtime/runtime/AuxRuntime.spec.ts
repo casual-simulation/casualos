@@ -10486,6 +10486,240 @@ describe('AuxRuntime', () => {
                 });
             });
 
+            describe('file path imports', () => {
+                it('should be able to resolve modules on the same bot using file path syntax', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test2: createBot('test2', {
+                                system: 'module.component',
+                                library: `📄export const abc = 'def';`,
+                                test: 123,
+                            }),
+                        })
+                    );
+                    await waitAsync();
+
+                    const m = await runtime.resolveModule('./library', {
+                        botId: 'test2',
+                        tag: 'test',
+                    });
+
+                    expect(m).toMatchObject({
+                        id: 'module.component.library',
+                        botId: 'test2',
+                        tag: 'library',
+                    });
+                });
+
+                it('should be able to resolve modules on the same bot using file path syntax even if they dont have a system', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test2: createBot('test2', {
+                                library: `📄export const abc = 'def';`,
+                                test: 123,
+                            }),
+                        })
+                    );
+                    await waitAsync();
+
+                    const m = await runtime.resolveModule('./library', {
+                        botId: 'test2',
+                        tag: 'test',
+                    });
+
+                    expect(m).toMatchObject({
+                        id: '🔗test2.library',
+                        botId: 'test2',
+                        tag: 'library',
+                    });
+                });
+
+                it('should be able to resolve modules on parent systems using file path syntax', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test2: createBot('test2', {
+                                system: 'module',
+                                library: `📄export const abc = 'def';`,
+                            }),
+                            test1: createBot('test1', {
+                                system: 'module.component',
+                                test: 123,
+                            }),
+                        })
+                    );
+                    await waitAsync();
+
+                    const m = await runtime.resolveModule('../library', {
+                        botId: 'test1',
+                        tag: 'test',
+                    });
+
+                    expect(m).toMatchObject({
+                        id: 'module.library',
+                        botId: 'test2',
+                        tag: 'library',
+                    });
+                });
+
+                it('should be able to resolve modules on grandparent systems using file path syntax', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test2: createBot('test2', {
+                                system: 'module',
+                                library: `📄export const abc = 'def';`,
+                            }),
+                            test1: createBot('test1', {
+                                system: 'module.component.child',
+                                test: 123,
+                            }),
+                        })
+                    );
+                    await waitAsync();
+
+                    const m = await runtime.resolveModule('../../library', {
+                        botId: 'test1',
+                        tag: 'test',
+                    });
+
+                    expect(m).toMatchObject({
+                        id: 'module.library',
+                        botId: 'test2',
+                        tag: 'library',
+                    });
+                });
+
+                it('should be able to resolve modules with nested paths using file path syntax', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test2: createBot('test2', {
+                                system: 'module.other',
+                                library: `📄export const abc = 'def';`,
+                            }),
+                            test1: createBot('test1', {
+                                system: 'module.component',
+                                test: 123,
+                            }),
+                        })
+                    );
+                    await waitAsync();
+
+                    const m = await runtime.resolveModule('../other/library', {
+                        botId: 'test1',
+                        tag: 'test',
+                    });
+
+                    expect(m).toMatchObject({
+                        id: 'module.other.library',
+                        botId: 'test2',
+                        tag: 'library',
+                    });
+                });
+
+                it('should be able to resolve modules with multiple nested levels using file path syntax', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test2: createBot('test2', {
+                                system: 'base.deep.nested',
+                                library: `📄export const abc = 'def';`,
+                            }),
+                            test1: createBot('test1', {
+                                system: 'base.other.component',
+                                test: 123,
+                            }),
+                        })
+                    );
+                    await waitAsync();
+
+                    const m = await runtime.resolveModule(
+                        '../../deep/nested/library',
+                        {
+                            botId: 'test1',
+                            tag: 'test',
+                        }
+                    );
+
+                    expect(m).toMatchObject({
+                        id: 'base.deep.nested.library',
+                        botId: 'test2',
+                        tag: 'library',
+                    });
+                });
+
+                it('should be able to resolve modules on different bots using file path syntax', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test2: createBot('test2', {
+                                system: 'module.component',
+                                library: `📄export const abc = 'def';`,
+                            }),
+                            test1: createBot('test1', {
+                                system: 'module.component',
+                                test: 123,
+                            }),
+                        })
+                    );
+                    await waitAsync();
+
+                    const m = await runtime.resolveModule('./library', {
+                        botId: 'test1',
+                        tag: 'test',
+                    });
+
+                    expect(m).toMatchObject({
+                        id: 'module.component.library',
+                        botId: 'test2',
+                        tag: 'library',
+                    });
+                });
+
+                it('should prefer system relative paths over file paths', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test2: createBot('test2', {
+                                system: 'module',
+                                library: `📄export const abc = 'def';`,
+                            }),
+                            test1: createBot('test1', {
+                                system: 'lib',
+                                test: 123,
+                            }),
+                        })
+                    );
+                    await waitAsync();
+
+                    const m = await runtime.resolveModule('.library', {
+                        botId: 'test1',
+                        tag: 'test',
+                    });
+
+                    // Should resolve to lib.library, not test1.library
+                    expect(m).toMatchObject({
+                        id: 'lib.library',
+                        url: 'lib.library',
+                    });
+                });
+
+                it('should not convert paths that dont start with ./ or ../', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test2: createBot('test2', {
+                                system: 'module',
+                                library: `📄export const abc = 'def';`,
+                            }),
+                        })
+                    );
+                    await waitAsync();
+
+                    const m = await runtime.resolveModule('module.library');
+
+                    expect(m).toMatchObject({
+                        id: 'module.library',
+                        botId: 'test2',
+                        tag: 'library',
+                    });
+                });
+            });
+
             it.skip('should be able to resolve modules based on system quickly', async () => {
                 let state: PartialPrecalculatedBotsState = {};
                 for (let i = 0; i < 1000; i++) {

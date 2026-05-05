@@ -7881,6 +7881,22 @@ describe('RecordsManager', () => {
                         1
                     ),
                 ] as const,
+                [
+                    'purchaseCredits',
+                    recordsCallProcedure(
+                        {
+                            purchaseCredits: {
+                                input: {
+                                    targetUserId: 'user123',
+                                    returnUrl: 'https://example.com/return',
+                                    successUrl: 'https://example.com/success',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
             ];
 
             describe.each(allowedProcedures)('%s', (name, event) => {
@@ -8309,6 +8325,114 @@ describe('RecordsManager', () => {
                 expect(authMock.isAuthenticated).toHaveBeenCalled();
                 expect(authMock.authenticate).not.toHaveBeenCalled();
                 expect(authMock.getAuthToken).toHaveBeenCalled();
+            });
+
+            it('should include prompt caching when enabled', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        choices: [
+                            {
+                                role: 'assistant',
+                                content: 'Hello!',
+                                finishReason: 'stop',
+                            },
+                        ],
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    aiChat(
+                        [
+                            {
+                                role: 'user',
+                                content: 'Hello!',
+                            },
+                        ],
+                        {
+                            enableCaching: true,
+                        },
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastPost()).toEqual([
+                    'http://localhost:3002/api/v2/ai/chat',
+                    {
+                        messages: [
+                            {
+                                role: 'user',
+                                content: 'Hello!',
+                            },
+                        ],
+                        enableCaching: true,
+                    },
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+            });
+
+            it('should include the record name', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        choices: [
+                            {
+                                role: 'assistant',
+                                content: 'Hello!',
+                                finishReason: 'stop',
+                            },
+                        ],
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    aiChat(
+                        [
+                            {
+                                role: 'user',
+                                content: 'Hello!',
+                            },
+                        ],
+                        {
+                            recordName: 'record-name',
+                        },
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastPost()).toEqual([
+                    'http://localhost:3002/api/v2/ai/chat',
+                    {
+                        messages: [
+                            {
+                                role: 'user',
+                                content: 'Hello!',
+                            },
+                        ],
+                        recordName: 'record-name',
+                    },
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
             });
 
             it('should include the inst', async () => {
@@ -8898,7 +9022,6 @@ describe('RecordsManager', () => {
                         },
                     ],
                 });
-
                 responses.next({
                     type: 'http_partial_response',
                     id: 0,
@@ -8954,6 +9077,65 @@ describe('RecordsManager', () => {
                 });
 
                 expect(vm.events.slice(2)).toEqual([iterableComplete(1)]);
+            });
+
+            it('should include prompt caching for websocket stream requests', async () => {
+                const client = new MemoryConnectionClient();
+
+                let responses =
+                    new Subject<WebsocketHttpPartialResponseMessage>();
+                client.events.set('http_partial_response', responses);
+
+                connectionClientFactory = () => {
+                    return client;
+                };
+                records = new RecordsManager(
+                    {
+                        version: '1.0.0',
+                        versionHash: '1234567890abcdef',
+                        recordsOrigin: 'http://localhost:3002',
+                        authOrigin: 'http://localhost:3002',
+                    },
+                    helper,
+                    getEndpointInfo,
+                    true,
+                    connectionClientFactory
+                );
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    aiChatStream(
+                        [
+                            {
+                                role: 'user',
+                                content: 'hello',
+                            },
+                        ],
+                        {
+                            enableCaching: true,
+                        },
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                const body = JSON.parse(
+                    (client.sentMessages[0] as WebsocketHttpRequestMessage)
+                        .request.body as string
+                );
+
+                expect(body).toEqual({
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'hello',
+                        },
+                    ],
+                    enableCaching: true,
+                });
             });
 
             it('should return an error if the connection closes during the request', async () => {
@@ -9165,6 +9347,66 @@ describe('RecordsManager', () => {
                 expect(authMock.isAuthenticated).toHaveBeenCalled();
                 expect(authMock.authenticate).not.toHaveBeenCalled();
                 expect(authMock.getAuthToken).toHaveBeenCalled();
+            });
+
+            it('should include the record name', async () => {
+                setNextResponse({
+                    data: {
+                        success: true,
+                        skyboxId: 'skybox-id',
+                    },
+                });
+                setNextResponse({
+                    data: {
+                        success: true,
+                        status: 'generated',
+                        fileUrl: 'file-url',
+                        thumbnailUrl: 'thumb-url',
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    aiGenerateSkybox(
+                        'prompt',
+                        undefined,
+                        {
+                            recordName: 'record-name',
+                        },
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getRequests()).toEqual([
+                    [
+                        'post',
+                        'http://localhost:3002/api/v2/ai/skybox',
+                        {
+                            prompt: 'prompt',
+                            recordName: 'record-name',
+                        },
+                        {
+                            validateStatus: expect.any(Function),
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                        },
+                    ],
+                    [
+                        'get',
+                        'http://localhost:3002/api/v2/ai/skybox?skyboxId=skybox-id',
+                        {
+                            validateStatus: expect.any(Function),
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                        },
+                    ],
+                ]);
             });
 
             it('should include the inst', async () => {
@@ -9733,6 +9975,49 @@ describe('RecordsManager', () => {
                 expect(authMock.isAuthenticated).toHaveBeenCalled();
                 expect(authMock.authenticate).not.toHaveBeenCalled();
                 expect(authMock.getAuthToken).toHaveBeenCalled();
+            });
+
+            it('should include the record name', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        images: [
+                            {
+                                base64: 'data',
+                            },
+                        ],
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    aiGenerateImage(
+                        {
+                            prompt: 'a blue bridge',
+                            recordName: 'record-name',
+                        },
+                        undefined,
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastPost()).toEqual([
+                    'http://localhost:3002/api/v2/ai/image',
+                    {
+                        prompt: 'a blue bridge',
+                        recordName: 'record-name',
+                    },
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
             });
 
             it('should include the inst', async () => {

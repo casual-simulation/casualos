@@ -111,6 +111,7 @@ Use the following environment variables to configure the inst collaboration feat
 -   `STATIC_REPO_LOCAL_PERSISTENCE`: Set this to `true` to enable local (IndexedDB) persistence for static inst data. Defaults to `true`.
 -   `BIOS_OPTIONS`: The comma-separated list of allowed bios options. If omitted, then all options are enabled. Possible options are:
     -   `enter join code`
+    -   `temp` - The data is kept only in memory and is lost on refresh.
     -   `local inst` - The data is stored on the device and not uploaded to the server.
     -   `local` - Same as `local inst`.
     -   `static inst` - Same as `local inst`.
@@ -123,7 +124,7 @@ Use the following environment variables to configure the inst collaboration feat
     -   `sign in`
     -   `sign up`
     -   `sign out`
-    -   The default options are: `enter join code,local inst,studio inst,free inst,sign in,sign up,sign out`.
+    -   The default options are: `enter join code,temp,local inst,studio inst,free inst,sign in,sign up,sign out`.
 -   `DEFAULT_BIOS_OPTION`: The BIOS option that should be selected by default when the BIOS is shown.
 -   `AUTOMATIC_BIOS_OPTION`: The BIOS option that should be executed automatically by the BIOS. Setting this to a valid BIOS value will skip the BIOS screen.
 -   `VM_ORIGIN`: The HTTP Origin that should be used to load the inst virtual machine. Useful for securely isolating insts from each other and from the frontend. Supports `{{inst}}` to customize the origin based on the inst that is being loaded. For example setting `VM_ORIGIN` to `https://{{inst}}.example.com` will cause `?staticInst=myInst` to load inside `https://myInst.example.com`. Defaults to null, which means that no special origin is used. Recommended for high-security deployments.

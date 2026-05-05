@@ -24,6 +24,11 @@ import { WEB_CONFIG_SCHEMA } from '@casual-simulation/aux-common';
 import { WEB_MANIFEST_SCHEMA } from '@casual-simulation/aux-common/common/WebManifest';
 import { memoize } from 'es-toolkit';
 import { serverMetadataSchema } from './ConfigurationStore';
+import {
+    FINANCIAL_JOB_AUTOMATED_SWEEP_SCHEMA,
+    FINANCIAL_JOB_PERIODIC_BILLING_SCHEMA,
+    FINANCIAL_JOB_REVENUE_CREDIT_SWEEP_SCHEMA,
+} from './financial/FinancialProcessor';
 
 let serverConfigSchema: ServerConfigSchema;
 
@@ -1542,11 +1547,7 @@ Because repo/add_updates is a very common permission, we periodically cache perm
                         snsSchema(),
                         bullmqSchema().extend({
                             revenueCreditSweep: bullmqScheduledJobSchema(
-                                z.object({
-                                    type: z.literal(
-                                        'financial-revenue-credit-sweep'
-                                    ),
-                                })
+                                FINANCIAL_JOB_REVENUE_CREDIT_SWEEP_SCHEMA
                             )
                                 .nullable()
                                 .describe(
@@ -1554,15 +1555,58 @@ Because repo/add_updates is a very common permission, we periodically cache perm
                                 ),
 
                             periodicBilling: bullmqScheduledJobSchema(
-                                z.object({
-                                    type: z.literal(
-                                        'financial-periodic-billing'
-                                    ),
+                                FINANCIAL_JOB_PERIODIC_BILLING_SCHEMA.omit({
+                                    nowMs: true,
                                 })
                             )
                                 .nullable()
                                 .describe(
                                     'A scheduled job that periodically bills subscribers based on their subscription and usage. If null, then periodic billing will be disabled.'
+                                ),
+
+                            automatedSweep: bullmqScheduledJobSchema(
+                                FINANCIAL_JOB_AUTOMATED_SWEEP_SCHEMA
+                            )
+                                .nullable()
+                                .describe(
+                                    'A scheduled job that periodically sweeps value from one account to another. If null, then automated credit sweeps will be disabled.'
+                                ),
+
+                            extraJobs: z
+                                .array(
+                                    z.object({
+                                        id: z
+                                            .string()
+                                            .min(1)
+                                            .describe(
+                                                'The unique ID of the job.'
+                                            ),
+                                        job: z
+                                            .union([
+                                                z.literal('removed'),
+                                                bullmqScheduledJobSchema(
+                                                    z.discriminatedUnion(
+                                                        'type',
+                                                        [
+                                                            FINANCIAL_JOB_AUTOMATED_SWEEP_SCHEMA,
+                                                            FINANCIAL_JOB_PERIODIC_BILLING_SCHEMA.omit(
+                                                                {
+                                                                    nowMs: true,
+                                                                }
+                                                            ),
+                                                            FINANCIAL_JOB_REVENUE_CREDIT_SWEEP_SCHEMA,
+                                                        ]
+                                                    )
+                                                ),
+                                            ])
+                                            .describe(
+                                                'The job to be added. If set to "removed", then the job with the corresponding ID will be removed from the schedule. This allows for dynamically adding and removing jobs without needing to redeploy the server.'
+                                            ),
+                                    })
+                                )
+                                .optional()
+                                .describe(
+                                    'A list of extra scheduled jobs that should be added to the financial processor.'
                                 ),
                         }),
                     ])
@@ -1591,6 +1635,18 @@ Because repo/add_updates is a very common permission, we periodically cache perm
                                     type: 'financial-periodic-billing',
                                 },
                                 name: 'financial-periodic-billing',
+                            },
+                        },
+                        automatedSweep: {
+                            repeatOptions: {
+                                pattern: '0 3 15 * *', // Daily at 3:15am to be after the revenue credit sweep job
+                            },
+                            jobTemplate: {
+                                data: {
+                                    type: 'financial-automated-sweep',
+                                    sweeps: [],
+                                },
+                                name: 'financial-automated-sweep',
                             },
                         },
                     })

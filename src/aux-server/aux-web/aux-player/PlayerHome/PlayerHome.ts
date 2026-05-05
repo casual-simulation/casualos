@@ -205,8 +205,9 @@ export default class PlayerHome extends Vue {
 
     get showInstNameInput() {
         return (
-            isStaticInst(this.biosSelection) &&
-            this.instSelection === 'new-inst'
+            isTempInst(this.biosSelection) ||
+            (isStaticInst(this.biosSelection) &&
+                this.instSelection === 'new-inst')
         );
     }
 
@@ -262,6 +263,7 @@ export default class PlayerHome extends Vue {
             isPrivateInst(option) ||
             isPublicInst(option) ||
             isStaticInst(option) ||
+            isTempInst(option) ||
             isJoinCode(option)
         ) {
             return true;
@@ -764,6 +766,7 @@ export default class PlayerHome extends Vue {
         return (
             appManager.config.allowedBiosOptions ?? [
                 'enter join code',
+                'temp',
                 'local',
                 'studio',
                 'free',
@@ -1109,12 +1112,22 @@ export default class PlayerHome extends Vue {
             changes.record = recordName;
             hasChange = true;
         }
+        const desiredStaticInst = this.query['staticInst'] as string | string[];
+        const desiredTempInst = this.query['tempInst'] as string | string[];
         if (
             hasChange &&
             isStatic(botManager.origin) &&
-            changes.staticInst !== bot.tags.inst
+            hasValue(desiredStaticInst) &&
+            !areEqualInstLists(desiredStaticInst, bot.tags.inst as any)
         ) {
-            changes.inst = changes.staticInst;
+            changes.inst = desiredStaticInst;
+        } else if (
+            hasChange &&
+            isTemp(botManager.origin) &&
+            hasValue(desiredTempInst) &&
+            !areEqualInstLists(desiredTempInst, bot.tags.inst as any)
+        ) {
+            changes.inst = desiredTempInst;
         }
         if (hasChange && hasValue(changes.inst)) {
             changes.inst = sortInsts(changes.inst, botManager.inst);
@@ -1167,8 +1180,12 @@ export default class PlayerHome extends Vue {
                 !isEqual(newValue, oldValue) &&
                 String(newValue) !== String(oldValue)
             ) {
-                // The inst and staticInst tags are handled by the userBotTagsChanged handler
-                if (tag === 'inst' || tag === 'staticInst') {
+                // The inst, staticInst, and tempInst tags are handled by the userBotTagsChanged handler
+                if (
+                    tag === 'inst' ||
+                    tag === 'staticInst' ||
+                    tag === 'tempInst'
+                ) {
                     continue;
                 }
                 changes[tag] = newValue;

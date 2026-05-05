@@ -33,7 +33,6 @@ import type {
     PortalType,
     ShowInputOptions,
     LocalFormAnimationAction,
-    AsyncActions,
     ShareOptions,
     Easing,
     BotAnchorPoint,
@@ -318,6 +317,8 @@ import type {
     StoreItem,
     PurchasableItemReference,
     InstallPackageOptions,
+    GetAccountBalancesActionOptions,
+    AIListChatModelsOptions,
 } from './RecordsEvents';
 import {
     aiChat,
@@ -406,7 +407,6 @@ import type {
     GenericResult,
     SimpleError,
     GenericSuccess,
-    JSONAccountBalance,
 } from '@casual-simulation/aux-common';
 import {
     remote as calcRemote,
@@ -457,7 +457,6 @@ import {
 } from '@casual-simulation/aux-common/bots';
 import { Vector3 as ThreeVector3, Plane, Ray } from '@casual-simulation/three';
 import mime from 'mime';
-import TWEEN from '@tweenjs/tween.js';
 import './PerformanceNowPolyfill';
 import '@casual-simulation/aux-common/BlobPolyfill';
 import type { AuxDevice } from './AuxDevice';
@@ -510,9 +509,12 @@ import type {
     PurchasableItem,
     PayoutDestination,
     ContractPricing,
+    JSONAccountBalancesAndSubscriptionInfo,
+    PurchaseCreditsResult,
 } from '@casual-simulation/aux-records';
 import SeedRandom from 'seedrandom';
 import { DateTime } from 'luxon';
+import TWEEN from '@tweenjs/tween.js';
 import * as hooks from 'preact/hooks';
 import { render, createRef, createContext } from 'preact';
 import * as compat from 'preact/compat';
@@ -610,6 +612,38 @@ export interface APIPurchaseContractRequest {
     returnUrl: string;
     successUrl: string;
 }
+
+/**
+ * Defines an interface that represents the options for purchasing credits for an account.
+ *
+ * @dochash types/records/extra
+ * @docname PurchaseCreditsRequest
+ * @docid PurchaseCreditsRequest
+ */
+export interface APIPurchaseCreditsRequest {
+    /**
+     * The ID of the user that the credits should be purchased for.
+     * Currently, credits can only be purchased for yourself.
+     */
+    targetUserId?: string;
+
+    /**
+     * The ID of the studio that the credits should be purchased for.
+     * Currently, only studio admins can purchase credits.
+     */
+    targetStudioId?: string;
+
+    /**
+     * The URL that the user should be sent to if they cancel the purchase.
+     */
+    returnUrl: string;
+
+    /**
+     * The URL that the user should be sent to if the purchase completes successfully.
+     */
+    successUrl: string;
+}
+
 export interface APIInvoiceContractRequest {
     contractId: string;
     amount: number;
@@ -2854,6 +2888,13 @@ export interface RecordFileOptions {
     mimeType?: string;
 
     /**
+     * The file extension to use for the uploaded file.
+     * If specified, this extension will be used instead of deriving one from the MIME type.
+     * May be provided with or without the leading dot (e.g. 'spz', 'png', '.spz', '.png').
+     */
+    fileExtension?: string;
+
+    /**
      * The marker that should be applied to the file.
      */
     marker?: string;
@@ -3894,6 +3935,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 payInvoice: xpPayInvoice,
                 payout: xpPayout,
                 getAccountBalances: xpGetAccountBalances,
+                purchaseCredits: xpPurchaseCredits,
             },
 
             portal: {
@@ -5767,7 +5809,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @docname ai.listChatModels
      */
     function listChatModels(
-        options?: RecordActionOptions
+        options?: AIListChatModelsOptions
     ): Promise<ListedChatModel[]> {
         const task = context.createTask();
         const action = aiListChatModels(options, task.taskId);
@@ -6654,7 +6696,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             easing: 'quadratic',
             ...(options ?? {}),
         };
-        let action: AsyncActions;
+        let action: RuntimeAsyncActions;
         if (botOrPosition === null) {
             action = cancelAnimation(task.taskId);
         } else if (botOrPosition === undefined) {
@@ -9629,22 +9671,98 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Attempts to retrieve the account balances for the user's account.
+     * Attempts to retrieve the account balances for the account.
      *
      * @param options The options for the request.
      * @returns A promise that resolves with the account balances.
+     *
+     * @example Get the current user's account balances and log them to the console.
+     * const balancesResult = await xp.getAccountBalances();
+     * console.log(balancesResult);
+     *
+     * @example Get the account balances for a studio
+     * const balances = await xp.getAccountBalances({
+     *  studioId: "myStudioId"
+     * });
+     *
+     * @example Get the account balances for a contract
+     * const balances = await xp.getAccountBalances({
+     *  contractId: "myContractId"
+     * });
      *
      * @dochash actions/xp
      * @docname xp.getAccountBalances
      */
     function xpGetAccountBalances(
-        options: RecordActionOptions = {}
-    ): Promise<GenericResult<JSONAccountBalance, SimpleError>> {
+        options: GetAccountBalancesActionOptions = {}
+    ): Promise<
+        GenericResult<JSONAccountBalancesAndSubscriptionInfo, SimpleError>
+    > {
         const task = context.createTask();
+        const { userId, studioId, contractId, ...rest } = options;
         const event = recordsCallProcedure(
             {
                 getBalances: {
-                    input: {},
+                    input: {
+                        userId,
+                        studioId,
+                        contractId,
+                    },
+                },
+            },
+            rest,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Creates a new checkout session that can be used to purchase credits for an account. Returns a promise which resolves with the URL that the user should be redirected to in order to complete the purchase.
+     *
+     * @param options The options for the request.
+     * @returns A promise that resolves with the account balances.
+     *
+     * @example Purchase credits for the current user.
+     * const purchaseResult = await xp.purchaseCredits({
+     *   targetUserId: authBot.id,
+     *   returnUrl: configBot.tags.url,
+     *   successUrl: configBot.tags.url
+     * });
+     * if (purchaseResult.success) {
+     *   os.goToURL(purchaseResult.url);
+     * } else {
+     *   os.toast("Failed to create checkout session")
+     * }
+     *
+     * @example Purchase credits for a studio.
+     * const purchaseResult = await xp.purchaseCredits({
+     *   targetUserId: "studioId",
+     *   returnUrl: configBot.tags.url,
+     *   successUrl: configBot.tags.url
+     * });
+     * if (purchaseResult.success) {
+     *   os.goToURL(purchaseResult.url);
+     * } else {
+     *   os.toast("Failed to create checkout session")
+     * }
+     *
+     * @dochash actions/xp
+     * @docname xp.purchaseCredits
+     */
+    function xpPurchaseCredits(
+        request: APIPurchaseCreditsRequest,
+        options: RecordActionOptions = {}
+    ): Promise<PurchaseCreditsResult> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                purchaseCredits: {
+                    input: {
+                        targetUserId: request.targetUserId,
+                        targetStudioId: request.targetStudioId,
+                        returnUrl: request.returnUrl,
+                        successUrl: request.successUrl,
+                    },
                 },
             },
             options,
@@ -11675,7 +11793,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             options?.description,
             options?.mimeType,
             recordOptions,
-            task.taskId
+            task.taskId,
+            options?.fileExtension
         );
         return addAsyncAction(task, event);
     }
@@ -15629,7 +15748,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 })
                 .duration(options.duration * 1000)
                 .easing(easing)
-                .onUpdate((obj, elapsed) => {
+                .onUpdate((obj: unknown, elapsed: number) => {
+                    void obj;
                     if (
                         options.tagMaskSpace === false ||
                         options.tagMaskSpace === getBotSpace(bot)

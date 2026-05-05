@@ -17,6 +17,7 @@
  */
 import {
     BehaviorSubject,
+    EMPTY,
     Observable,
     startWith,
     Subject,
@@ -49,6 +50,7 @@ import type {
     SharedArrayChanges,
     SharedTextChanges,
     SharedArrayOp,
+    RemoteClientEvent,
 } from './SharedDocument';
 import { fromByteArray, toByteArray } from 'base64-js';
 import type { InstUpdate } from '../bots';
@@ -154,6 +156,14 @@ export class YjsSharedDocument implements SharedDocument {
 
     get doc() {
         return this._doc;
+    }
+
+    get remoteClients(): Observable<RemoteClientEvent> {
+        return EMPTY;
+    }
+
+    get remoteClientsRaw(): Observable<RemoteClientEvent> {
+        return EMPTY;
     }
 
     protected get _remoteSite() {

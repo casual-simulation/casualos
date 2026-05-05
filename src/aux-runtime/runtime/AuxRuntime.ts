@@ -663,6 +663,71 @@ export class AuxRuntime
     }
 
     /**
+     * Converts a file-like relative path to a system-relative path.
+     * Examples:
+     *   `./tag` → `.tag`
+     *   `../tag` → `:tag`
+     *   `../../tag` → `::tag`
+     *   `../other/tag` → `:other.tag`
+     *   `../other/nested/tag` → `:other.nested.tag`
+     *
+     * @param moduleName The module name to convert.
+     * @returns The converted module name, or the original if not a file-like path.
+     */
+    private static _convertFilePathToSystemPath(moduleName: string): string {
+        // Check if it starts with ./ or ../
+        if (!moduleName.startsWith('./') && !moduleName.startsWith('../')) {
+            return moduleName;
+        }
+
+        let prefixCount = 0;
+        let index = 0;
+
+        // Count the number of ../ or ./ prefixes
+        while (index < moduleName.length) {
+            if (
+                index + 2 < moduleName.length &&
+                moduleName[index] === '.' &&
+                moduleName[index + 1] === '.' &&
+                moduleName[index + 2] === '/'
+            ) {
+                // Found ../
+                prefixCount++;
+                index += 3;
+            } else if (
+                index + 1 < moduleName.length &&
+                moduleName[index] === '.' &&
+                moduleName[index + 1] === '/'
+            ) {
+                // Found ./
+                index += 2;
+                break;
+            } else {
+                break;
+            }
+        }
+
+        // Extract the remaining path
+        const remainingPath = moduleName.substring(index);
+
+        // Replace / with . in the remaining path
+        const systemPath = remainingPath.replace(/\//g, '.');
+
+        // Build the result with appropriate number of : prefixes
+        let result = '';
+        for (let i = 0; i < prefixCount; i++) {
+            result += ':';
+        }
+
+        // For ./ prefix (when prefixCount is 0), add . prefix
+        if (prefixCount === 0 && moduleName.startsWith('./')) {
+            result = '.';
+        }
+
+        return result + systemPath;
+    }
+
+    /**
      * Attempts to resolve the module with the given name.
      * @param moduleName The name of the module to resolve.
      * @param meta The metadata that should be used to resolve the module.
@@ -760,6 +825,10 @@ export class AuxRuntime
                 }
             }
         }
+
+        // Convert file-like relative paths to system-relative paths
+        // This should happen first so file paths can also be caught by @onResolveModule
+        moduleName = AuxRuntime._convertFilePathToSystemPath(moduleName);
 
         const isRelativeImport =
             moduleName.startsWith('.') || moduleName.startsWith(':');
