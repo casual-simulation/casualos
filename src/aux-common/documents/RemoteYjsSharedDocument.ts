@@ -282,6 +282,7 @@ export class RemoteYjsSharedDocument
                                 );
                             } else if (
                                 event.initial &&
+                                !this._temporary &&
                                 this._persistence?.saveToIndexedDb &&
                                 this._persistence?.syncWithServerOnConnect !==
                                     false
