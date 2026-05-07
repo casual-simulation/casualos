@@ -5,7 +5,9 @@
  */
 declare let __magic__: any;
 (function () {
-    console.log('[globalThis-polyfill] load');
+    if (typeof process === 'undefined' || process.env.NODE_ENV !== 'test') {
+        console.log('[globalThis-polyfill] load');
+    }
     if (typeof globalThis === 'object') return;
     (<any>Object.prototype).__defineGetter__('__magic__', function () {
         return this;
