@@ -110,6 +110,11 @@ Object {
       },
       "inputs": Object {
         "schema": Object {
+          "enableCaching": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "boolean",
+          },
           "frequencyPenalty": Object {
             "nullable": true,
             "optional": true,
@@ -250,6 +255,11 @@ Object {
       },
       "inputs": Object {
         "schema": Object {
+          "enableCaching": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "boolean",
+          },
           "frequencyPenalty": Object {
             "nullable": true,
             "optional": true,
@@ -9530,6 +9540,18 @@ Object {
                     "optional": true,
                     "type": "boolean",
                   },
+                  "pageDescription": Object {
+                    "description": "The description that should be used for the player page.",
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "pageTitle": Object {
+                    "description": "The title that should be used for the player page.",
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
                   "playerMode": Object {
                     "nullable": true,
                     "optional": true,
@@ -10285,6 +10307,16 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                 "nullable": true,
                 "optional": true,
                 "type": "boolean",
+              },
+              "pageDescription": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
+              },
+              "pageTitle": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
               },
               "postHogApiHost": Object {
                 "nullable": true,
@@ -10611,6 +10643,11 @@ Object {
       },
       "inputs": Object {
         "schema": Object {
+          "enableCaching": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "boolean",
+          },
           "frequencyPenalty": Object {
             "nullable": true,
             "optional": true,
@@ -10751,6 +10788,11 @@ Object {
       },
       "inputs": Object {
         "schema": Object {
+          "enableCaching": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "boolean",
+          },
           "frequencyPenalty": Object {
             "nullable": true,
             "optional": true,
@@ -20031,6 +20073,18 @@ Object {
                     "optional": true,
                     "type": "boolean",
                   },
+                  "pageDescription": Object {
+                    "description": "The description that should be used for the player page.",
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "pageTitle": Object {
+                    "description": "The title that should be used for the player page.",
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
                   "playerMode": Object {
                     "nullable": true,
                     "optional": true,
@@ -20786,6 +20840,16 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                 "nullable": true,
                 "optional": true,
                 "type": "boolean",
+              },
+              "pageDescription": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
+              },
+              "pageTitle": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
               },
               "postHogApiHost": Object {
                 "nullable": true,

@@ -199,6 +199,11 @@ export interface AIChatOptions extends RecordActionOptions {
      * Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
      */
     frequencyPenalty?: number;
+
+    /**
+     * Whether prompt caching should be enabled for providers that support it.
+     */
+    enableCaching?: boolean;
 }
 
 /**

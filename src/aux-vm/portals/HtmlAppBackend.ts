@@ -146,6 +146,14 @@ let globalIdCounter = 0;
 let registeredMethodHandlers = false;
 
 /**
+ * Resets the global node ID counter used for serializing DOM node references.
+ * Intended for tests that need deterministic snapshot output.
+ */
+export function resetGlobalIdCounter() {
+    globalIdCounter = 0;
+}
+
+/**
  * Defines a class that is used to communicate HTML changes for a custom html portal.
  */
 export class HtmlAppBackend implements AppBackend {

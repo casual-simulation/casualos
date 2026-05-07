@@ -82,6 +82,7 @@ import { MemoryRateLimiter } from './MemoryRateLimiter';
 import type { RateLimiter } from '@casual-simulation/rate-limit-redis';
 import {
     asyncIterable,
+    checkAccounts,
     createStripeMock,
     createTestControllers,
     createTestPrivoConfiguration,
@@ -1871,6 +1872,16 @@ describe('RecordsServer', () => {
                     ],
                 })
             );
+
+            await checkAccounts(financialInterface, [
+                {
+                    id: account.id,
+                    debits_posted: 0n,
+                    debits_pending: 0n,
+                    credits_posted: 200n,
+                    credits_pending: 0n,
+                },
+            ]);
 
             const result = await server.handleHttpRequest(
                 httpGet(
@@ -24357,6 +24368,9 @@ describe('RecordsServer', () => {
                         content: 'hello',
                     },
                 ],
+                temperature: 1,
+                enableCaching: true,
+                maxTokens: undefined,
                 userId,
             });
         });
@@ -24604,6 +24618,9 @@ describe('RecordsServer', () => {
                         content: 'hello',
                     },
                 ],
+                temperature: 1,
+                enableCaching: true,
+                maxTokens: undefined,
                 userId,
             });
         });

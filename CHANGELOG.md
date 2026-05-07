@@ -1,8 +1,52 @@
 # CasualOS Changelog
 
-## V4.2.3
+## V4.2.4
 
 #### Date: TBD
+
+### :boom: Breaking Changes
+
+-   Changed how whitespace is handled in JSX expressions by default.
+
+    -   Previously, whitespace was preserved as much as possible. This meant that all spaces and newlines which were in the JSX expression were preserved in the JSX output. It also meant that formatting JSX could change the output.
+    -   Now, whitespace is removed unless explicitly added. This means that formatting will no longer change the JSX output. Additionally, this behavior matches the whitespace behavior of other JSX compilers (React, Babel, etc.).
+    -   If you want to preserve the previous behavior, you can add the `"jsx-preserve-whitespace";` directive at the start of the script(s) you want JSX whitespace preservation on.
+    -   Here's an example of the changed behavior:
+
+        ```typescript
+        let jsx = (
+            <div>
+                <span>Hello</span>
+                <span>World</span>
+            </div>
+        );
+
+        // Previously, the output would be like this:
+        let originalOutput = (
+            <div>
+                {' '}
+                <span>Hello</span> <span>World</span>{' '}
+            </div>
+        );
+
+        // Now, the output is like this:
+        let newOutput = (
+            <div>
+                <span>Hello</span> <span>World</span>
+            </div>
+        );
+        // Notice the spacing between the <div> and <span> tags
+        ```
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the default page title contained HTML comments used for replacing it on server-based deployments.
+-   Fixed an issue where fractional `tokenModifierRatio` values could cause the server to error because of mishandling of fractional values for AI chat billing.
+-   Fixed an issue where Anthropic models would not be allowed to output more than `4096` tokens.
+
+## V4.2.3
+
+#### Date: 4/27/2026
 
 ### :rocket: Features
 
@@ -22,6 +66,7 @@
 -   Added the `ai.chat`, `ai.image`, and `ai.skybox` policy resource kinds with `create` permissions.
 -   Improved `xp.getAccountBalances(options?)` to accept one of `userId`, `studioId`, or `contractId` in the `options` parameter object.
 -   Added the `temp` BIOS option to the player and studio configuration UI, and updated temp insts to use in-memory-only partitions with no persistence across refreshes.
+-   Added support for configuring the initial player page title and description in server deployments, including comId-specific overrides for link previews and other server-rendered metadata.
 -   Added support for configuring credit expiration.
     -   By default, credits never expire.
     -   Credit expiration can be configured via the `SERVER_CONFIG.subscriptions.subscriptions[i].creditExpiration` key, and can be set to one of the following options:
@@ -107,6 +152,7 @@
     -   Instead of `.otherTag`, now you can use `./otherTag`
     -   Instead of `:parent.tag`, now you can use `../parent/tag`
 -   Updated the [`typesense`](https://typesense.org/) library to v3.0.5.
+-   Added support for AI chat prompt caching via `enableCaching` in `ai.chat()` and `ai.stream.chat()` options, including forwarding to Claude/Anthropic requests using prompt cache control.
 -   Added the `listTransfers` operation (`GET /api/v2/transfers`) to support listing financial account transfers.
     -   Supports user, studio, and contract accounts denominated in USD or credits.
     -   Returns the current account balance and the matching transfers for the given account.

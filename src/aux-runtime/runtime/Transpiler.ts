@@ -305,6 +305,8 @@ export class Transpiler {
     private _insertEnergyChecks: boolean;
     private _cache: LRUCache<string, TranspilerResult>;
 
+    private _jsxPreserveWhitespace: boolean = false;
+
     get forceSync() {
         return this._forceSync;
     }
@@ -427,6 +429,7 @@ export class Transpiler {
         if (cached) {
             return cached;
         }
+        this._jsxPreserveWhitespace = directives.jsxPreserveWhitespace ?? false;
         const macroed = replaceMacros(code);
         const node = this._parse(macroed);
         const isAsync = directives.isAsync || this._isAsyncNode(node);
@@ -2039,21 +2042,35 @@ export class Transpiler {
         const version = { '0': getClock(doc, 0) };
 
         for (let child of children) {
-            const pos = createRelativePositionFromStateVector(
-                text,
-                version,
-                child.end,
-                undefined,
-                true
-            );
-            this._replace(child, doc, text, metadata);
+            let changed = false;
+            const changeHandler = () => {
+                changed = true;
+            };
+            try {
+                text.observe(changeHandler);
+                const pos = createRelativePositionFromStateVector(
+                    text,
+                    version,
+                    child.end,
+                    undefined,
+                    true
+                );
+                this._replace(child, doc, text, metadata);
 
-            doc.clientID += 1;
-            const absoluteEnd = createAbsolutePositionFromRelativePosition(
-                pos,
-                doc
-            );
-            text.insert(absoluteEnd.index, ',');
+                if (!changed) {
+                    // Skip inserting comma if nothing was changed
+                    continue;
+                }
+
+                doc.clientID += 1;
+                const absoluteEnd = createAbsolutePositionFromRelativePosition(
+                    pos,
+                    doc
+                );
+                text.insert(absoluteEnd.index, ',');
+            } finally {
+                text.unobserve(changeHandler);
+            }
         }
     }
 
@@ -2061,8 +2078,51 @@ export class Transpiler {
         doc.clientID += 1;
         const version = { '0': getClock(doc, 0) };
 
-        const startIndex = node.start;
-        const endIndex = node.end;
+        let startIndex: number;
+        let endIndex: number;
+
+        if (!this._jsxPreserveWhitespace) {
+            const firstNonWhitespaceMatch = /\S/.exec(node.raw);
+
+            if (!firstNonWhitespaceMatch) {
+                // Preserve pure whitespace on a single line, but trim pure multi-line whitespace.
+                if (/\r|\n/.test(node.raw)) {
+                    return;
+                }
+
+                startIndex = node.start;
+                endIndex = node.end;
+            } else {
+                const lastNonWhitespaceMatch = /\S\s*$/.exec(node.raw);
+                const firstNonWhitespaceIndex = firstNonWhitespaceMatch.index;
+                const lastNonWhitespaceIndex = lastNonWhitespaceMatch.index;
+
+                const leadingWhitespace = node.raw.slice(
+                    0,
+                    firstNonWhitespaceIndex
+                );
+                const trailingWhitespace = node.raw.slice(
+                    lastNonWhitespaceIndex + 1
+                );
+
+                // Trim leading whitespace only when it includes a newline.
+                if (/\r|\n/.test(leadingWhitespace)) {
+                    startIndex = node.start + firstNonWhitespaceIndex;
+                } else {
+                    startIndex = node.start;
+                }
+
+                // Trim trailing whitespace only when it includes a newline.
+                if (/\r|\n/.test(trailingWhitespace)) {
+                    endIndex = node.start + lastNonWhitespaceIndex + 1;
+                } else {
+                    endIndex = node.end;
+                }
+            }
+        } else {
+            startIndex = node.start;
+            endIndex = node.end;
+        }
 
         const absoluteStart = createAbsolutePositionFromStateVector(
             doc,
@@ -2523,6 +2583,16 @@ export interface TranspilerDirectives {
     noParse: boolean;
     isAsync: boolean;
     isModule: boolean;
+    /**
+     * Whether to preserve whitespace during JSX compilation.
+     * This is useful for cases where whitespace is significant, but is non-standard.
+     *
+     * If set to true, then whitespace in JSX nodes will be preserved in the output.
+     * If false, then whitespace will be removed unless explicitly added with `{" "}` or `{"\n"}`.
+     *
+     * Defaults to false.
+     */
+    jsxPreserveWhitespace?: boolean;
 
     startIndex?: number;
     endIndex?: number;
@@ -2569,6 +2639,8 @@ export function parseDirectives(code: string): TranspilerDirectives {
             directives.isAsync = true;
         } else if (part === 'module') {
             directives.isModule = true;
+        } else if (part === 'jsx-preserve-whitespace') {
+            directives.jsxPreserveWhitespace = true;
         }
     }
     return directives;
@@ -2600,6 +2672,9 @@ export function addDirectives(
     }
     if (directives.isModule) {
         directiveString += 'module ';
+    }
+    if (directives.jsxPreserveWhitespace) {
+        directiveString += 'jsx-preserve-whitespace ';
     }
     directiveString = directiveString.trim() + '";';
     return directiveString + code;

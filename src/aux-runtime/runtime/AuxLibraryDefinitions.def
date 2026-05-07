@@ -11201,6 +11201,11 @@ export interface AIChatOptions extends RecordActionOptions {
      * If the AI generates a sequence of tokens that match one of the given words, then it will stop generating tokens.
      */
     stopWords?: string[];
+
+    /**
+     * Whether prompt caching should be enabled for providers that support it.
+     */
+    enableCaching?: boolean;
 }
 
 /**

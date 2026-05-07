@@ -11361,6 +11361,7 @@ describe('SubscriptionController', () => {
 
             expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
                 mode: 'payment',
+                allow_promotion_codes: true,
                 line_items: [
                     {
                         adjustable_quantity: {
@@ -11436,6 +11437,7 @@ describe('SubscriptionController', () => {
 
             expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
                 mode: 'payment',
+                allow_promotion_codes: true,
                 line_items: [
                     {
                         adjustable_quantity: {
@@ -11511,6 +11513,7 @@ describe('SubscriptionController', () => {
 
             expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
                 mode: 'payment',
+                allow_promotion_codes: true,
                 line_items: [
                     {
                         adjustable_quantity: {
@@ -11588,6 +11591,7 @@ describe('SubscriptionController', () => {
 
             expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
                 mode: 'payment',
+                allow_promotion_codes: true,
                 line_items: [
                     {
                         adjustable_quantity: {

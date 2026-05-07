@@ -286,6 +286,11 @@ export interface StripeCheckoutRequest {
     mode: 'subscription' | 'payment';
 
     /**
+     * Whether promotion codes should be allowed for this checkout session.
+     */
+    allow_promotion_codes?: boolean;
+
+    /**
      * The ID of the customer that the checkout request should be used.
      */
     customer?: string;

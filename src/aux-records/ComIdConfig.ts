@@ -45,6 +45,8 @@ export const COM_ID_PLAYER_CONFIG = WEB_CONFIG_SCHEMA.pick({
     jitsiAppName: true,
     what3WordsApiKey: true,
     logoBackgroundColor: true,
+    pageTitle: true,
+    pageDescription: true,
     disableVM: true,
     postHogApiKey: true,
     postHogApiHost: true,

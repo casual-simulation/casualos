@@ -800,7 +800,11 @@ describe('RecordsServer', () => {
                 let result = '';
                 for (let key of Object.keys(args)) {
                     const value = args[key];
-                    result += `<${key}>${render(value)}</${key}>`;
+                    if (key === 'title') {
+                        result += render(value);
+                    } else {
+                        result += `<${key}>${render(value)}</${key}>`;
+                    }
                 }
                 return result as unknown as string;
             },
@@ -926,6 +930,99 @@ describe('RecordsServer', () => {
                         ...corsHeaders(defaultHeaders.origin),
                         'Content-Type': 'text/html; charset=utf-8',
                     });
+                });
+
+                it('should include the default title and description', async () => {
+                    const result = await server.handleHttpRequest(
+                        scoped('player', httpGet(path, defaultHeaders))
+                    );
+
+                    expect(result.statusCode).toBe(200);
+
+                    const body = result.body as string;
+                    const dom = new JSDOM(body);
+
+                    const title =
+                        dom.window.document.querySelector('title')?.textContent;
+                    const description = dom.window.document.querySelector(
+                        'description meta[name="description"]'
+                    );
+
+                    expect(title).toBe('CasualOS');
+                    expect(
+                        description?.attributes.getNamedItem('content')?.value
+                    ).toBe('Casual Open Simulation for the Web');
+                });
+
+                it('should include the configured title and description', async () => {
+                    store.webConfig = {
+                        causalRepoConnectionProtocol: 'websocket',
+                        version: 2,
+                        pageTitle: 'My CasualOS',
+                        pageDescription: 'My Custom CasualOS Description',
+                    };
+
+                    const result = await server.handleHttpRequest(
+                        scoped('player', httpGet(path, defaultHeaders))
+                    );
+
+                    expect(result.statusCode).toBe(200);
+
+                    const body = result.body as string;
+                    const dom = new JSDOM(body);
+
+                    const title =
+                        dom.window.document.querySelector('title')?.textContent;
+                    const description = dom.window.document.querySelector(
+                        'description meta[name="description"]'
+                    );
+
+                    expect(title).toBe('My CasualOS');
+                    expect(
+                        description?.attributes.getNamedItem('content')?.value
+                    ).toBe('My Custom CasualOS Description');
+                });
+
+                it('should include the comId configured title and description', async () => {
+                    store.webConfig = {
+                        causalRepoConnectionProtocol: 'websocket',
+                        version: 2,
+                        pageTitle: 'Default CasualOS',
+                        pageDescription: 'Default CasualOS Description',
+                    };
+
+                    await store.addStudio({
+                        id: 'studio-1',
+                        displayName: 'Test Studio',
+                        comId: 'my-com-id',
+                        playerConfig: {
+                            pageTitle: 'ComID CasualOS',
+                            pageDescription: 'ComID CasualOS Description',
+                        },
+                    });
+
+                    const result = await server.handleHttpRequest(
+                        scoped(
+                            'player',
+                            httpGet(`${path}?comId=my-com-id`, defaultHeaders)
+                        )
+                    );
+
+                    expect(result.statusCode).toBe(200);
+
+                    const body = result.body as string;
+                    const dom = new JSDOM(body);
+
+                    const title =
+                        dom.window.document.querySelector('title')?.textContent;
+                    const description = dom.window.document.querySelector(
+                        'description meta[name="description"]'
+                    );
+
+                    expect(title).toBe('ComID CasualOS');
+                    expect(
+                        description?.attributes.getNamedItem('content')?.value
+                    ).toBe('ComID CasualOS Description');
                 });
 
                 it('should include posthog', async () => {

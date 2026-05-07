@@ -8327,6 +8327,60 @@ describe('RecordsManager', () => {
                 expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
+            it('should include prompt caching when enabled', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        choices: [
+                            {
+                                role: 'assistant',
+                                content: 'Hello!',
+                                finishReason: 'stop',
+                            },
+                        ],
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    aiChat(
+                        [
+                            {
+                                role: 'user',
+                                content: 'Hello!',
+                            },
+                        ],
+                        {
+                            enableCaching: true,
+                        },
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastPost()).toEqual([
+                    'http://localhost:3002/api/v2/ai/chat',
+                    {
+                        messages: [
+                            {
+                                role: 'user',
+                                content: 'Hello!',
+                            },
+                        ],
+                        enableCaching: true,
+                    },
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+            });
+
             it('should include the record name', async () => {
                 setResponse({
                     data: {
@@ -9023,6 +9077,65 @@ describe('RecordsManager', () => {
                 });
 
                 expect(vm.events.slice(2)).toEqual([iterableComplete(1)]);
+            });
+
+            it('should include prompt caching for websocket stream requests', async () => {
+                const client = new MemoryConnectionClient();
+
+                let responses =
+                    new Subject<WebsocketHttpPartialResponseMessage>();
+                client.events.set('http_partial_response', responses);
+
+                connectionClientFactory = () => {
+                    return client;
+                };
+                records = new RecordsManager(
+                    {
+                        version: '1.0.0',
+                        versionHash: '1234567890abcdef',
+                        recordsOrigin: 'http://localhost:3002',
+                        authOrigin: 'http://localhost:3002',
+                    },
+                    helper,
+                    getEndpointInfo,
+                    true,
+                    connectionClientFactory
+                );
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    aiChatStream(
+                        [
+                            {
+                                role: 'user',
+                                content: 'hello',
+                            },
+                        ],
+                        {
+                            enableCaching: true,
+                        },
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                const body = JSON.parse(
+                    (client.sentMessages[0] as WebsocketHttpRequestMessage)
+                        .request.body as string
+                );
+
+                expect(body).toEqual({
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'hello',
+                        },
+                    ],
+                    enableCaching: true,
+                });
             });
 
             it('should return an error if the connection closes during the request', async () => {

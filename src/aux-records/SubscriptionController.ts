@@ -3556,6 +3556,7 @@ export class SubscriptionController {
         const sessionResult = await wrap(() =>
             this._stripe.createCheckoutSession({
                 mode: 'payment',
+                allow_promotion_codes: true,
                 line_items: [
                     {
                         adjustable_quantity: {

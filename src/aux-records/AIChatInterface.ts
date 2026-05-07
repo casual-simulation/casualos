@@ -90,6 +90,11 @@ export interface AIChatInterfaceRequest {
      * The ID of the user that is making the request.
      */
     userId: string;
+
+    /**
+     * Whether prompt caching should be enabled for providers that support it.
+     */
+    enableCaching?: boolean;
 }
 
 /**

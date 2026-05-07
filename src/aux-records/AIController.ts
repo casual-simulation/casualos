@@ -411,7 +411,7 @@ export class AIController {
 
             const model = request.model ?? this._chatOptions.defaultModel;
             const provider =
-                this._allowedChatModels.get(request.model) ??
+                this._allowedChatModels.get(model) ??
                 this._chatOptions.defaultModelProvider;
             const chat = this._chatProviders[provider];
 
@@ -577,15 +577,19 @@ export class AIController {
             const creditFeePerOutputToken =
                 allowedFeatures.ai.chat.creditFeePerOutputToken ?? null;
             const preChargeInputTokens = BigInt(
-                this._calculateTokenCost(
-                    allowedFeatures.ai.chat.preChargeInputTokens ?? 100,
-                    model
+                Math.ceil(
+                    this._calculateTokenCost(
+                        allowedFeatures.ai.chat.preChargeInputTokens ?? 100,
+                        model
+                    )
                 )
             );
             const preChargeOutputTokens = BigInt(
-                this._calculateTokenCost(
-                    allowedFeatures.ai.chat.preChargeOutputTokens ?? 100,
-                    model
+                Math.ceil(
+                    this._calculateTokenCost(
+                        allowedFeatures.ai.chat.preChargeOutputTokens ?? 100,
+                        model
+                    )
                 )
             );
             const initialAmount =
@@ -611,19 +615,30 @@ export class AIController {
                 return genericResult(initialResult.value);
             }
 
+            const chatOptions: Parameters<typeof chat.chat>[0] = {
+                messages: request.messages,
+                model: model,
+                userId: request.userId,
+                maxTokens,
+                temperature: request.temperature ?? 1,
+                enableCaching: request.enableCaching ?? true,
+            };
+
+            if (request.topP !== undefined) {
+                chatOptions.topP = request.topP;
+            }
+            if (request.frequencyPenalty !== undefined) {
+                chatOptions.frequencyPenalty = request.frequencyPenalty;
+            }
+            if (request.presencePenalty !== undefined) {
+                chatOptions.presencePenalty = request.presencePenalty;
+            }
+            if (request.stopWords !== undefined) {
+                chatOptions.stopWords = request.stopWords;
+            }
+
             const chatResult = await wrap(
-                async () =>
-                    await chat.chat({
-                        messages: request.messages,
-                        model: model,
-                        temperature: request.temperature,
-                        topP: request.topP,
-                        frequencyPenalty: request.frequencyPenalty,
-                        presencePenalty: request.presencePenalty,
-                        stopWords: request.stopWords,
-                        userId: request.userId,
-                        maxTokens,
-                    })
+                async () => await chat.chat(chatOptions)
             );
 
             if (isFailure(chatResult)) {
@@ -712,7 +727,8 @@ export class AIController {
                 chatResult.inputTokens,
                 model
             );
-            cost += BigInt(adjustedInputTokens) * creditFeePerInputToken;
+            cost +=
+                BigInt(Math.ceil(adjustedInputTokens)) * creditFeePerInputToken;
         }
 
         if (chatResult.outputTokens > 0 && creditFeePerOutputToken) {
@@ -720,7 +736,9 @@ export class AIController {
                 chatResult.outputTokens,
                 model
             );
-            cost += BigInt(adjustedOutputTokens) * creditFeePerOutputToken;
+            cost +=
+                BigInt(Math.ceil(adjustedOutputTokens)) *
+                creditFeePerOutputToken;
         }
 
         if (
@@ -734,7 +752,7 @@ export class AIController {
                 model
             );
             cost =
-                BigInt(adjustedTokens) *
+                BigInt(Math.ceil(adjustedTokens)) *
                 (creditFeePerOutputToken ?? creditFeePerInputToken ?? 0n);
         }
         return cost;
@@ -816,7 +834,7 @@ export class AIController {
 
             const model = request.model ?? this._chatOptions.defaultModel;
             const provider =
-                this._allowedChatModels.get(request.model) ??
+                this._allowedChatModels.get(model) ??
                 this._chatOptions.defaultModelProvider;
             const chat = this._chatProviders[provider];
 
@@ -1026,17 +1044,29 @@ export class AIController {
                 return genericResult(initialResult.value);
             }
 
-            const result = chat.chatStream({
+            const chatStreamOptions: Parameters<typeof chat.chatStream>[0] = {
                 messages: request.messages,
                 model: model,
-                temperature: request.temperature,
-                topP: request.topP,
-                frequencyPenalty: request.frequencyPenalty,
-                presencePenalty: request.presencePenalty,
-                stopWords: request.stopWords,
                 userId: request.userId,
                 maxTokens,
-            });
+                temperature: request.temperature ?? 1,
+                enableCaching: request.enableCaching ?? true,
+            };
+
+            if (request.topP !== undefined) {
+                chatStreamOptions.topP = request.topP;
+            }
+            if (request.frequencyPenalty !== undefined) {
+                chatStreamOptions.frequencyPenalty = request.frequencyPenalty;
+            }
+            if (request.presencePenalty !== undefined) {
+                chatStreamOptions.presencePenalty = request.presencePenalty;
+            }
+            if (request.stopWords !== undefined) {
+                chatStreamOptions.stopWords = request.stopWords;
+            }
+
+            const result = chat.chatStream(chatStreamOptions);
 
             let totalTokens = 0;
             let totalInputTokens = 0;
@@ -2610,6 +2640,11 @@ export interface AIChatRequest {
      * The maximum number of tokens that should be generated.
      */
     totalTokens?: number;
+
+    /**
+     * Whether prompt caching should be enabled for providers that support it.
+     */
+    enableCaching?: boolean;
 }
 
 export type AIChatResponse = AIChatSuccess | AIChatFailure;
