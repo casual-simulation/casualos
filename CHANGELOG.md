@@ -38,6 +38,13 @@
         // Notice the spacing between the <div> and <span> tags
         ```
 
+### :rocket: Features
+
+-   Added the `listTransfers` operation (`GET /api/v2/transfers`) to support listing financial account transfers.
+    -   Supports user, studio, and contract accounts denominated in USD or credits.
+    -   Returns the current account balance and the matching transfers for the given account.
+    -   Supports filtering by `minTimeMs`, `maxTimeMs`, and `limit`.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where the default page title contained HTML comments used for replacing it on server-based deployments.
@@ -153,10 +160,6 @@
     -   Instead of `:parent.tag`, now you can use `../parent/tag`
 -   Updated the [`typesense`](https://typesense.org/) library to v3.0.5.
 -   Added support for AI chat prompt caching via `enableCaching` in `ai.chat()` and `ai.stream.chat()` options, including forwarding to Claude/Anthropic requests using prompt cache control.
--   Added the `listTransfers` operation (`GET /api/v2/transfers`) to support listing financial account transfers.
-    -   Supports user, studio, and contract accounts denominated in USD or credits.
-    -   Returns the current account balance and the matching transfers for the given account.
-    -   Supports filtering by `minTimeMs`, `maxTimeMs`, and `limit`.
 
 ### :bug: Bug Fixes
 
