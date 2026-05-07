@@ -421,7 +421,7 @@ export class HtmlAppBackend implements AppBackend {
                 });
                 this._body = this._document.body;
             }
-            (<any>this._body).__id = this.appId;
+            this._getNodeId(this._body as any);
             this._nodes.set(this.appId, this._body);
 
             this._registerMethodHandlers(this._document);
