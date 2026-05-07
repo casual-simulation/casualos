@@ -51,6 +51,10 @@
         const nativeGoogleResponse = response.google;
         ```
     -   The existing normalized fields (`role`, `content`, `finishReason`, etc.) are unchanged.
+-   Added the `listTransfers` operation (`GET /api/v2/transfers`) to support listing financial account transfers.
+    -   Supports user, studio, and contract accounts denominated in USD or credits.
+    -   Returns the current account balance and the matching transfers for the given account.
+    -   Supports filtering by `minTimeMs`, `maxTimeMs`, and `limit`.
 
 ### :bug: Bug Fixes
 
