@@ -28,6 +28,7 @@ import {
     FinancialController,
     getAccountBalance,
     getAssetAccountBalance,
+    getBillingAccountForRecord,
     getLiabilityAccountBalance,
 } from './FinancialController';
 import {
@@ -3027,6 +3028,85 @@ describe('billForUsage()', () => {
                 errorCode: 'action_not_supported',
                 errorMessage: 'This action is not supported.',
             }),
+        });
+    });
+});
+
+describe('getBillingAccountForRecord()', () => {
+    it('should return record billing when enabled and a credit account exists', async () => {
+        const result = await getBillingAccountForRecord('record1', {
+            async getRecordByName() {
+                return {
+                    ownerId: 'owner1',
+                    studioId: null,
+                    creditAccountId: 'record-account-1',
+                    creditBillingEnabled: true,
+                };
+            },
+        });
+
+        expect(result).toEqual({
+            success: true,
+            userId: null,
+            studioId: null,
+            isRecordBilling: true,
+            recordAccountId: 'record-account-1',
+        });
+    });
+
+    it('should fall back to owner billing when record billing is disabled', async () => {
+        const result = await getBillingAccountForRecord('record1', {
+            async getRecordByName() {
+                return {
+                    ownerId: 'owner1',
+                    studioId: null,
+                    creditAccountId: 'record-account-1',
+                    creditBillingEnabled: false,
+                };
+            },
+        });
+
+        expect(result).toEqual({
+            success: true,
+            userId: 'owner1',
+            studioId: null,
+            isRecordBilling: false,
+            recordAccountId: null,
+        });
+    });
+
+    it('should fall back to studio billing when owner is missing', async () => {
+        const result = await getBillingAccountForRecord('record1', {
+            async getRecordByName() {
+                return {
+                    ownerId: null,
+                    studioId: 'studio1',
+                    creditAccountId: 'record-account-1',
+                    creditBillingEnabled: false,
+                };
+            },
+        });
+
+        expect(result).toEqual({
+            success: true,
+            userId: null,
+            studioId: 'studio1',
+            isRecordBilling: false,
+            recordAccountId: null,
+        });
+    });
+
+    it('should return record_not_found when the record does not exist', async () => {
+        const result = await getBillingAccountForRecord('record1', {
+            async getRecordByName() {
+                return null;
+            },
+        });
+
+        expect(result).toEqual({
+            success: false,
+            errorCode: 'record_not_found',
+            errorMessage: 'The specified record was not found.',
         });
     });
 });

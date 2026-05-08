@@ -2566,6 +2566,79 @@ describe('FileRecordsController', () => {
             });
         });
 
+        it('should fall back to owner billing when record billing is disabled', async () => {
+            const ownerAccount = unwrap(
+                await financialController.getAccountBalance({
+                    userId: ownerId,
+                    ledger: LEDGERS.credits,
+                })
+            );
+
+            const recordBudgetAccount = unwrap(
+                await financialController.getOrCreateFinancialAccount({
+                    userId: userId,
+                    ledger: LEDGERS.credits,
+                })
+            );
+
+            unwrap(
+                await financialController.internalTransaction({
+                    transfers: [
+                        {
+                            amount: 1000n,
+                            debitAccountId: ACCOUNT_IDS.liquidity_credits,
+                            creditAccountId: recordBudgetAccount.account.id,
+                            code: TransferCodes.admin_credit,
+                            currency: CurrencyCodes.credits,
+                        },
+                    ],
+                })
+            );
+
+            const record = await store.getRecordByName(recordName);
+            await store.updateRecord({
+                ...record,
+                creditAccountId: recordBudgetAccount.account.id,
+                creditBillingEnabled: false,
+            } as any);
+
+            presignUrlMock.mockResolvedValueOnce({
+                success: true,
+                uploadUrl: 'testUrl',
+                uploadMethod: 'POST',
+                uploadHeaders: {
+                    myHeader: 'myValue',
+                },
+            });
+
+            const result = (await manager.recordFile(key, userId, {
+                fileSha256Hex: 'hash-fallback',
+                fileByteLength: 100,
+                fileMimeType: 'text/plain',
+                fileDescription: 'description',
+                headers: {},
+            })) as RecordFileSuccess;
+
+            expect(result.success).toBe(true);
+
+            await checkAccounts(financialInterface, [
+                {
+                    id: BigInt(ownerAccount!.accountId),
+                    credits_posted: 1000n,
+                    debits_posted: 50n,
+                    credits_pending: 0n,
+                    debits_pending: 0n,
+                },
+                {
+                    id: recordBudgetAccount.account.id,
+                    credits_posted: 1000n,
+                    debits_posted: 0n,
+                    credits_pending: 0n,
+                    debits_pending: 0n,
+                },
+            ]);
+        });
+
         it('should fail to write the file if the user doesnt have enough credits', async () => {
             store.subscriptionConfiguration = buildSubscriptionConfig(
                 (config) =>
