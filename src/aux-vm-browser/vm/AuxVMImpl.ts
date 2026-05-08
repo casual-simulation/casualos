@@ -48,7 +48,7 @@ import type {
 import { getBaseOrigin, getVMOrigin } from './AuxVMUtils';
 
 export const DEFAULT_IFRAME_ALLOW_ATTRIBUTE =
-    'accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking';
+    'accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking; language-model';
 export const DEFAULT_IFRAME_SANDBOX_ATTRIBUTE =
     'allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts allow-downloads allow-popups-to-escape-sandbox';
 
