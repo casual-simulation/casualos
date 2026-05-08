@@ -17,6 +17,7 @@
  */
 import type {
     JSONAccountBalance,
+    KnownErrorCodes,
     MultiError,
     Result,
     ServerError,
@@ -1993,7 +1994,7 @@ export interface GetBillingAccountForRecordFailure {
 export async function getBillingAccountForRecord(
     recordName: string,
     recordStore: {
-        getRecordByName(name: string): Promise<{
+        getRecordByName?: (name: string) => Promise<{
             ownerId?: string | null;
             studioId?: string | null;
             creditAccountId?: string | null;
@@ -2002,6 +2003,15 @@ export async function getBillingAccountForRecord(
     }
 ): Promise<GetBillingAccountForRecordResult> {
     try {
+        if (!recordStore.getRecordByName) {
+            return {
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage:
+                    'Record billing is not supported by this record store.',
+            };
+        }
+
         const record = await recordStore.getRecordByName(recordName);
 
         if (!record) {
