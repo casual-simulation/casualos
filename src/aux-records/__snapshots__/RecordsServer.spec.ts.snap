@@ -4359,6 +4359,35 @@ Object {
     Object {
       "http": Object {
         "method": "GET",
+        "path": "/api/v2/transfers",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "accountId": Object {
+            "type": "string",
+          },
+          "limit": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "number",
+          },
+          "maxTimeMs": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "number",
+          },
+          "minTimeMs": Object {
+            "type": "number",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listTransfers",
+      "origins": "self",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
         "path": "/api/v2/webauthn/authenticators",
       },
       "name": "listUserAuthenticators",
@@ -14859,6 +14888,35 @@ Object {
       },
       "name": "listStudios",
       "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/transfers",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "accountId": Object {
+            "type": "string",
+          },
+          "limit": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "number",
+          },
+          "maxTimeMs": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "number",
+          },
+          "minTimeMs": Object {
+            "type": "number",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listTransfers",
+      "origins": "self",
     },
     Object {
       "http": Object {

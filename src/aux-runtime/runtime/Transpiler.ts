@@ -2082,26 +2082,42 @@ export class Transpiler {
         let endIndex: number;
 
         if (!this._jsxPreserveWhitespace) {
-            const isMultiLine = /\r|\n/.test(node.raw);
+            const firstNonWhitespaceMatch = /\S/.exec(node.raw);
 
-            if (isMultiLine) {
-                // Find the first non-whitespace character for the start index
-                const startMatch = /\S/.exec(node.raw);
-
-                if (!startMatch) {
-                    // If there are no non-whitespace characters, we can skip processing this node
+            if (!firstNonWhitespaceMatch) {
+                // Preserve pure whitespace on a single line, but trim pure multi-line whitespace.
+                if (/\r|\n/.test(node.raw)) {
                     return;
                 }
 
-                startIndex = startMatch.index + node.start;
-
-                // Find the last non-whitespace character for the end index
-                const endMatch = /\S\s*$/.exec(node.raw);
-                endIndex = endMatch.index + 1 + node.start;
-            } else {
-                // For single line text, we preserve the whitespace
                 startIndex = node.start;
                 endIndex = node.end;
+            } else {
+                const lastNonWhitespaceMatch = /\S\s*$/.exec(node.raw);
+                const firstNonWhitespaceIndex = firstNonWhitespaceMatch.index;
+                const lastNonWhitespaceIndex = lastNonWhitespaceMatch.index;
+
+                const leadingWhitespace = node.raw.slice(
+                    0,
+                    firstNonWhitespaceIndex
+                );
+                const trailingWhitespace = node.raw.slice(
+                    lastNonWhitespaceIndex + 1
+                );
+
+                // Trim leading whitespace only when it includes a newline.
+                if (/\r|\n/.test(leadingWhitespace)) {
+                    startIndex = node.start + firstNonWhitespaceIndex;
+                } else {
+                    startIndex = node.start;
+                }
+
+                // Trim trailing whitespace only when it includes a newline.
+                if (/\r|\n/.test(trailingWhitespace)) {
+                    endIndex = node.start + lastNonWhitespaceIndex + 1;
+                } else {
+                    endIndex = node.end;
+                }
             }
         } else {
             startIndex = node.start;

@@ -414,6 +414,26 @@ describe('Transpiler', () => {
                 );
             });
 
+            it('should preserve inline whitespace at the end of text nodes', () => {
+                const result = transpiler.transpile(
+                    [`<div>`, `  text {abc}`, `</div>`].join('\n')
+                );
+
+                expect(result).toBe(
+                    [`h("div",null,`, '  `text `,abc,', `)`].join('\n')
+                );
+            });
+
+            it('should preserve inline whitespace at the start of text nodes', () => {
+                const result = transpiler.transpile(
+                    [`<div>`, `  {abc} text`, `</div>`].join('\n')
+                );
+
+                expect(result).toBe(
+                    [`h("div",null,`, '  abc,` text`', `,)`].join('\n')
+                );
+            });
+
             it('should ignore empty sections of whitespace', () => {
                 const result = transpiler.transpile(
                     [`<div>`, `  <span>Hello!</span>`, `</div>`].join('\n')

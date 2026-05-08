@@ -118,6 +118,7 @@ export class GoogleAIChatInterface implements AIChatInterface {
             const result = await chat.sendMessage(lastMessage.parts);
 
             const response = result.response;
+            const serializableResponse = toSerializableGoogleResponse(response);
 
             const chatContents = await chat.getHistory();
             const tokens = await model.countTokens({
@@ -129,9 +130,11 @@ export class GoogleAIChatInterface implements AIChatInterface {
                     {
                         role: 'assistant',
                         content: response.text(),
+                        google: serializableResponse,
                     },
                 ],
                 totalTokens: tokens.totalTokens,
+                google: serializableResponse,
             };
         } catch (err) {
             const span = trace.getActiveSpan();
@@ -214,14 +217,17 @@ export class GoogleAIChatInterface implements AIChatInterface {
             const result = await chat.sendMessageStream(lastMessage.parts);
 
             for await (const chunk of result.stream) {
+                const serializableChunk = toSerializableGoogleResponse(chunk);
                 yield {
                     choices: [
                         {
                             role: 'assistant',
                             content: chunk.text(),
+                            google: serializableChunk,
                         },
                     ],
                     totalTokens: 0,
+                    google: serializableChunk,
                 };
             }
 
@@ -295,4 +301,21 @@ function mapParts(content: AIChatMessage['content']): Part[] {
             'URL content is not supported for Google Gemini models'
         );
     });
+}
+
+function toSerializableGoogleResponse(response: unknown): unknown {
+    try {
+        return JSON.parse(JSON.stringify(response));
+    } catch {
+        if (response && typeof response === 'object') {
+            const obj = response as Record<string, unknown>;
+            return {
+                candidates: obj['candidates'],
+                promptFeedback: obj['promptFeedback'],
+                usageMetadata: obj['usageMetadata'],
+            };
+        }
+
+        return response;
+    }
 }

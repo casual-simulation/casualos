@@ -689,9 +689,12 @@ export class AIController {
                 return genericResult(finalResult.value);
             }
 
+            const responsePayload = getProviderNativePayloads(chatResult.value);
+
             return {
                 success: true,
                 choices: chatResult.value.choices,
+                ...responsePayload,
             };
         } catch (err) {
             const span = trace.getActiveSpan();
@@ -769,7 +772,10 @@ export class AIController {
     async *chatStream(
         request: AIChatRequest
     ): AsyncGenerator<
-        Pick<AIChatInterfaceStreamResponse, 'choices'>,
+        Omit<
+            AIChatInterfaceStreamResponse,
+            'totalTokens' | 'inputTokens' | 'outputTokens'
+        >,
         AIChatStreamResponse
     > {
         try {
@@ -1089,8 +1095,11 @@ export class AIController {
                     });
                 }
 
+                const chunkPayload = getProviderNativePayloads(chunk);
+
                 yield {
                     choices: chunk.choices,
+                    ...chunkPayload,
                 };
             }
 
@@ -2573,6 +2582,25 @@ export class AIController {
     }
 }
 
+function getProviderNativePayloads(response: {
+    [key: string]: unknown;
+}): Record<string, unknown> {
+    const payload: Record<string, unknown> = {};
+
+    for (const key in response) {
+        if (
+            key !== 'choices' &&
+            key !== 'totalTokens' &&
+            key !== 'inputTokens' &&
+            key !== 'outputTokens'
+        ) {
+            payload[key] = response[key];
+        }
+    }
+
+    return payload;
+}
+
 /**
  * Defines an AI Chat request.
  */
@@ -2652,6 +2680,15 @@ export type AIChatResponse = AIChatSuccess | AIChatFailure;
 export interface AIChatSuccess {
     success: true;
     choices: AIChatMessage[];
+
+    /**
+     * The provider-native response payloads keyed by provider name.
+     *
+     * For example, OpenAI responses are placed in the `openai` property,
+     * Anthropic responses are placed in `anthropic`, and custom providers
+     * use their configured provider name.
+     */
+    [provider: string]: unknown;
 }
 
 export interface AIChatFailure {

@@ -218,11 +218,11 @@ describe('HtmlAppBackend', () => {
                     {
                         type: 'childList',
                         target: expect.objectContaining({
-                            __id: 'testPortal',
+                            __id: '0',
                         }),
                         addedNodes: [
                             expect.objectContaining({
-                                __id: '0',
+                                __id: '1',
                                 nodeName: 'H1',
                             }),
                         ],
@@ -375,7 +375,7 @@ describe('HtmlAppBackend', () => {
 
             expect(actions.slice(0, 3)).toEqual([
                 registerHtmlApp('testPortal', 'appId', 'uuid1'),
-                htmlAppMethod('testPortal', 'testPortal', 'focus', [], 'uuid2'),
+                htmlAppMethod('testPortal', '0', 'focus', [], 'uuid2'),
                 toast(undefined),
             ]);
         });

@@ -11091,6 +11091,15 @@ export interface AIChatMessage {
      * The reason why the message was finished.
      */
     finishReason?: string;
+
+    /**
+     * Provider-native response payloads keyed by provider name.
+     *
+     * For example, OpenAI responses are available in `openai`, Anthropic
+     * responses in `anthropic`, and custom providers use their configured
+     * provider name.
+     */
+    [provider: string]: any;
 }
 
 /**
