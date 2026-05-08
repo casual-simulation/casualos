@@ -119,7 +119,6 @@ import type {
     JSONAccountBalances,
     PayoutDestination,
     UniqueFinancialAccountFilter,
-    BillingCodes,
 } from './financial';
 import {
     ACCOUNT_IDS,
@@ -733,174 +732,6 @@ export class SubscriptionController {
             account: this._financialController.convertToAccountBalance(account),
             transfers: accountTransfers,
         });
-    }
-
-    /**
-     * Lists the transfers for the given account.
-     * @param request The request.
-     */
-    @traced(TRACE_NAME)
-    async listTransfers(
-        request: ListTransfersRequest
-    ): Promise<Result<ListedTransfers, SimpleError>> {
-        if (!this._financialController) {
-            return failure({
-                errorCode: 'not_supported',
-                errorMessage: 'This feature is not supported.',
-            });
-        }
-
-        const accountDetailsResult =
-            await this._financialController.getAccountDetails(
-                request.accountId
-            );
-
-        if (isFailure(accountDetailsResult)) {
-            return accountDetailsResult;
-        }
-
-        const { account, financialAccount } = accountDetailsResult.value;
-
-        const authorizationResult = await this._checkAuthorizationForFilter(
-            financialAccount,
-            request.userId,
-            request.userRole
-        );
-
-        if (isFailure(authorizationResult)) {
-            return authorizationResult;
-        }
-
-        const maxTimeMs = request.maxTimeMs ?? Date.now();
-
-        const transfersResult = await this._financialController.listTransfers(
-            request.accountId,
-            {
-                minTimeMs: request.minTimeMs,
-                maxTimeMs,
-                limit: request.limit ?? undefined,
-            }
-        );
-
-        if (isFailure(transfersResult)) {
-            return transfersResult;
-        }
-
-        const transfers = transfersResult.value;
-
-        const balanceHistoryResult =
-            await this._financialController.listBalanceHistory(
-                request.accountId,
-                {
-                    minTimeMs: request.minTimeMs,
-                    maxTimeMs,
-                    limit: request.limit ?? undefined,
-                }
-            );
-
-        if (isFailure(balanceHistoryResult)) {
-            return balanceHistoryResult;
-        }
-
-        const balanceByTimestamp = new Map<bigint, string>();
-        for (const balance of balanceHistoryResult.value) {
-            const accountAtTime: Account = {
-                ...account,
-                credits_pending: balance.credits_pending,
-                credits_posted: balance.credits_posted,
-                debits_pending: balance.debits_pending,
-                debits_posted: balance.debits_posted,
-                timestamp: balance.timestamp,
-            };
-            balanceByTimestamp.set(
-                balance.timestamp,
-                this._financialController
-                    .convertToAccountBalance(accountAtTime)
-                    .freeCreditBalance()
-                    .toString()
-            );
-        }
-
-        const resolvedPendingIds = new Set<bigint>();
-        for (const t of transfers) {
-            const isResolutionTransfer =
-                (t.flags & TransferFlags.post_pending_transfer) !== 0 ||
-                (t.flags & TransferFlags.void_pending_transfer) !== 0;
-            if (isResolutionTransfer && t.pending_id !== 0n) {
-                resolvedPendingIds.add(t.pending_id);
-            }
-        }
-
-        const listedTransfers: ListedTransfer[] = await Promise.all(
-            transfers.map(async (transfer) => {
-                const pending =
-                    (transfer.flags & TransferFlags.pending) !== 0 &&
-                    !resolvedPendingIds.has(transfer.id);
-                const transactionId = transfer.user_data_128.toString();
-
-                return {
-                    id: transfer.id.toString(),
-                    transactionId,
-                    debitAccountId: transfer.debit_account_id.toString(),
-                    debitAccountDescription: await this.getAccountDescription(
-                        transfer.debit_account_id
-                    ),
-                    creditAccountId: transfer.credit_account_id.toString(),
-                    creditAccountDescription: await this.getAccountDescription(
-                        transfer.credit_account_id
-                    ),
-                    amount: transfer.amount.toString(),
-                    code: transfer.code as TransferCodes,
-                    billingCode:
-                        transfer.user_data_32 > 0
-                            ? (transfer.user_data_32 as BillingCodes)
-                            : null,
-                    timeMs: Number(transfer.timestamp / 1000000n),
-                    pending,
-                    pendingTimeoutMs: pending ? transfer.timeout * 1000 : null,
-                    balance: balanceByTimestamp.get(transfer.timestamp) ?? null,
-                    description: charactarizeTransfer(transfer),
-                };
-            })
-        );
-
-        return success({
-            balance: this._financialController.convertToAccountBalance(account),
-            transfers: listedTransfers,
-        });
-    }
-
-    async getAccountDescription(accountId: bigint | string): Promise<string> {
-        if (typeof accountId === 'string') {
-            accountId = BigInt(accountId);
-        }
-
-        const builtInName = ACCOUNT_NAMES.get(accountId);
-        if (builtInName) {
-            return builtInName;
-        }
-
-        const financialAccount = this._financialStore
-            ? await this._financialStore.getAccountById(accountId.toString())
-            : null;
-
-        if (!financialAccount) {
-            return 'Account';
-        }
-
-        if (financialAccount.userId) {
-            return `User (${financialAccount.userId})`;
-        }
-
-        if (financialAccount.studioId) {
-            return `Studio (${financialAccount.studioId})`;
-        }
-
-        if (financialAccount.contractId) {
-            return `Contract (${financialAccount.contractId})`;
-        }
-
-        return 'Account';
     }
 
     /**
@@ -3556,7 +3387,6 @@ export class SubscriptionController {
         const sessionResult = await wrap(() =>
             this._stripe.createCheckoutSession({
                 mode: 'payment',
-                allow_promotion_codes: true,
                 line_items: [
                     {
                         adjustable_quantity: {
@@ -6172,13 +6002,13 @@ export interface UpdateSubscriptionRequest {
     subscriptionStatus: SubscriptionStatus['statusCode'] | null;
 
     /**
-     * The unix time in milliseconds that the subscription period starts.
+     * The unix time in miliseconds that the subscription period starts.
      * If null, then the subscription does not have a start date. This means that the subscription has already started.
      */
     subscriptionPeriodStartMs: number | null;
 
     /**
-     * The unix time in milliseconds that the subscription period ends.
+     * The unix time in miliseconds that the subscription period ends.
      * If null, then the subscription does not have an end date. This means that the subscription will never end.
      */
     subscriptionPeriodEndMs: number | null;
@@ -6877,122 +6707,6 @@ export interface ListAccountTransfersRequest {
     accountId: string | bigint;
 }
 
-export interface ListTransfersRequest {
-    /**
-     * The ID of the user that is currently logged in.
-     */
-    userId: string;
-
-    /**
-     * The role of the user that is currently logged in.
-     */
-    userRole?: UserRole | null;
-
-    /**
-     * The ID of the account.
-     */
-    accountId: string | bigint;
-
-    /**
-     * The unix time in milliseconds of the oldest transfers to include (inclusive).
-     */
-    minTimeMs: number;
-
-    /**
-     * The unix time in milliseconds of the newest transfers to include (inclusive).
-     */
-    maxTimeMs?: number | null;
-
-    /**
-     * The maximum number of transfers to include in the result.
-     */
-    limit?: number | null;
-}
-
-export interface ListedTransfers {
-    /**
-     * The current balance of the account.
-     */
-    balance: AccountBalance;
-
-    /**
-     * The transfers for the account.
-     */
-    transfers: ListedTransfer[];
-}
-
-export interface ListedTransfer {
-    /**
-     * The ID of the transfer.
-     */
-    id: string;
-
-    /**
-     * The ID of the transaction for the transfer.
-     */
-    transactionId: string;
-
-    /**
-     * The ID of the account that was debited.
-     */
-    debitAccountId: string;
-
-    /**
-     * A helpful description for debitAccount.
-     */
-    debitAccountDescription: string;
-
-    /**
-     * The ID of the account that was credited.
-     */
-    creditAccountId: string;
-
-    /**
-     * A helpful description for creditAccount.
-     */
-    creditAccountDescription: string;
-
-    /**
-     * The amount that was transferred.
-     */
-    amount: string;
-
-    /**
-     * The transfer code.
-     */
-    code: TransferCodes;
-
-    /**
-     * The billing code for the transfer, if available.
-     */
-    billingCode: BillingCodes | null;
-
-    /**
-     * The unix time in milliseconds of the transfer.
-     */
-    timeMs: number;
-
-    /**
-     * Whether the transfer is currently pending.
-     */
-    pending: boolean;
-
-    /**
-     * The timeout for the pending transfer. Always null if the transfer is not pending.
-     */
-    pendingTimeoutMs: number | null;
-
-    /**
-     * The resulting account balance after the transfer was processed.
-     */
-    balance: string | null;
-
-    /**
-     * A helpful description for the transfer.
-     */
-    description: string | null;
-}
-
 export interface ListedAccountTransfers {
     accountDetails: FinancialAccount;
     account: AccountBalance;
@@ -7031,7 +6745,7 @@ export interface AccountTransfer {
     code: TransferCodes;
 
     /**
-     * The time of the transfer in milliseconds since the Unix epoch.
+     * The time of the transfer in miliseconds since the Unix epoch.
      */
     timeMs: number;
 
@@ -7224,13 +6938,13 @@ export interface CancelInvoiceRequest {
  */
 export interface SubscriptionInfo {
     /**
-     * The unix time in milliseconds that the user/studio's subscription period started at.
+     * The unix time in miliseconds that the user/studio's subscription period started at.
      * Null if the subscription does not have a start date.
      */
     periodStartMs: number | null;
 
     /**
-     * The unix time in milliseconds that the user/studio's subscription period ends at.
+     * The unix time in miliseconds that the user/studio's subscription period ends at.
      * Null if the subscription never ends.
      */
     periodEndMs: number | null;
@@ -7319,7 +7033,7 @@ export interface PurchaseCreditsRequest {
     successUrl: string;
 
     /**
-     * The current unix time in milliseconds. This should only be used when testing.
+     * The current unix time in miliseconds. This should only be used when testing.
      */
     nowMs?: number;
 }

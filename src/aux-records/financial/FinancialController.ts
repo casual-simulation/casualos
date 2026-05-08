@@ -53,12 +53,7 @@ import {
     USD_DISPLAY_FACTOR,
     type FinancialInterface,
 } from './FinancialInterface';
-import type {
-    Account,
-    AccountBalance as TigerBeetleAccountBalance,
-    CreateTransferError,
-    Transfer,
-} from 'tigerbeetle-node';
+import type { Account, CreateTransferError, Transfer } from 'tigerbeetle-node';
 import {
     AccountFilterFlags,
     AccountFlags,
@@ -848,84 +843,25 @@ export class FinancialController {
 
     @traced(TRACE_NAME)
     async listTransfers(
-        accountId: bigint | string,
-        options?: {
-            minTimeMs?: number;
-            maxTimeMs?: number;
-            limit?: number;
-        }
+        accountId: bigint | string
     ): Promise<Result<Transfer[], SimpleError>> {
         if (typeof accountId === 'string') {
             accountId = BigInt(accountId);
         }
 
-        const minTime =
-            typeof options?.minTimeMs === 'number'
-                ? BigInt(Math.floor(options.minTimeMs)) * 1000000n
-                : 0n;
-        const maxTime =
-            typeof options?.maxTimeMs === 'number'
-                ? BigInt(Math.floor(options.maxTimeMs)) * 1000000n
-                : 0n;
-        // In account filters, a limit of 0 means no limit.
-        const limit = Math.max(0, options?.limit ?? 0);
-
         const transfers = await this._financialInterface.getAccountTransfers({
             account_id: accountId,
             code: 0, // 0 means all codes
             flags: AccountFilterFlags.credits | AccountFilterFlags.debits,
-            limit,
-            timestamp_max: maxTime,
-            timestamp_min: minTime,
+            limit: 1000, // Limit to 1000 transfers
+            timestamp_max: 0n, // No timestamp limit
+            timestamp_min: 0n, // No timestamp limit
             user_data_128: 0n, // No user data filter
             user_data_64: 0n, // No user data filter
             user_data_32: 0, // No user data filter
         });
 
         return success(transfers);
-    }
-
-    /**
-     * Lists account balance history entries for the given account.
-     * @param accountId The account ID.
-     * @param options The options.
-     */
-    @traced(TRACE_NAME)
-    async listBalanceHistory(
-        accountId: bigint | string,
-        options?: {
-            minTimeMs?: number;
-            maxTimeMs?: number;
-            limit?: number;
-        }
-    ): Promise<Result<TigerBeetleAccountBalance[], SimpleError>> {
-        if (typeof accountId === 'string') {
-            accountId = BigInt(accountId);
-        }
-
-        const minTime =
-            typeof options?.minTimeMs === 'number'
-                ? BigInt(Math.floor(options.minTimeMs)) * 1000000n
-                : 0n;
-        const maxTime =
-            typeof options?.maxTimeMs === 'number'
-                ? BigInt(Math.floor(options.maxTimeMs)) * 1000000n
-                : 0n;
-        const limit = Math.max(0, options?.limit ?? 0);
-
-        const balances = await this._financialInterface.getAccountBalances({
-            account_id: accountId,
-            code: 0, // 0 means all codes
-            flags: AccountFilterFlags.credits | AccountFilterFlags.debits,
-            limit,
-            timestamp_max: maxTime,
-            timestamp_min: minTime,
-            user_data_128: 0n, // No user data filter
-            user_data_64: 0n, // No user data filter
-            user_data_32: 0, // No user data filter
-        });
-
-        return success(balances);
     }
 
     @traced(TRACE_NAME)
@@ -2006,4 +1942,122 @@ export async function billForUsage(
     }
 
     return await financial.billForUsage(params);
+}
+
+/**
+ * Represents the result of determining the billing account for a record.
+ */
+export type GetBillingAccountForRecordResult =
+    | GetBillingAccountForRecordSuccess
+    | GetBillingAccountForRecordFailure;
+
+export interface GetBillingAccountForRecordSuccess {
+    success: true;
+
+    /**
+     * The user ID to bill. Null if billing a record or studio.
+     */
+    userId: string | null;
+
+    /**
+     * The studio ID to bill. Null if billing a user or record.
+     */
+    studioId: string | null;
+
+    /**
+     * Whether billing is using the record's credit account.
+     */
+    isRecordBilling: boolean;
+
+    /**
+     * The record account ID if billing the record, null otherwise.
+     */
+    recordAccountId: string | null;
+}
+
+export interface GetBillingAccountForRecordFailure {
+    success: false;
+    errorCode: KnownErrorCodes;
+    errorMessage: string;
+}
+
+/**
+ * Determines the billing account for a record usage.
+ * If the record has credit billing enabled and a credit account, bills the record.
+ * Otherwise, falls back to billing the record's owner (user or studio).
+ *
+ * @param recordName The name of the record
+ * @param recordStore The record store to fetch record data
+ * @returns The billing configuration (userId/studioId) to use
+ */
+export async function getBillingAccountForRecord(
+    recordName: string,
+    recordStore: {
+        getRecordByName(name: string): Promise<{
+            ownerId?: string | null;
+            studioId?: string | null;
+            creditAccountId?: string | null;
+            creditBillingEnabled?: boolean;
+        } | null>;
+    }
+): Promise<GetBillingAccountForRecordResult> {
+    try {
+        const record = await recordStore.getRecordByName(recordName);
+
+        if (!record) {
+            return {
+                success: false,
+                errorCode: 'record_not_found',
+                errorMessage: 'The specified record was not found.',
+            };
+        }
+
+        // Check if the record has credit billing enabled and a credit account
+        if (record.creditBillingEnabled && record.creditAccountId) {
+            return {
+                success: true,
+                userId: null,
+                studioId: null,
+                isRecordBilling: true,
+                recordAccountId: record.creditAccountId,
+            };
+        }
+
+        // Fall back to billing the record owner
+        if (record.ownerId) {
+            return {
+                success: true,
+                userId: record.ownerId,
+                studioId: null,
+                isRecordBilling: false,
+                recordAccountId: null,
+            };
+        }
+
+        if (record.studioId) {
+            return {
+                success: true,
+                userId: null,
+                studioId: record.studioId,
+                isRecordBilling: false,
+                recordAccountId: null,
+            };
+        }
+
+        return {
+            success: false,
+            errorCode: 'not_authorized',
+            errorMessage: 'The record has no owner or credit account to bill.',
+        };
+    } catch (err) {
+        console.error(
+            '[getBillingAccountForRecord] Error getting billing account for record:',
+            err
+        );
+        return {
+            success: false,
+            errorCode: 'server_error',
+            errorMessage: 'A server error occurred.',
+        };
+    }
 }

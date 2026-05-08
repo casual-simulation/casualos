@@ -77,6 +77,7 @@ import type {
 } from './AIOpenAIRealtimeInterface';
 import {
     billForUsage,
+    getBillingAccountForRecord,
     type FinancialController,
 } from './financial/FinancialController';
 import { BillingCodes, TransferCodes } from './financial/FinancialInterface';
@@ -484,18 +485,42 @@ export class AIController {
                     return authResult;
                 }
 
-                if (context.context.recordStudioId) {
-                    billingStudioId = context.context.recordStudioId;
+                // Determine the billing account - either the record's credit account or the owner
+                const billingAccountResult = await getBillingAccountForRecord(
+                    context.context.recordName,
+                    this._recordsStore
+                );
+
+                if (!billingAccountResult.success) {
+                    return {
+                        success: false,
+                        errorCode: billingAccountResult.errorCode,
+                        errorMessage: billingAccountResult.errorMessage,
+                    };
+                }
+
+                if (billingAccountResult.isRecordBilling) {
+                    // Billing to record account
+                    billingStudioId = undefined;
+                    billingUserId = undefined;
+                    metricsFilter = { ownerId: request.userId };
+                    subscriptionType = 'user';
+                    metricsRecordStudioId = undefined;
+                    metricsRecordUserId = request.userId;
+                } else if (billingAccountResult.studioId) {
+                    billingStudioId = billingAccountResult.studioId;
                     billingUserId = undefined;
                     metricsFilter = { studioId: billingStudioId };
                     subscriptionType = 'studio';
                     metricsRecordStudioId = billingStudioId;
                     metricsRecordUserId = undefined;
                 } else {
-                    billingUserId = context.context.recordOwnerId;
+                    billingUserId = billingAccountResult.userId;
                     billingStudioId = undefined;
                     metricsFilter = { ownerId: billingUserId };
+                    subscriptionType = 'user';
                     metricsRecordUserId = billingUserId;
+                    metricsRecordStudioId = undefined;
                 }
             }
 
@@ -689,12 +714,9 @@ export class AIController {
                 return genericResult(finalResult.value);
             }
 
-            const responsePayload = getProviderNativePayloads(chatResult.value);
-
             return {
                 success: true,
                 choices: chatResult.value.choices,
-                ...responsePayload,
             };
         } catch (err) {
             const span = trace.getActiveSpan();
@@ -772,10 +794,7 @@ export class AIController {
     async *chatStream(
         request: AIChatRequest
     ): AsyncGenerator<
-        Omit<
-            AIChatInterfaceStreamResponse,
-            'totalTokens' | 'inputTokens' | 'outputTokens'
-        >,
+        Pick<AIChatInterfaceStreamResponse, 'choices'>,
         AIChatStreamResponse
     > {
         try {
@@ -923,18 +942,42 @@ export class AIController {
                     return authResult;
                 }
 
-                if (context.context.recordStudioId) {
-                    billingStudioId = context.context.recordStudioId;
+                // Determine the billing account - either the record's credit account or the owner
+                const billingAccountResult = await getBillingAccountForRecord(
+                    context.context.recordName,
+                    this._recordsStore
+                );
+
+                if (!billingAccountResult.success) {
+                    return {
+                        success: false,
+                        errorCode: billingAccountResult.errorCode,
+                        errorMessage: billingAccountResult.errorMessage,
+                    };
+                }
+
+                if (billingAccountResult.isRecordBilling) {
+                    // Billing to record account
+                    billingStudioId = undefined;
+                    billingUserId = undefined;
+                    metricsFilter = { ownerId: request.userId };
+                    subscriptionType = 'user';
+                    metricsRecordStudioId = undefined;
+                    metricsRecordUserId = request.userId;
+                } else if (billingAccountResult.studioId) {
+                    billingStudioId = billingAccountResult.studioId;
                     billingUserId = undefined;
                     metricsFilter = { studioId: billingStudioId };
                     subscriptionType = 'studio';
                     metricsRecordStudioId = billingStudioId;
                     metricsRecordUserId = undefined;
                 } else {
-                    billingUserId = context.context.recordOwnerId;
+                    billingUserId = billingAccountResult.userId;
                     billingStudioId = undefined;
                     metricsFilter = { ownerId: billingUserId };
+                    subscriptionType = 'user';
                     metricsRecordUserId = billingUserId;
+                    metricsRecordStudioId = undefined;
                 }
             }
 
@@ -1095,11 +1138,8 @@ export class AIController {
                     });
                 }
 
-                const chunkPayload = getProviderNativePayloads(chunk);
-
                 yield {
                     choices: chunk.choices,
-                    ...chunkPayload,
                 };
             }
 
@@ -1646,18 +1686,42 @@ export class AIController {
                     return authResult;
                 }
 
-                if (context.context.recordStudioId) {
-                    billingStudioId = context.context.recordStudioId;
+                // Determine the billing account - either the record's credit account or the owner
+                const billingAccountResult = await getBillingAccountForRecord(
+                    context.context.recordName,
+                    this._recordsStore
+                );
+
+                if (!billingAccountResult.success) {
+                    return {
+                        success: false,
+                        errorCode: billingAccountResult.errorCode,
+                        errorMessage: billingAccountResult.errorMessage,
+                    };
+                }
+
+                if (billingAccountResult.isRecordBilling) {
+                    // Billing to record account
+                    billingStudioId = undefined;
+                    billingUserId = undefined;
+                    metricsFilter = { ownerId: request.userId };
+                    subscriptionType = 'user';
+                    metricsRecordStudioId = undefined;
+                    metricsRecordUserId = request.userId;
+                } else if (billingAccountResult.studioId) {
+                    billingStudioId = billingAccountResult.studioId;
                     billingUserId = undefined;
                     metricsFilter = { studioId: billingStudioId };
                     subscriptionType = 'studio';
                     metricsRecordStudioId = billingStudioId;
                     metricsRecordUserId = undefined;
                 } else {
-                    billingUserId = context.context.recordOwnerId;
+                    billingUserId = billingAccountResult.userId;
                     billingStudioId = undefined;
                     metricsFilter = { ownerId: billingUserId };
+                    subscriptionType = 'user';
                     metricsRecordUserId = billingUserId;
+                    metricsRecordStudioId = undefined;
                 }
             }
 
@@ -2582,25 +2646,6 @@ export class AIController {
     }
 }
 
-function getProviderNativePayloads(response: {
-    [key: string]: unknown;
-}): Record<string, unknown> {
-    const payload: Record<string, unknown> = {};
-
-    for (const key in response) {
-        if (
-            key !== 'choices' &&
-            key !== 'totalTokens' &&
-            key !== 'inputTokens' &&
-            key !== 'outputTokens'
-        ) {
-            payload[key] = response[key];
-        }
-    }
-
-    return payload;
-}
-
 /**
  * Defines an AI Chat request.
  */
@@ -2680,15 +2725,6 @@ export type AIChatResponse = AIChatSuccess | AIChatFailure;
 export interface AIChatSuccess {
     success: true;
     choices: AIChatMessage[];
-
-    /**
-     * The provider-native response payloads keyed by provider name.
-     *
-     * For example, OpenAI responses are placed in the `openai` property,
-     * Anthropic responses are placed in `anthropic`, and custom providers
-     * use their configured provider name.
-     */
-    [provider: string]: unknown;
 }
 
 export interface AIChatFailure {

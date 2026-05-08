@@ -60,7 +60,12 @@ import { SpanStatusCode, trace } from '@opentelemetry/api';
 import type { IQueue } from './queue';
 import type { SearchSyncQueueEvent } from './search';
 import type { FinancialController } from './financial/FinancialController';
-import { billForUsage, BillingCodes, TransferCodes } from './financial';
+import {
+    billForUsage,
+    getBillingAccountForRecord,
+    BillingCodes,
+    TransferCodes,
+} from './financial';
 
 const TRACE_NAME = 'DataRecordsController';
 
@@ -335,9 +340,23 @@ export class DataRecordsController {
             }
 
             if (features.data.creditFeePerWrite) {
+                // Determine the billing account - either the record's credit account or the owner
+                const billingAccountResult = await getBillingAccountForRecord(
+                    recordName,
+                    this._store
+                );
+
+                if (!billingAccountResult.success) {
+                    return {
+                        success: false,
+                        errorCode: billingAccountResult.errorCode,
+                        errorMessage: billingAccountResult.errorMessage,
+                    };
+                }
+
                 const billing = await billForUsage(this._financialController, {
-                    userId: metricsResult.ownerId,
-                    studioId: metricsResult.studioId,
+                    userId: billingAccountResult.userId,
+                    studioId: billingAccountResult.studioId,
                     transferCode: TransferCodes.records_usage_fee,
                     billingCode: BillingCodes.data_write,
                 });
@@ -479,9 +498,23 @@ export class DataRecordsController {
             );
 
             if (features.data.creditFeePerRead) {
+                // Determine the billing account - either the record's credit account or the owner
+                const billingAccountResult = await getBillingAccountForRecord(
+                    context.context.recordName,
+                    this._store
+                );
+
+                if (!billingAccountResult.success) {
+                    return {
+                        success: false,
+                        errorCode: billingAccountResult.errorCode,
+                        errorMessage: billingAccountResult.errorMessage,
+                    };
+                }
+
                 const billing = await billForUsage(this._financialController, {
-                    userId: metricsResult.ownerId,
-                    studioId: metricsResult.studioId,
+                    userId: billingAccountResult.userId,
+                    studioId: billingAccountResult.studioId,
                     transferCode: TransferCodes.records_usage_fee,
                     billingCode: BillingCodes.data_read,
                 });

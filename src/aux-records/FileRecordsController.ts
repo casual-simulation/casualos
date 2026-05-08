@@ -51,7 +51,12 @@ import { getSubscriptionFeatures } from './SubscriptionConfiguration';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
 import type { FinancialController } from './financial/FinancialController';
-import { billForUsage, BillingCodes, TransferCodes } from './financial';
+import {
+    billForUsage,
+    getBillingAccountForRecord,
+    BillingCodes,
+    TransferCodes,
+} from './financial';
 import { isFailure } from '@casual-simulation/aux-common';
 
 const TRACE_NAME = 'FileRecordsController';
@@ -299,9 +304,23 @@ export class FileRecordsController {
             }
 
             if (features.files.creditFeePerFileWrite) {
+                // Determine the billing account - either the record's credit account or the owner
+                const billingAccountResult = await getBillingAccountForRecord(
+                    recordKeyOrRecordName,
+                    this._store
+                );
+
+                if (!billingAccountResult.success) {
+                    return {
+                        success: false,
+                        errorCode: billingAccountResult.errorCode,
+                        errorMessage: billingAccountResult.errorMessage,
+                    };
+                }
+
                 const billing = await billForUsage(this._financialController, {
-                    userId: metricsResult.ownerId,
-                    studioId: metricsResult.studioId,
+                    userId: billingAccountResult.userId,
+                    studioId: billingAccountResult.studioId,
                     transferCode: TransferCodes.records_usage_fee,
                     billingCode: BillingCodes.file_write,
                 });
