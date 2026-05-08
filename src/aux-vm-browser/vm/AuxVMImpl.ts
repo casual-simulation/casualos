@@ -50,7 +50,7 @@ import { getBaseOrigin, getVMOrigin } from './AuxVMUtils';
 export const DEFAULT_IFRAME_ALLOW_ATTRIBUTE =
     'accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking';
 export const DEFAULT_IFRAME_SANDBOX_ATTRIBUTE =
-    'allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts allow-downloads';
+    'allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts allow-downloads allow-popups-to-escape-sandbox';
 
 /**
  * Defines an interface for an AUX that is run inside a virtual machine.
