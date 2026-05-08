@@ -55,6 +55,8 @@
     -   Supports user, studio, and contract accounts denominated in USD or credits.
     -   Returns the current account balance and the matching transfers for the given account.
     -   Supports filtering by `minTimeMs`, `maxTimeMs`, and `limit`.
+-   Added the `allow-popups-to-escape-sandbox` option to the VM sandbox so that they can link to new browsing contexts.
+-   Added the `language-model` option to the VM iframe permission policy.
 
 ### :bug: Bug Fixes
 
