@@ -697,22 +697,20 @@ export class SubscriptionController {
             return authorizationResult;
         }
 
-        const maxTimeMs = request.maxTimeMs ?? Date.now();
-
         const transfersResult = await this._financialController.listTransfers(
-            request.accountId
+            request.accountId,
+            {
+                minTimeMs: request.minTimeMs,
+                maxTimeMs: request.maxTimeMs,
+                limit: request.limit,
+            }
         );
 
         if (isFailure(transfersResult)) {
             return transfersResult;
         }
 
-        const transfers = transfersResult.value
-            .filter((transfer) => {
-                const timeMs = Number(transfer.timestamp / 1000000n);
-                return timeMs >= request.minTimeMs && timeMs <= maxTimeMs;
-            })
-            .slice(0, request.limit ?? undefined);
+        const transfers = transfersResult.value;
 
         const currentBalance = this._financialController
             .convertToAccountBalance(account)

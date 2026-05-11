@@ -307,10 +307,17 @@ export class FileRecordsController {
                 // Determine the billing account - either the record's credit account or the owner
                 const billingAccountResult = await getBillingAccountForRecord(
                     recordName,
-                    this._store
+                    this._store as {
+                        getRecordByName?: (name: string) => Promise<{
+                            ownerId?: string | null;
+                            studioId?: string | null;
+                            creditAccountId?: string | null;
+                            creditBillingEnabled?: boolean;
+                        } | null>;
+                    }
                 );
 
-                if (!billingAccountResult.success) {
+                if (billingAccountResult.success === false) {
                     return {
                         success: false,
                         errorCode: billingAccountResult.errorCode,
