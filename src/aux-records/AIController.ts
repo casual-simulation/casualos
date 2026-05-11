@@ -491,7 +491,7 @@ export class AIController {
                     this._recordsStore
                 );
 
-                if (!billingAccountResult.success) {
+                if (billingAccountResult.success === false) {
                     return {
                         success: false,
                         errorCode: billingAccountResult.errorCode,
@@ -500,13 +500,27 @@ export class AIController {
                 }
 
                 if (billingAccountResult.isRecordBilling) {
-                    // Billing to record account
+                    // Bill to the record credit account, but keep metrics/subscription
+                    // gating based on the record owner/studio from the authorization context.
                     billingStudioId = undefined;
                     billingUserId = undefined;
-                    metricsFilter = { ownerId: request.userId };
-                    subscriptionType = 'user';
-                    metricsRecordStudioId = undefined;
-                    metricsRecordUserId = request.userId;
+                    if (context.context.recordStudioId) {
+                        metricsFilter = {
+                            studioId: context.context.recordStudioId,
+                        };
+                        subscriptionType = 'studio';
+                        metricsRecordStudioId = context.context.recordStudioId;
+                        metricsRecordUserId = undefined;
+                    } else {
+                        const ownerId =
+                            context.context.recordOwnerId ?? request.userId;
+                        metricsFilter = {
+                            ownerId,
+                        };
+                        subscriptionType = 'user';
+                        metricsRecordStudioId = undefined;
+                        metricsRecordUserId = ownerId;
+                    }
                 } else if (billingAccountResult.studioId) {
                     billingStudioId = billingAccountResult.studioId;
                     billingUserId = undefined;
@@ -948,7 +962,7 @@ export class AIController {
                     this._recordsStore
                 );
 
-                if (!billingAccountResult.success) {
+                if (billingAccountResult.success === false) {
                     return {
                         success: false,
                         errorCode: billingAccountResult.errorCode,
@@ -957,13 +971,27 @@ export class AIController {
                 }
 
                 if (billingAccountResult.isRecordBilling) {
-                    // Billing to record account
+                    // Bill to the record credit account, but keep metrics/subscription
+                    // gating based on the record owner/studio from the authorization context.
                     billingStudioId = undefined;
                     billingUserId = undefined;
-                    metricsFilter = { ownerId: request.userId };
-                    subscriptionType = 'user';
-                    metricsRecordStudioId = undefined;
-                    metricsRecordUserId = request.userId;
+                    if (context.context.recordStudioId) {
+                        metricsFilter = {
+                            studioId: context.context.recordStudioId,
+                        };
+                        subscriptionType = 'studio';
+                        metricsRecordStudioId = context.context.recordStudioId;
+                        metricsRecordUserId = undefined;
+                    } else {
+                        const ownerId =
+                            context.context.recordOwnerId ?? request.userId;
+                        metricsFilter = {
+                            ownerId,
+                        };
+                        subscriptionType = 'user';
+                        metricsRecordStudioId = undefined;
+                        metricsRecordUserId = ownerId;
+                    }
                 } else if (billingAccountResult.studioId) {
                     billingStudioId = billingAccountResult.studioId;
                     billingUserId = undefined;
@@ -1692,7 +1720,7 @@ export class AIController {
                     this._recordsStore
                 );
 
-                if (!billingAccountResult.success) {
+                if (billingAccountResult.success === false) {
                     return {
                         success: false,
                         errorCode: billingAccountResult.errorCode,
@@ -1701,13 +1729,27 @@ export class AIController {
                 }
 
                 if (billingAccountResult.isRecordBilling) {
-                    // Billing to record account
+                    // Bill to the record credit account, but keep metrics/subscription
+                    // gating based on the record owner/studio from the authorization context.
                     billingStudioId = undefined;
                     billingUserId = undefined;
-                    metricsFilter = { ownerId: request.userId };
-                    subscriptionType = 'user';
-                    metricsRecordStudioId = undefined;
-                    metricsRecordUserId = request.userId;
+                    if (context.context.recordStudioId) {
+                        metricsFilter = {
+                            studioId: context.context.recordStudioId,
+                        };
+                        subscriptionType = 'studio';
+                        metricsRecordStudioId = context.context.recordStudioId;
+                        metricsRecordUserId = undefined;
+                    } else {
+                        const ownerId =
+                            context.context.recordOwnerId ?? request.userId;
+                        metricsFilter = {
+                            ownerId,
+                        };
+                        subscriptionType = 'user';
+                        metricsRecordStudioId = undefined;
+                        metricsRecordUserId = ownerId;
+                    }
                 } else if (billingAccountResult.studioId) {
                     billingStudioId = billingAccountResult.studioId;
                     billingUserId = undefined;
