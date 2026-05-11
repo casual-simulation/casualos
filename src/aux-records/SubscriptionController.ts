@@ -6139,7 +6139,7 @@ export interface UpdateSubscriptionRequest {
     subscriptionStatus: SubscriptionStatus['statusCode'] | null;
 
     /**
-     * The unix time in miliseconds that the subscription period starts.
+     * The unix time in milliseconds that the subscription period starts.
      * If null, then the subscription does not have a start date. This means that the subscription has already started.
      */
     subscriptionPeriodStartMs: number | null;
