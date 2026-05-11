@@ -57,6 +57,9 @@
     -   Supports filtering by `minTimeMs`, `maxTimeMs`, and `limit`.
 -   Added the `allow-popups-to-escape-sandbox` option to the VM sandbox so that they can link to new browsing contexts.
 -   Added the `language-model` option to the VM iframe permission policy.
+-   Added support for record-level credit billing accounts.
+    -   Records can now be configured with a dedicated credit account budget for metered usage.
+    -   AI, data, and file usage billing now supports charging a record-level credit account when configured.
 
 ### :bug: Bug Fixes
 
