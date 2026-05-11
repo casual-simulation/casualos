@@ -343,10 +343,17 @@ export class DataRecordsController {
                 // Determine the billing account - either the record's credit account or the owner
                 const billingAccountResult = await getBillingAccountForRecord(
                     recordName,
-                    this._store
+                    this._store as {
+                        getRecordByName?: (name: string) => Promise<{
+                            ownerId?: string;
+                            studioId?: string;
+                            creditAccountId?: string;
+                            creditBillingEnabled?: boolean;
+                        } | null>;
+                    }
                 );
 
-                if (!billingAccountResult.success) {
+                if (billingAccountResult.success === false) {
                     return {
                         success: false,
                         errorCode: billingAccountResult.errorCode,
@@ -501,10 +508,17 @@ export class DataRecordsController {
                 // Determine the billing account - either the record's credit account or the owner
                 const billingAccountResult = await getBillingAccountForRecord(
                     context.context.recordName,
-                    this._store
+                    this._store as {
+                        getRecordByName?: (name: string) => Promise<{
+                            ownerId?: string;
+                            studioId?: string;
+                            creditAccountId?: string;
+                            creditBillingEnabled?: boolean;
+                        } | null>;
+                    }
                 );
 
-                if (!billingAccountResult.success) {
+                if (billingAccountResult.success === false) {
                     return {
                         success: false,
                         errorCode: billingAccountResult.errorCode,
