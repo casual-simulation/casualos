@@ -306,8 +306,8 @@ export class FileRecordsController {
             if (features.files.creditFeePerFileWrite) {
                 // Determine the billing account - either the record's credit account or the owner
                 const billingAccountResult = await getBillingAccountForRecord(
-                    this._store,
-                    recordName
+                    recordName,
+                    this._store
                 );
 
                 if (!billingAccountResult.success) {
