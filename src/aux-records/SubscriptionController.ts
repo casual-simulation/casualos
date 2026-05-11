@@ -119,6 +119,7 @@ import type {
     JSONAccountBalances,
     PayoutDestination,
     UniqueFinancialAccountFilter,
+    BillingCodes,
 } from './financial';
 import {
     ACCOUNT_IDS,
@@ -665,6 +666,109 @@ export class SubscriptionController {
      * @param request The request.
      */
     @traced(TRACE_NAME)
+    async listTransfers(
+        request: ListTransfersRequest
+    ): Promise<Result<ListedTransfers, SimpleError>> {
+        if (!this._financialController) {
+            return failure({
+                errorCode: 'not_supported',
+                errorMessage: 'This feature is not supported.',
+            });
+        }
+
+        const accountDetailsResult =
+            await this._financialController.getAccountDetails(
+                request.accountId
+            );
+
+        if (isFailure(accountDetailsResult)) {
+            return accountDetailsResult;
+        }
+
+        const { account, financialAccount } = accountDetailsResult.value;
+
+        const authorizationResult = await this._checkAuthorizationForFilter(
+            financialAccount,
+            request.userId,
+            request.userRole
+        );
+
+        if (isFailure(authorizationResult)) {
+            return authorizationResult;
+        }
+
+        const maxTimeMs = request.maxTimeMs ?? Date.now();
+
+        const transfersResult = await this._financialController.listTransfers(
+            request.accountId
+        );
+
+        if (isFailure(transfersResult)) {
+            return transfersResult;
+        }
+
+        const transfers = transfersResult.value
+            .filter((transfer) => {
+                const timeMs = Number(transfer.timestamp / 1000000n);
+                return timeMs >= request.minTimeMs && timeMs <= maxTimeMs;
+            })
+            .slice(0, request.limit ?? undefined);
+
+        const currentBalance = this._financialController
+            .convertToAccountBalance(account)
+            .freeCreditBalance()
+            .toString();
+
+        const resolvedPendingIds = new Set<bigint>();
+        for (const t of transfers) {
+            const isResolutionTransfer =
+                (t.flags & TransferFlags.post_pending_transfer) !== 0 ||
+                (t.flags & TransferFlags.void_pending_transfer) !== 0;
+            if (isResolutionTransfer && t.pending_id !== 0n) {
+                resolvedPendingIds.add(t.pending_id);
+            }
+        }
+
+        const listedTransfers: ListedTransfer[] = await Promise.all(
+            transfers.map(async (transfer) => {
+                const pending =
+                    (transfer.flags & TransferFlags.pending) !== 0 &&
+                    !resolvedPendingIds.has(transfer.id);
+                const transactionId = transfer.user_data_128.toString();
+
+                return {
+                    id: transfer.id.toString(),
+                    transactionId,
+                    debitAccountId: transfer.debit_account_id.toString(),
+                    debitAccountDescription: await this.getAccountDescription(
+                        transfer.debit_account_id
+                    ),
+                    creditAccountId: transfer.credit_account_id.toString(),
+                    creditAccountDescription: await this.getAccountDescription(
+                        transfer.credit_account_id
+                    ),
+                    amount: transfer.amount.toString(),
+                    code: transfer.code as TransferCodes,
+                    billingCode:
+                        transfer.user_data_32 > 0
+                            ? (transfer.user_data_32 as BillingCodes)
+                            : null,
+                    timeMs: Number(transfer.timestamp / 1000000n),
+                    pending,
+                    pendingTimeoutMs: pending ? transfer.timeout * 1000 : null,
+                    balance: currentBalance,
+                    description: charactarizeTransfer(transfer),
+                };
+            })
+        );
+
+        return success({
+            balance: this._financialController.convertToAccountBalance(account),
+            transfers: listedTransfers,
+        });
+    }
+
+    @traced(TRACE_NAME)
     async listAccountTransfers(
         request: ListAccountTransfersRequest
     ): Promise<Result<ListedAccountTransfers, SimpleError>> {
@@ -732,6 +836,39 @@ export class SubscriptionController {
             account: this._financialController.convertToAccountBalance(account),
             transfers: accountTransfers,
         });
+    }
+
+    async getAccountDescription(accountId: bigint | string): Promise<string> {
+        if (typeof accountId === 'string') {
+            accountId = BigInt(accountId);
+        }
+
+        const builtInName = ACCOUNT_NAMES.get(accountId);
+        if (builtInName) {
+            return builtInName;
+        }
+
+        const financialAccount = this._financialStore
+            ? await this._financialStore.getAccountById(accountId.toString())
+            : null;
+
+        if (!financialAccount) {
+            return 'Account';
+        }
+
+        if (financialAccount.userId) {
+            return `User (${financialAccount.userId})`;
+        }
+
+        if (financialAccount.studioId) {
+            return `Studio (${financialAccount.studioId})`;
+        }
+
+        if (financialAccount.contractId) {
+            return `Contract (${financialAccount.contractId})`;
+        }
+
+        return 'Account';
     }
 
     /**
@@ -6705,6 +6842,60 @@ export interface ListAccountTransfersRequest {
      * The ID of the account to list transfers for.
      */
     accountId: string | bigint;
+}
+
+export interface ListTransfersRequest {
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string;
+
+    /**
+     * The role of the user that is currently logged in.
+     */
+    userRole?: UserRole | null;
+
+    /**
+     * The ID of the account to list transfers for.
+     */
+    accountId: string | bigint;
+
+    /**
+     * The minimum transfer time in milliseconds since Unix epoch.
+     */
+    minTimeMs: number;
+
+    /**
+     * The maximum transfer time in milliseconds since Unix epoch.
+     */
+    maxTimeMs?: number | null;
+
+    /**
+     * The maximum number of transfers to return.
+     */
+    limit?: number | null;
+}
+
+export interface ListedTransfers {
+    balance: AccountBalance;
+    transfers: ListedTransfer[];
+}
+
+export interface ListedTransfer {
+    id: string;
+    transactionId: string;
+    debitAccountId: string;
+    debitAccountDescription: string;
+    creditAccountId: string;
+    creditAccountDescription: string;
+    amount: string;
+    code: TransferCodes;
+    billingCode: BillingCodes | null;
+    timeMs: number;
+    pending: boolean;
+    pendingTimeoutMs: number | null;
+    balance: string | null;
+    description: string | null;
 }
 
 export interface ListedAccountTransfers {
