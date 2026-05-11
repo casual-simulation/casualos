@@ -728,9 +728,18 @@ export class AIController {
                 return genericResult(finalResult.value);
             }
 
+            const {
+                choices,
+                totalTokens: _totalTokens,
+                inputTokens: _inputTokens,
+                outputTokens: _outputTokens,
+                ...providerResponses
+            } = chatResult.value as typeof chatResult.value &
+                Record<string, unknown>;
             return {
                 success: true,
-                choices: chatResult.value.choices,
+                choices,
+                ...providerResponses,
             };
         } catch (err) {
             const span = trace.getActiveSpan();
@@ -808,7 +817,8 @@ export class AIController {
     async *chatStream(
         request: AIChatRequest
     ): AsyncGenerator<
-        Pick<AIChatInterfaceStreamResponse, 'choices'>,
+        Pick<AIChatInterfaceStreamResponse, 'choices'> &
+            Record<string, unknown>,
         AIChatStreamResponse
     > {
         try {
@@ -1166,8 +1176,16 @@ export class AIController {
                     });
                 }
 
+                const {
+                    choices: chunkChoices,
+                    totalTokens: _chunkTotalTokens,
+                    inputTokens: _chunkInputTokens,
+                    outputTokens: _chunkOutputTokens,
+                    ...chunkProviderResponses
+                } = chunk as typeof chunk & Record<string, unknown>;
                 yield {
-                    choices: chunk.choices,
+                    choices: chunkChoices,
+                    ...chunkProviderResponses,
                 };
             }
 
