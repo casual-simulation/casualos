@@ -69,7 +69,7 @@ import { getInstParameters, getPermalink } from '../UrlUtils';
 import type { FormError } from '@casual-simulation/aux-common';
 import FieldErrors from '../../shared/vue-components/FieldErrors/FieldErrors';
 import { MdField } from 'vue-material/dist/components';
-import { sortInsts } from '../PlayerUtils';
+import { normalizeInsts } from '../PlayerUtils';
 import { getSimulationId } from '../../../shared/SimulationHelpers';
 
 Vue.use(MdField);
@@ -1130,7 +1130,7 @@ export default class PlayerHome extends Vue {
             changes.inst = desiredTempInst;
         }
         if (hasChange && hasValue(changes.inst)) {
-            changes.inst = sortInsts(changes.inst, botManager.inst);
+            changes.inst = normalizeInsts(changes.inst, botManager.inst);
         }
         if (hasChange) {
             await botManager.helper.updateBot(bot, {
