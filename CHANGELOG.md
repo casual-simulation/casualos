@@ -2,7 +2,7 @@
 
 ## V4.2.4
 
-#### Date: 5/8/2026
+#### Date: 5/12/2026
 
 ### :boom: Breaking Changes
 
@@ -63,6 +63,7 @@
 -   Fixed an issue where the default page title contained HTML comments used for replacing it on server-based deployments.
 -   Fixed an issue where fractional `tokenModifierRatio` values could cause the server to error because of mishandling of fractional values for AI chat billing.
 -   Fixed an issue where Anthropic models would not be allowed to output more than `4096` tokens.
+-   Fixed an issue where the `inst` tag on the `configBot` wouldn't be properly populated for insts loaded via `os.loadInst(config)`.
 
 ## V4.2.3
 
