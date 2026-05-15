@@ -1398,6 +1398,9 @@ export class Transpiler {
     }
 
     private _replaceForOfStatement(node: any, doc: Doc, text: Text): any {
+        if (node.await) {
+            return;
+        }
         this._insertEnergyCheckIntoStatement(doc, text, node.body);
     }
 

@@ -322,6 +322,48 @@ describe('Transpiler', () => {
                     );
                 });
             });
+
+            describe('for await of', () => {
+                it('should not add a call to __energyCheck() in for await of loops', () => {
+                    const result = transpiler.transpile(
+                        'for await(let key of arr) { console.log("Hello"); }'
+                    );
+
+                    expect(result).toBe(
+                        'for await(let key of arr) { console.log("Hello"); }'
+                    );
+                });
+
+                it('should not add a call to __energyCheck() in inline for await of loops', () => {
+                    const result = transpiler.transpile(
+                        'for await(let key of arr) console.log("Hello");'
+                    );
+
+                    expect(result).toBe(
+                        'for await(let key of arr) console.log("Hello");'
+                    );
+                });
+
+                it('should support inline for await of loops without semicolons', () => {
+                    const result = transpiler.transpile(
+                        'for await(let key of arr) console.log("Hello")'
+                    );
+
+                    expect(result).toBe(
+                        'for await(let key of arr) console.log("Hello")'
+                    );
+                });
+
+                it('should support inline for await of loops with comments', () => {
+                    const result = transpiler.transpile(
+                        'for await(let key of arr) /* comment */ console.log("Hello")'
+                    );
+
+                    expect(result).toBe(
+                        'for await(let key of arr) /* comment */ console.log("Hello")'
+                    );
+                });
+            });
         });
 
         describe('jsx', () => {
