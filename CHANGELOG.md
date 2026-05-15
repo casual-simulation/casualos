@@ -2,7 +2,7 @@
 
 ## V4.2.4
 
-#### Date: 5/12/2026
+#### Date: 5/15/2026
 
 ### :boom: Breaking Changes
 
@@ -57,6 +57,9 @@
     -   Supports filtering by `minTimeMs`, `maxTimeMs`, and `limit`.
 -   Added the `allow-popups-to-escape-sandbox` option to the VM sandbox so that they can link to new browsing contexts.
 -   Added the `language-model` option to the VM iframe permission policy.
+-   Made [`for await...of`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for-await...of) loop iterations not use energy.
+    -   These kinds of loops work asynchronously, so they aren't likely to cause the system to lock up due to an infinite loop.
+-   Added the `"-energy";` directive to disable energy checks for a script.
 
 ### :bug: Bug Fixes
 

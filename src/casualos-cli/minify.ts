@@ -114,6 +114,7 @@ export async function transformAux(
                             noParse: true,
                             isAsync: result.metadata.isAsync,
                             isModule: result.metadata.isModule,
+                            noEnergy: result.metadata.noEnergy,
                         };
                         value = `async function __aux_tag_wrapper__(){\n${value}\n}`;
                     }

@@ -421,6 +421,7 @@ export class Transpiler {
                     text: null,
                     isAsync: directives.isAsync,
                     isModule: directives.isModule,
+                    noEnergy: directives.noEnergy,
                 },
             };
         }
@@ -450,6 +451,7 @@ export class Transpiler {
             text,
             isAsync,
             isModule: directives.isModule,
+            noEnergy: directives.noEnergy,
         };
 
         this._replace(node, doc, text, metadata);
@@ -574,15 +576,15 @@ export class Transpiler {
                 ) {
                     this._replaceImportMeta(n, parent, doc, text, metadata);
                 } else if (n.type === 'WhileStatement') {
-                    this._replaceWhileStatement(n, doc, text);
+                    this._replaceWhileStatement(n, doc, text, metadata);
                 } else if (n.type === 'DoWhileStatement') {
-                    this._replaceDoWhileStatement(n, doc, text);
+                    this._replaceDoWhileStatement(n, doc, text, metadata);
                 } else if (n.type === 'ForStatement') {
-                    this._replaceForStatement(n, doc, text);
+                    this._replaceForStatement(n, doc, text, metadata);
                 } else if (n.type === 'ForInStatement') {
-                    this._replaceForInStatement(n, doc, text);
+                    this._replaceForInStatement(n, doc, text, metadata);
                 } else if (n.type === 'ForOfStatement') {
-                    this._replaceForOfStatement(n, doc, text);
+                    this._replaceForOfStatement(n, doc, text, metadata);
                 } else if (n.type === 'JSXElement') {
                     this._replaceJSXElement(n, doc, text, metadata);
                 } else if (n.type === 'JSXText') {
@@ -1381,24 +1383,52 @@ export class Transpiler {
         text.delete(absoulteEnd.index - 1, 1);
     }
 
-    private _replaceWhileStatement(node: any, doc: Doc, text: Text): any {
-        this._insertEnergyCheckIntoStatement(doc, text, node.body);
+    private _replaceWhileStatement(
+        node: any,
+        doc: Doc,
+        text: Text,
+        metadata: TranspilerResult['metadata']
+    ): any {
+        this._insertEnergyCheckIntoStatement(doc, text, node.body, metadata);
     }
 
-    private _replaceDoWhileStatement(node: any, doc: Doc, text: Text): any {
-        this._insertEnergyCheckIntoStatement(doc, text, node.body);
+    private _replaceDoWhileStatement(
+        node: any,
+        doc: Doc,
+        text: Text,
+        metadata: TranspilerResult['metadata']
+    ): any {
+        this._insertEnergyCheckIntoStatement(doc, text, node.body, metadata);
     }
 
-    private _replaceForStatement(node: any, doc: Doc, text: Text): any {
-        this._insertEnergyCheckIntoStatement(doc, text, node.body);
+    private _replaceForStatement(
+        node: any,
+        doc: Doc,
+        text: Text,
+        metadata: TranspilerResult['metadata']
+    ): any {
+        this._insertEnergyCheckIntoStatement(doc, text, node.body, metadata);
     }
 
-    private _replaceForInStatement(node: any, doc: Doc, text: Text): any {
-        this._insertEnergyCheckIntoStatement(doc, text, node.body);
+    private _replaceForInStatement(
+        node: any,
+        doc: Doc,
+        text: Text,
+        metadata: TranspilerResult['metadata']
+    ): any {
+        this._insertEnergyCheckIntoStatement(doc, text, node.body, metadata);
     }
 
-    private _replaceForOfStatement(node: any, doc: Doc, text: Text): any {
-        this._insertEnergyCheckIntoStatement(doc, text, node.body);
+    private _replaceForOfStatement(
+        node: any,
+        doc: Doc,
+        text: Text,
+        metadata: TranspilerResult['metadata']
+    ): any {
+        if (node.await) {
+            return;
+        }
+        this._insertEnergyCheckIntoStatement(doc, text, node.body, metadata);
     }
 
     private _removeClassImplements(node: any, doc: Doc, text: Text): any {
@@ -2349,9 +2379,10 @@ export class Transpiler {
     private _insertEnergyCheckIntoStatement(
         doc: Doc,
         text: Text,
-        statement: any
+        statement: any,
+        metadata: TranspilerResult['metadata']
     ) {
-        if (!this._insertEnergyChecks) {
+        if (!this._insertEnergyChecks || metadata.noEnergy) {
             return;
         }
 
@@ -2518,6 +2549,11 @@ export interface TranspilerResult {
          * Whether the code is async (contains await expressions).
          */
         isAsync: boolean;
+
+        /**
+         * Whether energy checks were disabled.
+         */
+        noEnergy: boolean;
     };
 }
 
@@ -2584,6 +2620,11 @@ export interface TranspilerDirectives {
     isAsync: boolean;
     isModule: boolean;
     /**
+     * Whether to disable energy checks in the transpiled code.
+     * Set to true to disable energy checks.
+     */
+    noEnergy: boolean;
+    /**
      * Whether to preserve whitespace during JSX compilation.
      * This is useful for cases where whitespace is significant, but is non-standard.
      *
@@ -2607,6 +2648,7 @@ export function parseDirectives(code: string): TranspilerDirectives {
         noParse: false,
         isAsync: false,
         isModule: false,
+        noEnergy: false,
     };
 
     if (code.charAt(0) !== '"') {
@@ -2641,6 +2683,8 @@ export function parseDirectives(code: string): TranspilerDirectives {
             directives.isModule = true;
         } else if (part === 'jsx-preserve-whitespace') {
             directives.jsxPreserveWhitespace = true;
+        } else if (part === '-energy') {
+            directives.noEnergy = true;
         }
     }
     return directives;
@@ -2675,6 +2719,9 @@ export function addDirectives(
     }
     if (directives.jsxPreserveWhitespace) {
         directiveString += 'jsx-preserve-whitespace ';
+    }
+    if (directives.noEnergy) {
+        directiveString += '-energy ';
     }
     directiveString = directiveString.trim() + '";';
     return directiveString + code;
