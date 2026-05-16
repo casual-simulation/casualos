@@ -15,14 +15,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { sortInsts } from './PlayerUtils';
+import { normalizeInsts, sortInsts } from './PlayerUtils';
 
 describe('sortInsts()', () => {
-    it('should work with a single inst', () => {
-        const result = sortInsts('test', 'other');
-        expect(result).toBe('test');
-    });
-
     it('should work with an array of one item', () => {
         const result = sortInsts(['test'], 'other');
         expect(result).toEqual(['test']);
@@ -36,5 +31,38 @@ describe('sortInsts()', () => {
     it('should preserve the order of a list that is already sorted', () => {
         const result = sortInsts(['test', 'other', 'third'], 'test');
         expect(result).toEqual(['test', 'other', 'third']);
+    });
+});
+
+describe('normalizeInsts()', () => {
+    it('should return a single string if there is only one inst', () => {
+        const result = normalizeInsts('test', 'test');
+        expect(result).toEqual('test');
+    });
+
+    it('should return an array if the current inst is different from the given inst', () => {
+        const result = normalizeInsts('test', 'current');
+        expect(result).toEqual(['current', 'test']);
+    });
+
+    it('should add the current inst to the list if it is not already present', () => {
+        const result = normalizeInsts(['test', 'different'], 'current');
+        expect(result).toEqual(['current', 'test', 'different']);
+    });
+
+    it('should not duplicate the current inst if it is already present', () => {
+        const result = normalizeInsts(
+            ['test', 'current', 'different'],
+            'current'
+        );
+        expect(result).toEqual(['current', 'test', 'different']);
+    });
+
+    it('should preserve the order of the list if the current inst is already first', () => {
+        const result = normalizeInsts(
+            ['current', 'test', 'different'],
+            'current'
+        );
+        expect(result).toEqual(['current', 'test', 'different']);
     });
 });

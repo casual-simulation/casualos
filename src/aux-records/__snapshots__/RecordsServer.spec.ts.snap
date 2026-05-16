@@ -110,6 +110,11 @@ Object {
       },
       "inputs": Object {
         "schema": Object {
+          "enableCaching": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "boolean",
+          },
           "frequencyPenalty": Object {
             "nullable": true,
             "optional": true,
@@ -250,6 +255,11 @@ Object {
       },
       "inputs": Object {
         "schema": Object {
+          "enableCaching": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "boolean",
+          },
           "frequencyPenalty": Object {
             "nullable": true,
             "optional": true,
@@ -4345,6 +4355,35 @@ Object {
       },
       "name": "listStudios",
       "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/transfers",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "accountId": Object {
+            "type": "string",
+          },
+          "limit": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "number",
+          },
+          "maxTimeMs": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "number",
+          },
+          "minTimeMs": Object {
+            "type": "number",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listTransfers",
+      "origins": "self",
     },
     Object {
       "http": Object {
@@ -10604,6 +10643,11 @@ Object {
       },
       "inputs": Object {
         "schema": Object {
+          "enableCaching": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "boolean",
+          },
           "frequencyPenalty": Object {
             "nullable": true,
             "optional": true,
@@ -10744,6 +10788,11 @@ Object {
       },
       "inputs": Object {
         "schema": Object {
+          "enableCaching": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "boolean",
+          },
           "frequencyPenalty": Object {
             "nullable": true,
             "optional": true,
@@ -14839,6 +14888,35 @@ Object {
       },
       "name": "listStudios",
       "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/transfers",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "accountId": Object {
+            "type": "string",
+          },
+          "limit": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "number",
+          },
+          "maxTimeMs": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "number",
+          },
+          "minTimeMs": Object {
+            "type": "number",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listTransfers",
+      "origins": "self",
     },
     Object {
       "http": Object {

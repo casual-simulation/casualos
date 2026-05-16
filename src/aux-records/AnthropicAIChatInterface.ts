@@ -50,6 +50,7 @@ export interface AnthropicAIChatOptions {
 export class AnthropicAIChatInterface implements AIChatInterface {
     private _options: AnthropicAIChatOptions;
     private _ai: Anthropic;
+    private _modelMaxOutputTokens = new Map<string, number>();
 
     constructor(options: AnthropicAIChatOptions) {
         this._options = options;
@@ -63,13 +64,7 @@ export class AnthropicAIChatInterface implements AIChatInterface {
         request: AIChatInterfaceRequest
     ): Promise<AIChatInterfaceResponse> {
         try {
-            let maxTokens = Math.min(request.maxTokens, 4096);
-
-            // TODO: Support 8192 tokens for sonnet
-            // See https://docs.anthropic.com/en/docs/about-claude/models
-            // if (/claude-3-5-sonnet/.test(request.model)) {
-            //     maxTokens = Math.min(request.maxTokens, 8192);
-            // }
+            const maxTokens = await this._getMaxTokensForRequest(request);
 
             const response = await this._ai.messages.create({
                 max_tokens: maxTokens,
@@ -78,6 +73,13 @@ export class AnthropicAIChatInterface implements AIChatInterface {
                 stop_sequences: request.stopWords,
                 model: request.model,
                 messages: request.messages.map((m) => mapMessage(m)),
+                ...(request.enableCaching
+                    ? {
+                          cache_control: {
+                              type: 'ephemeral',
+                          },
+                      }
+                    : {}),
             });
 
             return {
@@ -85,19 +87,21 @@ export class AnthropicAIChatInterface implements AIChatInterface {
                     {
                         content: mapOutputContent(response.content),
                         role: response.role,
+                        anthropic: response,
                     },
                 ],
                 totalTokens:
                     response.usage.input_tokens + response.usage.output_tokens,
                 inputTokens: response.usage.input_tokens,
                 outputTokens: response.usage.output_tokens,
+                anthropic: response,
             };
         } catch (err) {
             const span = trace.getActiveSpan();
-            span?.recordException(err);
             span?.setStatus({ code: SpanStatusCode.ERROR });
 
             if (err instanceof Error) {
+                span?.recordException(err);
                 console.error(
                     '[AnthropicAIChatInterface] Error occurred while generating content.',
                     err
@@ -121,13 +125,7 @@ export class AnthropicAIChatInterface implements AIChatInterface {
         request: AIChatInterfaceRequest
     ): AsyncIterable<AIChatInterfaceStreamResponse> {
         try {
-            let maxTokens = Math.min(request.maxTokens, 4096);
-
-            // TODO: Support 8192 tokens for sonnet
-            // See https://docs.anthropic.com/en/docs/about-claude/models
-            // if (/claude-3-5-sonnet/.test(request.model)) {
-            //     maxTokens = Math.min(request.maxTokens, 8192);
-            // }
+            const maxTokens = await this._getMaxTokensForRequest(request);
 
             const response = this._ai.messages.stream({
                 max_tokens: maxTokens,
@@ -136,6 +134,13 @@ export class AnthropicAIChatInterface implements AIChatInterface {
                 stop_sequences: request.stopWords,
                 model: request.model,
                 messages: request.messages.map((m) => mapMessage(m)),
+                ...(request.enableCaching
+                    ? {
+                          cache_control: {
+                              type: 'ephemeral',
+                          },
+                      }
+                    : {}),
             });
 
             for await (const chunk of response) {
@@ -147,6 +152,7 @@ export class AnthropicAIChatInterface implements AIChatInterface {
                             chunk.message.usage.output_tokens,
                         inputTokens: chunk.message.usage.input_tokens,
                         outputTokens: chunk.message.usage.output_tokens,
+                        anthropic: chunk,
                     };
                 } else if (chunk.type === 'content_block_delta') {
                     if (chunk.delta.type === 'text_delta') {
@@ -155,9 +161,11 @@ export class AnthropicAIChatInterface implements AIChatInterface {
                                 {
                                     content: chunk.delta.text,
                                     role: 'assistant',
+                                    anthropic: chunk,
                                 },
                             ],
                             totalTokens: 0,
+                            anthropic: chunk,
                         };
                     }
                 }
@@ -169,10 +177,10 @@ export class AnthropicAIChatInterface implements AIChatInterface {
             };
         } catch (err) {
             const span = trace.getActiveSpan();
-            span?.recordException(err);
             span?.setStatus({ code: SpanStatusCode.ERROR });
 
             if (err instanceof Error) {
+                span?.recordException(err);
                 console.error(
                     '[AnthropicAIChatInterface] Error occurred while generating content.',
                     err
@@ -192,6 +200,50 @@ export class AnthropicAIChatInterface implements AIChatInterface {
                 };
             }
             throw err;
+        }
+    }
+
+    private async _getMaxTokensForRequest(
+        request: AIChatInterfaceRequest
+    ): Promise<number> {
+        const fallbackMaxTokens = 4096;
+        const modelMaxTokens = await this._getModelMaxOutputTokens(
+            request.model
+        );
+        const maxTokens = modelMaxTokens ?? fallbackMaxTokens;
+
+        return Math.min(request.maxTokens ?? maxTokens, maxTokens);
+    }
+
+    private async _getModelMaxOutputTokens(
+        model: string
+    ): Promise<number | null> {
+        const cached = this._modelMaxOutputTokens.get(model);
+        if (typeof cached === 'number') {
+            return cached;
+        }
+
+        try {
+            console.log(
+                `[AnthropicAIChatInterface] Fetching max output tokens for model (${model})...`
+            );
+            const modelInfo = await this._ai.models.retrieve(model);
+
+            if (!modelInfo || typeof modelInfo.max_tokens !== 'number') {
+                return null;
+            }
+
+            console.log(
+                `[AnthropicAIChatInterface] Fetched max output tokens for model (${model}): ${modelInfo.max_tokens}`
+            );
+            this._modelMaxOutputTokens.set(model, modelInfo.max_tokens);
+            return modelInfo.max_tokens;
+        } catch (err) {
+            console.warn(
+                `[AnthropicAIChatInterface] Failed to fetch max output tokens for model (${model}).`,
+                err
+            );
+            return null;
         }
     }
 }

@@ -800,7 +800,11 @@ describe('RecordsServer', () => {
                 let result = '';
                 for (let key of Object.keys(args)) {
                     const value = args[key];
-                    result += `<${key}>${render(value)}</${key}>`;
+                    if (key === 'title') {
+                        result += render(value);
+                    } else {
+                        result += `<${key}>${render(value)}</${key}>`;
+                    }
                 }
                 return result as unknown as string;
             },

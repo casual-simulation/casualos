@@ -761,7 +761,7 @@ export class RecordsServer {
                     }
 
                     const result = success<ViewParams>({
-                        title: <>{pageTitle}</>,
+                        title: <title>{pageTitle}</title>,
                         description: (
                             <meta
                                 name="description"
@@ -4394,6 +4394,7 @@ export class RecordsServer {
                             .max(2)
                             .optional()
                             .nullable(),
+                        enableCaching: z.boolean().optional().nullable(),
                         stopWords: z
                             .array(z.string())
                             .max(4)
@@ -4466,6 +4467,7 @@ export class RecordsServer {
                             .max(2)
                             .optional()
                             .nullable(),
+                        enableCaching: z.boolean().optional().nullable(),
                         stopWords: z
                             .array(z.string())
                             .max(4)
@@ -5748,6 +5750,56 @@ export class RecordsServer {
                                   }
                                 : undefined
                         )
+                    );
+                }),
+
+            listTransfers: procedure()
+                .origins('self')
+                .http('GET', '/api/v2/transfers')
+                .inputs(
+                    z.object({
+                        accountId: z.string().min(1).max(255),
+                        minTimeMs: z.coerce.number().int().nonnegative(),
+                        maxTimeMs: z.coerce
+                            .number()
+                            .int()
+                            .nonnegative()
+                            .optional()
+                            .nullable(),
+                        limit: z.coerce
+                            .number()
+                            .int()
+                            .positive()
+                            .optional()
+                            .nullable(),
+                    })
+                )
+                .handler(async (input, context) => {
+                    if (!this._subscriptions) {
+                        return SUBSCRIPTIONS_NOT_SUPPORTED_RESULT;
+                    }
+
+                    const validation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (validation.success === false) {
+                        return validation;
+                    }
+
+                    const result = await this._subscriptions.listTransfers({
+                        accountId: input.accountId,
+                        minTimeMs: input.minTimeMs,
+                        maxTimeMs: input.maxTimeMs,
+                        limit: input.limit,
+                        userId: validation.userId,
+                        userRole: validation.role,
+                    });
+
+                    return genericResult(
+                        mapResult(result, (transfers) => ({
+                            balance: transfers.balance.toJSON(),
+                            transfers: transfers.transfers,
+                        }))
                     );
                 }),
 

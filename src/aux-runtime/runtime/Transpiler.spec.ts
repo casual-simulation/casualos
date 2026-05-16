@@ -322,6 +322,48 @@ describe('Transpiler', () => {
                     );
                 });
             });
+
+            describe('for await of', () => {
+                it('should not add a call to __energyCheck() in for await of loops', () => {
+                    const result = transpiler.transpile(
+                        'for await(let key of arr) { console.log("Hello"); }'
+                    );
+
+                    expect(result).toBe(
+                        'for await(let key of arr) { console.log("Hello"); }'
+                    );
+                });
+
+                it('should not add a call to __energyCheck() in inline for await of loops', () => {
+                    const result = transpiler.transpile(
+                        'for await(let key of arr) console.log("Hello");'
+                    );
+
+                    expect(result).toBe(
+                        'for await(let key of arr) console.log("Hello");'
+                    );
+                });
+
+                it('should support inline for await of loops without semicolons', () => {
+                    const result = transpiler.transpile(
+                        'for await(let key of arr) console.log("Hello")'
+                    );
+
+                    expect(result).toBe(
+                        'for await(let key of arr) console.log("Hello")'
+                    );
+                });
+
+                it('should support inline for await of loops with comments', () => {
+                    const result = transpiler.transpile(
+                        'for await(let key of arr) /* comment */ console.log("Hello")'
+                    );
+
+                    expect(result).toBe(
+                        'for await(let key of arr) /* comment */ console.log("Hello")'
+                    );
+                });
+            });
         });
 
         describe('jsx', () => {
@@ -350,7 +392,31 @@ describe('Transpiler', () => {
                 );
             });
 
-            it('should preserve whitespace as much as possible', () => {
+            it('should preserve whitespace as much as possible if the jsx-preserve-whitespace directive is present', () => {
+                const result = transpiler.transpile(
+                    [
+                        `"jsx-preserve-whitespace";`,
+                        `<div `,
+                        `  val="123" `,
+                        `  other="str">`,
+                        `  Hello`,
+                        `</div>`,
+                    ].join('\n')
+                );
+
+                expect(result).toBe(
+                    [
+                        `"jsx-preserve-whitespace";`,
+                        `h("div",{ `,
+                        `  "val":"123" `,
+                        `  ,"other":"str"},\``,
+                        `  Hello`,
+                        `\`,)`,
+                    ].join('\n')
+                );
+            });
+
+            it('should not preserve whitespace if the jsx-preserve-whitespace directive is not present', () => {
                 const result = transpiler.transpile(
                     [
                         `<div `,
@@ -365,9 +431,61 @@ describe('Transpiler', () => {
                     [
                         `h("div",{ `,
                         `  "val":"123" `,
-                        `  ,"other":"str"},\``,
-                        `  Hello`,
-                        `\`,)`,
+                        `  ,"other":"str"},`,
+                        `  \`Hello\``,
+                        `,)`,
+                    ].join('\n')
+                );
+            });
+
+            it('should preserve inline whitespace between elements', () => {
+                const result = transpiler.transpile(
+                    [
+                        `<div>`,
+                        `  <span>Hello</span> <span>World</span>`,
+                        `</div>`,
+                    ].join('\n')
+                );
+
+                expect(result).toBe(
+                    [
+                        `h("div",null,`,
+                        '  h("span",null,`Hello`,),` `,h("span",null,`World`,),',
+                        `)`,
+                    ].join('\n')
+                );
+            });
+
+            it('should preserve inline whitespace at the end of text nodes', () => {
+                const result = transpiler.transpile(
+                    [`<div>`, `  text {abc}`, `</div>`].join('\n')
+                );
+
+                expect(result).toBe(
+                    [`h("div",null,`, '  `text `,abc,', `)`].join('\n')
+                );
+            });
+
+            it('should preserve inline whitespace at the start of text nodes', () => {
+                const result = transpiler.transpile(
+                    [`<div>`, `  {abc} text`, `</div>`].join('\n')
+                );
+
+                expect(result).toBe(
+                    [`h("div",null,`, '  abc,` text`', `,)`].join('\n')
+                );
+            });
+
+            it('should ignore empty sections of whitespace', () => {
+                const result = transpiler.transpile(
+                    [`<div>`, `  <span>Hello!</span>`, `</div>`].join('\n')
+                );
+
+                expect(result).toBe(
+                    [
+                        `h("div",null,`,
+                        `  h("span",null,\`Hello!\`,),`,
+                        `)`,
                     ].join('\n')
                 );
             });
@@ -379,6 +497,28 @@ describe('Transpiler', () => {
 
                 expect(result).toBe(
                     `h("div",null,h("h1",null,\`Hello, World!\`,),)`
+                );
+            });
+
+            it('should be able to preserve whitespace for elements with text and other elements', () => {
+                const result = transpiler.transpile(
+                    [
+                        `"jsx-preserve-whitespace";`,
+                        `<div>`,
+                        `  Some text`,
+                        `  <h1>Hello, World!</h1>`,
+                        `</div>`,
+                    ].join('\n')
+                );
+
+                expect(result).toBe(
+                    [
+                        `"jsx-preserve-whitespace";`,
+                        'h("div",null,`',
+                        '  Some text',
+                        '  `,h("h1",null,`Hello, World!`,),`',
+                        '`,)',
+                    ].join('\n')
                 );
             });
 
@@ -394,10 +534,10 @@ describe('Transpiler', () => {
 
                 expect(result).toBe(
                     [
-                        'h("div",null,`',
-                        `  Some text`,
-                        '  `,h("h1",null,`Hello, World!`,),`',
-                        '`,)',
+                        'h("div",null,',
+                        '  `Some text`',
+                        '  ,h("h1",null,`Hello, World!`,),',
+                        ')',
                     ].join('\n')
                 );
             });
@@ -575,10 +715,10 @@ describe('Transpiler', () => {
 
                 expect(result).toBe(
                     [
-                        'let el = h("div",null,`',
-                        `  Some text`,
-                        '  `,h("h1",null,`Hello, World!`,),`',
-                        '`,)',
+                        'let el = h("div",null,',
+                        '  `Some text`',
+                        '  ,h("h1",null,`Hello, World!`,),',
+                        ')',
                         `for(let abc of def) {__energyCheck();`,
                         `  let test = {`,
                         `    value: abc`,
@@ -601,10 +741,10 @@ describe('Transpiler', () => {
 
                 expect(result).toBe(
                     [
-                        'let el = h("div",null,`',
-                        `  Some text`,
-                        '  `,h("h1",null,`Hello, World!`,),`',
-                        '`,)',
+                        'let el = h("div",null,',
+                        '  `Some text`',
+                        '  ,h("h1",null,`Hello, World!`,),',
+                        ')',
                         `for(let abc of def) {__energyCheck();console.log("abc")}`,
                     ].join('\n')
                 );
@@ -624,10 +764,10 @@ describe('Transpiler', () => {
 
                 expect(result).toBe(
                     [
-                        'let el = h("div",null,`',
-                        `  Some text`,
-                        '  `,h("h1",null,`Hello, World!`,),`',
-                        '`,)',
+                        'let el = h("div",null,',
+                        '  `Some text`',
+                        '  ,h("h1",null,`Hello, World!`,),',
+                        ')',
                         `for(let abc of def)`,
                         `  {__energyCheck();console.log("abc")}`,
                     ].join('\n')
@@ -2688,6 +2828,53 @@ describe('Transpiler', () => {
                 expect(result.metadata.isModule).toBe(true);
                 expect(result.metadata.isAsync).toBe(true);
             });
+
+            describe('-energy', () => {
+                it('should diable energy checks in while loops', () => {
+                    const transpiler = new Transpiler();
+
+                    const result = transpiler.transpile(
+                        `"-energy";
+                        while(true) { console.log("Hello"); }
+                        `
+                    );
+                    expect(result).toBe(
+                        `"-energy";
+                        while(true) { console.log("Hello"); }
+                        `
+                    );
+                });
+
+                it('should diable energy checks in for loops', () => {
+                    const transpiler = new Transpiler();
+
+                    const result = transpiler.transpile(
+                        `"-energy";
+                        for(let i = 0; i < 10; i++) { console.log("Hello"); }
+                        `
+                    );
+                    expect(result).toBe(
+                        `"-energy";
+                        for(let i = 0; i < 10; i++) { console.log("Hello"); }
+                        `
+                    );
+                });
+
+                it('should diable energy checks in for of loops', () => {
+                    const transpiler = new Transpiler();
+
+                    const result = transpiler.transpile(
+                        `"-energy";
+                        for(const i of [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]) { console.log("Hello"); }
+                        `
+                    );
+                    expect(result).toBe(
+                        `"-energy";
+                        for(const i of [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]) { console.log("Hello"); }
+                        `
+                    );
+                });
+            });
         });
     });
 
@@ -2898,6 +3085,7 @@ describe('parseDirectives()', () => {
                 noParse: true,
                 isAsync: false,
                 isModule: false,
+                noEnergy: false,
                 startIndex: 0,
                 endIndex: 9,
             },
@@ -2908,6 +3096,7 @@ describe('parseDirectives()', () => {
                 noParse: false,
                 isAsync: true,
                 isModule: false,
+                noEnergy: false,
                 startIndex: 0,
                 endIndex: 8,
             },
@@ -2918,8 +3107,20 @@ describe('parseDirectives()', () => {
                 noParse: false,
                 isAsync: false,
                 isModule: true,
+                noEnergy: false,
                 startIndex: 0,
                 endIndex: 9,
+            },
+        ] as const,
+        [
+            '"-energy";',
+            {
+                noParse: false,
+                isAsync: false,
+                isModule: false,
+                noEnergy: true,
+                startIndex: 0,
+                endIndex: 10,
             },
         ] as const,
         [
@@ -2928,6 +3129,7 @@ describe('parseDirectives()', () => {
                 noParse: true,
                 isAsync: false,
                 isModule: true,
+                noEnergy: false,
                 startIndex: 0,
                 endIndex: 16,
             },
@@ -2938,6 +3140,7 @@ describe('parseDirectives()', () => {
                 noParse: false,
                 isAsync: true,
                 isModule: true,
+                noEnergy: false,
                 startIndex: 0,
                 endIndex: 15,
             },
@@ -2948,6 +3151,7 @@ describe('parseDirectives()', () => {
                 noParse: true,
                 isAsync: true,
                 isModule: true,
+                noEnergy: false,
                 startIndex: 0,
                 endIndex: 22,
             },
@@ -2958,8 +3162,33 @@ describe('parseDirectives()', () => {
                 noParse: true,
                 isAsync: true,
                 isModule: true,
+                noEnergy: false,
                 startIndex: 0,
                 endIndex: 22,
+            },
+        ] as const,
+        [
+            '"jsx-preserve-whitespace"; const abc = 123;',
+            {
+                noParse: false,
+                isAsync: false,
+                isModule: false,
+                jsxPreserveWhitespace: true,
+                noEnergy: false,
+                startIndex: 0,
+                endIndex: 26,
+            },
+        ] as const,
+        [
+            '"module async -parse jsx-preserve-whitespace"; const abc = 123;',
+            {
+                noParse: true,
+                isAsync: true,
+                isModule: true,
+                noEnergy: false,
+                jsxPreserveWhitespace: true,
+                startIndex: 0,
+                endIndex: 46,
             },
         ] as const,
     ];
@@ -2974,28 +3203,49 @@ describe('addDirectives()', () => {
     const cases = [
         [
             '-parse',
-            { noParse: true, isAsync: false, isModule: false },
+            { noParse: true, isAsync: false, isModule: false, noEnergy: false },
             '"-parse";',
         ] as const,
         [
             'async',
-            { noParse: false, isAsync: true, isModule: false },
+            { noParse: false, isAsync: true, isModule: false, noEnergy: false },
             '"async";',
         ] as const,
         [
             'module',
-            { noParse: false, isAsync: false, isModule: true },
+            { noParse: false, isAsync: false, isModule: true, noEnergy: false },
             '"module";',
         ] as const,
         [
+            '-energy',
+            { noParse: false, isAsync: false, isModule: false, noEnergy: true },
+            '"-energy";',
+        ] as const,
+        [
             '-parse module',
-            { noParse: true, isAsync: false, isModule: true },
+            { noParse: true, isAsync: false, isModule: true, noEnergy: false },
             '"-parse module";',
         ] as const,
         [
             '-parse async module',
-            { noParse: true, isAsync: true, isModule: true },
+            { noParse: true, isAsync: true, isModule: true, noEnergy: false },
             '"-parse async module";',
+        ] as const,
+        [
+            '-parse async module -energy',
+            { noParse: true, isAsync: true, isModule: true, noEnergy: true },
+            '"-parse async module -energy";',
+        ] as const,
+        [
+            '-parse async module jsx-preserve-whitespace',
+            {
+                noParse: true,
+                isAsync: true,
+                isModule: true,
+                jsxPreserveWhitespace: true,
+                noEnergy: false,
+            },
+            '"-parse async module jsx-preserve-whitespace";',
         ] as const,
     ];
 
@@ -3009,7 +3259,8 @@ describe('addDirectives()', () => {
             noParse: true,
             isAsync: true,
             isModule: true,
+            noEnergy: true,
         });
-        expect(result).toBe('"-parse async module";a');
+        expect(result).toBe('"-parse async module -energy";a');
     });
 });

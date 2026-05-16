@@ -1,5 +1,73 @@
 # CasualOS Changelog
 
+## V4.2.4
+
+#### Date: 5/16/2026
+
+### :boom: Breaking Changes
+
+-   Changed how whitespace is handled in JSX expressions by default.
+
+    -   Previously, whitespace was preserved as much as possible. This meant that all spaces and newlines which were in the JSX expression were preserved in the JSX output. It also meant that formatting JSX could change the output.
+    -   Now, whitespace is removed unless explicitly added. This means that formatting will no longer change the JSX output. Additionally, this behavior matches the whitespace behavior of other JSX compilers (React, Babel, etc.).
+    -   If you want to preserve the previous behavior, you can add the `"jsx-preserve-whitespace";` directive at the start of the script(s) you want JSX whitespace preservation on.
+    -   Here's an example of the changed behavior:
+
+        ```typescript
+        let jsx = (
+            <div>
+                <span>Hello</span>
+                <span>World</span>
+            </div>
+        );
+
+        // Previously, the output would be like this:
+        let originalOutput = (
+            <div>
+                {' '}
+                <span>Hello</span> <span>World</span>{' '}
+            </div>
+        );
+
+        // Now, the output is like this:
+        let newOutput = (
+            <div>
+                <span>Hello</span> <span>World</span>
+            </div>
+        );
+        // Notice the spacing between the <div> and <span> tags
+        ```
+
+### :rocket: Features
+
+-   `ai.chat()` and `ai.stream.chat()` now include the provider-native response object on each returned choice.
+    -   The raw response from the underlying provider is available as a property named after the provider (e.g. `openai`, `anthropic`, `google`).
+    -   For custom OpenAI-compatible providers the property is keyed by the configured provider name.
+    -   Example:
+        ```typescript
+        const response = await ai.chat('Hello!');
+        const nativeOpenAIResponse = response.openai;
+        const nativeAnthropicResponse = response.anthropic;
+        const nativeGoogleResponse = response.google;
+        ```
+    -   The existing normalized fields (`role`, `content`, `finishReason`, etc.) are unchanged.
+-   Added the `listTransfers` operation (`GET /api/v2/transfers`) to support listing financial account transfers.
+    -   Supports user, studio, and contract accounts denominated in USD or credits.
+    -   Returns the current account balance and the matching transfers for the given account.
+    -   Supports filtering by `minTimeMs`, `maxTimeMs`, and `limit`.
+-   Added the `allow-popups-to-escape-sandbox` option to the VM sandbox so that they can link to new browsing contexts.
+-   Added the `language-model` option to the VM iframe permission policy.
+-   Made [`for await...of`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for-await...of) loop iterations not use energy.
+    -   These kinds of loops work asynchronously, so they aren't likely to cause the system to lock up due to an infinite loop.
+-   Added the `"-energy";` directive to disable energy checks for a script.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the default page title contained HTML comments used for replacing it on server-based deployments.
+-   Fixed an issue where fractional `tokenModifierRatio` values could cause the server to error because of mishandling of fractional values for AI chat billing.
+-   Fixed an issue where Anthropic models would not be allowed to output more than `4096` tokens.
+-   Fixed an issue where the `inst` tag on the `configBot` wouldn't be properly populated for insts loaded via `os.loadInst(config)`.
+
 ## V4.2.3
 
 #### Date: 4/27/2026
@@ -108,6 +176,7 @@
     -   Instead of `.otherTag`, now you can use `./otherTag`
     -   Instead of `:parent.tag`, now you can use `../parent/tag`
 -   Updated the [`typesense`](https://typesense.org/) library to v3.0.5.
+-   Added support for AI chat prompt caching via `enableCaching` in `ai.chat()` and `ai.stream.chat()` options, including forwarding to Claude/Anthropic requests using prompt cache control.
 
 ### :bug: Bug Fixes
 

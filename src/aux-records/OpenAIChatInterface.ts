@@ -58,6 +58,12 @@ export interface OpenAIChatOptions {
     name?: string;
 
     /**
+     * The provider key to include on provider-native response payloads.
+     * Defaults to "openai".
+     */
+    providerName?: string;
+
+    /**
      * The additional properties that should be included in requests.
      */
     additionalProperties?: Record<string, any>;
@@ -77,6 +83,10 @@ export class OpenAIChatInterface implements AIChatInterface {
 
     private get _name() {
         return this._options.name ?? 'OpenAIChatInterface';
+    }
+
+    private get _providerName() {
+        return this._options.providerName ?? this._options.name ?? 'openai';
     }
 
     constructor(options: OpenAIChatOptions) {
@@ -167,7 +177,8 @@ export class OpenAIChatInterface implements AIChatInterface {
                     content: c.message.content,
                     author: c.message.name,
                     functionCall: c.message.function_call,
-                    finishReason: c.finishReason,
+                    finishReason: c.finishReason ?? c.finish_reason,
+                    [this._providerName]: c,
                 })
             );
 
@@ -176,6 +187,7 @@ export class OpenAIChatInterface implements AIChatInterface {
                 totalTokens: result.data.usage?.total_tokens ?? 0,
                 inputTokens: result.data.usage?.prompt_tokens,
                 outputTokens: result.data.usage?.completion_tokens,
+                [this._providerName]: result.data,
             };
         } catch (err) {
             if (axios.isAxiosError(err)) {
@@ -260,17 +272,20 @@ export class OpenAIChatInterface implements AIChatInterface {
                     finishReason: c.finish_reason,
                     functionCall: c.delta
                         .function_call as unknown as AIFunctionCall,
+                    [this._providerName]: c,
                 })),
                 totalTokens: chunk.usage?.total_tokens ?? 0,
                 inputTokens: chunk.usage?.prompt_tokens,
                 outputTokens: chunk.usage?.completion_tokens,
+                [this._providerName]: chunk,
             };
         }
     }
 }
 
 interface ChatChoice {
-    finishReason: string;
+    finishReason?: string;
+    finish_reason?: string;
     message: {
         role: string;
         content: string;

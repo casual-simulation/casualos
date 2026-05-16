@@ -290,6 +290,63 @@ describe('AIController', () => {
                 ],
                 temperature: 0.5,
                 userId: 'test-user',
+                enableCaching: true,
+                maxTokens: undefined,
+            });
+        });
+
+        it('should include provider-native payloads in chat choices', async () => {
+            chatInterface.chat.mockReturnValueOnce(
+                Promise.resolve({
+                    choices: [
+                        {
+                            role: 'assistant',
+                            content: 'test',
+                            finishReason: 'stop',
+                            anthropic: {
+                                id: 'msg_123',
+                                model: 'claude',
+                            },
+                        } as any,
+                    ],
+                    totalTokens: 1,
+                    anthropic: {
+                        id: 'msg_123',
+                        model: 'claude',
+                    },
+                })
+            );
+
+            const result = await controller.chat({
+                model: 'test-model1',
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'test',
+                    },
+                ],
+                temperature: 0.5,
+                userId,
+                userSubscriptionTier,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                choices: [
+                    {
+                        role: 'assistant',
+                        content: 'test',
+                        finishReason: 'stop',
+                        anthropic: {
+                            id: 'msg_123',
+                            model: 'claude',
+                        },
+                    },
+                ],
+                anthropic: {
+                    id: 'msg_123',
+                    model: 'claude',
+                },
             });
         });
 
@@ -340,6 +397,50 @@ describe('AIController', () => {
                 ],
                 temperature: 0.5,
                 userId: 'test-user',
+                enableCaching: true,
+                maxTokens: undefined,
+            });
+        });
+
+        it('should pass prompt caching options to the chat interface', async () => {
+            chatInterface.chat.mockReturnValueOnce(
+                Promise.resolve({
+                    choices: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                            finishReason: 'stop',
+                        },
+                    ],
+                    totalTokens: 1,
+                })
+            );
+
+            await controller.chat({
+                model: 'test-model1',
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'test',
+                    },
+                ],
+                temperature: 0.5,
+                enableCaching: true,
+                userId,
+                userSubscriptionTier,
+            });
+
+            expect(chatInterface.chat).toHaveBeenCalledWith({
+                model: 'test-model1',
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'test',
+                    },
+                ],
+                temperature: 0.5,
+                enableCaching: true,
+                userId: 'test-user',
             });
         });
 
@@ -389,6 +490,8 @@ describe('AIController', () => {
                 ],
                 temperature: 0.5,
                 userId: 'test-user',
+                enableCaching: true,
+                maxTokens: undefined,
             });
         });
 
@@ -567,6 +670,8 @@ describe('AIController', () => {
                 ],
                 temperature: 0.5,
                 userId: 'test-user',
+                enableCaching: true,
+                maxTokens: undefined,
             });
         });
 
@@ -652,6 +757,8 @@ describe('AIController', () => {
                 ],
                 temperature: 0.5,
                 userId: 'test-user',
+                enableCaching: true,
+                maxTokens: undefined,
             });
 
             const metrics = await store.getSubscriptionAiChatMetrics({
@@ -716,6 +823,8 @@ describe('AIController', () => {
                 ],
                 temperature: 0.5,
                 userId: 'test-user',
+                enableCaching: true,
+                maxTokens: undefined,
             });
 
             const metrics = await store.getSubscriptionAiChatMetrics({
@@ -971,6 +1080,7 @@ describe('AIController', () => {
                     ],
                     temperature: 0.5,
                     userId: 'test-user',
+                    enableCaching: true,
                     maxTokens: 50,
                 });
 
@@ -1040,6 +1150,7 @@ describe('AIController', () => {
                     ],
                     temperature: 0.5,
                     userId: 'test-user',
+                    enableCaching: true,
                     maxTokens: 75,
                 });
 
@@ -1236,6 +1347,173 @@ describe('AIController', () => {
 
                     const result = await controller.chat({
                         model: 'test-model1',
+                        messages: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                            },
+                        ],
+                        temperature: 0.5,
+                        userId,
+                        userSubscriptionTier,
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                        choices: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                                finishReason: 'stop',
+                            },
+                        ],
+                    });
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: account1.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+
+                            // Should charge at the output token rate
+                            debits_posted: 15n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                    expect(chatInterface.chat).toHaveBeenCalled();
+
+                    const list = unwrap(
+                        await financial.listTransfers(account1.id)
+                    );
+                    checkTransfers(list.slice(1), [
+                        {
+                            amount: 15n,
+                            credit_account_id:
+                                ACCOUNT_IDS.revenue_records_usage_credits,
+                            flags: TransferFlags.pending,
+                            user_data_32: BillingCodes.ai_chat_tokens,
+                        },
+                        {
+                            amount: 15n,
+                            credit_account_id:
+                                ACCOUNT_IDS.revenue_records_usage_credits,
+                            flags: TransferFlags.post_pending_transfer,
+                            user_data_32: BillingCodes.ai_chat_tokens,
+                        },
+                    ]);
+                });
+
+                it('should round partial credits up', async () => {
+                    controller = new AIController({
+                        chat: {
+                            interfaces: {
+                                provider1: chatInterface,
+                                provider2: chatInterface2,
+                            },
+                            options: {
+                                defaultModel: 'default-model',
+                                defaultModelProvider: 'provider1',
+                                allowedChatModels: [
+                                    {
+                                        provider: 'provider1',
+                                        model: 'test-model1',
+                                    },
+                                    {
+                                        provider: 'provider1',
+                                        model: 'test-model2',
+                                    },
+                                    {
+                                        provider: 'provider2',
+                                        model: 'test-model3',
+                                    },
+                                    {
+                                        provider: 'provider1',
+                                        model: 'test-model-token-ratio',
+                                    },
+                                ],
+                                allowedChatSubscriptionTiers: ['test-tier'],
+                                tokenModifierRatio: {
+                                    'test-model-token-ratio': 0.3,
+                                },
+                            },
+                        },
+                        generateSkybox: {
+                            interface: generateSkyboxInterface,
+                            options: {
+                                allowedSubscriptionTiers: ['test-tier'],
+                            },
+                        },
+                        images: {
+                            interfaces: {
+                                openai: generateImageInterface,
+                            },
+                            options: {
+                                defaultModel: 'openai',
+                                defaultWidth: 512,
+                                defaultHeight: 512,
+                                maxWidth: 1024,
+                                maxHeight: 1024,
+                                maxSteps: 50,
+                                maxImages: 3,
+                                allowedModels: {
+                                    openai: ['openai'],
+                                    stabilityai: [
+                                        'stable-diffusion-xl-1024-v1-0',
+                                    ],
+                                },
+                                allowedSubscriptionTiers: ['test-tier'],
+                            },
+                        },
+                        hume: {
+                            interface: humeInterface,
+                            config: {
+                                apiKey: 'apiKey',
+                                secretKey: 'secretKey',
+                            },
+                        },
+                        sloyd: {
+                            interface: sloydInterface,
+                        },
+                        openai: {
+                            realtime: {
+                                interface: realtimeInterface,
+                            },
+                        },
+                        metrics: store,
+                        config: store,
+                        policies: null,
+                        policyController: policies,
+                        records: store,
+                    });
+                    // @ts-expect-error private access
+                    controller._financial = financial;
+
+                    chatInterface.chat.mockImplementationOnce(async () => {
+                        await checkAccounts(financialInterface, [
+                            {
+                                id: account1.id,
+                                credits_posted: 10000n,
+                                credits_pending: 0n,
+                                debits_posted: 0n,
+
+                                debits_pending: 750n,
+                            },
+                        ]);
+
+                        return Promise.resolve({
+                            choices: [
+                                {
+                                    role: 'user',
+                                    content: 'test',
+                                    finishReason: 'stop',
+                                },
+                            ],
+                            totalTokens: 1,
+                        });
+                    });
+
+                    const result = await controller.chat({
+                        model: 'test-model-token-ratio',
                         messages: [
                             {
                                 role: 'user',
@@ -2303,6 +2581,69 @@ describe('AIController', () => {
                 ],
                 temperature: 0.5,
                 userId: 'test-user',
+                enableCaching: true,
+                maxTokens: undefined,
+            });
+        });
+
+        it('should include provider-native payloads in stream chunks', async () => {
+            chatInterface.chatStream.mockReturnValueOnce(
+                asyncIterable<AIChatInterfaceStreamResponse>([
+                    Promise.resolve({
+                        choices: [
+                            {
+                                role: 'assistant',
+                                content: 'test',
+                                finishReason: 'stop',
+                                'my-custom-provider': {
+                                    requestId: 'req_123',
+                                },
+                            } as any,
+                        ],
+                        totalTokens: 1,
+                        'my-custom-provider': {
+                            requestId: 'req_123',
+                        },
+                    }),
+                ])
+            );
+
+            const result = await unwindAndCaptureAsync(
+                controller.chatStream({
+                    model: 'test-model1',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                        },
+                    ],
+                    temperature: 0.5,
+                    userId,
+                    userSubscriptionTier,
+                })
+            );
+
+            expect(result).toEqual({
+                result: {
+                    success: true,
+                },
+                states: [
+                    {
+                        choices: [
+                            {
+                                role: 'assistant',
+                                content: 'test',
+                                finishReason: 'stop',
+                                'my-custom-provider': {
+                                    requestId: 'req_123',
+                                },
+                            },
+                        ],
+                        'my-custom-provider': {
+                            requestId: 'req_123',
+                        },
+                    },
+                ],
             });
         });
 
@@ -2363,6 +2704,54 @@ describe('AIController', () => {
                 ],
                 temperature: 0.5,
                 userId: 'test-user',
+                enableCaching: true,
+                maxTokens: undefined,
+            });
+        });
+
+        it('should pass prompt caching options to the chat stream interface', async () => {
+            chatInterface.chatStream.mockReturnValueOnce(
+                asyncIterable<AIChatInterfaceStreamResponse>([
+                    Promise.resolve({
+                        choices: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                                finishReason: 'stop',
+                            },
+                        ],
+                        totalTokens: 1,
+                    }),
+                ])
+            );
+
+            await unwindAndCaptureAsync(
+                controller.chatStream({
+                    model: 'test-model1',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                        },
+                    ],
+                    temperature: 0.5,
+                    enableCaching: true,
+                    userId,
+                    userSubscriptionTier,
+                })
+            );
+
+            expect(chatInterface.chatStream).toHaveBeenCalledWith({
+                model: 'test-model1',
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'test',
+                    },
+                ],
+                temperature: 0.5,
+                enableCaching: true,
+                userId: 'test-user',
             });
         });
 
@@ -2422,6 +2811,8 @@ describe('AIController', () => {
                 ],
                 temperature: 0.5,
                 userId: 'test-user',
+                enableCaching: true,
+                maxTokens: undefined,
             });
         });
 
@@ -2630,6 +3021,8 @@ describe('AIController', () => {
                 ],
                 temperature: 0.5,
                 userId: 'test-user',
+                enableCaching: true,
+                maxTokens: undefined,
             });
         });
 
@@ -2730,6 +3123,8 @@ describe('AIController', () => {
                 ],
                 temperature: 0.5,
                 userId: 'test-user',
+                enableCaching: true,
+                maxTokens: undefined,
             });
 
             const metrics = await store.getSubscriptionAiChatMetrics({
@@ -2804,6 +3199,8 @@ describe('AIController', () => {
                 ],
                 temperature: 0.5,
                 userId: 'test-user',
+                enableCaching: true,
+                maxTokens: undefined,
             });
 
             const metrics = await store.getSubscriptionAiChatMetrics({
@@ -3058,6 +3455,7 @@ describe('AIController', () => {
                     ],
                     temperature: 0.5,
                     userId: 'test-user',
+                    enableCaching: true,
                     maxTokens: 50,
                 });
 
@@ -3137,6 +3535,7 @@ describe('AIController', () => {
                     ],
                     temperature: 0.5,
                     userId: 'test-user',
+                    enableCaching: true,
                     maxTokens: 75,
                 });
 
