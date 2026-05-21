@@ -345,6 +345,16 @@ export interface RecordsServerOptions {
     allowedApiOrigins: Set<string>;
 
     /**
+     * The number of seconds that public inst records should be kept for.
+     */
+    publicInstRecordsLifetimeSeconds?: number;
+
+    /**
+     * The expiration mode that should be used for public inst records.
+     */
+    publicInstRecordsLifetimeExpireMode?: 'NX' | 'XX' | 'GT' | 'LT' | null;
+
+    /**
      * The controller that should be used for handling authentication requests.
      */
     authController: AuthController;
@@ -514,6 +524,13 @@ export class RecordsServer {
      */
     private _allowedAccountOrigins: Set<string>;
     private _allowedSelfOrigins: Set<string>;
+    private _publicInstRecordsLifetimeSeconds: number;
+    private _publicInstRecordsLifetimeExpireMode:
+        | 'NX'
+        | 'XX'
+        | 'GT'
+        | 'LT'
+        | null;
 
     private _rateLimit: RateLimitController;
     private _websocketRateLimit: RateLimitController;
@@ -556,6 +573,8 @@ export class RecordsServer {
     constructor({
         allowedAccountOrigins,
         allowedApiOrigins,
+        publicInstRecordsLifetimeSeconds = 60 * 60 * 24,
+        publicInstRecordsLifetimeExpireMode = 'NX',
         authController,
         livekitController,
         recordsController,
@@ -587,6 +606,10 @@ export class RecordsServer {
             ...allowedAccountOrigins,
             ...allowedApiOrigins,
         ]);
+        this._publicInstRecordsLifetimeSeconds =
+            publicInstRecordsLifetimeSeconds;
+        this._publicInstRecordsLifetimeExpireMode =
+            publicInstRecordsLifetimeExpireMode;
         this._auth = authController;
         this._livekit = livekitController;
         this._records = recordsController;
@@ -936,6 +959,17 @@ export class RecordsServer {
                     });
 
                     return genericResult<ViewParams, SimpleError>(result);
+                }),
+
+            getPublicInstOptions: procedure()
+                .origins('api')
+                .inputs(z.object({}))
+                .handler(async () => {
+                    return {
+                        success: true,
+                        lifetimeSeconds: this._publicInstRecordsLifetimeSeconds,
+                        expireMode: this._publicInstRecordsLifetimeExpireMode,
+                    };
                 }),
 
             getUserInfo: procedure()
