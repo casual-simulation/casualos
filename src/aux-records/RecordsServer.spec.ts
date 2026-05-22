@@ -1204,6 +1204,147 @@ describe('RecordsServer', () => {
                 headers: corsHeaders(apiHeaders.origin),
             });
         });
+
+        it('should return null lifetime when configured to never expire', async () => {
+            const customServer = new RecordsServer({
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                publicInstRecordsLifetimeSeconds: null,
+                publicInstRecordsLifetimeExpireMode: null,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                rateLimitController,
+                policyController,
+                aiController,
+                websocketController,
+                moderationController,
+                loomController,
+                websocketRateLimitController: rateLimitController,
+                webhooksController: webhookController,
+                notificationsController: notificationController,
+                packagesController: packageController,
+                packageVersionController: packageVersionController,
+                searchRecordsController: searchRecordsController,
+                databaseRecordsController: databaseController,
+                purchasableItemsController,
+                contractRecordsController: contractsController,
+                viewTemplateRenderer: viewTemplateRenderer,
+            });
+
+            const result = await customServer.handleHttpRequest(
+                procedureRequest('getPublicInstOptions', {}, apiHeaders)
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    lifetimeSeconds: null,
+                    expireMode: null,
+                },
+                headers: corsHeaders(apiHeaders.origin),
+            });
+        });
+
+        it('should return null lifetime with a configured expire mode', async () => {
+            const customServer = new RecordsServer({
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                publicInstRecordsLifetimeSeconds: null,
+                publicInstRecordsLifetimeExpireMode: 'GT',
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                rateLimitController,
+                policyController,
+                aiController,
+                websocketController,
+                moderationController,
+                loomController,
+                websocketRateLimitController: rateLimitController,
+                webhooksController: webhookController,
+                notificationsController: notificationController,
+                packagesController: packageController,
+                packageVersionController: packageVersionController,
+                searchRecordsController: searchRecordsController,
+                databaseRecordsController: databaseController,
+                purchasableItemsController,
+                contractRecordsController: contractsController,
+                viewTemplateRenderer: viewTemplateRenderer,
+            });
+
+            const result = await customServer.handleHttpRequest(
+                procedureRequest('getPublicInstOptions', {}, apiHeaders)
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    lifetimeSeconds: null,
+                    expireMode: 'GT',
+                },
+                headers: corsHeaders(apiHeaders.origin),
+            });
+        });
+
+        it('should return null expire mode with a configured lifetime', async () => {
+            const customServer = new RecordsServer({
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                publicInstRecordsLifetimeSeconds: 123,
+                publicInstRecordsLifetimeExpireMode: null,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                rateLimitController,
+                policyController,
+                aiController,
+                websocketController,
+                moderationController,
+                loomController,
+                websocketRateLimitController: rateLimitController,
+                webhooksController: webhookController,
+                notificationsController: notificationController,
+                packagesController: packageController,
+                packageVersionController: packageVersionController,
+                searchRecordsController: searchRecordsController,
+                databaseRecordsController: databaseController,
+                purchasableItemsController,
+                contractRecordsController: contractsController,
+                viewTemplateRenderer: viewTemplateRenderer,
+            });
+
+            const result = await customServer.handleHttpRequest(
+                procedureRequest('getPublicInstOptions', {}, apiHeaders)
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    lifetimeSeconds: 123,
+                    expireMode: null,
+                },
+                headers: corsHeaders(apiHeaders.origin),
+            });
+        });
     });
 
     describe('GET /api/{userId}/metadata', () => {

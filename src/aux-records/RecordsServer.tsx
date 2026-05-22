@@ -347,7 +347,7 @@ export interface RecordsServerOptions {
     /**
      * The number of seconds that public inst records should be kept for.
      */
-    publicInstRecordsLifetimeSeconds?: number;
+    publicInstRecordsLifetimeSeconds?: number | null;
 
     /**
      * The expiration mode that should be used for public inst records.
@@ -524,7 +524,7 @@ export class RecordsServer {
      */
     private _allowedAccountOrigins: Set<string>;
     private _allowedSelfOrigins: Set<string>;
-    private _publicInstRecordsLifetimeSeconds: number;
+    private _publicInstRecordsLifetimeSeconds: number | null;
     private _publicInstRecordsLifetimeExpireMode:
         | 'NX'
         | 'XX'
