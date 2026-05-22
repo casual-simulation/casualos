@@ -913,74 +913,29 @@ export default class PlayerHome extends Vue {
     private _getDurationMsFromPublicInstOptionsResult(
         result: any
     ): number | null {
-        const lifetimeSeconds = this._findNumericField(result, [
-            'lifetimeSeconds',
-        ]);
-        if (typeof lifetimeSeconds === 'number') {
-            return lifetimeSeconds * 1000;
+        if (!result || typeof result !== 'object') {
+            return null;
         }
 
-        const durationMs = this._findNumericField(result, [
-            'durationMs',
-            'publicInstDurationMs',
-            'instDurationMs',
-            'retentionMs',
-            'expiresAfterMs',
-            'expireAfterMs',
-            'expirationMs',
-            'maxDurationMs',
-            'maxLifetimeMs',
-            'ttlMs',
-        ]);
-        if (typeof durationMs === 'number') {
-            return durationMs;
+        if (result.success === false) {
+            return null;
+        }
+
+        if (typeof result.lifetimeSeconds === 'number') {
+            return result.lifetimeSeconds * 1000;
         }
 
         const options = result.options;
         if (options && typeof options === 'object') {
-            const optionLifetimeSeconds = this._findNumericField(options, [
-                'lifetimeSeconds',
-            ]);
-            if (typeof optionLifetimeSeconds === 'number') {
-                return optionLifetimeSeconds * 1000;
+            if (typeof options.lifetimeSeconds === 'number') {
+                return options.lifetimeSeconds * 1000;
             }
 
-            const optionDurationMs = this._findNumericField(options, [
-                'durationMs',
-                'publicInstDurationMs',
-                'instDurationMs',
-                'retentionMs',
-                'expiresAfterMs',
-                'expireAfterMs',
-                'expirationMs',
-                'maxDurationMs',
-                'maxLifetimeMs',
-                'ttlMs',
-            ]);
-            if (typeof optionDurationMs === 'number') {
-                return optionDurationMs;
-            }
-
-            const hours = this._findNumericField(options, [
-                'durationHours',
-                'retentionHours',
-                'expiresAfterHours',
-                'maxHours',
-                'ttlHours',
-            ]);
-            if (typeof hours === 'number') {
-                return hours * ONE_HOUR_MS;
-            }
-
-            const minutes = this._findNumericField(options, [
-                'durationMinutes',
-                'retentionMinutes',
-                'expiresAfterMinutes',
-                'maxMinutes',
-                'ttlMinutes',
-            ]);
-            if (typeof minutes === 'number') {
-                return minutes * ONE_MINUTE_MS;
+            if (
+                typeof options.expireMode === 'string' ||
+                typeof result.expireMode === 'string'
+            ) {
+                return null;
             }
         }
 
