@@ -324,14 +324,14 @@ export default class PlayerHome extends Vue {
         if (this.publicInstLifetimeMs < ONE_HOUR_MS) {
             const minutes = Math.max(
                 1,
-                Math.floor(this.publicInstLifetimeMs / ONE_MINUTE_MS)
+                Math.ceil(this.publicInstLifetimeMs / ONE_MINUTE_MS)
             );
             return `${minutes}m`;
         }
 
         const hours = Math.max(
             1,
-            Math.floor(this.publicInstLifetimeMs / ONE_HOUR_MS)
+            Math.ceil(this.publicInstLifetimeMs / ONE_HOUR_MS)
         );
         return `${hours}h`;
     }
