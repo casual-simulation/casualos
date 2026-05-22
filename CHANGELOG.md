@@ -60,6 +60,13 @@
 -   Made [`for await...of`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for-await...of) loop iterations not use energy.
     -   These kinds of loops work asynchronously, so they aren't likely to cause the system to lock up due to an infinite loop.
 -   Added the `"-energy";` directive to disable energy checks for a script.
+-   Added support for expiring private insts.
+    -   Added optional `expires` support to inst/branch/package records and websocket `repo/watch_branch` requests.
+    -   Updated split-store and websocket inst routing to use `expires` semantics (instead of relying on `recordName` alone) when deciding temporary vs permanent storage.
+    -   Public insts now reject explicitly non-expiring watch requests (`recordName: null` with `expires: false`).
+    -   `savePermanentBranches()` now skips expiring and public branches.
+    -   Subscription metrics now exclude expiring insts from `totalInsts` in memory, Prisma, and SQLite stores.
+    -   Added persistence support for `InstRecord.expires` in Prisma/Cockroach and Prisma/SQLite schemas and stores.
 
 ### :bug: Bug Fixes
 
