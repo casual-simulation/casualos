@@ -1134,8 +1134,17 @@ describe('RecordsServer', () => {
 
     describe('getPublicInstOptions', () => {
         it('should return the public inst options without requiring authentication', async () => {
+            const unauthenticatedApiHeaders = {
+                ...defaultHeaders,
+                origin: apiOrigin,
+            };
+
             const result = await server.handleHttpRequest(
-                procedureRequest('getPublicInstOptions', {}, defaultHeaders)
+                procedureRequest(
+                    'getPublicInstOptions',
+                    {},
+                    unauthenticatedApiHeaders
+                )
             );
 
             await expectResponseBodyToEqual(result, {
@@ -1145,7 +1154,7 @@ describe('RecordsServer', () => {
                     lifetimeSeconds: 60 * 60 * 24,
                     expireMode: 'NX',
                 },
-                headers: corsHeaders(defaultHeaders.origin),
+                headers: corsHeaders(unauthenticatedApiHeaders.origin),
             });
         });
 
@@ -1182,7 +1191,7 @@ describe('RecordsServer', () => {
             });
 
             const result = await customServer.handleHttpRequest(
-                procedureRequest('getPublicInstOptions', {}, defaultHeaders)
+                procedureRequest('getPublicInstOptions', {}, apiHeaders)
             );
 
             await expectResponseBodyToEqual(result, {
@@ -1192,7 +1201,7 @@ describe('RecordsServer', () => {
                     lifetimeSeconds: 123,
                     expireMode: 'GT',
                 },
-                headers: corsHeaders(defaultHeaders.origin),
+                headers: corsHeaders(apiHeaders.origin),
             });
         });
     });
