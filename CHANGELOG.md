@@ -60,6 +60,9 @@
 -   Made [`for await...of`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for-await...of) loop iterations not use energy.
     -   These kinds of loops work asynchronously, so they aren't likely to cause the system to lock up due to an infinite loop.
 -   Added the `"-energy";` directive to disable energy checks for a script.
+-   Added the `getPublicInstOptions` procedure for retrieving public inst lifetime configuration.
+    -   Returns the configured `publicInstRecordsLifetimeSeconds` and `publicInstRecordsLifetimeExpireMode` values from Redis server options.
+    -   Does not require authentication (available to logged-out users).
 
 ### :bug: Bug Fixes
 
