@@ -362,6 +362,18 @@ describe('SplitInstRecordsStore', () => {
             const result = await perm.getInstByName(null as any, instName);
             expect(result).toEqual(null);
         });
+
+        it('should not save the inst to the permanent store if expires is true', async () => {
+            await store.saveInst({
+                recordName,
+                inst: instName,
+                markers: ['test'],
+                expires: true,
+            });
+
+            const result = await perm.getInstByName(recordName, instName);
+            expect(result).toEqual(null);
+        });
     });
 
     describe('saveBranch()', () => {
@@ -449,6 +461,39 @@ describe('SplitInstRecordsStore', () => {
                 branchSizeInBytes: 0,
             });
         });
+
+        it('should only save the branch to the temp store if expires is true', async () => {
+            await store.saveBranch({
+                recordName,
+                inst: instName,
+                branch: branchName,
+                temporary: false,
+                expires: true,
+            });
+
+            const result = await perm.getBranchByName(
+                recordName,
+                instName,
+                branchName
+            );
+            expect(result).toEqual(null);
+
+            const tempResult = await temp.getBranchByName(
+                recordName,
+                instName,
+                branchName
+            );
+
+            expect(tempResult).toEqual({
+                recordName,
+                inst: instName,
+                branch: branchName,
+                temporary: false,
+                expires: true,
+                linkedInst: null,
+                branchSizeInBytes: 0,
+            });
+        });
     });
 
     describe('saveLoadedPackage()', () => {
@@ -522,6 +567,36 @@ describe('SplitInstRecordsStore', () => {
                 },
             ]);
             expect(await temp.listLoadedPackages('record', 'test')).toEqual([]);
+        });
+
+        it('should save the package to the temp store if expires is true', async () => {
+            await store.saveLoadedPackage({
+                id: 'package',
+                recordName: 'record',
+                inst: 'test',
+                packageId: 'packageId',
+                packageVersionId: 'packageVersionId',
+                userId: 'user',
+                branch: DEFAULT_BRANCH_NAME,
+                expires: true,
+            });
+
+            expect(await store.listLoadedPackages('record', 'test')).toEqual(
+                []
+            );
+            expect(await temp.listLoadedPackages('record', 'test')).toEqual([
+                {
+                    id: 'package',
+                    recordName: 'record',
+                    inst: 'test',
+                    packageId: 'packageId',
+                    packageVersionId: 'packageVersionId',
+                    userId: 'user',
+                    branch: DEFAULT_BRANCH_NAME,
+                    expires: true,
+                },
+            ]);
+            expect(await perm.listLoadedPackages('record', 'test')).toEqual([]);
         });
     });
 
