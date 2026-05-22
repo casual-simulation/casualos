@@ -63,6 +63,9 @@
 -   Added the `getPublicInstOptions` procedure for retrieving public inst lifetime configuration.
     -   Returns the configured `publicInstRecordsLifetimeSeconds` and `publicInstRecordsLifetimeExpireMode` values from Redis server options.
     -   Does not require authentication (available to logged-out users).
+-   Updated the player BIOS to display public/free inst retention duration.
+    -   The player now reads `getPublicInstOptions.lifetimeSeconds` and shows the duration in the BIOS option label (for example: `free 24h` or `free 45m`).
+    -   If public inst options are unavailable, the BIOS falls back to the plain option label.
 
 ### :bug: Bug Fixes
 
