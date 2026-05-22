@@ -149,6 +149,7 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
             select: {
                 name: true,
                 markers: true,
+                expires: true,
             },
         });
 
@@ -164,6 +165,7 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
                 recordName: recordName,
                 inst: i.name,
                 markers: i.markers,
+                ...(i.expires === true ? { expires: true } : {}),
             })),
             totalCount,
         };
@@ -197,6 +199,7 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
             select: {
                 name: true,
                 markers: true,
+                expires: true,
             },
         });
 
@@ -215,6 +218,7 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
                 recordName: recordName,
                 inst: i.name,
                 markers: i.markers,
+                ...(i.expires === true ? { expires: true } : {}),
             })),
             totalCount,
         };
@@ -235,6 +239,7 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
             select: {
                 name: true,
                 markers: true,
+                expires: true,
                 recordName: true,
                 record: {
                     select: {
@@ -269,6 +274,7 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
             inst: record.name,
             markers: record.markers,
             recordName: record.recordName,
+            ...(record.expires === true ? { expires: true } : {}),
             subscriptionId:
                 record.record.owner?.subscriptionId ??
                 record.record.studio?.subscriptionId,
@@ -380,11 +386,13 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
                 },
                 update: {
                     markers: inst.markers,
+                    expires: inst.expires === true,
                 },
                 create: {
                     name: inst.inst,
                     recordName: inst.recordName,
                     markers: inst.markers,
+                    expires: inst.expires === true,
                 },
             });
 

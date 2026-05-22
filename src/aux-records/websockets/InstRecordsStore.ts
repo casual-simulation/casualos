@@ -216,6 +216,12 @@ export interface LoadedPackage {
     id: string;
 
     /**
+     * Whether the loaded package expires and should be deleted when it is no longer needed.
+     * If not provided, the default is derived from the record name.
+     */
+    expires?: boolean;
+
+    /**
      * The name of the record that the inst is stored in.
      * If null, then the inst is a public inst.
      */
@@ -318,6 +324,12 @@ export interface InstRecord {
     recordName: string | null;
 
     /**
+     * Whether the inst expires and should be deleted when it is no longer needed.
+     * If not provided, the default is derived from the record name.
+     */
+    expires?: boolean;
+
+    /**
      * The name of the inst.
      */
     inst: string;
@@ -358,6 +370,12 @@ export interface BranchRecord {
      * The name of the record.
      */
     recordName: string | null;
+
+    /**
+     * Whether the branch expires and should be deleted when it is no longer needed.
+     * If not provided, the default is derived from the record name.
+     */
+    expires?: boolean;
 
     /**
      * The name of the inst.

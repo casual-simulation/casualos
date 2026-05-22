@@ -3239,8 +3239,11 @@ export class MemoryStore
                 r.ownerId === filter.ownerId ||
                 r.studioId === filter.studioId
             ) {
-                totalInsts += insts.size;
                 for (let inst of insts.values()) {
+                    if (inst.expires === true) {
+                        continue;
+                    }
+                    totalInsts += 1;
                     totalBytes += inst.instSizeInBytes;
                 }
             }
@@ -3283,8 +3286,11 @@ export class MemoryStore
                 r.ownerId === info.ownerId ||
                 r.studioId === info.studioId
             ) {
-                totalInsts += insts.size;
                 for (let inst of insts.values()) {
+                    if (inst.expires === true) {
+                        continue;
+                    }
+                    totalInsts += 1;
                     totalBytes += inst.instSizeInBytes;
                 }
             }
