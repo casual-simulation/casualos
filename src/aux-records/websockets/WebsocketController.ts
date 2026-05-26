@@ -500,6 +500,27 @@ export class WebsocketController {
         const inst = instResult.inst;
         const features = instResult.features;
 
+        if (
+            recordName &&
+            instResult.instExisted &&
+            typeof event.expires === 'boolean'
+        ) {
+            const savedExpires = inst?.expires === true;
+            if (savedExpires !== event.expires) {
+                await this.messenger.sendMessage([connectionId], {
+                    type: 'repo/watch_branch_result',
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage:
+                        'The requested expires value does not match the existing inst.',
+                    recordName: recordName,
+                    inst: event.inst,
+                    branch: event.branch,
+                });
+                return;
+            }
+        }
+
         let maxConnections: number = null;
 
         if (
@@ -2959,6 +2980,7 @@ export class WebsocketController {
     ): Promise<GetOrCreateInstResult> {
         let inst: InstWithSubscriptionInfo | null = null;
         let features: FeaturesConfiguration | null = null;
+        let instExisted = false;
         if (recordName) {
             const getInstResult = await this._getInst(
                 recordName,
@@ -3128,6 +3150,7 @@ export class WebsocketController {
                 }
             } else {
                 inst = savedInst;
+                instExisted = true;
             }
         } else {
             // null record name means public temporary inst
@@ -3162,6 +3185,7 @@ export class WebsocketController {
             inst,
             context,
             features,
+            instExisted,
         };
     }
 
@@ -3244,6 +3268,7 @@ export class WebsocketController {
                 inst: savedInst,
                 context,
                 features,
+                instExisted: !!savedInst,
             };
         }
 
@@ -3252,6 +3277,7 @@ export class WebsocketController {
             inst,
             context,
             features,
+            instExisted: false,
         };
     }
 
@@ -3512,6 +3538,11 @@ export type GetOrCreateInstResult =
 export interface GetOrCreateInstSuccess {
     success: true;
     inst: InstWithSubscriptionInfo | null;
+
+    /**
+     * Whether the inst already existed before this operation.
+     */
+    instExisted: boolean;
 
     /**
      * The context that was used to authorize the request.

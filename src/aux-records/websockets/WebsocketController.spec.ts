@@ -1284,6 +1284,60 @@ describe('WebsocketController', () => {
                                 );
                             });
 
+                            it('should reject expires mismatch for an existing private inst', async () => {
+                                await instStore.saveInst({
+                                    recordName,
+                                    inst,
+                                    markers: [PRIVATE_MARKER],
+                                });
+
+                                await server.login(serverConnectionId, 1, {
+                                    type: 'login',
+                                    connectionToken: connectionToken,
+                                });
+
+                                await server.watchBranch(serverConnectionId, {
+                                    type: 'repo/watch_branch',
+                                    recordName,
+                                    inst,
+                                    branch: 'mismatchBranch',
+                                    expires: true,
+                                });
+
+                                expect(
+                                    messenger
+                                        .getMessages(serverConnectionId)
+                                        .slice(1)
+                                ).toEqual([
+                                    {
+                                        type: 'repo/watch_branch_result',
+                                        success: false,
+                                        errorCode: 'invalid_request',
+                                        errorMessage:
+                                            'The requested expires value does not match the existing inst.',
+                                        recordName,
+                                        inst,
+                                        branch: 'mismatchBranch',
+                                    },
+                                ]);
+
+                                expect(
+                                    await instStore.perm.getBranchByName(
+                                        recordName,
+                                        inst,
+                                        'mismatchBranch'
+                                    )
+                                ).toBeNull();
+
+                                expect(
+                                    await instStore.temp.getBranchByName(
+                                        recordName,
+                                        inst,
+                                        'mismatchBranch'
+                                    )
+                                ).toBeNull();
+                            });
+
                             it('should support record keys', async () => {
                                 const { recordKey } = await createTestRecordKey(
                                     services,
