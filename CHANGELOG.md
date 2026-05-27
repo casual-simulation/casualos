@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V4.2.5
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where getting a package version required that the user be logged in.
+
 ## V4.2.4
 
 #### Date: 5/16/2026
