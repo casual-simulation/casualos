@@ -2452,6 +2452,16 @@ export class ServerBuilder implements SubscriptionLike {
         const server = new RecordsServer({
             allowedAccountOrigins: this._allowedAccountOrigins,
             allowedApiOrigins: this._allowedApiOrigins,
+            publicInstRecordsLifetimeSeconds:
+                this._options.redis?.publicInstRecordsLifetimeSeconds !==
+                undefined
+                    ? this._options.redis.publicInstRecordsLifetimeSeconds
+                    : 60 * 60 * 24,
+            publicInstRecordsLifetimeExpireMode:
+                this._options.redis?.publicInstRecordsLifetimeExpireMode ===
+                undefined
+                    ? 'NX'
+                    : this._options.redis?.publicInstRecordsLifetimeExpireMode,
             authController: this._authController,
             livekitController: this._livekitController,
             recordsController: this._recordsController,
