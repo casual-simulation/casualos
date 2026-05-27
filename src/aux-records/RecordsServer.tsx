@@ -2745,10 +2745,10 @@ export class RecordsServer {
                         const validation = await this._validateSessionKey(
                             context.sessionKey
                         );
-                        if (validation.success === false) {
-                            if (validation.errorCode === 'no_session_key') {
-                                return NOT_LOGGED_IN_RESULT;
-                            }
+                        if (
+                            validation.success === false &&
+                            validation.errorCode !== 'no_session_key'
+                        ) {
                             return validation;
                         }
 

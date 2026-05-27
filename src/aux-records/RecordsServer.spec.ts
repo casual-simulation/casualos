@@ -14357,6 +14357,54 @@ describe('RecordsServer', () => {
             });
         });
 
+        it('should not require a session key', async () => {
+            delete apiHeaders['authorization'];
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/package/version?recordName=${recordName}&address=${'address'}&major=1`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    item: {
+                        id: 'packageVersionId',
+                        packageId: 'packageId',
+                        address: 'address',
+                        key: {
+                            major: 1,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        },
+                        auxFileName: 'test.aux',
+                        auxSha256: 'auxSha256',
+                        sizeInBytes: 123,
+                        createdAtMs: 999,
+                        createdFile: true,
+                        entitlements: [],
+                        description: '',
+                        requiresReview: false,
+                        sha256: 'sha256',
+                        approved: true,
+                        approvalType: 'normal',
+                        markers: [PUBLIC_READ_MARKER],
+                    },
+                    auxFile: {
+                        success: true,
+                        requestMethod: 'GET',
+                        requestUrl: expect.any(String),
+                        requestHeaders: expect.any(Object),
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
         it('should get the latest package version', async () => {
             await packageVersionsStore.createItem(recordName, {
                 id: 'packageVersionId2',
