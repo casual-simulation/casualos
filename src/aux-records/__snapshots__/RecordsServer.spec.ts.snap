@@ -2133,6 +2133,14 @@ Object {
       "origins": true,
     },
     Object {
+      "inputs": Object {
+        "schema": Object {},
+        "type": "object",
+      },
+      "name": "getPublicInstOptions",
+      "origins": "api",
+    },
+    Object {
       "http": Object {
         "method": "GET",
         "path": "/api/v2/records/purchasableItems",
@@ -12664,6 +12672,14 @@ Object {
       },
       "name": "getPlayerWebManifest",
       "origins": true,
+    },
+    Object {
+      "inputs": Object {
+        "schema": Object {},
+        "type": "object",
+      },
+      "name": "getPublicInstOptions",
+      "origins": "api",
     },
     Object {
       "http": Object {

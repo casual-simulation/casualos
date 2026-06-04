@@ -94,6 +94,9 @@ function isExpiringPublicBiosOption(option: BiosOption): boolean {
     return option === 'public inst-expires' || option === 'free inst-expires';
 }
 
+const ONE_MINUTE_MS = 60 * 1000;
+const ONE_HOUR_MS = 60 * ONE_MINUTE_MS;
+
 function isPrivateInst(
     biosOption: BiosOption
 ): biosOption is
@@ -177,7 +180,11 @@ const BiosSelectComponent = MdSelect.extend({
             // Overrides the default MdSelect#setFieldContent method
             // to ensure that it actually works for the BIOS selection dialog.
             // For some reason, the default version doesn't work because of the multiple-line item description issue.
-            this.MdSelect.label = this.localValue;
+            const selectedOption = (this.$el as HTMLElement)?.querySelector(
+                '.md-list-item.md-selected .md-list-item-text > span'
+            );
+            this.MdSelect.label =
+                selectedOption?.textContent?.trim() || this.localValue;
         },
     },
 });
@@ -215,6 +222,7 @@ export default class PlayerHome extends Vue {
     logoUrl: string = null;
     logoTitle: string = null;
     generatedName: string = null;
+    publicInstLifetimeMs: number | null = null;
 
     errors: FormError[] = [];
 
@@ -338,6 +346,43 @@ export default class PlayerHome extends Vue {
         return option;
     }
 
+    getOptionLabel(option: BiosOption): string {
+        if (!isPublicInst(option)) {
+            return option;
+        }
+
+        const duration = this.getPublicInstLifetimeSuffix();
+        if (!duration) {
+            return option;
+        }
+
+        return `${option} ${duration}`;
+    }
+
+    getPublicInstLifetimeSuffix(): string | null {
+        if (
+            typeof this.publicInstLifetimeMs !== 'number' ||
+            !Number.isFinite(this.publicInstLifetimeMs) ||
+            this.publicInstLifetimeMs <= 0
+        ) {
+            return null;
+        }
+
+        if (this.publicInstLifetimeMs < ONE_HOUR_MS) {
+            const minutes = Math.max(
+                1,
+                Math.ceil(this.publicInstLifetimeMs / ONE_MINUTE_MS)
+            );
+            return `${minutes}m`;
+        }
+
+        const hours = Math.max(
+            1,
+            Math.ceil(this.publicInstLifetimeMs / ONE_HOUR_MS)
+        );
+        return `${hours}h`;
+    }
+
     canSignOut(): boolean {
         return this.biosOptions.some((option) => option === 'sign out');
     }
@@ -441,6 +486,8 @@ export default class PlayerHome extends Vue {
                 sub.unsubscribe();
             }
         });
+
+        void this._loadPublicInstOptions();
 
         await this._executeOrShowBios();
 
@@ -881,6 +928,96 @@ export default class PlayerHome extends Vue {
                 return false;
             }
         });
+    }
+
+    private async _loadPublicInstOptions(): Promise<void> {
+        try {
+            const recordsOrigin =
+                await appManager.auth.primary.getRecordsOrigin();
+            if (!recordsOrigin) {
+                this.publicInstLifetimeMs = null;
+                return;
+            }
+
+            const authToken = await appManager.auth.primary.getAuthToken();
+            const response = await fetch(
+                `${recordsOrigin}/api/v3/callProcedure`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json;charset=UTF-8',
+                        ...(authToken
+                            ? {
+                                  Authorization: `Bearer ${authToken}`,
+                              }
+                            : {}),
+                    },
+                    body: JSON.stringify({
+                        procedure: 'getPublicInstOptions',
+                        input: {},
+                    }),
+                }
+            );
+
+            const result = await response.json();
+
+            if (!result || result.success === false) {
+                this.publicInstLifetimeMs = null;
+                return;
+            }
+
+            this.publicInstLifetimeMs =
+                this._getDurationMsFromPublicInstOptionsResult(result);
+        } catch (error) {
+            console.error(
+                '[PlayerHome] Unable to load public inst options:',
+                error
+            );
+            this.publicInstLifetimeMs = null;
+        }
+    }
+
+    private _getDurationMsFromPublicInstOptionsResult(
+        result: any
+    ): number | null {
+        if (!result || typeof result !== 'object') {
+            return null;
+        }
+
+        if (result.success === false) {
+            return null;
+        }
+
+        if (typeof result.lifetimeSeconds === 'number') {
+            return result.lifetimeSeconds * 1000;
+        }
+
+        const options = result.options;
+        if (options && typeof options === 'object') {
+            if (typeof options.lifetimeSeconds === 'number') {
+                return options.lifetimeSeconds * 1000;
+            }
+
+            if (
+                typeof options.expireMode === 'string' ||
+                typeof result.expireMode === 'string'
+            ) {
+                return null;
+            }
+        }
+
+        return null;
+    }
+
+    private _findNumericField(obj: any, fields: string[]): number | null {
+        for (let field of fields) {
+            const value = obj?.[field];
+            if (typeof value === 'number' && Number.isFinite(value)) {
+                return value;
+            }
+        }
+
+        return null;
     }
 
     private _setupSimulation(sim: BrowserSimulation): Subscription {
