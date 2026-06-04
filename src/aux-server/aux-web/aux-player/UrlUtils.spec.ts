@@ -72,6 +72,51 @@ describe('getInstParameters()', () => {
         });
     });
 
+    it('should support expires=true for default insts', () => {
+        const params = getInstParameters({
+            owner: 'testRecord',
+            inst: 'test',
+            expires: 'true',
+        });
+        expect(params).toEqual({
+            inst: 'test',
+            recordName: 'testRecord',
+            owner: 'testRecord',
+            kind: 'default',
+            expires: true,
+        });
+    });
+
+    it('should support expires=false for default insts', () => {
+        const params = getInstParameters({
+            owner: 'testRecord',
+            inst: 'test',
+            expires: 'false',
+        });
+        expect(params).toEqual({
+            inst: 'test',
+            recordName: 'testRecord',
+            owner: 'testRecord',
+            kind: 'default',
+            expires: false,
+        });
+    });
+
+    it('should support expiring private BIOS options', () => {
+        const params = getInstParameters({
+            owner: 'testRecord',
+            inst: 'test',
+            bios: 'private-expires',
+        });
+        expect(params).toEqual({
+            inst: 'test',
+            recordName: 'testRecord',
+            owner: 'testRecord',
+            kind: 'default',
+            expires: true,
+        });
+    });
+
     it('should support the story param', () => {
         const params = getInstParameters({ story: 'test' });
         expect(params).toEqual({

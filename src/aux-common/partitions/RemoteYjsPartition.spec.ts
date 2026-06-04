@@ -3196,6 +3196,31 @@ describe('RemoteYjsPartition', () => {
                         },
                     ]);
                 });
+
+                it('should load the given branch with expires when configured', async () => {
+                    setupPartition({
+                        type: 'remote_yjs',
+                        recordName: recordName,
+                        inst: 'inst',
+                        branch: 'testBranch',
+                        host: 'testHost',
+                        expires: true,
+                    });
+
+                    partition.connect();
+
+                    await waitAsync();
+
+                    expect(connection.sentMessages).toEqual([
+                        {
+                            type: 'repo/watch_branch',
+                            recordName: recordName,
+                            inst: 'inst',
+                            branch: 'testBranch',
+                            expires: true,
+                        },
+                    ]);
+                });
             });
 
             function setupPartition(config: RemoteYjsPartitionConfig) {
