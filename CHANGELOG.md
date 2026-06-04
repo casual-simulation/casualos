@@ -67,6 +67,9 @@
     -   `savePermanentBranches()` now skips expiring and public branches.
     -   Subscription metrics now exclude expiring insts from `totalInsts` in memory, Prisma, and SQLite stores.
     -   Added persistence support for `InstRecord.expires` in Prisma/Cockroach and Prisma/SQLite schemas and stores.
+    -   Added AUX player support for loading expiring private/studio insts from the BIOS and URL query parameters.
+    -   Added the `private-expires`, `studio-expires`, `private inst-expires`, and `studio inst-expires` BIOS options.
+    -   Added support for the `expires=true` query parameter alongside `owner`, `record`, `inst`, and `bios` when loading an inst.
 
 ### :bug: Bug Fixes
 
