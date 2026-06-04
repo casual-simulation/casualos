@@ -28,7 +28,9 @@ import { z } from 'zod';
  * - "temp" indicates that a temporary instance should be created (no persistence).
  * - "static inst", "local inst", and "local" indicates that the instance should be loaded statically.
  * - "public inst", "free inst", and "free" indicates that the instance should be loaded from the public partition.
+ * - "public inst-expires" and "free inst-expires" indicates that the instance should be loaded from the public partition and should expire.
  * - "private inst", "studio inst", "studio", and "locked" indicates that the instance should be loaded from the private partition.
+ * - "private-expires", "studio-expires", "private inst-expires", and "studio inst-expires" indicates that the instance should be loaded from the private partition and should expire.
  * - "sign in" indicates that the user should be prompted to sign in.
  * - "sign up" indicates that the user should be prompted to sign up.
  * - "sign out" indicates that the user should be logged out.
@@ -43,10 +45,16 @@ export type BiosOption =
     | 'public inst'
     | 'free inst'
     | 'free'
+    | 'public inst-expires'
+    | 'free inst-expires'
     | 'private inst'
     | 'studio inst'
     | 'studio'
     | 'locked'
+    | 'private-expires'
+    | 'studio-expires'
+    | 'private inst-expires'
+    | 'studio inst-expires'
     | 'sign in'
     | 'sign up'
     | 'sign out'
@@ -62,10 +70,16 @@ export const BIOS_OPTION_SCHEMA = z.enum([
     'public inst',
     'free inst',
     'free',
+    'public inst-expires',
+    'free inst-expires',
     'private inst',
     'studio inst',
     'studio',
     'locked',
+    'private-expires',
+    'studio-expires',
+    'private inst-expires',
+    'studio inst-expires',
     'sign in',
     'sign up',
     'sign out',

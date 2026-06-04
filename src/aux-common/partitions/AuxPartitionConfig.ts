@@ -344,6 +344,11 @@ export interface RemoteYjsPartitionConfig extends PartitionConfigBase {
     temporary?: boolean;
 
     /**
+     * Whether the partition should request an expiring inst.
+     */
+    expires?: boolean;
+
+    /**
      * Whether to support remote events. (Default is true)
      */
     remoteEvents?: PartitionRemoteEvents | boolean;

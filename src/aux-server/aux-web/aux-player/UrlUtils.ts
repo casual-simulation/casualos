@@ -49,6 +49,45 @@ export interface InstParameters {
      * Whether the server query parameter was used for the inst.
      */
     server?: boolean;
+
+    /**
+     * Whether the inst should be created as expiring.
+     */
+    expires?: boolean;
+}
+
+function getFirst(value: string | string[]): string | null {
+    if (Array.isArray(value)) {
+        return value[0] ?? null;
+    }
+    return value ?? null;
+}
+
+function isExpiringBiosOption(option: string | null): boolean {
+    return (
+        option === 'private-expires' ||
+        option === 'studio-expires' ||
+        option === 'private inst-expires' ||
+        option === 'studio inst-expires'
+    );
+}
+
+function parseExpires(value: unknown): boolean | undefined {
+    if (value === true) {
+        return true;
+    }
+    if (value === false) {
+        return false;
+    }
+    if (typeof value === 'string') {
+        if (value === 'true') {
+            return true;
+        }
+        if (value === 'false') {
+            return false;
+        }
+    }
+    return undefined;
 }
 
 /**
@@ -64,6 +103,9 @@ export function getInstParameters(query: any): InstParameters {
         null;
     const recordName = query.owner ?? query.record ?? query.player ?? null;
     const owner = query.owner ?? null;
+    const bios = getFirst(query.bios);
+    const expiresFromQuery = parseExpires(getFirst(query.expires));
+    const expiresFromBios = isExpiringBiosOption(bios);
 
     if (!hasValue(inst)) {
         return null;
@@ -73,6 +115,11 @@ export function getInstParameters(query: any): InstParameters {
         inst: inst,
         recordName: recordName,
         owner,
+        ...(expiresFromBios || typeof expiresFromQuery === 'boolean'
+            ? {
+                  expires: expiresFromBios || expiresFromQuery === true,
+              }
+            : {}),
         kind:
             inst === query.staticInst
                 ? 'static'

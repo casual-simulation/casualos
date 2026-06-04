@@ -223,6 +223,9 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                 branch: DEFAULT_BRANCH_NAME,
                 host: host,
                 connectionProtocol: protocol,
+                ...(typeof origin.expires === 'boolean'
+                    ? { expires: origin.expires }
+                    : {}),
                 localPersistence: localPersistence
                     ? {
                           saveToIndexedDb: true,
@@ -238,6 +241,9 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                 host: host,
                 connectionProtocol: protocol,
                 temporary: true,
+                ...(typeof origin.expires === 'boolean'
+                    ? { expires: origin.expires }
+                    : {}),
                 remoteEvents: false,
             },
             [REMOTE_TEMPORARY_SHARED_PARTITION_ID]: {
