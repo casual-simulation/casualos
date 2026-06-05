@@ -337,26 +337,23 @@ export default class PlayerHome extends Vue {
             }
             return `studio ${DEFAULT_EXPIRING_INST_HOURS}h`;
         }
+
         if (isExpiringPublicBiosOption(option)) {
+            const duration = this.getPublicInstLifetimeSuffix();
+            if (duration) {
+                if (option === 'public inst-expires') {
+                    return `public ${duration}`;
+                }
+                return `free ${duration}`;
+            }
+
             if (option === 'public inst-expires') {
                 return `public ${DEFAULT_EXPIRING_INST_HOURS}h`;
             }
             return `free ${DEFAULT_EXPIRING_INST_HOURS}h`;
         }
+
         return option;
-    }
-
-    getOptionLabel(option: BiosOption): string {
-        if (!isPublicInst(option)) {
-            return option;
-        }
-
-        const duration = this.getPublicInstLifetimeSuffix();
-        if (!duration) {
-            return option;
-        }
-
-        return `${option} ${duration}`;
     }
 
     getPublicInstLifetimeSuffix(): string | null {

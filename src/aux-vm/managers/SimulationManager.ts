@@ -46,6 +46,11 @@ export interface SimulationFactoryOptions {
      * The kind of the simulation.
      */
     kind?: 'default' | 'static' | 'temp';
+
+    /**
+     * Whether the simulation should load an expiring inst.
+     */
+    expires?: boolean;
 }
 
 /**
