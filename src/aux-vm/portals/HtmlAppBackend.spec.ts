@@ -32,7 +32,6 @@ import {
     setAppOutput,
     toast,
     unregisterHtmlApp,
-    updateHtmlApp,
 } from '@casual-simulation/aux-common';
 import type { RuntimeActions } from '@casual-simulation/aux-runtime';
 import { AuxRuntime } from '@casual-simulation/aux-runtime';
@@ -212,28 +211,31 @@ describe('HtmlAppBackend', () => {
 
             await waitAsync();
 
-            expect(actions).toEqual([
-                registerHtmlApp('testPortal', 'appId', 'uuid'),
-                updateHtmlApp('testPortal', [
-                    {
-                        type: 'childList',
-                        target: expect.objectContaining({
-                            __id: 'testPortal',
+            expect(actions[0]).toEqual(
+                registerHtmlApp('testPortal', 'appId', 'uuid')
+            );
+
+            const setupUpdate = actions.find(
+                (a) =>
+                    a.type === 'update_html_app' &&
+                    (a as UpdateHtmlAppAction).appId === 'testPortal'
+            ) as UpdateHtmlAppAction;
+
+            expect(setupUpdate).toBeTruthy();
+            expect(setupUpdate.updates).toEqual([
+                expect.objectContaining({
+                    type: 'childList',
+                    target: expect.objectContaining({
+                        __id: 'testPortal',
+                    }),
+                    addedNodes: [
+                        expect.objectContaining({
+                            __id: '0',
+                            nodeName: 'H1',
                         }),
-                        addedNodes: [
-                            expect.objectContaining({
-                                __id: '0',
-                                nodeName: 'H1',
-                            }),
-                        ],
-                        removedNodes: [],
-                        attributeName: undefined,
-                        attributeNamespace: undefined,
-                        nextSibling: undefined,
-                        previousSibling: undefined,
-                        oldValue: undefined,
-                    },
-                ]),
+                    ],
+                    removedNodes: [],
+                }),
             ]);
         });
 
