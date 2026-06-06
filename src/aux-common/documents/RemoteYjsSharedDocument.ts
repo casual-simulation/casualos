@@ -260,9 +260,7 @@ export class RemoteYjsSharedDocument
                     inst: this._inst,
                     branch: this._branch,
                     temporary: this._temporary,
-                    ...(typeof this._expires === 'boolean'
-                        ? { expires: this._expires }
-                        : {}),
+                    ...(this._expires === true ? { expires: true } : {}),
                     markers: this._markers,
                 })
                 .subscribe({
