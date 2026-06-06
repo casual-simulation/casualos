@@ -329,13 +329,24 @@ export default class PlayerHome extends Vue {
 
     getOptionLabel(option: BiosOption): string {
         if (isExpiringPrivateBiosOption(option)) {
+            const hours =
+                typeof this.publicInstLifetimeMs === 'number' &&
+                Number.isFinite(this.publicInstLifetimeMs) &&
+                this.publicInstLifetimeMs > 0
+                    ? Math.max(
+                          1,
+                          Math.ceil(this.publicInstLifetimeMs / ONE_HOUR_MS)
+                      )
+                    : DEFAULT_EXPIRING_INST_HOURS;
+            const duration = `${hours}h`;
+
             if (
                 option === 'private-expires' ||
                 option === 'private inst-expires'
             ) {
-                return `private ${DEFAULT_EXPIRING_INST_HOURS}h`;
+                return `private ${duration}`;
             }
-            return `studio ${DEFAULT_EXPIRING_INST_HOURS}h`;
+            return `studio ${duration}`;
         }
 
         if (isExpiringPublicBiosOption(option)) {
