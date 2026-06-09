@@ -2,11 +2,12 @@
 
 ## V4.2.5
 
-#### Date: 5/27/2026
+#### Date: 6/9/2026
 
 ### :bug: Bug Fixes
 
 -   Fixed an issue where getting a package version required that the user be logged in.
+-   Fixed an issue where `os.createRecord()` did not work.
 
 ## V4.2.4
 

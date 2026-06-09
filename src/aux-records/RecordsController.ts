@@ -256,12 +256,13 @@ export class RecordsController {
             }
 
             if (!request.ownerId && !request.studioId) {
-                return {
-                    success: false,
-                    errorCode: 'unacceptable_request',
-                    errorMessage:
-                        'You must provide an owner ID or a studio ID.',
-                };
+                request.ownerId = request.userId;
+                // return {
+                //     success: false,
+                //     errorCode: 'unacceptable_request',
+                //     errorMessage:
+                //         'You must provide an owner ID or a studio ID.',
+                // };
             }
 
             if (request.ownerId) {
