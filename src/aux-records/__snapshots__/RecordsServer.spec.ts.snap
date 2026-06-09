@@ -1012,7 +1012,7 @@ Object {
         "type": "object",
       },
       "name": "createRecord",
-      "origins": "account",
+      "origins": "self",
     },
     Object {
       "http": Object {
@@ -11553,7 +11553,7 @@ Object {
         "type": "object",
       },
       "name": "createRecord",
-      "origins": "account",
+      "origins": "self",
     },
     Object {
       "http": Object {
