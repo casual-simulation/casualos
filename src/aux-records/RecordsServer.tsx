@@ -1608,7 +1608,7 @@ export class RecordsServer {
                 }),
 
             createRecord: procedure()
-                .origins('account')
+                .origins('self')
                 .http('POST', '/api/v2/records')
                 .inputs(
                     z.object({

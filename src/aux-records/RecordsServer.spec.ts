@@ -6066,6 +6066,32 @@ describe('RecordsServer', () => {
             });
         });
 
+        it('should create a new record for the user if no owner is provided', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records',
+                    JSON.stringify({
+                        recordName: 'myRecord',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+
+            const record = await store.getRecordByName('myRecord');
+            expect(record).toMatchObject({
+                name: 'myRecord',
+                ownerId: userId,
+            });
+        });
+
         it('should be able to create a record for a studio', async () => {
             await store.addStudio({
                 id: 'studioId',
