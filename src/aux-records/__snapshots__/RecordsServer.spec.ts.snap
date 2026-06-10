@@ -1012,7 +1012,7 @@ Object {
         "type": "object",
       },
       "name": "createRecord",
-      "origins": "account",
+      "origins": "self",
     },
     Object {
       "http": Object {
@@ -2131,6 +2131,14 @@ Object {
       },
       "name": "getPlayerWebManifest",
       "origins": true,
+    },
+    Object {
+      "inputs": Object {
+        "schema": Object {},
+        "type": "object",
+      },
+      "name": "getPublicInstOptions",
+      "origins": "api",
     },
     Object {
       "http": Object {
@@ -11545,7 +11553,7 @@ Object {
         "type": "object",
       },
       "name": "createRecord",
-      "origins": "account",
+      "origins": "self",
     },
     Object {
       "http": Object {
@@ -12664,6 +12672,14 @@ Object {
       },
       "name": "getPlayerWebManifest",
       "origins": true,
+    },
+    Object {
+      "inputs": Object {
+        "schema": Object {},
+        "type": "object",
+      },
+      "name": "getPublicInstOptions",
+      "origins": "api",
     },
     Object {
       "http": Object {
