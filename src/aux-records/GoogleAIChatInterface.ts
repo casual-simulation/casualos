@@ -15,13 +15,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import type {
-    Content,
-    Part,
-    TextPart,
-    InlineDataPart,
-} from '@google/generative-ai';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import type { Content, Part } from '@google/genai';
+import { GoogleGenAI } from '@google/genai';
 import type {
     AIChatInterface,
     AIChatInterfaceRequest,
@@ -54,11 +49,11 @@ export interface GoogleAIChatOptions {
  */
 export class GoogleAIChatInterface implements AIChatInterface {
     private _options: GoogleAIChatOptions;
-    private _genAI: GoogleGenerativeAI;
+    private _genAI: GoogleGenAI;
 
     constructor(options: GoogleAIChatOptions) {
         this._options = options;
-        this._genAI = new GoogleGenerativeAI(options.apiKey);
+        this._genAI = new GoogleGenAI({ apiKey: options.apiKey });
     }
 
     @traced(TRACE_NAME, SPAN_OPTIONS)
@@ -66,10 +61,6 @@ export class GoogleAIChatInterface implements AIChatInterface {
         request: AIChatInterfaceRequest
     ): Promise<AIChatInterfaceResponse> {
         try {
-            const model = this._genAI.getGenerativeModel({
-                model: request.model,
-            });
-
             const messages = request.messages.map((m) => mapMessage(m));
 
             const historyMessages = messages.slice(0, messages.length - 1);
@@ -105,9 +96,10 @@ export class GoogleAIChatInterface implements AIChatInterface {
                 };
             }
 
-            const chat = model.startChat({
+            const chat = this._genAI.chats.create({
+                model: request.model,
                 history: historyMessages,
-                generationConfig: {
+                config: {
                     maxOutputTokens: request.maxTokens,
                     topP: request.topP,
                     temperature: request.temperature,
@@ -115,13 +107,15 @@ export class GoogleAIChatInterface implements AIChatInterface {
                 },
             });
 
-            const result = await chat.sendMessage(lastMessage.parts);
+            const response = await chat.sendMessage({
+                message: lastMessage.parts ?? [],
+            });
 
-            const response = result.response;
             const serializableResponse = toSerializableGoogleResponse(response);
 
-            const chatContents = await chat.getHistory();
-            const tokens = await model.countTokens({
+            const chatContents = chat.getHistory();
+            const tokens = await this._genAI.models.countTokens({
+                model: request.model,
                 contents: chatContents,
             });
 
@@ -129,11 +123,11 @@ export class GoogleAIChatInterface implements AIChatInterface {
                 choices: [
                     {
                         role: 'assistant',
-                        content: response.text(),
+                        content: response.text ?? '',
                         google: serializableResponse,
                     },
                 ],
-                totalTokens: tokens.totalTokens,
+                totalTokens: tokens.totalTokens ?? 0,
                 google: serializableResponse,
             };
         } catch (err) {
@@ -165,10 +159,6 @@ export class GoogleAIChatInterface implements AIChatInterface {
         request: AIChatInterfaceRequest
     ): AsyncIterable<AIChatInterfaceStreamResponse> {
         try {
-            const model = this._genAI.getGenerativeModel({
-                model: request.model,
-            });
-
             const messages = request.messages.map((m) => mapMessage(m));
 
             const historyMessages = messages.slice(0, messages.length - 1);
@@ -204,9 +194,10 @@ export class GoogleAIChatInterface implements AIChatInterface {
                 };
             }
 
-            const chat = model.startChat({
+            const chat = this._genAI.chats.create({
+                model: request.model,
                 history: historyMessages,
-                generationConfig: {
+                config: {
                     maxOutputTokens: request.maxTokens,
                     topP: request.topP,
                     temperature: request.temperature,
@@ -214,15 +205,17 @@ export class GoogleAIChatInterface implements AIChatInterface {
                 },
             });
 
-            const result = await chat.sendMessageStream(lastMessage.parts);
+            const result = await chat.sendMessageStream({
+                message: lastMessage.parts ?? [],
+            });
 
-            for await (const chunk of result.stream) {
+            for await (const chunk of result) {
                 const serializableChunk = toSerializableGoogleResponse(chunk);
                 yield {
                     choices: [
                         {
                             role: 'assistant',
-                            content: chunk.text(),
+                            content: chunk.text ?? '',
                             google: serializableChunk,
                         },
                     ],
@@ -231,14 +224,15 @@ export class GoogleAIChatInterface implements AIChatInterface {
                 };
             }
 
-            const chatContents = await chat.getHistory();
-            const tokens = await model.countTokens({
+            const chatContents = chat.getHistory();
+            const tokens = await this._genAI.models.countTokens({
+                model: request.model,
                 contents: chatContents,
             });
 
             return {
                 choices: [],
-                totalTokens: tokens.totalTokens,
+                totalTokens: tokens.totalTokens ?? 0,
             };
         } catch (err) {
             const span = trace.getActiveSpan();
@@ -282,10 +276,10 @@ function mapMessage(message: AIChatMessage): Content {
 
 function mapParts(content: AIChatMessage['content']): Part[] {
     if (typeof content === 'string') {
-        return [{ text: content } as TextPart];
+        return [{ text: content }];
     }
 
-    return content.map((c) => {
+    return content.map((c): Part => {
         if ('text' in c) {
             return { text: c.text };
         } else if ('base64' in c) {
@@ -294,7 +288,7 @@ function mapParts(content: AIChatMessage['content']): Part[] {
                     data: c.base64,
                     mimeType: c.mimeType,
                 },
-            } as InlineDataPart;
+            };
         }
 
         throw new Error(
