@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import type { Content, Part } from '@google/genai';
+import type { Content, GenerateContentResponse, Part } from '@google/genai';
 import { GoogleGenAI } from '@google/genai';
 import type {
     AIChatInterface,
@@ -113,11 +113,7 @@ export class GoogleAIChatInterface implements AIChatInterface {
 
             const serializableResponse = toSerializableGoogleResponse(response);
 
-            const chatContents = chat.getHistory();
-            const tokens = await this._genAI.models.countTokens({
-                model: request.model,
-                contents: chatContents,
-            });
+            const usage = response.usageMetadata;
 
             return {
                 choices: [
@@ -127,7 +123,9 @@ export class GoogleAIChatInterface implements AIChatInterface {
                         google: serializableResponse,
                     },
                 ],
-                totalTokens: tokens.totalTokens ?? 0,
+                totalTokens: usage?.totalTokenCount ?? 0,
+                inputTokens: usage?.promptTokenCount,
+                outputTokens: usage?.candidatesTokenCount,
                 google: serializableResponse,
             };
         } catch (err) {
@@ -209,7 +207,16 @@ export class GoogleAIChatInterface implements AIChatInterface {
                 message: lastMessage.parts ?? [],
             });
 
+            // Gemini reports cumulative usage metadata across the stream, with
+            // the latest (final) chunk holding the totals for the whole
+            // response. Track the most recent value and emit it once at the end
+            // so the totals are not counted multiple times by consumers.
+            let usage: GenerateContentResponse['usageMetadata'];
+
             for await (const chunk of result) {
+                if (chunk.usageMetadata) {
+                    usage = chunk.usageMetadata;
+                }
                 const serializableChunk = toSerializableGoogleResponse(chunk);
                 yield {
                     choices: [
@@ -224,15 +231,11 @@ export class GoogleAIChatInterface implements AIChatInterface {
                 };
             }
 
-            const chatContents = chat.getHistory();
-            const tokens = await this._genAI.models.countTokens({
-                model: request.model,
-                contents: chatContents,
-            });
-
-            return {
+            yield {
                 choices: [],
-                totalTokens: tokens.totalTokens ?? 0,
+                totalTokens: usage?.totalTokenCount ?? 0,
+                inputTokens: usage?.promptTokenCount,
+                outputTokens: usage?.candidatesTokenCount,
             };
         } catch (err) {
             const span = trace.getActiveSpan();
