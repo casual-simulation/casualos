@@ -1,8 +1,16 @@
 # CasualOS Changelog
 
+## V4.2.6
+
+#### Date: 6/12/2026
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where Anthropic models might under-report credit usage when streaming chat messages.
+
 ## V4.2.5
 
-#### Date: 6/9/2026
+#### Date: 6/10/2026
 
 ### :bug: Bug Fixes
 
