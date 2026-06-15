@@ -25,10 +25,13 @@ import {
 export function getSimulationId(
     recordName: string | null,
     inst: string,
-    kind: SimulationOrigin['kind']
+    kind: SimulationOrigin['kind'],
+    expires?: boolean
 ): string {
     if (!isStatic(kind) && !isTemp(kind)) {
-        return `${recordName ?? 'null'}/${inst}`;
+        return `${recordName ?? 'null'}/${inst}${
+            expires === true ? '/expires' : ''
+        }`;
     } else {
         return inst;
     }

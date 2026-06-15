@@ -49,6 +49,12 @@ export interface SimulationOrigin {
     host?: string;
 
     /**
+     * Whether the default inst should be created as expiring.
+     * Ignored for static and temp simulations.
+     */
+    expires?: boolean;
+
+    /**
      * The kind of the simulation.
      *
      * - "default": A regular simulation with persistence over the network.

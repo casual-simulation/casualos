@@ -401,6 +401,21 @@ export class WebsocketController {
             `[WebsocketController] [namespace: ${recordName}/${event.inst}/${event.branch}, ${connectionId}] Watch`
         );
 
+        const expires = event.expires ?? !recordName;
+
+        if (!recordName && event.expires === false) {
+            await this.messenger.sendMessage([connectionId], {
+                type: 'repo/watch_branch_result',
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'Public insts cannot be non-expiring.',
+                recordName: recordName,
+                inst: event.inst,
+                branch: event.branch,
+            });
+            return;
+        }
+
         const connection = await this._connectionStore.getConnection(
             connectionId
         );
@@ -468,6 +483,7 @@ export class WebsocketController {
             connection.userId,
             config,
             null,
+            expires,
             event.markers
         );
 
@@ -483,6 +499,27 @@ export class WebsocketController {
         }
         const inst = instResult.inst;
         const features = instResult.features;
+
+        if (
+            recordName &&
+            instResult.instExisted &&
+            typeof event.expires === 'boolean'
+        ) {
+            const savedExpires = inst?.expires === true;
+            if (savedExpires !== event.expires) {
+                await this.messenger.sendMessage([connectionId], {
+                    type: 'repo/watch_branch_result',
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage:
+                        'The requested expires value does not match the existing inst.',
+                    recordName: recordName,
+                    inst: event.inst,
+                    branch: event.branch,
+                });
+                return;
+            }
+        }
 
         let maxConnections: number = null;
 
@@ -539,7 +576,8 @@ export class WebsocketController {
             event.inst,
             event.branch,
             event.temporary,
-            inst
+            inst,
+            expires
         );
 
         let updates: CurrentUpdates;
@@ -839,27 +877,46 @@ export class WebsocketController {
 
                 features = instResult.features;
 
-                const branchResult = await this._instStore.saveBranch({
-                    branch: event.branch,
-                    inst: event.inst,
-                    recordName: event.recordName,
-                    temporary: false,
-                });
-
-                if (branchResult.success === false) {
-                    await this.sendError(connectionId, -1, {
-                        ...branchResult,
+                if (
+                    instResult.inst?.expires === true &&
+                    this._instStore instanceof SplitInstRecordsStore
+                ) {
+                    await this._instStore.temp.saveBranchInfo({
                         recordName: event.recordName,
                         inst: event.inst,
                         branch: event.branch,
+                        temporary: false,
+                        linkedInst: instResult.inst,
+                        ...(event.recordName ? { expires: true } : {}),
                     });
-                    return;
+                    branch = await this._instStore.temp.getBranchByName(
+                        event.recordName,
+                        event.inst,
+                        event.branch
+                    );
+                } else {
+                    const branchResult = await this._instStore.saveBranch({
+                        branch: event.branch,
+                        inst: event.inst,
+                        recordName: event.recordName,
+                        temporary: false,
+                    });
+
+                    if (branchResult.success === false) {
+                        await this.sendError(connectionId, -1, {
+                            ...branchResult,
+                            recordName: event.recordName,
+                            inst: event.inst,
+                            branch: event.branch,
+                        });
+                        return;
+                    }
+                    branch = await this._instStore.getBranchByName(
+                        event.recordName,
+                        event.inst,
+                        event.branch
+                    );
                 }
-                branch = await this._instStore.getBranchByName(
-                    event.recordName,
-                    event.inst,
-                    event.branch
-                );
             } else if (event.recordName) {
                 const authorized = await this._connectionStore.isAuthorizedInst(
                     connectionId,
@@ -1196,21 +1253,40 @@ export class WebsocketController {
 
                 features = instResult.features;
 
-                const branchResult = await this._instStore.saveBranch({
-                    branch: request.branch,
-                    inst: request.inst,
-                    recordName: request.recordName,
-                    temporary: false,
-                });
+                if (
+                    instResult.inst?.expires === true &&
+                    this._instStore instanceof SplitInstRecordsStore
+                ) {
+                    await this._instStore.temp.saveBranchInfo({
+                        recordName: request.recordName,
+                        inst: request.inst,
+                        branch: request.branch,
+                        temporary: false,
+                        linkedInst: instResult.inst,
+                        ...(request.recordName ? { expires: true } : {}),
+                    });
+                    branch = await this._instStore.temp.getBranchByName(
+                        request.recordName,
+                        request.inst,
+                        request.branch
+                    );
+                } else {
+                    const branchResult = await this._instStore.saveBranch({
+                        branch: request.branch,
+                        inst: request.inst,
+                        recordName: request.recordName,
+                        temporary: false,
+                    });
 
-                if (branchResult.success === false) {
-                    return branchResult;
+                    if (branchResult.success === false) {
+                        return branchResult;
+                    }
+                    branch = await this._instStore.getBranchByName(
+                        request.recordName,
+                        request.inst,
+                        request.branch
+                    );
                 }
-                branch = await this._instStore.getBranchByName(
-                    request.recordName,
-                    request.inst,
-                    request.branch
-                );
             } else if (request.recordName) {
                 const contextResult =
                     await this._policies.constructAuthorizationContext({
@@ -2853,7 +2929,17 @@ export class WebsocketController {
                 const branches = await store.temp.listDirtyBranches(generation);
 
                 for (let branch of branches) {
-                    if (!branch.recordName) {
+                    const branchInfo = await store.getBranchByName(
+                        branch.recordName,
+                        branch.inst,
+                        branch.branch
+                    );
+
+                    if (
+                        !branchInfo ||
+                        branchInfo.expires ||
+                        !branch.recordName
+                    ) {
                         continue;
                     }
                     await this._saveBranchUpdates(store, branch);
@@ -2889,10 +2975,12 @@ export class WebsocketController {
         userId: string,
         config: SubscriptionConfiguration,
         context: AuthorizationContext = null,
+        expires?: boolean,
         markers?: string[]
     ): Promise<GetOrCreateInstResult> {
         let inst: InstWithSubscriptionInfo | null = null;
         let features: FeaturesConfiguration | null = null;
+        let instExisted = false;
         if (recordName) {
             const getInstResult = await this._getInst(
                 recordName,
@@ -3050,6 +3138,7 @@ export class WebsocketController {
                     subscriptionId: instMetrics.subscriptionId,
                     subscriptionStatus: instMetrics.subscriptionStatus,
                     subscriptionType: instMetrics.subscriptionType,
+                    ...(expires === true ? { expires: true } : {}),
                 };
                 const result = await this._instStore.saveInst(inst);
                 if (result.success === false) {
@@ -3061,6 +3150,7 @@ export class WebsocketController {
                 }
             } else {
                 inst = savedInst;
+                instExisted = true;
             }
         } else {
             // null record name means public temporary inst
@@ -3095,6 +3185,7 @@ export class WebsocketController {
             inst,
             context,
             features,
+            instExisted,
         };
     }
 
@@ -3177,6 +3268,7 @@ export class WebsocketController {
                 inst: savedInst,
                 context,
                 features,
+                instExisted: !!savedInst,
             };
         }
 
@@ -3185,6 +3277,7 @@ export class WebsocketController {
             inst,
             context,
             features,
+            instExisted: false,
         };
     }
 
@@ -3193,7 +3286,8 @@ export class WebsocketController {
         inst: string,
         branch: string,
         temporary: boolean,
-        linkedInst: InstWithSubscriptionInfo
+        linkedInst: InstWithSubscriptionInfo,
+        expires?: boolean
     ) {
         if (temporary) {
             let b = await this._temporaryStore.getBranchByName(
@@ -3218,6 +3312,32 @@ export class WebsocketController {
             }
 
             return b;
+        } else if (
+            expires === true &&
+            this._instStore instanceof SplitInstRecordsStore
+        ) {
+            let b = await this._instStore.temp.getBranchByName(
+                recordName,
+                inst,
+                branch
+            );
+            if (!b) {
+                await this._instStore.temp.saveBranchInfo({
+                    recordName: recordName,
+                    inst: inst,
+                    branch: branch,
+                    temporary: temporary || false,
+                    linkedInst: linkedInst,
+                    ...(recordName ? { expires: true } : {}),
+                });
+                b = await this._instStore.temp.getBranchByName(
+                    recordName,
+                    inst,
+                    branch
+                );
+            }
+
+            return b;
         } else {
             let b = await this._instStore.getBranchByName(
                 recordName,
@@ -3231,6 +3351,7 @@ export class WebsocketController {
                     inst: inst,
                     recordName: recordName,
                     temporary: temporary || false,
+                    expires: expires,
                 });
                 b = await this._instStore.getBranchByName(
                     recordName,
@@ -3417,6 +3538,11 @@ export type GetOrCreateInstResult =
 export interface GetOrCreateInstSuccess {
     success: true;
     inst: InstWithSubscriptionInfo | null;
+
+    /**
+     * Whether the inst already existed before this operation.
+     */
+    instExisted: boolean;
 
     /**
      * The context that was used to authorize the request.

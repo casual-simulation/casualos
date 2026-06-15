@@ -254,7 +254,7 @@ export class SqliteMetricsStore implements MetricsStore {
                 u."stripeAccountId" as "stripeAccountId",
                 u."stripeAccountStatus" as "stripeAccountStatus",
                 SUM(i."sizeInBytes") as "totalInstBytes",
-                COUNT(i."id") as "totalInsts"
+                COUNT(i."id") FILTER (WHERE i."expires" = false) as "totalInsts"
             FROM "User" u
             INNER JOIN "Record" r ON r."ownerId" = u.id
             INNER JOIN "InstRecord" i ON i."recordName" = r.name
@@ -271,7 +271,7 @@ export class SqliteMetricsStore implements MetricsStore {
                 s."stripeAccountId" as "stripeAccountId",
                 s."stripeAccountStatus" as "stripeAccountStatus",
                 SUM(bu."sizeInBytes") as "totalInstBytes",
-                COUNT(i."id") as "totalInsts"
+                COUNT(i."id") FILTER (WHERE i."expires" = false) as "totalInsts"
             FROM "Studio" s
             INNER JOIN "Record" r ON r."studioId" = s.id
             INNER JOIN "InstRecord" i ON i."recordName" = r.name
@@ -303,7 +303,10 @@ export class SqliteMetricsStore implements MetricsStore {
 
         const [totalInsts, instSize] = await Promise.all([
             this._client.instRecord.count({
-                where,
+                where: {
+                    ...where,
+                    expires: false,
+                },
             }),
             this._client.branchUpdate.aggregate({
                 where: where as Prisma.BranchUpdateWhereInput,

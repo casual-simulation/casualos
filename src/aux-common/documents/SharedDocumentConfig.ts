@@ -61,6 +61,11 @@ export interface SharedDocumentConfig {
     temporary?: boolean;
 
     /**
+     * Whether the doc should request an expiring inst.
+     */
+    expires?: boolean;
+
+    /**
      * The markers that should be set on the inst if it is new.
      * If the inst already exists, this field is ignored.
      * If not provided, the default markers will be used (publicRead for public insts, private for record-based insts).

@@ -340,6 +340,12 @@ export interface WatchBranchMessage {
     recordName: string | null;
 
     /**
+     * Whether the branch expires and should be deleted when it is no longer needed.
+     * If not provided, the default is derived from the record name.
+     */
+    expires?: boolean;
+
+    /**
      * The name of the inst.
      */
     inst: string;
@@ -374,6 +380,7 @@ export const watchBranchMessageSchema = memoize(() =>
     z.object({
         type: z.literal('repo/watch_branch'),
         recordName: z.string().nonempty().nullable(),
+        expires: z.boolean().optional(),
         inst: z.string(),
         branch: z.string(),
         temporary: z.boolean().optional(),

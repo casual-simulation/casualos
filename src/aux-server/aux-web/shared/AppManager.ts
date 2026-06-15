@@ -880,10 +880,11 @@ export class AppManager {
     async setPrimarySimulation(
         recordName: string | null,
         inst: string,
-        kind: SimulationOrigin['kind']
+        kind: SimulationOrigin['kind'],
+        expires?: boolean
     ) {
         const timeBasis = Date.now();
-        const simulationId = getSimulationId(recordName, inst, kind);
+        const simulationId = getSimulationId(recordName, inst, kind, expires);
         if (
             (this.simulationManager.primary &&
                 this.simulationManager.primary.id === simulationId) ||
@@ -896,7 +897,8 @@ export class AppManager {
             simulationId,
             recordName,
             inst,
-            kind
+            kind,
+            expires
         );
 
         this._primaryPromise.then((manager) => {
@@ -926,7 +928,8 @@ export class AppManager {
         id: string,
         recordName: string | null,
         inst: string,
-        kind: SimulationOrigin['kind']
+        kind: SimulationOrigin['kind'],
+        expires?: boolean
     ) {
         this._sendProgress('Requesting inst...', 0.1);
 
@@ -941,6 +944,7 @@ export class AppManager {
             recordName,
             inst,
             kind,
+            expires,
         });
         this._primarySimulationAvailableSubject.next(true);
 

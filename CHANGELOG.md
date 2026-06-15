@@ -77,12 +77,16 @@
 -   Made [`for await...of`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for-await...of) loop iterations not use energy.
     -   These kinds of loops work asynchronously, so they aren't likely to cause the system to lock up due to an infinite loop.
 -   Added the `"-energy";` directive to disable energy checks for a script.
--   Added the `getPublicInstOptions` procedure for retrieving public inst lifetime configuration.
-    -   Returns the configured `publicInstRecordsLifetimeSeconds` and `publicInstRecordsLifetimeExpireMode` values from Redis server options.
-    -   Does not require authentication (available to logged-out users).
--   Updated the player BIOS to display public/free inst retention duration.
-    -   The player now reads `getPublicInstOptions.lifetimeSeconds` and shows the duration in the BIOS option label (for example: `free 24h` or `free 45m`).
-    -   If public inst options are unavailable, the BIOS falls back to the plain option label.
+-   Added support for expiring private insts.
+    -   Added optional `expires` support to inst/branch/package records and websocket `repo/watch_branch` requests.
+    -   Updated split-store and websocket inst routing to use `expires` semantics (instead of relying on `recordName` alone) when deciding temporary vs permanent storage.
+    -   Public insts now reject explicitly non-expiring watch requests (`recordName: null` with `expires: false`).
+    -   `savePermanentBranches()` now skips expiring and public branches.
+    -   Subscription metrics now exclude expiring insts from `totalInsts` in memory, Prisma, and SQLite stores.
+    -   Added persistence support for `InstRecord.expires` in Prisma/Cockroach and Prisma/SQLite schemas and stores.
+    -   Added AUX player support for loading expiring private/studio insts from the BIOS and URL query parameters.
+    -   Added the `private-expires`, `studio-expires`, `private inst-expires`, and `studio inst-expires` BIOS options.
+    -   Added support for the `expires=true` query parameter alongside `owner`, `record`, `inst`, and `bios` when loading an inst.
 
 ### :bug: Bug Fixes
 
