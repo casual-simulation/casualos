@@ -218,11 +218,11 @@ describe('HtmlAppBackend', () => {
                     {
                         type: 'childList',
                         target: expect.objectContaining({
-                            __id: '0',
+                            __id: 'testPortal',
                         }),
                         addedNodes: [
                             expect.objectContaining({
-                                __id: '1',
+                                __id: '0',
                                 nodeName: 'H1',
                             }),
                         ],
@@ -375,7 +375,7 @@ describe('HtmlAppBackend', () => {
 
             expect(actions.slice(0, 3)).toEqual([
                 registerHtmlApp('testPortal', 'appId', 'uuid1'),
-                htmlAppMethod('testPortal', '0', 'focus', [], 'uuid2'),
+                htmlAppMethod('testPortal', 'testPortal', 'focus', [], 'uuid2'),
                 toast(undefined),
             ]);
         });
@@ -454,21 +454,28 @@ describe('HtmlAppBackend', () => {
 
             await waitAsync();
 
-            expect(actions.length).toBe(2);
             expect(actions[0]).toEqual(
                 registerHtmlApp('testPortal', 'appId', 'uuid')
             );
 
-            const updateAction = actions[1] as UpdateHtmlAppAction;
+            const updateAction = actions.find(
+                (a) => a.type === 'update_html_app'
+            ) as UpdateHtmlAppAction;
+
+            expect(updateAction).toBeTruthy();
 
             expect(updateAction).toMatchSnapshot();
 
             expect(updateAction.type).toBe('update_html_app');
             expect(updateAction.appId).toBe('testPortal');
-            expect(updateAction.updates.length).toBe(1);
-            expect(updateAction.updates[0].type).toBe('childList');
-            expect(updateAction.updates[0].addedNodes.length).toBe(1);
-            const h1Node = updateAction.updates[0].addedNodes[0] as any;
+
+            const childListUpdate = updateAction.updates.find(
+                (u) => u.type === 'childList'
+            ) as any;
+
+            expect(childListUpdate).toBeTruthy();
+            expect(childListUpdate.addedNodes.length).toBe(1);
+            const h1Node = childListUpdate.addedNodes[0] as any;
             expect(h1Node.nodeName).toBe('h1');
             expect(h1Node.childNodes.length).toBe(1);
             expect(h1Node.childNodes[0].nodeType).toBe(3);

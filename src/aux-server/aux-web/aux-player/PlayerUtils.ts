@@ -58,16 +58,29 @@ export function safeParseURL(url: string): URL {
 
 /**
  * Sorts the given insts in the order that they should be stored in the inst tag.
- * @param insts The instance or instances.
+ * @param insts The instances.
  * @param currentInst The instance that the tag is being stored in.
  */
-export function sortInsts<T extends string | string[]>(
-    insts: T,
+export function sortInsts(insts: string[], currentInst: string): string[] {
+    return sortBy(insts, (i) => i !== currentInst);
+}
+
+/**
+ * Normalizes the given insts to ensure that they are in the correct format for storing in the inst tag.
+ * @param insts The insts to normalize. This can be either a string or an array of strings.
+ * @param currentInst The current instance that the tag is being made for.
+ */
+export function normalizeInsts(
+    insts: string[] | string,
     currentInst: string
-): T {
-    if (Array.isArray(insts)) {
-        return sortBy(insts, (i) => i !== currentInst) as T;
-    } else {
-        return insts;
+): string[] | string {
+    const sorted =
+        typeof insts === 'string'
+            ? sortInsts([...new Set([insts, currentInst])], currentInst)
+            : sortInsts([...new Set([...insts, currentInst])], currentInst);
+
+    if (sorted.length === 1) {
+        return sorted[0];
     }
+    return sorted;
 }

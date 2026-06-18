@@ -1,8 +1,25 @@
 # CasualOS Changelog
 
-## V4.2.4
+## V4.2.6
 
 #### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where Anthropic models might under-report credit usage when streaming chat messages.
+
+## V4.2.5
+
+#### Date: 6/10/2026
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where getting a package version required that the user be logged in.
+-   Fixed an issue where `os.createRecord()` did not work.
+
+## V4.2.4
+
+#### Date: 5/16/2026
 
 ### :boom: Breaking Changes
 
@@ -57,6 +74,15 @@
     -   Supports filtering by `minTimeMs`, `maxTimeMs`, and `limit`.
 -   Added the `allow-popups-to-escape-sandbox` option to the VM sandbox so that they can link to new browsing contexts.
 -   Added the `language-model` option to the VM iframe permission policy.
+-   Made [`for await...of`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for-await...of) loop iterations not use energy.
+    -   These kinds of loops work asynchronously, so they aren't likely to cause the system to lock up due to an infinite loop.
+-   Added the `"-energy";` directive to disable energy checks for a script.
+-   Added the `getPublicInstOptions` procedure for retrieving public inst lifetime configuration.
+    -   Returns the configured `publicInstRecordsLifetimeSeconds` and `publicInstRecordsLifetimeExpireMode` values from Redis server options.
+    -   Does not require authentication (available to logged-out users).
+-   Updated the player BIOS to display public/free inst retention duration.
+    -   The player now reads `getPublicInstOptions.lifetimeSeconds` and shows the duration in the BIOS option label (for example: `free 24h` or `free 45m`).
+    -   If public inst options are unavailable, the BIOS falls back to the plain option label.
 -   Added support for record-level credit billing accounts.
     -   Records can now be configured with a dedicated credit account budget for metered usage.
     -   AI, data, and file usage billing now supports charging a record-level credit account when configured.
@@ -66,6 +92,7 @@
 -   Fixed an issue where the default page title contained HTML comments used for replacing it on server-based deployments.
 -   Fixed an issue where fractional `tokenModifierRatio` values could cause the server to error because of mishandling of fractional values for AI chat billing.
 -   Fixed an issue where Anthropic models would not be allowed to output more than `4096` tokens.
+-   Fixed an issue where the `inst` tag on the `configBot` wouldn't be properly populated for insts loaded via `os.loadInst(config)`.
 
 ## V4.2.3
 
