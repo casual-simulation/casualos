@@ -364,6 +364,7 @@ export class DataRecordsController {
                 const billing = await billForUsage(this._financialController, {
                     userId: billingAccountResult.userId,
                     studioId: billingAccountResult.studioId,
+                    billingAccount: billingAccountResult,
                     transferCode: TransferCodes.records_usage_fee,
                     billingCode: BillingCodes.data_write,
                 });
@@ -529,6 +530,7 @@ export class DataRecordsController {
                 const billing = await billForUsage(this._financialController, {
                     userId: billingAccountResult.userId,
                     studioId: billingAccountResult.studioId,
+                    billingAccount: billingAccountResult,
                     transferCode: TransferCodes.records_usage_fee,
                     billingCode: BillingCodes.data_read,
                 });
