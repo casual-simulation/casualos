@@ -1694,6 +1694,8 @@ export class AIController {
             let subscriptionType: 'user' | 'studio' = 'user';
             let billingUserId: string | undefined = request.userId;
             let billingStudioId: string | undefined = undefined;
+            let billingAccount: GetBillingAccountForRecordSuccess | undefined =
+                undefined;
             let metricsRecordUserId: string | undefined = request.userId;
             let metricsRecordStudioId: string | undefined = undefined;
 

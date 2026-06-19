@@ -2101,6 +2101,143 @@ describe('AIController', () => {
                     ]);
                 });
 
+                it('should bill the record credit account for chat when record credit billing is enabled', async () => {
+                    const callerId = 'chat-record-account-caller';
+                    const recordBudgetUserId =
+                        'chat-record-account-budget-user';
+                    const recordName = 'chat-record-account-record';
+
+                    await store.saveUser({
+                        id: callerId,
+                        email: 'chat-record-account-caller@example.com',
+                        phoneNumber: null,
+                        allSessionRevokeTimeMs: null,
+                        currentLoginRequestId: null,
+                    });
+
+                    await store.saveUser({
+                        id: recordBudgetUserId,
+                        email: 'chat-record-account-budget-user@example.com',
+                        phoneNumber: null,
+                        allSessionRevokeTimeMs: null,
+                        currentLoginRequestId: null,
+                    });
+
+                    await store.addRecord({
+                        name: recordName,
+                        ownerId: userId,
+                        studioId: null,
+                        secretHashes: [],
+                        secretSalt: '',
+                    });
+
+                    const callerAccount = unwrap(
+                        await financial.getOrCreateFinancialAccount({
+                            userId: callerId,
+                            ledger: LEDGERS.credits,
+                        })
+                    ).account;
+
+                    const recordBudgetAccount = unwrap(
+                        await financial.getOrCreateFinancialAccount({
+                            userId: recordBudgetUserId,
+                            ledger: LEDGERS.credits,
+                        })
+                    ).account;
+
+                    unwrap(
+                        await financial.internalTransaction({
+                            transfers: [
+                                {
+                                    debitAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    creditAccountId: callerAccount.id,
+                                    amount: 10000n,
+                                    code: TransferCodes.admin_credit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                                {
+                                    debitAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    creditAccountId: recordBudgetAccount.id,
+                                    amount: 10000n,
+                                    code: TransferCodes.admin_credit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                            ],
+                        })
+                    );
+
+                    const record = await store.getRecordByName(recordName);
+                    await store.updateRecord({
+                        ...record,
+                        creditAccountId: recordBudgetAccount.id,
+                        creditBillingEnabled: true,
+                    } as any);
+
+                    const permissionResult =
+                        await policies.grantMarkerPermission({
+                            recordKeyOrRecordName: recordName,
+                            userId,
+                            marker: PUBLIC_READ_MARKER,
+                            permission: {
+                                resourceKind: 'ai.chat',
+                                action: 'create',
+                                expireTimeMs: null,
+                                options: {},
+                                subjectType: 'user',
+                                subjectId: callerId,
+                                marker: PUBLIC_READ_MARKER,
+                            },
+                        });
+                    expect(permissionResult).toMatchObject({ success: true });
+
+                    chatInterface.chat.mockResolvedValueOnce({
+                        choices: [
+                            {
+                                role: 'assistant',
+                                content: 'ok',
+                                finishReason: 'stop',
+                            },
+                        ],
+                        totalTokens: 10,
+                    });
+
+                    const result = await controller.chat({
+                        model: 'test-model1',
+                        messages: [{ role: 'user', content: 'test' }],
+                        userId: callerId,
+                        userSubscriptionTier,
+                        recordName,
+                    });
+
+                    expect(result.success).toBe(true);
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: account1.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 0n,
+                            debits_pending: 0n,
+                        },
+                        {
+                            id: recordBudgetAccount.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 150n,
+                            debits_pending: 0n,
+                        },
+                        {
+                            id: callerAccount.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                });
+
                 it('should bill the studio for chat when a member uses a studio recordName', async () => {
                     const callerId = 'chat-billing-studio-caller';
                     const studioId = 'chat-billing-studio';
@@ -4387,6 +4524,149 @@ describe('AIController', () => {
 
                     expect(ownerMetrics.totalTokensInCurrentPeriod).toBe(10);
                     expect(callerMetrics.totalTokensInCurrentPeriod).toBe(0);
+                });
+
+                it('should bill the record credit account for chatStream when record credit billing is enabled', async () => {
+                    const callerId = 'chat-stream-record-account-caller';
+                    const recordBudgetUserId =
+                        'chat-stream-record-account-budget-user';
+                    const recordName = 'chat-stream-record-account-record';
+
+                    await store.saveUser({
+                        id: callerId,
+                        email: 'chat-stream-record-account-caller@example.com',
+                        phoneNumber: null,
+                        allSessionRevokeTimeMs: null,
+                        currentLoginRequestId: null,
+                    });
+
+                    await store.saveUser({
+                        id: recordBudgetUserId,
+                        email: 'chat-stream-record-account-budget-user@example.com',
+                        phoneNumber: null,
+                        allSessionRevokeTimeMs: null,
+                        currentLoginRequestId: null,
+                    });
+
+                    await store.addRecord({
+                        name: recordName,
+                        ownerId: userId,
+                        studioId: null,
+                        secretHashes: [],
+                        secretSalt: '',
+                    });
+
+                    const callerAccount = unwrap(
+                        await financial.getOrCreateFinancialAccount({
+                            userId: callerId,
+                            ledger: LEDGERS.credits,
+                        })
+                    ).account;
+
+                    const recordBudgetAccount = unwrap(
+                        await financial.getOrCreateFinancialAccount({
+                            userId: recordBudgetUserId,
+                            ledger: LEDGERS.credits,
+                        })
+                    ).account;
+
+                    unwrap(
+                        await financial.internalTransaction({
+                            transfers: [
+                                {
+                                    debitAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    creditAccountId: callerAccount.id,
+                                    amount: 10000n,
+                                    code: TransferCodes.admin_credit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                                {
+                                    debitAccountId:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    creditAccountId: recordBudgetAccount.id,
+                                    amount: 10000n,
+                                    code: TransferCodes.admin_credit,
+                                    currency: CurrencyCodes.credits,
+                                },
+                            ],
+                        })
+                    );
+
+                    const record = await store.getRecordByName(recordName);
+                    await store.updateRecord({
+                        ...record,
+                        creditAccountId: recordBudgetAccount.id,
+                        creditBillingEnabled: true,
+                    } as any);
+
+                    const permissionResult =
+                        await policies.grantMarkerPermission({
+                            recordKeyOrRecordName: recordName,
+                            userId,
+                            marker: PUBLIC_READ_MARKER,
+                            permission: {
+                                resourceKind: 'ai.chat',
+                                action: 'create',
+                                expireTimeMs: null,
+                                options: {},
+                                subjectType: 'user',
+                                subjectId: callerId,
+                                marker: PUBLIC_READ_MARKER,
+                            },
+                        });
+                    expect(permissionResult).toMatchObject({ success: true });
+
+                    chatInterface.chatStream.mockReturnValueOnce(
+                        asyncIterable<AIChatInterfaceStreamResponse>([
+                            Promise.resolve({
+                                choices: [
+                                    {
+                                        role: 'assistant',
+                                        content: 'ok',
+                                        finishReason: 'stop',
+                                    },
+                                ],
+                                totalTokens: 10,
+                            }),
+                        ])
+                    );
+
+                    const result = await unwindAndCaptureAsync(
+                        controller.chatStream({
+                            model: 'test-model1',
+                            messages: [{ role: 'user', content: 'test' }],
+                            userId: callerId,
+                            userSubscriptionTier,
+                            recordName,
+                        })
+                    );
+
+                    expect(result.result.success).toBe(true);
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: account1.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 0n,
+                            debits_pending: 0n,
+                        },
+                        {
+                            id: recordBudgetAccount.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 150n,
+                            debits_pending: 0n,
+                        },
+                        {
+                            id: callerAccount.id,
+                            credits_posted: 10000n,
+                            credits_pending: 0n,
+                            debits_posted: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
                 });
 
                 it('should bill the studio for chatStream when a member uses a studio recordName', async () => {
