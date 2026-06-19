@@ -734,14 +734,10 @@ export class AIController {
                 return genericResult(finalResult.value);
             }
 
-            const {
-                choices,
-                totalTokens: _totalTokens,
-                inputTokens: _inputTokens,
-                outputTokens: _outputTokens,
-                ...providerResponses
-            } = chatResult.value as typeof chatResult.value &
-                Record<string, unknown>;
+            const { choices } = chatResult.value;
+            const providerResponses = getProviderNativePayloads(
+                chatResult.value as Record<string, unknown>
+            );
             return {
                 success: true,
                 choices,
@@ -1187,13 +1183,10 @@ export class AIController {
                     });
                 }
 
-                const {
-                    choices: chunkChoices,
-                    totalTokens: _chunkTotalTokens,
-                    inputTokens: _chunkInputTokens,
-                    outputTokens: _chunkOutputTokens,
-                    ...chunkProviderResponses
-                } = chunk as typeof chunk & Record<string, unknown>;
+                const { choices: chunkChoices } = chunk;
+                const chunkProviderResponses = getProviderNativePayloads(
+                    chunk as Record<string, unknown>
+                );
                 yield {
                     choices: chunkChoices,
                     ...chunkProviderResponses,
@@ -3306,4 +3299,23 @@ export interface ListedChatModel {
      * Whether this is the default model.
      */
     isDefault?: boolean;
+}
+
+function getProviderNativePayloads(response: {
+    [key: string]: unknown;
+}): Record<string, unknown> {
+    const payload: Record<string, unknown> = {};
+
+    for (const key in response) {
+        if (
+            key !== 'choices' &&
+            key !== 'totalTokens' &&
+            key !== 'inputTokens' &&
+            key !== 'outputTokens'
+        ) {
+            payload[key] = response[key];
+        }
+    }
+
+    return payload;
 }
