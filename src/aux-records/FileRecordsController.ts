@@ -326,6 +326,7 @@ export class FileRecordsController {
                 }
 
                 const billing = await billForUsage(this._financialController, {
+                    billingAccount: billingAccountResult,
                     userId: billingAccountResult.userId,
                     studioId: billingAccountResult.studioId,
                     transferCode: TransferCodes.records_usage_fee,
