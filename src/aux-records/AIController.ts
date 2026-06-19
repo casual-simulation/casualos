@@ -78,6 +78,7 @@ import type {
 import {
     billForUsage,
     getBillingAccountForRecord,
+    type GetBillingAccountForRecordSuccess,
     type FinancialController,
 } from './financial/FinancialController';
 import { BillingCodes, TransferCodes } from './financial/FinancialInterface';
@@ -441,6 +442,8 @@ export class AIController {
             let subscriptionType: 'user' | 'studio' = 'user';
             let billingUserId: string | undefined = request.userId;
             let billingStudioId: string | undefined = undefined;
+            let billingAccount: GetBillingAccountForRecordSuccess | undefined =
+                undefined;
             let metricsRecordUserId: string | undefined = request.userId;
             let metricsRecordStudioId: string | undefined = undefined;
 
@@ -498,6 +501,8 @@ export class AIController {
                         errorMessage: billingAccountResult.errorMessage,
                     };
                 }
+
+                billingAccount = billingAccountResult;
 
                 if (billingAccountResult.recordAccountId) {
                     // Bill to the record credit account, but keep metrics/subscription
@@ -640,6 +645,7 @@ export class AIController {
             const billing = await billForUsage(this._financial, {
                 userId: billingUserId,
                 studioId: billingStudioId,
+                billingAccount,
                 transferCode: TransferCodes.records_usage_fee,
                 billingCode: BillingCodes.ai_chat_tokens,
             });
@@ -922,6 +928,8 @@ export class AIController {
             let subscriptionType: 'user' | 'studio' = 'user';
             let billingUserId: string | undefined = request.userId;
             let billingStudioId: string | undefined = undefined;
+            let billingAccount: GetBillingAccountForRecordSuccess | undefined =
+                undefined;
             let metricsRecordUserId: string | undefined = request.userId;
             let metricsRecordStudioId: string | undefined = undefined;
 
@@ -979,6 +987,8 @@ export class AIController {
                         errorMessage: billingAccountResult.errorMessage,
                     };
                 }
+
+                billingAccount = billingAccountResult;
 
                 if (billingAccountResult.recordAccountId) {
                     // Bill to the record credit account, but keep metrics/subscription
@@ -1117,6 +1127,7 @@ export class AIController {
             const billing = await billForUsage(this._financial, {
                 userId: billingUserId,
                 studioId: billingStudioId,
+                billingAccount,
                 transferCode: TransferCodes.records_usage_fee,
                 billingCode: BillingCodes.ai_chat_tokens,
             });
@@ -1290,6 +1301,8 @@ export class AIController {
             let subscriptionType: 'user' | 'studio' = 'user';
             let billingUserId: string | undefined = request.userId;
             let billingStudioId: string | undefined = undefined;
+            let billingAccount: GetBillingAccountForRecordSuccess | undefined =
+                undefined;
             let metricsRecordUserId: string | undefined = request.userId;
             let metricsRecordStudioId: string | undefined = undefined;
 
@@ -1746,6 +1759,8 @@ export class AIController {
                     };
                 }
 
+                billingAccount = billingAccountResult;
+
                 if (billingAccountResult.recordAccountId) {
                     // Bill to the record credit account, but keep metrics/subscription
                     // gating based on the record owner/studio from the authorization context.
@@ -1853,6 +1868,7 @@ export class AIController {
             const billing = await billForUsage(this._financial, {
                 userId: billingUserId,
                 studioId: billingStudioId,
+                billingAccount,
                 transferCode: TransferCodes.records_usage_fee,
                 billingCode: BillingCodes.ai_image_pixels,
             });
