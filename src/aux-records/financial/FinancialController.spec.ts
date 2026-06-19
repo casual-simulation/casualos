@@ -2874,6 +2874,102 @@ describe('FinancialController', () => {
                 ]);
             });
         });
+
+        it('should bill a record account when billingAccount.recordAccountId is specified', async () => {
+            await controller.init();
+
+            const created = unwrap(
+                await controller.createAccount(
+                    AccountCodes.liabilities_contract,
+                    LEDGERS.credits
+                )
+            );
+            const recordAccountId = created.id;
+
+            // Fund the record account with 500 credits.
+            unwrap(
+                await controller.internalTransaction({
+                    transfers: [
+                        {
+                            transferId: 100n,
+                            debitAccountId: ACCOUNT_IDS.liquidity_credits,
+                            creditAccountId: recordAccountId,
+                            amount: 500n,
+                            code: TransferCodes.admin_credit,
+                            currency: 'credits',
+                        },
+                    ],
+                })
+            );
+
+            const billing = await controller.billForUsage({
+                billingAccount: {
+                    success: true,
+                    userId: null,
+                    studioId: null,
+                    isRecordBilling: true,
+                    recordAccountId: recordAccountId,
+                },
+                transferCode: TransferCodes.records_usage_fee,
+                billingCode: BillingCodes.ai_chat_tokens,
+            });
+
+            await billing.next(
+                success({
+                    initialCost: 50,
+                })
+            );
+
+            const result = await billing.next(
+                success({
+                    cost: 50,
+                })
+            );
+
+            expect(result.done).toBe(false);
+            expect(isSuccess(result.value)).toBe(true);
+
+            await checkAccounts(financialInterface, [
+                {
+                    id: BigInt(recordAccountId),
+                    credits_posted: 500n,
+                    credits_pending: 0n,
+                    debits_posted: 50n,
+                    debits_pending: 0n,
+                },
+            ]);
+        });
+
+        it('should return invalid_request when billingAccount has no userId, studioId, or recordAccountId', async () => {
+            await controller.init();
+
+            const billing = await controller.billForUsage({
+                billingAccount: {
+                    success: true,
+                    userId: null,
+                    studioId: null,
+                    isRecordBilling: false,
+                    recordAccountId: null,
+                },
+                transferCode: TransferCodes.records_usage_fee,
+                billingCode: BillingCodes.ai_chat_tokens,
+            });
+
+            const result = await billing.next(
+                success({
+                    cost: 50,
+                })
+            );
+
+            expect(result.done).toBe(true);
+            expect(result.value).toEqual(
+                failure({
+                    errorCode: 'invalid_request',
+                    errorMessage:
+                        'Billing account must specify userId, studioId, or recordAccountId.',
+                })
+            );
+        });
     });
 });
 
