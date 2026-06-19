@@ -499,7 +499,7 @@ export class AIController {
                     };
                 }
 
-                if (billingAccountResult.isRecordBilling) {
+                if (billingAccountResult.recordAccountId) {
                     // Bill to the record credit account, but keep metrics/subscription
                     // gating based on the record owner/studio from the authorization context.
                     billingStudioId = undefined;
@@ -980,7 +980,7 @@ export class AIController {
                     };
                 }
 
-                if (billingAccountResult.isRecordBilling) {
+                if (billingAccountResult.recordAccountId) {
                     // Bill to the record credit account, but keep metrics/subscription
                     // gating based on the record owner/studio from the authorization context.
                     billingStudioId = undefined;
@@ -1746,7 +1746,7 @@ export class AIController {
                     };
                 }
 
-                if (billingAccountResult.isRecordBilling) {
+                if (billingAccountResult.recordAccountId) {
                     // Bill to the record credit account, but keep metrics/subscription
                     // gating based on the record owner/studio from the authorization context.
                     billingStudioId = undefined;

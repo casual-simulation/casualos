@@ -991,7 +991,11 @@ export class FinancialController {
         const gen = this._billForUsage(params);
         const first = await gen.next();
         if (first.done) {
-            async function* doneGen() {
+            async function* doneGen(): AsyncGenerator<
+                Success<void>,
+                Result<void, SimpleError>,
+                Result<BillingStep, SimpleError>
+            > {
                 yield* [];
                 return first.value;
             }
@@ -2085,11 +2089,6 @@ export interface GetBillingAccountForRecordSuccess {
     studioId: string | null;
 
     /**
-     * Whether billing is using the record's credit account.
-     */
-    isRecordBilling: boolean;
-
-    /**
      * The record account ID if billing the record, null otherwise.
      */
     recordAccountId: string | null;
@@ -2147,7 +2146,6 @@ export async function getBillingAccountForRecord(
                 success: true,
                 userId: null,
                 studioId: null,
-                isRecordBilling: true,
                 recordAccountId: record.creditAccountId,
             };
         }
@@ -2158,7 +2156,6 @@ export async function getBillingAccountForRecord(
                 success: true,
                 userId: record.ownerId,
                 studioId: null,
-                isRecordBilling: false,
                 recordAccountId: null,
             };
         }
@@ -2168,7 +2165,6 @@ export async function getBillingAccountForRecord(
                 success: true,
                 userId: null,
                 studioId: record.studioId,
-                isRecordBilling: false,
                 recordAccountId: null,
             };
         }

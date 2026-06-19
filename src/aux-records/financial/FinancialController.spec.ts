@@ -2907,7 +2907,6 @@ describe('FinancialController', () => {
                     success: true,
                     userId: null,
                     studioId: null,
-                    isRecordBilling: true,
                     recordAccountId: recordAccountId,
                 },
                 transferCode: TransferCodes.records_usage_fee,
@@ -2948,7 +2947,6 @@ describe('FinancialController', () => {
                     success: true,
                     userId: null,
                     studioId: null,
-                    isRecordBilling: false,
                     recordAccountId: null,
                 },
                 transferCode: TransferCodes.records_usage_fee,
@@ -3145,7 +3143,6 @@ describe('getBillingAccountForRecord()', () => {
             success: true,
             userId: null,
             studioId: null,
-            isRecordBilling: true,
             recordAccountId: 'record-account-1',
         });
     });
@@ -3166,7 +3163,6 @@ describe('getBillingAccountForRecord()', () => {
             success: true,
             userId: 'owner1',
             studioId: null,
-            isRecordBilling: false,
             recordAccountId: null,
         });
     });
@@ -3187,7 +3183,6 @@ describe('getBillingAccountForRecord()', () => {
             success: true,
             userId: null,
             studioId: 'studio1',
-            isRecordBilling: false,
             recordAccountId: null,
         });
     });
