@@ -2794,6 +2794,15 @@ export type AIChatResponse = AIChatSuccess | AIChatFailure;
 export interface AIChatSuccess {
     success: true;
     choices: AIChatMessage[];
+
+    /**
+     * The provider-native response payloads keyed by provider name.
+     *
+     * For example, OpenAI responses are placed in the `openai` property,
+     * Anthropic responses are placed in `anthropic`, and custom providers
+     * use their configured provider name.
+     */
+    [provider: string]: unknown;
 }
 
 export interface AIChatFailure {
