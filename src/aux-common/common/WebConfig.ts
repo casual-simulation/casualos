@@ -43,6 +43,7 @@ export type BiosOption =
     | 'public inst'
     | 'free inst'
     | 'free'
+    | 'public'
     | 'private inst'
     | 'studio inst'
     | 'studio'
