@@ -99,10 +99,11 @@ function isTempInst(biosOption: BiosOption): biosOption is 'temp' {
 
 function isPublicInst(
     biosOption: BiosOption
-): biosOption is 'public inst' | 'free inst' | 'free' {
+): biosOption is 'public inst' | 'free inst' | 'public' | 'free' {
     return (
         biosOption === 'public inst' ||
         biosOption === 'free inst' ||
+        biosOption === 'public' ||
         biosOption === 'free'
     );
 }
@@ -820,7 +821,7 @@ export default class PlayerHome extends Vue {
                 'temp',
                 'local',
                 'studio',
-                'free',
+                'public',
                 'sign in',
                 'sign up',
                 'sign out',
