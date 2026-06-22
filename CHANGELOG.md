@@ -7,6 +7,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where Anthropic models might under-report credit usage when streaming chat messages.
+-   Fixed an issue where some HTTP request paths would cause the server to crash.
 
 ## V4.2.5
 
