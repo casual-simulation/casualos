@@ -114,6 +114,55 @@ describe('InstRecordsClient', () => {
             expect(updates).toEqual(['111', '222']);
         });
 
+        it('should include whether the updates are initial', async () => {
+            const addUpdates = new Subject<AddUpdatesMessage>();
+            connection.events.set('repo/add_updates', addUpdates);
+
+            let updates = [] as { updates: string[]; initial: boolean }[];
+            connection.connect();
+            client
+                .watchBranchUpdates('abc')
+                .pipe(filter(isClientUpdates))
+                .subscribe((a) =>
+                    updates.push({
+                        updates: a.updates,
+                        initial: !!a.initial,
+                    })
+                );
+
+            await waitAsync();
+
+            addUpdates.next({
+                type: 'repo/add_updates',
+                recordName: null,
+                inst: 'abc',
+                branch: DEFAULT_BRANCH_NAME,
+                updates: ['111'],
+                initial: true,
+            });
+
+            addUpdates.next({
+                type: 'repo/add_updates',
+                recordName: null,
+                inst: 'abc',
+                branch: DEFAULT_BRANCH_NAME,
+                updates: ['222'],
+            });
+
+            await waitAsync();
+
+            expect(updates).toEqual([
+                {
+                    updates: ['111'],
+                    initial: true,
+                },
+                {
+                    updates: ['222'],
+                    initial: false,
+                },
+            ]);
+        });
+
         it('should buffer add updates events until the intial event', async () => {
             const addUpdates = new Subject<AddUpdatesMessage>();
             connection.events.set('repo/add_updates', addUpdates);
@@ -1832,7 +1881,7 @@ describe('InstRecordsClient', () => {
             const connections = new Subject<ConnectionCountMessage>();
             connection.events.set('repo/connection_count', connections);
 
-            let counts = [] as number[];
+            let counts = [] as (number | undefined)[];
             client.connectionCount().subscribe((e) => counts.push(e));
 
             connection.connect();

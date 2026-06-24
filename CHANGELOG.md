@@ -202,6 +202,10 @@
 -   Updated the [`typesense`](https://typesense.org/) library to v3.0.5.
 -   Added support for AI chat prompt caching via `enableCaching` in `ai.chat()` and `ai.stream.chat()` options, including forwarding to Claude/Anthropic requests using prompt cache control.
 
+### :rocket: Features
+
+-   Added support for remote shared inst local-persistence reconciliation on reconnect. Remote shared docs now wait for local IndexedDB hydration before connecting and only send missing local Yjs updates after the initial server sync payload is received.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where CasualOS didn't support the TypeScript `override` keyword.
