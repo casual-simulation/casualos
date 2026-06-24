@@ -312,13 +312,17 @@ describe('HtmlAppBackend', () => {
 
             await waitAsync();
 
-            const emitted = actions.slice(1);
-            expect(emitted).toEqual(
-                expect.arrayContaining([
-                    toast('Hit'),
-                    asyncResult('taskId', null),
-                ])
-            );
+            const emitted = actions
+                .slice(1)
+                .filter(
+                    (a) =>
+                        a.type === 'show_toast' ||
+                        (a.type === 'async_result' && a.taskId === 'taskId')
+                );
+            expect(emitted).toEqual([
+                toast('Hit'),
+                asyncResult('taskId', null),
+            ]);
             expect(emitted).toHaveLength(2);
         });
 

@@ -1,5 +1,21 @@
 # CasualOS Changelog
 
+## V4.2.6
+
+#### Date: 6/24/2026
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where Anthropic models might under-report credit usage when streaming chat messages.
+-   Fixed an issue where some HTTP request paths would cause the server to crash.
+
+### :rocket: Features
+
+-   Added new BIOS option.
+    -   `public` - Works exactly like `public inst`.
+-   BIOS option label updated to `public` (for example: `public 24h` or `public 45m`)
+
+
 ## V4.2.5
 
 #### Date: 6/10/2026

@@ -450,6 +450,7 @@ type BiosOption =
     | 'local inst' // Local instance
     | 'local'
     | 'public inst' // Public partition
+    | 'public'
     | 'free inst'
     | 'free'
     | 'private inst' // Private partition

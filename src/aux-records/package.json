@@ -43,7 +43,7 @@
         "@casual-simulation/fast-json-stable-stringify": "^4.0.5",
         "@casual-simulation/rate-limit-redis": "^4.0.0",
         "@casual-simulation/timesync": "^4.0.0",
-        "@google/generative-ai": "0.11.3",
+        "@google/genai": "^2.8.0",
         "@libsql/client": "^0.15.14",
         "@opentelemetry/api": "^1.9.0",
         "@opentelemetry/resources": "^1.25.1",
