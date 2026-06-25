@@ -91,6 +91,9 @@
 -   Updated the player BIOS to display public/free inst retention duration.
     -   The player now reads `getPublicInstOptions.lifetimeSeconds` and shows the duration in the BIOS option label (for example: `free 24h` or `free 45m`).
     -   If public inst options are unavailable, the BIOS falls back to the plain option label.
+-   Added support for record-level credit billing accounts.
+    -   Records can now be configured with a dedicated credit account budget for metered usage.
+    -   AI, data, and file usage billing now supports charging a record-level credit account when configured.
 
 ### :bug: Bug Fixes
 
