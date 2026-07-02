@@ -1,5 +1,17 @@
 # CasualOS Changelog
 
+## V4.2.7
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where bots with rotation were being reset to null when dragged
+
+### :rocket: Features
+
+-   Added support for granting records credit budgets
+
 ## V4.2.6
 
 #### Date: 6/24/2026
@@ -14,7 +26,6 @@
 -   Added new BIOS option.
     -   `public` - Works exactly like `public inst`.
 -   BIOS option label updated to `public` (for example: `public 24h` or `public 45m`)
-
 
 ## V4.2.5
 
