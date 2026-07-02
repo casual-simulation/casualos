@@ -444,10 +444,10 @@ export abstract class BaseBotDragOperation implements IOperation {
         }
 
         const isIdentityRotation =
-            rotation.x === 0 &&
-            rotation.y === 0 &&
-            rotation.z === 0 &&
-            rotation.w === 1;
+            rotation?.x === 0 &&
+            rotation?.y === 0 &&
+            rotation?.z === 0 &&
+            rotation?.w === 1;
         let events: BotAction[] = [];
         for (let i = 0; i < bots.length; i++) {
             let tags;
