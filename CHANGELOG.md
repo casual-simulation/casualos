@@ -1,13 +1,31 @@
 # CasualOS Changelog
 
+## V4.2.7
+
+#### Date: 7/2/2026
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where bots with rotation were being reset to null when dragged
+
+### :rocket: Features
+
+-   Added support for granting records credit budgets
+
 ## V4.2.6
 
-#### Date: 6/22/2026
+#### Date: 6/24/2026
 
 ### :bug: Bug Fixes
 
 -   Fixed an issue where Anthropic models might under-report credit usage when streaming chat messages.
 -   Fixed an issue where some HTTP request paths would cause the server to crash.
+
+### :rocket: Features
+
+-   Added new BIOS option.
+    -   `public` - Works exactly like `public inst`.
+-   BIOS option label updated to `public` (for example: `public 24h` or `public 45m`)
 
 ## V4.2.5
 
@@ -84,6 +102,9 @@
 -   Updated the player BIOS to display public/free inst retention duration.
     -   The player now reads `getPublicInstOptions.lifetimeSeconds` and shows the duration in the BIOS option label (for example: `free 24h` or `free 45m`).
     -   If public inst options are unavailable, the BIOS falls back to the plain option label.
+-   Added support for record-level credit billing accounts.
+    -   Records can now be configured with a dedicated credit account budget for metered usage.
+    -   AI, data, and file usage billing now supports charging a record-level credit account when configured.
 
 ### :bug: Bug Fixes
 

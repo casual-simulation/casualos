@@ -353,6 +353,11 @@ model Record {
     studioId String?
     studio Studio? @relation(fields: [studioId], references: [id])
 
+    creditAccountId String?
+    creditAccount FinancialAccount? @relation(fields: [creditAccountId], references: [id], onDelete: SetNull)
+
+    creditBillingEnabled Boolean @default(false)
+
     secretHashes Json
     secretSalt String
 
@@ -1576,6 +1581,8 @@ model FinancialAccount {
 
     studioId String?
     studio Studio? @relation(fields: [studioId], references: [id], onDelete: Restrict)
+
+    records Record[]
 
     contractId String? @unique
     contract ContractRecord? @relation(fields: [contractId], references: [id], onUpdate: Restrict, onDelete: Restrict)
