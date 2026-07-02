@@ -1383,7 +1383,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
     protected async _updateBotsPositions(
         bots: Bot[],
         gridPosition: Vector3 | Vector2,
-        rotation: Quaternion = new Quaternion(0, 0, 0, 1)
+        rotation?: Quaternion
     ) {
         this._sendDropEnterExitEvents(this._other);
         super._updateBotsPositions(bots, gridPosition, rotation);
