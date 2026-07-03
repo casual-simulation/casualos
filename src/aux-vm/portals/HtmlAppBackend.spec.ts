@@ -78,6 +78,7 @@ describe('HtmlAppBackend', () => {
                 allowCollaborationUpgrade: true,
                 ab1BootstrapUrl: 'ab1Bootstrap',
                 comID: null,
+                isEmbedded: false,
             }
         );
         memory = createMemoryPartition({
@@ -108,6 +109,7 @@ describe('HtmlAppBackend', () => {
                 allowCollaborationUpgrade: true,
                 ab1BootstrapUrl: 'ab1Bootstrap',
                 comID: null,
+                isEmbedded: false,
             }
         );
         const helper = new AuxHelper(userId, partitions, runtime);

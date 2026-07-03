@@ -64,4 +64,9 @@ export interface AuxDevice {
      * Null if it was not loaded from a comID.
      */
     comID: string | null;
+
+    /**
+     * Whether the CasualOS frontend was loaded inside an iframe.
+     */
+    isEmbedded: boolean;
 }
