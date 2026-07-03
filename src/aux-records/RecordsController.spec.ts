@@ -4627,6 +4627,27 @@ describe('RecordsController', () => {
             ]);
         });
 
+        it('should create the given record for the user if no ownerId is provided', async () => {
+            const result = await manager.createRecord({
+                recordName: 'myRecord',
+                userId: 'userId',
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const records = await store.listRecordsByOwnerId('userId');
+
+            expect(records).toEqual([
+                {
+                    name: 'myRecord',
+                    ownerId: 'userId',
+                    studioId: null,
+                },
+            ]);
+        });
+
         it('should not create the record if it already exists', async () => {
             await store.addRecord({
                 name: 'myRecord',

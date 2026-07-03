@@ -1,8 +1,52 @@
 # CasualOS Changelog
 
-## V4.2.4
+## V4.2.7
 
 #### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where bots with rotation were being reset to null when dragged
+
+### :rocket: Features
+
+-   Added support for granting records credit budgets
+-   Added support for expiring private insts.
+    -   Added optional `expires` support to inst/branch/package records and websocket `repo/watch_branch` requests.
+    -   Updated split-store and websocket inst routing to use `expires` semantics (instead of relying on `recordName` alone) when deciding temporary vs permanent storage.
+    -   Public insts now reject explicitly non-expiring watch requests (`recordName: null` with `expires: false`).
+    -   `savePermanentBranches()` now skips expiring and public branches.
+    -   Subscription metrics now exclude expiring insts from `totalInsts` in memory, Prisma, and SQLite stores.
+    -   Added persistence support for `InstRecord.expires` in Prisma/Cockroach and Prisma/SQLite schemas and stores.
+    -   Fixed `listLoadedPackages()`/`isPackageLoaded()` to find packages loaded into expiring private insts, and `installPackage()` to save newly-loaded packages to the correct store based on the target inst's `expires` state.
+
+## V4.2.6
+
+#### Date: 6/24/2026
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where Anthropic models might under-report credit usage when streaming chat messages.
+-   Fixed an issue where some HTTP request paths would cause the server to crash.
+
+### :rocket: Features
+
+-   Added new BIOS option.
+    -   `public` - Works exactly like `public inst`.
+-   BIOS option label updated to `public` (for example: `public 24h` or `public 45m`)
+
+## V4.2.5
+
+#### Date: 6/10/2026
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where getting a package version required that the user be logged in.
+-   Fixed an issue where `os.createRecord()` did not work.
+
+## V4.2.4
+
+#### Date: 5/16/2026
 
 ### :boom: Breaking Changes
 
@@ -60,14 +104,15 @@
 -   Made [`for await...of`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for-await...of) loop iterations not use energy.
     -   These kinds of loops work asynchronously, so they aren't likely to cause the system to lock up due to an infinite loop.
 -   Added the `"-energy";` directive to disable energy checks for a script.
--   Added support for expiring private insts.
-    -   Added optional `expires` support to inst/branch/package records and websocket `repo/watch_branch` requests.
-    -   Updated split-store and websocket inst routing to use `expires` semantics (instead of relying on `recordName` alone) when deciding temporary vs permanent storage.
-    -   Public insts now reject explicitly non-expiring watch requests (`recordName: null` with `expires: false`).
-    -   `savePermanentBranches()` now skips expiring and public branches.
-    -   Subscription metrics now exclude expiring insts from `totalInsts` in memory, Prisma, and SQLite stores.
-    -   Added persistence support for `InstRecord.expires` in Prisma/Cockroach and Prisma/SQLite schemas and stores.
-    -   Fixed `listLoadedPackages()`/`isPackageLoaded()` to find packages loaded into expiring private insts, and `installPackage()` to save newly-loaded packages to the correct store based on the target inst's `expires` state.
+-   Added the `getPublicInstOptions` procedure for retrieving public inst lifetime configuration.
+    -   Returns the configured `publicInstRecordsLifetimeSeconds` and `publicInstRecordsLifetimeExpireMode` values from Redis server options.
+    -   Does not require authentication (available to logged-out users).
+-   Updated the player BIOS to display public/free inst retention duration.
+    -   The player now reads `getPublicInstOptions.lifetimeSeconds` and shows the duration in the BIOS option label (for example: `free 24h` or `free 45m`).
+    -   If public inst options are unavailable, the BIOS falls back to the plain option label.
+-   Added support for record-level credit billing accounts.
+    -   Records can now be configured with a dedicated credit account budget for metered usage.
+    -   AI, data, and file usage billing now supports charging a record-level credit account when configured.
 
 ### :bug: Bug Fixes
 

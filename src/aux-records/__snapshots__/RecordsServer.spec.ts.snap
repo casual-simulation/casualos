@@ -1012,7 +1012,7 @@ Object {
         "type": "object",
       },
       "name": "createRecord",
-      "origins": "account",
+      "origins": "self",
     },
     Object {
       "http": Object {
@@ -2131,6 +2131,14 @@ Object {
       },
       "name": "getPlayerWebManifest",
       "origins": true,
+    },
+    Object {
+      "inputs": Object {
+        "schema": Object {},
+        "type": "object",
+      },
+      "name": "getPublicInstOptions",
+      "origins": "api",
     },
     Object {
       "http": Object {
@@ -9364,6 +9372,7 @@ Object {
                         "local inst",
                         "local",
                         "public inst",
+                        "public",
                         "free inst",
                         "free",
                         "private inst",
@@ -9400,6 +9409,7 @@ Object {
                       "local inst",
                       "local",
                       "public inst",
+                      "public",
                       "free inst",
                       "free",
                       "private inst",
@@ -9453,6 +9463,7 @@ Object {
                       "local inst",
                       "local",
                       "public inst",
+                      "public",
                       "free inst",
                       "free",
                       "private inst",
@@ -10216,6 +10227,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                     "local inst",
                     "local",
                     "public inst",
+                    "public",
                     "free inst",
                     "free",
                     "private inst",
@@ -10247,6 +10259,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                   "local inst",
                   "local",
                   "public inst",
+                  "public",
                   "free inst",
                   "free",
                   "private inst",
@@ -10276,6 +10289,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                   "local inst",
                   "local",
                   "public inst",
+                  "public",
                   "free inst",
                   "free",
                   "private inst",
@@ -11545,7 +11559,7 @@ Object {
         "type": "object",
       },
       "name": "createRecord",
-      "origins": "account",
+      "origins": "self",
     },
     Object {
       "http": Object {
@@ -12664,6 +12678,14 @@ Object {
       },
       "name": "getPlayerWebManifest",
       "origins": true,
+    },
+    Object {
+      "inputs": Object {
+        "schema": Object {},
+        "type": "object",
+      },
+      "name": "getPublicInstOptions",
+      "origins": "api",
     },
     Object {
       "http": Object {
@@ -19897,6 +19919,7 @@ Object {
                         "local inst",
                         "local",
                         "public inst",
+                        "public",
                         "free inst",
                         "free",
                         "private inst",
@@ -19933,6 +19956,7 @@ Object {
                       "local inst",
                       "local",
                       "public inst",
+                      "public",
                       "free inst",
                       "free",
                       "private inst",
@@ -19986,6 +20010,7 @@ Object {
                       "local inst",
                       "local",
                       "public inst",
+                      "public",
                       "free inst",
                       "free",
                       "private inst",
@@ -20749,6 +20774,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                     "local inst",
                     "local",
                     "public inst",
+                    "public",
                     "free inst",
                     "free",
                     "private inst",
@@ -20780,6 +20806,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                   "local inst",
                   "local",
                   "public inst",
+                  "public",
                   "free inst",
                   "free",
                   "private inst",
@@ -20809,6 +20836,7 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
                   "local inst",
                   "local",
                   "public inst",
+                  "public",
                   "free inst",
                   "free",
                   "private inst",

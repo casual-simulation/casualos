@@ -345,6 +345,16 @@ export interface RecordsServerOptions {
     allowedApiOrigins: Set<string>;
 
     /**
+     * The number of seconds that public inst records should be kept for.
+     */
+    publicInstRecordsLifetimeSeconds?: number | null;
+
+    /**
+     * The expiration mode that should be used for public inst records.
+     */
+    publicInstRecordsLifetimeExpireMode?: 'NX' | 'XX' | 'GT' | 'LT' | null;
+
+    /**
      * The controller that should be used for handling authentication requests.
      */
     authController: AuthController;
@@ -514,6 +524,13 @@ export class RecordsServer {
      */
     private _allowedAccountOrigins: Set<string>;
     private _allowedSelfOrigins: Set<string>;
+    private _publicInstRecordsLifetimeSeconds: number | null;
+    private _publicInstRecordsLifetimeExpireMode:
+        | 'NX'
+        | 'XX'
+        | 'GT'
+        | 'LT'
+        | null;
 
     private _rateLimit: RateLimitController;
     private _websocketRateLimit: RateLimitController;
@@ -556,6 +573,8 @@ export class RecordsServer {
     constructor({
         allowedAccountOrigins,
         allowedApiOrigins,
+        publicInstRecordsLifetimeSeconds = 60 * 60 * 24,
+        publicInstRecordsLifetimeExpireMode = 'NX',
         authController,
         livekitController,
         recordsController,
@@ -587,6 +606,10 @@ export class RecordsServer {
             ...allowedAccountOrigins,
             ...allowedApiOrigins,
         ]);
+        this._publicInstRecordsLifetimeSeconds =
+            publicInstRecordsLifetimeSeconds;
+        this._publicInstRecordsLifetimeExpireMode =
+            publicInstRecordsLifetimeExpireMode;
         this._auth = authController;
         this._livekit = livekitController;
         this._records = recordsController;
@@ -936,6 +959,17 @@ export class RecordsServer {
                     });
 
                     return genericResult<ViewParams, SimpleError>(result);
+                }),
+
+            getPublicInstOptions: procedure()
+                .origins('api')
+                .inputs(z.object({}))
+                .handler(async () => {
+                    return {
+                        success: true,
+                        lifetimeSeconds: this._publicInstRecordsLifetimeSeconds,
+                        expireMode: this._publicInstRecordsLifetimeExpireMode,
+                    };
                 }),
 
             getUserInfo: procedure()
@@ -1574,7 +1608,7 @@ export class RecordsServer {
                 }),
 
             createRecord: procedure()
-                .origins('account')
+                .origins('self')
                 .http('POST', '/api/v2/records')
                 .inputs(
                     z.object({
@@ -2711,10 +2745,10 @@ export class RecordsServer {
                         const validation = await this._validateSessionKey(
                             context.sessionKey
                         );
-                        if (validation.success === false) {
-                            if (validation.errorCode === 'no_session_key') {
-                                return NOT_LOGGED_IN_RESULT;
-                            }
+                        if (
+                            validation.success === false &&
+                            validation.errorCode !== 'no_session_key'
+                        ) {
                             return validation;
                         }
 
@@ -7341,10 +7375,7 @@ export class RecordsServer {
                     sessionKey: getSessionKey(request),
                     httpRequest: request,
                     origin: request.headers.origin ?? null,
-                    url: new URL(
-                        request.path,
-                        `http://${request.headers.host}`
-                    ),
+                    url: this._buildUrl(request.path, request.headers.host),
                 };
                 const result = await procedure.handler(data, context, query);
                 const response = returnProcedureOutput(result);
@@ -7363,6 +7394,10 @@ export class RecordsServer {
         };
 
         this.addRoute(r);
+    }
+
+    private _buildUrl(path: string, host: string): URL {
+        return new URL(path, `http://${host}`);
     }
 
     /**
@@ -7401,10 +7436,7 @@ export class RecordsServer {
                     sessionKey: getSessionKey(request),
                     httpRequest: request,
                     origin: request.headers.origin ?? null,
-                    url: new URL(
-                        request.path,
-                        `http://${request.headers.host}`
-                    ),
+                    url: this._buildUrl(request.path, request.headers.host),
                 };
                 let result: ProcedureOutput;
                 try {
@@ -7584,266 +7616,288 @@ export class RecordsServer {
     async handleHttpRequest(
         request: GenericHttpRequest
     ): Promise<GenericHttpResponse> {
-        const span = trace.getActiveSpan();
-        if (span) {
-            const url = new URL(request.path, `http://${request.headers.host}`);
-            span.setAttributes({
-                [SEMATTRS_HTTP_METHOD]: request.method,
-                [SEMATTRS_HTTP_URL]: url.href,
-                [SEMATTRS_HTTP_TARGET]: request.path,
-                [SEMATTRS_HTTP_CLIENT_IP]: request.ipAddress,
-                [SEMATTRS_HTTP_HOST]: request.headers.host,
-                [SEMATTRS_HTTP_USER_AGENT]: request.headers['user-agent'],
-                ['http.origin']: request.headers.origin,
-            });
-        }
+        try {
+            const span = trace.getActiveSpan();
+            if (span) {
+                const url = this._buildUrl(request.path, request.headers.host);
+                span.setAttributes({
+                    [SEMATTRS_HTTP_METHOD]: request.method,
+                    [SEMATTRS_HTTP_URL]: url.href,
+                    [SEMATTRS_HTTP_TARGET]: request.path,
+                    [SEMATTRS_HTTP_CLIENT_IP]: request.ipAddress,
+                    [SEMATTRS_HTTP_HOST]: request.headers.host,
+                    [SEMATTRS_HTTP_USER_AGENT]: request.headers['user-agent'],
+                    ['http.origin']: request.headers.origin,
+                });
+            }
 
-        let skipRateLimitCheck = false;
-        if (!this._rateLimit) {
-            skipRateLimitCheck = true;
-        } else if (
-            request.method == 'POST' &&
-            request.path === '/api/stripeWebhook'
-        ) {
-            skipRateLimitCheck = true;
-        }
+            let skipRateLimitCheck = false;
+            if (!this._rateLimit) {
+                skipRateLimitCheck = true;
+            } else if (
+                request.method == 'POST' &&
+                request.path === '/api/stripeWebhook'
+            ) {
+                skipRateLimitCheck = true;
+            }
 
-        if (skipRateLimitCheck && span) {
-            span.setAttribute('request.rateLimitCheck', 'skipped');
-        }
+            if (skipRateLimitCheck && span) {
+                span.setAttribute('request.rateLimitCheck', 'skipped');
+            }
 
-        if (!skipRateLimitCheck) {
-            const response = await this._rateLimit.checkRateLimit({
-                ipAddress: request.ipAddress,
-            });
+            if (!skipRateLimitCheck) {
+                const response = await this._rateLimit.checkRateLimit({
+                    ipAddress: request.ipAddress,
+                });
 
-            if (response.success === false) {
-                if (response.errorCode === 'rate_limit_exceeded') {
+                if (response.success === false) {
+                    if (response.errorCode === 'rate_limit_exceeded') {
+                        return formatResponse(
+                            request,
+                            returnResult(response),
+                            true
+                        );
+                    } else {
+                        console.log(
+                            '[RecordsServer] Rate limit check failed. Allowing request to continue.'
+                        );
+                    }
+                }
+            }
+
+            if (
+                request.method === 'GET' &&
+                request.path.startsWith('/api/') &&
+                request.path.endsWith('/metadata') &&
+                !!request.pathParams.userId
+            ) {
+                return formatResponse(
+                    request,
+                    await this._getUserInfo(request),
+                    this._allowedAccountOrigins
+                );
+            } else if (
+                request.method === 'PUT' &&
+                request.path.startsWith('/api/') &&
+                request.path.endsWith('/metadata') &&
+                !!request.pathParams.userId
+            ) {
+                return formatResponse(
+                    request,
+                    await this._putUserInfo(request),
+                    this._allowedAccountOrigins
+                );
+            } else if (
+                request.method === 'GET' &&
+                request.path.startsWith('/api/') &&
+                request.path.endsWith('/subscription') &&
+                !!request.pathParams.userId
+            ) {
+                return formatResponse(
+                    request,
+                    await this._getSubscriptionInfo(request),
+                    this._allowedAccountOrigins
+                );
+            } else if (
+                request.method === 'POST' &&
+                request.path.startsWith('/api/') &&
+                request.path.endsWith('/subscription/manage') &&
+                !!request.pathParams.userId
+            ) {
+                return formatResponse(
+                    request,
+                    await this._manageSubscription(request),
+                    this._allowedAccountOrigins
+                );
+            } else if (
+                request.method === 'OPTIONS' &&
+                request.path.startsWith('/api/v2/records/file/')
+            ) {
+                return formatResponse(
+                    request,
+                    await this._handleRecordFileOptions(request),
+                    this._allowedApiOrigins
+                );
+            } else if (request.method === 'OPTIONS') {
+                return formatResponse(
+                    request,
+                    await this._handleOptions(request),
+                    true
+                );
+            }
+
+            let route = this._routes.get(
+                `${request.scope ?? 'auth'}:${request.method}:${request.path}`
+            );
+
+            // Default routes shouldn't work for API routes (for now)
+            if (!route && !request.path.startsWith('/api/')) {
+                route = this._routes.get(
+                    `${request.scope ?? 'auth'}:${request.method}:**default**`
+                );
+            }
+
+            if (route) {
+                if (span && route.name) {
+                    span.updateName(`http:${route.name}`);
+                }
+
+                let origins =
+                    route.allowedOrigins === 'account'
+                        ? this._allowedAccountOrigins
+                        : route.allowedOrigins === 'api'
+                        ? this._allowedApiOrigins
+                        : route.allowedOrigins === 'self'
+                        ? this._allowedSelfOrigins
+                        : route.allowedOrigins ?? true;
+
+                try {
+                    const allowCustomDomains =
+                        route.allowedOrigins === 'api' ||
+                        route.allowedOrigins === 'self';
+                    const validOrigin = await this.verifyOrigins(
+                        request,
+                        origins,
+                        allowCustomDomains
+                    );
+
+                    if (isFailure(validOrigin)) {
+                        return formatResponse(
+                            request,
+                            returnResult(genericResult(validOrigin)),
+                            origins
+                        );
+                    }
+
+                    origins = validOrigin.value.origins;
+
+                    let response: GenericHttpResponse;
+                    if (route.schema) {
+                        let data: any;
+                        if (
+                            request.method === 'GET' ||
+                            request.method === 'HEAD'
+                        ) {
+                            const parseResult = route.schema.safeParse(
+                                request.query
+                            );
+                            if (parseResult.success === false) {
+                                return formatResponse(
+                                    request,
+                                    returnZodError(parseResult.error),
+                                    origins
+                                );
+                            }
+                            data = parseResult.data;
+                        } else {
+                            if (typeof request.body !== 'string') {
+                                return formatResponse(
+                                    request,
+                                    returnResult(
+                                        UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON
+                                    ),
+                                    origins
+                                );
+                            }
+
+                            const jsonResult = tryParseJson(request.body);
+
+                            if (
+                                !jsonResult.success ||
+                                typeof jsonResult.value !== 'object'
+                            ) {
+                                return formatResponse(
+                                    request,
+                                    returnResult(
+                                        UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON
+                                    ),
+                                    origins
+                                );
+                            }
+
+                            const parseResult = route.schema.safeParse(
+                                jsonResult.value
+                            );
+                            if (parseResult.success === false) {
+                                return formatResponse(
+                                    request,
+                                    returnZodError(parseResult.error),
+                                    origins
+                                );
+                            }
+                            data = parseResult.data;
+                        }
+
+                        let query: any;
+                        if (route.querySchema) {
+                            const parseResult = route.schema.safeParse(
+                                request.query
+                            );
+                            if (parseResult.success === false) {
+                                return formatResponse(
+                                    request,
+                                    returnZodError(parseResult.error),
+                                    origins
+                                );
+                            }
+                            query = parseResult.data;
+                        }
+
+                        response = await route.handler(request, data, query);
+                    } else {
+                        response = await route.handler(request);
+                    }
+
+                    if (response) {
+                        return formatResponse(request, response, origins);
+                    } else {
+                        return formatResponse(
+                            request,
+                            returnResult({ success: true }),
+                            origins
+                        );
+                    }
+                } catch (err) {
+                    console.error(
+                        '[RecordsServer] Error while handling request: ',
+                        err,
+                        request
+                    );
                     return formatResponse(
                         request,
-                        returnResult(response),
-                        true
-                    );
-                } else {
-                    console.log(
-                        '[RecordsServer] Rate limit check failed. Allowing request to continue.'
+                        returnResult({
+                            success: false,
+                            errorCode: 'server_error',
+                            errorMessage: 'A server error occurred.',
+                        }),
+                        origins
                     );
                 }
             }
-        }
 
-        if (
-            request.method === 'GET' &&
-            request.path.startsWith('/api/') &&
-            request.path.endsWith('/metadata') &&
-            !!request.pathParams.userId
-        ) {
             return formatResponse(
                 request,
-                await this._getUserInfo(request),
-                this._allowedAccountOrigins
+                returnResult(OPERATION_NOT_FOUND_RESULT),
+                true
             );
-        } else if (
-            request.method === 'PUT' &&
-            request.path.startsWith('/api/') &&
-            request.path.endsWith('/metadata') &&
-            !!request.pathParams.userId
-        ) {
-            return formatResponse(
-                request,
-                await this._putUserInfo(request),
-                this._allowedAccountOrigins
+        } catch (err) {
+            console.error(
+                '[RecordsServer] Error while handling request: ',
+                err,
+                request
             );
-        } else if (
-            request.method === 'GET' &&
-            request.path.startsWith('/api/') &&
-            request.path.endsWith('/subscription') &&
-            !!request.pathParams.userId
-        ) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
             return formatResponse(
                 request,
-                await this._getSubscriptionInfo(request),
-                this._allowedAccountOrigins
-            );
-        } else if (
-            request.method === 'POST' &&
-            request.path.startsWith('/api/') &&
-            request.path.endsWith('/subscription/manage') &&
-            !!request.pathParams.userId
-        ) {
-            return formatResponse(
-                request,
-                await this._manageSubscription(request),
-                this._allowedAccountOrigins
-            );
-        } else if (
-            request.method === 'OPTIONS' &&
-            request.path.startsWith('/api/v2/records/file/')
-        ) {
-            return formatResponse(
-                request,
-                await this._handleRecordFileOptions(request),
-                this._allowedApiOrigins
-            );
-        } else if (request.method === 'OPTIONS') {
-            return formatResponse(
-                request,
-                await this._handleOptions(request),
+                returnResult({
+                    success: false,
+                    errorCode: 'server_error',
+                    errorMessage: 'A server error occurred.',
+                }),
                 true
             );
         }
-
-        let route = this._routes.get(
-            `${request.scope ?? 'auth'}:${request.method}:${request.path}`
-        );
-
-        // Default routes shouldn't work for API routes (for now)
-        if (!route && !request.path.startsWith('/api/')) {
-            route = this._routes.get(
-                `${request.scope ?? 'auth'}:${request.method}:**default**`
-            );
-        }
-
-        if (route) {
-            if (span && route.name) {
-                span.updateName(`http:${route.name}`);
-            }
-
-            let origins =
-                route.allowedOrigins === 'account'
-                    ? this._allowedAccountOrigins
-                    : route.allowedOrigins === 'api'
-                    ? this._allowedApiOrigins
-                    : route.allowedOrigins === 'self'
-                    ? this._allowedSelfOrigins
-                    : route.allowedOrigins ?? true;
-
-            try {
-                const allowCustomDomains =
-                    route.allowedOrigins === 'api' ||
-                    route.allowedOrigins === 'self';
-                const validOrigin = await this.verifyOrigins(
-                    request,
-                    origins,
-                    allowCustomDomains
-                );
-
-                if (isFailure(validOrigin)) {
-                    return formatResponse(
-                        request,
-                        returnResult(genericResult(validOrigin)),
-                        origins
-                    );
-                }
-
-                origins = validOrigin.value.origins;
-
-                let response: GenericHttpResponse;
-                if (route.schema) {
-                    let data: any;
-                    if (request.method === 'GET' || request.method === 'HEAD') {
-                        const parseResult = route.schema.safeParse(
-                            request.query
-                        );
-                        if (parseResult.success === false) {
-                            return formatResponse(
-                                request,
-                                returnZodError(parseResult.error),
-                                origins
-                            );
-                        }
-                        data = parseResult.data;
-                    } else {
-                        if (typeof request.body !== 'string') {
-                            return formatResponse(
-                                request,
-                                returnResult(
-                                    UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON
-                                ),
-                                origins
-                            );
-                        }
-
-                        const jsonResult = tryParseJson(request.body);
-
-                        if (
-                            !jsonResult.success ||
-                            typeof jsonResult.value !== 'object'
-                        ) {
-                            return formatResponse(
-                                request,
-                                returnResult(
-                                    UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON
-                                ),
-                                origins
-                            );
-                        }
-
-                        const parseResult = route.schema.safeParse(
-                            jsonResult.value
-                        );
-                        if (parseResult.success === false) {
-                            return formatResponse(
-                                request,
-                                returnZodError(parseResult.error),
-                                origins
-                            );
-                        }
-                        data = parseResult.data;
-                    }
-
-                    let query: any;
-                    if (route.querySchema) {
-                        const parseResult = route.schema.safeParse(
-                            request.query
-                        );
-                        if (parseResult.success === false) {
-                            return formatResponse(
-                                request,
-                                returnZodError(parseResult.error),
-                                origins
-                            );
-                        }
-                        query = parseResult.data;
-                    }
-
-                    response = await route.handler(request, data, query);
-                } else {
-                    response = await route.handler(request);
-                }
-
-                if (response) {
-                    return formatResponse(request, response, origins);
-                } else {
-                    return formatResponse(
-                        request,
-                        returnResult({ success: true }),
-                        origins
-                    );
-                }
-            } catch (err) {
-                console.error(
-                    '[RecordsServer] Error while handling request: ',
-                    err,
-                    request
-                );
-                return formatResponse(
-                    request,
-                    returnResult({
-                        success: false,
-                        errorCode: 'server_error',
-                        errorMessage: 'A server error occurred.',
-                    }),
-                    origins
-                );
-            }
-        }
-
-        return formatResponse(
-            request,
-            returnResult(OPERATION_NOT_FOUND_RESULT),
-            true
-        );
     }
 
     /**

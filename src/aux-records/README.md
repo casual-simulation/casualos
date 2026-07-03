@@ -256,7 +256,7 @@ Major dependencies include:
 -   **axios**: HTTP client for external services
 -   **stripe**: Payment processing
 -   **@anthropic-ai/sdk**: Anthropic AI integration
--   **@google/generative-ai**: Google AI integration
+-   **@google/genai**: Google AI integration
 -   **livekit-server-sdk**: Video conferencing
 -   And many more specialized libraries
 

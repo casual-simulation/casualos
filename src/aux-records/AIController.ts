@@ -77,6 +77,8 @@ import type {
 } from './AIOpenAIRealtimeInterface';
 import {
     billForUsage,
+    getBillingAccountForRecord,
+    type GetBillingAccountForRecordSuccess,
     type FinancialController,
 } from './financial/FinancialController';
 import { BillingCodes, TransferCodes } from './financial/FinancialInterface';
@@ -440,6 +442,8 @@ export class AIController {
             let subscriptionType: 'user' | 'studio' = 'user';
             let billingUserId: string | undefined = request.userId;
             let billingStudioId: string | undefined = undefined;
+            let billingAccount: GetBillingAccountForRecordSuccess | undefined =
+                undefined;
             let metricsRecordUserId: string | undefined = request.userId;
             let metricsRecordStudioId: string | undefined = undefined;
 
@@ -484,18 +488,58 @@ export class AIController {
                     return authResult;
                 }
 
-                if (context.context.recordStudioId) {
-                    billingStudioId = context.context.recordStudioId;
+                // Determine the billing account - either the record's credit account or the owner
+                const billingAccountResult = await getBillingAccountForRecord(
+                    context.context.recordName,
+                    this._recordsStore
+                );
+
+                if (billingAccountResult.success === false) {
+                    return {
+                        success: false,
+                        errorCode: billingAccountResult.errorCode,
+                        errorMessage: billingAccountResult.errorMessage,
+                    };
+                }
+
+                billingAccount = billingAccountResult;
+
+                if (billingAccountResult.recordAccountId) {
+                    // Bill to the record credit account, but keep metrics/subscription
+                    // gating based on the record owner/studio from the authorization context.
+                    billingStudioId = undefined;
+                    billingUserId = undefined;
+                    if (context.context.recordStudioId) {
+                        metricsFilter = {
+                            studioId: context.context.recordStudioId,
+                        };
+                        subscriptionType = 'studio';
+                        metricsRecordStudioId = context.context.recordStudioId;
+                        metricsRecordUserId = undefined;
+                    } else {
+                        const ownerId =
+                            context.context.recordOwnerId ?? request.userId;
+                        metricsFilter = {
+                            ownerId,
+                        };
+                        subscriptionType = 'user';
+                        metricsRecordStudioId = undefined;
+                        metricsRecordUserId = ownerId;
+                    }
+                } else if (billingAccountResult.studioId) {
+                    billingStudioId = billingAccountResult.studioId;
                     billingUserId = undefined;
                     metricsFilter = { studioId: billingStudioId };
                     subscriptionType = 'studio';
                     metricsRecordStudioId = billingStudioId;
                     metricsRecordUserId = undefined;
                 } else {
-                    billingUserId = context.context.recordOwnerId;
+                    billingUserId = billingAccountResult.userId;
                     billingStudioId = undefined;
                     metricsFilter = { ownerId: billingUserId };
+                    subscriptionType = 'user';
                     metricsRecordUserId = billingUserId;
+                    metricsRecordStudioId = undefined;
                 }
             }
 
@@ -601,6 +645,7 @@ export class AIController {
             const billing = await billForUsage(this._financial, {
                 userId: billingUserId,
                 studioId: billingStudioId,
+                billingAccount,
                 transferCode: TransferCodes.records_usage_fee,
                 billingCode: BillingCodes.ai_chat_tokens,
             });
@@ -689,12 +734,14 @@ export class AIController {
                 return genericResult(finalResult.value);
             }
 
-            const responsePayload = getProviderNativePayloads(chatResult.value);
-
+            const { choices } = chatResult.value;
+            const providerResponses = getProviderNativePayloads(
+                chatResult.value as Record<string, unknown>
+            );
             return {
                 success: true,
-                choices: chatResult.value.choices,
-                ...responsePayload,
+                choices,
+                ...providerResponses,
             };
         } catch (err) {
             const span = trace.getActiveSpan();
@@ -772,10 +819,8 @@ export class AIController {
     async *chatStream(
         request: AIChatRequest
     ): AsyncGenerator<
-        Omit<
-            AIChatInterfaceStreamResponse,
-            'totalTokens' | 'inputTokens' | 'outputTokens'
-        >,
+        Pick<AIChatInterfaceStreamResponse, 'choices'> &
+            Record<string, unknown>,
         AIChatStreamResponse
     > {
         try {
@@ -879,6 +924,8 @@ export class AIController {
             let subscriptionType: 'user' | 'studio' = 'user';
             let billingUserId: string | undefined = request.userId;
             let billingStudioId: string | undefined = undefined;
+            let billingAccount: GetBillingAccountForRecordSuccess | undefined =
+                undefined;
             let metricsRecordUserId: string | undefined = request.userId;
             let metricsRecordStudioId: string | undefined = undefined;
 
@@ -923,18 +970,58 @@ export class AIController {
                     return authResult;
                 }
 
-                if (context.context.recordStudioId) {
-                    billingStudioId = context.context.recordStudioId;
+                // Determine the billing account - either the record's credit account or the owner
+                const billingAccountResult = await getBillingAccountForRecord(
+                    context.context.recordName,
+                    this._recordsStore
+                );
+
+                if (billingAccountResult.success === false) {
+                    return {
+                        success: false,
+                        errorCode: billingAccountResult.errorCode,
+                        errorMessage: billingAccountResult.errorMessage,
+                    };
+                }
+
+                billingAccount = billingAccountResult;
+
+                if (billingAccountResult.recordAccountId) {
+                    // Bill to the record credit account, but keep metrics/subscription
+                    // gating based on the record owner/studio from the authorization context.
+                    billingStudioId = undefined;
+                    billingUserId = undefined;
+                    if (context.context.recordStudioId) {
+                        metricsFilter = {
+                            studioId: context.context.recordStudioId,
+                        };
+                        subscriptionType = 'studio';
+                        metricsRecordStudioId = context.context.recordStudioId;
+                        metricsRecordUserId = undefined;
+                    } else {
+                        const ownerId =
+                            context.context.recordOwnerId ?? request.userId;
+                        metricsFilter = {
+                            ownerId,
+                        };
+                        subscriptionType = 'user';
+                        metricsRecordStudioId = undefined;
+                        metricsRecordUserId = ownerId;
+                    }
+                } else if (billingAccountResult.studioId) {
+                    billingStudioId = billingAccountResult.studioId;
                     billingUserId = undefined;
                     metricsFilter = { studioId: billingStudioId };
                     subscriptionType = 'studio';
                     metricsRecordStudioId = billingStudioId;
                     metricsRecordUserId = undefined;
                 } else {
-                    billingUserId = context.context.recordOwnerId;
+                    billingUserId = billingAccountResult.userId;
                     billingStudioId = undefined;
                     metricsFilter = { ownerId: billingUserId };
+                    subscriptionType = 'user';
                     metricsRecordUserId = billingUserId;
+                    metricsRecordStudioId = undefined;
                 }
             }
 
@@ -1036,6 +1123,7 @@ export class AIController {
             const billing = await billForUsage(this._financial, {
                 userId: billingUserId,
                 studioId: billingStudioId,
+                billingAccount,
                 transferCode: TransferCodes.records_usage_fee,
                 billingCode: BillingCodes.ai_chat_tokens,
             });
@@ -1095,11 +1183,13 @@ export class AIController {
                     });
                 }
 
-                const chunkPayload = getProviderNativePayloads(chunk);
-
+                const { choices: chunkChoices } = chunk;
+                const chunkProviderResponses = getProviderNativePayloads(
+                    chunk as Record<string, unknown>
+                );
                 yield {
-                    choices: chunk.choices,
-                    ...chunkPayload,
+                    choices: chunkChoices,
+                    ...chunkProviderResponses,
                 };
             }
 
@@ -1204,6 +1294,8 @@ export class AIController {
             let subscriptionType: 'user' | 'studio' = 'user';
             let billingUserId: string | undefined = request.userId;
             let billingStudioId: string | undefined = undefined;
+            let billingAccount: GetBillingAccountForRecordSuccess | undefined =
+                undefined;
             let metricsRecordUserId: string | undefined = request.userId;
             let metricsRecordStudioId: string | undefined = undefined;
 
@@ -1602,6 +1694,8 @@ export class AIController {
             let subscriptionType: 'user' | 'studio' = 'user';
             let billingUserId: string | undefined = request.userId;
             let billingStudioId: string | undefined = undefined;
+            let billingAccount: GetBillingAccountForRecordSuccess | undefined =
+                undefined;
             let metricsRecordUserId: string | undefined = request.userId;
             let metricsRecordStudioId: string | undefined = undefined;
 
@@ -1646,18 +1740,58 @@ export class AIController {
                     return authResult;
                 }
 
-                if (context.context.recordStudioId) {
-                    billingStudioId = context.context.recordStudioId;
+                // Determine the billing account - either the record's credit account or the owner
+                const billingAccountResult = await getBillingAccountForRecord(
+                    context.context.recordName,
+                    this._recordsStore
+                );
+
+                if (billingAccountResult.success === false) {
+                    return {
+                        success: false,
+                        errorCode: billingAccountResult.errorCode,
+                        errorMessage: billingAccountResult.errorMessage,
+                    };
+                }
+
+                billingAccount = billingAccountResult;
+
+                if (billingAccountResult.recordAccountId) {
+                    // Bill to the record credit account, but keep metrics/subscription
+                    // gating based on the record owner/studio from the authorization context.
+                    billingStudioId = undefined;
+                    billingUserId = undefined;
+                    if (context.context.recordStudioId) {
+                        metricsFilter = {
+                            studioId: context.context.recordStudioId,
+                        };
+                        subscriptionType = 'studio';
+                        metricsRecordStudioId = context.context.recordStudioId;
+                        metricsRecordUserId = undefined;
+                    } else {
+                        const ownerId =
+                            context.context.recordOwnerId ?? request.userId;
+                        metricsFilter = {
+                            ownerId,
+                        };
+                        subscriptionType = 'user';
+                        metricsRecordStudioId = undefined;
+                        metricsRecordUserId = ownerId;
+                    }
+                } else if (billingAccountResult.studioId) {
+                    billingStudioId = billingAccountResult.studioId;
                     billingUserId = undefined;
                     metricsFilter = { studioId: billingStudioId };
                     subscriptionType = 'studio';
                     metricsRecordStudioId = billingStudioId;
                     metricsRecordUserId = undefined;
                 } else {
-                    billingUserId = context.context.recordOwnerId;
+                    billingUserId = billingAccountResult.userId;
                     billingStudioId = undefined;
                     metricsFilter = { ownerId: billingUserId };
+                    subscriptionType = 'user';
                     metricsRecordUserId = billingUserId;
+                    metricsRecordStudioId = undefined;
                 }
             }
 
@@ -1729,6 +1863,7 @@ export class AIController {
             const billing = await billForUsage(this._financial, {
                 userId: billingUserId,
                 studioId: billingStudioId,
+                billingAccount,
                 transferCode: TransferCodes.records_usage_fee,
                 billingCode: BillingCodes.ai_image_pixels,
             });
@@ -2582,25 +2717,6 @@ export class AIController {
     }
 }
 
-function getProviderNativePayloads(response: {
-    [key: string]: unknown;
-}): Record<string, unknown> {
-    const payload: Record<string, unknown> = {};
-
-    for (const key in response) {
-        if (
-            key !== 'choices' &&
-            key !== 'totalTokens' &&
-            key !== 'inputTokens' &&
-            key !== 'outputTokens'
-        ) {
-            payload[key] = response[key];
-        }
-    }
-
-    return payload;
-}
-
 /**
  * Defines an AI Chat request.
  */
@@ -3194,4 +3310,23 @@ export interface ListedChatModel {
      * Whether this is the default model.
      */
     isDefault?: boolean;
+}
+
+function getProviderNativePayloads(response: {
+    [key: string]: unknown;
+}): Record<string, unknown> {
+    const payload: Record<string, unknown> = {};
+
+    for (const key in response) {
+        if (
+            key !== 'choices' &&
+            key !== 'totalTokens' &&
+            key !== 'inputTokens' &&
+            key !== 'outputTokens'
+        ) {
+            payload[key] = response[key];
+        }
+    }
+
+    return payload;
 }

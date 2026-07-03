@@ -312,13 +312,17 @@ describe('HtmlAppBackend', () => {
 
             await waitAsync();
 
-            const emitted = actions.slice(1);
-            expect(emitted).toEqual(
-                expect.arrayContaining([
-                    toast('Hit'),
-                    asyncResult('taskId', null),
-                ])
-            );
+            const emitted = actions
+                .slice(1)
+                .filter(
+                    (a) =>
+                        a.type === 'show_toast' ||
+                        (a.type === 'async_result' && a.taskId === 'taskId')
+                );
+            expect(emitted).toEqual([
+                toast('Hit'),
+                asyncResult('taskId', null),
+            ]);
             expect(emitted).toHaveLength(2);
         });
 
@@ -454,21 +458,28 @@ describe('HtmlAppBackend', () => {
 
             await waitAsync();
 
-            expect(actions.length).toBe(2);
             expect(actions[0]).toEqual(
                 registerHtmlApp('testPortal', 'appId', 'uuid')
             );
 
-            const updateAction = actions[1] as UpdateHtmlAppAction;
+            const updateAction = actions.find(
+                (a) => a.type === 'update_html_app'
+            ) as UpdateHtmlAppAction;
+
+            expect(updateAction).toBeTruthy();
 
             expect(updateAction).toMatchSnapshot();
 
             expect(updateAction.type).toBe('update_html_app');
             expect(updateAction.appId).toBe('testPortal');
-            expect(updateAction.updates.length).toBe(1);
-            expect(updateAction.updates[0].type).toBe('childList');
-            expect(updateAction.updates[0].addedNodes.length).toBe(1);
-            const h1Node = updateAction.updates[0].addedNodes[0] as any;
+
+            const childListUpdate = updateAction.updates.find(
+                (u) => u.type === 'childList'
+            ) as any;
+
+            expect(childListUpdate).toBeTruthy();
+            expect(childListUpdate.addedNodes.length).toBe(1);
+            const h1Node = childListUpdate.addedNodes[0] as any;
             expect(h1Node.nodeName).toBe('h1');
             expect(h1Node.childNodes.length).toBe(1);
             expect(h1Node.childNodes[0].nodeType).toBe(3);

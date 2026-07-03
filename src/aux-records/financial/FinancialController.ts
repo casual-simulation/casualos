@@ -17,6 +17,7 @@
  */
 import type {
     JSONAccountBalance,
+    KnownErrorCodes,
     MultiError,
     Result,
     ServerError,
@@ -859,24 +860,21 @@ export class FinancialController {
             accountId = BigInt(accountId);
         }
 
-        const minTime =
-            typeof options?.minTimeMs === 'number'
-                ? BigInt(Math.floor(options.minTimeMs)) * 1000000n
-                : 0n;
-        const maxTime =
-            typeof options?.maxTimeMs === 'number'
-                ? BigInt(Math.floor(options.maxTimeMs)) * 1000000n
-                : 0n;
-        // In account filters, a limit of 0 means no limit.
-        const limit = Math.max(0, options?.limit ?? 0);
-
         const transfers = await this._financialInterface.getAccountTransfers({
             account_id: accountId,
             code: 0, // 0 means all codes
             flags: AccountFilterFlags.credits | AccountFilterFlags.debits,
-            limit,
-            timestamp_max: maxTime,
-            timestamp_min: minTime,
+            // 0 means no limit for account transfer queries.
+            limit: options?.limit ?? 0,
+            // 0 means no timestamp bound.
+            timestamp_max:
+                typeof options?.maxTimeMs === 'number'
+                    ? BigInt(options.maxTimeMs) * 1000000n
+                    : 0n,
+            timestamp_min:
+                typeof options?.minTimeMs === 'number'
+                    ? BigInt(options.minTimeMs) * 1000000n
+                    : 0n,
             user_data_128: 0n, // No user data filter
             user_data_64: 0n, // No user data filter
             user_data_32: 0, // No user data filter
@@ -991,7 +989,19 @@ export class FinancialController {
         >
     > {
         const gen = this._billForUsage(params);
-        await gen.next();
+        const first = await gen.next();
+        if (first.done) {
+            async function* doneGen(): AsyncGenerator<
+                Success<void>,
+                Result<void, SimpleError>,
+                Result<BillingStep, SimpleError>
+            > {
+                yield* [];
+                return first.value;
+            }
+
+            return doneGen();
+        }
         return gen;
     }
 
@@ -1004,24 +1014,70 @@ export class FinancialController {
         Result<BillingStep, SimpleError>
     > {
         let accountResult: GetFinancialAccountResult | null = null;
+        let accountId: string;
         const maxSteps = params.maxSteps || 100;
 
-        // Get or create the user's credits account
-        accountResult = await this.getOrCreateFinancialAccount({
-            userId: params.userId,
-            studioId: params.studioId,
-            ledger: LEDGERS.credits,
-        });
+        const billingAccount = params.billingAccount;
+        if (billingAccount) {
+            if (billingAccount.recordAccountId) {
+                const account = await this.getAccount(
+                    billingAccount.recordAccountId
+                );
+                if (isFailure(account)) {
+                    return account;
+                }
+                accountId = account.value.id.toString();
+            } else {
+                const billingUserId = billingAccount.userId ?? undefined;
+                const billingStudioId = billingAccount.studioId ?? undefined;
 
-        if (isFailure(accountResult)) {
-            logError(
-                accountResult.error,
-                `[FinancialController] [userId: ${params.userId} studioId: ${params.studioId}] Failed to get or create financial account for filter`
-            );
-            return failure({
-                errorCode: 'server_error',
-                errorMessage: 'The server encountered an error.',
+                if (!billingUserId && !billingStudioId) {
+                    return failure({
+                        errorCode: 'invalid_request',
+                        errorMessage:
+                            'Billing account must specify userId, studioId, or recordAccountId.',
+                    });
+                }
+
+                accountResult = await this.getOrCreateFinancialAccount({
+                    userId: billingUserId,
+                    studioId: billingStudioId,
+                    ledger: LEDGERS.credits,
+                });
+
+                if (isFailure(accountResult)) {
+                    logError(
+                        accountResult.error,
+                        `[FinancialController] [userId: ${billingAccount.userId} studioId: ${billingAccount.studioId}] Failed to get or create financial account for billing account`
+                    );
+                    return failure({
+                        errorCode: 'server_error',
+                        errorMessage: 'The server encountered an error.',
+                    });
+                }
+
+                accountId = accountResult.value.account.id.toString();
+            }
+        } else {
+            // Backward-compatible path.
+            accountResult = await this.getOrCreateFinancialAccount({
+                userId: params.userId,
+                studioId: params.studioId,
+                ledger: LEDGERS.credits,
             });
+
+            if (isFailure(accountResult)) {
+                logError(
+                    accountResult.error,
+                    `[FinancialController] [userId: ${params.userId} studioId: ${params.studioId}] Failed to get or create financial account for filter`
+                );
+                return failure({
+                    errorCode: 'server_error',
+                    errorMessage: 'The server encountered an error.',
+                });
+            }
+
+            accountId = accountResult.value.account.id.toString();
         }
 
         let initialAmount: bigint = 0n;
@@ -1031,7 +1087,7 @@ export class FinancialController {
         const transactionId = this._financialInterface.generateId();
 
         console.log(
-            `[FinancialController] [userId: ${params.userId} studioId: ${params.studioId} transactionId: ${transactionId} billingCode: ${params.billingCode}] Billing usage for account ID ${accountResult.value.account.id}`
+            `[FinancialController] [userId: ${params.userId} studioId: ${params.studioId} transactionId: ${transactionId} billingCode: ${params.billingCode}] Billing usage for account ID ${accountId}`
         );
 
         // Process each action and bill for it
@@ -1045,7 +1101,7 @@ export class FinancialController {
                         isSuccess(initialTransferResult)
                     ) {
                         console.log(
-                            `[FinancialController] [userId: ${params.userId} studioId: ${params.studioId} transactionId: ${transactionId}] Voiding billing transfer for account ${accountResult.value.account.id} due to action failure.`
+                            `[FinancialController] [userId: ${params.userId} studioId: ${params.studioId} transactionId: ${transactionId}] Voiding billing transfer for account ${accountId} due to action failure.`
                         );
 
                         // cancel the transfer
@@ -1078,7 +1134,7 @@ export class FinancialController {
                         isSuccess(initialTransferResult);
 
                     console.log(
-                        `[FinancialController] [userId: ${params.userId} studioId: ${params.studioId} transactionId: ${transactionId}] Billing for cost of ${cost} credits for account ${accountResult.value.account.id}.\nCurrently pending: ${initialAmount}\nAdditional amount: ${additionalAmount}\n`
+                        `[FinancialController] [userId: ${params.userId} studioId: ${params.studioId} transactionId: ${transactionId}] Billing for cost of ${cost} credits for account ${accountId}.\nCurrently pending: ${initialAmount}\nAdditional amount: ${additionalAmount}\n`
                     );
 
                     if (
@@ -1142,8 +1198,7 @@ export class FinancialController {
                                 transactionId: transactionId,
                                 transfers: [
                                     {
-                                        debitAccountId:
-                                            accountResult.value.account.id,
+                                        debitAccountId: accountId,
                                         creditAccountId:
                                             ACCOUNT_IDS.revenue_records_usage_credits,
                                         amount: additionalAmount,
@@ -1166,7 +1221,7 @@ export class FinancialController {
                                 additionalTransferResult.error.errorCode ===
                                     'debits_exceed_credits' &&
                                 additionalTransferResult.error.accountId ===
-                                    accountResult.value.account.id.toString()
+                                    accountId
                             ) {
                                 logError(
                                     additionalTransferResult.error,
@@ -1208,7 +1263,7 @@ export class FinancialController {
                     }
 
                     console.log(
-                        `[FinancialController] [userId: ${params.userId} studioId: ${params.studioId} transactionId: ${transactionId}] Creating initial pending transfer for ${result.value.initialCost} credits for account ${accountResult.value.account.id}.`
+                        `[FinancialController] [userId: ${params.userId} studioId: ${params.studioId} transactionId: ${transactionId}] Creating initial pending transfer for ${result.value.initialCost} credits for account ${accountId}.`
                     );
 
                     initialTransferCode =
@@ -1221,8 +1276,7 @@ export class FinancialController {
                             transactionId,
                             transfers: [
                                 {
-                                    debitAccountId:
-                                        accountResult.value.account.id,
+                                    debitAccountId: accountId,
                                     creditAccountId:
                                         ACCOUNT_IDS.revenue_records_usage_credits,
                                     amount: result.value.initialCost,
@@ -1240,7 +1294,7 @@ export class FinancialController {
                             newInitialTransferResult.error.errorCode ===
                                 'debits_exceed_credits' &&
                             newInitialTransferResult.error.accountId ===
-                                accountResult.value.account.id.toString()
+                                accountId
                         ) {
                             logError(
                                 newInitialTransferResult.error,
@@ -1889,6 +1943,12 @@ export interface UsageBillingOptions {
      */
     studioId?: string;
 
+    /**
+     * The resolved billing account details for a record.
+     * If specified, this takes precedence over userId/studioId.
+     */
+    billingAccount?: GetBillingAccountForRecordSuccess;
+
     // /**
     //  * The initial amount that should be reserved before performing the action.
     //  * If null, then no billing will be performed, but results will still be collected.
@@ -2006,4 +2066,123 @@ export async function billForUsage(
     }
 
     return await financial.billForUsage(params);
+}
+
+/**
+ * Represents the result of determining the billing account for a record.
+ */
+export type GetBillingAccountForRecordResult =
+    | GetBillingAccountForRecordSuccess
+    | GetBillingAccountForRecordFailure;
+
+export interface GetBillingAccountForRecordSuccess {
+    success: true;
+
+    /**
+     * The user ID to bill. Null if billing a record or studio.
+     */
+    userId: string | null;
+
+    /**
+     * The studio ID to bill. Null if billing a user or record.
+     */
+    studioId: string | null;
+
+    /**
+     * The record account ID if billing the record, null otherwise.
+     */
+    recordAccountId: string | null;
+}
+
+export interface GetBillingAccountForRecordFailure {
+    success: false;
+    errorCode: KnownErrorCodes;
+    errorMessage: string;
+}
+
+/**
+ * Determines the billing account for a record usage.
+ * If the record has credit billing enabled and a credit account, bills the record.
+ * Otherwise, falls back to billing the record's owner (user or studio).
+ *
+ * @param recordName The name of the record
+ * @param recordStore The record store to fetch record data
+ * @returns The billing configuration (userId/studioId) to use
+ */
+export async function getBillingAccountForRecord(
+    recordName: string,
+    recordStore: {
+        getRecordByName?: (name: string) => Promise<{
+            ownerId?: string | null;
+            studioId?: string | null;
+            creditAccountId?: string | null;
+            creditBillingEnabled?: boolean;
+        } | null>;
+    }
+): Promise<GetBillingAccountForRecordResult> {
+    try {
+        if (!recordStore.getRecordByName) {
+            return {
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage:
+                    'Record billing is not supported by this record store.',
+            };
+        }
+
+        const record = await recordStore.getRecordByName(recordName);
+
+        if (!record) {
+            return {
+                success: false,
+                errorCode: 'record_not_found',
+                errorMessage: 'The specified record was not found.',
+            };
+        }
+
+        // Check if the record has credit billing enabled and a credit account
+        if (record.creditBillingEnabled && record.creditAccountId) {
+            return {
+                success: true,
+                userId: null,
+                studioId: null,
+                recordAccountId: record.creditAccountId,
+            };
+        }
+
+        // Fall back to billing the record owner
+        if (record.ownerId) {
+            return {
+                success: true,
+                userId: record.ownerId,
+                studioId: null,
+                recordAccountId: null,
+            };
+        }
+
+        if (record.studioId) {
+            return {
+                success: true,
+                userId: null,
+                studioId: record.studioId,
+                recordAccountId: null,
+            };
+        }
+
+        return {
+            success: false,
+            errorCode: 'not_authorized',
+            errorMessage: 'The record has no owner or credit account to bill.',
+        };
+    } catch (err) {
+        console.error(
+            '[getBillingAccountForRecord] Error getting billing account for record:',
+            err
+        );
+        return {
+            success: false,
+            errorCode: 'server_error',
+            errorMessage: 'A server error occurred.',
+        };
+    }
 }

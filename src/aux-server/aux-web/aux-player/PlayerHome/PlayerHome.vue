@@ -38,7 +38,7 @@
                             ref="biosOptions"
                             :value="option"
                             :class="{ 'double-line': hasOptionDescription(option) }"
-                            ><span>{{ option }}</span
+                            ><span>{{ getOptionLabel(option) }}</span
                             ><span v-if="hasOptionDescription(option)">{{
                                 getOptionDescription(option)
                             }}</span></bios-option

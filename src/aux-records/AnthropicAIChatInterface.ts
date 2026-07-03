@@ -168,6 +168,31 @@ export class AnthropicAIChatInterface implements AIChatInterface {
                             anthropic: chunk,
                         };
                     }
+                } else if (chunk.type === 'content_block_start') {
+                    if (chunk.content_block.type === 'text') {
+                        yield {
+                            choices: [
+                                {
+                                    content: chunk.content_block.text,
+                                    role: 'assistant',
+                                    anthropic: chunk,
+                                },
+                            ],
+                            totalTokens: 0,
+                            anthropic: chunk,
+                        };
+                    }
+                } else if ('usage' in chunk) {
+                    // Chunck has usage info
+                    yield {
+                        choices: [],
+                        totalTokens:
+                            chunk.usage.input_tokens +
+                            chunk.usage.output_tokens,
+                        inputTokens: chunk.usage.input_tokens,
+                        outputTokens: chunk.usage.output_tokens,
+                        anthropic: chunk,
+                    };
                 }
             }
 
