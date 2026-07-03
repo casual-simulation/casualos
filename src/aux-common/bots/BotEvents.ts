@@ -135,6 +135,7 @@ export type AsyncActions =
     | ShowAlertAction
     | ShowConfirmAction
     | ShareAction
+    | SendEmbedMessageAction
     | ImportAUXAction
     | RegisterBuiltinPortalAction
     | RegisterPrefixAction
@@ -2539,6 +2540,26 @@ export interface ShareOptions {
  */
 export interface ShareAction extends AsyncAction, ShareOptions {
     type: 'share';
+}
+
+/**
+ * Defines an event that sends a message to the parent window that CasualOS is embedded in.
+ *
+ * @dochash types/os/system
+ * @docname SendEmbedMessageAction
+ */
+export interface SendEmbedMessageAction extends AsyncAction {
+    type: 'send_embed_message';
+
+    /**
+     * The message that should be sent to the parent window.
+     */
+    message: any;
+
+    /**
+     * The origin that the parent window must have in order to receive the message.
+     */
+    targetOrigin?: string;
 }
 
 /**
@@ -5809,6 +5830,25 @@ export function share(
         type: 'share',
         taskId,
         ...options,
+    };
+}
+
+/**
+ * Creates an action that sends a message to the parent window that CasualOS is embedded in.
+ * @param message The message to send to the parent window.
+ * @param targetOrigin The origin that the parent window must have in order to receive the message.
+ * @param taskId The ID of the task.
+ */
+export function sendEmbedMessage(
+    message: any,
+    targetOrigin?: string,
+    taskId?: number | string
+): SendEmbedMessageAction {
+    return {
+        type: 'send_embed_message',
+        taskId,
+        message,
+        targetOrigin,
     };
 }
 

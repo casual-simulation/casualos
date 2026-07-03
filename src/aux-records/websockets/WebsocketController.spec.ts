@@ -499,6 +499,41 @@ describe('WebsocketController', () => {
                     );
                 });
 
+                it('should return a not_authorized error if the public inst is explicitly non-expiring', async () => {
+                    await connectionStore.saveConnection(device1Info);
+
+                    await server.watchBranch(device1Info.serverConnectionId, {
+                        type: 'repo/watch_branch',
+                        recordName: null,
+                        inst,
+                        branch: 'doesNotExist',
+                        expires: false,
+                    });
+
+                    expect(
+                        messenger.getMessages(device1Info.serverConnectionId)
+                    ).toEqual([
+                        {
+                            type: 'repo/watch_branch_result',
+                            success: false,
+                            recordName: null,
+                            inst,
+                            branch: 'doesNotExist',
+                            errorCode: 'not_authorized',
+                            errorMessage:
+                                'Public insts cannot be non-expiring.',
+                        },
+                    ]);
+
+                    expect(
+                        await instStore.getBranchByName(
+                            null,
+                            inst,
+                            'doesNotExist'
+                        )
+                    ).toBeNull();
+                });
+
                 it('should return a not_authorized error if recordless insts are not allowed', async () => {
                     store.subscriptionConfiguration = buildSubscriptionConfig(
                         (config) =>
@@ -1179,6 +1214,128 @@ describe('WebsocketController', () => {
                                     inst,
                                     markers: [PRIVATE_MARKER],
                                 });
+                            });
+
+                            it('should create an expiring private branch in the temp store when expires is true', async () => {
+                                await server.login(serverConnectionId, 1, {
+                                    type: 'login',
+                                    connectionToken: connectionToken,
+                                });
+
+                                await server.watchBranch(serverConnectionId, {
+                                    type: 'repo/watch_branch',
+                                    recordName,
+                                    inst,
+                                    branch: 'expiringBranch',
+                                    expires: true,
+                                });
+
+                                expect(
+                                    messenger
+                                        .getMessages(serverConnectionId)
+                                        .slice(1)
+                                ).toEqual([
+                                    {
+                                        type: 'repo/add_updates',
+                                        recordName,
+                                        inst,
+                                        branch: 'expiringBranch',
+                                        updates: [],
+                                        initial: true,
+                                    },
+                                    {
+                                        type: 'repo/watch_branch_result',
+                                        success: true,
+                                        recordName,
+                                        inst,
+                                        branch: 'expiringBranch',
+                                    },
+                                ]);
+
+                                expect(
+                                    await instStore.perm.getBranchByName(
+                                        recordName,
+                                        inst,
+                                        'expiringBranch'
+                                    )
+                                ).toBeNull();
+
+                                expect(
+                                    await instStore.temp.getBranchByName(
+                                        recordName,
+                                        inst,
+                                        'expiringBranch'
+                                    )
+                                ).toEqual(
+                                    expect.objectContaining({
+                                        recordName,
+                                        inst,
+                                        branch: 'expiringBranch',
+                                        temporary: false,
+                                        expires: true,
+                                        branchSizeInBytes: 0,
+                                        linkedInst: expect.objectContaining({
+                                            recordName,
+                                            inst,
+                                            markers: [PRIVATE_MARKER],
+                                            expires: true,
+                                        }),
+                                    })
+                                );
+                            });
+
+                            it('should reject expires mismatch for an existing private inst', async () => {
+                                await instStore.saveInst({
+                                    recordName,
+                                    inst,
+                                    markers: [PRIVATE_MARKER],
+                                });
+
+                                await server.login(serverConnectionId, 1, {
+                                    type: 'login',
+                                    connectionToken: connectionToken,
+                                });
+
+                                await server.watchBranch(serverConnectionId, {
+                                    type: 'repo/watch_branch',
+                                    recordName,
+                                    inst,
+                                    branch: 'mismatchBranch',
+                                    expires: true,
+                                });
+
+                                expect(
+                                    messenger
+                                        .getMessages(serverConnectionId)
+                                        .slice(1)
+                                ).toEqual([
+                                    {
+                                        type: 'repo/watch_branch_result',
+                                        success: false,
+                                        errorCode: 'invalid_request',
+                                        errorMessage:
+                                            'The requested expires value does not match the existing inst.',
+                                        recordName,
+                                        inst,
+                                        branch: 'mismatchBranch',
+                                    },
+                                ]);
+
+                                expect(
+                                    await instStore.perm.getBranchByName(
+                                        recordName,
+                                        inst,
+                                        'mismatchBranch'
+                                    )
+                                ).toBeNull();
+
+                                expect(
+                                    await instStore.temp.getBranchByName(
+                                        recordName,
+                                        inst,
+                                        'mismatchBranch'
+                                    )
+                                ).toBeNull();
                             });
 
                             it('should support record keys', async () => {
@@ -10866,6 +11023,284 @@ describe('WebsocketController', () => {
                     },
                 ]);
             });
+
+            describe('expiring insts', () => {
+                beforeEach(async () => {
+                    await instStore.temp.saveBranchInfo({
+                        recordName,
+                        inst,
+                        branch: DEFAULT_BRANCH_NAME,
+                        temporary: false,
+                        expires: true,
+                        linkedInst: {
+                            recordName,
+                            inst,
+                            markers: [PRIVATE_MARKER],
+                            expires: true,
+                            subscriptionId: null,
+                            subscriptionStatus: null,
+                            subscriptionType: null,
+                        },
+                    });
+                });
+
+                it('should save the loaded package to the temp store instead of the permanent store', async () => {
+                    uuidv7Mock.mockReturnValueOnce('packageId');
+
+                    const result = await server.installPackage({
+                        userId,
+                        userRole: 'none',
+                        recordName,
+                        inst,
+                        package: {
+                            recordName,
+                            address: 'public',
+                            key: version(1),
+                        },
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                        packageLoadId: 'packageId',
+                        package: {
+                            id: 'public@1.0.0',
+                            packageId: 'public',
+                            address: 'public',
+                            key: version(1),
+                            entitlements: [],
+                            description: '',
+                            markers: [PUBLIC_READ_MARKER],
+                            createdAtMs: expect.any(Number),
+                            sha256: expect.any(String),
+                            auxSha256: expect.any(String),
+                            auxFileName: expect.any(String),
+                            createdFile: true,
+                            requiresReview: false,
+                            sizeInBytes: expect.any(Number),
+                            approved: true,
+                            approvalType: 'normal',
+                        },
+                    });
+
+                    expect(
+                        await instStore.temp.listLoadedPackages(
+                            recordName,
+                            inst
+                        )
+                    ).toEqual([
+                        {
+                            id: 'packageId',
+                            recordName,
+                            inst,
+                            branch: DEFAULT_BRANCH_NAME,
+                            packageId: 'public',
+                            packageVersionId: 'public@1.0.0',
+                            userId: userId,
+                            expires: true,
+                        },
+                    ]);
+                    expect(
+                        await instStore.perm.listLoadedPackages(
+                            recordName,
+                            inst
+                        )
+                    ).toEqual([]);
+                    expect(
+                        await instStore.listLoadedPackages(recordName, inst)
+                    ).toEqual([
+                        {
+                            id: 'packageId',
+                            recordName,
+                            inst,
+                            branch: DEFAULT_BRANCH_NAME,
+                            packageId: 'public',
+                            packageVersionId: 'public@1.0.0',
+                            userId: userId,
+                            expires: true,
+                        },
+                    ]);
+                });
+
+                it('should do nothing if the exact package version is already loaded', async () => {
+                    uuidv7Mock.mockReturnValueOnce('packageId');
+
+                    await server.installPackage({
+                        userId,
+                        userRole: 'none',
+                        recordName,
+                        inst,
+                        package: {
+                            recordName,
+                            address: 'public',
+                            key: version(1),
+                        },
+                    });
+
+                    const result2 = await server.installPackage({
+                        userId,
+                        userRole: 'none',
+                        recordName,
+                        inst,
+                        package: {
+                            recordName,
+                            address: 'public',
+                            key: version(1),
+                        },
+                    });
+
+                    expect(result2).toEqual({
+                        success: true,
+                        packageLoadId: 'packageId',
+                        package: {
+                            id: 'public@1.0.0',
+                            packageId: 'public',
+                            address: 'public',
+                            key: version(1),
+                            entitlements: [],
+                            description: '',
+                            markers: [PUBLIC_READ_MARKER],
+                            createdAtMs: expect.any(Number),
+                            sha256: expect.any(String),
+                            auxSha256: expect.any(String),
+                            auxFileName: expect.any(String),
+                            createdFile: true,
+                            requiresReview: false,
+                            sizeInBytes: expect.any(Number),
+                            approved: true,
+                            approvalType: 'normal',
+                        },
+                    });
+
+                    expect(
+                        await instStore.temp.listLoadedPackages(
+                            recordName,
+                            inst
+                        )
+                    ).toEqual([
+                        {
+                            id: 'packageId',
+                            recordName,
+                            inst,
+                            branch: DEFAULT_BRANCH_NAME,
+                            packageId: 'public',
+                            packageVersionId: 'public@1.0.0',
+                            userId: userId,
+                            expires: true,
+                        },
+                    ]);
+                    expect(
+                        await instStore.perm.listLoadedPackages(
+                            recordName,
+                            inst
+                        )
+                    ).toEqual([]);
+                });
+
+                it('should upgrade the package in the temp store if a new version is installed', async () => {
+                    await recordPackage(
+                        recordName,
+                        'upgradable',
+                        [PUBLIC_READ_MARKER],
+                        version(1),
+                        {
+                            version: 1,
+                            state: {
+                                test: createBot('test', {
+                                    abc: 'def',
+                                }),
+                            },
+                        }
+                    );
+
+                    await recordPackage(
+                        recordName,
+                        'upgradable',
+                        [PUBLIC_READ_MARKER],
+                        version(2),
+                        {
+                            version: 1,
+                            state: {
+                                test: createBot('test', {
+                                    abc: 'ghi',
+                                }),
+                            },
+                        }
+                    );
+
+                    uuidv7Mock.mockReturnValueOnce('packageId');
+
+                    await server.installPackage({
+                        userId,
+                        userRole: 'none',
+                        recordName,
+                        inst,
+                        package: {
+                            recordName,
+                            address: 'upgradable',
+                            key: version(1),
+                        },
+                    });
+
+                    const result2 = await server.installPackage({
+                        userId,
+                        userRole: 'none',
+                        recordName,
+                        inst,
+                        package: {
+                            recordName,
+                            address: 'upgradable',
+                            key: version(2),
+                        },
+                    });
+
+                    expect(result2).toEqual({
+                        success: true,
+                        packageLoadId: 'packageId',
+                        package: {
+                            id: 'upgradable@2.0.0',
+                            packageId: 'upgradable',
+                            address: 'upgradable',
+                            key: version(2),
+                            entitlements: [],
+                            description: '',
+                            markers: [PUBLIC_READ_MARKER],
+                            createdAtMs: expect.any(Number),
+                            sha256: expect.any(String),
+                            auxSha256: expect.any(String),
+                            auxFileName: expect.any(String),
+                            createdFile: true,
+                            requiresReview: false,
+                            sizeInBytes: expect.any(Number),
+                            approved: true,
+                            approvalType: 'normal',
+                        },
+                    });
+
+                    expect(
+                        await instStore.temp.listLoadedPackages(
+                            recordName,
+                            inst
+                        )
+                    ).toEqual([
+                        {
+                            id: 'packageId',
+                            recordName,
+                            inst,
+                            branch: DEFAULT_BRANCH_NAME,
+                            packageId: 'upgradable',
+                            packageVersionId: 'upgradable@2.0.0',
+                            userId: userId,
+                            expires: true,
+                        },
+                    ]);
+                    expect(
+                        await instStore.perm.listLoadedPackages(
+                            recordName,
+                            inst
+                        )
+                    ).toEqual([]);
+                });
+            });
         });
 
         describe('listInstalledPackages()', () => {
@@ -13118,6 +13553,73 @@ describe('WebsocketController', () => {
                 expect(
                     await instStore.temp.getDirtyBranchGeneration()
                 ).not.toBe(generation);
+            });
+
+            it('should skip saving expiring and public branches', async () => {
+                await instStore.temp.saveBranchInfo({
+                    recordName,
+                    inst,
+                    branch: 'expiring',
+                    temporary: false,
+                    expires: true,
+                    linkedInst: null,
+                });
+                await instStore.temp.addUpdates(
+                    recordName,
+                    inst,
+                    'expiring',
+                    [update1Base64],
+                    update1Base64.length
+                );
+
+                await instStore.temp.saveBranchInfo({
+                    recordName: null,
+                    inst,
+                    branch: 'public',
+                    temporary: false,
+                    linkedInst: null,
+                });
+                await instStore.temp.addUpdates(
+                    null,
+                    inst,
+                    'public',
+                    [update2Base64],
+                    update2Base64.length
+                );
+
+                await server.savePermanentBranches();
+
+                expect(
+                    await instStore.perm.getCurrentUpdates(
+                        recordName,
+                        inst,
+                        'expiring'
+                    )
+                ).toBeNull();
+
+                expect(
+                    await instStore.temp.getUpdates(
+                        recordName,
+                        inst,
+                        'expiring'
+                    )
+                ).toEqual(
+                    expect.objectContaining({
+                        updates: [update1Base64],
+                        timestamps: [expect.any(Number)],
+                        branchSizeInBytes: update1Base64.length,
+                        instSizeInBytes: expect.any(Number),
+                    })
+                );
+
+                expect(
+                    await instStore.temp.getUpdates(null, inst, 'public')
+                ).toEqual({
+                    updates: [update2Base64],
+                    timestamps: [expect.any(Number)],
+                    instSizeInBytes: update2Base64.length,
+                    branchSizeInBytes: update2Base64.length,
+                });
             });
         });
     });

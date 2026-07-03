@@ -756,6 +756,7 @@ model InstRecord {
     name String
 
     markers Json
+    expires Boolean @default(false)
 
     branches InstBranch[]
     updates BranchUpdate[]
