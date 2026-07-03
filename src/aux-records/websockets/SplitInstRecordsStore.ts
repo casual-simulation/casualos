@@ -86,11 +86,16 @@ export class SplitInstRecordsStore implements InstRecordsStore {
         recordName: string | null,
         inst: string
     ): Promise<LoadedPackage[]> {
-        if (recordName) {
-            return await this._permanent.listLoadedPackages(recordName, inst);
-        } else {
+        if (!recordName) {
             return await this._temp.listLoadedPackages(recordName, inst);
         }
+
+        const [tempPackages, permPackages] = await Promise.all([
+            this._temp.listLoadedPackages(recordName, inst),
+            this._permanent.listLoadedPackages(recordName, inst),
+        ]);
+
+        return tempPackages.length > 0 ? tempPackages : permPackages;
     }
 
     async isPackageLoaded(
@@ -98,19 +103,20 @@ export class SplitInstRecordsStore implements InstRecordsStore {
         inst: string,
         packageId: string
     ): Promise<LoadedPackage | null> {
-        if (recordName) {
-            return await this._permanent.isPackageLoaded(
-                recordName,
-                inst,
-                packageId
-            );
-        } else {
+        if (!recordName) {
             return await this._temp.isPackageLoaded(
                 recordName,
                 inst,
                 packageId
             );
         }
+
+        const [tempResult, permResult] = await Promise.all([
+            this._temp.isPackageLoaded(recordName, inst, packageId),
+            this._permanent.isPackageLoaded(recordName, inst, packageId),
+        ]);
+
+        return tempResult ?? permResult;
     }
 
     async getInstByName(

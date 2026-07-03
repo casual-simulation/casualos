@@ -581,9 +581,18 @@ describe('SplitInstRecordsStore', () => {
                 expires: true,
             });
 
-            expect(await store.listLoadedPackages('record', 'test')).toEqual(
-                []
-            );
+            expect(await store.listLoadedPackages('record', 'test')).toEqual([
+                {
+                    id: 'package',
+                    recordName: 'record',
+                    inst: 'test',
+                    packageId: 'packageId',
+                    packageVersionId: 'packageVersionId',
+                    userId: 'user',
+                    branch: DEFAULT_BRANCH_NAME,
+                    expires: true,
+                },
+            ]);
             expect(await temp.listLoadedPackages('record', 'test')).toEqual([
                 {
                     id: 'package',
@@ -597,6 +606,146 @@ describe('SplitInstRecordsStore', () => {
                 },
             ]);
             expect(await perm.listLoadedPackages('record', 'test')).toEqual([]);
+        });
+    });
+
+    describe('listLoadedPackages()', () => {
+        it('should find a package saved to the temp store for an expiring private inst', async () => {
+            await store.saveLoadedPackage({
+                id: 'package',
+                recordName: 'record',
+                inst: 'test',
+                packageId: 'packageId',
+                packageVersionId: 'packageVersionId',
+                userId: 'user',
+                branch: DEFAULT_BRANCH_NAME,
+                expires: true,
+            });
+
+            expect(await store.listLoadedPackages('record', 'test')).toEqual([
+                {
+                    id: 'package',
+                    recordName: 'record',
+                    inst: 'test',
+                    packageId: 'packageId',
+                    packageVersionId: 'packageVersionId',
+                    userId: 'user',
+                    branch: DEFAULT_BRANCH_NAME,
+                    expires: true,
+                },
+            ]);
+        });
+
+        it('should find a package saved to the permanent store for a non-expiring private inst', async () => {
+            await store.saveLoadedPackage({
+                id: 'package',
+                recordName: 'record',
+                inst: 'test',
+                packageId: 'packageId',
+                packageVersionId: 'packageVersionId',
+                userId: 'user',
+                branch: DEFAULT_BRANCH_NAME,
+            });
+
+            expect(await store.listLoadedPackages('record', 'test')).toEqual([
+                {
+                    id: 'package',
+                    recordName: 'record',
+                    inst: 'test',
+                    packageId: 'packageId',
+                    packageVersionId: 'packageVersionId',
+                    userId: 'user',
+                    branch: DEFAULT_BRANCH_NAME,
+                },
+            ]);
+        });
+
+        it('should find a package saved to the temp store for a public inst', async () => {
+            await store.saveLoadedPackage({
+                id: 'package',
+                recordName: null,
+                inst: 'test',
+                packageId: 'packageId',
+                packageVersionId: 'packageVersionId',
+                userId: 'user',
+                branch: DEFAULT_BRANCH_NAME,
+            });
+
+            expect(await store.listLoadedPackages(null, 'test')).toEqual([
+                {
+                    id: 'package',
+                    recordName: null,
+                    inst: 'test',
+                    packageId: 'packageId',
+                    packageVersionId: 'packageVersionId',
+                    userId: 'user',
+                    branch: DEFAULT_BRANCH_NAME,
+                },
+            ]);
+        });
+
+        it('should return an empty array if no packages are loaded for an expiring private inst', async () => {
+            expect(await store.listLoadedPackages('record', 'test')).toEqual(
+                []
+            );
+        });
+    });
+
+    describe('isPackageLoaded()', () => {
+        it('should find a package saved to the temp store for an expiring private inst', async () => {
+            await store.saveLoadedPackage({
+                id: 'package',
+                recordName: 'record',
+                inst: 'test',
+                packageId: 'packageId',
+                packageVersionId: 'packageVersionId',
+                userId: 'user',
+                branch: DEFAULT_BRANCH_NAME,
+                expires: true,
+            });
+
+            expect(
+                await store.isPackageLoaded('record', 'test', 'packageId')
+            ).toEqual({
+                id: 'package',
+                recordName: 'record',
+                inst: 'test',
+                packageId: 'packageId',
+                packageVersionId: 'packageVersionId',
+                userId: 'user',
+                branch: DEFAULT_BRANCH_NAME,
+                expires: true,
+            });
+        });
+
+        it('should find a package saved to the permanent store for a non-expiring private inst', async () => {
+            await store.saveLoadedPackage({
+                id: 'package',
+                recordName: 'record',
+                inst: 'test',
+                packageId: 'packageId',
+                packageVersionId: 'packageVersionId',
+                userId: 'user',
+                branch: DEFAULT_BRANCH_NAME,
+            });
+
+            expect(
+                await store.isPackageLoaded('record', 'test', 'packageId')
+            ).toEqual({
+                id: 'package',
+                recordName: 'record',
+                inst: 'test',
+                packageId: 'packageId',
+                packageVersionId: 'packageVersionId',
+                userId: 'user',
+                branch: DEFAULT_BRANCH_NAME,
+            });
+        });
+
+        it('should return null if the package is not loaded for an expiring private inst', async () => {
+            expect(
+                await store.isPackageLoaded('record', 'test', 'packageId')
+            ).toBeNull();
         });
     });
 

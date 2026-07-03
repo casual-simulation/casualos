@@ -2465,6 +2465,14 @@ export class WebsocketController {
         }
 
         const loadedPackageStore = this._instStore;
+        const branch = request.branch ?? DEFAULT_BRANCH_NAME;
+
+        const existingBranchInfo = await this._instStore.getBranchByName(
+            request.recordName,
+            request.inst,
+            branch
+        );
+        const expires = existingBranchInfo?.expires === true;
 
         const loadedPackage = await loadedPackageStore.isPackageLoaded(
             request.recordName,
@@ -2530,8 +2538,6 @@ export class WebsocketController {
                           )
                       ),
                   ];
-
-        const branch = request.branch ?? DEFAULT_BRANCH_NAME;
 
         if (loadedPackage) {
             // Different version
@@ -2619,6 +2625,7 @@ export class WebsocketController {
             packageVersionId: p.item.id,
 
             userId: userId,
+            ...(expires === true ? { expires: true } : {}),
         });
 
         return {

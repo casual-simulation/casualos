@@ -11023,6 +11023,284 @@ describe('WebsocketController', () => {
                     },
                 ]);
             });
+
+            describe('expiring insts', () => {
+                beforeEach(async () => {
+                    await instStore.temp.saveBranchInfo({
+                        recordName,
+                        inst,
+                        branch: DEFAULT_BRANCH_NAME,
+                        temporary: false,
+                        expires: true,
+                        linkedInst: {
+                            recordName,
+                            inst,
+                            markers: [PRIVATE_MARKER],
+                            expires: true,
+                            subscriptionId: null,
+                            subscriptionStatus: null,
+                            subscriptionType: null,
+                        },
+                    });
+                });
+
+                it('should save the loaded package to the temp store instead of the permanent store', async () => {
+                    uuidv7Mock.mockReturnValueOnce('packageId');
+
+                    const result = await server.installPackage({
+                        userId,
+                        userRole: 'none',
+                        recordName,
+                        inst,
+                        package: {
+                            recordName,
+                            address: 'public',
+                            key: version(1),
+                        },
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                        packageLoadId: 'packageId',
+                        package: {
+                            id: 'public@1.0.0',
+                            packageId: 'public',
+                            address: 'public',
+                            key: version(1),
+                            entitlements: [],
+                            description: '',
+                            markers: [PUBLIC_READ_MARKER],
+                            createdAtMs: expect.any(Number),
+                            sha256: expect.any(String),
+                            auxSha256: expect.any(String),
+                            auxFileName: expect.any(String),
+                            createdFile: true,
+                            requiresReview: false,
+                            sizeInBytes: expect.any(Number),
+                            approved: true,
+                            approvalType: 'normal',
+                        },
+                    });
+
+                    expect(
+                        await instStore.temp.listLoadedPackages(
+                            recordName,
+                            inst
+                        )
+                    ).toEqual([
+                        {
+                            id: 'packageId',
+                            recordName,
+                            inst,
+                            branch: DEFAULT_BRANCH_NAME,
+                            packageId: 'public',
+                            packageVersionId: 'public@1.0.0',
+                            userId: userId,
+                            expires: true,
+                        },
+                    ]);
+                    expect(
+                        await instStore.perm.listLoadedPackages(
+                            recordName,
+                            inst
+                        )
+                    ).toEqual([]);
+                    expect(
+                        await instStore.listLoadedPackages(recordName, inst)
+                    ).toEqual([
+                        {
+                            id: 'packageId',
+                            recordName,
+                            inst,
+                            branch: DEFAULT_BRANCH_NAME,
+                            packageId: 'public',
+                            packageVersionId: 'public@1.0.0',
+                            userId: userId,
+                            expires: true,
+                        },
+                    ]);
+                });
+
+                it('should do nothing if the exact package version is already loaded', async () => {
+                    uuidv7Mock.mockReturnValueOnce('packageId');
+
+                    await server.installPackage({
+                        userId,
+                        userRole: 'none',
+                        recordName,
+                        inst,
+                        package: {
+                            recordName,
+                            address: 'public',
+                            key: version(1),
+                        },
+                    });
+
+                    const result2 = await server.installPackage({
+                        userId,
+                        userRole: 'none',
+                        recordName,
+                        inst,
+                        package: {
+                            recordName,
+                            address: 'public',
+                            key: version(1),
+                        },
+                    });
+
+                    expect(result2).toEqual({
+                        success: true,
+                        packageLoadId: 'packageId',
+                        package: {
+                            id: 'public@1.0.0',
+                            packageId: 'public',
+                            address: 'public',
+                            key: version(1),
+                            entitlements: [],
+                            description: '',
+                            markers: [PUBLIC_READ_MARKER],
+                            createdAtMs: expect.any(Number),
+                            sha256: expect.any(String),
+                            auxSha256: expect.any(String),
+                            auxFileName: expect.any(String),
+                            createdFile: true,
+                            requiresReview: false,
+                            sizeInBytes: expect.any(Number),
+                            approved: true,
+                            approvalType: 'normal',
+                        },
+                    });
+
+                    expect(
+                        await instStore.temp.listLoadedPackages(
+                            recordName,
+                            inst
+                        )
+                    ).toEqual([
+                        {
+                            id: 'packageId',
+                            recordName,
+                            inst,
+                            branch: DEFAULT_BRANCH_NAME,
+                            packageId: 'public',
+                            packageVersionId: 'public@1.0.0',
+                            userId: userId,
+                            expires: true,
+                        },
+                    ]);
+                    expect(
+                        await instStore.perm.listLoadedPackages(
+                            recordName,
+                            inst
+                        )
+                    ).toEqual([]);
+                });
+
+                it('should upgrade the package in the temp store if a new version is installed', async () => {
+                    await recordPackage(
+                        recordName,
+                        'upgradable',
+                        [PUBLIC_READ_MARKER],
+                        version(1),
+                        {
+                            version: 1,
+                            state: {
+                                test: createBot('test', {
+                                    abc: 'def',
+                                }),
+                            },
+                        }
+                    );
+
+                    await recordPackage(
+                        recordName,
+                        'upgradable',
+                        [PUBLIC_READ_MARKER],
+                        version(2),
+                        {
+                            version: 1,
+                            state: {
+                                test: createBot('test', {
+                                    abc: 'ghi',
+                                }),
+                            },
+                        }
+                    );
+
+                    uuidv7Mock.mockReturnValueOnce('packageId');
+
+                    await server.installPackage({
+                        userId,
+                        userRole: 'none',
+                        recordName,
+                        inst,
+                        package: {
+                            recordName,
+                            address: 'upgradable',
+                            key: version(1),
+                        },
+                    });
+
+                    const result2 = await server.installPackage({
+                        userId,
+                        userRole: 'none',
+                        recordName,
+                        inst,
+                        package: {
+                            recordName,
+                            address: 'upgradable',
+                            key: version(2),
+                        },
+                    });
+
+                    expect(result2).toEqual({
+                        success: true,
+                        packageLoadId: 'packageId',
+                        package: {
+                            id: 'upgradable@2.0.0',
+                            packageId: 'upgradable',
+                            address: 'upgradable',
+                            key: version(2),
+                            entitlements: [],
+                            description: '',
+                            markers: [PUBLIC_READ_MARKER],
+                            createdAtMs: expect.any(Number),
+                            sha256: expect.any(String),
+                            auxSha256: expect.any(String),
+                            auxFileName: expect.any(String),
+                            createdFile: true,
+                            requiresReview: false,
+                            sizeInBytes: expect.any(Number),
+                            approved: true,
+                            approvalType: 'normal',
+                        },
+                    });
+
+                    expect(
+                        await instStore.temp.listLoadedPackages(
+                            recordName,
+                            inst
+                        )
+                    ).toEqual([
+                        {
+                            id: 'packageId',
+                            recordName,
+                            inst,
+                            branch: DEFAULT_BRANCH_NAME,
+                            packageId: 'upgradable',
+                            packageVersionId: 'upgradable@2.0.0',
+                            userId: userId,
+                            expires: true,
+                        },
+                    ]);
+                    expect(
+                        await instStore.perm.listLoadedPackages(
+                            recordName,
+                            inst
+                        )
+                    ).toEqual([]);
+                });
+            });
         });
 
         describe('listInstalledPackages()', () => {
