@@ -174,6 +174,7 @@ import {
     webhook as calcWebhook,
     superShout as calcSuperShout,
     share as calcShare,
+    sendEmbedMessage as calcSendEmbedMessage,
     registerPrefix as calcRegisterPrefix,
     localPositionTween as calcLocalPositionTween,
     localRotationTween as calcLocalRotationTween,
@@ -3730,6 +3731,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 cancelSound,
                 hasBotInMiniPortal,
                 share,
+                sendEmbedMessage,
                 closeCircleWipe,
                 openCircleWipe,
                 addDropSnap,
@@ -6898,6 +6900,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             allowCollaborationUpgrade: null as boolean,
             ab1BootstrapUrl: null as string,
             comID: null as string,
+            isEmbedded: null as boolean,
         };
     }
 
@@ -8914,6 +8917,39 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function share(options: ShareOptions): Promise<void> {
         const task = context.createTask();
         const event = calcShare(options, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Sends a message to the parent window that this CasualOS instance is embedded in.
+     * Returns a Promise that resolves when the message has been sent.
+     * Throws an error if this CasualOS instance is not embedded in an iframe.
+     *
+     * The message must be structure cloneable (transferrables are not supported).
+     *
+     * @param message the message to send to the parent window.
+     * @param targetOrigin the origin that the parent window must have in order to receive the message. If not specified, then the message will be sent to the parent window regardless of its origin.
+     *
+     * @example Send a message to the parent window.
+     * await os.sendEmbedMessage({ hello: 'world' });
+     *
+     * @example Send a message to the parent window with a specific target origin.
+     * await os.sendEmbedMessage({ hello: 'world' }, 'https://example.com');
+     *
+     * @dochash actions/os/system
+     * @docname os.sendEmbedMessage
+     */
+    function sendEmbedMessage(
+        message: any,
+        targetOrigin?: string
+    ): Promise<void> {
+        if (!context.device?.isEmbedded) {
+            throw new Error(
+                'os.sendEmbedMessage() can only be used when CasualOS is embedded in an iframe.'
+            );
+        }
+        const task = context.createTask();
+        const event = calcSendEmbedMessage(message, targetOrigin, task.taskId);
         return addAsyncAction(task, event);
     }
 

@@ -10,6 +10,10 @@
 
 ### :rocket: Features
 
+-   Added support for sending and receiving messages with the window that CasualOS is embedded in.
+    -   Added `os.sendEmbedMessage(message, targetOrigin)` to send a message to the parent window.
+    -   Added `@onEmbedMessage` to listen for messages sent from the parent window.
+    -   Added `isEmbedded` to `os.device()` to indicate whether CasualOS is currently embedded in an iframe.
 -   Added support for granting records credit budgets
 -   Added support for expiring private insts.
     -   Added optional `expires` support to inst/branch/package records and websocket `repo/watch_branch` requests.

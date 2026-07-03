@@ -1213,6 +1213,7 @@ describe('BaseAuxChannel', () => {
                         allowCollaborationUpgrade: false,
                         ab1BootstrapUrl: 'bootstrap',
                         comID: null,
+                        isEmbedded: false,
                     }
                 );
 
@@ -1274,6 +1275,7 @@ describe('BaseAuxChannel', () => {
                         allowCollaborationUpgrade: false,
                         ab1BootstrapUrl: 'bootstrap',
                         comID: null,
+                        isEmbedded: false,
                     }
                 );
 
@@ -1364,6 +1366,7 @@ describe('BaseAuxChannel', () => {
                         allowCollaborationUpgrade: false,
                         ab1BootstrapUrl: 'bootstrap',
                         comID: null,
+                        isEmbedded: false,
                     }
                 );
 
@@ -1465,6 +1468,7 @@ describe('BaseAuxChannel', () => {
                         allowCollaborationUpgrade: false,
                         ab1BootstrapUrl: 'bootstrap',
                         comID: null,
+                        isEmbedded: false,
                     }
                 );
 
@@ -1583,6 +1587,7 @@ describe('BaseAuxChannel', () => {
                         allowCollaborationUpgrade: false,
                         ab1BootstrapUrl: 'bootstrap',
                         comID: null,
+                        isEmbedded: false,
                     }
                 );
 
@@ -1760,6 +1765,7 @@ describe('BaseAuxChannel', () => {
                         allowCollaborationUpgrade: false,
                         ab1BootstrapUrl: 'bootstrap',
                         comID: null,
+                        isEmbedded: false,
                     }
                 );
 
@@ -1825,6 +1831,7 @@ describe('BaseAuxChannel', () => {
                             supportsVR: false,
                             supportsDOM: false,
                             comID: null,
+                            isEmbedded: false,
                         },
                     },
                     partitions: {
@@ -1923,6 +1930,7 @@ describe('BaseAuxChannel', () => {
                             supportsVR: false,
                             supportsDOM: false,
                             comID: null,
+                            isEmbedded: false,
                         },
                     },
                     partitions: {
@@ -2010,6 +2018,7 @@ describe('BaseAuxChannel', () => {
                             supportsVR: false,
                             supportsDOM: false,
                             comID: null,
+                            isEmbedded: false,
                         },
                     },
                     partitions: {
@@ -2219,6 +2228,7 @@ describe('BaseAuxChannel', () => {
                         allowCollaborationUpgrade: false,
                         isCollaborative: false,
                         comID: null,
+                        isEmbedded: false,
                     },
                 },
                 partitions: {
@@ -2247,6 +2257,7 @@ describe('BaseAuxChannel', () => {
                 allowCollaborationUpgrade: false,
                 isCollaborative: false,
                 comID: null,
+                isEmbedded: false,
             });
 
             await channel.updateDevice({
@@ -2257,6 +2268,7 @@ describe('BaseAuxChannel', () => {
                 allowCollaborationUpgrade: true,
                 isCollaborative: true,
                 comID: null,
+                isEmbedded: false,
             });
 
             const { result: device2 } = await channel.runtime.execute(
@@ -2271,6 +2283,7 @@ describe('BaseAuxChannel', () => {
                 allowCollaborationUpgrade: true,
                 isCollaborative: true,
                 comID: null,
+                isEmbedded: false,
             });
         });
 
@@ -2298,6 +2311,7 @@ describe('BaseAuxChannel', () => {
                 allowCollaborationUpgrade: true,
                 isCollaborative: true,
                 comID: null,
+                isEmbedded: false,
             });
 
             await waitAsync();
@@ -2329,6 +2343,7 @@ describe('BaseAuxChannel', () => {
                 allowCollaborationUpgrade: true,
                 isCollaborative: false,
                 comID: null,
+                isEmbedded: false,
             });
 
             await waitAsync();
@@ -2362,6 +2377,7 @@ describe('BaseAuxChannel', () => {
                 allowCollaborationUpgrade: false,
                 isCollaborative: false,
                 comID: null,
+                isEmbedded: false,
             });
 
             await waitAsync();
