@@ -174,6 +174,7 @@ import {
     webhook as calcWebhook,
     superShout as calcSuperShout,
     share as calcShare,
+    sendEmbedMessage as calcSendEmbedMessage,
     registerPrefix as calcRegisterPrefix,
     localPositionTween as calcLocalPositionTween,
     localRotationTween as calcLocalRotationTween,
@@ -511,6 +512,8 @@ import type {
     ContractPricing,
     JSONAccountBalancesAndSubscriptionInfo,
     PurchaseCreditsResult,
+    SetRecordBudgetResult,
+    GetRecordBudgetResult,
 } from '@casual-simulation/aux-records';
 import SeedRandom from 'seedrandom';
 import { DateTime } from 'luxon';
@@ -642,6 +645,39 @@ export interface APIPurchaseCreditsRequest {
      * The URL that the user should be sent to if the purchase completes successfully.
      */
     successUrl: string;
+}
+
+/**
+ * Defines an interface that represents the options for setting a record's budget.
+ *
+ * @dochash types/records/extra
+ * @docname SetRecordBudgetRequest
+ * @docid SetRecordBudgetRequest
+ */
+export interface APISetRecordBudgetRequest {
+    /**
+     * The name of the record that the budget should be set for.
+     */
+    recordName: string;
+
+    /**
+     * The budget that should be set for the record.
+     * Setting this value to null will clear the budget, causing billing for the record to go to the owner's account.
+     */
+    budget: {
+        /**
+         * The type of the budget.
+         * - "fixed" means that a set number of credits will be transferred to the record from the owner's account upon a subscription credit grant.
+         * - "percent" means that the record will be granted a percentage of the total amount that the owner's account receives upon a subscription credit grant.
+         */
+        type: 'fixed' | 'percent';
+
+        /**
+         * The budget amount. Can be a string containing a bigint value. Must be an integer.
+         * Must be between 0 and 100 if type is "percent".
+         */
+        amount: number | string;
+    } | null;
 }
 
 export interface APIInvoiceContractRequest {
@@ -3730,6 +3766,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 cancelSound,
                 hasBotInMiniPortal,
                 share,
+                sendEmbedMessage,
                 closeCircleWipe,
                 openCircleWipe,
                 addDropSnap,
@@ -3936,6 +3973,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 payout: xpPayout,
                 getAccountBalances: xpGetAccountBalances,
                 purchaseCredits: xpPurchaseCredits,
+                setRecordBudget: xpSetRecordBudget,
+                getRecordBudget: xpGetRecordBudget,
             },
 
             portal: {
@@ -6898,6 +6937,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             allowCollaborationUpgrade: null as boolean,
             ab1BootstrapUrl: null as string,
             comID: null as string,
+            isEmbedded: null as boolean,
         };
     }
 
@@ -8918,6 +8958,39 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Sends a message to the parent window that this CasualOS instance is embedded in.
+     * Returns a Promise that resolves when the message has been sent.
+     * Throws an error if this CasualOS instance is not embedded in an iframe.
+     *
+     * The message must be structure cloneable (transferrables are not supported).
+     *
+     * @param message the message to send to the parent window.
+     * @param targetOrigin the origin that the parent window must have in order to receive the message. If not specified, then the message will be sent to the parent window regardless of its origin.
+     *
+     * @example Send a message to the parent window.
+     * await os.sendEmbedMessage({ hello: 'world' });
+     *
+     * @example Send a message to the parent window with a specific target origin.
+     * await os.sendEmbedMessage({ hello: 'world' }, 'https://example.com');
+     *
+     * @dochash actions/os/system
+     * @docname os.sendEmbedMessage
+     */
+    function sendEmbedMessage(
+        message: any,
+        targetOrigin?: string
+    ): Promise<void> {
+        if (!context.device?.isEmbedded) {
+            throw new Error(
+                'os.sendEmbedMessage() can only be used when CasualOS is embedded in an iframe.'
+            );
+        }
+        const task = context.createTask();
+        const event = calcSendEmbedMessage(message, targetOrigin, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
      * Causes a circular wipe animation to close around the screen.
      * This can be used to cover the grid portal while transitioning between scenes.
      * Returns a promise that resolves when the animation has finished running.
@@ -9762,6 +9835,94 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                         targetStudioId: request.targetStudioId,
                         returnUrl: request.returnUrl,
                         successUrl: request.successUrl,
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Sets the budget that should be used to automatically transfer credits from a record's owner to the record's own credit account whenever the owner is granted credits from their subscription.
+     * Setting the budget to null clears it, causing billing for the record to go to the owner's account.
+     * Only studio admins and superUsers are authorized to set a record's budget.
+     *
+     * @param request The options for the request.
+     * @returns A promise that resolves with the result of the request.
+     *
+     * @example Set a fixed record budget
+     * const result = await xp.setRecordBudget({
+     *   recordName: "myRecord",
+     *   budget: {
+     *     type: "fixed",
+     *     amount: 100
+     *   }
+     * });
+     *
+     * @example Set a percent record budget
+     * const result = await xp.setRecordBudget({
+     *   recordName: "myRecord",
+     *   budget: {
+     *     type: "percent",
+     *     amount: 10
+     *   }
+     * });
+     *
+     * @example Clear a record budget
+     * const result = await xp.setRecordBudget({
+     *   recordName: "myRecord",
+     *   budget: null
+     * });
+     *
+     * @dochash actions/xp
+     * @docname xp.setRecordBudget
+     */
+    function xpSetRecordBudget(
+        request: APISetRecordBudgetRequest,
+        options: RecordActionOptions = {}
+    ): Promise<SetRecordBudgetResult> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                setRecordBudget: {
+                    input: {
+                        recordName: request.recordName,
+                        budget: request.budget,
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the budget that has been configured for the given record.
+     *
+     * @param recordName The name of the record to get the budget for.
+     * @param options The options for the request.
+     * @returns A promise that resolves with the result of the request.
+     *
+     * @example Get a record's budget
+     * const result = await xp.getRecordBudget("myRecord");
+     * console.log(result);
+     *
+     * @dochash actions/xp
+     * @docname xp.getRecordBudget
+     */
+    function xpGetRecordBudget(
+        recordName: string,
+        options: RecordActionOptions = {}
+    ): Promise<GetRecordBudgetResult> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                getRecordBudget: {
+                    input: {
+                        recordName,
                     },
                 },
             },

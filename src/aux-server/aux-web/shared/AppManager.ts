@@ -756,6 +756,7 @@ export class AppManager {
             ab1BootstrapUrl: this._ab1BootstrapUrl,
             ab1BootstrapAux: this._ab1BootstrapAux,
             comID: this._comId,
+            isEmbedded: isInIframe(),
         };
     }
 
@@ -1387,6 +1388,14 @@ export class AppManager {
             console.error('Unable to fetch config from storage', err);
             return null;
         }
+    }
+}
+
+function isInIframe(): boolean {
+    try {
+        return window.self !== window.top;
+    } catch (e) {
+        return true;
     }
 }
 

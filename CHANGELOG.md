@@ -2,7 +2,7 @@
 
 ## V4.2.7
 
-#### Date: 7/2/2026
+#### Date: 7/3/2026
 
 ### :bug: Bug Fixes
 
@@ -10,7 +10,20 @@
 
 ### :rocket: Features
 
+-   Added support for sending and receiving messages with the window that CasualOS is embedded in.
+    -   Added `os.sendEmbedMessage(message, targetOrigin)` to send a message to the parent window.
+    -   Added `@onEmbedMessage` to listen for messages sent from the parent window.
+    -   Added `isEmbedded` to `os.device()` to indicate whether CasualOS is currently embedded in an iframe.
 -   Added support for granting records credit budgets
+-   Added `xp.setRecordBudget()` and `xp.getRecordBudget()` to configure automatic credit transfers from a record's owner to the record whenever the owner is granted credits from their subscription
+-   Added support for expiring private insts.
+    -   Added optional `expires` support to inst/branch/package records and websocket `repo/watch_branch` requests.
+    -   Updated split-store and websocket inst routing to use `expires` semantics (instead of relying on `recordName` alone) when deciding temporary vs permanent storage.
+    -   Public insts now reject explicitly non-expiring watch requests (`recordName: null` with `expires: false`).
+    -   `savePermanentBranches()` now skips expiring and public branches.
+    -   Subscription metrics now exclude expiring insts from `totalInsts` in memory, Prisma, and SQLite stores.
+    -   Added persistence support for `InstRecord.expires` in Prisma/Cockroach and Prisma/SQLite schemas and stores.
+    -   Fixed `listLoadedPackages()`/`isPackageLoaded()` to find packages loaded into expiring private insts, and `installPackage()` to save newly-loaded packages to the correct store based on the target inst's `expires` state.
 
 ## V4.2.6
 

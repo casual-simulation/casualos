@@ -2172,6 +2172,22 @@ Object {
     Object {
       "http": Object {
         "method": "GET",
+        "path": "/api/v2/records/budget",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getRecordBudget",
+      "origins": "self",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
         "path": "/api/v2/records/search/collection",
       },
       "inputs": Object {
@@ -9892,6 +9908,45 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
       },
       "name": "setConfigurationValue",
       "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/budget",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "budget": Object {
+            "options": Array [
+              Object {
+                "schema": Object {
+                  "amount": Object {
+                    "type": "string",
+                  },
+                  "type": Object {
+                    "type": "enum",
+                    "values": Array [
+                      "fixed",
+                      "percent",
+                    ],
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "type": "null",
+              },
+            ],
+            "type": "union",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "setRecordBudget",
+      "origins": "self",
     },
     Object {
       "http": Object {
@@ -12719,6 +12774,22 @@ Object {
     Object {
       "http": Object {
         "method": "GET",
+        "path": "/api/v2/records/budget",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getRecordBudget",
+      "origins": "self",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
         "path": "/api/v2/records/search/collection",
       },
       "inputs": Object {
@@ -20439,6 +20510,45 @@ Also see https://favicon.inbrowser.app/tools/favicon-generator to generate icons
       },
       "name": "setConfigurationValue",
       "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/budget",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "budget": Object {
+            "options": Array [
+              Object {
+                "schema": Object {
+                  "amount": Object {
+                    "type": "string",
+                  },
+                  "type": Object {
+                    "type": "enum",
+                    "values": Array [
+                      "fixed",
+                      "percent",
+                    ],
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "type": "null",
+              },
+            ],
+            "type": "union",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "setRecordBudget",
+      "origins": "self",
     },
     Object {
       "http": Object {

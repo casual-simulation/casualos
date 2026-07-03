@@ -325,6 +325,31 @@ export interface Record {
      * it is fine because there are very few secrets per salt (i.e. not 1 salt per million users but 1 salt per couple record keys) and the secrets are randomly generated.
      */
     secretSalt: string;
+
+    /**
+     * The ID of the financial account that should be billed for usage of this record.
+     * Null or undefined if the record does not have its own credit account.
+     */
+    creditAccountId?: string | null;
+
+    /**
+     * Whether usage of this record should be billed to its own credit account (creditAccountId) instead of the record's owner.
+     */
+    creditBillingEnabled?: boolean;
+
+    /**
+     * The type of budget that has been configured for this record.
+     * - "fixed" means that a set number of credits will be transferred to the record's account from the owner's account upon a subscription credit grant.
+     * - "percent" means that the record will be granted a percentage of the total amount that the owner's account receives upon a subscription credit grant.
+     * Null or undefined if no budget has been configured for this record.
+     */
+    creditBudgetType?: 'fixed' | 'percent' | null;
+
+    /**
+     * The budget amount for this record.
+     * A bigint value stored as a string. Only meaningful when creditBudgetType is set.
+     */
+    creditBudgetAmount?: string | null;
 }
 
 export interface ListedRecord {

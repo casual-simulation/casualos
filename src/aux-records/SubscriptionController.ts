@@ -124,6 +124,7 @@ import type {
 import {
     ACCOUNT_IDS,
     ACCOUNT_NAMES,
+    AccountCodes,
     AMOUNT_MAX,
     convertBetweenLedgers,
     CURRENCIES,
@@ -659,6 +660,265 @@ export class SubscriptionController {
         }
 
         return success();
+    }
+
+    /**
+     * Sets the budget that should be used to automatically transfer credits from a record's owner to the record's own credit account whenever the owner is granted credits from their subscription.
+     * Only studio admins and superUsers are authorized to set a record's budget - record owners cannot set a budget for their own records.
+     * @param request The request.
+     */
+    @traced(TRACE_NAME)
+    async setRecordBudget(
+        request: SetRecordBudgetRequest
+    ): Promise<SetRecordBudgetResult> {
+        if (!this._financialController || !this._financialStore) {
+            return {
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'This feature is not supported.',
+            };
+        }
+
+        const record = await this._recordsStore.getRecordByName(
+            request.recordName
+        );
+
+        if (!record) {
+            return {
+                success: false,
+                errorCode: 'record_not_found',
+                errorMessage: 'The given record was not found.',
+            };
+        }
+
+        const authorizationResult =
+            await this._checkAuthorizationForRecordBudget(
+                record,
+                request.userId,
+                request.userRole
+            );
+
+        if (isFailure(authorizationResult)) {
+            return {
+                success: false,
+                ...authorizationResult.error,
+            };
+        }
+
+        const budget = request.budget;
+
+        if (budget === null) {
+            await this._recordsStore.updateRecord({
+                ...record,
+                creditBillingEnabled: false,
+                creditBudgetType: null,
+                creditBudgetAmount: null,
+            });
+
+            return {
+                success: true,
+            };
+        }
+
+        if (budget.type !== 'fixed' && budget.type !== 'percent') {
+            return {
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage:
+                    'The budget type must be either "fixed" or "percent".',
+            };
+        }
+
+        let amount: bigint;
+        try {
+            amount = BigInt(budget.amount);
+        } catch (err) {
+            return {
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage:
+                    'The budget amount must be an integer number or a string containing an integer.',
+            };
+        }
+
+        if (amount < 0n) {
+            return {
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'The budget amount must not be negative.',
+            };
+        }
+
+        if (budget.type === 'percent' && amount > 100n) {
+            return {
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage:
+                    'The budget amount must be between 0 and 100 when the budget type is "percent".',
+            };
+        }
+
+        let creditAccountId = record.creditAccountId;
+        if (!creditAccountId) {
+            const accountResult = await this._financialController.createAccount(
+                AccountCodes.liabilities_record,
+                LEDGERS.credits
+            );
+
+            if (isFailure(accountResult)) {
+                logError(
+                    accountResult.error,
+                    `[SubscriptionController] [setRecordBudget recordName: ${request.recordName}] Unable to create record credit account!`
+                );
+                return {
+                    success: false,
+                    errorCode: 'server_error',
+                    errorMessage: 'Unable to create the record credit account.',
+                };
+            }
+
+            creditAccountId = accountResult.value.id;
+            await this._financialStore.createAccount({
+                id: creditAccountId,
+                ledger: LEDGERS.credits,
+                currency: CURRENCIES.get(LEDGERS.credits),
+            });
+        }
+
+        await this._recordsStore.updateRecord({
+            ...record,
+            creditAccountId,
+            creditBillingEnabled: true,
+            creditBudgetType: budget.type,
+            creditBudgetAmount: amount.toString(),
+        });
+
+        return {
+            success: true,
+        };
+    }
+
+    /**
+     * Gets the budget that has been configured for the given record.
+     * @param request The request.
+     */
+    @traced(TRACE_NAME)
+    async getRecordBudget(
+        request: GetRecordBudgetRequest
+    ): Promise<GetRecordBudgetResult> {
+        if (!this._financialController) {
+            return {
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'This feature is not supported.',
+            };
+        }
+
+        const record = await this._recordsStore.getRecordByName(
+            request.recordName
+        );
+
+        if (!record) {
+            return {
+                success: false,
+                errorCode: 'record_not_found',
+                errorMessage: 'The given record was not found.',
+            };
+        }
+
+        const authorizationResult =
+            await this._checkAuthorizationForGetRecordBudget(
+                record,
+                request.userId,
+                request.userRole
+            );
+
+        if (isFailure(authorizationResult)) {
+            return {
+                success: false,
+                ...authorizationResult.error,
+            };
+        }
+
+        return {
+            success: true,
+            budget: record.creditBudgetType
+                ? {
+                      type: record.creditBudgetType,
+                      amount: record.creditBudgetAmount,
+                  }
+                : null,
+        };
+    }
+
+    /**
+     * Checks whether the given user is authorized to set the budget for the given record.
+     * Only studio admins and superUsers are authorized - record owners are not authorized to set a budget for their own records.
+     */
+    private async _checkAuthorizationForRecordBudget(
+        record: { ownerId?: string | null; studioId?: string | null },
+        userId: string,
+        userRole: UserRole | null
+    ): Promise<Result<void, SimpleError>> {
+        if (isSuperUserRole(userRole)) {
+            return success();
+        }
+
+        if (record.studioId) {
+            const assignments = await this._recordsStore.listStudioAssignments(
+                record.studioId,
+                {
+                    userId,
+                    role: 'admin',
+                }
+            );
+
+            if (assignments.length > 0) {
+                return success();
+            }
+        }
+
+        return failure({
+            errorCode: 'not_authorized',
+            errorMessage: 'You are not authorized to perform this action.',
+        });
+    }
+
+    /**
+     * Checks whether the given user is authorized to read the budget for the given record.
+     * Record owners, studio admins, and superUsers are authorized.
+     */
+    private async _checkAuthorizationForGetRecordBudget(
+        record: { ownerId?: string | null; studioId?: string | null },
+        userId: string,
+        userRole: UserRole | null
+    ): Promise<Result<void, SimpleError>> {
+        if (isSuperUserRole(userRole)) {
+            return success();
+        }
+
+        if (record.ownerId) {
+            if (record.ownerId === userId) {
+                return success();
+            }
+        } else if (record.studioId) {
+            const assignments = await this._recordsStore.listStudioAssignments(
+                record.studioId,
+                {
+                    userId,
+                    role: 'admin',
+                }
+            );
+
+            if (assignments.length > 0) {
+                return success();
+            }
+        }
+
+        return failure({
+            errorCode: 'not_authorized',
+            errorMessage: 'You are not authorized to perform this action.',
+        });
     }
 
     /**
@@ -5376,7 +5636,105 @@ export class SubscriptionController {
             );
         }
 
+        if (creditAmount > 0) {
+            await this._transferBudgetedCreditsToRecords(
+                accountFilter,
+                accountId,
+                creditAmount
+            );
+        }
+
         return success();
+    }
+
+    /**
+     * Transfers credits from the owner's (user or studio) credit account to the credit accounts of any of the owner's records that have a budget configured.
+     * This is called after the owner has been granted credits from their subscription.
+     *
+     * Each record's transfer is performed as its own transaction (separate from the owner's grant transaction and from each other), so that a misconfigured
+     * or under-funded record budget cannot fail/rollback the owner's own credit grant or other records' transfers.
+     */
+    private async _transferBudgetedCreditsToRecords(
+        accountFilter: Omit<UniqueFinancialAccountFilter, 'ledger'>,
+        ownerAccountId: bigint | string,
+        ownerCreditAmount: bigint
+    ): Promise<void> {
+        if (!this._financialController) {
+            return;
+        }
+
+        const listedRecords = accountFilter.userId
+            ? await this._recordsStore.listRecordsByOwnerId(
+                  accountFilter.userId
+              )
+            : accountFilter.studioId
+            ? await this._recordsStore.listRecordsByStudioId(
+                  accountFilter.studioId
+              )
+            : [];
+
+        for (let listedRecord of listedRecords) {
+            const record = await this._recordsStore.getRecordByName(
+                listedRecord.name
+            );
+
+            if (
+                !record ||
+                !record.creditBillingEnabled ||
+                !record.creditAccountId ||
+                !record.creditBudgetType ||
+                record.creditBudgetAmount == null
+            ) {
+                continue;
+            }
+
+            let recordAmount: bigint;
+            try {
+                if (record.creditBudgetType === 'fixed') {
+                    recordAmount = BigInt(record.creditBudgetAmount);
+                } else {
+                    recordAmount =
+                        (ownerCreditAmount *
+                            BigInt(record.creditBudgetAmount)) /
+                        100n;
+                }
+            } catch (err) {
+                logError(
+                    err,
+                    `[SubscriptionController] [_transferBudgetedCreditsToRecords recordName: ${record.name}] Unable to parse the configured budget amount!`
+                );
+                continue;
+            }
+
+            if (recordAmount <= 0n) {
+                continue;
+            }
+
+            const transactionResult =
+                await this._financialController.internalTransaction({
+                    transfers: [
+                        {
+                            amount: recordAmount,
+                            code: TransferCodes.record_budget_transfer,
+                            debitAccountId: ownerAccountId,
+                            creditAccountId: record.creditAccountId,
+                            currency: CurrencyCodes.credits,
+                        },
+                    ],
+                });
+
+            if (isFailure(transactionResult)) {
+                logError(
+                    transactionResult.error,
+                    `[SubscriptionController] [_transferBudgetedCreditsToRecords recordName: ${record.name}] Unable to transfer budgeted credits to record!`
+                );
+                continue;
+            }
+
+            console.log(
+                `[SubscriptionController] [_transferBudgetedCreditsToRecords recordName: ${record.name}] Transferred ${recordAmount} credits to record.`
+            );
+        }
     }
 
     private async _internalTransactionExpireCredits(
@@ -7245,3 +7603,115 @@ export type PurchaseCreditsResult = Result<
     },
     SimpleError
 >;
+
+/**
+ * Defines an interface that represents a budget that has been configured for a record.
+ *
+ * @dochash types/records/extra
+ * @docname RecordCreditBudget
+ * @docid RecordCreditBudget
+ */
+export interface RecordCreditBudget {
+    /**
+     * The type of the budget.
+     * - "fixed" means that a set number of credits will be transferred to the record from the owner's account upon a subscription credit grant.
+     * - "percent" means that the record will be granted a percentage of the total amount that the owner's account receives upon a subscription credit grant.
+     */
+    type: 'fixed' | 'percent';
+
+    /**
+     * The budget amount. A bigint value represented as a string.
+     */
+    amount: string;
+}
+
+export interface SetRecordBudgetRequest {
+    /**
+     * The name of the record that the budget should be set for.
+     */
+    recordName: string;
+
+    /**
+     * The budget that should be set for the record.
+     * Null to clear the budget, which causes billing for the record to go to the owner's account.
+     */
+    budget: {
+        type: 'fixed' | 'percent';
+        amount: number | string;
+    } | null;
+
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string;
+
+    /**
+     * The role of the user that is currently logged in.
+     */
+    userRole: UserRole | null;
+}
+
+/**
+ * Defines an interface that represents the result of a request to set a record's budget.
+ *
+ * @dochash types/records/extra
+ * @docname SetRecordBudgetResult
+ * @docid SetRecordBudgetResult
+ */
+export type SetRecordBudgetResult =
+    | SetRecordBudgetSuccess
+    | SetRecordBudgetFailure;
+
+export interface SetRecordBudgetSuccess {
+    success: true;
+}
+
+export interface SetRecordBudgetFailure {
+    success: false;
+    errorCode: KnownErrorCodes;
+    errorMessage: string;
+}
+
+export interface GetRecordBudgetRequest {
+    /**
+     * The name of the record that the budget should be retrieved for.
+     */
+    recordName: string;
+
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string;
+
+    /**
+     * The role of the user that is currently logged in.
+     */
+    userRole: UserRole | null;
+}
+
+/**
+ * Defines an interface that represents the result of a request to get a record's budget.
+ *
+ * @dochash types/records/extra
+ * @docname GetRecordBudgetResult
+ * @docid GetRecordBudgetResult
+ */
+export type GetRecordBudgetResult =
+    | GetRecordBudgetSuccess
+    | GetRecordBudgetFailure;
+
+export interface GetRecordBudgetSuccess {
+    success: true;
+
+    /**
+     * The budget that is configured for the record.
+     * Null if no budget is configured (billing for the record goes to the owner's account).
+     */
+    budget: RecordCreditBudget | null;
+}
+
+export interface GetRecordBudgetFailure {
+    success: false;
+    errorCode: KnownErrorCodes;
+    errorMessage: string;
+}

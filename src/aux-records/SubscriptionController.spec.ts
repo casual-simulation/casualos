@@ -11280,6 +11280,422 @@ describe('SubscriptionController', () => {
         });
     });
 
+    describe('setRecordBudget()', () => {
+        const recordName = 'recordName';
+        const studioId = 'studioId';
+
+        beforeEach(async () => {
+            await store.addRecord({
+                name: recordName,
+                ownerId: userId,
+                studioId: null,
+                secretHashes: [],
+                secretSalt: '',
+            });
+        });
+
+        it('should return record_not_found if the record does not exist', async () => {
+            const result = await controller.setRecordBudget({
+                recordName: 'missingRecord',
+                budget: { type: 'fixed', amount: 100 },
+                userId,
+                userRole: null,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'record_not_found',
+                errorMessage: 'The given record was not found.',
+            });
+        });
+
+        it('should return not_authorized if the caller is the owner of a personal record', async () => {
+            const result = await controller.setRecordBudget({
+                recordName,
+                budget: { type: 'fixed', amount: 100 },
+                userId,
+                userRole: null,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+            });
+
+            const record = await store.getRecordByName(recordName);
+            expect(record.creditBudgetType).toBeFalsy();
+        });
+
+        it('should return not_authorized if the caller is unrelated to the record', async () => {
+            const result = await controller.setRecordBudget({
+                recordName,
+                budget: { type: 'fixed', amount: 100 },
+                userId: 'otherUserId',
+                userRole: null,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+            });
+        });
+
+        it('should allow superUsers to set a budget for a personal record', async () => {
+            const result = await controller.setRecordBudget({
+                recordName,
+                budget: { type: 'fixed', amount: 100 },
+                userId: 'someOtherUser',
+                userRole: 'superUser',
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const record = await store.getRecordByName(recordName);
+            expect(record.creditBillingEnabled).toBe(true);
+            expect(record.creditBudgetType).toBe('fixed');
+            expect(record.creditBudgetAmount).toBe('100');
+            expect(record.creditAccountId).toBeTruthy();
+        });
+
+        describe('studio owned record', () => {
+            const studioRecordName = 'studioRecord';
+
+            beforeEach(async () => {
+                await store.addStudio({
+                    id: studioId,
+                    displayName: 'studio name',
+                });
+                await store.addStudioAssignment({
+                    studioId,
+                    userId,
+                    isPrimaryContact: true,
+                    role: 'admin',
+                });
+                await store.addRecord({
+                    name: studioRecordName,
+                    ownerId: null,
+                    studioId,
+                    secretHashes: [],
+                    secretSalt: '',
+                });
+            });
+
+            it('should allow studio admins to set a fixed budget', async () => {
+                const result = await controller.setRecordBudget({
+                    recordName: studioRecordName,
+                    budget: { type: 'fixed', amount: 100 },
+                    userId,
+                    userRole: null,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                });
+
+                const record = await store.getRecordByName(studioRecordName);
+                expect(record.creditBillingEnabled).toBe(true);
+                expect(record.creditBudgetType).toBe('fixed');
+                expect(record.creditBudgetAmount).toBe('100');
+                expect(record.creditAccountId).toBeTruthy();
+            });
+
+            it('should allow studio admins to set a percent budget', async () => {
+                const result = await controller.setRecordBudget({
+                    recordName: studioRecordName,
+                    budget: { type: 'percent', amount: 10 },
+                    userId,
+                    userRole: null,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                });
+
+                const record = await store.getRecordByName(studioRecordName);
+                expect(record.creditBillingEnabled).toBe(true);
+                expect(record.creditBudgetType).toBe('percent');
+                expect(record.creditBudgetAmount).toBe('10');
+            });
+
+            it('should reuse an existing credit account when one is already configured', async () => {
+                const first = await controller.setRecordBudget({
+                    recordName: studioRecordName,
+                    budget: { type: 'fixed', amount: 100 },
+                    userId,
+                    userRole: null,
+                });
+                expect(first).toEqual({ success: true });
+
+                const firstRecord = await store.getRecordByName(
+                    studioRecordName
+                );
+
+                const second = await controller.setRecordBudget({
+                    recordName: studioRecordName,
+                    budget: { type: 'fixed', amount: 200 },
+                    userId,
+                    userRole: null,
+                });
+                expect(second).toEqual({ success: true });
+
+                const secondRecord = await store.getRecordByName(
+                    studioRecordName
+                );
+                expect(secondRecord.creditAccountId).toBe(
+                    firstRecord.creditAccountId
+                );
+                expect(secondRecord.creditBudgetAmount).toBe('200');
+            });
+
+            it('should return unacceptable_request for an invalid budget type', async () => {
+                const result = await controller.setRecordBudget({
+                    recordName: studioRecordName,
+                    budget: { type: 'other' as any, amount: 100 },
+                    userId,
+                    userRole: null,
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The budget type must be either "fixed" or "percent".',
+                });
+            });
+
+            it('should return unacceptable_request for a non-integer amount', async () => {
+                const result = await controller.setRecordBudget({
+                    recordName: studioRecordName,
+                    budget: { type: 'fixed', amount: 'not a number' },
+                    userId,
+                    userRole: null,
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The budget amount must be an integer number or a string containing an integer.',
+                });
+            });
+
+            it('should return unacceptable_request for a negative amount', async () => {
+                const result = await controller.setRecordBudget({
+                    recordName: studioRecordName,
+                    budget: { type: 'fixed', amount: -10 },
+                    userId,
+                    userRole: null,
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage: 'The budget amount must not be negative.',
+                });
+            });
+
+            it('should return unacceptable_request for a percent amount over 100', async () => {
+                const result = await controller.setRecordBudget({
+                    recordName: studioRecordName,
+                    budget: { type: 'percent', amount: 101 },
+                    userId,
+                    userRole: null,
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The budget amount must be between 0 and 100 when the budget type is "percent".',
+                });
+            });
+
+            it('should allow clearing the budget with null', async () => {
+                await controller.setRecordBudget({
+                    recordName: studioRecordName,
+                    budget: { type: 'fixed', amount: 100 },
+                    userId,
+                    userRole: null,
+                });
+
+                const beforeClear = await store.getRecordByName(
+                    studioRecordName
+                );
+                expect(beforeClear.creditAccountId).toBeTruthy();
+
+                const result = await controller.setRecordBudget({
+                    recordName: studioRecordName,
+                    budget: null,
+                    userId,
+                    userRole: null,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                });
+
+                const record = await store.getRecordByName(studioRecordName);
+                expect(record.creditBillingEnabled).toBe(false);
+                expect(record.creditBudgetType).toBeFalsy();
+                expect(record.creditBudgetAmount).toBeFalsy();
+                // The credit account is preserved so that any remaining balance/history is not lost.
+                expect(record.creditAccountId).toBe(
+                    beforeClear.creditAccountId
+                );
+            });
+
+            it('should return not_authorized if the caller is not a studio admin', async () => {
+                await store.addStudioAssignment({
+                    studioId,
+                    userId: 'memberUserId',
+                    isPrimaryContact: false,
+                    role: 'member',
+                });
+
+                const result = await controller.setRecordBudget({
+                    recordName: studioRecordName,
+                    budget: { type: 'fixed', amount: 100 },
+                    userId: 'memberUserId',
+                    userRole: null,
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+            });
+        });
+    });
+
+    describe('getRecordBudget()', () => {
+        const recordName = 'recordName';
+        const studioId = 'studioId';
+
+        beforeEach(async () => {
+            await store.addRecord({
+                name: recordName,
+                ownerId: userId,
+                studioId: null,
+                secretHashes: [],
+                secretSalt: '',
+            });
+        });
+
+        it('should return record_not_found if the record does not exist', async () => {
+            const result = await controller.getRecordBudget({
+                recordName: 'missingRecord',
+                userId,
+                userRole: null,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'record_not_found',
+                errorMessage: 'The given record was not found.',
+            });
+        });
+
+        it('should return null when no budget has been configured', async () => {
+            const result = await controller.getRecordBudget({
+                recordName,
+                userId,
+                userRole: null,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                budget: null,
+            });
+        });
+
+        it('should allow the personal record owner to read the budget', async () => {
+            await store.updateRecord({
+                ...(await store.getRecordByName(recordName)),
+                creditBudgetType: 'fixed',
+                creditBudgetAmount: '100',
+            } as any);
+
+            const result = await controller.getRecordBudget({
+                recordName,
+                userId,
+                userRole: null,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                budget: {
+                    type: 'fixed',
+                    amount: '100',
+                },
+            });
+        });
+
+        it('should return not_authorized if the caller is unrelated to the record', async () => {
+            const result = await controller.getRecordBudget({
+                recordName,
+                userId: 'otherUserId',
+                userRole: null,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+            });
+        });
+
+        it('should allow superUsers to read any record budget', async () => {
+            const result = await controller.getRecordBudget({
+                recordName,
+                userId: 'someOtherUser',
+                userRole: 'superUser',
+            });
+
+            expect(result).toEqual({
+                success: true,
+                budget: null,
+            });
+        });
+
+        it('should allow studio admins to read the budget for a studio record', async () => {
+            await store.addStudio({
+                id: studioId,
+                displayName: 'studio name',
+            });
+            await store.addStudioAssignment({
+                studioId,
+                userId,
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+            const studioRecordName = 'studioRecord';
+            await store.addRecord({
+                name: studioRecordName,
+                ownerId: null,
+                studioId,
+                secretHashes: [],
+                secretSalt: '',
+            });
+
+            const result = await controller.getRecordBudget({
+                recordName: studioRecordName,
+                userId,
+                userRole: null,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                budget: null,
+            });
+        });
+    });
+
     describe('purchaseCredits()', () => {
         const recordName = 'recordName';
 
@@ -15422,6 +15838,271 @@ describe('SubscriptionController', () => {
                             },
                         ]
                     );
+                });
+
+                describe('record budget', () => {
+                    const recordName = 'budgetedRecord';
+
+                    beforeEach(async () => {
+                        await store.addRecord({
+                            name: recordName,
+                            ownerId: userId,
+                            studioId: null,
+                            secretHashes: [],
+                            secretSalt: '',
+                        });
+                    });
+
+                    function stripeInvoicePaidEvent() {
+                        stripeMock.constructWebhookEvent.mockReturnValueOnce({
+                            id: 'event_id',
+                            type: 'invoice.paid',
+                            object: 'event',
+                            account: 'account_id',
+                            api_version: 'api_version',
+                            created: 123,
+                            data: {
+                                object: {
+                                    id: 'invoiceId',
+                                    customer: 'customer_id',
+                                    currency: 'usd',
+                                    total: 1000,
+                                    subtotal: 1000,
+                                    tax: 0,
+                                    description: 'description',
+                                    status: 'paid',
+                                    paid: true,
+                                    hosted_invoice_url: 'invoiceUrl',
+                                    invoice_pdf: 'pdfUrl',
+                                    lines: {
+                                        object: 'list',
+                                        data: [
+                                            {
+                                                id: 'line_item_1_id',
+                                                price: {
+                                                    id: 'price_1',
+                                                    product: 'product_1_id',
+                                                },
+                                            },
+                                        ],
+                                    },
+                                    subscription: 'sub',
+                                },
+                            },
+                            livemode: true,
+                            pending_webhooks: 1,
+                            request: {} as any,
+                        });
+                        stripeMock.getSubscriptionById.mockResolvedValueOnce({
+                            id: 'sub',
+                            status: 'active',
+                            current_period_start: 456,
+                            current_period_end: 999,
+                            cancel_at: 7777,
+                            canceled_at: null,
+                            ended_at: null,
+                            start_date: 123,
+                        });
+                    }
+
+                    it('should transfer a fixed budget from the owner to the record on grant', async () => {
+                        for (let sub of store.subscriptionConfiguration
+                            .subscriptions) {
+                            sub.creditGrant = 500;
+                        }
+
+                        const setResult = await controller.setRecordBudget({
+                            recordName,
+                            budget: { type: 'fixed', amount: 50 },
+                            userId: 'someSuperUser',
+                            userRole: 'superUser',
+                        });
+                        expect(setResult).toEqual({ success: true });
+
+                        const record = await store.getRecordByName(recordName);
+
+                        stripeInvoicePaidEvent();
+
+                        const result = await controller.handleStripeWebhook({
+                            requestBody: 'request_body',
+                            signature: 'request_signature',
+                        });
+
+                        expect(result).toEqual({ success: true });
+
+                        const ownerAccount = unwrap(
+                            await financialController.getFinancialAccount({
+                                userId: userId,
+                                ledger: LEDGERS.credits,
+                            })
+                        );
+
+                        checkAccounts(financialInterface, [
+                            {
+                                id: ownerAccount.account.id,
+                                credits_pending: 0n,
+                                credits_posted: 500n,
+                                debits_pending: 0n,
+                                debits_posted: 50n,
+                            },
+                            {
+                                id: BigInt(record.creditAccountId),
+                                credits_pending: 0n,
+                                credits_posted: 50n,
+                                debits_pending: 0n,
+                                debits_posted: 0n,
+                            },
+                        ]);
+                    });
+
+                    it('should transfer a percentage of the granted credits from the owner to the record on grant', async () => {
+                        for (let sub of store.subscriptionConfiguration
+                            .subscriptions) {
+                            sub.creditGrant = 500;
+                        }
+
+                        const setResult = await controller.setRecordBudget({
+                            recordName,
+                            budget: { type: 'percent', amount: 10 },
+                            userId: 'someSuperUser',
+                            userRole: 'superUser',
+                        });
+                        expect(setResult).toEqual({ success: true });
+
+                        const record = await store.getRecordByName(recordName);
+
+                        stripeInvoicePaidEvent();
+
+                        const result = await controller.handleStripeWebhook({
+                            requestBody: 'request_body',
+                            signature: 'request_signature',
+                        });
+
+                        expect(result).toEqual({ success: true });
+
+                        const ownerAccount = unwrap(
+                            await financialController.getFinancialAccount({
+                                userId: userId,
+                                ledger: LEDGERS.credits,
+                            })
+                        );
+
+                        checkAccounts(financialInterface, [
+                            {
+                                id: ownerAccount.account.id,
+                                credits_pending: 0n,
+                                credits_posted: 500n,
+                                debits_pending: 0n,
+                                debits_posted: 50n,
+                            },
+                            {
+                                id: BigInt(record.creditAccountId),
+                                credits_pending: 0n,
+                                credits_posted: 50n,
+                                debits_pending: 0n,
+                                debits_posted: 0n,
+                            },
+                        ]);
+                    });
+
+                    it('should not fail the owner grant if the record budget transfer would exceed the owner balance', async () => {
+                        for (let sub of store.subscriptionConfiguration
+                            .subscriptions) {
+                            sub.creditGrant = 500;
+                        }
+
+                        const setResult = await controller.setRecordBudget({
+                            recordName,
+                            budget: { type: 'fixed', amount: 100000 },
+                            userId: 'someSuperUser',
+                            userRole: 'superUser',
+                        });
+                        expect(setResult).toEqual({ success: true });
+
+                        stripeInvoicePaidEvent();
+
+                        const result = await controller.handleStripeWebhook({
+                            requestBody: 'request_body',
+                            signature: 'request_signature',
+                        });
+
+                        expect(result).toEqual({ success: true });
+
+                        const ownerAccount = unwrap(
+                            await financialController.getFinancialAccount({
+                                userId: userId,
+                                ledger: LEDGERS.credits,
+                            })
+                        );
+
+                        // The owner should still have received the full grant, since the
+                        // over-budgeted record transfer is performed as its own transaction
+                        // and should not roll back the owner's grant.
+                        checkAccounts(financialInterface, [
+                            {
+                                id: ownerAccount.account.id,
+                                credits_pending: 0n,
+                                credits_posted: 500n,
+                                debits_pending: 0n,
+                                debits_posted: 0n,
+                            },
+                        ]);
+                    });
+
+                    it('should not transfer credits when the budget has been cleared', async () => {
+                        for (let sub of store.subscriptionConfiguration
+                            .subscriptions) {
+                            sub.creditGrant = 500;
+                        }
+
+                        await controller.setRecordBudget({
+                            recordName,
+                            budget: { type: 'fixed', amount: 50 },
+                            userId: 'someSuperUser',
+                            userRole: 'superUser',
+                        });
+                        await controller.setRecordBudget({
+                            recordName,
+                            budget: null,
+                            userId: 'someSuperUser',
+                            userRole: 'superUser',
+                        });
+
+                        const record = await store.getRecordByName(recordName);
+
+                        stripeInvoicePaidEvent();
+
+                        const result = await controller.handleStripeWebhook({
+                            requestBody: 'request_body',
+                            signature: 'request_signature',
+                        });
+
+                        expect(result).toEqual({ success: true });
+
+                        const ownerAccount = unwrap(
+                            await financialController.getFinancialAccount({
+                                userId: userId,
+                                ledger: LEDGERS.credits,
+                            })
+                        );
+
+                        checkAccounts(financialInterface, [
+                            {
+                                id: ownerAccount.account.id,
+                                credits_pending: 0n,
+                                credits_posted: 500n,
+                                debits_pending: 0n,
+                                debits_posted: 0n,
+                            },
+                            {
+                                id: BigInt(record.creditAccountId),
+                                credits_pending: 0n,
+                                credits_posted: 0n,
+                                debits_pending: 0n,
+                                debits_posted: 0n,
+                            },
+                        ]);
+                    });
                 });
 
                 it('should do nothing if no grant is set', async () => {

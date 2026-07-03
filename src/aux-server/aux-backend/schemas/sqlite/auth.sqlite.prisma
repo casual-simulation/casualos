@@ -358,6 +358,9 @@ model Record {
 
     creditBillingEnabled Boolean @default(false)
 
+    creditBudgetType String?
+    creditBudgetAmount String?
+
     secretHashes Json
     secretSalt String
 
@@ -753,6 +756,7 @@ model InstRecord {
     name String
 
     markers Json
+    expires Boolean @default(false)
 
     branches InstBranch[]
     updates BranchUpdate[]

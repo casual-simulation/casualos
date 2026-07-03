@@ -1838,6 +1838,7 @@ export class ServerBuilder implements SubscriptionLike {
                 allowCollaborationUpgrade: false,
                 ab1BootstrapUrl: null,
                 comID: null,
+                isEmbedded: false,
             },
         };
 

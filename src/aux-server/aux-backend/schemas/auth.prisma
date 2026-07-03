@@ -358,6 +358,9 @@ model Record {
 
     creditBillingEnabled Boolean @default(false)
 
+    creditBudgetType String?
+    creditBudgetAmount String?
+
     secretHashes String[]
     secretSalt String
 
@@ -754,6 +757,7 @@ model InstRecord {
     name String @db.String(128)
 
     markers String[]
+    expires Boolean @default(false)
 
     branches InstBranch[]
     updates BranchUpdate[]

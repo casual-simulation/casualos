@@ -65,8 +65,10 @@ import {
     ON_AUDIO_SAMPLE,
     ON_BEGIN_AUDIO_RECORDING,
     ON_END_AUDIO_RECORDING,
+    ON_EMBED_MESSAGE_ACTION_NAME,
     action,
 } from '@casual-simulation/aux-common';
+import { shouldForwardEmbedMessage } from './PlayerApp.embedMessages';
 import type SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
 import LoadApp from '../../shared/vue-components/LoadApp/LoadApp';
@@ -381,6 +383,7 @@ export default class PlayerApp extends Vue {
     showChangeLogin: boolean = false;
     private _isLoggingIn: boolean = false;
     private _deferredPWAPrompt: BeforeInstallPromptEvent | null = null;
+    private _onEmbedMessage: (event: MessageEvent) => void;
 
     showNotificationPermissionDialog: boolean = false;
     showNotificationPermissionMessage: string =
@@ -545,6 +548,24 @@ export default class PlayerApp extends Vue {
             // Store the event so it can be triggered later
             this._deferredPWAPrompt = e as BeforeInstallPromptEvent;
         });
+
+        this._onEmbedMessage = (event: MessageEvent) => {
+            if (
+                !shouldForwardEmbedMessage(
+                    event,
+                    window.parent,
+                    window.parent !== window,
+                    appManager.config?.authOrigin
+                )
+            ) {
+                return;
+            }
+            this._superAction(ON_EMBED_MESSAGE_ACTION_NAME, {
+                origin: event.origin,
+                message: event.data,
+            });
+        };
+        window.addEventListener('message', this._onEmbedMessage);
     }
 
     onRecordsUIVisible() {
@@ -573,6 +594,7 @@ export default class PlayerApp extends Vue {
 
     beforeDestroy() {
         this._subs.forEach((s) => s.unsubscribe());
+        window.removeEventListener('message', this._onEmbedMessage);
     }
 
     snackbarClick(action: SnackbarOptions['action']) {
@@ -1151,6 +1173,29 @@ export default class PlayerApp extends Vue {
                                 e.taskId,
                                 "This device doesn't support sharing"
                             )
+                        );
+                    }
+                } else if (e.type === 'send_embed_message') {
+                    try {
+                        if (window.parent && window.parent !== window) {
+                            window.parent.postMessage(
+                                e.message,
+                                e.targetOrigin ?? '*'
+                            );
+                            simulation.helper.transaction(
+                                asyncResult(e.taskId, null)
+                            );
+                        } else {
+                            simulation.helper.transaction(
+                                asyncError(
+                                    e.taskId,
+                                    'os.sendEmbedMessage() can only be used when CasualOS is embedded in an iframe.'
+                                )
+                            );
+                        }
+                    } catch (error) {
+                        simulation.helper.transaction(
+                            asyncError(e.taskId, (error as Error).toString())
                         );
                     }
                 } else if (e.type === 'begin_audio_recording') {

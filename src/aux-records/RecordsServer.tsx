@@ -5787,6 +5787,72 @@ export class RecordsServer {
                     );
                 }),
 
+            setRecordBudget: procedure()
+                .origins('self')
+                .http('POST', '/api/v2/records/budget')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        budget: z.union([
+                            z.object({
+                                type: z.enum(['fixed', 'percent']),
+                                amount: z.coerce.string(),
+                            }),
+                            z.null(),
+                        ]),
+                    })
+                )
+                .handler(async ({ recordName, budget }, context) => {
+                    if (!this._subscriptions) {
+                        return SUBSCRIPTIONS_NOT_SUPPORTED_RESULT;
+                    }
+
+                    const validation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (validation.success === false) {
+                        return validation;
+                    }
+
+                    const result = await this._subscriptions.setRecordBudget({
+                        recordName,
+                        budget,
+                        userId: validation.userId,
+                        userRole: validation.role,
+                    });
+
+                    return result;
+                }),
+
+            getRecordBudget: procedure()
+                .origins('self')
+                .http('GET', '/api/v2/records/budget')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                    })
+                )
+                .handler(async ({ recordName }, context) => {
+                    if (!this._subscriptions) {
+                        return SUBSCRIPTIONS_NOT_SUPPORTED_RESULT;
+                    }
+
+                    const validation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (validation.success === false) {
+                        return validation;
+                    }
+
+                    const result = await this._subscriptions.getRecordBudget({
+                        recordName,
+                        userId: validation.userId,
+                        userRole: validation.role,
+                    });
+
+                    return result;
+                }),
+
             listTransfers: procedure()
                 .origins('self')
                 .http('GET', '/api/v2/transfers')

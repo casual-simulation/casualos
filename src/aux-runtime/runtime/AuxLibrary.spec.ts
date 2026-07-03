@@ -89,6 +89,7 @@ import {
     localFormAnimation,
     showInput,
     share,
+    sendEmbedMessage,
     getRemoteCount,
     getRemotes,
     action,
@@ -358,6 +359,7 @@ describe('AuxLibrary', () => {
             allowCollaborationUpgrade: true,
             ab1BootstrapUrl: 'bootstrapURL',
             comID: null,
+            isEmbedded: false,
         };
         notifier = {
             notifyChange: jest.fn(),
@@ -4520,7 +4522,14 @@ describe('AuxLibrary', () => {
                     ab1BootstrapUrl: null,
                     allowCollaborationUpgrade: null,
                     comID: null,
+                    isEmbedded: null,
                 });
+            });
+
+            it('should include isEmbedded from the device info', () => {
+                device.isEmbedded = true;
+                const d = library.api.os.device();
+                expect(d.isEmbedded).toBe(true);
             });
         });
 
@@ -4579,6 +4588,7 @@ describe('AuxLibrary', () => {
                     supportsVR: true,
                     supportsDOM: false,
                     comID: null,
+                    isEmbedded: false,
                 };
                 const promise: any = library.api.os.enableCollaboration();
                 const expected = enableCollaboration(context.tasks.size);
@@ -4595,6 +4605,7 @@ describe('AuxLibrary', () => {
                     supportsVR: true,
                     supportsDOM: false,
                     comID: null,
+                    isEmbedded: false,
                 };
                 const promise: any = library.api.os.enableCollaboration();
                 expect(promise[ORIGINAL_OBJECT]).toBeUndefined();
@@ -4614,6 +4625,7 @@ describe('AuxLibrary', () => {
                     supportsVR: true,
                     supportsDOM: false,
                     comID: null,
+                    isEmbedded: false,
                 };
                 const promise: any = library.api.os.enableCollaboration();
                 expect(promise[ORIGINAL_OBJECT]).toBeUndefined();
@@ -6583,6 +6595,35 @@ describe('AuxLibrary', () => {
                 );
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.sendEmbedMessage()', () => {
+            it('should return a SendEmbedMessageAction when embedded', () => {
+                device.isEmbedded = true;
+                const promise: any = library.api.os.sendEmbedMessage(
+                    { hello: 'world' },
+                    'https://example.com'
+                );
+                const expected = sendEmbedMessage(
+                    { hello: 'world' },
+                    'https://example.com',
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should throw if not embedded', () => {
+                device.isEmbedded = false;
+                expect(() => {
+                    library.api.os.sendEmbedMessage({ hello: 'world' });
+                }).toThrow(
+                    new Error(
+                        'os.sendEmbedMessage() can only be used when CasualOS is embedded in an iframe.'
+                    )
+                );
+                expect(context.actions).toEqual([]);
             });
         });
 
@@ -12233,6 +12274,7 @@ describe('AuxLibrary', () => {
                         allowCollaborationUpgrade: true,
                         ab1BootstrapUrl: 'bootstrapURL',
                         comID: null,
+                        isEmbedded: false,
                     };
                     notifier = {
                         notifyChange: jest.fn(),
@@ -23810,6 +23852,130 @@ describe('AuxLibrary', () => {
                                 targetUserId: 'user123',
                                 returnUrl: 'abc',
                                 successUrl: 'def',
+                            },
+                        },
+                    },
+                    {
+                        endpoint: 'my-endpoint',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('xp.setRecordBudget()', () => {
+            it('should emit a recordsCallProcedure action with setRecordBudget', async () => {
+                const action: any = library.api.xp.setRecordBudget({
+                    recordName: 'myRecord',
+                    budget: {
+                        type: 'fixed',
+                        amount: 100,
+                    },
+                });
+                const expected = recordsCallProcedure(
+                    {
+                        setRecordBudget: {
+                            input: {
+                                recordName: 'myRecord',
+                                budget: {
+                                    type: 'fixed',
+                                    amount: 100,
+                                },
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support clearing the budget with null', async () => {
+                const action: any = library.api.xp.setRecordBudget({
+                    recordName: 'myRecord',
+                    budget: null,
+                });
+                const expected = recordsCallProcedure(
+                    {
+                        setRecordBudget: {
+                            input: {
+                                recordName: 'myRecord',
+                                budget: null,
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should accept options', async () => {
+                const action: any = library.api.xp.setRecordBudget(
+                    {
+                        recordName: 'myRecord',
+                        budget: {
+                            type: 'percent',
+                            amount: 10,
+                        },
+                    },
+                    {
+                        endpoint: 'my-endpoint',
+                    }
+                );
+                const expected = recordsCallProcedure(
+                    {
+                        setRecordBudget: {
+                            input: {
+                                recordName: 'myRecord',
+                                budget: {
+                                    type: 'percent',
+                                    amount: 10,
+                                },
+                            },
+                        },
+                    },
+                    {
+                        endpoint: 'my-endpoint',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('xp.getRecordBudget()', () => {
+            it('should emit a recordsCallProcedure action with getRecordBudget', async () => {
+                const action: any = library.api.xp.getRecordBudget('myRecord');
+                const expected = recordsCallProcedure(
+                    {
+                        getRecordBudget: {
+                            input: {
+                                recordName: 'myRecord',
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should accept options', async () => {
+                const action: any = library.api.xp.getRecordBudget('myRecord', {
+                    endpoint: 'my-endpoint',
+                });
+                const expected = recordsCallProcedure(
+                    {
+                        getRecordBudget: {
+                            input: {
+                                recordName: 'myRecord',
                             },
                         },
                     },

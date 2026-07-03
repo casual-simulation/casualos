@@ -287,6 +287,8 @@ export class RecordsManager {
         ['payoutAccount', true],
         ['getBalances', true],
         ['purchaseCredits', true],
+        ['setRecordBudget', true],
+        ['getRecordBudget', true],
     ]);
 
     /**
