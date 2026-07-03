@@ -11,6 +11,7 @@
 ### :rocket: Features
 
 -   Added support for granting records credit budgets
+-   Added `xp.setRecordBudget()` and `xp.getRecordBudget()` to configure automatic credit transfers from a record's owner to the record whenever the owner is granted credits from their subscription
 
 ## V4.2.6
 

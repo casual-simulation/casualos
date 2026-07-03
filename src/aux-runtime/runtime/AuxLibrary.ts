@@ -511,6 +511,8 @@ import type {
     ContractPricing,
     JSONAccountBalancesAndSubscriptionInfo,
     PurchaseCreditsResult,
+    SetRecordBudgetResult,
+    GetRecordBudgetResult,
 } from '@casual-simulation/aux-records';
 import SeedRandom from 'seedrandom';
 import { DateTime } from 'luxon';
@@ -642,6 +644,39 @@ export interface APIPurchaseCreditsRequest {
      * The URL that the user should be sent to if the purchase completes successfully.
      */
     successUrl: string;
+}
+
+/**
+ * Defines an interface that represents the options for setting a record's budget.
+ *
+ * @dochash types/records/extra
+ * @docname SetRecordBudgetRequest
+ * @docid SetRecordBudgetRequest
+ */
+export interface APISetRecordBudgetRequest {
+    /**
+     * The name of the record that the budget should be set for.
+     */
+    recordName: string;
+
+    /**
+     * The budget that should be set for the record.
+     * Setting this value to null will clear the budget, causing billing for the record to go to the owner's account.
+     */
+    budget: {
+        /**
+         * The type of the budget.
+         * - "fixed" means that a set number of credits will be transferred to the record from the owner's account upon a subscription credit grant.
+         * - "percent" means that the record will be granted a percentage of the total amount that the owner's account receives upon a subscription credit grant.
+         */
+        type: 'fixed' | 'percent';
+
+        /**
+         * The budget amount. Can be a string containing a bigint value. Must be an integer.
+         * Must be between 0 and 100 if type is "percent".
+         */
+        amount: number | string;
+    } | null;
 }
 
 export interface APIInvoiceContractRequest {
@@ -3936,6 +3971,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 payout: xpPayout,
                 getAccountBalances: xpGetAccountBalances,
                 purchaseCredits: xpPurchaseCredits,
+                setRecordBudget: xpSetRecordBudget,
+                getRecordBudget: xpGetRecordBudget,
             },
 
             portal: {
@@ -9762,6 +9799,94 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                         targetStudioId: request.targetStudioId,
                         returnUrl: request.returnUrl,
                         successUrl: request.successUrl,
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Sets the budget that should be used to automatically transfer credits from a record's owner to the record's own credit account whenever the owner is granted credits from their subscription.
+     * Setting the budget to null clears it, causing billing for the record to go to the owner's account.
+     * Only studio admins and superUsers are authorized to set a record's budget.
+     *
+     * @param request The options for the request.
+     * @returns A promise that resolves with the result of the request.
+     *
+     * @example Set a fixed record budget
+     * const result = await xp.setRecordBudget({
+     *   recordName: "myRecord",
+     *   budget: {
+     *     type: "fixed",
+     *     amount: 100
+     *   }
+     * });
+     *
+     * @example Set a percent record budget
+     * const result = await xp.setRecordBudget({
+     *   recordName: "myRecord",
+     *   budget: {
+     *     type: "percent",
+     *     amount: 10
+     *   }
+     * });
+     *
+     * @example Clear a record budget
+     * const result = await xp.setRecordBudget({
+     *   recordName: "myRecord",
+     *   budget: null
+     * });
+     *
+     * @dochash actions/xp
+     * @docname xp.setRecordBudget
+     */
+    function xpSetRecordBudget(
+        request: APISetRecordBudgetRequest,
+        options: RecordActionOptions = {}
+    ): Promise<SetRecordBudgetResult> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                setRecordBudget: {
+                    input: {
+                        recordName: request.recordName,
+                        budget: request.budget,
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the budget that has been configured for the given record.
+     *
+     * @param recordName The name of the record to get the budget for.
+     * @param options The options for the request.
+     * @returns A promise that resolves with the result of the request.
+     *
+     * @example Get a record's budget
+     * const result = await xp.getRecordBudget("myRecord");
+     * console.log(result);
+     *
+     * @dochash actions/xp
+     * @docname xp.getRecordBudget
+     */
+    function xpGetRecordBudget(
+        recordName: string,
+        options: RecordActionOptions = {}
+    ): Promise<GetRecordBudgetResult> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                getRecordBudget: {
+                    input: {
+                        recordName,
                     },
                 },
             },
