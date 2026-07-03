@@ -51,6 +51,12 @@ export interface EmailPlainContent {
     type: 'plain';
     subject: string;
     body: string;
+
+    /**
+     * The HTML body of the email. If omitted, only the plain-text body is sent.
+     * Use double curly-braces {{variable}} to insert variables, same as `body`.
+     */
+    html?: string;
 }
 
 export class SimpleEmailServiceAuthMessenger implements AuthMessenger {
@@ -98,6 +104,17 @@ export class SimpleEmailServiceAuthMessenger implements AuthMessenger {
                                 ),
                                 Charset: 'UTF-8',
                             },
+                            ...(this._options.content.html
+                                ? {
+                                      Html: {
+                                          Data: renderString(
+                                              this._options.content.html,
+                                              data
+                                          ),
+                                          Charset: 'UTF-8',
+                                      },
+                                  }
+                                : {}),
                         },
                         Subject: {
                             Data: renderString(

@@ -105,6 +105,58 @@ describe('SimpleEmailServiceAuthMessenger', () => {
             });
         });
 
+        it('should send a code with an html body when configured', async () => {
+            messenger = new SimpleEmailServiceAuthMessenger(ses as any, {
+                content: {
+                    type: 'plain',
+                    subject: 'Test',
+                    body: 'Your code is: {{code}}',
+                    html: '<p>Your code is: {{code}}</p>',
+                },
+                fromAddress: 'test@example.com',
+            });
+
+            ses.sendEmail.mockReturnValueOnce(
+                awsResult({
+                    MessageId: 'test',
+                })
+            );
+
+            const result = await messenger.sendCode(
+                'target@example.com',
+                'email',
+                '1234'
+            );
+
+            expect(result).toEqual({
+                success: true,
+            });
+            expect(ses.sendEmail).toHaveBeenCalledWith({
+                Destination: {
+                    ToAddresses: ['target@example.com'],
+                },
+                FromEmailAddress: 'test@example.com',
+                Content: {
+                    Simple: {
+                        Body: {
+                            Text: {
+                                Data: 'Your code is: 1234',
+                                Charset: 'UTF-8',
+                            },
+                            Html: {
+                                Data: '<p>Your code is: 1234</p>',
+                                Charset: 'UTF-8',
+                            },
+                        },
+                        Subject: {
+                            Data: 'Test',
+                            Charset: 'UTF-8',
+                        },
+                    },
+                },
+            });
+        });
+
         it('should send a code using the given AWS template', async () => {
             messenger = new SimpleEmailServiceAuthMessenger(ses as any, {
                 content: {

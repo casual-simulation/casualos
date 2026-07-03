@@ -111,7 +111,7 @@ Amazon SES implementation of `AuthMessenger` for sending authentication codes vi
 
 -   Send authentication codes via AWS SES
 -   Template-based emails (using SES templates)
--   Plain text emails with variable substitution
+-   Plain text (and optional HTML) emails with variable substitution
 -   Supports email address type only
 -   Customizable sender address and content
 
@@ -132,16 +132,19 @@ const messenger = new SimpleEmailServiceAuthMessenger(sesClient, {
     },
 });
 
-// Using plain text with variable substitution
+// Using plain text with variable substitution (optionally with an HTML body)
 const messengerPlain = new SimpleEmailServiceAuthMessenger(sesClient, {
     fromAddress: 'noreply@example.com',
     content: {
         type: 'plain',
         subject: 'Your authentication code',
         body: 'Your code is: {{code}}',
+        html: '<p>Your code is: <strong>{{code}}</strong></p>',
     },
 });
 ```
+
+`html` is optional. When provided, SES sends a multipart/alternative email with both the plain-text and HTML bodies; when omitted, only the plain-text body is sent. This is separate from the `type: 'template'` option above, which delegates to AWS SES's own hosted templates (referenced by ARN) rather than configuring content directly.
 
 **Example Usage**:
 
