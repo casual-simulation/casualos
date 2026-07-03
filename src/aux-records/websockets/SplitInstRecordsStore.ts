@@ -56,8 +56,26 @@ export class SplitInstRecordsStore implements InstRecordsStore {
         this._permanent = permanent;
     }
 
+    private _isExpiring(recordName: string | null, expires?: boolean): boolean {
+        return typeof expires === 'boolean' ? expires : !recordName;
+    }
+
     async saveLoadedPackage(loadedPackage: LoadedPackage): Promise<void> {
-        if (loadedPackage.recordName) {
+        if (this._isExpiring(loadedPackage.recordName, loadedPackage.expires)) {
+            await this._temp.saveLoadedPackage(
+                loadedPackage.expires === true
+                    ? loadedPackage
+                    : {
+                          id: loadedPackage.id,
+                          recordName: loadedPackage.recordName,
+                          inst: loadedPackage.inst,
+                          branch: loadedPackage.branch,
+                          userId: loadedPackage.userId,
+                          packageId: loadedPackage.packageId,
+                          packageVersionId: loadedPackage.packageVersionId,
+                      }
+            );
+        } else if (loadedPackage.recordName) {
             await this._permanent.saveLoadedPackage(loadedPackage);
         } else {
             await this._temp.saveLoadedPackage(loadedPackage);
@@ -68,11 +86,16 @@ export class SplitInstRecordsStore implements InstRecordsStore {
         recordName: string | null,
         inst: string
     ): Promise<LoadedPackage[]> {
-        if (recordName) {
-            return await this._permanent.listLoadedPackages(recordName, inst);
-        } else {
+        if (!recordName) {
             return await this._temp.listLoadedPackages(recordName, inst);
         }
+
+        const [tempPackages, permPackages] = await Promise.all([
+            this._temp.listLoadedPackages(recordName, inst),
+            this._permanent.listLoadedPackages(recordName, inst),
+        ]);
+
+        return tempPackages.length > 0 ? tempPackages : permPackages;
     }
 
     async isPackageLoaded(
@@ -80,19 +103,20 @@ export class SplitInstRecordsStore implements InstRecordsStore {
         inst: string,
         packageId: string
     ): Promise<LoadedPackage | null> {
-        if (recordName) {
-            return await this._permanent.isPackageLoaded(
-                recordName,
-                inst,
-                packageId
-            );
-        } else {
+        if (!recordName) {
             return await this._temp.isPackageLoaded(
                 recordName,
                 inst,
                 packageId
             );
         }
+
+        const [tempResult, permResult] = await Promise.all([
+            this._temp.isPackageLoaded(recordName, inst, packageId),
+            this._permanent.isPackageLoaded(recordName, inst, packageId),
+        ]);
+
+        return tempResult ?? permResult;
     }
 
     async getInstByName(
@@ -152,6 +176,12 @@ export class SplitInstRecordsStore implements InstRecordsStore {
     }
 
     async saveInst(inst: InstWithBranches): Promise<SaveInstResult> {
+        if (inst.expires === true) {
+            return {
+                success: true,
+            };
+        }
+
         if (inst.recordName) {
             const result = await this._permanent.saveInst(inst);
             if (!result.success) {
@@ -176,7 +206,16 @@ export class SplitInstRecordsStore implements InstRecordsStore {
     }
 
     async saveBranch(branch: BranchRecord): Promise<SaveBranchResult> {
-        if (branch.recordName) {
+        if (this._isExpiring(branch.recordName, branch.expires)) {
+            await this._temp.saveBranchInfo({
+                recordName: branch.recordName,
+                inst: branch.inst,
+                branch: branch.branch,
+                linkedInst: null,
+                temporary: branch.temporary,
+                ...(branch.expires === true ? { expires: true } : {}),
+            });
+        } else if (branch.recordName) {
             const result = await this._permanent.saveBranch(branch);
             if (!result.success) {
                 return result;
