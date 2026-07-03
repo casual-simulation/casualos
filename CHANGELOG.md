@@ -15,6 +15,7 @@
     -   Added `@onEmbedMessage` to listen for messages sent from the parent window.
     -   Added `isEmbedded` to `os.device()` to indicate whether CasualOS is currently embedded in an iframe.
 -   Added support for granting records credit budgets
+-   Added `xp.setRecordBudget()` and `xp.getRecordBudget()` to configure automatic credit transfers from a record's owner to the record whenever the owner is granted credits from their subscription
 -   Added support for expiring private insts.
     -   Added optional `expires` support to inst/branch/package records and websocket `repo/watch_branch` requests.
     -   Updated split-store and websocket inst routing to use `expires` semantics (instead of relying on `recordName` alone) when deciding temporary vs permanent storage.

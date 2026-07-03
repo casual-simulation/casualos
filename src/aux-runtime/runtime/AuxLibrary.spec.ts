@@ -23864,6 +23864,130 @@ describe('AuxLibrary', () => {
                 expect(context.actions).toEqual([expected]);
             });
         });
+
+        describe('xp.setRecordBudget()', () => {
+            it('should emit a recordsCallProcedure action with setRecordBudget', async () => {
+                const action: any = library.api.xp.setRecordBudget({
+                    recordName: 'myRecord',
+                    budget: {
+                        type: 'fixed',
+                        amount: 100,
+                    },
+                });
+                const expected = recordsCallProcedure(
+                    {
+                        setRecordBudget: {
+                            input: {
+                                recordName: 'myRecord',
+                                budget: {
+                                    type: 'fixed',
+                                    amount: 100,
+                                },
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support clearing the budget with null', async () => {
+                const action: any = library.api.xp.setRecordBudget({
+                    recordName: 'myRecord',
+                    budget: null,
+                });
+                const expected = recordsCallProcedure(
+                    {
+                        setRecordBudget: {
+                            input: {
+                                recordName: 'myRecord',
+                                budget: null,
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should accept options', async () => {
+                const action: any = library.api.xp.setRecordBudget(
+                    {
+                        recordName: 'myRecord',
+                        budget: {
+                            type: 'percent',
+                            amount: 10,
+                        },
+                    },
+                    {
+                        endpoint: 'my-endpoint',
+                    }
+                );
+                const expected = recordsCallProcedure(
+                    {
+                        setRecordBudget: {
+                            input: {
+                                recordName: 'myRecord',
+                                budget: {
+                                    type: 'percent',
+                                    amount: 10,
+                                },
+                            },
+                        },
+                    },
+                    {
+                        endpoint: 'my-endpoint',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('xp.getRecordBudget()', () => {
+            it('should emit a recordsCallProcedure action with getRecordBudget', async () => {
+                const action: any = library.api.xp.getRecordBudget('myRecord');
+                const expected = recordsCallProcedure(
+                    {
+                        getRecordBudget: {
+                            input: {
+                                recordName: 'myRecord',
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should accept options', async () => {
+                const action: any = library.api.xp.getRecordBudget('myRecord', {
+                    endpoint: 'my-endpoint',
+                });
+                const expected = recordsCallProcedure(
+                    {
+                        getRecordBudget: {
+                            input: {
+                                recordName: 'myRecord',
+                            },
+                        },
+                    },
+                    {
+                        endpoint: 'my-endpoint',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
     });
 });
 

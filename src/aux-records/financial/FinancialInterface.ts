@@ -394,6 +394,11 @@ export enum AccountCodes {
     liabilities_contract = 2103, // flags.debits_must_not_exceed_credits
 
     /**
+     * liabilities held by records.
+     */
+    liabilities_record = 2104, // flags.debits_must_not_exceed_credits
+
+    /**
      * Revenue accounts from platform fees.
      */
     revenue_platform_fees = 4101, // flags.debits_must_not_exceed_credits
@@ -474,6 +479,12 @@ export enum TransferCodes {
      * This generally functions as a payout to the user and corresponds to a credit to an assets account.
      */
     user_payout = 1001,
+
+    /**
+     * A credit to a record's account from its owner (user or studio), based on a configured record budget.
+     * This corresponds to a debit from the owner's account.
+     */
+    record_budget_transfer = 1002,
 
     /**
      * A credit to a contract account from a user and a corresponding debit from the corresponding payment source.
@@ -671,6 +682,7 @@ export function getFlagsForAccountCode(code: AccountCodes): AccountFlags {
         case AccountCodes.liabilities_user:
         case AccountCodes.liabilities_studio:
         case AccountCodes.liabilities_contract:
+        case AccountCodes.liabilities_record:
         case AccountCodes.revenue_platform_fees:
         case AccountCodes.credit_expiration:
             return (

@@ -19627,6 +19627,108 @@ export type PurchaseCreditsResult = GenericResult<
 >;
 
 /**
+ * Defines an interface that represents a budget that has been configured for a record.
+ *
+ * @dochash types/records/extra
+ * @docname RecordCreditBudget
+ * @docid RecordCreditBudget
+ */
+export interface RecordCreditBudget {
+    /**
+     * The type of the budget.
+     * - "fixed" means that a set number of credits will be transferred to the record from the owner's account upon a subscription credit grant.
+     * - "percent" means that the record will be granted a percentage of the total amount that the owner's account receives upon a subscription credit grant.
+     */
+    type: 'fixed' | 'percent';
+
+    /**
+     * The budget amount. A bigint value represented as a string.
+     */
+    amount: string;
+}
+
+/**
+ * Defines an interface that represents the options for setting a record's budget.
+ *
+ * @dochash types/records/extra
+ * @docname SetRecordBudgetRequest
+ * @docid SetRecordBudgetRequest
+ */
+export interface APISetRecordBudgetRequest {
+    /**
+     * The name of the record that the budget should be set for.
+     */
+    recordName: string;
+
+    /**
+     * The budget that should be set for the record.
+     * Setting this value to null will clear the budget, causing billing for the record to go to the owner's account.
+     */
+    budget: {
+        /**
+         * The type of the budget.
+         * - "fixed" means that a set number of credits will be transferred to the record from the owner's account upon a subscription credit grant.
+         * - "percent" means that the record will be granted a percentage of the total amount that the owner's account receives upon a subscription credit grant.
+         */
+        type: 'fixed' | 'percent';
+
+        /**
+         * The budget amount. Can be a string containing a bigint value. Must be an integer.
+         * Must be between 0 and 100 if type is "percent".
+         */
+        amount: number | string;
+    } | null;
+}
+
+/**
+ * Defines an interface that represents the result of a request to set a record's budget.
+ *
+ * @dochash types/records/extra
+ * @docname SetRecordBudgetResult
+ * @docid SetRecordBudgetResult
+ */
+export type SetRecordBudgetResult =
+    | SetRecordBudgetSuccess
+    | SetRecordBudgetFailure;
+
+export interface SetRecordBudgetSuccess {
+    success: true;
+}
+
+export interface SetRecordBudgetFailure {
+    success: false;
+    errorCode: KnownErrorCodes;
+    errorMessage: string;
+}
+
+/**
+ * Defines an interface that represents the result of a request to get a record's budget.
+ *
+ * @dochash types/records/extra
+ * @docname GetRecordBudgetResult
+ * @docid GetRecordBudgetResult
+ */
+export type GetRecordBudgetResult =
+    | GetRecordBudgetSuccess
+    | GetRecordBudgetFailure;
+
+export interface GetRecordBudgetSuccess {
+    success: true;
+
+    /**
+     * The budget that is configured for the record.
+     * Null if no budget is configured (billing for the record goes to the owner's account).
+     */
+    budget: RecordCreditBudget | null;
+}
+
+export interface GetRecordBudgetFailure {
+    success: false;
+    errorCode: KnownErrorCodes;
+    errorMessage: string;
+}
+
+/**
  * The destination for the payout of an invoice.
  * - "stripe" means that the invoiced amount will be transfered to the users Stripe account once paid.
  * - "account" means that the invoiced amount will remain in thier CasualOS account.
@@ -19983,6 +20085,65 @@ interface Xp {
         request: APIPurchaseCreditsRequest,
         options?: RecordActionOptions
     ): Promise<PurchaseCreditsResult>;
+
+    /**
+     * Sets the budget that should be used to automatically transfer credits from a record's owner to the record's own credit account whenever the owner is granted credits from their subscription.
+     * Setting the budget to null clears it, causing billing for the record to go to the owner's account.
+     * Only studio admins and superUsers are authorized to set a record's budget.
+     *
+     * @param request The options for the request.
+     * @returns A promise that resolves with the result of the request.
+     *
+     * @example Set a fixed record budget
+     * const result = await xp.setRecordBudget({
+     *   recordName: "myRecord",
+     *   budget: {
+     *     type: "fixed",
+     *     amount: 100
+     *   }
+     * });
+     *
+     * @example Set a percent record budget
+     * const result = await xp.setRecordBudget({
+     *   recordName: "myRecord",
+     *   budget: {
+     *     type: "percent",
+     *     amount: 10
+     *   }
+     * });
+     *
+     * @example Clear a record budget
+     * const result = await xp.setRecordBudget({
+     *   recordName: "myRecord",
+     *   budget: null
+     * });
+     *
+     * @dochash actions/xp
+     * @docname xp.setRecordBudget
+     */
+    setRecordBudget(
+        request: APISetRecordBudgetRequest,
+        options?: RecordActionOptions
+    ): Promise<SetRecordBudgetResult>;
+
+    /**
+     * Gets the budget that has been configured for the given record.
+     *
+     * @param recordName The name of the record to get the budget for.
+     * @param options The options for the request.
+     * @returns A promise that resolves with the result of the request.
+     *
+     * @example Get a record's budget
+     * const result = await xp.getRecordBudget("myRecord");
+     * console.log(result);
+     *
+     * @dochash actions/xp
+     * @docname xp.getRecordBudget
+     */
+    getRecordBudget(
+        recordName: string,
+        options?: RecordActionOptions
+    ): Promise<GetRecordBudgetResult>;
 }
 
 interface Perf {
