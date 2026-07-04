@@ -466,6 +466,13 @@ function constructServerConfigSchema() {
                 .describe(
                     'The body of the email. Use double curly-braces {{variable}} to insert variables.'
                 ),
+            html: z
+                .string()
+                .nonempty()
+                .optional()
+                .describe(
+                    'The HTML body of the email. If omitted, only the plain-text body will be sent. Use double curly-braces {{variable}} to insert variables.'
+                ),
         }),
     ]);
 
