@@ -1858,6 +1858,26 @@ Object {
     Object {
       "http": Object {
         "method": "GET",
+        "path": "/api/v2/link-preview",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "locale": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "url": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getLinkPreview",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
         "path": "/api/v2/loom/token",
       },
       "inputs": Object {
@@ -12456,6 +12476,26 @@ Object {
       },
       "name": "getInstData",
       "origins": true,
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/link-preview",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "locale": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "url": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getLinkPreview",
+      "origins": "api",
     },
     Object {
       "http": Object {

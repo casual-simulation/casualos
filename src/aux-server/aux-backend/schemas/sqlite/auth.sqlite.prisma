@@ -1313,6 +1313,16 @@ model Configuration {
     updatedAt Decimal
 }
 
+model LinkPreviewCache {
+    cacheKey String @id
+    data Json
+    expireAtMs BigInt
+    createdAt Decimal
+    updatedAt Decimal
+
+    @@index([expireAtMs])
+}
+
 model Subscription {
     id String @id
     stripeSubscriptionId String @unique

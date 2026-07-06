@@ -1314,6 +1314,16 @@ model Configuration {
     updatedAt DateTime @updatedAt
 }
 
+model LinkPreviewCache {
+    cacheKey String @id
+    data Json
+    expireAtMs BigInt
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([expireAtMs])
+}
+
 model Subscription {
     id String @id @db.Uuid
     stripeSubscriptionId String @unique
