@@ -104,6 +104,7 @@ import { getStatusCode } from '@casual-simulation/aux-common';
 import type { ModerationController } from './ModerationController';
 import { COM_ID_CONFIG_SCHEMA, COM_ID_PLAYER_CONFIG } from './ComIdConfig';
 import type { LoomController } from './LoomController';
+import type { LinkPreviewController } from './LinkPreviewController';
 import type { Tracer } from '@opentelemetry/api';
 import { SpanKind, ValueType, trace } from '@opentelemetry/api';
 import { traceHttpResponse, traced } from './tracing/TracingDecorators';
@@ -260,6 +261,12 @@ export const XP_API_NOT_SUPPORTED_RESULT = {
     success: false as const,
     errorCode: 'not_supported' as const,
     errorMessage: 'xpAPI features are not supported by this server.',
+};
+
+export const LINK_PREVIEW_NOT_SUPPORTED_RESULT = {
+    success: false as const,
+    errorCode: 'not_supported' as const,
+    errorMessage: 'Link previews are not supported by this server.',
 };
 
 /**
@@ -487,6 +494,12 @@ export interface RecordsServerOptions {
      * The interface that should be used for rendering view templates.
      */
     viewTemplateRenderer?: ViewTemplateRenderer | null;
+
+    /**
+     * The controller that should be used for handling link preview requests.
+     * If null, then link previews are not supported.
+     */
+    linkPreviewController?: LinkPreviewController | null;
 }
 
 /**
@@ -513,6 +526,7 @@ export class RecordsServer {
     private _databaseRecordsController: DatabaseRecordsController | null;
     private _contractRecordsController: ContractRecordsController | null;
     private _viewTemplateRenderer: ViewTemplateRenderer | null;
+    private _linkPreviewController: LinkPreviewController | null;
 
     /**
      * The set of origins that are allowed for API requests.
@@ -599,6 +613,7 @@ export class RecordsServer {
         contractRecordsController,
         purchasableItemsController,
         viewTemplateRenderer,
+        linkPreviewController,
     }: RecordsServerOptions) {
         this._allowedAccountOrigins = allowedAccountOrigins;
         this._allowedApiOrigins = allowedApiOrigins;
@@ -634,6 +649,7 @@ export class RecordsServer {
         this._databaseRecordsController = databaseRecordsController;
         this._contractRecordsController = contractRecordsController;
         this._viewTemplateRenderer = viewTemplateRenderer;
+        this._linkPreviewController = linkPreviewController ?? null;
         this._tracer = trace.getTracer(
             'RecordsServer',
             typeof GIT_TAG === 'undefined' ? undefined : GIT_TAG
@@ -7250,6 +7266,29 @@ export class RecordsServer {
                     });
 
                     return genericResult(result);
+                }),
+
+            getLinkPreview: procedure()
+                .origins('api')
+                .http('GET', '/api/v2/link-preview')
+                .inputs(
+                    z.object({
+                        url: z.url(),
+                        locale: z.string().nonempty().optional(),
+                    })
+                )
+                .handler(async ({ url, locale }) => {
+                    if (!this._linkPreviewController) {
+                        return LINK_PREVIEW_NOT_SUPPORTED_RESULT;
+                    }
+
+                    const result =
+                        await this._linkPreviewController.getLinkPreview({
+                            url,
+                            locale,
+                        });
+
+                    return result;
                 }),
         };
     }

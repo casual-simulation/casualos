@@ -79,6 +79,11 @@ import {
 } from '@casual-simulation/aux-common';
 import { RateLimitController } from './RateLimitController';
 import { MemoryRateLimiter } from './MemoryRateLimiter';
+import { LinkPreviewController } from './LinkPreviewController';
+import { MemoryLinkPreviewStore } from './MemoryLinkPreviewStore';
+import { lookup as dnsLookup } from 'node:dns/promises';
+
+jest.mock('node:dns/promises');
 import type { RateLimiter } from '@casual-simulation/rate-limit-redis';
 import {
     asyncIterable,
@@ -462,6 +467,10 @@ describe('RecordsServer', () => {
     let rateLimiter: RateLimiter;
     let rateLimitController: RateLimitController;
 
+    let linkPreviewStore: MemoryLinkPreviewStore;
+    let linkPreviewRateLimiter: MemoryRateLimiter;
+    let linkPreviewController: LinkPreviewController;
+
     let filesController: FileRecordsController;
 
     let stripeMock: jest.Mocked<StripeInterface>;
@@ -718,6 +727,22 @@ describe('RecordsServer', () => {
         rateLimitController = new RateLimitController(rateLimiter, {
             maxHits: 5,
             windowMs: 1000,
+        });
+
+        linkPreviewStore = new MemoryLinkPreviewStore();
+        linkPreviewRateLimiter = new MemoryRateLimiter();
+        linkPreviewController = new LinkPreviewController({
+            store: linkPreviewStore,
+            rateLimiter: linkPreviewRateLimiter,
+            config: {
+                rateLimit: {
+                    maxHits: 1000,
+                    windowMs: 60 * 1000,
+                },
+                minCacheSeconds: 60 * 30,
+                requestTimeoutMs: 10_000,
+                maxResponseBytes: 5_000_000,
+            },
         });
 
         packageController = new PackageRecordsController({
@@ -997,6 +1022,7 @@ describe('RecordsServer', () => {
             purchasableItemsController,
             contractRecordsController: contractsController,
             viewTemplateRenderer: viewTemplateRenderer,
+            linkPreviewController,
         });
         defaultHeaders = {
             origin: 'test.com',
@@ -35855,6 +35881,167 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
             expect(result.statusCode).not.toEqual(429);
         });
     }
+
+    describe('GET /api/v2/link-preview', () => {
+        const mockedDnsLookup = dnsLookup as jest.MockedFunction<
+            typeof dnsLookup
+        >;
+
+        beforeEach(() => {
+            require('axios').__reset();
+            mockedDnsLookup.mockReset();
+            mockedDnsLookup.mockResolvedValue([
+                { address: '93.184.216.34', family: 4 },
+            ] as any);
+            mockHtmlResponse(
+                '<html><head><title>Default Title</title></head></html>'
+            );
+        });
+
+        function mockHtmlResponse(
+            html: string,
+            headers: { [key: string]: string } = {}
+        ) {
+            require('axios').__setResponse({
+                data: html,
+                headers: {
+                    'content-type': 'text/html; charset=utf-8',
+                    ...headers,
+                },
+                request: {
+                    res: {
+                        responseUrl: 'https://example.com/page',
+                    },
+                },
+            });
+        }
+
+        it('should return the link preview for the given URL', async () => {
+            mockHtmlResponse(
+                '<html><head><meta property="og:title" content="Example Title" /></head></html>'
+            );
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    '/api/v2/link-preview?url=https://example.com/page',
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    title: 'Example Title',
+                    cachedUntilMs: expect.any(Number),
+                    meta: expect.objectContaining({
+                        'og:title': 'Example Title',
+                    }),
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request result if url is omitted', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet('/api/v2/link-preview', apiHeaders)
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: expect.any(Array),
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return url_not_html if the site does not return HTML', async () => {
+            require('axios').__setResponse({
+                data: '{}',
+                headers: { 'content-type': 'application/json' },
+                request: {
+                    res: { responseUrl: 'https://example.com/data' },
+                },
+            });
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    '/api/v2/link-preview?url=https://example.com/data',
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'url_not_html',
+                    errorMessage:
+                        'The given URL does not point to an HTML page.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return not_supported if link previews are not configured', async () => {
+            server = new RecordsServer({
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                rateLimitController,
+                policyController,
+                aiController,
+                websocketController,
+                moderationController,
+            });
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    '/api/v2/link-preview?url=https://example.com/page',
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'Link previews are not supported by this server.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin(
+            'GET',
+            `/api/v2/link-preview?url=${encodeURIComponent(
+                'https://example.com/page'
+            )}`
+        );
+        testCustomOrigin(
+            'GET',
+            `/api/v2/link-preview?url=${encodeURIComponent(
+                'https://example.com/page'
+            )}`,
+            undefined,
+            () => apiHeaders
+        );
+        testRateLimit('GET', `/api/v2/link-preview`);
+    });
 });
 
 describe('validateOrigin()', () => {

@@ -45,6 +45,7 @@ import type {
     FinancialInterface,
     PurchasableItemRecordsStore,
     BackgroundJobs,
+    LinkPreviewStore,
 } from '@casual-simulation/aux-records';
 import {
     DNSDomainNameValidator,
@@ -78,6 +79,8 @@ import {
     cleanupObject,
     NotificationRecordsController,
     PackageRecordsController,
+    LinkPreviewController,
+    MemoryRateLimiter,
 } from '@casual-simulation/aux-records';
 import type { SimpleEmailServiceAuthMessengerOptions } from '@casual-simulation/aux-records-aws';
 import {
@@ -95,6 +98,7 @@ import { SESv2 } from '@aws-sdk/client-sesv2';
 import type { RedisClientType } from 'redis';
 import { createClient as createRedisClient } from 'redis';
 import { TracedRedisRateLimitStore } from '../redis/TracedRedisRateLimitStore';
+import type { RateLimiter } from '@casual-simulation/rate-limit-redis';
 import { StripeIntegration } from './StripeIntegration';
 import Stripe from 'stripe';
 import type { Db } from 'mongodb';
@@ -255,6 +259,8 @@ import { SqliteFinancialStore } from '../prisma/sqlite/SqliteFinancialStore';
 import { PrismaFinancialStore } from '../prisma/PrismaFinancialStore';
 import { SqliteContractsRecordsStore } from '../prisma/sqlite/SqliteContractsRecordsStore';
 import { PrismaContractsRecordsStore } from '../prisma/PrismaContractsRecordsStore';
+import { SqliteLinkPreviewStore } from '../prisma/sqlite/SqliteLinkPreviewStore';
+import { PrismaLinkPreviewStore } from '../prisma/PrismaLinkPreviewStore';
 import type { ContractRecordsStore } from '@casual-simulation/aux-records/contracts';
 import { ContractRecordsController } from '@casual-simulation/aux-records/contracts';
 import type z from 'zod';
@@ -367,6 +373,9 @@ export class ServerBuilder implements SubscriptionLike {
 
     private _contractsStore: ContractRecordsStore;
     private _contractsController: ContractRecordsController;
+
+    private _linkPreviewStore: LinkPreviewStore;
+    private _linkPreviewController: LinkPreviewController | null = null;
 
     private _subscriptionConfig: SubscriptionConfiguration | null = null;
     private _subscriptionController: SubscriptionController;
@@ -822,6 +831,7 @@ export class ServerBuilder implements SubscriptionLike {
                 client,
                 metricsStore
             );
+            this._linkPreviewStore = new SqliteLinkPreviewStore(client);
         } else {
             const metricsStore = (this._metricsStore = new PrismaMetricsStore(
                 prismaClient,
@@ -870,6 +880,7 @@ export class ServerBuilder implements SubscriptionLike {
                 prismaClient,
                 metricsStore
             );
+            this._linkPreviewStore = new PrismaLinkPreviewStore(prismaClient);
         }
 
         const filesLookup =
@@ -1312,6 +1323,46 @@ export class ServerBuilder implements SubscriptionLike {
         this._websocketRateLimitController = new RateLimitController(store, {
             maxHits: rateLimit.maxHits,
             windowMs: rateLimit.windowMs,
+        });
+
+        return this;
+    }
+
+    useLinkPreview(
+        options: Pick<ServerConfig, 'linkPreview' | 'redis'> = this._options
+    ): this {
+        console.log('[ServerBuilder] Using Link Previews.');
+        if (!options.linkPreview) {
+            throw new Error('Link preview options must be provided.');
+        }
+        if (!this._linkPreviewStore) {
+            throw new Error('A link preview store must be configured.');
+        }
+
+        let rateLimiter: RateLimiter;
+        if (options.redis) {
+            const client = this._ensureRedisRateLimit(options);
+            const store = new TracedRedisRateLimitStore({
+                sendCommand: (command: string, ...args: string[]) => {
+                    return client.sendCommand([command, ...args]);
+                },
+            });
+            this._initActions.push({
+                priority: 11,
+                action: async () => {
+                    await store.setup();
+                },
+            });
+            store.prefix = 'link-preview-rl:';
+            rateLimiter = store;
+        } else {
+            rateLimiter = new MemoryRateLimiter();
+        }
+
+        this._linkPreviewController = new LinkPreviewController({
+            store: this._linkPreviewStore,
+            rateLimiter,
+            config: options.linkPreview,
         });
 
         return this;
@@ -2487,6 +2538,7 @@ export class ServerBuilder implements SubscriptionLike {
             contractRecordsController: this._contractsController,
             purchasableItemsController: this._purchasableItemsController,
             viewTemplateRenderer: this._viewTemplateRenderer,
+            linkPreviewController: this._linkPreviewController,
         });
 
         const buildReturn: BuildReturn = {

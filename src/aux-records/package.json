@@ -59,6 +59,7 @@
         "livekit-server-sdk": "2.7.2",
         "luxon": "3.4.4",
         "mime": "2.4.6",
+        "node-html-parser": "^6.1.13",
         "openai": "4.89.0",
         "openid-client": "5.6.1",
         "preact": "10.28.4",
