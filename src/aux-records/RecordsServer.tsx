@@ -1272,6 +1272,32 @@ export class RecordsServer {
                     return result;
                 }),
 
+            listOpenIDProviders: procedure()
+                .origins('account')
+                .http('GET', '/api/v2/login/openid/list')
+                .handler(async (_, context) => {
+                    const result = await this._auth.listOpenIDProviders();
+
+                    return result;
+                }),
+
+            requestOpenIDLogin: procedure()
+                .origins('account')
+                .http('POST', '/api/v2/login/openid')
+                .inputs(
+                    z.object({
+                        provider: z.string().nonempty(),
+                    })
+                )
+                .handler(async ({ provider }, context) => {
+                    const result = await this._auth.requestOpenIDLogin({
+                        provider,
+                        ipAddress: context.ipAddress,
+                    });
+
+                    return result;
+                }),
+
             processOAuthCode: procedure()
                 .origins('account')
                 .http('POST', '/api/v2/oauth/code')
@@ -1304,6 +1330,7 @@ export class RecordsServer {
                     const result = await this._auth.completeOpenIDLogin({
                         ipAddress: context.ipAddress,
                         requestId,
+                        sessionKey: context.sessionKey ?? null,
                     });
 
                     return result;

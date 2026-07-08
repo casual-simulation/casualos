@@ -53,6 +53,7 @@ import { allowAllDefaultFeatures } from './SubscriptionConfiguration';
 import { MemoryStore } from './MemoryStore';
 import { DateTime } from 'luxon';
 import type { PrivoClientInterface } from './PrivoClient';
+import type { GenericOpenIDClientInterface } from './GenericOpenIDClient';
 import type {
     VerifiedRegistrationResponse,
     VerifyAuthenticationResponseOpts,
@@ -149,6 +150,8 @@ describe('AuthController', () => {
     // let financialInterface: MemoryFinancialInterface;
     // let financialController: FinancialController;
     let privoClientMock: jest.MockedObject<PrivoClientInterface>;
+    let genericOpenIDClient: GenericOpenIDClientInterface;
+    let genericOpenIDClientMock: jest.MockedObject<GenericOpenIDClientInterface>;
     let nowMock: jest.Mock<number>;
     let relyingParty: RelyingParty;
 
@@ -202,6 +205,11 @@ describe('AuthController', () => {
             lookupServiceId: jest.fn(),
         };
 
+        genericOpenIDClient = genericOpenIDClientMock = {
+            generateAuthorizationUrl: jest.fn(),
+            processAuthorizationCallback: jest.fn(),
+        };
+
         relyingParty = {
             name: 'example relying party',
             id: 'example.com',
@@ -217,7 +225,8 @@ describe('AuthController', () => {
             store,
             store,
             privoClient,
-            [relyingParty]
+            [relyingParty],
+            genericOpenIDClient
         );
 
         uuidMock.mockReset();
@@ -2835,6 +2844,140 @@ describe('AuthController', () => {
                 errorMessage: 'The given provider is not supported.',
             });
         });
+
+        describe('custom provider', () => {
+            beforeEach(() => {
+                nowMock.mockReturnValue(
+                    DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis()
+                );
+
+                store.openIdConfiguration = {
+                    providers: [
+                        {
+                            id: 'google',
+                            name: 'Google',
+                            discoveryUri:
+                                'https://accounts.google.com/.well-known/openid-configuration',
+                            redirectUri: 'https://example.com/redirect',
+                            clientId: 'clientId',
+                            clientSecret: 'clientSecret',
+                            requestScopes: ['openid', 'email', 'profile'],
+                        },
+                    ],
+                };
+            });
+
+            it('should return the redirect URL', async () => {
+                uuidMock
+                    .mockReturnValueOnce('uuid')
+                    .mockReturnValueOnce('uuid2');
+                genericOpenIDClientMock.generateAuthorizationUrl.mockResolvedValueOnce(
+                    {
+                        codeVerifier: 'verifier',
+                        codeMethod: 'method',
+                        authorizationUrl: 'https://mock_authorization_url',
+                        redirectUrl: 'https://redirect_url',
+                        scope: 'openid email profile',
+                    }
+                );
+
+                const result = await controller.requestOpenIDLogin({
+                    provider: 'google',
+                    ipAddress: '127.0.0.1',
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    authorizationUrl: 'https://mock_authorization_url',
+                    requestId: 'uuid',
+                });
+
+                expect(store.openIdLoginRequests).toEqual([
+                    {
+                        requestId: 'uuid',
+                        state: 'uuid2',
+                        provider: 'google',
+                        codeVerifier: 'verifier',
+                        codeMethod: 'method',
+                        authorizationUrl: 'https://mock_authorization_url',
+                        redirectUrl: 'https://redirect_url',
+                        scope: 'openid email profile',
+                        requestTimeMs: DateTime.utc(
+                            2023,
+                            1,
+                            1,
+                            0,
+                            0,
+                            0
+                        ).toMillis(),
+                        expireTimeMs:
+                            DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() +
+                            OPEN_ID_LOGIN_REQUEST_LIFETIME_MS,
+                        completedTimeMs: null,
+                        ipAddress: '127.0.0.1',
+                    },
+                ]);
+
+                expect(
+                    genericOpenIDClientMock.generateAuthorizationUrl
+                ).toHaveBeenCalledWith(
+                    store.openIdConfiguration.providers[0],
+                    'uuid2'
+                );
+            });
+
+            it('should return not_supported if the provider is not configured', async () => {
+                const result = await controller.requestOpenIDLogin({
+                    provider: 'not_google',
+                    ipAddress: '127.0.0.1',
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'The given provider is not supported.',
+                });
+            });
+
+            it('should return not_supported if no generic OpenID client is configured', async () => {
+                controller = new AuthController(
+                    store,
+                    messenger,
+                    store,
+                    store,
+                    privoClient,
+                    [relyingParty]
+                );
+
+                const result = await controller.requestOpenIDLogin({
+                    provider: 'google',
+                    ipAddress: '127.0.0.1',
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'The given provider is not supported.',
+                });
+            });
+
+            it('should return an error if the generic OpenID client throws an error', async () => {
+                genericOpenIDClientMock.generateAuthorizationUrl.mockRejectedValueOnce(
+                    new Error('mock error')
+                );
+
+                const result = await controller.requestOpenIDLogin({
+                    provider: 'google',
+                    ipAddress: '127.0.0.1',
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'server_error',
+                    errorMessage: 'A server error occurred.',
+                });
+            });
+        });
     });
 
     describe('requestWebAuthnRegistration()', () => {
@@ -4020,6 +4163,21 @@ describe('AuthController', () => {
             it('should return not_supported when no privo client is configured', async () => {
                 store.privoConfiguration = null;
 
+                await store.saveOpenIDLoginRequest({
+                    requestId: 'requestId',
+                    state: 'state',
+                    redirectUrl: 'https://redirect_url',
+                    authorizationUrl: 'https://mock_authorization_url',
+                    codeMethod: 'method',
+                    codeVerifier: 'verifier',
+                    requestTimeMs: Date.now() - 100,
+                    expireTimeMs: Date.now() + 100,
+                    completedTimeMs: null,
+                    provider: PRIVO_OPEN_ID_PROVIDER,
+                    scope: 'scope1 scope2',
+                    ipAddress: '127.0.0.1',
+                });
+
                 const result = await controller.processOpenIDAuthorizationCode({
                     state: 'state',
                     authorizationCode: 'code',
@@ -4860,7 +5018,7 @@ describe('AuthController', () => {
                 });
             });
 
-            it('should return invalid_request if the request is for a non-privo provider', async () => {
+            it('should return not_supported if the request is for an unconfigured non-privo provider', async () => {
                 uuidMock.mockReturnValueOnce('uuid');
                 privoClientMock.processAuthorizationCallback.mockResolvedValueOnce(
                     {
@@ -4917,8 +5075,8 @@ describe('AuthController', () => {
 
                 expect(result).toEqual({
                     success: false,
-                    errorCode: 'invalid_request',
-                    errorMessage: 'The login request is invalid.',
+                    errorCode: 'not_supported',
+                    errorMessage: 'The given provider is not supported.',
                 });
             });
 
@@ -5205,6 +5363,416 @@ describe('AuthController', () => {
                     errorMessage:
                         "The login request is invalid. You attempted to sign into an account that is associated with a parent email address. This is not allowed because we don't ask consent for parent accounts, but all accounts must have consent. Please sign up with a new account instead.",
                 });
+            });
+        });
+
+        describe('custom provider', () => {
+            const providerConfig = {
+                id: 'google',
+                name: 'Google',
+                discoveryUri:
+                    'https://accounts.google.com/.well-known/openid-configuration',
+                redirectUri: 'https://example.com/redirect',
+                clientId: 'clientId',
+                clientSecret: 'clientSecret',
+                requestScopes: ['openid', 'email', 'profile'],
+            };
+
+            beforeEach(() => {
+                nowMock.mockReturnValue(
+                    DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis()
+                );
+
+                randomBytesMock
+                    .mockReturnValueOnce(sessionId)
+                    .mockReturnValueOnce(sessionSecret)
+                    .mockReturnValueOnce(connectionSecret);
+
+                store.openIdConfiguration = {
+                    providers: [providerConfig],
+                };
+            });
+
+            async function saveGoogleLoginRequest() {
+                await store.saveOpenIDLoginRequest({
+                    requestId: 'requestId',
+                    state: 'state',
+                    authorizationUrl: 'https://mock_authorization_url',
+                    redirectUrl: 'https://redirect_url',
+                    codeVerifier: 'verifier',
+                    codeMethod: 'method',
+                    requestTimeMs: Date.now() - 100,
+                    expireTimeMs: Date.now() + 100,
+                    authorizationCode: 'code',
+                    authorizationTimeMs: Date.now(),
+                    completedTimeMs: null,
+                    ipAddress: '127.0.0.1',
+                    provider: 'google',
+                    scope: 'openid email profile',
+                });
+            }
+
+            it('should log in the linked user without requiring a session key', async () => {
+                await store.saveNewUser({
+                    id: 'userId',
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+
+                await store.saveOpenIDIdentity({
+                    provider: 'google',
+                    subject: 'sub1',
+                    userId: 'userId',
+                    createdAtMs: Date.now(),
+                });
+
+                await saveGoogleLoginRequest();
+
+                genericOpenIDClientMock.processAuthorizationCallback.mockResolvedValueOnce(
+                    {
+                        accessToken: 'accessToken',
+                        refreshToken: 'refreshToken',
+                        tokenType: 'Bearer',
+                        idToken: 'idToken',
+                        expiresIn: 1000,
+                        userInfo: {
+                            sub: 'sub1',
+                            email: 'test@example.com',
+                            name: 'Test Name',
+                        },
+                    }
+                );
+
+                const result = await controller.completeOpenIDLogin({
+                    ipAddress: '127.0.0.1',
+                    requestId: 'requestId',
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    userId: 'userId',
+                    sessionKey: expect.any(String),
+                    connectionKey: expect.any(String),
+                    expireTimeMs: Date.now() + SESSION_LIFETIME_MS,
+                    metadata: {
+                        hasUserAuthenticator: false,
+                        userAuthenticatorCredentialIds: [],
+                        hasPushSubscription: false,
+                        pushSubscriptionIds: [],
+                    },
+                });
+
+                expect(
+                    genericOpenIDClientMock.processAuthorizationCallback
+                ).toHaveBeenCalledWith(providerConfig, {
+                    code: 'code',
+                    state: 'state',
+                    codeVerifier: 'verifier',
+                    redirectUrl: 'https://redirect_url',
+                });
+            });
+
+            it('should create a new user and populate name/email when no session key is provided and no user matches the email', async () => {
+                uuidMock.mockReturnValueOnce('newUserId');
+
+                await saveGoogleLoginRequest();
+
+                genericOpenIDClientMock.processAuthorizationCallback.mockResolvedValueOnce(
+                    {
+                        accessToken: 'accessToken',
+                        refreshToken: 'refreshToken',
+                        tokenType: 'Bearer',
+                        idToken: 'idToken',
+                        expiresIn: 1000,
+                        userInfo: {
+                            sub: 'sub1',
+                            email: 'new@example.com',
+                            name: 'New User',
+                        },
+                    }
+                );
+
+                const result = await controller.completeOpenIDLogin({
+                    ipAddress: '127.0.0.1',
+                    requestId: 'requestId',
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    userId: 'newUserId',
+                    sessionKey: expect.any(String),
+                    connectionKey: expect.any(String),
+                    expireTimeMs: Date.now() + SESSION_LIFETIME_MS,
+                    metadata: {
+                        hasUserAuthenticator: false,
+                        userAuthenticatorCredentialIds: [],
+                        hasPushSubscription: false,
+                        pushSubscriptionIds: [],
+                    },
+                });
+
+                const user = await store.findUser('newUserId');
+                expect(user.email).toBe('new@example.com');
+                expect(user.name).toBe('New User');
+
+                expect(
+                    await store.findUserIdForOpenIDIdentity('google', 'sub1')
+                ).toBe('newUserId');
+            });
+
+            it('should return session_key_required_for_openid if a user matches the email and no session key is provided', async () => {
+                await store.saveNewUser({
+                    id: 'userId',
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+
+                await saveGoogleLoginRequest();
+
+                genericOpenIDClientMock.processAuthorizationCallback.mockResolvedValueOnce(
+                    {
+                        accessToken: 'accessToken',
+                        refreshToken: 'refreshToken',
+                        tokenType: 'Bearer',
+                        idToken: 'idToken',
+                        expiresIn: 1000,
+                        userInfo: {
+                            sub: 'sub1',
+                            email: 'test@example.com',
+                            name: 'Test Name',
+                        },
+                    }
+                );
+
+                const result = await controller.completeOpenIDLogin({
+                    ipAddress: '127.0.0.1',
+                    requestId: 'requestId',
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'session_key_required_for_openid',
+                    errorMessage: expect.any(String),
+                });
+
+                expect(
+                    await store.findUserIdForOpenIDIdentity('google', 'sub1')
+                ).toBe(null);
+            });
+
+            it('should link the identity and log in when a valid session key is provided for a user matching the email', async () => {
+                const userId = 'userId';
+                const sessionId = toBase64String('sessionId');
+                const code = 'code';
+                const sessionKey = formatV1SessionKey(
+                    userId,
+                    sessionId,
+                    code,
+                    Date.now() + 1000
+                );
+
+                await store.saveNewUser({
+                    id: userId,
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+
+                await store.saveSession({
+                    requestId: 'sessionRequestId',
+                    sessionId,
+                    secretHash: hashLowEntropyPasswordWithSalt(code, sessionId),
+                    connectionSecret: code,
+                    expireTimeMs: Date.now() + 1000,
+                    grantedTimeMs: Date.now(),
+                    previousSessionId: null,
+                    nextSessionId: null,
+                    revokeTimeMs: null,
+                    userId,
+                    ipAddress: '127.0.0.1',
+                });
+
+                await saveGoogleLoginRequest();
+
+                genericOpenIDClientMock.processAuthorizationCallback.mockResolvedValueOnce(
+                    {
+                        accessToken: 'accessToken',
+                        refreshToken: 'refreshToken',
+                        tokenType: 'Bearer',
+                        idToken: 'idToken',
+                        expiresIn: 1000,
+                        userInfo: {
+                            sub: 'sub1',
+                            email: 'test@example.com',
+                            name: 'Test Name',
+                        },
+                    }
+                );
+
+                const result = await controller.completeOpenIDLogin({
+                    ipAddress: '127.0.0.1',
+                    requestId: 'requestId',
+                    sessionKey,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    userId,
+                    sessionKey: expect.any(String),
+                    connectionKey: expect.any(String),
+                    expireTimeMs: Date.now() + SESSION_LIFETIME_MS,
+                    metadata: {
+                        hasUserAuthenticator: false,
+                        userAuthenticatorCredentialIds: [],
+                        hasPushSubscription: false,
+                        pushSubscriptionIds: [],
+                    },
+                });
+
+                expect(
+                    await store.findUserIdForOpenIDIdentity('google', 'sub1')
+                ).toBe(userId);
+            });
+
+            it('should return the session key validation error if an invalid session key is provided', async () => {
+                await store.saveNewUser({
+                    id: 'userId',
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+
+                await saveGoogleLoginRequest();
+
+                genericOpenIDClientMock.processAuthorizationCallback.mockResolvedValueOnce(
+                    {
+                        accessToken: 'accessToken',
+                        refreshToken: 'refreshToken',
+                        tokenType: 'Bearer',
+                        idToken: 'idToken',
+                        expiresIn: 1000,
+                        userInfo: {
+                            sub: 'sub1',
+                            email: 'test@example.com',
+                            name: 'Test Name',
+                        },
+                    }
+                );
+
+                const result = await controller.completeOpenIDLogin({
+                    ipAddress: '127.0.0.1',
+                    requestId: 'requestId',
+                    sessionKey: 'wrong',
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'unacceptable_session_key',
+                    errorMessage: expect.any(String),
+                });
+            });
+
+            it('should return not_supported if the provider is not configured', async () => {
+                store.openIdConfiguration = {
+                    providers: [],
+                };
+
+                await saveGoogleLoginRequest();
+
+                const result = await controller.completeOpenIDLogin({
+                    ipAddress: '127.0.0.1',
+                    requestId: 'requestId',
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'The given provider is not supported.',
+                });
+            });
+        });
+    });
+
+    describe('listOpenIDProviders()', () => {
+        it('should include Privo when it is configured', async () => {
+            store.privoConfiguration = {
+                gatewayEndpoint: 'endpoint',
+                featureIds: {
+                    adultPrivoSSO: 'adultAccount',
+                    childPrivoSSO: 'childAccount',
+                    joinAndCollaborate: 'joinAndCollaborate',
+                    publishProjects: 'publish',
+                    projectDevelopment: 'dev',
+                    buildAIEggs: 'buildaieggs',
+                },
+                clientId: 'clientId',
+                clientSecret: 'clientSecret',
+                publicEndpoint: 'publicEndpoint',
+                roleIds: {
+                    child: 'childRole',
+                    adult: 'adultRole',
+                    parent: 'parentRole',
+                },
+                clientTokenScopes: 'scope1 scope2',
+                userTokenScopes: 'scope1 scope2',
+                redirectUri: 'redirectUri',
+                ageOfConsent: 18,
+            };
+
+            const result = await controller.listOpenIDProviders();
+
+            expect(result).toEqual({
+                success: true,
+                providers: [
+                    {
+                        id: PRIVO_OPEN_ID_PROVIDER,
+                        name: 'Privo',
+                    },
+                ],
+            });
+        });
+
+        it('should include configured custom providers', async () => {
+            store.openIdConfiguration = {
+                providers: [
+                    {
+                        id: 'google',
+                        name: 'Google',
+                        discoveryUri:
+                            'https://accounts.google.com/.well-known/openid-configuration',
+                        redirectUri: 'https://example.com/redirect',
+                        clientId: 'clientId',
+                        clientSecret: 'clientSecret',
+                        requestScopes: ['openid', 'email', 'profile'],
+                    },
+                ],
+            };
+
+            const result = await controller.listOpenIDProviders();
+
+            expect(result).toEqual({
+                success: true,
+                providers: [
+                    {
+                        id: 'google',
+                        name: 'Google',
+                    },
+                ],
+            });
+        });
+
+        it('should return an empty list when nothing is configured', async () => {
+            const result = await controller.listOpenIDProviders();
+
+            expect(result).toEqual({
+                success: true,
+                providers: [],
             });
         });
     });

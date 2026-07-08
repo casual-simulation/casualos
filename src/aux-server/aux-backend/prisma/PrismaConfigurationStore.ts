@@ -27,6 +27,7 @@ import type {
 import {
     CONFIGURATION_SCHEMAS_MAP,
     MODERATION_CONFIG_KEY,
+    OPENID_CONFIG_KEY,
     PLAYER_WEB_MANIFEST_KEY,
     PRIVO_CONFIG_KEY,
     SUBSCRIPTIONS_CONFIG_KEY,
@@ -35,6 +36,8 @@ import {
 } from '@casual-simulation/aux-records';
 import type { PrivoConfiguration } from '@casual-simulation/aux-records/PrivoConfiguration';
 import { parsePrivoConfiguration } from '@casual-simulation/aux-records/PrivoConfiguration';
+import type { OpenIDConfiguration } from '@casual-simulation/aux-records/OpenIDConfiguration';
+import { parseOpenIDConfiguration } from '@casual-simulation/aux-records/OpenIDConfiguration';
 import type { PrismaClient } from './generated';
 import { parseModerationConfiguration } from '@casual-simulation/aux-records/ModerationConfiguration';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
@@ -65,6 +68,9 @@ export class PrismaConfigurationStore implements ConfigurationStore {
         } else if (key === 'privo') {
             return this._defaultConfiguration
                 .privo as ConfigurationOutput<TKey>;
+        } else if (key === 'openid') {
+            return this._defaultConfiguration
+                .openid as ConfigurationOutput<TKey>;
         } else if (key === 'web') {
             return this._defaultConfiguration
                 .webConfig as ConfigurationOutput<TKey>;
@@ -179,6 +185,20 @@ export class PrismaConfigurationStore implements ConfigurationStore {
         return parsePrivoConfiguration(
             result?.data,
             this._defaultConfiguration.privo
+        );
+    }
+
+    @traced(TRACE_NAME)
+    async getOpenIDConfiguration(): Promise<OpenIDConfiguration> {
+        const result = await this._client.configuration.findUnique({
+            where: {
+                key: OPENID_CONFIG_KEY,
+            },
+        });
+
+        return parseOpenIDConfiguration(
+            result?.data,
+            this._defaultConfiguration.openid
         );
     }
 

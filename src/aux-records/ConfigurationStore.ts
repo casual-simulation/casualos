@@ -20,6 +20,7 @@ import {
     type SubscriptionConfiguration,
 } from './SubscriptionConfiguration';
 import { privoSchema, type PrivoConfiguration } from './PrivoConfiguration';
+import { openIdSchema, type OpenIDConfiguration } from './OpenIDConfiguration';
 import {
     moderationSchema,
     type ModerationConfiguration,
@@ -39,6 +40,8 @@ import { memoize } from 'es-toolkit';
 export const SUBSCRIPTIONS_CONFIG_KEY = 'subscriptions';
 
 export const PRIVO_CONFIG_KEY = 'privo';
+
+export const OPENID_CONFIG_KEY = 'openid';
 
 export const MODERATION_CONFIG_KEY = 'moderation';
 
@@ -97,6 +100,11 @@ export interface DefaultConfiguration {
     privo: PrivoConfiguration;
 
     /**
+     * The default openid configuration.
+     */
+    openid: OpenIDConfiguration;
+
+    /**
      * The default moderation configuration.
      */
     moderation: ModerationConfiguration;
@@ -123,6 +131,7 @@ export const CONFIGURATION_SCHEMAS = [
         schema: getSubscriptionConfigSchema(),
     } as const,
     { key: PRIVO_CONFIG_KEY, schema: privoSchema } as const,
+    { key: OPENID_CONFIG_KEY, schema: openIdSchema } as const,
     { key: MODERATION_CONFIG_KEY, schema: moderationSchema } as const,
     { key: WEB_CONFIG_KEY, schema: WEB_CONFIG_SCHEMA } as const,
     { key: PLAYER_WEB_MANIFEST_KEY, schema: WEB_MANIFEST_SCHEMA } as const,
@@ -136,6 +145,7 @@ export const CONFIGURATION_SCHEMAS = [
 export const CONFIGURATION_SCHEMAS_MAP = {
     [SUBSCRIPTIONS_CONFIG_KEY]: getSubscriptionConfigSchema(),
     [PRIVO_CONFIG_KEY]: privoSchema,
+    [OPENID_CONFIG_KEY]: openIdSchema,
     [MODERATION_CONFIG_KEY]: moderationSchema,
     [WEB_CONFIG_KEY]: WEB_CONFIG_SCHEMA,
     [PLAYER_WEB_MANIFEST_KEY]: WEB_MANIFEST_SCHEMA,
@@ -172,6 +182,11 @@ export interface ConfigurationStore {
      * Retrieves the privo configuration from the store.
      */
     getPrivoConfiguration(): Promise<PrivoConfiguration | null>;
+
+    /**
+     * Retrieves the openid configuration from the store.
+     */
+    getOpenIDConfiguration(): Promise<OpenIDConfiguration | null>;
 
     /**
      * Retrieves the moderation configuration from the store.

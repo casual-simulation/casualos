@@ -152,6 +152,8 @@ import { RedisMultiCache } from '../redis/RedisMultiCache';
 import { PrivoClient } from '@casual-simulation/aux-records/PrivoClient';
 import { PrismaPrivoStore } from '../prisma/PrismaPrivoStore';
 import type { PrivoConfiguration } from '@casual-simulation/aux-records/PrivoConfiguration';
+import type { OpenIDConfiguration } from '@casual-simulation/aux-records/OpenIDConfiguration';
+import { GenericOpenIDClient } from '@casual-simulation/aux-records/GenericOpenIDClient';
 import { SlackNotificationMessenger } from '../notifications/SlackNotificationMessenger';
 import { TelegramNotificationMessenger } from '../notifications/TelegramNotificationMessenger';
 import { PrismaModerationStore } from '../prisma/PrismaModerationStore';
@@ -325,6 +327,8 @@ export class ServerBuilder implements SubscriptionLike {
 
     private _privoClient: PrivoClient;
     private _privoStore: PrivoStore;
+    private _genericOpenIDClient: GenericOpenIDClient =
+        new GenericOpenIDClient();
 
     private _configStore: ConfigurationStore;
     private _metricsStore: MetricsStore;
@@ -643,6 +647,7 @@ export class ServerBuilder implements SubscriptionLike {
             | 'moderation'
             | 'server'
             | 'privo'
+            | 'openid'
             | 'meta'
         > = this._options
     ): this {
@@ -694,6 +699,7 @@ export class ServerBuilder implements SubscriptionLike {
                             options.moderation as ModerationConfiguration,
                         webConfig: options.server?.webConfig as WebConfig,
                         privo: options.privo as PrivoConfiguration,
+                        openid: options.openid as OpenIDConfiguration,
                         playerWebManifest: options.server?.playerWebManifest,
                         meta: options.meta,
                     },
@@ -2315,7 +2321,8 @@ export class ServerBuilder implements SubscriptionLike {
             this._configStore,
             this._recordsStore,
             this._privoClient,
-            this._relyingParties ?? []
+            this._relyingParties ?? [],
+            this._genericOpenIDClient
         );
         this._recordsController = new RecordsController({
             store: this._recordsStore,
@@ -2873,6 +2880,7 @@ export class ServerBuilder implements SubscriptionLike {
             | 'subscriptions'
             | 'moderation'
             | 'privo'
+            | 'openid'
             | 'server'
             | 'meta'
         >
@@ -2883,6 +2891,7 @@ export class ServerBuilder implements SubscriptionLike {
                 subscriptions:
                     options.subscriptions as SubscriptionConfiguration,
                 privo: options.privo as PrivoConfiguration,
+                openid: options.openid as OpenIDConfiguration,
                 moderation: options.moderation as ModerationConfiguration,
                 webConfig: options.server?.webConfig as WebConfig,
                 playerWebManifest: options.server?.playerWebManifest,
@@ -2893,6 +2902,7 @@ export class ServerBuilder implements SubscriptionLike {
                 subscriptions:
                     options.subscriptions as SubscriptionConfiguration,
                 privo: options.privo as PrivoConfiguration,
+                openid: options.openid as OpenIDConfiguration,
                 moderation: options.moderation as ModerationConfiguration,
                 webConfig: options.server?.webConfig as WebConfig,
                 playerWebManifest: options.server?.playerWebManifest,

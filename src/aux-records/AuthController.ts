@@ -73,6 +73,8 @@ import type {
 } from './PrivoClient';
 import { DateTime } from 'luxon';
 import type { PrivoConfiguration } from './PrivoConfiguration';
+import type { GenericOpenIDClientInterface } from './GenericOpenIDClient';
+import type { OpenIDProviderConfiguration } from './OpenIDConfiguration';
 import type { ZodIssue } from 'zod';
 import type {
     PublicKeyCredentialCreationOptionsJSON,
@@ -208,6 +210,7 @@ export class AuthController {
     private _messenger: AuthMessenger;
     private _config: ConfigurationStore;
     private _privoClient: PrivoClientInterface = null;
+    private _genericOpenIDClient: GenericOpenIDClientInterface = null;
     private _webAuthNRelyingParties: RelyingParty[];
     private _privoEnabled: boolean;
 
@@ -225,7 +228,8 @@ export class AuthController {
         configStore: ConfigurationStore,
         recordsStore: RecordsStore,
         privoClient: PrivoClientInterface = null,
-        relyingParties: RelyingParty[] = []
+        relyingParties: RelyingParty[] = [],
+        genericOpenIDClient: GenericOpenIDClientInterface = null
     ) {
         this._store = authStore;
         this._messenger = messenger;
@@ -234,6 +238,7 @@ export class AuthController {
         this._privoClient = privoClient;
         this._webAuthNRelyingParties = relyingParties;
         this._privoEnabled = this._privoClient !== null;
+        this._genericOpenIDClient = genericOpenIDClient;
     }
 
     /**
@@ -262,6 +267,20 @@ export class AuthController {
      */
     set privoClient(value: PrivoClientInterface) {
         this._privoClient = value;
+    }
+
+    /**
+     * Gets the generic OpenID client that is used for custom OpenID providers.
+     */
+    get genericOpenIDClient(): GenericOpenIDClientInterface {
+        return this._genericOpenIDClient;
+    }
+
+    /**
+     * Sets the generic OpenID client that is used for custom OpenID providers.
+     */
+    set genericOpenIDClient(value: GenericOpenIDClientInterface) {
+        this._genericOpenIDClient = value;
     }
 
     @traced(TRACE_NAME)
@@ -815,51 +834,70 @@ export class AuthController {
         request: OpenIDLoginRequest
     ): Promise<OpenIDLoginRequestResult> {
         try {
-            if (request.provider !== PRIVO_OPEN_ID_PROVIDER) {
-                return {
-                    success: false,
-                    errorCode: 'not_supported',
-                    errorMessage: 'The given provider is not supported.',
-                };
-            }
+            let providerId: string;
+            let providerConfig: OpenIDProviderConfiguration = null;
 
-            if (!this._privoClient) {
-                return {
-                    success: false,
-                    errorCode: 'not_supported',
-                    errorMessage:
-                        'Privo features are not supported on this server.',
-                };
-            }
+            if (request.provider === PRIVO_OPEN_ID_PROVIDER) {
+                if (!this._privoClient) {
+                    return {
+                        success: false,
+                        errorCode: 'not_supported',
+                        errorMessage:
+                            'Privo features are not supported on this server.',
+                    };
+                }
 
-            const config = await this._config.getPrivoConfiguration();
+                const config = await this._config.getPrivoConfiguration();
 
-            if (!config) {
-                return {
-                    success: false,
-                    errorCode: 'not_supported',
-                    errorMessage:
-                        'Privo features are not supported on this server.',
-                };
+                if (!config) {
+                    return {
+                        success: false,
+                        errorCode: 'not_supported',
+                        errorMessage:
+                            'Privo features are not supported on this server.',
+                    };
+                }
+
+                providerId = PRIVO_OPEN_ID_PROVIDER;
+            } else {
+                const openIdConfig =
+                    await this._config.getOpenIDConfiguration();
+                providerConfig = openIdConfig?.providers.find(
+                    (p) => p.id === request.provider
+                );
+
+                if (!providerConfig || !this._genericOpenIDClient) {
+                    return {
+                        success: false,
+                        errorCode: 'not_supported',
+                        errorMessage: 'The given provider is not supported.',
+                    };
+                }
+
+                providerId = providerConfig.id;
             }
 
             const requestId = uuid();
             const state = uuid();
-            const result = await this._privoClient.generateAuthorizationUrl(
-                state
-            );
+
+            const authorizationUrlResult = providerConfig
+                ? await this._genericOpenIDClient.generateAuthorizationUrl(
+                      providerConfig,
+                      state
+                  )
+                : await this._privoClient.generateAuthorizationUrl(state);
 
             const loginRequest: AuthOpenIDLoginRequest = {
                 requestId: requestId,
                 state: state,
-                provider: PRIVO_OPEN_ID_PROVIDER,
-                codeMethod: result.codeMethod,
-                codeVerifier: result.codeVerifier,
-                authorizationUrl: result.authorizationUrl,
-                redirectUrl: result.redirectUrl,
+                provider: providerId,
+                codeMethod: authorizationUrlResult.codeMethod,
+                codeVerifier: authorizationUrlResult.codeVerifier,
+                authorizationUrl: authorizationUrlResult.authorizationUrl,
+                redirectUrl: authorizationUrlResult.redirectUrl,
                 completedTimeMs: null,
                 ipAddress: request.ipAddress,
-                scope: result.scope,
+                scope: authorizationUrlResult.scope,
                 requestTimeMs: Date.now(),
                 expireTimeMs: Date.now() + OPEN_ID_LOGIN_REQUEST_LIFETIME_MS,
             };
@@ -868,7 +906,7 @@ export class AuthController {
 
             return {
                 success: true,
-                authorizationUrl: result.authorizationUrl,
+                authorizationUrl: authorizationUrlResult.authorizationUrl,
                 requestId: requestId,
             };
         } catch (err) {
@@ -877,7 +915,7 @@ export class AuthController {
             span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(
-                '[AuthController] Error occurred while requesting Privo login',
+                '[AuthController] Error occurred while requesting OpenID login',
                 err
             );
             return {
@@ -893,26 +931,6 @@ export class AuthController {
         request: ProcessOpenIDAuthorizationCodeRequest
     ): Promise<ProcessOpenIDAuthorizationCodeResult> {
         try {
-            if (!this._privoClient) {
-                return {
-                    success: false,
-                    errorCode: 'not_supported',
-                    errorMessage:
-                        'Privo features are not supported on this server.',
-                };
-            }
-
-            const config = await this._config.getPrivoConfiguration();
-
-            if (!config) {
-                return {
-                    success: false,
-                    errorCode: 'not_supported',
-                    errorMessage:
-                        'Privo features are not supported on this server.',
-                };
-            }
-
             const state = request.state;
             const loginRequest =
                 await this._store.findOpenIDLoginRequestByState(state);
@@ -924,6 +942,42 @@ export class AuthController {
                     errorCode: 'invalid_request',
                     errorMessage: INVALID_AUTHORIZATION_REQUEST_ERROR_MESSAGE,
                 };
+            }
+
+            if (loginRequest.provider === PRIVO_OPEN_ID_PROVIDER) {
+                if (!this._privoClient) {
+                    return {
+                        success: false,
+                        errorCode: 'not_supported',
+                        errorMessage:
+                            'Privo features are not supported on this server.',
+                    };
+                }
+
+                const config = await this._config.getPrivoConfiguration();
+
+                if (!config) {
+                    return {
+                        success: false,
+                        errorCode: 'not_supported',
+                        errorMessage:
+                            'Privo features are not supported on this server.',
+                    };
+                }
+            } else {
+                const openIdConfig =
+                    await this._config.getOpenIDConfiguration();
+                const providerConfig = openIdConfig?.providers.find(
+                    (p) => p.id === loginRequest.provider
+                );
+
+                if (!providerConfig || !this._genericOpenIDClient) {
+                    return {
+                        success: false,
+                        errorCode: 'not_supported',
+                        errorMessage: 'The given provider is not supported.',
+                    };
+                }
             }
 
             let validRequest = true;
@@ -938,14 +992,6 @@ export class AuthController {
             }
 
             if (!validRequest) {
-                return {
-                    success: false,
-                    errorCode: 'invalid_request',
-                    errorMessage: INVALID_AUTHORIZATION_REQUEST_ERROR_MESSAGE,
-                };
-            }
-
-            if (loginRequest.provider !== PRIVO_OPEN_ID_PROVIDER) {
                 return {
                     success: false,
                     errorCode: 'invalid_request',
@@ -968,7 +1014,7 @@ export class AuthController {
             span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(
-                '[AuthController] Error occurred while processing Privo authorization code',
+                '[AuthController] Error occurred while processing OpenID authorization code',
                 err
             );
             return {
@@ -984,26 +1030,6 @@ export class AuthController {
         request: CompleteOpenIDLoginRequest
     ): Promise<CompleteOpenIDLoginResult> {
         try {
-            if (!this._privoClient) {
-                return {
-                    success: false,
-                    errorCode: 'not_supported',
-                    errorMessage:
-                        'Privo features are not supported on this server.',
-                };
-            }
-
-            const config = await this._config.getPrivoConfiguration();
-
-            if (!config) {
-                return {
-                    success: false,
-                    errorCode: 'not_supported',
-                    errorMessage:
-                        'Privo features are not supported on this server.',
-                };
-            }
-
             const requestId = request.requestId;
             const loginRequest = await this._store.findOpenIDLoginRequest(
                 requestId
@@ -1034,14 +1060,6 @@ export class AuthController {
                 };
             }
 
-            if (loginRequest.provider !== PRIVO_OPEN_ID_PROVIDER) {
-                return {
-                    success: false,
-                    errorCode: 'invalid_request',
-                    errorMessage: INVALID_REQUEST_ERROR_MESSAGE,
-                };
-            }
-
             if (
                 !loginRequest.authorizationTimeMs ||
                 !loginRequest.authorizationCode
@@ -1053,7 +1071,204 @@ export class AuthController {
                 };
             }
 
-            const result = await this._privoClient.processAuthorizationCallback(
+            if (loginRequest.provider === PRIVO_OPEN_ID_PROVIDER) {
+                return await this._completePrivoOpenIDLogin(
+                    loginRequest,
+                    request
+                );
+            }
+
+            return await this._completeGenericOpenIDLogin(
+                loginRequest,
+                request
+            );
+        } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
+            console.error(
+                '[AuthController] Error occurred while completing OpenID login',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    private async _completePrivoOpenIDLogin(
+        loginRequest: AuthOpenIDLoginRequest,
+        request: CompleteOpenIDLoginRequest
+    ): Promise<CompleteOpenIDLoginResult> {
+        if (!this._privoClient) {
+            return {
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage:
+                    'Privo features are not supported on this server.',
+            };
+        }
+
+        const config = await this._config.getPrivoConfiguration();
+
+        if (!config) {
+            return {
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage:
+                    'Privo features are not supported on this server.',
+            };
+        }
+
+        const result = await this._privoClient.processAuthorizationCallback({
+            code: loginRequest.authorizationCode,
+            state: loginRequest.state,
+            codeVerifier: loginRequest.codeVerifier,
+            redirectUrl: loginRequest.redirectUrl,
+        });
+
+        const serviceId = result.userInfo.serviceId;
+        const email = result.userInfo.email;
+
+        if (
+            result.userInfo.roleIdentifier !== config.roleIds.adult &&
+            result.userInfo.roleIdentifier !== config.roleIds.child
+        ) {
+            return {
+                success: false,
+                errorCode: 'invalid_request',
+                errorMessage:
+                    "The login request is invalid. You attempted to sign into an account that is associated with a parent email address. This is not allowed because we don't ask consent for parent accounts, but all accounts must have consent. Please sign up with a new account instead.",
+            };
+        }
+
+        let user: AuthUser;
+        if (serviceId) {
+            user = await this._store.findUserByPrivoServiceId(
+                result.userInfo.serviceId
+            );
+        }
+
+        if (!user && email) {
+            user = await this._store.findUserByAddress(email, 'email');
+        }
+
+        if (!user) {
+            console.log(
+                '[AuthController] [completeOpenIDLogin] Could not find user.'
+            );
+            return {
+                success: false,
+                errorCode: 'invalid_request',
+                errorMessage: INVALID_REQUEST_ERROR_MESSAGE,
+            };
+        }
+
+        if (!user.privoServiceId) {
+            console.log(
+                `[AuthController] [completeOpenIDLogin] Updating user service ID.`
+            );
+            user = {
+                ...user,
+                privoServiceId: serviceId,
+            };
+            await this._store.saveUser({
+                ...user,
+            });
+        } else if (user.privoServiceId !== serviceId) {
+            console.log(
+                `[AuthController] [completeOpenIDLogin] User's service ID (${user.privoServiceId}) doesnt match the one returned by Privo (${serviceId}).`
+            );
+            return {
+                success: false,
+                errorCode: 'invalid_request',
+                errorMessage: INVALID_REQUEST_ERROR_MESSAGE,
+            };
+        }
+
+        const privacyFeatures = getPrivacyFeaturesFromPermissions(
+            config.featureIds,
+            result.userInfo.permissions
+        );
+
+        if (
+            user.privacyFeatures?.publishData !== privacyFeatures.publishData ||
+            user.privacyFeatures?.allowPublicData !==
+                privacyFeatures.allowPublicData ||
+            user.privacyFeatures?.allowAI !== privacyFeatures.allowAI ||
+            user.privacyFeatures?.allowPublicInsts !==
+                privacyFeatures.allowPublicInsts
+        ) {
+            console.log(
+                `[AuthController] [completeOpenIDLogin] Updating user privacy features.`
+            );
+
+            user = {
+                ...user,
+                privacyFeatures,
+            };
+            await this._store.saveUser({
+                ...user,
+            });
+        }
+
+        const now = Date.now();
+        const expiry = now + result.expiresIn * 1000;
+
+        const { info } = await this._issueSession({
+            userId: user.id,
+            lifetimeMs: SESSION_LIFETIME_MS,
+            oidRequestId: loginRequest.requestId,
+            oidAccessToken: result.accessToken,
+            oidRefreshToken: result.refreshToken,
+            oidIdToken: result.idToken,
+            oidScope: loginRequest.scope,
+            oidTokenType: result.tokenType,
+            oidExpiresAtMs: expiry,
+            oidProvider: loginRequest.provider,
+            ipAddress: request.ipAddress,
+        });
+
+        return {
+            success: true,
+            ...info,
+        };
+    }
+
+    /**
+     * Completes an OpenID login for a custom (non-Privo) provider.
+     *
+     * Unlike Privo, a custom OpenID provider is not trusted to authoritatively
+     * own an email address, so a login that would link to an *existing* user
+     * (either because that user already linked this exact provider identity, or
+     * because a user with a matching email exists) requires proof that the
+     * caller is already authenticated as that user via a session key. Brand new
+     * users don't need a session key, since there's no existing account that
+     * could be hijacked.
+     */
+    private async _completeGenericOpenIDLogin(
+        loginRequest: AuthOpenIDLoginRequest,
+        request: CompleteOpenIDLoginRequest
+    ): Promise<CompleteOpenIDLoginResult> {
+        const openIdConfig = await this._config.getOpenIDConfiguration();
+        const providerConfig = openIdConfig?.providers.find(
+            (p) => p.id === loginRequest.provider
+        );
+
+        if (!providerConfig || !this._genericOpenIDClient) {
+            return {
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'The given provider is not supported.',
+            };
+        }
+
+        const result =
+            await this._genericOpenIDClient.processAuthorizationCallback(
+                providerConfig,
                 {
                     code: loginRequest.authorizationCode,
                     state: loginRequest.state,
@@ -1062,112 +1277,161 @@ export class AuthController {
                 }
             );
 
-            const serviceId = result.userInfo.serviceId;
-            const email = result.userInfo.email;
+        const subject = result.userInfo.sub;
+        const email = result.userInfo.email;
+        const name = result.userInfo.name;
 
-            if (
-                result.userInfo.roleIdentifier !== config.roleIds.adult &&
-                result.userInfo.roleIdentifier !== config.roleIds.child
-            ) {
-                return {
-                    success: false,
-                    errorCode: 'invalid_request',
-                    errorMessage:
-                        "The login request is invalid. You attempted to sign into an account that is associated with a parent email address. This is not allowed because we don't ask consent for parent accounts, but all accounts must have consent. Please sign up with a new account instead.",
-                };
-            }
+        const linkedUserId = await this._store.findUserIdForOpenIDIdentity(
+            loginRequest.provider,
+            subject
+        );
 
-            let user: AuthUser;
-            if (serviceId) {
-                user = await this._store.findUserByPrivoServiceId(
-                    result.userInfo.serviceId
-                );
-            }
+        let user: AuthUser;
 
-            if (!user && email) {
-                user = await this._store.findUserByAddress(email, 'email');
-            }
+        if (linkedUserId) {
+            user = await this._store.findUser(linkedUserId);
 
             if (!user) {
-                console.log(
-                    '[AuthController] [completeOpenIDLogin] Could not find user.'
-                );
                 return {
                     success: false,
                     errorCode: 'invalid_request',
                     errorMessage: INVALID_REQUEST_ERROR_MESSAGE,
                 };
             }
-
-            if (!user.privoServiceId) {
-                console.log(
-                    `[AuthController] [completeOpenIDLogin] Updating user service ID.`
-                );
-                user = {
-                    ...user,
-                    privoServiceId: serviceId,
-                };
-                await this._store.saveUser({
-                    ...user,
-                });
-            } else if (user.privoServiceId !== serviceId) {
-                console.log(
-                    `[AuthController] [completeOpenIDLogin] User's service ID (${user.privoServiceId}) doesnt match the one returned by Privo (${serviceId}).`
-                );
-                return {
-                    success: false,
-                    errorCode: 'invalid_request',
-                    errorMessage: INVALID_REQUEST_ERROR_MESSAGE,
-                };
-            }
-
-            const privacyFeatures = getPrivacyFeaturesFromPermissions(
-                config.featureIds,
-                result.userInfo.permissions
+        } else if (request.sessionKey) {
+            const validation = await validateSessionKey(
+                this,
+                request.sessionKey
             );
 
-            if (
-                user.privacyFeatures?.publishData !==
-                    privacyFeatures.publishData ||
-                user.privacyFeatures?.allowPublicData !==
-                    privacyFeatures.allowPublicData ||
-                user.privacyFeatures?.allowAI !== privacyFeatures.allowAI ||
-                user.privacyFeatures?.allowPublicInsts !==
-                    privacyFeatures.allowPublicInsts
-            ) {
-                console.log(
-                    `[AuthController] [completeOpenIDLogin] Updating user privacy features.`
-                );
-
-                user = {
-                    ...user,
-                    privacyFeatures,
+            if (validation.success === false) {
+                return {
+                    success: false,
+                    errorCode:
+                        validation.errorCode === 'no_session_key'
+                            ? 'session_key_required_for_openid'
+                            : validation.errorCode,
+                    errorMessage: validation.errorMessage,
                 };
-                await this._store.saveUser({
-                    ...user,
-                });
             }
 
-            const now = Date.now();
-            const expiry = now + result.expiresIn * 1000;
+            user = await this._store.findUser(validation.userId);
 
-            const { info } = await this._issueSession({
+            if (!user) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: INVALID_REQUEST_ERROR_MESSAGE,
+                };
+            }
+
+            await this._store.saveOpenIDIdentity({
+                provider: loginRequest.provider,
+                subject,
                 userId: user.id,
-                lifetimeMs: SESSION_LIFETIME_MS,
-                oidRequestId: loginRequest.requestId,
-                oidAccessToken: result.accessToken,
-                oidRefreshToken: result.refreshToken,
-                oidIdToken: result.idToken,
-                oidScope: loginRequest.scope,
-                oidTokenType: result.tokenType,
-                oidExpiresAtMs: expiry,
-                oidProvider: loginRequest.provider,
-                ipAddress: request.ipAddress,
+                createdAtMs: Date.now(),
             });
+        } else {
+            const existingUser = email
+                ? await this._store.findUserByAddress(email, 'email')
+                : null;
+
+            if (existingUser) {
+                return {
+                    success: false,
+                    errorCode: 'session_key_required_for_openid',
+                    errorMessage:
+                        'A valid session key is required to link this OpenID account to an existing user.',
+                };
+            }
+
+            user = {
+                id: uuid(),
+                email: email ?? null,
+                phoneNumber: null,
+                name: name ?? null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            };
+
+            const saveUserResult = await this._store.saveNewUser(user);
+
+            if (saveUserResult.success === false) {
+                console.error(
+                    '[AuthController] Error saving new user',
+                    saveUserResult
+                );
+                return {
+                    success: false,
+                    errorCode: 'server_error',
+                    errorMessage: 'A server error occurred.',
+                };
+            }
+
+            await this._store.saveOpenIDIdentity({
+                provider: loginRequest.provider,
+                subject,
+                userId: user.id,
+                createdAtMs: Date.now(),
+            });
+        }
+
+        const now = Date.now();
+        const expiry = now + result.expiresIn * 1000;
+
+        const { info } = await this._issueSession({
+            userId: user.id,
+            lifetimeMs: SESSION_LIFETIME_MS,
+            oidRequestId: loginRequest.requestId,
+            oidAccessToken: result.accessToken,
+            oidRefreshToken: result.refreshToken,
+            oidIdToken: result.idToken,
+            oidScope: loginRequest.scope,
+            oidTokenType: result.tokenType,
+            oidExpiresAtMs: expiry,
+            oidProvider: loginRequest.provider,
+            ipAddress: request.ipAddress,
+        });
+
+        return {
+            success: true,
+            ...info,
+        };
+    }
+
+    /**
+     * Lists the OpenID providers that are configured on this server.
+     * Includes Privo (if configured) as well as any configured custom providers.
+     */
+    @traced(TRACE_NAME)
+    async listOpenIDProviders(): Promise<ListOpenIDProvidersResult> {
+        try {
+            const providers: OpenIDProviderInfo[] = [];
+
+            if (this._privoClient) {
+                const privoConfig = await this._config.getPrivoConfiguration();
+                if (privoConfig) {
+                    providers.push({
+                        id: PRIVO_OPEN_ID_PROVIDER,
+                        name: 'Privo',
+                    });
+                }
+            }
+
+            if (this._genericOpenIDClient) {
+                const openIdConfig =
+                    await this._config.getOpenIDConfiguration();
+                for (const provider of openIdConfig?.providers ?? []) {
+                    providers.push({
+                        id: provider.id,
+                        name: provider.name,
+                    });
+                }
+            }
 
             return {
                 success: true,
-                ...info,
+                providers,
             };
         } catch (err) {
             const span = trace.getActiveSpan();
@@ -1175,7 +1439,7 @@ export class AuthController {
             span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(
-                '[AuthController] Error occurred while completing Privo login',
+                '[AuthController] Error occurred while listing OpenID providers',
                 err
             );
             return {
@@ -3554,6 +3818,16 @@ export interface CompleteOpenIDLoginRequest {
      * The IP address that the request is from.
      */
     ipAddress: string;
+
+    /**
+     * The session key of the user that is completing the login.
+     * Required for custom (non-Privo) OpenID providers when the login would
+     * link to an existing user account, in order to prevent account takeover
+     * by a rogue OpenID account that shares an email address with an existing
+     * CasualOS user. Not required if the OpenID identity has already been
+     * linked to a user, or if the login will create a brand new user.
+     */
+    sessionKey?: string | null;
 }
 
 export type CompleteOpenIDLoginResult =
@@ -3570,7 +3844,42 @@ export interface CompleteOpenIDLoginFailure {
         | ServerError
         | 'not_supported'
         | 'invalid_request'
-        | 'not_completed';
+        | 'not_completed'
+        | 'session_key_required_for_openid'
+        | 'unacceptable_session_key'
+        | 'invalid_key'
+        | 'session_expired'
+        | 'user_is_banned';
+    errorMessage: string;
+}
+
+/**
+ * Defines information about an OpenID provider that is available for login.
+ */
+export interface OpenIDProviderInfo {
+    /**
+     * The ID of the provider.
+     */
+    id: string;
+
+    /**
+     * The human-readable name of the provider.
+     */
+    name: string;
+}
+
+export type ListOpenIDProvidersResult =
+    | ListOpenIDProvidersSuccess
+    | ListOpenIDProvidersFailure;
+
+export interface ListOpenIDProvidersSuccess {
+    success: true;
+    providers: OpenIDProviderInfo[];
+}
+
+export interface ListOpenIDProvidersFailure {
+    success: false;
+    errorCode: ServerError;
     errorMessage: string;
 }
 

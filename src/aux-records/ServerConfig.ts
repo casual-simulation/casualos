@@ -18,6 +18,7 @@
 import { moderationSchema } from './ModerationConfiguration';
 import { notificationsSchema } from './SystemNotificationMessenger';
 import { privoSchema } from './PrivoConfiguration';
+import { openIdSchema } from './OpenIDConfiguration';
 import { getSubscriptionConfigSchema } from './SubscriptionConfiguration';
 import { z } from 'zod';
 import { WEB_CONFIG_SCHEMA } from '@casual-simulation/aux-common';
@@ -1500,6 +1501,12 @@ Because repo/add_updates is a very common permission, we periodically cache perm
             .optional()
             .describe(
                 'Privo configuration options. If omitted, then Privo features will be disabled.'
+            ),
+
+        openid: openIdSchema
+            .optional()
+            .describe(
+                'Custom OpenID Connect provider configuration options. If omitted, then no custom OpenID providers will be available.'
             ),
 
         webauthn: webauthnSchema
