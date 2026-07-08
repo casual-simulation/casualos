@@ -150,7 +150,16 @@ export class GenericOpenIDClient implements GenericOpenIDClientInterface {
     ): Promise<Client> {
         let client = this._clients.get(config.id);
         if (!client) {
-            const issuer = await Issuer.discover(config.discoveryUri);
+            let issuer: Issuer<Client>;
+            if (config.issuer) {
+                issuer = new Issuer(config.issuer);
+            } else if (config.discoveryUri) {
+                issuer = await Issuer.discover(config.discoveryUri);
+            } else {
+                throw new Error(
+                    `The OpenID provider "${config.id}" must specify either a discoveryUri or an issuer.`
+                );
+            }
             client = new issuer.Client({
                 client_id: config.clientId,
                 client_secret: config.clientSecret,
