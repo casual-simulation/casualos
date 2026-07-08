@@ -62,6 +62,7 @@ model User {
 
     loginRequests LoginRequest[]
     webauthnLoginRequests WebAuthnLoginRequest[]
+    openIdIdentities OpenIdIdentity[]
     sessions AuthSession[]
     records Record[]
     recordKeys RecordKey[]
@@ -235,6 +236,19 @@ model OpenIDLoginRequest {
     updatedAt Decimal
 
     authSessions AuthSession[]
+}
+
+model OpenIdIdentity {
+    provider String
+    subject String
+
+    userId String
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    createdAt Decimal
+
+    @@id([provider, subject])
+    @@index([userId])
 }
 
 model WebAuthnLoginRequest {

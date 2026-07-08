@@ -101,7 +101,8 @@ export type KnownErrorCodes =
     | 'currency_not_supported'
     | 'invalid_user'
     | 'url_not_html'
-    | 'site_rate_limited';
+    | 'site_rate_limited'
+    | 'session_key_required_for_openid';
 
 /**
  * Gets the status code that should be used for the given response.
@@ -219,6 +220,8 @@ export function getStatusCode(
             return 400;
         } else if (response.errorCode === 'site_rate_limited') {
             return 429;
+        } else if (response.errorCode === 'session_key_required_for_openid') {
+            return 401;
         } else {
             return 400;
         }

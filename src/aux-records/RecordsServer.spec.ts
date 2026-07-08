@@ -137,6 +137,7 @@ import {
 import type { ConnectionInfo } from '@casual-simulation/aux-common/common/ConnectionInfo';
 import { constructInitializationUpdate } from '@casual-simulation/aux-common';
 import type { PrivoClientInterface } from './PrivoClient';
+import type { GenericOpenIDClientInterface } from './GenericOpenIDClient';
 import { DateTime } from 'luxon';
 import { ModerationController } from './ModerationController';
 import type {
@@ -557,6 +558,8 @@ describe('RecordsServer', () => {
     const recordName = 'testRecord';
     let privoClient: PrivoClientInterface;
     let privoClientMock: jest.MockedObject<PrivoClientInterface>;
+    let genericOpenIDClient: GenericOpenIDClientInterface;
+    let genericOpenIDClientMock: jest.MockedObject<GenericOpenIDClientInterface>;
 
     let domainNameValidator: jest.Mocked<DomainNameValidator>;
 
@@ -616,6 +619,10 @@ describe('RecordsServer', () => {
             resendConsentRequest: jest.fn(),
             lookupServiceId: jest.fn(),
         };
+        genericOpenIDClient = genericOpenIDClientMock = {
+            generateAuthorizationUrl: jest.fn(),
+            processAuthorizationCallback: jest.fn(),
+        };
         relyingParty = {
             id: 'relying_party_id',
             name: 'Relying Party',
@@ -628,7 +635,8 @@ describe('RecordsServer', () => {
             store,
             store,
             privoClient,
-            [relyingParty]
+            [relyingParty],
+            genericOpenIDClient
         );
 
         // manually disable the Privo flag for tests
@@ -4164,6 +4172,201 @@ describe('RecordsServer', () => {
             httpPost('/api/v2/login/privo', body, authenticatedHeaders)
         );
         testRateLimit('POST', `/api/v2/login/privo`, () => JSON.stringify({}));
+    });
+
+    describe('GET /api/v2/login/openid/list', () => {
+        it('should list the configured providers', async () => {
+            store.openIdConfiguration = {
+                providers: [
+                    {
+                        id: 'google',
+                        name: 'Google',
+                        discoveryUri:
+                            'https://accounts.google.com/.well-known/openid-configuration',
+                        redirectUri: 'https://example.com/redirect',
+                        clientId: 'clientId',
+                        clientSecret: 'clientSecret',
+                        requestScopes: ['openid', 'email', 'profile'],
+                    },
+                ],
+            };
+
+            const result = await server.handleHttpRequest(
+                httpGet('/api/v2/login/openid/list', {
+                    origin: 'https://account-origin.com',
+                })
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    providers: [
+                        {
+                            id: 'google',
+                            name: 'Google',
+                        },
+                    ],
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should support procedures', async () => {
+            store.openIdConfiguration = {
+                providers: [
+                    {
+                        id: 'google',
+                        name: 'Google',
+                        discoveryUri:
+                            'https://accounts.google.com/.well-known/openid-configuration',
+                        redirectUri: 'https://example.com/redirect',
+                        clientId: 'clientId',
+                        clientSecret: 'clientSecret',
+                        requestScopes: ['openid', 'email', 'profile'],
+                    },
+                ],
+            };
+
+            const result = await server.handleHttpRequest(
+                procedureRequest('listOpenIDProviders', undefined, {
+                    origin: 'https://account-origin.com',
+                })
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    providers: [
+                        {
+                            id: 'google',
+                            name: 'Google',
+                        },
+                    ],
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testOrigin('GET', '/api/v2/login/openid/list');
+    });
+
+    describe('POST /api/v2/login/openid', () => {
+        const providerConfig = {
+            id: 'google',
+            name: 'Google',
+            discoveryUri:
+                'https://accounts.google.com/.well-known/openid-configuration',
+            redirectUri: 'https://example.com/redirect',
+            clientId: 'clientId',
+            clientSecret: 'clientSecret',
+            requestScopes: ['openid', 'email', 'profile'],
+        };
+
+        beforeEach(() => {
+            store.openIdConfiguration = {
+                providers: [providerConfig],
+            };
+        });
+
+        it('should return a login request with the authorization URL', async () => {
+            genericOpenIDClientMock.generateAuthorizationUrl.mockResolvedValueOnce(
+                {
+                    authorizationUrl: 'https://authorization_url',
+                    codeMethod: 'method',
+                    codeVerifier: 'verifier',
+                    redirectUrl: 'https://redirect_url',
+                    scope: 'openid email profile',
+                }
+            );
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/login/openid`,
+                    JSON.stringify({ provider: 'google' }),
+                    {
+                        origin: 'https://account-origin.com',
+                    },
+                    '123.456.789'
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    authorizationUrl: 'https://authorization_url',
+                    requestId: expect.any(String),
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should support procedures', async () => {
+            genericOpenIDClientMock.generateAuthorizationUrl.mockResolvedValueOnce(
+                {
+                    authorizationUrl: 'https://authorization_url',
+                    codeMethod: 'method',
+                    codeVerifier: 'verifier',
+                    redirectUrl: 'https://redirect_url',
+                    scope: 'openid email profile',
+                }
+            );
+
+            const result = await server.handleHttpRequest(
+                procedureRequest(
+                    `requestOpenIDLogin`,
+                    { provider: 'google' },
+                    {
+                        origin: 'https://account-origin.com',
+                    }
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    authorizationUrl: 'https://authorization_url',
+                    requestId: expect.any(String),
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return not_supported for an unconfigured provider', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/login/openid`,
+                    JSON.stringify({ provider: 'not_google' }),
+                    {
+                        origin: 'https://account-origin.com',
+                    },
+                    '123.456.789'
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'The given provider is not supported.',
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testOrigin('POST', '/api/v2/login/openid', () =>
+            JSON.stringify({ provider: 'google' })
+        );
+        testBodyIsJson((body) =>
+            httpPost('/api/v2/login/openid', body, authenticatedHeaders)
+        );
+        testRateLimit('POST', `/api/v2/login/openid`, () =>
+            JSON.stringify({ provider: 'google' })
+        );
     });
 
     describe('POST /api/v2/oauth/code', () => {
