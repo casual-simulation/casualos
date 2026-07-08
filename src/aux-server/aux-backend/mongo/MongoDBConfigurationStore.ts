@@ -24,6 +24,7 @@ import type {
 } from '@casual-simulation/aux-records';
 import {
     MODERATION_CONFIG_KEY,
+    OPENID_CONFIG_KEY,
     PLAYER_WEB_MANIFEST_KEY,
     PRIVO_CONFIG_KEY,
     SUBSCRIPTIONS_CONFIG_KEY,
@@ -33,6 +34,8 @@ import {
 import type { SubscriptionConfiguration } from '@casual-simulation/aux-records/SubscriptionConfiguration';
 import type { PrivoConfiguration } from '@casual-simulation/aux-records/PrivoConfiguration';
 import { parsePrivoConfiguration } from '@casual-simulation/aux-records/PrivoConfiguration';
+import type { OpenIDConfiguration } from '@casual-simulation/aux-records/OpenIDConfiguration';
+import { parseOpenIDConfiguration } from '@casual-simulation/aux-records/OpenIDConfiguration';
 import type { Collection } from 'mongodb';
 import type { ModerationConfiguration } from '@casual-simulation/aux-records/ModerationConfiguration';
 import { parseModerationConfiguration } from '@casual-simulation/aux-records/ModerationConfiguration';
@@ -108,6 +111,17 @@ export class MongoDBConfigurationStore implements ConfigurationStore {
         return parsePrivoConfiguration(
             item?.data,
             this._defaultConfiguration.privo
+        );
+    }
+
+    async getOpenIDConfiguration(): Promise<OpenIDConfiguration> {
+        const item = await this._collection.findOne({
+            _id: OPENID_CONFIG_KEY,
+        });
+
+        return parseOpenIDConfiguration(
+            item?.data,
+            this._defaultConfiguration.openid
         );
     }
 

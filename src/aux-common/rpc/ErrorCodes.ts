@@ -99,7 +99,10 @@ export type KnownErrorCodes =
     | 'item_not_found'
     | 'store_disabled'
     | 'currency_not_supported'
-    | 'invalid_user';
+    | 'invalid_user'
+    | 'url_not_html'
+    | 'site_rate_limited'
+    | 'session_key_required_for_openid';
 
 /**
  * Gets the status code that should be used for the given response.
@@ -213,6 +216,12 @@ export function getStatusCode(
             return 504;
         } else if (response.errorCode === 'service_unavailable') {
             return 503;
+        } else if (response.errorCode === 'url_not_html') {
+            return 400;
+        } else if (response.errorCode === 'site_rate_limited') {
+            return 429;
+        } else if (response.errorCode === 'session_key_required_for_openid') {
+            return 401;
         } else {
             return 400;
         }

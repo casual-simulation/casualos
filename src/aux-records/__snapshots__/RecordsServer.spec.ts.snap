@@ -1622,6 +1622,7 @@ Object {
             "values": Array [
               "subscriptions",
               "privo",
+              "openid",
               "moderation",
               "web",
               "playerWebManifest",
@@ -1854,6 +1855,26 @@ Object {
       },
       "name": "getInstData",
       "origins": true,
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/link-preview",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "locale": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "url": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getLinkPreview",
+      "origins": "api",
     },
     Object {
       "http": Object {
@@ -4035,6 +4056,14 @@ Object {
     Object {
       "http": Object {
         "method": "GET",
+        "path": "/api/v2/login/openid/list",
+      },
+      "name": "listOpenIDProviders",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
         "path": "/api/v2/records/package/list",
       },
       "inputs": Object {
@@ -6025,6 +6054,22 @@ Object {
         "type": "object",
       },
       "name": "requestLogin",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/login/openid",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "provider": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "requestOpenIDLogin",
       "origins": "account",
     },
     Object {
@@ -9188,6 +9233,120 @@ Object {
                     "hasDefault": true,
                     "optional": true,
                     "type": "string",
+                  },
+                },
+                "type": "object",
+              },
+            },
+            "type": "object",
+          },
+          Object {
+            "schema": Object {
+              "key": Object {
+                "type": "literal",
+                "value": "openid",
+              },
+              "value": Object {
+                "schema": Object {
+                  "providers": Object {
+                    "defaultValue": Array [],
+                    "description": "The list of custom OpenID providers that are configured.",
+                    "hasDefault": true,
+                    "optional": true,
+                    "schema": Object {
+                      "schema": Object {
+                        "clientId": Object {
+                          "description": "The Client ID that should be used.",
+                          "type": "string",
+                        },
+                        "clientSecret": Object {
+                          "description": "The client secret that should be used.",
+                          "type": "string",
+                        },
+                        "discoveryUri": Object {
+                          "description": "The URI that OpenID configuration info should be discovered from. Either this or issuer must be specified.",
+                          "optional": true,
+                          "type": "string",
+                        },
+                        "id": Object {
+                          "description": "The unique ID of the provider.",
+                          "type": "string",
+                        },
+                        "issuer": Object {
+                          "catchall": Object {
+                            "type": "any",
+                          },
+                          "description": "The issuer metadata that should be used instead of discovery. Either this or discoveryUri must be specified.",
+                          "optional": true,
+                          "schema": Object {
+                            "authorization_endpoint": Object {
+                              "description": "The URL of the authorization endpoint.",
+                              "optional": true,
+                              "type": "string",
+                            },
+                            "end_session_endpoint": Object {
+                              "description": "The URL of the end-session (logout) endpoint.",
+                              "optional": true,
+                              "type": "string",
+                            },
+                            "issuer": Object {
+                              "description": "The identifier (URL) of the issuer.",
+                              "type": "string",
+                            },
+                            "jwks_uri": Object {
+                              "description": "The URL of the JSON Web Key Set document.",
+                              "optional": true,
+                              "type": "string",
+                            },
+                            "registration_endpoint": Object {
+                              "description": "The URL of the dynamic client registration endpoint.",
+                              "optional": true,
+                              "type": "string",
+                            },
+                            "revocation_endpoint": Object {
+                              "description": "The URL of the token revocation endpoint.",
+                              "optional": true,
+                              "type": "string",
+                            },
+                            "token_endpoint": Object {
+                              "description": "The URL of the token endpoint.",
+                              "optional": true,
+                              "type": "string",
+                            },
+                            "userinfo_endpoint": Object {
+                              "description": "The URL of the userinfo endpoint.",
+                              "optional": true,
+                              "type": "string",
+                            },
+                          },
+                          "type": "object",
+                        },
+                        "name": Object {
+                          "description": "The human-readable name of the provider.",
+                          "type": "string",
+                        },
+                        "redirectUri": Object {
+                          "description": "The URI that users should be redirected to after a login.",
+                          "type": "string",
+                        },
+                        "requestScopes": Object {
+                          "defaultValue": Array [
+                            "openid",
+                            "email",
+                            "profile",
+                          ],
+                          "description": "The scopes that should be requested during login.",
+                          "hasDefault": true,
+                          "optional": true,
+                          "schema": Object {
+                            "type": "string",
+                          },
+                          "type": "array",
+                        },
+                      },
+                      "type": "object",
+                    },
+                    "type": "array",
                   },
                 },
                 "type": "object",
@@ -12224,6 +12383,7 @@ Object {
             "values": Array [
               "subscriptions",
               "privo",
+              "openid",
               "moderation",
               "web",
               "playerWebManifest",
@@ -12456,6 +12616,26 @@ Object {
       },
       "name": "getInstData",
       "origins": true,
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/link-preview",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "locale": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "url": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getLinkPreview",
+      "origins": "api",
     },
     Object {
       "http": Object {
@@ -14637,6 +14817,14 @@ Object {
     Object {
       "http": Object {
         "method": "GET",
+        "path": "/api/v2/login/openid/list",
+      },
+      "name": "listOpenIDProviders",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
         "path": "/api/v2/records/package/list",
       },
       "inputs": Object {
@@ -16627,6 +16815,22 @@ Object {
         "type": "object",
       },
       "name": "requestLogin",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/login/openid",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "provider": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "requestOpenIDLogin",
       "origins": "account",
     },
     Object {
@@ -19790,6 +19994,120 @@ Object {
                     "hasDefault": true,
                     "optional": true,
                     "type": "string",
+                  },
+                },
+                "type": "object",
+              },
+            },
+            "type": "object",
+          },
+          Object {
+            "schema": Object {
+              "key": Object {
+                "type": "literal",
+                "value": "openid",
+              },
+              "value": Object {
+                "schema": Object {
+                  "providers": Object {
+                    "defaultValue": Array [],
+                    "description": "The list of custom OpenID providers that are configured.",
+                    "hasDefault": true,
+                    "optional": true,
+                    "schema": Object {
+                      "schema": Object {
+                        "clientId": Object {
+                          "description": "The Client ID that should be used.",
+                          "type": "string",
+                        },
+                        "clientSecret": Object {
+                          "description": "The client secret that should be used.",
+                          "type": "string",
+                        },
+                        "discoveryUri": Object {
+                          "description": "The URI that OpenID configuration info should be discovered from. Either this or issuer must be specified.",
+                          "optional": true,
+                          "type": "string",
+                        },
+                        "id": Object {
+                          "description": "The unique ID of the provider.",
+                          "type": "string",
+                        },
+                        "issuer": Object {
+                          "catchall": Object {
+                            "type": "any",
+                          },
+                          "description": "The issuer metadata that should be used instead of discovery. Either this or discoveryUri must be specified.",
+                          "optional": true,
+                          "schema": Object {
+                            "authorization_endpoint": Object {
+                              "description": "The URL of the authorization endpoint.",
+                              "optional": true,
+                              "type": "string",
+                            },
+                            "end_session_endpoint": Object {
+                              "description": "The URL of the end-session (logout) endpoint.",
+                              "optional": true,
+                              "type": "string",
+                            },
+                            "issuer": Object {
+                              "description": "The identifier (URL) of the issuer.",
+                              "type": "string",
+                            },
+                            "jwks_uri": Object {
+                              "description": "The URL of the JSON Web Key Set document.",
+                              "optional": true,
+                              "type": "string",
+                            },
+                            "registration_endpoint": Object {
+                              "description": "The URL of the dynamic client registration endpoint.",
+                              "optional": true,
+                              "type": "string",
+                            },
+                            "revocation_endpoint": Object {
+                              "description": "The URL of the token revocation endpoint.",
+                              "optional": true,
+                              "type": "string",
+                            },
+                            "token_endpoint": Object {
+                              "description": "The URL of the token endpoint.",
+                              "optional": true,
+                              "type": "string",
+                            },
+                            "userinfo_endpoint": Object {
+                              "description": "The URL of the userinfo endpoint.",
+                              "optional": true,
+                              "type": "string",
+                            },
+                          },
+                          "type": "object",
+                        },
+                        "name": Object {
+                          "description": "The human-readable name of the provider.",
+                          "type": "string",
+                        },
+                        "redirectUri": Object {
+                          "description": "The URI that users should be redirected to after a login.",
+                          "type": "string",
+                        },
+                        "requestScopes": Object {
+                          "defaultValue": Array [
+                            "openid",
+                            "email",
+                            "profile",
+                          ],
+                          "description": "The scopes that should be requested during login.",
+                          "hasDefault": true,
+                          "optional": true,
+                          "schema": Object {
+                            "type": "string",
+                          },
+                          "type": "array",
+                        },
+                      },
+                      "type": "object",
+                    },
+                    "type": "array",
                   },
                 },
                 "type": "object",

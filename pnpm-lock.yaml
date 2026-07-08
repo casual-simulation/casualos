@@ -802,6 +802,9 @@ importers:
       mime:
         specifier: 2.4.6
         version: 2.4.6
+      node-html-parser:
+        specifier: ^6.1.13
+        version: 6.1.13
       openai:
         specifier: 4.89.0
         version: 4.89.0(encoding@0.1.13)(ws@8.18.3)(zod@4.1.12)
@@ -12485,6 +12488,9 @@ packages:
     resolution: {integrity: sha512-OQkWKbjQKbGkMf/xqI1jjy3oCTgMKJac58G2+bjZb3fza6gW2YrCSdMQYaoTb70crvE//Gngr4f0AgVHmqHvBQ==}
     engines: {node: ^12.13 || ^14.13 || >=16}
     hasBin: true
+
+  node-html-parser@6.1.13:
+    resolution: {integrity: sha512-qIsTMOY4C/dAa5Q5vsobRpOOvPfC4pB61UVW2uSwZNUp0QU/jCekTal1vMmbO0DgdHeLUJpv/ARmDqErVxA3Sg==}
 
   node-int64@0.4.0:
     resolution: {integrity: sha512-O5lz91xSOeoXP6DulyHfllpq+Eg00MWitZIbtPfoSEvqIHdl5gfcY6hYzDWnj0qD5tz52PI08u9qUvSVeUBeHw==}
@@ -31668,6 +31674,11 @@ snapshots:
     transitivePeerDependencies:
       - bluebird
       - supports-color
+
+  node-html-parser@6.1.13:
+    dependencies:
+      css-select: 5.1.0
+      he: 1.2.0
 
   node-int64@0.4.0: {}
 

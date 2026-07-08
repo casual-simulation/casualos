@@ -16,6 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import type { PrivoConfiguration } from './PrivoConfiguration';
+import type { OpenIDConfiguration } from './OpenIDConfiguration';
 import type { Cache } from './Cache';
 import type {
     ConfigurationInput,
@@ -25,6 +26,7 @@ import type {
 import {
     CONFIGURATION_SCHEMAS_MAP,
     MODERATION_CONFIG_KEY,
+    OPENID_CONFIG_KEY,
     PLAYER_WEB_MANIFEST_KEY,
     PRIVO_CONFIG_KEY,
     SUBSCRIPTIONS_CONFIG_KEY,
@@ -180,6 +182,17 @@ export class CachingConfigStore implements ConfigurationStore {
                     typeof PRIVO_CONFIG_KEY
                 > | null
         )) as PrivoConfiguration;
+    }
+
+    @traced(TRACE_NAME)
+    async getOpenIDConfiguration(): Promise<OpenIDConfiguration> {
+        return (await this._getConfiguration(
+            OPENID_CONFIG_KEY,
+            async () =>
+                (await this._store.getOpenIDConfiguration()) as ConfigurationOutput<
+                    typeof OPENID_CONFIG_KEY
+                > | null
+        )) as OpenIDConfiguration;
     }
 
     @traced(TRACE_NAME)

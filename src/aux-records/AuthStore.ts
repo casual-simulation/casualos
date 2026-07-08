@@ -189,6 +189,23 @@ export interface AuthStore {
     ): Promise<void>;
 
     /**
+     * Finds the ID of the user that has linked the given custom OpenID provider identity.
+     * Returns null if no user has linked the given identity.
+     * @param provider The ID of the OpenID provider.
+     * @param subject The subject (user ID) that the OpenID provider reported.
+     */
+    findUserIdForOpenIDIdentity(
+        provider: string,
+        subject: string
+    ): Promise<string | null>;
+
+    /**
+     * Saves a link between a user and a custom OpenID provider identity.
+     * @param identity The identity that should be saved.
+     */
+    saveOpenIDIdentity(identity: AuthCustomOpenIDIdentity): Promise<void>;
+
+    /**
      * Increments the attempt count for the given login request.
      * @param userId The ID of the user.
      * @param requestId The ID of the login request.
@@ -1017,6 +1034,31 @@ export interface AuthOpenIDLoginRequest {
      * The IP Address that the request came from.
      */
     ipAddress: string;
+}
+
+/**
+ * Defines an interface that represents a link between a user and a custom OpenID provider identity.
+ */
+export interface AuthCustomOpenIDIdentity {
+    /**
+     * The ID of the OpenID provider that the identity is for.
+     */
+    provider: string;
+
+    /**
+     * The subject (user ID) that the OpenID provider reported for the user.
+     */
+    subject: string;
+
+    /**
+     * The ID of the user that the identity is linked to.
+     */
+    userId: string;
+
+    /**
+     * The unix timestamp in miliseconds that the identity was linked at.
+     */
+    createdAtMs: number;
 }
 
 export interface AuthSubscription {
