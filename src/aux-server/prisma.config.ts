@@ -26,7 +26,9 @@ import {
 const auxBackend = path.join(__dirname, 'aux-backend');
 const schemas = path.join(auxBackend, 'schemas');
 
-loadEnvFiles(listEnvironmentFiles(schemas));
+if (!process.env.DATABASE_URL) {
+    loadEnvFiles(listEnvironmentFiles(schemas));
+}
 
 export default defineConfig({
     schema: path.join(schemas, 'auth.prisma'),
