@@ -27,7 +27,9 @@ const auxBackend = path.join(__dirname, 'aux-backend');
 const schemas = path.join(auxBackend, 'schemas');
 const sqlite = path.join(schemas, 'sqlite');
 
-loadEnvFiles(listEnvironmentFiles(sqlite));
+if (!process.env.DATABASE_URL) {
+    loadEnvFiles(listEnvironmentFiles(sqlite));
+}
 
 export default defineConfig({
     schema: path.join(sqlite, 'auth.sqlite.prisma'),
