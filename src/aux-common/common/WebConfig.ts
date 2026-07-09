@@ -37,6 +37,7 @@ export type BiosOption =
     | 'enter join code'
     | 'join inst'
     | 'temp'
+    | 'temp local'
     | 'static inst'
     | 'local inst'
     | 'local'
@@ -57,6 +58,7 @@ export const BIOS_OPTION_SCHEMA = z.enum([
     'enter join code',
     'join inst',
     'temp',
+    'temp local',
     'static inst',
     'local inst',
     'local',

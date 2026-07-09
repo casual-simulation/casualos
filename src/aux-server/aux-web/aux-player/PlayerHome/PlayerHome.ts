@@ -93,8 +93,10 @@ function isPrivateInst(
     );
 }
 
-function isTempInst(biosOption: BiosOption): biosOption is 'temp' {
-    return biosOption === 'temp';
+function isTempInst(
+    biosOption: BiosOption
+): biosOption is 'temp' | 'temp local' {
+    return biosOption === 'temp' || biosOption === 'temp local';
 }
 
 function isPublicInst(
@@ -818,7 +820,7 @@ export default class PlayerHome extends Vue {
         return (
             appManager.config.allowedBiosOptions ?? [
                 'enter join code',
-                'temp',
+                'temp local',
                 'local',
                 'studio',
                 'public',
