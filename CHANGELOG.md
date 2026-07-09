@@ -2,7 +2,7 @@
 
 ## V4.2.7
 
-#### Date: 7/8/2026
+#### Date: 7/9/2026
 
 ### :bug: Bug Fixes
 
@@ -24,6 +24,7 @@
     -   Subscription metrics now exclude expiring insts from `totalInsts` in memory, Prisma, and SQLite stores.
     -   Added persistence support for `InstRecord.expires` in Prisma/Cockroach and Prisma/SQLite schemas and stores.
     -   Fixed `listLoadedPackages()`/`isPackageLoaded()` to find packages loaded into expiring private insts, and `installPackage()` to save newly-loaded packages to the correct store based on the target inst's `expires` state.
+-   BIOS option label updated to `temp local` (this functions the same as `temp` for tempInst)
 
 ## V4.2.6
 
