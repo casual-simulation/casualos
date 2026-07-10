@@ -2343,6 +2343,7 @@ export class ServerBuilder implements SubscriptionLike {
             config: this._configStore,
             policies: this._policyController,
             metrics: this._metricsStore,
+            recordsStore: this._recordsStore,
             searchSyncQueue: this._searchQueue,
             financialController: this._financialController,
         });
@@ -2351,6 +2352,7 @@ export class ServerBuilder implements SubscriptionLike {
             config: this._configStore,
             policies: this._policyController,
             metrics: this._metricsStore,
+            recordsStore: this._recordsStore,
             financialController: this._financialController,
         });
         this._filesController = new FileRecordsController({
@@ -2358,6 +2360,7 @@ export class ServerBuilder implements SubscriptionLike {
             config: this._configStore,
             policies: this._policyController,
             metrics: this._metricsStore,
+            recordsStore: this._recordsStore,
             financialController: this._financialController,
         });
         this._eventsController = new EventRecordsController({

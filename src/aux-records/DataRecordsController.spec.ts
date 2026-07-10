@@ -1735,6 +1735,92 @@ describe('DataRecordsController', () => {
                 );
             });
 
+            it('should bill the record credit account for reads when record billing is enabled and a records store is provided', async () => {
+                const dataStoreWithoutRecordLookup = {
+                    setData: store.setData.bind(store),
+                    getData: store.getData.bind(store),
+                    listData: store.listData.bind(store),
+                    listDataByMarker: store.listDataByMarker.bind(store),
+                    eraseData: store.eraseData.bind(store),
+                } as any;
+
+                const localManager = new DataRecordsController({
+                    policies,
+                    store: dataStoreWithoutRecordLookup,
+                    metrics: store,
+                    config: store,
+                    financialController,
+                    recordsStore: store,
+                } as any);
+
+                const ownerAccount = unwrap(
+                    await financialController.getAccountBalance({
+                        userId: userId,
+                        ledger: LEDGERS.credits,
+                    })
+                );
+
+                const recordBudgetAccount = unwrap(
+                    await financialController.getOrCreateFinancialAccount({
+                        userId: otherUserId,
+                        ledger: LEDGERS.credits,
+                    })
+                );
+
+                unwrap(
+                    await financialController.internalTransaction({
+                        transfers: [
+                            {
+                                amount: 1000n,
+                                debitAccountId: ACCOUNT_IDS.liquidity_credits,
+                                creditAccountId: recordBudgetAccount.account.id,
+                                code: TransferCodes.admin_credit,
+                                currency: CurrencyCodes.credits,
+                            },
+                        ],
+                    })
+                );
+
+                const record = await store.getRecordByName('testRecord');
+                await store.updateRecord({
+                    ...record,
+                    creditAccountId: recordBudgetAccount.account.id,
+                    creditBillingEnabled: true,
+                } as any);
+
+                const result = (await localManager.getData(
+                    'testRecord',
+                    'address'
+                )) as GetDataSuccess;
+
+                expect(result.success).toBe(true);
+
+                await checkAccounts(financialInterface, [
+                    {
+                        id: BigInt(ownerAccount!.accountId),
+                        credits_posted: 1000n,
+                        debits_posted: 0n,
+                        credits_pending: 0n,
+                        debits_pending: 0n,
+                    },
+                    {
+                        id: recordBudgetAccount.account.id,
+                        credits_posted: 1000n,
+                        debits_posted: 25n,
+                        credits_pending: 0n,
+                        debits_pending: 0n,
+                    },
+                ]);
+
+                await checkBillingTotals(
+                    financialController,
+                    recordBudgetAccount.account.id.toString(),
+                    {
+                        [BillingCodes.data_read]: 25n,
+                    }
+                );
+            });
+
             it('should bill the record credit account for reads when record billing is enabled', async () => {
                 const ownerAccount = unwrap(
                     await financialController.getAccountBalance({
