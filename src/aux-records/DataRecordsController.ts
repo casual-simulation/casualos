@@ -50,6 +50,7 @@ import {
 } from '@casual-simulation/aux-common';
 import type { MetricsStore } from './MetricsStore';
 import type { ConfigurationStore } from './ConfigurationStore';
+import type { RecordsStore } from './RecordsStore';
 import { getSubscriptionFeatures } from './SubscriptionConfiguration';
 import { byteLengthOfString } from './Utils';
 import type { ZodIssue } from 'zod';
@@ -74,6 +75,7 @@ export interface DataRecordsConfiguration {
     policies: PolicyController;
     metrics: MetricsStore;
     config: ConfigurationStore;
+    recordsStore?: RecordsStore | null;
 
     searchSyncQueue?: IQueue<SearchSyncQueueEvent> | null;
 
@@ -88,6 +90,7 @@ export class DataRecordsController {
     private _policies: PolicyController;
     private _metrics: MetricsStore;
     private _config: ConfigurationStore;
+    private _recordsStore: RecordsStore | null;
     private _financialController: FinancialController | null;
 
     private _searchSyncQueue: IQueue<SearchSyncQueueEvent> | null;
@@ -101,6 +104,7 @@ export class DataRecordsController {
         this._policies = config.policies;
         this._metrics = config.metrics;
         this._config = config.config;
+        this._recordsStore = config.recordsStore || null;
         this._searchSyncQueue = config.searchSyncQueue || null;
         this._financialController = config.financialController || null;
     }
@@ -343,7 +347,7 @@ export class DataRecordsController {
                 // Determine the billing account - either the record's credit account or the owner
                 const billingAccountResult = await getBillingAccountForRecord(
                     recordName,
-                    this._store as {
+                    (this._recordsStore ?? this._store) as {
                         getRecordByName?: (name: string) => Promise<{
                             ownerId?: string;
                             studioId?: string;
@@ -509,7 +513,7 @@ export class DataRecordsController {
                 // Determine the billing account - either the record's credit account or the owner
                 const billingAccountResult = await getBillingAccountForRecord(
                     context.context.recordName,
-                    this._store as {
+                    (this._recordsStore ?? this._store) as {
                         getRecordByName?: (name: string) => Promise<{
                             ownerId?: string;
                             studioId?: string;
