@@ -10664,6 +10664,116 @@ describe('RecordsServer', () => {
             });
         });
 
+        describe('?filter', () => {
+            beforeEach(async () => {
+                await dataController.recordData(
+                    recordKey,
+                    'address4',
+                    { num: 5 },
+                    userId,
+                    null,
+                    null
+                );
+                await dataController.recordData(
+                    recordKey,
+                    'address5',
+                    { num: 10 },
+                    userId,
+                    null,
+                    null
+                );
+            });
+
+            it('should only return items that match the filter', async () => {
+                const filter = encodeURIComponent(
+                    JSON.stringify({ num: { $gt: 6 } })
+                );
+                const result = await server.handleHttpRequest(
+                    httpGet(
+                        `/api/v2/records/data/list?recordName=${recordName}&marker=${PUBLIC_READ_MARKER}&filter=${filter}`,
+                        defaultHeaders
+                    )
+                );
+
+                await expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        recordName,
+                        items: [
+                            {
+                                address: 'address5',
+                                data: { num: 10 },
+                                markers: [PUBLIC_READ_MARKER],
+                            },
+                        ],
+                        totalCount: 1,
+                        marker: PUBLIC_READ_MARKER,
+                    },
+                    headers: corsHeaders(defaultHeaders['origin']),
+                });
+            });
+
+            it('should return an unacceptable_request result when filter is given without a marker', async () => {
+                const filter = encodeURIComponent(
+                    JSON.stringify({ num: { $gt: 6 } })
+                );
+                const result = await server.handleHttpRequest(
+                    httpGet(
+                        `/api/v2/records/data/list?recordName=${recordName}&filter=${filter}`,
+                        defaultHeaders
+                    )
+                );
+
+                await expectResponseBodyToEqual(result, {
+                    statusCode: 400,
+                    body: {
+                        success: false,
+                        errorCode: 'unacceptable_request',
+                        errorMessage:
+                            'filter can only be used when listing data by marker.',
+                    },
+                    headers: corsHeaders(defaultHeaders['origin']),
+                });
+            });
+
+            it('should return an unacceptable_request result when the filter is malformed', async () => {
+                const filter = encodeURIComponent(
+                    JSON.stringify({ num: { $regex: 'abc' } })
+                );
+                const result = await server.handleHttpRequest(
+                    httpGet(
+                        `/api/v2/records/data/list?recordName=${recordName}&marker=${PUBLIC_READ_MARKER}&filter=${filter}`,
+                        defaultHeaders
+                    )
+                );
+
+                expect(result.statusCode).toBe(400);
+                const body = JSON.parse(result.body as string);
+                expect(body.success).toBe(false);
+                expect(body.errorCode).toBe('unacceptable_request');
+            });
+
+            it('should return an unacceptable_request result when the filter is not valid JSON', async () => {
+                const result = await server.handleHttpRequest(
+                    httpGet(
+                        `/api/v2/records/data/list?recordName=${recordName}&marker=${PUBLIC_READ_MARKER}&filter=not-json`,
+                        defaultHeaders
+                    )
+                );
+
+                await expectResponseBodyToEqual(result, {
+                    statusCode: 400,
+                    body: {
+                        success: false,
+                        errorCode: 'unacceptable_request',
+                        errorMessage: 'filter must be valid JSON.',
+                    },
+                    headers: corsHeaders(defaultHeaders['origin']),
+                });
+            });
+        });
+
         it('should be able to list all data', async () => {
             await dataController.recordData(
                 recordKey,

@@ -70,6 +70,7 @@ import type {
     SetDataResult,
     UserPolicy,
 } from './DataRecordsStore';
+import { matchesDataFilter } from './DataRecordsFilters';
 import type {
     AddFileResult,
     EraseFileStoreResult,
@@ -2603,7 +2604,11 @@ export class MemoryStore
 
         let count = 0;
         for (let [key, item] of record.entries()) {
-            if (item.markers.includes(marker)) {
+            if (
+                item.markers.includes(marker) &&
+                (!request.filter ||
+                    matchesDataFilter(item.data, request.filter))
+            ) {
                 count += 1;
                 if (
                     !address ||

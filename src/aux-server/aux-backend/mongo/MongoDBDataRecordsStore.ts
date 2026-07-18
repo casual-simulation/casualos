@@ -131,6 +131,15 @@ export class MongoDBDataRecordsStore implements DataRecordsStore {
     async listDataByMarker(
         request: ListDataStoreByMarkerRequest
     ): Promise<ListDataStoreResult> {
+        if (request.filter) {
+            return {
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage:
+                    'Filtering data by a custom filter is not supported by this store.',
+            };
+        }
+
         let query = {
             recordName: { $eq: request.recordName },
             markers: request.marker,
