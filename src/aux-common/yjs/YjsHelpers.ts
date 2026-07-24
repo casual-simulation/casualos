@@ -18,9 +18,11 @@
 import type { VersionVector } from '../common';
 import type { Doc, ID, Text } from 'yjs';
 import {
+    applyUpdate,
     ContentString,
     createAbsolutePositionFromRelativePosition,
     createID,
+    decodeUpdate,
     findRootTypeKey,
     RelativePosition,
 } from 'yjs';
@@ -145,6 +147,86 @@ function createRelativePosition(type: Text, item: ID, assoc: number) {
         typeid = createID(type._item.id.client, type._item.id.clock);
     }
     return new RelativePosition(typeid, tname, item, assoc);
+}
+
+/**
+ * Determines whether the given update depends on missing updates from one or more clients.
+ * If this returns a map, then applying the update can cause Y.Map keys to be temporarily
+ * deleted while waiting for the missing update. See https://github.com/yjs/yjs/issues/461
+ *
+ * @param doc The document that the update should be applied to.
+ * @param update The update.
+ */
+export function willMissingUpdate(
+    doc: Doc,
+    update: Uint8Array
+): Map<number, number> | false {
+    const { structs } = decodeUpdate(update);
+    const missingMap = new Map<number, number>();
+    const firstStructPerClient = new Map<number, (typeof structs)[0]>();
+
+    for (let struct of structs) {
+        const client = struct.id.client;
+        const existing = firstStructPerClient.get(client);
+        if (!existing || struct.id.clock < existing.id.clock) {
+            firstStructPerClient.set(client, struct);
+        }
+    }
+
+    for (let [client, struct] of firstStructPerClient) {
+        const items = doc.store.clients.get(client) ?? [];
+        const lastItem = items[items.length - 1];
+        if (!lastItem) {
+            if (struct.id.clock !== 0) {
+                missingMap.set(client, struct.id.clock);
+            }
+            continue;
+        }
+        const nextClock = lastItem.id.clock + lastItem.length;
+        if (nextClock < struct.id.clock) {
+            missingMap.set(client, struct.id.clock);
+        }
+    }
+
+    return missingMap.size > 0 ? missingMap : false;
+}
+
+/**
+ * Applies the given updates to the document, deferring any updates that depend on missing
+ * updates until those missing updates have been applied.
+ *
+ * @param doc The document.
+ * @param updates The updates to apply.
+ * @param transactionOrigin The origin of the transaction.
+ * @param pendingUpdates The list of previously deferred updates.
+ * @returns The list of updates that are still waiting for missing updates.
+ */
+export function applyUpdatesInOrder(
+    doc: Doc,
+    updates: Uint8Array[],
+    transactionOrigin: any,
+    pendingUpdates: Uint8Array[] = []
+): Uint8Array[] {
+    pendingUpdates.push(...updates);
+
+    let madeProgress = true;
+    while (madeProgress) {
+        madeProgress = false;
+        const remaining: Uint8Array[] = [];
+
+        for (let update of pendingUpdates) {
+            if (willMissingUpdate(doc, update)) {
+                remaining.push(update);
+            } else {
+                applyUpdate(doc, update, transactionOrigin);
+                madeProgress = true;
+            }
+        }
+
+        pendingUpdates = remaining;
+    }
+
+    return pendingUpdates;
 }
 
 /**

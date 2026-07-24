@@ -35,7 +35,6 @@ import {
     createRelativePositionFromTypeIndex,
     createAbsolutePositionFromRelativePosition,
     Doc,
-    applyUpdate,
     encodeStateAsUpdate,
 } from 'yjs';
 import type {
@@ -57,6 +56,7 @@ import type { InstUpdate } from '../bots';
 import type { CurrentVersion, Action, StatusUpdate } from '../common';
 import type { ClientError, InstRecordsClient } from '../websockets';
 import { YjsIndexedDBPersistence } from '../yjs/YjsIndexedDBPersistence';
+import { applyUpdatesInOrder } from '../yjs/YjsHelpers';
 import type { SharedDocumentConfig } from './SharedDocumentConfig';
 
 export const APPLY_UPDATES_TO_INST_TRANSACTION_ORIGIN =
@@ -100,6 +100,7 @@ export class YjsSharedDocument implements SharedDocument {
     protected _branch: string;
     protected _indexeddb: YjsIndexedDBPersistence;
     protected _persistence: SharedDocumentConfig['localPersistence'];
+    protected _pendingRemoteUpdates: Uint8Array[] = [];
     private _maps: Map<string, YjsSharedMap<any>> = new Map();
     private _arrays: Map<string, YjsSharedArray<any>> = new Map();
     private _texts: Map<string, YjsSharedText> = new Map();
@@ -314,10 +315,12 @@ export class YjsSharedDocument implements SharedDocument {
     protected _applyUpdates(updates: string[], transactionOrigin?: string) {
         try {
             this._isRemoteUpdate = true;
-            for (let updateBase64 of updates) {
-                const update = toByteArray(updateBase64);
-                applyUpdate(this._doc, update, transactionOrigin);
-            }
+            this._pendingRemoteUpdates = applyUpdatesInOrder(
+                this._doc,
+                updates.map((update) => toByteArray(update)),
+                transactionOrigin,
+                this._pendingRemoteUpdates
+            );
         } finally {
             this._isRemoteUpdate = false;
         }

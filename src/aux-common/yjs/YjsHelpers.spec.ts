@@ -24,10 +24,12 @@ import {
     YTextEvent,
 } from 'yjs';
 import {
+    applyUpdatesInOrder,
     createRelativePositionFromStateVector,
     getClock,
     getStateVector,
     getTextChar,
+    willMissingUpdate,
 } from './YjsHelpers';
 
 describe('YjsHelpers', () => {
@@ -318,6 +320,69 @@ describe('YjsHelpers', () => {
                 '1': 6,
                 '2': 3,
             });
+        });
+    });
+
+    describe('willMissingUpdate()', () => {
+        it('should return false when the update can be applied', () => {
+            const doc1 = new Doc();
+            doc1.getMap().set('abc', 'def');
+
+            const update = encodeStateAsUpdate(doc1);
+
+            const doc2 = new Doc();
+            expect(willMissingUpdate(doc2, update)).toBe(false);
+        });
+
+        it('should return a map when the update depends on missing updates', () => {
+            const a = new Doc();
+            const capturedUpdates: Uint8Array[] = [];
+            a.on('update', (update) => {
+                capturedUpdates.push(update);
+            });
+
+            a.getMap('map').set('x', 0);
+            a.getMap('map').set('y', 0);
+            a.getMap('map').set('x', 100);
+            a.getMap('map').set('y', 200);
+
+            const b = new Doc();
+            applyUpdate(b, capturedUpdates[0]);
+
+            expect(willMissingUpdate(b, capturedUpdates[2])).not.toBe(false);
+        });
+    });
+
+    describe('applyUpdatesInOrder()', () => {
+        it('should defer updates that depend on missing updates', () => {
+            const a = new Doc();
+            const b = new Doc();
+            let pendingUpdates: Uint8Array[] = [];
+            let updateEnabled = true;
+
+            a.on('update', (update) => {
+                if (updateEnabled) {
+                    pendingUpdates = applyUpdatesInOrder(
+                        b,
+                        [update],
+                        undefined,
+                        pendingUpdates
+                    );
+                }
+            });
+
+            const aMap = a.getMap('map');
+            const bMap = b.getMap('map');
+            aMap.set('x', 0);
+            aMap.set('y', 0);
+
+            updateEnabled = false;
+            aMap.set('x', 100);
+
+            updateEnabled = true;
+            aMap.set('y', 200);
+
+            expect(bMap.toJSON()).toEqual({ x: 0, y: 0 });
         });
     });
 
