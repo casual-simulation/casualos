@@ -4049,7 +4049,8 @@ export class MemoryStore
         inst: string,
         branch: string,
         updateToAdd: string,
-        sizeInBytes: number
+        sizeInBytes: number,
+        numberOfUpdatesToKeep?: number
     ): Promise<ReplaceUpdatesResult> {
         const r = this._instRecords.get(recordName);
 
@@ -4095,13 +4096,24 @@ export class MemoryStore
         storedUpdates.updates = [];
         storedUpdates.timestamps = [];
 
-        return this.addUpdates(
+        const result = await this.addUpdates(
             recordName,
             inst,
             branch,
             [updateToAdd],
             sizeInBytes
         );
+
+        if (typeof numberOfUpdatesToKeep === 'number') {
+            const archived = b.archived;
+            const excess = archived.updates.length - numberOfUpdatesToKeep;
+            if (excess > 0) {
+                archived.updates.splice(0, excess);
+                archived.timestamps.splice(0, excess);
+            }
+        }
+
+        return result;
     }
 
     async deleteBranch(

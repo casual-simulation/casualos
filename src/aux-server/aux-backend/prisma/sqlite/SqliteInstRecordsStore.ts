@@ -575,7 +575,8 @@ export class SqliteInstRecordsStore implements InstRecordsStore {
         inst: string,
         branch: string,
         updateToAdd: string,
-        sizeInBytes: number
+        sizeInBytes: number,
+        numberOfUpdatesToKeep?: number
     ): Promise<ReplaceUpdatesResult> {
         const branchUpdateId = uuid();
         try {
@@ -613,6 +614,29 @@ export class SqliteInstRecordsStore implements InstRecordsStore {
                     };
                 }
                 throw err;
+            }
+        }
+
+        if (typeof numberOfUpdatesToKeep === 'number') {
+            const excess = await this._prisma.branchUpdate.findMany({
+                where: {
+                    recordName: recordName,
+                    instName: inst,
+                    branchName: branch,
+                },
+                orderBy: {
+                    createdAt: 'desc',
+                },
+                skip: numberOfUpdatesToKeep,
+                select: { id: true },
+            });
+
+            if (excess.length > 0) {
+                await this._prisma.branchUpdate.deleteMany({
+                    where: {
+                        id: { in: excess.map((u) => u.id) },
+                    },
+                });
             }
         }
 

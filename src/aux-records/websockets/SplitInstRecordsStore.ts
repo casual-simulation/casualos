@@ -410,7 +410,8 @@ export class SplitInstRecordsStore implements InstRecordsStore {
         inst: string,
         branch: string,
         updateToAdd: string,
-        sizeInBytes: number
+        sizeInBytes: number,
+        numberOfUpdatesToKeep?: number
     ): Promise<ReplaceUpdatesResult> {
         const updateCount = await this._temp.countBranchUpdates(
             recordName,
@@ -423,7 +424,8 @@ export class SplitInstRecordsStore implements InstRecordsStore {
                 inst,
                 branch,
                 updateToAdd,
-                sizeInBytes
+                sizeInBytes,
+                numberOfUpdatesToKeep
             );
         if (permanentReplaceResult.success === false) {
             return permanentReplaceResult;

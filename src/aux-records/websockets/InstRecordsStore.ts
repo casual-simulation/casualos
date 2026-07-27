@@ -163,13 +163,15 @@ export interface InstRecordsStore {
      * @param updatesToRemove The updates that should be moved. Only valid if the result from getUpdates() is used.
      * @param updateToAdd The update that should be added.
      * @param sizeInBytes The size of the new update in bytes.
+     * @param numberOfUpdatesToKeep If provided, then older stored updates for the branch beyond this count should be deleted, keeping only the most recent updates (including the one being added). If omitted, then all updates are kept.
      */
     replaceCurrentUpdates(
         recordName: string | null,
         inst: string,
         branch: string,
         updateToAdd: string,
-        sizeInBytes: number
+        sizeInBytes: number,
+        numberOfUpdatesToKeep?: number
     ): Promise<ReplaceUpdatesResult>;
 
     /**
