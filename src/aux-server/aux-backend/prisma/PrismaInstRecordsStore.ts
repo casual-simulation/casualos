@@ -483,29 +483,13 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
 
     @traced(TRACE_NAME)
     async getInstSize(recordName: string, inst: string): Promise<number> {
-        const branches = await this._prisma.instBranch.findMany({
-            where: {
-                recordName: recordName,
-                instName: inst,
-            },
-            select: {
-                updates: {
-                    orderBy: {
-                        createdAt: 'desc',
-                    },
-                    take: 1,
-                    select: {
-                        sizeInBytes: true,
-                    },
-                },
-            },
-        });
+        const rows: { branch: string; sizeInBytes: number }[] = await this
+            ._prisma
+            .$queryRaw`SELECT DISTINCT ON ("branchName") "branchName", "sizeInBytes" FROM "BranchUpdate" WHERE "recordName" = ${recordName} AND "instName" = ${inst} ORDER BY "branchName", "createdAt" DESC`;
 
         let size: number = 0;
-        for (let b of branches) {
-            for (let u of b.updates) {
-                size += u.sizeInBytes;
-            }
+        for (let row of rows) {
+            size += row.sizeInBytes;
         }
 
         return size;

@@ -819,6 +819,7 @@ model BranchUpdate {
     updatedAt Decimal
 
     @@index([recordName, instName, branchName, id])
+    @@index([recordName, instName, branchName, createdAt, sizeInBytes])
 }
 
 // A package that has been loaded into an inst
