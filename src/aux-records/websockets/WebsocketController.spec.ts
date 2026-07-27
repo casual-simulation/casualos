@@ -13507,6 +13507,54 @@ describe('WebsocketController', () => {
                 ).toEqual([]);
             });
 
+            it('should keep all permanent updates across multiple merge cycles by default', async () => {
+                await server.savePermanentBranches();
+
+                await server.addUpdates(serverConnectionId, {
+                    type: 'repo/add_updates',
+                    recordName,
+                    inst,
+                    branch: 'branch',
+                    updates: [update1Base64],
+                    updateId: 2,
+                });
+
+                await server.savePermanentBranches();
+
+                const allUpdates = await instStore.perm.getAllUpdates(
+                    recordName,
+                    inst,
+                    'branch'
+                );
+                expect(allUpdates?.updates.length).toBe(2);
+            });
+
+            it('should trim permanent updates to numberOfInstUpdatesToKeep when configured', async () => {
+                store.subscriptionConfiguration = buildSubscriptionConfig(
+                    (config) => config.withNumberOfInstUpdatesToKeep(1)
+                );
+
+                await server.savePermanentBranches();
+
+                await server.addUpdates(serverConnectionId, {
+                    type: 'repo/add_updates',
+                    recordName,
+                    inst,
+                    branch: 'branch',
+                    updates: [update1Base64],
+                    updateId: 2,
+                });
+
+                await server.savePermanentBranches();
+
+                const allUpdates = await instStore.perm.getAllUpdates(
+                    recordName,
+                    inst,
+                    'branch'
+                );
+                expect(allUpdates?.updates.length).toBe(1);
+            });
+
             it('should acquire a lock before trying to save branch data', async () => {
                 const generation =
                     await instStore.temp.getDirtyBranchGeneration();

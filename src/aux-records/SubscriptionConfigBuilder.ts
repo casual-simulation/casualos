@@ -531,6 +531,11 @@ export class SubscriptionConfigBuilder {
         return this;
     }
 
+    withNumberOfInstUpdatesToKeep(count?: number): this {
+        this._config.defaultFeatures.numberOfInstUpdatesToKeep = count;
+        return this;
+    }
+
     withWebhookSecret(secret: string): this {
         this._config.webhookSecret = secret;
         return this;

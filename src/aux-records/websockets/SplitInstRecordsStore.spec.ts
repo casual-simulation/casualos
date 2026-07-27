@@ -1412,5 +1412,37 @@ describe('SplitInstRecordsStore', () => {
                 instSizeInBytes: 10,
             });
         });
+
+        it('should trim the permanent store to the given number of updates when numberOfUpdatesToKeep is provided', async () => {
+            await temp.addUpdates(
+                recordName,
+                instName,
+                branchName,
+                ['abc', 'def'],
+                6
+            );
+            await perm.addUpdates(recordName, instName, branchName, ['abc'], 3);
+            await perm.addUpdates(recordName, instName, branchName, ['def'], 3);
+
+            await store.replaceCurrentUpdates(
+                recordName,
+                instName,
+                branchName,
+                'test',
+                4,
+                1
+            );
+
+            const allUpdates = await perm.getAllUpdates(
+                recordName,
+                instName,
+                branchName
+            );
+            expect(allUpdates).toEqual({
+                updates: ['test'],
+                timestamps: [expect.any(Number)],
+                instSizeInBytes: 10,
+            });
+        });
     });
 });

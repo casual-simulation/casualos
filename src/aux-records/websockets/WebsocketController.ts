@@ -3379,6 +3379,10 @@ export class WebsocketController {
             `[WebsocketController] Saving branch updates for ${branch.recordName}/${branch.inst}/${branch.branch}`
         );
 
+        const config = await this._config.getSubscriptionConfiguration();
+        const numberOfUpdatesToKeep =
+            config?.defaultFeatures?.numberOfInstUpdatesToKeep;
+
         let [updateCount, size] = await Promise.all([
             store.temp.countBranchUpdates(
                 branch.recordName,
@@ -3437,7 +3441,8 @@ export class WebsocketController {
                     branch.inst,
                     branch.branch,
                     mergedBase64,
-                    mergedBase64.length
+                    mergedBase64.length,
+                    numberOfUpdatesToKeep
                 );
 
             if (permanentReplaceResult.success === false) {

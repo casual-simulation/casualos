@@ -6693,6 +6693,11 @@ Object {
                         },
                         "type": "object",
                       },
+                      "numberOfInstUpdatesToKeep": Object {
+                        "description": "The number of branch updates that should be kept in permanent storage for each branch. Older updates beyond this count are deleted whenever a branch is merged into permanent storage. If omitted, then all updates are kept.",
+                        "optional": true,
+                        "type": "number",
+                      },
                       "publicInsts": Object {
                         "description": "The feature limits for public insts (insts that do not belong to a record and will expire after a preset time). Defaults to an object that allows all features.",
                         "optional": true,
@@ -17459,6 +17464,11 @@ Object {
                           },
                         },
                         "type": "object",
+                      },
+                      "numberOfInstUpdatesToKeep": Object {
+                        "description": "The number of branch updates that should be kept in permanent storage for each branch. Older updates beyond this count are deleted whenever a branch is merged into permanent storage. If omitted, then all updates are kept.",
+                        "optional": true,
+                        "type": "number",
                       },
                       "publicInsts": Object {
                         "description": "The feature limits for public insts (insts that do not belong to a record and will expire after a preset time). Defaults to an object that allows all features.",
