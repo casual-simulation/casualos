@@ -7,6 +7,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where bots with rotation were being reset to null when dragged
+-   Improved loading performance when the database has lots of old inst updates.
 
 ### :rocket: Features
 
