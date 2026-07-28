@@ -483,29 +483,13 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
 
     @traced(TRACE_NAME)
     async getInstSize(recordName: string, inst: string): Promise<number> {
-        const branches = await this._prisma.instBranch.findMany({
-            where: {
-                recordName: recordName,
-                instName: inst,
-            },
-            select: {
-                updates: {
-                    orderBy: {
-                        createdAt: 'desc',
-                    },
-                    take: 1,
-                    select: {
-                        sizeInBytes: true,
-                    },
-                },
-            },
-        });
+        const rows: { branch: string; sizeInBytes: number }[] = await this
+            ._prisma
+            .$queryRaw`SELECT DISTINCT ON ("branchName") "branchName", "sizeInBytes" FROM "BranchUpdate" WHERE "recordName" = ${recordName} AND "instName" = ${inst} ORDER BY "branchName", "createdAt" DESC`;
 
         let size: number = 0;
-        for (let b of branches) {
-            for (let u of b.updates) {
-                size += u.sizeInBytes;
-            }
+        for (let row of rows) {
+            size += row.sizeInBytes;
         }
 
         return size;
@@ -581,7 +565,8 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
         inst: string,
         branch: string,
         updateToAdd: string,
-        sizeInBytes: number
+        sizeInBytes: number,
+        numberOfUpdatesToKeep?: number
     ): Promise<ReplaceUpdatesResult> {
         const branchUpdateId = uuid();
         try {
@@ -617,6 +602,29 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
                     };
                 }
                 throw err;
+            }
+        }
+
+        if (typeof numberOfUpdatesToKeep === 'number') {
+            const excess = await this._prisma.branchUpdate.findMany({
+                where: {
+                    recordName: recordName,
+                    instName: inst,
+                    branchName: branch,
+                },
+                orderBy: {
+                    createdAt: 'desc',
+                },
+                skip: numberOfUpdatesToKeep,
+                select: { id: true },
+            });
+
+            if (excess.length > 0) {
+                await this._prisma.branchUpdate.deleteMany({
+                    where: {
+                        id: { in: excess.map((u) => u.id) },
+                    },
+                });
             }
         }
 

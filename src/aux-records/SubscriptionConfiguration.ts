@@ -1119,6 +1119,13 @@ export const getSubscriptionConfigSchema = memoize(() =>
                     .describe(
                         'The feature limits for public insts (insts that do not belong to a record and will expire after a preset time). Defaults to an object that allows all features.'
                     ),
+                numberOfInstUpdatesToKeep: z
+                    .int()
+                    .positive()
+                    .optional()
+                    .describe(
+                        'The number of branch updates that should be kept in permanent storage for each branch. Older updates beyond this count are deleted whenever a branch is merged into permanent storage. If omitted, then all updates are kept.'
+                    ),
             })
             .optional(),
     })
@@ -1322,6 +1329,12 @@ export interface DefaultFeaturesConfiguration {
      * The configuration for temporary insts.
      */
     publicInsts?: PublicInstsConfiguration;
+
+    /**
+     * The number of branch updates that should be kept in permanent storage for each branch.
+     * If omitted, then all updates are kept.
+     */
+    numberOfInstUpdatesToKeep?: number;
 }
 
 export interface PublicInstsConfiguration {
