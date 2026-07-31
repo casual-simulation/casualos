@@ -168,9 +168,6 @@ importers:
       '@types/three':
         specifier: ^0.182.0
         version: 0.182.0(patch_hash=98f4c7789af2f7ae90c8b0dfd9bb6537d1c5ef2988ddb01f48a62438b53abfc2)
-      '@types/uuid':
-        specifier: 10.0.0
-        version: 10.0.0
       '@types/vue-color':
         specifier: ^2.4.3
         version: 2.4.8
@@ -500,9 +497,6 @@ importers:
       '@types/estraverse':
         specifier: ^5.1.1
         version: 5.1.7
-      '@types/uuid':
-        specifier: 10.0.0
-        version: 10.0.0
       astring:
         specifier: 1.7.5
         version: 1.7.5
@@ -525,8 +519,8 @@ importers:
         specifier: 3.1.0
         version: 3.1.0
       lib0:
-        specifier: 0.2.49
-        version: 0.2.49
+        specifier: 0.2.117
+        version: 0.2.117
       lru-cache:
         specifier: ^5.1.1
         version: 5.1.1
@@ -543,11 +537,11 @@ importers:
         specifier: ^0.182.0
         version: 0.182.0
       uuid:
-        specifier: 10.0.0
-        version: 10.0.0
+        specifier: 14.0.1
+        version: 14.0.1
       yjs:
-        specifier: 13.6.8
-        version: 13.6.8
+        specifier: 13.6.31
+        version: 13.6.31
       zod:
         specifier: 4.1.12
         version: 4.1.12
@@ -676,8 +670,8 @@ importers:
         specifier: ^0.182.0
         version: 0.182.0
       uuid:
-        specifier: 10.0.0
-        version: 10.0.0
+        specifier: 14.0.1
+        version: 14.0.1
       vue:
         specifier: ^2.7.15
         version: 2.7.16
@@ -728,8 +722,8 @@ importers:
         specifier: 1.16.1
         version: 1.16.1
       uuid:
-        specifier: 10.0.0
-        version: 10.0.0
+        specifier: 14.0.1
+        version: 14.0.1
       ws:
         specifier: 8.18.0
         version: 8.18.0
@@ -827,11 +821,11 @@ importers:
         specifier: 3.0.5
         version: 3.0.5(@babel/runtime@7.27.1)
       uuid:
-        specifier: 10.0.0
-        version: 10.0.0
+        specifier: 14.0.1
+        version: 14.0.1
       yjs:
-        specifier: 13.6.8
-        version: 13.6.8
+        specifier: 13.6.31
+        version: 13.6.31
       zod:
         specifier: 4.1.12
         version: 4.1.12
@@ -869,8 +863,8 @@ importers:
         specifier: 1.7.7
         version: 1.7.7
       uuid:
-        specifier: 10.0.0
-        version: 10.0.0
+        specifier: 14.0.1
+        version: 14.0.1
 
   src/aux-redirector:
     dependencies:
@@ -922,9 +916,6 @@ importers:
       '@types/seedrandom':
         specifier: 3.0.8
         version: 3.0.8
-      '@types/uuid':
-        specifier: 10.0.0
-        version: 10.0.0
       acorn:
         specifier: 8.11.3
         version: 8.11.3
@@ -956,8 +947,8 @@ importers:
         specifier: 3.1.0
         version: 3.1.0
       lib0:
-        specifier: 0.2.49
-        version: 0.2.49
+        specifier: 0.2.117
+        version: 0.2.117
       lru-cache:
         specifier: ^5.1.1
         version: 5.1.1
@@ -986,11 +977,11 @@ importers:
         specifier: 3.0.5
         version: 3.0.5(@babel/runtime@7.27.1)
       uuid:
-        specifier: 10.0.0
-        version: 10.0.0
+        specifier: 14.0.1
+        version: 14.0.1
       yjs:
-        specifier: 13.6.8
-        version: 13.6.8
+        specifier: 13.6.31
+        version: 13.6.31
     devDependencies:
       '@types/jsdom':
         specifier: 21.1.6
@@ -1383,8 +1374,8 @@ importers:
         specifier: 4.2.0
         version: 4.2.0
       uuid:
-        specifier: 10.0.0
-        version: 10.0.0
+        specifier: 14.0.1
+        version: 14.0.1
       vhost:
         specifier: ^3.0.2
         version: 3.0.2
@@ -1416,8 +1407,8 @@ importers:
         specifier: 8.18.0
         version: 8.18.0
       yjs:
-        specifier: 13.6.8
-        version: 13.6.8
+        specifier: 13.6.31
+        version: 13.6.31
       zod:
         specifier: 4.1.12
         version: 4.1.12
@@ -1555,8 +1546,8 @@ importers:
         specifier: 8.0.0-alpha.14
         version: 8.0.0-alpha.14
       uuid:
-        specifier: 10.0.0
-        version: 10.0.0
+        specifier: 14.0.1
+        version: 14.0.1
 
   src/aux-vm-browser:
     dependencies:
@@ -1609,8 +1600,8 @@ importers:
         specifier: 8.0.0-alpha.14
         version: 8.0.0-alpha.14
       uuid:
-        specifier: 10.0.0
-        version: 10.0.0
+        specifier: 14.0.1
+        version: 14.0.1
     devDependencies:
       base64-js:
         specifier: ^1.5.1
@@ -1655,8 +1646,8 @@ importers:
         specifier: 8.0.0-alpha.14
         version: 8.0.0-alpha.14
       uuid:
-        specifier: 10.0.0
-        version: 10.0.0
+        specifier: 14.0.1
+        version: 14.0.1
 
   src/aux-vm-deno:
     dependencies:
@@ -1691,8 +1682,8 @@ importers:
         specifier: 8.0.0-alpha.14
         version: 8.0.0-alpha.14
       uuid:
-        specifier: 10.0.0
-        version: 10.0.0
+        specifier: 14.0.1
+        version: 14.0.1
 
   src/aux-vm-node:
     dependencies:
@@ -1721,8 +1712,8 @@ importers:
         specifier: 8.0.0-alpha.14
         version: 8.0.0-alpha.14
       uuid:
-        specifier: 10.0.0
-        version: 10.0.0
+        specifier: 14.0.1
+        version: 14.0.1
 
   src/aux-websocket:
     dependencies:
@@ -1805,8 +1796,8 @@ importers:
         specifier: 1.0.3
         version: 1.0.3
       uuid:
-        specifier: 10.0.0
-        version: 10.0.0
+        specifier: 14.0.1
+        version: 14.0.1
       zod:
         specifier: 4.1.12
         version: 4.1.12
@@ -1962,8 +1953,8 @@ importers:
         specifier: 8.0.0-alpha.14
         version: 8.0.0-alpha.14
       uuid:
-        specifier: 10.0.0
-        version: 10.0.0
+        specifier: 14.0.1
+        version: 14.0.1
       ws:
         specifier: 8.18.0
         version: 8.18.0
@@ -7041,9 +7032,6 @@ packages:
   '@types/unist@3.0.3':
     resolution: {integrity: sha512-ko/gIFJRv177XgZsZcBwnqJN5x/Gien8qNOn0D5bQU/zAzVf9Zt3BlcUiLqhV9y4ARk0GbT3tnUiPNgnTXzc/Q==}
 
-  '@types/uuid@10.0.0':
-    resolution: {integrity: sha512-7gqG38EyHgyP1S+7+xomFtL+ZNHcKv6DwNaCZmJmo1vgMugyF3TCnXVg4t1uk89mLNwnLtnY3TpOpCOyp1/xHQ==}
-
   '@types/uuid@9.0.8':
     resolution: {integrity: sha512-jg+97EGIcY9AGHJJRaaPVgetKDsrTgbRjQ5Msgjh/DQKEFl0DtyRr/VCOyD1T2R1MNeWPK/u7JoGhlDZnKBAfA==}
 
@@ -11523,14 +11511,10 @@ packages:
     resolution: {integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==}
     engines: {node: '>= 0.8.0'}
 
-  lib0@0.2.107:
-    resolution: {integrity: sha512-2xih/AugT0dJSgeSfsW/bqIPILlsqzEtmw8hXzWEnMLrOz12DTK5z9rjNgUT21/HkBjHSznOQBr67bcZdc8Ltg==}
+  lib0@0.2.117:
+    resolution: {integrity: sha512-DeXj9X5xDCjgKLU/7RR+/HQEVzuuEUiwldwOGsHK/sfAfELGWEyTcf0x+uOvCvK3O2zPmZePXWL85vtia6GyZw==}
     engines: {node: '>=16'}
     hasBin: true
-
-  lib0@0.2.49:
-    resolution: {integrity: sha512-ziwYLe/pmI9bjHsAehm4ApuVfZ+q+sbC+vO6Z5+KM+0Fe0MrTLwZSDkJ+cElnhFNQ0P6z/wVkRmc5+vTmImJ9A==}
-    engines: {node: '>=12'}
 
   libnpmaccess@7.0.2:
     resolution: {integrity: sha512-vHBVMw1JFMTgEk15zRsJuSAg7QtGGHpUSEfnbcRL1/gTBag9iEfJbyjpDmdJmwMhvpoLoNBtdAUCdGnaP32hhw==}
@@ -15606,9 +15590,8 @@ packages:
     resolution: {integrity: sha512-pMZTvIkT1d+TFGvDOqodOclx0QWkkgi6Tdoa8gC8ffGAAqz9pzPTZWAybbsHHoED/ztMtkv/VoYTYyShUn81hA==}
     engines: {node: '>= 0.4.0'}
 
-  uuid@10.0.0:
-    resolution: {integrity: sha512-8XkAphELsDnEGrDxUOHB3RGvXz6TeuYSGEZBOjtTtPm2lwhGBjLgOzLHB63IUWfBpNucQjND6d3AOudO+H3RWQ==}
-    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
+  uuid@14.0.1:
+    resolution: {integrity: sha512-6ZxzVpzDXDa3bJWaHilVayA+BH/1zmxCJoVgvmqJnid/gPoKHxUrS/aC/T6LGQtNHT+XHG9fXPJB4d+IrU30Ew==}
     hasBin: true
 
   uuid@3.4.0:
@@ -16238,8 +16221,8 @@ packages:
     resolution: {integrity: sha512-7dSzzRQ++CKnNI/krKnYRV7JKKPUXMEh61soaHKg9mrWEhzFWhFnxPxGl+69cD1Ou63C13NUPCnmIcrvqCuM6w==}
     engines: {node: '>=12'}
 
-  yjs@13.6.8:
-    resolution: {integrity: sha512-ZPq0hpJQb6f59B++Ngg4cKexDJTvfOgeiv0sBc4sUm8CaBWH7OQC4kcCgrqbjJ/B2+6vO49exvTmYfdlPtcjbg==}
+  yjs@13.6.31:
+    resolution: {integrity: sha512-Eq+5BRfbeGyqGVrTJL3bEcr8gKkxPuyuoHmAwpk52fDb8kOVMrfVSTRPd6yiGgX5Fskb96qCRjzjbRjrL4YEnw==}
     engines: {node: '>=16.0.0', npm: '>=8.0.0'}
 
   yocto-queue@0.1.0:
@@ -24687,8 +24670,6 @@ snapshots:
 
   '@types/unist@3.0.3': {}
 
-  '@types/uuid@10.0.0': {}
-
   '@types/uuid@9.0.8': {}
 
   '@types/vue-color@2.4.8':
@@ -30334,11 +30315,7 @@ snapshots:
       prelude-ls: 1.2.1
       type-check: 0.4.0
 
-  lib0@0.2.107:
-    dependencies:
-      isomorphic.js: 0.2.5
-
-  lib0@0.2.49:
+  lib0@0.2.117:
     dependencies:
       isomorphic.js: 0.2.5
 
@@ -35263,7 +35240,7 @@ snapshots:
 
   utils-merge@1.0.1: {}
 
-  uuid@10.0.0: {}
+  uuid@14.0.1: {}
 
   uuid@3.4.0: {}
 
@@ -36060,9 +36037,9 @@ snapshots:
       y18n: 5.0.8
       yargs-parser: 21.1.1
 
-  yjs@13.6.8:
+  yjs@13.6.31:
     dependencies:
-      lib0: 0.2.107
+      lib0: 0.2.117
 
   yocto-queue@0.1.0: {}
 

@@ -177,7 +177,7 @@
         "typescript": "^5.0.2",
         "typesense": "3.0.5",
         "unique-names-generator": "4.2.0",
-        "uuid": "10.0.0",
+        "uuid": "14.0.1",
         "vhost": "^3.0.2",
         "vue": "^2.7.15",
         "vue-class-component": "7.2.6",
@@ -188,7 +188,7 @@
         "vue-router": "3.5.4",
         "web-push": "3.6.7",
         "ws": "8.18.0",
-        "yjs": "13.6.8",
+        "yjs": "13.6.31",
         "zod": "4.1.12"
     },
     "devDependencies": {
