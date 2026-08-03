@@ -46,6 +46,7 @@ import type {
 } from '../common/RemoteActions';
 import { device, remote } from '../common/RemoteActions';
 import { connectionInfo } from '../common/ConnectionInfo';
+import type { ConnectionInfo } from '../common/ConnectionInfo';
 import type { TimeSample } from '@casual-simulation/timesync';
 
 describe('InstRecordsClient', () => {
@@ -1268,6 +1269,91 @@ describe('InstRecordsClient', () => {
                     },
                     connection: device2,
                 },
+            ]);
+            expect(disconnections).toEqual([
+                {
+                    type: 'repo/disconnected_from_branch',
+                    broadcast: false,
+                    recordName: 'myRecord',
+                    inst: 'inst',
+                    branch: 'testBranch',
+                    connection: device1,
+                },
+                {
+                    type: 'repo/disconnected_from_branch',
+                    broadcast: false,
+                    recordName: 'myRecord',
+                    inst: 'inst',
+                    branch: 'testBranch',
+                    connection: device2,
+                },
+            ]);
+        });
+
+        it('should re-emit connected events for devices that were already known after a reconnect', async () => {
+            let connections: ConnectedToBranchMessage[] = [];
+            let disconnections: DisconnectedFromBranchMessage[] = [];
+            client
+                .watchBranchDevices('myRecord', 'inst', 'testBranch')
+                .subscribe((e) => {
+                    if (e.type === 'repo/connected_to_branch') {
+                        connections.push(e);
+                    } else {
+                        disconnections.push(e);
+                    }
+                });
+
+            let connect = new Subject<ConnectedToBranchMessage>();
+            let disconnect = new Subject<DisconnectedFromBranchMessage>();
+            connection.events.set('repo/connected_to_branch', connect);
+            connection.events.set('repo/disconnected_from_branch', disconnect);
+
+            const device1 = connectionInfo('device1', 'device1', 'device1');
+            const device2 = connectionInfo('device2', 'device2', 'device2');
+
+            connection.connect();
+            await waitAsync();
+
+            const connectedMessage = (
+                device: ConnectionInfo
+            ): ConnectedToBranchMessage => ({
+                type: 'repo/connected_to_branch',
+                broadcast: false,
+                branch: {
+                    type: 'repo/watch_branch',
+                    recordName: 'myRecord',
+                    inst: 'inst',
+                    branch: 'testBranch',
+                },
+                connection: device,
+            });
+
+            connect.next(connectedMessage(device1));
+            connect.next(connectedMessage(device2));
+
+            await waitAsync();
+
+            // Simulate the underlying socket dropping and coming back.
+            // The server always replays the full current device list on
+            // reconnect - even for devices that were already known before
+            // the drop - and those should be treated as new connections
+            // (not filtered out) so that presence recovers.
+            connection.disconnect();
+            await waitAsync();
+
+            connection.connect();
+            await waitAsync();
+
+            connect.next(connectedMessage(device1));
+            connect.next(connectedMessage(device2));
+
+            await waitAsync();
+
+            expect(connections).toEqual([
+                connectedMessage(device1),
+                connectedMessage(device2),
+                connectedMessage(device1),
+                connectedMessage(device2),
             ]);
             expect(disconnections).toEqual([
                 {
