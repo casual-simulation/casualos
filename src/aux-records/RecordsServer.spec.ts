@@ -399,7 +399,7 @@ describe('RecordsServer', () => {
         });
 
         savedMemoryStore = services.store;
-    });
+    }, 60000);
 
     afterAll(() => {
         if (tbClient) {

@@ -3741,6 +3741,11 @@ Object {
             "optional": true,
             "type": "string",
           },
+          "filter": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "any",
+          },
           "instances": Object {
             "maxLength": 3,
             "minLength": 1,
@@ -14507,6 +14512,11 @@ Object {
             "nullable": true,
             "optional": true,
             "type": "string",
+          },
+          "filter": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "any",
           },
           "instances": Object {
             "maxLength": 3,
