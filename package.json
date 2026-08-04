@@ -86,6 +86,7 @@
         "lint:shortkey": "eslint src/vue-shortkey",
         "prisma:migrate:dev": "pnpm --filter @casual-simulation/aux-server exec prisma migrate dev",
         "prisma:migrate:sqlite:dev": "pnpm --filter @casual-simulation/aux-server exec prisma --config ./prisma.sqlite.config.ts migrate dev",
+        "migrate:cockroachdb-to-sqlite": "tsx ./src/aux-server/script/migrate-cockroachdb-to-sqlite.ts",
         "prepare": "husky",
         "pretest": "tsx ./script/pretest.mts"
     },

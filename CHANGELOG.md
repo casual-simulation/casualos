@@ -27,6 +27,10 @@
     -   Added persistence support for `InstRecord.expires` in Prisma/Cockroach and Prisma/SQLite schemas and stores.
     -   Fixed `listLoadedPackages()`/`isPackageLoaded()` to find packages loaded into expiring private insts, and `installPackage()` to save newly-loaded packages to the correct store based on the target inst's `expires` state.
 -   BIOS option label updated to `temp local` (this functions the same as `temp` for tempInst)
+-   Added a script for migrating data from CockroachDB to SQLite.
+    -   Run `npm run migrate:cockroachdb-to-sqlite -- --source <url> --target <file>` to copy every row from a CockroachDB database into a SQLite database.
+    -   Both databases must already have all of their migrations applied - the script only moves data.
+    -   Supports `--dry-run`, `--truncate`, `--skip-duplicates`, `--only`, `--exclude`, and `--batch-size`. See [DEVELOPERS.md](./DEVELOPERS.md#migrating-from-cockroachdb-to-sqlite) for details.
 
 ## V4.2.6
 

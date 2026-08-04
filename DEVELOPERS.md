@@ -103,8 +103,69 @@ Most of them are NPM scripts, so they're easy to run.
     -   `prisma migrate reset`
 -   Update your database to match schema (creates a migration if needed)
     -   `prisma migrate dev`
+-   Copy data from a CockroachDB database into a SQLite database
+    -   `npm run migrate:cockroachdb-to-sqlite -- --source <url> --target <file>`
+    -   See [Migrating from CockroachDB to SQLite](#migrating-from-cockroachdb-to-sqlite) below.
 
 You can find other scripts in the `package.json` file at the root of the repository.
+
+## Migrating from CockroachDB to SQLite
+
+CasualOS can store its data in either CockroachDB or SQLite, selected with `SERVER_CONFIG.prisma.db`. Each database has its own Prisma schema (`src/aux-server/aux-backend/schemas/auth.prisma` and `src/aux-server/aux-backend/schemas/sqlite/auth.sqlite.prisma`) and its own set of migrations.
+
+`npm run migrate:cockroachdb-to-sqlite` copies every row from a CockroachDB database into a SQLite database, converting between the two schemas along the way (`DateTime` columns become epoch milliseconds, `String[]` columns become JSON arrays).
+
+**Before running it:**
+
+1. Install dependencies so that both Prisma clients have been generated (`pnpm install` runs this automatically via `postinstall`; otherwise run `pnpm --filter @casual-simulation/aux-server run prisma:generate` and `prisma:generate:sqlite`).
+2. Apply all migrations to **both** databases. The script only moves data — it never creates or alters tables.
+    - CockroachDB: `pnpm --filter @casual-simulation/aux-server exec prisma migrate deploy`
+    - SQLite: `DATABASE_URL=file:/path/to/aux.db pnpm --filter @casual-simulation/aux-server exec prisma --config ./prisma.sqlite.config.ts migrate deploy`
+3. Stop the server, or otherwise make sure nothing is writing to either database.
+
+**Then run:**
+
+```bash
+npm run migrate:cockroachdb-to-sqlite -- \
+    --source "postgresql://root@127.0.0.1:26257/defaultdb?sslmode=disable" \
+    --target file:/path/to/aux.db \
+    --dry-run
+```
+
+`--dry-run` prints the row counts it would copy without writing anything. Re-run without it to perform the copy. When it finishes, the script runs `PRAGMA foreign_key_check` on the SQLite database and exits non-zero if anything is dangling.
+
+| Option | Description |
+| --- | --- |
+| `--source <url>` | The CockroachDB connection string to read from. Defaults to `$SOURCE_DATABASE_URL`, then to the `DATABASE_URL` in `aux-backend/schemas/*.env.json`. |
+| `--target <file>` | The SQLite file to write to, as a path or a `file:` URL. Defaults to `$TARGET_DATABASE_URL`, then to the `DATABASE_URL` in `aux-backend/schemas/sqlite/*.env.json`. |
+| `--truncate` | Delete all existing rows from the target before copying. |
+| `--skip-duplicates` | Append to the target, leaving rows whose primary key already exists alone. |
+| `--only <models>` | Comma separated list of models to copy. |
+| `--exclude <models>` | Comma separated list of models to skip. |
+| `--batch-size <n>` | Rows to read and write at a time. Defaults to 500. |
+| `--dry-run` | Report what would be copied without writing anything. |
+| `--yes` | Skip the confirmation prompt. |
+
+The script refuses to run if the target database already contains data unless `--truncate` or `--skip-duplicates` is given.
+
+Afterwards, point the server at the SQLite file:
+
+```json
+{
+    "prisma": {
+        "db": "sqlite",
+        "options": { "datasourceUrl": "file:/path/to/aux.db" }
+    }
+}
+```
+
+Only data that lives in the Prisma schema is copied. These have to be migrated separately:
+
+-   Uploaded files in S3/MinIO.
+-   Inst updates and caches held in Redis.
+-   Per-record user databases (the `databases` provider).
+-   MongoDB collections.
+-   TigerBeetle ledgers.
 
 ## Deployment Process
 
