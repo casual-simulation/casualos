@@ -8,6 +8,7 @@
 
 -   Fixed an issue where bots with rotation were being reset to null when dragged
 -   Improved loading performance when the database has lots of old inst updates.
+-   Fixed an issue where presence (participant/avatar list and host-left detection) would never recover after a websocket reconnect, because `InstRecordsClient` never cleared its cache of previously-connected devices when synthesizing disconnect events, causing the server's replayed connection list to be filtered out as duplicates.
 
 ### :rocket: Features
 
