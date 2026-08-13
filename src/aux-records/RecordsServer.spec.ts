@@ -79,6 +79,11 @@ import {
 } from '@casual-simulation/aux-common';
 import { RateLimitController } from './RateLimitController';
 import { MemoryRateLimiter } from './MemoryRateLimiter';
+import { LinkPreviewController } from './LinkPreviewController';
+import { MemoryLinkPreviewStore } from './MemoryLinkPreviewStore';
+import { lookup as dnsLookup } from 'node:dns/promises';
+
+jest.mock('node:dns/promises');
 import type { RateLimiter } from '@casual-simulation/rate-limit-redis';
 import {
     asyncIterable,
@@ -132,6 +137,7 @@ import {
 import type { ConnectionInfo } from '@casual-simulation/aux-common/common/ConnectionInfo';
 import { constructInitializationUpdate } from '@casual-simulation/aux-common';
 import type { PrivoClientInterface } from './PrivoClient';
+import type { GenericOpenIDClientInterface } from './GenericOpenIDClient';
 import { DateTime } from 'luxon';
 import { ModerationController } from './ModerationController';
 import type {
@@ -462,6 +468,10 @@ describe('RecordsServer', () => {
     let rateLimiter: RateLimiter;
     let rateLimitController: RateLimitController;
 
+    let linkPreviewStore: MemoryLinkPreviewStore;
+    let linkPreviewRateLimiter: MemoryRateLimiter;
+    let linkPreviewController: LinkPreviewController;
+
     let filesController: FileRecordsController;
 
     let stripeMock: jest.Mocked<StripeInterface>;
@@ -548,6 +558,8 @@ describe('RecordsServer', () => {
     const recordName = 'testRecord';
     let privoClient: PrivoClientInterface;
     let privoClientMock: jest.MockedObject<PrivoClientInterface>;
+    let genericOpenIDClient: GenericOpenIDClientInterface;
+    let genericOpenIDClientMock: jest.MockedObject<GenericOpenIDClientInterface>;
 
     let domainNameValidator: jest.Mocked<DomainNameValidator>;
 
@@ -607,6 +619,10 @@ describe('RecordsServer', () => {
             resendConsentRequest: jest.fn(),
             lookupServiceId: jest.fn(),
         };
+        genericOpenIDClient = genericOpenIDClientMock = {
+            generateAuthorizationUrl: jest.fn(),
+            processAuthorizationCallback: jest.fn(),
+        };
         relyingParty = {
             id: 'relying_party_id',
             name: 'Relying Party',
@@ -619,7 +635,8 @@ describe('RecordsServer', () => {
             store,
             store,
             privoClient,
-            [relyingParty]
+            [relyingParty],
+            genericOpenIDClient
         );
 
         // manually disable the Privo flag for tests
@@ -718,6 +735,22 @@ describe('RecordsServer', () => {
         rateLimitController = new RateLimitController(rateLimiter, {
             maxHits: 5,
             windowMs: 1000,
+        });
+
+        linkPreviewStore = new MemoryLinkPreviewStore();
+        linkPreviewRateLimiter = new MemoryRateLimiter();
+        linkPreviewController = new LinkPreviewController({
+            store: linkPreviewStore,
+            rateLimiter: linkPreviewRateLimiter,
+            config: {
+                rateLimit: {
+                    maxHits: 1000,
+                    windowMs: 60 * 1000,
+                },
+                minCacheSeconds: 60 * 30,
+                requestTimeoutMs: 10_000,
+                maxResponseBytes: 5_000_000,
+            },
         });
 
         packageController = new PackageRecordsController({
@@ -997,6 +1030,7 @@ describe('RecordsServer', () => {
             purchasableItemsController,
             contractRecordsController: contractsController,
             viewTemplateRenderer: viewTemplateRenderer,
+            linkPreviewController,
         });
         defaultHeaders = {
             origin: 'test.com',
@@ -4138,6 +4172,201 @@ describe('RecordsServer', () => {
             httpPost('/api/v2/login/privo', body, authenticatedHeaders)
         );
         testRateLimit('POST', `/api/v2/login/privo`, () => JSON.stringify({}));
+    });
+
+    describe('GET /api/v2/login/openid/list', () => {
+        it('should list the configured providers', async () => {
+            store.openIdConfiguration = {
+                providers: [
+                    {
+                        id: 'google',
+                        name: 'Google',
+                        discoveryUri:
+                            'https://accounts.google.com/.well-known/openid-configuration',
+                        redirectUri: 'https://example.com/redirect',
+                        clientId: 'clientId',
+                        clientSecret: 'clientSecret',
+                        requestScopes: ['openid', 'email', 'profile'],
+                    },
+                ],
+            };
+
+            const result = await server.handleHttpRequest(
+                httpGet('/api/v2/login/openid/list', {
+                    origin: 'https://account-origin.com',
+                })
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    providers: [
+                        {
+                            id: 'google',
+                            name: 'Google',
+                        },
+                    ],
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should support procedures', async () => {
+            store.openIdConfiguration = {
+                providers: [
+                    {
+                        id: 'google',
+                        name: 'Google',
+                        discoveryUri:
+                            'https://accounts.google.com/.well-known/openid-configuration',
+                        redirectUri: 'https://example.com/redirect',
+                        clientId: 'clientId',
+                        clientSecret: 'clientSecret',
+                        requestScopes: ['openid', 'email', 'profile'],
+                    },
+                ],
+            };
+
+            const result = await server.handleHttpRequest(
+                procedureRequest('listOpenIDProviders', undefined, {
+                    origin: 'https://account-origin.com',
+                })
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    providers: [
+                        {
+                            id: 'google',
+                            name: 'Google',
+                        },
+                    ],
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testOrigin('GET', '/api/v2/login/openid/list');
+    });
+
+    describe('POST /api/v2/login/openid', () => {
+        const providerConfig = {
+            id: 'google',
+            name: 'Google',
+            discoveryUri:
+                'https://accounts.google.com/.well-known/openid-configuration',
+            redirectUri: 'https://example.com/redirect',
+            clientId: 'clientId',
+            clientSecret: 'clientSecret',
+            requestScopes: ['openid', 'email', 'profile'],
+        };
+
+        beforeEach(() => {
+            store.openIdConfiguration = {
+                providers: [providerConfig],
+            };
+        });
+
+        it('should return a login request with the authorization URL', async () => {
+            genericOpenIDClientMock.generateAuthorizationUrl.mockResolvedValueOnce(
+                {
+                    authorizationUrl: 'https://authorization_url',
+                    codeMethod: 'method',
+                    codeVerifier: 'verifier',
+                    redirectUrl: 'https://redirect_url',
+                    scope: 'openid email profile',
+                }
+            );
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/login/openid`,
+                    JSON.stringify({ provider: 'google' }),
+                    {
+                        origin: 'https://account-origin.com',
+                    },
+                    '123.456.789'
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    authorizationUrl: 'https://authorization_url',
+                    requestId: expect.any(String),
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should support procedures', async () => {
+            genericOpenIDClientMock.generateAuthorizationUrl.mockResolvedValueOnce(
+                {
+                    authorizationUrl: 'https://authorization_url',
+                    codeMethod: 'method',
+                    codeVerifier: 'verifier',
+                    redirectUrl: 'https://redirect_url',
+                    scope: 'openid email profile',
+                }
+            );
+
+            const result = await server.handleHttpRequest(
+                procedureRequest(
+                    `requestOpenIDLogin`,
+                    { provider: 'google' },
+                    {
+                        origin: 'https://account-origin.com',
+                    }
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    authorizationUrl: 'https://authorization_url',
+                    requestId: expect.any(String),
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return not_supported for an unconfigured provider', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/login/openid`,
+                    JSON.stringify({ provider: 'not_google' }),
+                    {
+                        origin: 'https://account-origin.com',
+                    },
+                    '123.456.789'
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'The given provider is not supported.',
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testOrigin('POST', '/api/v2/login/openid', () =>
+            JSON.stringify({ provider: 'google' })
+        );
+        testBodyIsJson((body) =>
+            httpPost('/api/v2/login/openid', body, authenticatedHeaders)
+        );
+        testRateLimit('POST', `/api/v2/login/openid`, () =>
+            JSON.stringify({ provider: 'google' })
+        );
     });
 
     describe('POST /api/v2/oauth/code', () => {
@@ -35855,6 +36084,167 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
             expect(result.statusCode).not.toEqual(429);
         });
     }
+
+    describe('GET /api/v2/link-preview', () => {
+        const mockedDnsLookup = dnsLookup as jest.MockedFunction<
+            typeof dnsLookup
+        >;
+
+        beforeEach(() => {
+            require('axios').__reset();
+            mockedDnsLookup.mockReset();
+            mockedDnsLookup.mockResolvedValue([
+                { address: '93.184.216.34', family: 4 },
+            ] as any);
+            mockHtmlResponse(
+                '<html><head><title>Default Title</title></head></html>'
+            );
+        });
+
+        function mockHtmlResponse(
+            html: string,
+            headers: { [key: string]: string } = {}
+        ) {
+            require('axios').__setResponse({
+                data: html,
+                headers: {
+                    'content-type': 'text/html; charset=utf-8',
+                    ...headers,
+                },
+                request: {
+                    res: {
+                        responseUrl: 'https://example.com/page',
+                    },
+                },
+            });
+        }
+
+        it('should return the link preview for the given URL', async () => {
+            mockHtmlResponse(
+                '<html><head><meta property="og:title" content="Example Title" /></head></html>'
+            );
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    '/api/v2/link-preview?url=https://example.com/page',
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    title: 'Example Title',
+                    cachedUntilMs: expect.any(Number),
+                    meta: expect.objectContaining({
+                        'og:title': 'Example Title',
+                    }),
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request result if url is omitted', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet('/api/v2/link-preview', apiHeaders)
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: expect.any(Array),
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return url_not_html if the site does not return HTML', async () => {
+            require('axios').__setResponse({
+                data: '{}',
+                headers: { 'content-type': 'application/json' },
+                request: {
+                    res: { responseUrl: 'https://example.com/data' },
+                },
+            });
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    '/api/v2/link-preview?url=https://example.com/data',
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'url_not_html',
+                    errorMessage:
+                        'The given URL does not point to an HTML page.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return not_supported if link previews are not configured', async () => {
+            server = new RecordsServer({
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                rateLimitController,
+                policyController,
+                aiController,
+                websocketController,
+                moderationController,
+            });
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    '/api/v2/link-preview?url=https://example.com/page',
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'Link previews are not supported by this server.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin(
+            'GET',
+            `/api/v2/link-preview?url=${encodeURIComponent(
+                'https://example.com/page'
+            )}`
+        );
+        testCustomOrigin(
+            'GET',
+            `/api/v2/link-preview?url=${encodeURIComponent(
+                'https://example.com/page'
+            )}`,
+            undefined,
+            () => apiHeaders
+        );
+        testRateLimit('GET', `/api/v2/link-preview`);
+    });
 });
 
 describe('validateOrigin()', () => {

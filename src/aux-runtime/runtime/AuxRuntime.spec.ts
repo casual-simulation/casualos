@@ -198,6 +198,7 @@ describe('AuxRuntime', () => {
                 allowCollaborationUpgrade: true,
                 ab1BootstrapUrl: 'bootstrap',
                 comID: null,
+                isEmbedded: false,
             };
 
             if (type === 'interpreted') {
@@ -14439,6 +14440,7 @@ describe('AuxRuntime', () => {
                 allowCollaborationUpgrade: true,
                 ab1BootstrapUrl: 'bootstrap',
                 comID: null,
+                isEmbedded: false,
             };
 
             interpreter = new Interpreter();
@@ -18908,6 +18910,7 @@ describe('original action tests', () => {
                 allowCollaborationUpgrade: true,
                 ab1BootstrapUrl: 'bootstrap',
                 comID: null,
+                isEmbedded: false,
             });
 
             expect(result.actions).toEqual([
@@ -18921,6 +18924,7 @@ describe('original action tests', () => {
                             allowCollaborationUpgrade: true,
                             ab1BootstrapUrl: 'bootstrap',
                             comID: null,
+                            isEmbedded: false,
                         },
                     },
                 }),
@@ -18953,6 +18957,7 @@ describe('original action tests', () => {
                             allowCollaborationUpgrade: null,
                             ab1BootstrapUrl: null,
                             comID: null,
+                            isEmbedded: null,
                         },
                     },
                 }),

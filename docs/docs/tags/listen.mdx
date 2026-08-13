@@ -2738,3 +2738,23 @@ if (that.module === 'myCustomModule') {
     return 'https://example.com/myCustomModule.js';
 }
 ```
+
+### `@onEmbedMessage`
+
+A shout that is sent to all bots when a message is received from the parent window that CasualOS is embedded in.
+See <ActionLink action='os.sendEmbedMessage'/> for how to send a message to the parent window.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The origin of the window that sent the message.
+     */
+    origin: string;
+
+    /**
+     * The message that was sent.
+     */
+    message: any;
+};
+```

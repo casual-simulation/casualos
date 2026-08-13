@@ -124,6 +124,7 @@ import type {
 import {
     ACCOUNT_IDS,
     ACCOUNT_NAMES,
+    AccountCodes,
     AMOUNT_MAX,
     convertBetweenLedgers,
     CURRENCIES,
@@ -662,9 +663,369 @@ export class SubscriptionController {
     }
 
     /**
+     * Sets the budget that should be used to automatically transfer credits from a record's owner to the record's own credit account whenever the owner is granted credits from their subscription.
+     * Only studio admins and superUsers are authorized to set a record's budget - record owners cannot set a budget for their own records.
+     * @param request The request.
+     */
+    @traced(TRACE_NAME)
+    async setRecordBudget(
+        request: SetRecordBudgetRequest
+    ): Promise<SetRecordBudgetResult> {
+        if (!this._financialController || !this._financialStore) {
+            return {
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'This feature is not supported.',
+            };
+        }
+
+        const record = await this._recordsStore.getRecordByName(
+            request.recordName
+        );
+
+        if (!record) {
+            return {
+                success: false,
+                errorCode: 'record_not_found',
+                errorMessage: 'The given record was not found.',
+            };
+        }
+
+        const authorizationResult =
+            await this._checkAuthorizationForRecordBudget(
+                record,
+                request.userId,
+                request.userRole
+            );
+
+        if (isFailure(authorizationResult)) {
+            return {
+                success: false,
+                ...authorizationResult.error,
+            };
+        }
+
+        const budget = request.budget;
+
+        if (budget === null) {
+            await this._recordsStore.updateRecord({
+                ...record,
+                creditBillingEnabled: false,
+                creditBudgetType: null,
+                creditBudgetAmount: null,
+            });
+
+            return {
+                success: true,
+            };
+        }
+
+        if (budget.type !== 'fixed' && budget.type !== 'percent') {
+            return {
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage:
+                    'The budget type must be either "fixed" or "percent".',
+            };
+        }
+
+        let amount: bigint;
+        try {
+            amount = BigInt(budget.amount);
+        } catch (err) {
+            return {
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage:
+                    'The budget amount must be an integer number or a string containing an integer.',
+            };
+        }
+
+        if (amount < 0n) {
+            return {
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'The budget amount must not be negative.',
+            };
+        }
+
+        if (budget.type === 'percent' && amount > 100n) {
+            return {
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage:
+                    'The budget amount must be between 0 and 100 when the budget type is "percent".',
+            };
+        }
+
+        let creditAccountId = record.creditAccountId;
+        if (!creditAccountId) {
+            const accountResult = await this._financialController.createAccount(
+                AccountCodes.liabilities_record,
+                LEDGERS.credits
+            );
+
+            if (isFailure(accountResult)) {
+                logError(
+                    accountResult.error,
+                    `[SubscriptionController] [setRecordBudget recordName: ${request.recordName}] Unable to create record credit account!`
+                );
+                return {
+                    success: false,
+                    errorCode: 'server_error',
+                    errorMessage: 'Unable to create the record credit account.',
+                };
+            }
+
+            creditAccountId = accountResult.value.id;
+            await this._financialStore.createAccount({
+                id: creditAccountId,
+                ledger: LEDGERS.credits,
+                currency: CURRENCIES.get(LEDGERS.credits),
+            });
+        }
+
+        await this._recordsStore.updateRecord({
+            ...record,
+            creditAccountId,
+            creditBillingEnabled: true,
+            creditBudgetType: budget.type,
+            creditBudgetAmount: amount.toString(),
+        });
+
+        return {
+            success: true,
+        };
+    }
+
+    /**
+     * Gets the budget that has been configured for the given record.
+     * @param request The request.
+     */
+    @traced(TRACE_NAME)
+    async getRecordBudget(
+        request: GetRecordBudgetRequest
+    ): Promise<GetRecordBudgetResult> {
+        if (!this._financialController) {
+            return {
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'This feature is not supported.',
+            };
+        }
+
+        const record = await this._recordsStore.getRecordByName(
+            request.recordName
+        );
+
+        if (!record) {
+            return {
+                success: false,
+                errorCode: 'record_not_found',
+                errorMessage: 'The given record was not found.',
+            };
+        }
+
+        const authorizationResult =
+            await this._checkAuthorizationForGetRecordBudget(
+                record,
+                request.userId,
+                request.userRole
+            );
+
+        if (isFailure(authorizationResult)) {
+            return {
+                success: false,
+                ...authorizationResult.error,
+            };
+        }
+
+        return {
+            success: true,
+            budget: record.creditBudgetType
+                ? {
+                      type: record.creditBudgetType,
+                      amount: record.creditBudgetAmount,
+                  }
+                : null,
+        };
+    }
+
+    /**
+     * Checks whether the given user is authorized to set the budget for the given record.
+     * Only studio admins and superUsers are authorized - record owners are not authorized to set a budget for their own records.
+     */
+    private async _checkAuthorizationForRecordBudget(
+        record: { ownerId?: string | null; studioId?: string | null },
+        userId: string,
+        userRole: UserRole | null
+    ): Promise<Result<void, SimpleError>> {
+        if (isSuperUserRole(userRole)) {
+            return success();
+        }
+
+        if (record.studioId) {
+            const assignments = await this._recordsStore.listStudioAssignments(
+                record.studioId,
+                {
+                    userId,
+                    role: 'admin',
+                }
+            );
+
+            if (assignments.length > 0) {
+                return success();
+            }
+        }
+
+        return failure({
+            errorCode: 'not_authorized',
+            errorMessage: 'You are not authorized to perform this action.',
+        });
+    }
+
+    /**
+     * Checks whether the given user is authorized to read the budget for the given record.
+     * Record owners, studio admins, and superUsers are authorized.
+     */
+    private async _checkAuthorizationForGetRecordBudget(
+        record: { ownerId?: string | null; studioId?: string | null },
+        userId: string,
+        userRole: UserRole | null
+    ): Promise<Result<void, SimpleError>> {
+        if (isSuperUserRole(userRole)) {
+            return success();
+        }
+
+        if (record.ownerId) {
+            if (record.ownerId === userId) {
+                return success();
+            }
+        } else if (record.studioId) {
+            const assignments = await this._recordsStore.listStudioAssignments(
+                record.studioId,
+                {
+                    userId,
+                    role: 'admin',
+                }
+            );
+
+            if (assignments.length > 0) {
+                return success();
+            }
+        }
+
+        return failure({
+            errorCode: 'not_authorized',
+            errorMessage: 'You are not authorized to perform this action.',
+        });
+    }
+
+    /**
      * Lists the transfers for the given account.
      * @param request The request.
      */
+    @traced(TRACE_NAME)
+    async listTransfers(
+        request: ListTransfersRequest
+    ): Promise<Result<ListedTransfers, SimpleError>> {
+        if (!this._financialController) {
+            return failure({
+                errorCode: 'not_supported',
+                errorMessage: 'This feature is not supported.',
+            });
+        }
+
+        const accountDetailsResult =
+            await this._financialController.getAccountDetails(
+                request.accountId
+            );
+
+        if (isFailure(accountDetailsResult)) {
+            return accountDetailsResult;
+        }
+
+        const { account, financialAccount } = accountDetailsResult.value;
+
+        const authorizationResult = await this._checkAuthorizationForFilter(
+            financialAccount,
+            request.userId,
+            request.userRole
+        );
+
+        if (isFailure(authorizationResult)) {
+            return authorizationResult;
+        }
+
+        const transfersResult = await this._financialController.listTransfers(
+            request.accountId,
+            {
+                minTimeMs: request.minTimeMs,
+                maxTimeMs: request.maxTimeMs,
+                limit: request.limit,
+            }
+        );
+
+        if (isFailure(transfersResult)) {
+            return transfersResult;
+        }
+
+        const transfers = transfersResult.value;
+
+        const currentBalance = this._financialController
+            .convertToAccountBalance(account)
+            .freeCreditBalance()
+            .toString();
+
+        const resolvedPendingIds = new Set<bigint>();
+        for (const t of transfers) {
+            const isResolutionTransfer =
+                (t.flags & TransferFlags.post_pending_transfer) !== 0 ||
+                (t.flags & TransferFlags.void_pending_transfer) !== 0;
+            if (isResolutionTransfer && t.pending_id !== 0n) {
+                resolvedPendingIds.add(t.pending_id);
+            }
+        }
+
+        const listedTransfers: ListedTransfer[] = await Promise.all(
+            transfers.map(async (transfer) => {
+                const pending =
+                    (transfer.flags & TransferFlags.pending) !== 0 &&
+                    !resolvedPendingIds.has(transfer.id);
+                const transactionId = transfer.user_data_128.toString();
+
+                return {
+                    id: transfer.id.toString(),
+                    transactionId,
+                    debitAccountId: transfer.debit_account_id.toString(),
+                    debitAccountDescription: await this.getAccountDescription(
+                        transfer.debit_account_id
+                    ),
+                    creditAccountId: transfer.credit_account_id.toString(),
+                    creditAccountDescription: await this.getAccountDescription(
+                        transfer.credit_account_id
+                    ),
+                    amount: transfer.amount.toString(),
+                    code: transfer.code as TransferCodes,
+                    billingCode:
+                        transfer.user_data_32 > 0
+                            ? (transfer.user_data_32 as BillingCodes)
+                            : null,
+                    timeMs: Number(transfer.timestamp / 1000000n),
+                    pending,
+                    pendingTimeoutMs: pending ? transfer.timeout * 1000 : null,
+                    balance: currentBalance,
+                    description: charactarizeTransfer(transfer),
+                };
+            })
+        );
+
+        return success({
+            balance: this._financialController.convertToAccountBalance(account),
+            transfers: listedTransfers,
+        });
+    }
+
     @traced(TRACE_NAME)
     async listAccountTransfers(
         request: ListAccountTransfersRequest
@@ -732,141 +1093,6 @@ export class SubscriptionController {
             accountDetails: financialAccount,
             account: this._financialController.convertToAccountBalance(account),
             transfers: accountTransfers,
-        });
-    }
-
-    /**
-     * Lists the transfers for the given account.
-     * @param request The request.
-     */
-    @traced(TRACE_NAME)
-    async listTransfers(
-        request: ListTransfersRequest
-    ): Promise<Result<ListedTransfers, SimpleError>> {
-        if (!this._financialController) {
-            return failure({
-                errorCode: 'not_supported',
-                errorMessage: 'This feature is not supported.',
-            });
-        }
-
-        const accountDetailsResult =
-            await this._financialController.getAccountDetails(
-                request.accountId
-            );
-
-        if (isFailure(accountDetailsResult)) {
-            return accountDetailsResult;
-        }
-
-        const { account, financialAccount } = accountDetailsResult.value;
-
-        const authorizationResult = await this._checkAuthorizationForFilter(
-            financialAccount,
-            request.userId,
-            request.userRole
-        );
-
-        if (isFailure(authorizationResult)) {
-            return authorizationResult;
-        }
-
-        const maxTimeMs = request.maxTimeMs ?? Date.now();
-
-        const transfersResult = await this._financialController.listTransfers(
-            request.accountId,
-            {
-                minTimeMs: request.minTimeMs,
-                maxTimeMs,
-                limit: request.limit ?? undefined,
-            }
-        );
-
-        if (isFailure(transfersResult)) {
-            return transfersResult;
-        }
-
-        const transfers = transfersResult.value;
-
-        const balanceHistoryResult =
-            await this._financialController.listBalanceHistory(
-                request.accountId,
-                {
-                    minTimeMs: request.minTimeMs,
-                    maxTimeMs,
-                    limit: request.limit ?? undefined,
-                }
-            );
-
-        if (isFailure(balanceHistoryResult)) {
-            return balanceHistoryResult;
-        }
-
-        const balanceByTimestamp = new Map<bigint, string>();
-        for (const balance of balanceHistoryResult.value) {
-            const accountAtTime: Account = {
-                ...account,
-                credits_pending: balance.credits_pending,
-                credits_posted: balance.credits_posted,
-                debits_pending: balance.debits_pending,
-                debits_posted: balance.debits_posted,
-                timestamp: balance.timestamp,
-            };
-            balanceByTimestamp.set(
-                balance.timestamp,
-                this._financialController
-                    .convertToAccountBalance(accountAtTime)
-                    .freeCreditBalance()
-                    .toString()
-            );
-        }
-
-        const resolvedPendingIds = new Set<bigint>();
-        for (const t of transfers) {
-            const isResolutionTransfer =
-                (t.flags & TransferFlags.post_pending_transfer) !== 0 ||
-                (t.flags & TransferFlags.void_pending_transfer) !== 0;
-            if (isResolutionTransfer && t.pending_id !== 0n) {
-                resolvedPendingIds.add(t.pending_id);
-            }
-        }
-
-        const listedTransfers: ListedTransfer[] = await Promise.all(
-            transfers.map(async (transfer) => {
-                const pending =
-                    (transfer.flags & TransferFlags.pending) !== 0 &&
-                    !resolvedPendingIds.has(transfer.id);
-                const transactionId = transfer.user_data_128.toString();
-
-                return {
-                    id: transfer.id.toString(),
-                    transactionId,
-                    debitAccountId: transfer.debit_account_id.toString(),
-                    debitAccountDescription: await this.getAccountDescription(
-                        transfer.debit_account_id
-                    ),
-                    creditAccountId: transfer.credit_account_id.toString(),
-                    creditAccountDescription: await this.getAccountDescription(
-                        transfer.credit_account_id
-                    ),
-                    amount: transfer.amount.toString(),
-                    code: transfer.code as TransferCodes,
-                    billingCode:
-                        transfer.user_data_32 > 0
-                            ? (transfer.user_data_32 as BillingCodes)
-                            : null,
-                    timeMs: Number(transfer.timestamp / 1000000n),
-                    pending,
-                    pendingTimeoutMs: pending ? transfer.timeout * 1000 : null,
-                    balance: balanceByTimestamp.get(transfer.timestamp) ?? null,
-                    description: charactarizeTransfer(transfer),
-                };
-            })
-        );
-
-        return success({
-            balance: this._financialController.convertToAccountBalance(account),
-            transfers: listedTransfers,
         });
     }
 
@@ -3556,7 +3782,8 @@ export class SubscriptionController {
         const sessionResult = await wrap(() =>
             this._stripe.createCheckoutSession({
                 mode: 'payment',
-                allow_promotion_codes: true,
+                allow_promotion_codes:
+                    config.checkoutConfig?.allow_promotion_codes ?? true,
                 line_items: [
                     {
                         adjustable_quantity: {
@@ -5409,7 +5636,105 @@ export class SubscriptionController {
             );
         }
 
+        if (creditAmount > 0) {
+            await this._transferBudgetedCreditsToRecords(
+                accountFilter,
+                accountId,
+                creditAmount
+            );
+        }
+
         return success();
+    }
+
+    /**
+     * Transfers credits from the owner's (user or studio) credit account to the credit accounts of any of the owner's records that have a budget configured.
+     * This is called after the owner has been granted credits from their subscription.
+     *
+     * Each record's transfer is performed as its own transaction (separate from the owner's grant transaction and from each other), so that a misconfigured
+     * or under-funded record budget cannot fail/rollback the owner's own credit grant or other records' transfers.
+     */
+    private async _transferBudgetedCreditsToRecords(
+        accountFilter: Omit<UniqueFinancialAccountFilter, 'ledger'>,
+        ownerAccountId: bigint | string,
+        ownerCreditAmount: bigint
+    ): Promise<void> {
+        if (!this._financialController) {
+            return;
+        }
+
+        const listedRecords = accountFilter.userId
+            ? await this._recordsStore.listRecordsByOwnerId(
+                  accountFilter.userId
+              )
+            : accountFilter.studioId
+            ? await this._recordsStore.listRecordsByStudioId(
+                  accountFilter.studioId
+              )
+            : [];
+
+        for (let listedRecord of listedRecords) {
+            const record = await this._recordsStore.getRecordByName(
+                listedRecord.name
+            );
+
+            if (
+                !record ||
+                !record.creditBillingEnabled ||
+                !record.creditAccountId ||
+                !record.creditBudgetType ||
+                record.creditBudgetAmount == null
+            ) {
+                continue;
+            }
+
+            let recordAmount: bigint;
+            try {
+                if (record.creditBudgetType === 'fixed') {
+                    recordAmount = BigInt(record.creditBudgetAmount);
+                } else {
+                    recordAmount =
+                        (ownerCreditAmount *
+                            BigInt(record.creditBudgetAmount)) /
+                        100n;
+                }
+            } catch (err) {
+                logError(
+                    err,
+                    `[SubscriptionController] [_transferBudgetedCreditsToRecords recordName: ${record.name}] Unable to parse the configured budget amount!`
+                );
+                continue;
+            }
+
+            if (recordAmount <= 0n) {
+                continue;
+            }
+
+            const transactionResult =
+                await this._financialController.internalTransaction({
+                    transfers: [
+                        {
+                            amount: recordAmount,
+                            code: TransferCodes.record_budget_transfer,
+                            debitAccountId: ownerAccountId,
+                            creditAccountId: record.creditAccountId,
+                            currency: CurrencyCodes.credits,
+                        },
+                    ],
+                });
+
+            if (isFailure(transactionResult)) {
+                logError(
+                    transactionResult.error,
+                    `[SubscriptionController] [_transferBudgetedCreditsToRecords recordName: ${record.name}] Unable to transfer budgeted credits to record!`
+                );
+                continue;
+            }
+
+            console.log(
+                `[SubscriptionController] [_transferBudgetedCreditsToRecords recordName: ${record.name}] Transferred ${recordAmount} credits to record.`
+            );
+        }
     }
 
     private async _internalTransactionExpireCredits(
@@ -6889,107 +7214,45 @@ export interface ListTransfersRequest {
     userRole?: UserRole | null;
 
     /**
-     * The ID of the account.
+     * The ID of the account to list transfers for.
      */
     accountId: string | bigint;
 
     /**
-     * The unix time in milliseconds of the oldest transfers to include (inclusive).
+     * The minimum transfer time in milliseconds since Unix epoch.
      */
     minTimeMs: number;
 
     /**
-     * The unix time in milliseconds of the newest transfers to include (inclusive).
+     * The maximum transfer time in milliseconds since Unix epoch.
      */
     maxTimeMs?: number | null;
 
     /**
-     * The maximum number of transfers to include in the result.
+     * The maximum number of transfers to return.
      */
     limit?: number | null;
 }
 
 export interface ListedTransfers {
-    /**
-     * The current balance of the account.
-     */
     balance: AccountBalance;
-
-    /**
-     * The transfers for the account.
-     */
     transfers: ListedTransfer[];
 }
 
 export interface ListedTransfer {
-    /**
-     * The ID of the transfer.
-     */
     id: string;
-
-    /**
-     * The ID of the transaction for the transfer.
-     */
     transactionId: string;
-
-    /**
-     * The ID of the account that was debited.
-     */
     debitAccountId: string;
-
-    /**
-     * A helpful description for debitAccount.
-     */
     debitAccountDescription: string;
-
-    /**
-     * The ID of the account that was credited.
-     */
     creditAccountId: string;
-
-    /**
-     * A helpful description for creditAccount.
-     */
     creditAccountDescription: string;
-
-    /**
-     * The amount that was transferred.
-     */
     amount: string;
-
-    /**
-     * The transfer code.
-     */
     code: TransferCodes;
-
-    /**
-     * The billing code for the transfer, if available.
-     */
     billingCode: BillingCodes | null;
-
-    /**
-     * The unix time in milliseconds of the transfer.
-     */
     timeMs: number;
-
-    /**
-     * Whether the transfer is currently pending.
-     */
     pending: boolean;
-
-    /**
-     * The timeout for the pending transfer. Always null if the transfer is not pending.
-     */
     pendingTimeoutMs: number | null;
-
-    /**
-     * The resulting account balance after the transfer was processed.
-     */
     balance: string | null;
-
-    /**
-     * A helpful description for the transfer.
-     */
     description: string | null;
 }
 
@@ -7340,3 +7603,115 @@ export type PurchaseCreditsResult = Result<
     },
     SimpleError
 >;
+
+/**
+ * Defines an interface that represents a budget that has been configured for a record.
+ *
+ * @dochash types/records/extra
+ * @docname RecordCreditBudget
+ * @docid RecordCreditBudget
+ */
+export interface RecordCreditBudget {
+    /**
+     * The type of the budget.
+     * - "fixed" means that a set number of credits will be transferred to the record from the owner's account upon a subscription credit grant.
+     * - "percent" means that the record will be granted a percentage of the total amount that the owner's account receives upon a subscription credit grant.
+     */
+    type: 'fixed' | 'percent';
+
+    /**
+     * The budget amount. A bigint value represented as a string.
+     */
+    amount: string;
+}
+
+export interface SetRecordBudgetRequest {
+    /**
+     * The name of the record that the budget should be set for.
+     */
+    recordName: string;
+
+    /**
+     * The budget that should be set for the record.
+     * Null to clear the budget, which causes billing for the record to go to the owner's account.
+     */
+    budget: {
+        type: 'fixed' | 'percent';
+        amount: number | string;
+    } | null;
+
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string;
+
+    /**
+     * The role of the user that is currently logged in.
+     */
+    userRole: UserRole | null;
+}
+
+/**
+ * Defines an interface that represents the result of a request to set a record's budget.
+ *
+ * @dochash types/records/extra
+ * @docname SetRecordBudgetResult
+ * @docid SetRecordBudgetResult
+ */
+export type SetRecordBudgetResult =
+    | SetRecordBudgetSuccess
+    | SetRecordBudgetFailure;
+
+export interface SetRecordBudgetSuccess {
+    success: true;
+}
+
+export interface SetRecordBudgetFailure {
+    success: false;
+    errorCode: KnownErrorCodes;
+    errorMessage: string;
+}
+
+export interface GetRecordBudgetRequest {
+    /**
+     * The name of the record that the budget should be retrieved for.
+     */
+    recordName: string;
+
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string;
+
+    /**
+     * The role of the user that is currently logged in.
+     */
+    userRole: UserRole | null;
+}
+
+/**
+ * Defines an interface that represents the result of a request to get a record's budget.
+ *
+ * @dochash types/records/extra
+ * @docname GetRecordBudgetResult
+ * @docid GetRecordBudgetResult
+ */
+export type GetRecordBudgetResult =
+    | GetRecordBudgetSuccess
+    | GetRecordBudgetFailure;
+
+export interface GetRecordBudgetSuccess {
+    success: true;
+
+    /**
+     * The budget that is configured for the record.
+     * Null if no budget is configured (billing for the record goes to the owner's account).
+     */
+    budget: RecordCreditBudget | null;
+}
+
+export interface GetRecordBudgetFailure {
+    success: false;
+    errorCode: KnownErrorCodes;
+    errorMessage: string;
+}

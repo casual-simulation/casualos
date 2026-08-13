@@ -28,6 +28,7 @@ import type {
     AuthInvoice,
     AuthLoginRequest,
     AuthOpenIDLoginRequest,
+    AuthCustomOpenIDIdentity,
     AuthSession,
     AuthStore,
     AuthSubscription,
@@ -745,6 +746,46 @@ export class SqliteAuthStore implements AuthStore {
                 authorizationCode: authorizationCode,
                 authorizationTime: authorizationTimeMs,
                 updatedAt: Date.now(),
+            },
+        });
+    }
+
+    @traced(TRACE_NAME)
+    async findUserIdForOpenIDIdentity(
+        provider: string,
+        subject: string
+    ): Promise<string | null> {
+        const identity = await this._client.openIdIdentity.findUnique({
+            where: {
+                provider_subject: {
+                    provider,
+                    subject,
+                },
+            },
+        });
+
+        return identity?.userId ?? null;
+    }
+
+    @traced(TRACE_NAME)
+    async saveOpenIDIdentity(
+        identity: AuthCustomOpenIDIdentity
+    ): Promise<void> {
+        await this._client.openIdIdentity.upsert({
+            where: {
+                provider_subject: {
+                    provider: identity.provider,
+                    subject: identity.subject,
+                },
+            },
+            create: {
+                provider: identity.provider,
+                subject: identity.subject,
+                userId: identity.userId,
+                createdAt: identity.createdAtMs,
+            },
+            update: {
+                userId: identity.userId,
             },
         });
     }

@@ -421,10 +421,22 @@ function resolveType(renamedTypes: Map<string, string>, item: ReferenceType, pro
 }
 
 export async function loadContent() {
-    const { app, project } = await getProject();
+    let app: Application;
+    let project: ProjectReflection;
+    try {
+        ({ app, project } = await getProject());
+    } catch (err) {
+        console.error(
+            '[docusarus-plugin-typedoc] Failed to load TypeDoc project:',
+            err
+        );
+        throw err;
+    }
     if (!project) {
-        console.warn('[docusarus-plugin-typedoc] Unable to load TypeDoc project!');
-        throw new Error('Unable to load TypeDoc project!');
+        const message =
+            'Unable to load TypeDoc project. Check TypeDoc/TypeScript errors in the logs above.';
+        console.warn(`[docusarus-plugin-typedoc] ${message}`);
+        throw new Error(message);
     }
 
     let commentPartSerializer = new CommentDisplayPartSerializer(app, project);

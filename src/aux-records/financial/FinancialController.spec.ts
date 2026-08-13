@@ -28,6 +28,7 @@ import {
     FinancialController,
     getAccountBalance,
     getAssetAccountBalance,
+    getBillingAccountForRecord,
     getLiabilityAccountBalance,
 } from './FinancialController';
 import {
@@ -2873,6 +2874,100 @@ describe('FinancialController', () => {
                 ]);
             });
         });
+
+        it('should bill a record account when billingAccount.recordAccountId is specified', async () => {
+            await controller.init();
+
+            const created = unwrap(
+                await controller.createAccount(
+                    AccountCodes.liabilities_contract,
+                    LEDGERS.credits
+                )
+            );
+            const recordAccountId = created.id;
+
+            // Fund the record account with 500 credits.
+            unwrap(
+                await controller.internalTransaction({
+                    transfers: [
+                        {
+                            transferId: 100n,
+                            debitAccountId: ACCOUNT_IDS.liquidity_credits,
+                            creditAccountId: recordAccountId,
+                            amount: 500n,
+                            code: TransferCodes.admin_credit,
+                            currency: 'credits',
+                        },
+                    ],
+                })
+            );
+
+            const billing = await controller.billForUsage({
+                billingAccount: {
+                    success: true,
+                    userId: null,
+                    studioId: null,
+                    recordAccountId: recordAccountId,
+                },
+                transferCode: TransferCodes.records_usage_fee,
+                billingCode: BillingCodes.ai_chat_tokens,
+            });
+
+            await billing.next(
+                success({
+                    initialCost: 50,
+                })
+            );
+
+            const result = await billing.next(
+                success({
+                    cost: 50,
+                })
+            );
+
+            expect(result.done).toBe(false);
+            expect(isSuccess(result.value)).toBe(true);
+
+            await checkAccounts(financialInterface, [
+                {
+                    id: BigInt(recordAccountId),
+                    credits_posted: 500n,
+                    credits_pending: 0n,
+                    debits_posted: 50n,
+                    debits_pending: 0n,
+                },
+            ]);
+        });
+
+        it('should return invalid_request when billingAccount has no userId, studioId, or recordAccountId', async () => {
+            await controller.init();
+
+            const billing = await controller.billForUsage({
+                billingAccount: {
+                    success: true,
+                    userId: null,
+                    studioId: null,
+                    recordAccountId: null,
+                },
+                transferCode: TransferCodes.records_usage_fee,
+                billingCode: BillingCodes.ai_chat_tokens,
+            });
+
+            const result = await billing.next(
+                success({
+                    cost: 50,
+                })
+            );
+
+            expect(result.done).toBe(true);
+            expect(result.value).toEqual(
+                failure({
+                    errorCode: 'invalid_request',
+                    errorMessage:
+                        'Billing account must specify userId, studioId, or recordAccountId.',
+                })
+            );
+        });
     });
 });
 
@@ -3027,6 +3122,82 @@ describe('billForUsage()', () => {
                 errorCode: 'action_not_supported',
                 errorMessage: 'This action is not supported.',
             }),
+        });
+    });
+});
+
+describe('getBillingAccountForRecord()', () => {
+    it('should return record billing when enabled and a credit account exists', async () => {
+        const result = await getBillingAccountForRecord('record1', {
+            async getRecordByName() {
+                return {
+                    ownerId: 'owner1',
+                    studioId: null,
+                    creditAccountId: 'record-account-1',
+                    creditBillingEnabled: true,
+                };
+            },
+        });
+
+        expect(result).toEqual({
+            success: true,
+            userId: null,
+            studioId: null,
+            recordAccountId: 'record-account-1',
+        });
+    });
+
+    it('should fall back to owner billing when record billing is disabled', async () => {
+        const result = await getBillingAccountForRecord('record1', {
+            async getRecordByName() {
+                return {
+                    ownerId: 'owner1',
+                    studioId: null,
+                    creditAccountId: 'record-account-1',
+                    creditBillingEnabled: false,
+                };
+            },
+        });
+
+        expect(result).toEqual({
+            success: true,
+            userId: 'owner1',
+            studioId: null,
+            recordAccountId: null,
+        });
+    });
+
+    it('should fall back to studio billing when owner is missing', async () => {
+        const result = await getBillingAccountForRecord('record1', {
+            async getRecordByName() {
+                return {
+                    ownerId: null,
+                    studioId: 'studio1',
+                    creditAccountId: 'record-account-1',
+                    creditBillingEnabled: false,
+                };
+            },
+        });
+
+        expect(result).toEqual({
+            success: true,
+            userId: null,
+            studioId: 'studio1',
+            recordAccountId: null,
+        });
+    });
+
+    it('should return record_not_found when the record does not exist', async () => {
+        const result = await getBillingAccountForRecord('record1', {
+            async getRecordByName() {
+                return null;
+            },
+        });
+
+        expect(result).toEqual({
+            success: false,
+            errorCode: 'record_not_found',
+            errorMessage: 'The specified record was not found.',
         });
     });
 });

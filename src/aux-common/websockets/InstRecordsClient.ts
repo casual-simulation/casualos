@@ -502,10 +502,18 @@ export class InstRecordsClient {
         inst: string,
         branch: string
     ) {
+        const devices = this._getConnectedDevices(recordName, inst, branch);
+        const disconnectedDevices = [...devices.values()];
+
+        // Clear the cache so that when we reconnect, the devices that the
+        // server tells us are still connected are treated as newly connected
+        // instead of being filtered out as already-known. Otherwise, the
+        // server's replayed repo/connected_to_branch events would never be
+        // re-emitted and presence would never recover after a reconnect.
+        devices.clear();
+
         return of(
-            ...[
-                ...this._getConnectedDevices(recordName, inst, branch).values(),
-            ].map(
+            ...disconnectedDevices.map(
                 (device) =>
                     ({
                         type: 'repo/disconnected_from_branch',

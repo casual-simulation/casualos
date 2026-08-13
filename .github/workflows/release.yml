@@ -31,11 +31,12 @@ jobs:
               run: |
                   npm install -g node-gyp
                   npm prefix -g | % {npm config set node_gyp "$_\node_modules\node-gyp\bin\node-gyp.js"}
-            - name: Update npm
-              run: npm install -g npm@latest
+            - name: Use npm 11
+              run: npm install -g npm@11
             - name: NPM Install
               run: |
                   corepack enable
+                  corepack prepare
                   npm run bootstrap
             - name: Find Version
               run: |

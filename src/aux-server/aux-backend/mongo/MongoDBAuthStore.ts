@@ -43,6 +43,7 @@ import type {
     AuthInvoice,
     AuthLoginRequest,
     AuthOpenIDLoginRequest,
+    AuthCustomOpenIDIdentity,
     AuthSession,
     AuthStore,
     AuthSubscription,
@@ -76,6 +77,7 @@ export const RECORD_KEYS_COLLECTION_NAME = 'recordKeys';
 export const STUDIOS_COLLECTION_NAME = 'studios';
 export const STUDIO_COM_ID_REQEUSTS_COLLECTION_NAME = 'studioComIdRequests';
 export const WEB_AUTHN_LOGIN_REQUESTS_COLLECTION_NAME = 'webAuthnLoginRequests';
+export const OPENID_IDENTITIES_COLLECTION_NAME = 'openIdIdentities';
 
 export class MongoDBAuthStore implements AuthStore, RecordsStore {
     private _users: Collection<MongoDBAuthUser>;
@@ -92,6 +94,7 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
     private _comIdRequests: Collection<MongoDBStudioComIdRequest>;
     private _userAuthenticators: Collection<MongoDBUserAuthenticator>;
     private _webauthnLoginRequests: Collection<MongoDBWebAuthnLoginRequest>;
+    private _openIdIdentities: Collection<MongoDBOpenIdIdentity>;
 
     private _db: Db;
 
@@ -137,6 +140,9 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
             db.collection<MongoDBWebAuthnLoginRequest>(
                 WEB_AUTHN_LOGIN_REQUESTS_COLLECTION_NAME
             );
+        this._openIdIdentities = db.collection<MongoDBOpenIdIdentity>(
+            OPENID_IDENTITIES_COLLECTION_NAME
+        );
     }
 
     saveCustomDomain(domain: CustomDomain): Promise<void> {
@@ -471,6 +477,36 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
         authorizationTimeMs: number
     ): Promise<void> {
         throw new Error('Method not implemented.');
+    }
+
+    async findUserIdForOpenIDIdentity(
+        provider: string,
+        subject: string
+    ): Promise<string | null> {
+        const identity = await this._openIdIdentities.findOne({
+            provider,
+            subject,
+        });
+        return identity?.userId ?? null;
+    }
+
+    async saveOpenIDIdentity(
+        identity: AuthCustomOpenIDIdentity
+    ): Promise<void> {
+        await this._openIdIdentities.updateOne(
+            {
+                provider: identity.provider,
+                subject: identity.subject,
+            },
+            {
+                $set: {
+                    ...identity,
+                },
+            },
+            {
+                upsert: true,
+            }
+        );
     }
 
     async listEmailRules(): Promise<RegexRule[]> {
@@ -1570,6 +1606,14 @@ export interface MongoDBUserAuthenticator extends AuthUserAuthenticator {
 
 export interface MongoDBWebAuthnLoginRequest extends AuthWebAuthnLoginRequest {
     _id: string;
+}
+
+export interface MongoDBOpenIdIdentity {
+    _id?: string;
+    provider: string;
+    subject: string;
+    userId: string;
+    createdAtMs: number;
 }
 
 export interface MongoDBLoginRequest {

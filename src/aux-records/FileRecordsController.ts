@@ -47,11 +47,17 @@ import {
 import { getMarkersOrDefault, getRootMarkersOrDefault } from './Utils';
 import type { MetricsStore } from './MetricsStore';
 import type { ConfigurationStore } from './ConfigurationStore';
+import type { RecordsStore } from './RecordsStore';
 import { getSubscriptionFeatures } from './SubscriptionConfiguration';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
 import type { FinancialController } from './financial/FinancialController';
-import { billForUsage, BillingCodes, TransferCodes } from './financial';
+import {
+    billForUsage,
+    getBillingAccountForRecord,
+    BillingCodes,
+    TransferCodes,
+} from './financial';
 import { isFailure } from '@casual-simulation/aux-common';
 
 const TRACE_NAME = 'FileRecordsController';
@@ -61,6 +67,7 @@ export interface FileRecordsConfiguration {
     store: FileRecordsStore;
     metrics: MetricsStore;
     config: ConfigurationStore;
+    recordsStore?: RecordsStore | null;
     financialController?: FinancialController | null;
 }
 
@@ -72,6 +79,7 @@ export class FileRecordsController {
     private _store: FileRecordsStore;
     private _metrics: MetricsStore;
     private _config: ConfigurationStore;
+    private _recordsStore: RecordsStore | null;
     private _financialController: FinancialController | null;
 
     constructor(config: FileRecordsConfiguration) {
@@ -79,6 +87,7 @@ export class FileRecordsController {
         this._store = config.store;
         this._metrics = config.metrics;
         this._config = config.config;
+        this._recordsStore = config.recordsStore || null;
         this._financialController = config.financialController || null;
     }
 
@@ -299,9 +308,31 @@ export class FileRecordsController {
             }
 
             if (features.files.creditFeePerFileWrite) {
+                // Determine the billing account - either the record's credit account or the owner
+                const billingAccountResult = await getBillingAccountForRecord(
+                    recordName,
+                    (this._recordsStore ?? this._store) as {
+                        getRecordByName?: (name: string) => Promise<{
+                            ownerId?: string | null;
+                            studioId?: string | null;
+                            creditAccountId?: string | null;
+                            creditBillingEnabled?: boolean;
+                        } | null>;
+                    }
+                );
+
+                if (billingAccountResult.success === false) {
+                    return {
+                        success: false,
+                        errorCode: billingAccountResult.errorCode,
+                        errorMessage: billingAccountResult.errorMessage,
+                    };
+                }
+
                 const billing = await billForUsage(this._financialController, {
-                    userId: metricsResult.ownerId,
-                    studioId: metricsResult.studioId,
+                    billingAccount: billingAccountResult,
+                    userId: billingAccountResult.userId,
+                    studioId: billingAccountResult.studioId,
                     transferCode: TransferCodes.records_usage_fee,
                     billingCode: BillingCodes.file_write,
                 });

@@ -22,6 +22,7 @@ import type {
     AuthInvoice,
     AuthLoginRequest,
     AuthOpenIDLoginRequest,
+    AuthCustomOpenIDIdentity,
     AuthSession,
     AuthStore,
     AuthSubscription,
@@ -167,6 +168,7 @@ import type {
     StoredUpdates,
 } from './websockets';
 import type { PrivoConfiguration } from './PrivoConfiguration';
+import type { OpenIDConfiguration } from './OpenIDConfiguration';
 import type {
     ModerationFileScanResult,
     ModerationJob,
@@ -192,6 +194,7 @@ import type { WebManifest } from '@casual-simulation/aux-common/common/WebManife
 export interface MemoryConfiguration {
     subscriptions: SubscriptionConfiguration;
     privo?: PrivoConfiguration;
+    openid?: OpenIDConfiguration;
     moderation?: ModerationConfiguration;
     webConfig?: WebConfig;
 }
@@ -215,6 +218,7 @@ export class MemoryStore
     private _userAuthenticators: AuthUserAuthenticator[] = [];
     private _loginRequests: AuthLoginRequest[] = [];
     private _oidLoginRequests: AuthOpenIDLoginRequest[] = [];
+    private _openIdIdentities: AuthCustomOpenIDIdentity[] = [];
     private _webauthnLoginRequests: AuthWebAuthnLoginRequest[] = [];
     private _sessions: AuthSession[] = [];
     private _subscriptions: AuthSubscription[] = [];
@@ -247,6 +251,7 @@ export class MemoryStore
 
     private _subscriptionConfiguration: SubscriptionConfiguration | null;
     private _privoConfiguration: PrivoConfiguration | null = null;
+    private _openIdConfiguration: OpenIDConfiguration | null = null;
     private _moderationConfiguration: ModerationConfiguration | null = null;
     private _webConfig: WebConfig | null = null;
     private _playerWebManifest: WebManifest | null = null;
@@ -339,6 +344,10 @@ export class MemoryStore
         return this._oidLoginRequests;
     }
 
+    get openIdIdentities() {
+        return this._openIdIdentities;
+    }
+
     get webauthnLoginRequests() {
         return this._webauthnLoginRequests;
     }
@@ -385,6 +394,14 @@ export class MemoryStore
 
     set privoConfiguration(value: PrivoConfiguration | null) {
         this._privoConfiguration = value;
+    }
+
+    get openIdConfiguration() {
+        return this._openIdConfiguration;
+    }
+
+    set openIdConfiguration(value: OpenIDConfiguration | null) {
+        this._openIdConfiguration = value;
     }
 
     get moderationConfiguration() {
@@ -478,6 +495,7 @@ export class MemoryStore
     constructor(config: MemoryConfiguration) {
         this._subscriptionConfiguration = config.subscriptions;
         this._privoConfiguration = config.privo ?? null;
+        this._openIdConfiguration = config.openid ?? null;
         this._moderationConfiguration = config.moderation ?? null;
         this.policies = {};
         this.roles = {};
@@ -521,6 +539,8 @@ export class MemoryStore
                 finalValue as ModerationConfiguration;
         } else if (key === 'privo') {
             this._privoConfiguration = finalValue as PrivoConfiguration;
+        } else if (key === 'openid') {
+            this._openIdConfiguration = finalValue as OpenIDConfiguration;
         } else if (key === 'subscriptions') {
             this._subscriptionConfiguration =
                 finalValue as SubscriptionConfiguration;
@@ -548,6 +568,11 @@ export class MemoryStore
                     .parse(defaultValue ?? null)) as ConfigurationOutput<TKey>;
         } else if (key === 'privo') {
             return (this._privoConfiguration ??
+                CONFIGURATION_SCHEMAS_MAP[key]
+                    .nullable()
+                    .parse(defaultValue ?? null)) as ConfigurationOutput<TKey>;
+        } else if (key === 'openid') {
+            return (this._openIdConfiguration ??
                 CONFIGURATION_SCHEMAS_MAP[key]
                     .nullable()
                     .parse(defaultValue ?? null)) as ConfigurationOutput<TKey>;
@@ -779,6 +804,7 @@ export class MemoryStore
         const newStore = new MemoryStore({
             subscriptions: cloneDeep(this._subscriptionConfiguration),
             privo: cloneDeep(this._privoConfiguration),
+            openid: cloneDeep(this._openIdConfiguration),
             moderation: cloneDeep(this._moderationConfiguration),
             webConfig: cloneDeep(this._webConfig),
         });
@@ -786,6 +812,7 @@ export class MemoryStore
         newStore._users = cloneDeep(this._users);
         newStore._loginRequests = cloneDeep(this._loginRequests);
         newStore._oidLoginRequests = cloneDeep(this._oidLoginRequests);
+        newStore._openIdIdentities = cloneDeep(this._openIdIdentities);
         newStore._sessions = cloneDeep(this._sessions);
         newStore._subscriptions = cloneDeep(this._subscriptions);
         newStore._periods = cloneDeep(this._periods);
@@ -809,6 +836,7 @@ export class MemoryStore
             this._subscriptionConfiguration
         );
         newStore._privoConfiguration = cloneDeep(this._privoConfiguration);
+        newStore._openIdConfiguration = cloneDeep(this._openIdConfiguration);
         newStore._moderationConfiguration = cloneDeep(
             this._moderationConfiguration
         );
@@ -930,6 +958,10 @@ export class MemoryStore
 
     async getPrivoConfiguration(): Promise<PrivoConfiguration | null> {
         return this._privoConfiguration;
+    }
+
+    async getOpenIDConfiguration(): Promise<OpenIDConfiguration | null> {
+        return this._openIdConfiguration;
     }
 
     async getModerationConfig(): Promise<ModerationConfiguration | null> {
@@ -2006,6 +2038,32 @@ export class MemoryStore
             lr.authorizationTimeMs = authorizationTimeMs;
         } else {
             throw new Error('Request not found.');
+        }
+    }
+
+    async findUserIdForOpenIDIdentity(
+        provider: string,
+        subject: string
+    ): Promise<string | null> {
+        const identity = this._openIdIdentities.find(
+            (i) => i.provider === provider && i.subject === subject
+        );
+        return identity?.userId ?? null;
+    }
+
+    async saveOpenIDIdentity(
+        identity: AuthCustomOpenIDIdentity
+    ): Promise<void> {
+        const index = this._openIdIdentities.findIndex(
+            (i) =>
+                i.provider === identity.provider &&
+                i.subject === identity.subject
+        );
+
+        if (index >= 0) {
+            this._openIdIdentities[index] = identity;
+        } else {
+            this._openIdIdentities.push(identity);
         }
     }
 
@@ -3239,8 +3297,11 @@ export class MemoryStore
                 r.ownerId === filter.ownerId ||
                 r.studioId === filter.studioId
             ) {
-                totalInsts += insts.size;
                 for (let inst of insts.values()) {
+                    if (inst.expires === true) {
+                        continue;
+                    }
+                    totalInsts += 1;
                     totalBytes += inst.instSizeInBytes;
                 }
             }
@@ -3283,8 +3344,11 @@ export class MemoryStore
                 r.ownerId === info.ownerId ||
                 r.studioId === info.studioId
             ) {
-                totalInsts += insts.size;
                 for (let inst of insts.values()) {
+                    if (inst.expires === true) {
+                        continue;
+                    }
+                    totalInsts += 1;
                     totalBytes += inst.instSizeInBytes;
                 }
             }
@@ -3985,7 +4049,8 @@ export class MemoryStore
         inst: string,
         branch: string,
         updateToAdd: string,
-        sizeInBytes: number
+        sizeInBytes: number,
+        numberOfUpdatesToKeep?: number
     ): Promise<ReplaceUpdatesResult> {
         const r = this._instRecords.get(recordName);
 
@@ -4031,13 +4096,24 @@ export class MemoryStore
         storedUpdates.updates = [];
         storedUpdates.timestamps = [];
 
-        return this.addUpdates(
+        const result = await this.addUpdates(
             recordName,
             inst,
             branch,
             [updateToAdd],
             sizeInBytes
         );
+
+        if (typeof numberOfUpdatesToKeep === 'number') {
+            const archived = b.archived;
+            const excess = archived.updates.length - numberOfUpdatesToKeep;
+            if (excess > 0) {
+                archived.updates.splice(0, excess);
+                archived.timestamps.splice(0, excess);
+            }
+        }
+
+        return result;
     }
 
     async deleteBranch(

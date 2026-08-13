@@ -276,6 +276,10 @@ export function constructServerBuilder(
         builder.useWebPushNotifications();
     }
 
+    if (config.linkPreview) {
+        builder.useLinkPreview();
+    }
+
     builder.useAutomaticPlugins();
 
     return builder;

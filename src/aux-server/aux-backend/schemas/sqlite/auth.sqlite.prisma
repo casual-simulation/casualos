@@ -62,6 +62,7 @@ model User {
 
     loginRequests LoginRequest[]
     webauthnLoginRequests WebAuthnLoginRequest[]
+    openIdIdentities OpenIdIdentity[]
     sessions AuthSession[]
     records Record[]
     recordKeys RecordKey[]
@@ -237,6 +238,19 @@ model OpenIDLoginRequest {
     authSessions AuthSession[]
 }
 
+model OpenIdIdentity {
+    provider String
+    subject String
+
+    userId String
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    createdAt Decimal
+
+    @@id([provider, subject])
+    @@index([userId])
+}
+
 model WebAuthnLoginRequest {
     requestId String @id
     challenge String
@@ -352,6 +366,14 @@ model Record {
 
     studioId String?
     studio Studio? @relation(fields: [studioId], references: [id])
+
+    creditAccountId String?
+    creditAccount FinancialAccount? @relation(fields: [creditAccountId], references: [id], onDelete: SetNull)
+
+    creditBillingEnabled Boolean @default(false)
+
+    creditBudgetType String?
+    creditBudgetAmount String?
 
     secretHashes Json
     secretSalt String
@@ -748,6 +770,7 @@ model InstRecord {
     name String
 
     markers Json
+    expires Boolean @default(false)
 
     branches InstBranch[]
     updates BranchUpdate[]
@@ -796,6 +819,7 @@ model BranchUpdate {
     updatedAt Decimal
 
     @@index([recordName, instName, branchName, id])
+    @@index([recordName, instName, branchName, createdAt, sizeInBytes])
 }
 
 // A package that has been loaded into an inst
@@ -1304,6 +1328,16 @@ model Configuration {
     updatedAt Decimal
 }
 
+model LinkPreviewCache {
+    cacheKey String @id
+    data Json
+    expireAtMs BigInt
+    createdAt Decimal
+    updatedAt Decimal
+
+    @@index([expireAtMs])
+}
+
 model Subscription {
     id String @id
     stripeSubscriptionId String @unique
@@ -1576,6 +1610,8 @@ model FinancialAccount {
 
     studioId String?
     studio Studio? @relation(fields: [studioId], references: [id], onDelete: Restrict)
+
+    records Record[]
 
     contractId String? @unique
     contract ContractRecord? @relation(fields: [contractId], references: [id], onUpdate: Restrict, onDelete: Restrict)

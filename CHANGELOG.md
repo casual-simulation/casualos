@@ -1,5 +1,50 @@
 # CasualOS Changelog
 
+## V4.2.7
+
+#### Date: 8/13/2026
+
+### :rocket: Features
+
+-   Added support for sending and receiving messages with the window that CasualOS is embedded in.
+    -   Added `os.sendEmbedMessage(message, targetOrigin)` to send a message to the parent window.
+    -   Added `@onEmbedMessage` to listen for messages sent from the parent window.
+    -   Added `isEmbedded` to `os.device()` to indicate whether CasualOS is currently embedded in an iframe.
+-   Added support for granting records credit budgets
+-   Added `xp.setRecordBudget()` and `xp.getRecordBudget()` to configure automatic credit transfers from a record's owner to the record whenever the owner is granted credits from their subscription
+-   Added support for expiring private insts.
+    -   Added optional `expires` support to inst/branch/package records and websocket `repo/watch_branch` requests.
+    -   Updated split-store and websocket inst routing to use `expires` semantics (instead of relying on `recordName` alone) when deciding temporary vs permanent storage.
+    -   Public insts now reject explicitly non-expiring watch requests (`recordName: null` with `expires: false`).
+    -   `savePermanentBranches()` now skips expiring and public branches.
+    -   Subscription metrics now exclude expiring insts from `totalInsts` in memory, Prisma, and SQLite stores.
+    -   Added persistence support for `InstRecord.expires` in Prisma/Cockroach and Prisma/SQLite schemas and stores.
+    -   Fixed `listLoadedPackages()`/`isPackageLoaded()` to find packages loaded into expiring private insts, and `installPackage()` to save newly-loaded packages to the correct store based on the target inst's `expires` state.
+-   BIOS option label updated to `temp local` (this functions the same as `temp` for tempInst)
+-   Added support for configuring custom OpenID Connect providers via the server config.
+    -   Configure with the `serverConfig.openid.providers` key.
+-   Added support for limiting the number of update snapshots to save per inst.
+    -   Configure with the `serverConfig.subscriptions.defaultFeatures.numberOfInstUpdatesToKeep` key.
+-   Added support for messaging websites that embed CasualOS.
+    -   To send a message to the host website from CasualOS:
+        -   use the `os.sendEmbedMessage(message, targetOrigin?)` function.
+    -   To receive a message from the host website in CasualOS:
+        -   use the `@onEmbedMessage` listener. `that` is an object with `origin` and `message` properties.
+    -   To send a message to CasualOS scripts from a host website:
+        -   use `iframe.postMessage(message)`
+    -   To recieve a message from CasualOS scripts on the host website:
+        -   use `window.addEventListener('message', listener)`
+    -   You can also detect whether CasualOS was embedded in another website by checking the `os.device().isEmbedded` property.
+-   Added API support for generating link previews.
+    -   Use the `GET /api/v2/link-preview` endpoint with `url` and `locale` as query parameters.
+    -   Configure using the `serverConfig.linkPreview` object key.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where bots with rotation were being reset to null when dragged
+-   Improved loading performance when the database has lots of old inst updates.
+-   Fixed an issue where presence (participant/avatar list and host-left detection) would never recover after a websocket reconnect, because `InstRecordsClient` never cleared its cache of previously-connected devices when synthesizing disconnect events, causing the server's replayed connection list to be filtered out as duplicates.
+
 ## V4.2.6
 
 #### Date: 6/24/2026
@@ -14,7 +59,6 @@
 -   Added new BIOS option.
     -   `public` - Works exactly like `public inst`.
 -   BIOS option label updated to `public` (for example: `public 24h` or `public 45m`)
-
 
 ## V4.2.5
 
@@ -91,6 +135,9 @@
 -   Updated the player BIOS to display public/free inst retention duration.
     -   The player now reads `getPublicInstOptions.lifetimeSeconds` and shows the duration in the BIOS option label (for example: `free 24h` or `free 45m`).
     -   If public inst options are unavailable, the BIOS falls back to the plain option label.
+-   Added support for record-level credit billing accounts.
+    -   Records can now be configured with a dedicated credit account budget for metered usage.
+    -   AI, data, and file usage billing now supports charging a record-level credit account when configured.
 
 ### :bug: Bug Fixes
 

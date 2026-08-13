@@ -246,8 +246,14 @@ export class PrismaRecordsStore implements RecordsStore {
     @traced(TRACE_NAME)
     async updateRecord(record: Record): Promise<void> {
         await this._client
-            .$executeRaw`UPSERT INTO public."Record" ("name", "ownerId", "studioId", "secretHashes", "secretSalt", "updatedAt")
-            VALUES (${record.name}, ${record.ownerId}, ${record.studioId}, ${record.secretHashes}, ${record.secretSalt}, NOW())`;
+            .$executeRaw`UPSERT INTO public."Record" ("name", "ownerId", "studioId", "secretHashes", "secretSalt", "creditAccountId", "creditBillingEnabled", "creditBudgetType", "creditBudgetAmount", "updatedAt")
+            VALUES (${record.name}, ${record.ownerId}, ${record.studioId}, ${
+            record.secretHashes
+        }, ${record.secretSalt}, ${record.creditAccountId ?? null}, ${
+            record.creditBillingEnabled ?? false
+        }, ${record.creditBudgetType ?? null}, ${
+            record.creditBudgetAmount ?? null
+        }, NOW())`;
     }
 
     @traced(TRACE_NAME)

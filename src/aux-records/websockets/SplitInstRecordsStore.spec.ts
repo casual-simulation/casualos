@@ -362,6 +362,18 @@ describe('SplitInstRecordsStore', () => {
             const result = await perm.getInstByName(null as any, instName);
             expect(result).toEqual(null);
         });
+
+        it('should not save the inst to the permanent store if expires is true', async () => {
+            await store.saveInst({
+                recordName,
+                inst: instName,
+                markers: ['test'],
+                expires: true,
+            });
+
+            const result = await perm.getInstByName(recordName, instName);
+            expect(result).toEqual(null);
+        });
     });
 
     describe('saveBranch()', () => {
@@ -449,6 +461,39 @@ describe('SplitInstRecordsStore', () => {
                 branchSizeInBytes: 0,
             });
         });
+
+        it('should only save the branch to the temp store if expires is true', async () => {
+            await store.saveBranch({
+                recordName,
+                inst: instName,
+                branch: branchName,
+                temporary: false,
+                expires: true,
+            });
+
+            const result = await perm.getBranchByName(
+                recordName,
+                instName,
+                branchName
+            );
+            expect(result).toEqual(null);
+
+            const tempResult = await temp.getBranchByName(
+                recordName,
+                instName,
+                branchName
+            );
+
+            expect(tempResult).toEqual({
+                recordName,
+                inst: instName,
+                branch: branchName,
+                temporary: false,
+                expires: true,
+                linkedInst: null,
+                branchSizeInBytes: 0,
+            });
+        });
     });
 
     describe('saveLoadedPackage()', () => {
@@ -522,6 +567,185 @@ describe('SplitInstRecordsStore', () => {
                 },
             ]);
             expect(await temp.listLoadedPackages('record', 'test')).toEqual([]);
+        });
+
+        it('should save the package to the temp store if expires is true', async () => {
+            await store.saveLoadedPackage({
+                id: 'package',
+                recordName: 'record',
+                inst: 'test',
+                packageId: 'packageId',
+                packageVersionId: 'packageVersionId',
+                userId: 'user',
+                branch: DEFAULT_BRANCH_NAME,
+                expires: true,
+            });
+
+            expect(await store.listLoadedPackages('record', 'test')).toEqual([
+                {
+                    id: 'package',
+                    recordName: 'record',
+                    inst: 'test',
+                    packageId: 'packageId',
+                    packageVersionId: 'packageVersionId',
+                    userId: 'user',
+                    branch: DEFAULT_BRANCH_NAME,
+                    expires: true,
+                },
+            ]);
+            expect(await temp.listLoadedPackages('record', 'test')).toEqual([
+                {
+                    id: 'package',
+                    recordName: 'record',
+                    inst: 'test',
+                    packageId: 'packageId',
+                    packageVersionId: 'packageVersionId',
+                    userId: 'user',
+                    branch: DEFAULT_BRANCH_NAME,
+                    expires: true,
+                },
+            ]);
+            expect(await perm.listLoadedPackages('record', 'test')).toEqual([]);
+        });
+    });
+
+    describe('listLoadedPackages()', () => {
+        it('should find a package saved to the temp store for an expiring private inst', async () => {
+            await store.saveLoadedPackage({
+                id: 'package',
+                recordName: 'record',
+                inst: 'test',
+                packageId: 'packageId',
+                packageVersionId: 'packageVersionId',
+                userId: 'user',
+                branch: DEFAULT_BRANCH_NAME,
+                expires: true,
+            });
+
+            expect(await store.listLoadedPackages('record', 'test')).toEqual([
+                {
+                    id: 'package',
+                    recordName: 'record',
+                    inst: 'test',
+                    packageId: 'packageId',
+                    packageVersionId: 'packageVersionId',
+                    userId: 'user',
+                    branch: DEFAULT_BRANCH_NAME,
+                    expires: true,
+                },
+            ]);
+        });
+
+        it('should find a package saved to the permanent store for a non-expiring private inst', async () => {
+            await store.saveLoadedPackage({
+                id: 'package',
+                recordName: 'record',
+                inst: 'test',
+                packageId: 'packageId',
+                packageVersionId: 'packageVersionId',
+                userId: 'user',
+                branch: DEFAULT_BRANCH_NAME,
+            });
+
+            expect(await store.listLoadedPackages('record', 'test')).toEqual([
+                {
+                    id: 'package',
+                    recordName: 'record',
+                    inst: 'test',
+                    packageId: 'packageId',
+                    packageVersionId: 'packageVersionId',
+                    userId: 'user',
+                    branch: DEFAULT_BRANCH_NAME,
+                },
+            ]);
+        });
+
+        it('should find a package saved to the temp store for a public inst', async () => {
+            await store.saveLoadedPackage({
+                id: 'package',
+                recordName: null,
+                inst: 'test',
+                packageId: 'packageId',
+                packageVersionId: 'packageVersionId',
+                userId: 'user',
+                branch: DEFAULT_BRANCH_NAME,
+            });
+
+            expect(await store.listLoadedPackages(null, 'test')).toEqual([
+                {
+                    id: 'package',
+                    recordName: null,
+                    inst: 'test',
+                    packageId: 'packageId',
+                    packageVersionId: 'packageVersionId',
+                    userId: 'user',
+                    branch: DEFAULT_BRANCH_NAME,
+                },
+            ]);
+        });
+
+        it('should return an empty array if no packages are loaded for an expiring private inst', async () => {
+            expect(await store.listLoadedPackages('record', 'test')).toEqual(
+                []
+            );
+        });
+    });
+
+    describe('isPackageLoaded()', () => {
+        it('should find a package saved to the temp store for an expiring private inst', async () => {
+            await store.saveLoadedPackage({
+                id: 'package',
+                recordName: 'record',
+                inst: 'test',
+                packageId: 'packageId',
+                packageVersionId: 'packageVersionId',
+                userId: 'user',
+                branch: DEFAULT_BRANCH_NAME,
+                expires: true,
+            });
+
+            expect(
+                await store.isPackageLoaded('record', 'test', 'packageId')
+            ).toEqual({
+                id: 'package',
+                recordName: 'record',
+                inst: 'test',
+                packageId: 'packageId',
+                packageVersionId: 'packageVersionId',
+                userId: 'user',
+                branch: DEFAULT_BRANCH_NAME,
+                expires: true,
+            });
+        });
+
+        it('should find a package saved to the permanent store for a non-expiring private inst', async () => {
+            await store.saveLoadedPackage({
+                id: 'package',
+                recordName: 'record',
+                inst: 'test',
+                packageId: 'packageId',
+                packageVersionId: 'packageVersionId',
+                userId: 'user',
+                branch: DEFAULT_BRANCH_NAME,
+            });
+
+            expect(
+                await store.isPackageLoaded('record', 'test', 'packageId')
+            ).toEqual({
+                id: 'package',
+                recordName: 'record',
+                inst: 'test',
+                packageId: 'packageId',
+                packageVersionId: 'packageVersionId',
+                userId: 'user',
+                branch: DEFAULT_BRANCH_NAME,
+            });
+        });
+
+        it('should return null if the package is not loaded for an expiring private inst', async () => {
+            expect(
+                await store.isPackageLoaded('record', 'test', 'packageId')
+            ).toBeNull();
         });
     });
 
@@ -1185,6 +1409,38 @@ describe('SplitInstRecordsStore', () => {
                     expect.any(Number),
                     expect.any(Number),
                 ],
+                instSizeInBytes: 10,
+            });
+        });
+
+        it('should trim the permanent store to the given number of updates when numberOfUpdatesToKeep is provided', async () => {
+            await temp.addUpdates(
+                recordName,
+                instName,
+                branchName,
+                ['abc', 'def'],
+                6
+            );
+            await perm.addUpdates(recordName, instName, branchName, ['abc'], 3);
+            await perm.addUpdates(recordName, instName, branchName, ['def'], 3);
+
+            await store.replaceCurrentUpdates(
+                recordName,
+                instName,
+                branchName,
+                'test',
+                4,
+                1
+            );
+
+            const allUpdates = await perm.getAllUpdates(
+                recordName,
+                instName,
+                branchName
+            );
+            expect(allUpdates).toEqual({
+                updates: ['test'],
+                timestamps: [expect.any(Number)],
                 instSizeInBytes: 10,
             });
         });

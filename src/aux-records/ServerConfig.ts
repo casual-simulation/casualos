@@ -18,6 +18,7 @@
 import { moderationSchema } from './ModerationConfiguration';
 import { notificationsSchema } from './SystemNotificationMessenger';
 import { privoSchema } from './PrivoConfiguration';
+import { openIdSchema } from './OpenIDConfiguration';
 import { getSubscriptionConfigSchema } from './SubscriptionConfiguration';
 import { z } from 'zod';
 import { WEB_CONFIG_SCHEMA } from '@casual-simulation/aux-common';
@@ -466,6 +467,13 @@ function constructServerConfigSchema() {
                 .describe(
                     'The body of the email. Use double curly-braces {{variable}} to insert variables.'
                 ),
+            html: z
+                .string()
+                .nonempty()
+                .optional()
+                .describe(
+                    'The HTML body of the email. If omitted, only the plain-text body will be sent. Use double curly-braces {{variable}} to insert variables.'
+                ),
         }),
     ]);
 
@@ -724,6 +732,39 @@ Because repo/add_updates is a very common permission, we periodically cache perm
             .number()
             .positive()
             .describe('The size of the window in miliseconds.'),
+    });
+
+    const linkPreviewSchema = z.object({
+        rateLimit: rateLimitSchema
+            .optional()
+            .prefault({ maxHits: 100, windowMs: 24 * 60 * 60 * 1000 })
+            .describe(
+                'The rate limit that should be applied per-origin to prevent hammering a single site with link preview requests. Defaults to 100 hits per day.'
+            ),
+        minCacheSeconds: z
+            .number()
+            .positive()
+            .optional()
+            .prefault(60 * 30)
+            .describe(
+                'The minimum number of seconds that a link preview should be cached for. Defaults to 30 minutes.'
+            ),
+        requestTimeoutMs: z
+            .number()
+            .positive()
+            .optional()
+            .prefault(10_000)
+            .describe(
+                'The number of miliseconds that a request for a page should be allowed to take before it is aborted. Defaults to 10 seconds.'
+            ),
+        maxResponseBytes: z
+            .number()
+            .positive()
+            .optional()
+            .prefault(5_000_000)
+            .describe(
+                'The maximum number of bytes that will be read from a page response. Defaults to 5,000,000 (5MB).'
+            ),
     });
 
     const stripeSchema = z.object({
@@ -1403,6 +1444,11 @@ Because repo/add_updates is a very common permission, we periodically cache perm
             .describe(
                 'Rate limit options for websockets. If omitted, then the rateLimit options will be used for websockets.'
             ),
+        linkPreview: linkPreviewSchema
+            .optional()
+            .describe(
+                'Link preview options. If omitted, then the link preview API will not be supported.'
+            ),
         openai: openAiSchema
             .optional()
             .describe(
@@ -1455,6 +1501,12 @@ Because repo/add_updates is a very common permission, we periodically cache perm
             .optional()
             .describe(
                 'Privo configuration options. If omitted, then Privo features will be disabled.'
+            ),
+
+        openid: openIdSchema
+            .optional()
+            .describe(
+                'Custom OpenID Connect provider configuration options. If omitted, then no custom OpenID providers will be available.'
             ),
 
         webauthn: webauthnSchema

@@ -1754,6 +1754,11 @@ export const ON_ANY_POINTER_DOWN: string = 'onAnyBotPointerDown';
 export const ON_ANY_POINTER_UP: string = 'onAnyBotPointerUp';
 
 /**
+ * The name of the event that is triggered when a message is received from the parent window that CasualOS is embedded in.
+ */
+export const ON_EMBED_MESSAGE_ACTION_NAME: string = 'onEmbedMessage';
+
+/**
  * The name of the event that is triggered when a QR Code is scanned.
  */
 export const ON_QR_CODE_SCANNED_ACTION_NAME: string = 'onQRCodeScanned';

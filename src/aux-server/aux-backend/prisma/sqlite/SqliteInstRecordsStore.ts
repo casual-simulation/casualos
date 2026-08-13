@@ -155,6 +155,7 @@ export class SqliteInstRecordsStore implements InstRecordsStore {
             select: {
                 name: true,
                 markers: true,
+                expires: true,
             },
         });
 
@@ -170,6 +171,7 @@ export class SqliteInstRecordsStore implements InstRecordsStore {
                 recordName: recordName,
                 inst: i.name,
                 markers: i.markers as string[],
+                ...(i.expires === true ? { expires: true } : {}),
             })),
             totalCount,
         };
@@ -189,9 +191,9 @@ export class SqliteInstRecordsStore implements InstRecordsStore {
         const instsPromise: Prisma.PrismaPromise<PrismaInstRecord[]> =
             !!startingInst
                 ? this._prisma
-                      .$queryRaw`SELECT "name", "markers" FROM "InstRecord" WHERE "recordName" = ${recordName} AND ${marker} IN json_each("markers") AND "address" > ${startingInst} ORDER BY "address" ASC LIMIT ${limit}`
+                      .$queryRaw`SELECT "name", "markers", "expires" FROM "InstRecord" WHERE "recordName" = ${recordName} AND ${marker} IN json_each("markers") AND "address" > ${startingInst} ORDER BY "address" ASC LIMIT ${limit}`
                 : this._prisma
-                      .$queryRaw`SELECT "name", "markers" FROM "InstRecord" WHERE "recordName" = ${recordName} AND ${marker} IN json_each("markers") ORDER BY "address" ASC LIMIT ${limit}`;
+                      .$queryRaw`SELECT "name", "markers", "expires" FROM "InstRecord" WHERE "recordName" = ${recordName} AND ${marker} IN json_each("markers") ORDER BY "address" ASC LIMIT ${limit}`;
 
         const [totalCount, insts] = await Promise.all([
             countPromise,
@@ -204,6 +206,7 @@ export class SqliteInstRecordsStore implements InstRecordsStore {
                 recordName: recordName,
                 inst: i.name,
                 markers: i.markers as string[],
+                ...(i.expires === true ? { expires: true } : {}),
             })),
             totalCount: totalCount[0].count,
         };
@@ -224,6 +227,7 @@ export class SqliteInstRecordsStore implements InstRecordsStore {
             select: {
                 name: true,
                 markers: true,
+                expires: true,
                 recordName: true,
                 record: {
                     select: {
@@ -258,6 +262,7 @@ export class SqliteInstRecordsStore implements InstRecordsStore {
             inst: record.name,
             markers: record.markers as string[],
             recordName: record.recordName,
+            ...(record.expires === true ? { expires: true } : {}),
             subscriptionId:
                 record.record.owner?.subscriptionId ??
                 record.record.studio?.subscriptionId,
@@ -369,12 +374,14 @@ export class SqliteInstRecordsStore implements InstRecordsStore {
                 },
                 update: {
                     markers: inst.markers,
+                    expires: inst.expires === true,
                     updatedAt: Date.now(),
                 },
                 create: {
                     name: inst.inst,
                     recordName: inst.recordName,
                     markers: inst.markers,
+                    expires: inst.expires === true,
                     createdAt: Date.now(),
                     updatedAt: Date.now(),
                 },
@@ -568,7 +575,8 @@ export class SqliteInstRecordsStore implements InstRecordsStore {
         inst: string,
         branch: string,
         updateToAdd: string,
-        sizeInBytes: number
+        sizeInBytes: number,
+        numberOfUpdatesToKeep?: number
     ): Promise<ReplaceUpdatesResult> {
         const branchUpdateId = uuid();
         try {
@@ -606,6 +614,29 @@ export class SqliteInstRecordsStore implements InstRecordsStore {
                     };
                 }
                 throw err;
+            }
+        }
+
+        if (typeof numberOfUpdatesToKeep === 'number') {
+            const excess = await this._prisma.branchUpdate.findMany({
+                where: {
+                    recordName: recordName,
+                    instName: inst,
+                    branchName: branch,
+                },
+                orderBy: {
+                    createdAt: 'desc',
+                },
+                skip: numberOfUpdatesToKeep,
+                select: { id: true },
+            });
+
+            if (excess.length > 0) {
+                await this._prisma.branchUpdate.deleteMany({
+                    where: {
+                        id: { in: excess.map((u) => u.id) },
+                    },
+                });
             }
         }
 

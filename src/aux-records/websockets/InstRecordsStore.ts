@@ -163,13 +163,15 @@ export interface InstRecordsStore {
      * @param updatesToRemove The updates that should be moved. Only valid if the result from getUpdates() is used.
      * @param updateToAdd The update that should be added.
      * @param sizeInBytes The size of the new update in bytes.
+     * @param numberOfUpdatesToKeep If provided, then older stored updates for the branch beyond this count should be deleted, keeping only the most recent updates (including the one being added). If omitted, then all updates are kept.
      */
     replaceCurrentUpdates(
         recordName: string | null,
         inst: string,
         branch: string,
         updateToAdd: string,
-        sizeInBytes: number
+        sizeInBytes: number,
+        numberOfUpdatesToKeep?: number
     ): Promise<ReplaceUpdatesResult>;
 
     /**
@@ -214,6 +216,12 @@ export interface LoadedPackage {
      * The ID of the loaded package.
      */
     id: string;
+
+    /**
+     * Whether the loaded package expires and should be deleted when it is no longer needed.
+     * If not provided, the default is derived from the record name.
+     */
+    expires?: boolean;
 
     /**
      * The name of the record that the inst is stored in.
@@ -318,6 +326,12 @@ export interface InstRecord {
     recordName: string | null;
 
     /**
+     * Whether the inst expires and should be deleted when it is no longer needed.
+     * If not provided, the default is derived from the record name.
+     */
+    expires?: boolean;
+
+    /**
      * The name of the inst.
      */
     inst: string;
@@ -358,6 +372,12 @@ export interface BranchRecord {
      * The name of the record.
      */
     recordName: string | null;
+
+    /**
+     * Whether the branch expires and should be deleted when it is no longer needed.
+     * If not provided, the default is derived from the record name.
+     */
+    expires?: boolean;
 
     /**
      * The name of the inst.
