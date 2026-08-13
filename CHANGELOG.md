@@ -4,12 +4,6 @@
 
 #### Date: TBD
 
-### :bug: Bug Fixes
-
--   Fixed an issue where bots with rotation were being reset to null when dragged
--   Improved loading performance when the database has lots of old inst updates.
--   Fixed an issue where presence (participant/avatar list and host-left detection) would never recover after a websocket reconnect, because `InstRecordsClient` never cleared its cache of previously-connected devices when synthesizing disconnect events, causing the server's replayed connection list to be filtered out as duplicates.
-
 ### :rocket: Features
 
 -   Added support for sending and receiving messages with the window that CasualOS is embedded in.
@@ -27,6 +21,29 @@
     -   Added persistence support for `InstRecord.expires` in Prisma/Cockroach and Prisma/SQLite schemas and stores.
     -   Fixed `listLoadedPackages()`/`isPackageLoaded()` to find packages loaded into expiring private insts, and `installPackage()` to save newly-loaded packages to the correct store based on the target inst's `expires` state.
 -   BIOS option label updated to `temp local` (this functions the same as `temp` for tempInst)
+-   Added support for configuring custom OpenID Connect providers via the server config.
+    -   Configure with the `serverConfig.openid.providers` key.
+-   Added support for limiting the number of update snapshots to save per inst.
+    -   Configure with the `serverConfig.subscriptions.defaultFeatures.numberOfInstUpdatesToKeep` key.
+-   Added support for messaging websites that embed CasualOS.
+    -   To send a message to the host website from CasualOS:
+        -   use the `os.sendEmbedMessage(message, targetOrigin?)` function.
+    -   To receive a message from the host website in CasualOS:
+        -   use the `@onEmbedMessage` listener. `that` is an object with `origin` and `message` properties.
+    -   To send a message to CasualOS scripts from a host website:
+        -   use `iframe.postMessage(message)`
+    -   To recieve a message from CasualOS scripts on the host website:
+        -   use `window.addEventListener('message', listener)`
+    -   You can also detect whether CasualOS was embedded in another website by checking the `os.device().isEmbedded` property.
+-   Added API support for generating link previews.
+    -   Use the `GET /api/v2/link-preview` endpoint with `url` and `locale` as query parameters.
+    -   Configure using the `serverConfig.linkPreview` object key.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where bots with rotation were being reset to null when dragged
+-   Improved loading performance when the database has lots of old inst updates.
+-   Fixed an issue where presence (participant/avatar list and host-left detection) would never recover after a websocket reconnect, because `InstRecordsClient` never cleared its cache of previously-connected devices when synthesizing disconnect events, causing the server's replayed connection list to be filtered out as duplicates.
 
 ## V4.2.6
 
