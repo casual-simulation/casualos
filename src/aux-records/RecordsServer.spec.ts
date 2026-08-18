@@ -4278,6 +4278,7 @@ describe('RecordsServer', () => {
                     codeVerifier: 'verifier',
                     redirectUrl: 'https://redirect_url',
                     scope: 'openid email profile',
+                    nonce: 'nonce',
                 }
             );
 
@@ -4311,6 +4312,7 @@ describe('RecordsServer', () => {
                     codeVerifier: 'verifier',
                     redirectUrl: 'https://redirect_url',
                     scope: 'openid email profile',
+                    nonce: 'nonce',
                 }
             );
 
