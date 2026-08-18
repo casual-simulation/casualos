@@ -2791,6 +2791,7 @@ describe('AuthController', () => {
                         provider: 'privo',
                         codeVerifier: 'verifier',
                         codeMethod: 'method',
+                        nonce: null,
                         authorizationUrl: 'https://mock_authorization_url',
                         redirectUrl: 'https://redirect_url',
                         scope: 'scope',
@@ -2878,6 +2879,7 @@ describe('AuthController', () => {
                         authorizationUrl: 'https://mock_authorization_url',
                         redirectUrl: 'https://redirect_url',
                         scope: 'openid email profile',
+                        nonce: 'nonce',
                     }
                 );
 
@@ -2899,6 +2901,7 @@ describe('AuthController', () => {
                         provider: 'google',
                         codeVerifier: 'verifier',
                         codeMethod: 'method',
+                        nonce: 'nonce',
                         authorizationUrl: 'https://mock_authorization_url',
                         redirectUrl: 'https://redirect_url',
                         scope: 'openid email profile',

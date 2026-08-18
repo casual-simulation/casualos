@@ -76,6 +76,11 @@ export interface GenericOpenIDAuthorizationUrlResult {
      * The scope that was requested.
      */
     scope: string;
+
+    /**
+     * The nonce that was generated for the request.
+     */
+    nonce: string;
 }
 
 export interface ProcessGenericOpenIDCallbackRequest {
@@ -93,6 +98,11 @@ export interface ProcessGenericOpenIDCallbackRequest {
      * The PKCE code verifier that was generated for the original request.
      */
     codeVerifier: string;
+
+    /**
+     * The nonce that was generated for the original request.
+     */
+    nonce: string;
 
     /**
      * The URL that the provider redirected the user back to.
@@ -181,12 +191,14 @@ export class GenericOpenIDClient implements GenericOpenIDClientInterface {
         const codeChallenge = generators.codeChallenge(codeVerifier);
         const codeMethod = 'S256';
         const scope = config.requestScopes.join(' ');
+        const nonce = generators.nonce();
 
         const url = client.authorizationUrl({
             scope,
             code_challenge: codeChallenge,
             code_challenge_method: codeMethod,
             state,
+            nonce,
         });
 
         return {
@@ -195,6 +207,7 @@ export class GenericOpenIDClient implements GenericOpenIDClientInterface {
             codeMethod,
             codeVerifier,
             scope,
+            nonce,
         };
     }
 
@@ -213,6 +226,7 @@ export class GenericOpenIDClient implements GenericOpenIDClientInterface {
             {
                 state: request.state,
                 code_verifier: request.codeVerifier,
+                nonce: request.nonce,
             }
         );
 

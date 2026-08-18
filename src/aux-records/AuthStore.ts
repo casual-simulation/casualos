@@ -989,6 +989,12 @@ export interface AuthOpenIDLoginRequest {
     codeMethod: string;
 
     /**
+     * The nonce that the ID token returned by the provider should match.
+     * Not all providers support/require a nonce (e.g. Privo), so this may be null/undefined.
+     */
+    nonce?: string | null;
+
+    /**
      * The URL that was used as the authorization URL in the Open ID authorization code flow.
      */
     authorizationUrl: string;
