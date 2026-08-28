@@ -24,10 +24,51 @@ import axios from 'axios';
 import * as net from 'node:net';
 import { lookup as dnsLookup } from 'node:dns/promises';
 import { parse as parseHtml } from 'node-html-parser';
+import { z } from 'zod';
 
 const TRACE_NAME = 'LinkPreviewController';
 
 const USER_AGENT = 'CasualOS-LinkPreview/1.0 (+https://casualos.com)';
+
+const YOUTUBE_OEMBED_URL = 'https://www.youtube.com/oembed';
+
+const YOUTUBE_HOSTNAMES = new Set([
+    'youtube.com',
+    'www.youtube.com',
+    'm.youtube.com',
+    'youtube-nocookie.com',
+    'www.youtube-nocookie.com',
+    'youtu.be',
+    'www.youtu.be',
+]);
+
+/**
+ * The schema for the response returned by YouTube's oEmbed endpoint.
+ * See https://oembed.com/ and https://www.youtube.com/oembed for details.
+ */
+export const YOUTUBE_OEMBED_SCHEMA = z.object({
+    title: z.string().optional(),
+    author_name: z.string().optional(),
+    author_url: z.string().optional(),
+    provider_name: z.string().optional(),
+    provider_url: z.string().optional(),
+    thumbnail_url: z.string().optional(),
+    thumbnail_width: z.number().optional(),
+    thumbnail_height: z.number().optional(),
+    html: z.string().optional(),
+    type: z.string().optional(),
+    version: z.string().optional(),
+});
+
+export type YouTubeOEmbedResponse = z.infer<typeof YOUTUBE_OEMBED_SCHEMA>;
+
+/**
+ * Determines if the given hostname belongs to YouTube.
+ * @param hostname The hostname to check.
+ */
+export function isYouTubeHostname(hostname: string): boolean {
+    return YOUTUBE_HOSTNAMES.has(hostname.toLowerCase());
+}
 
 export interface LinkPreviewControllerOptions {
     store: LinkPreviewStore;
@@ -130,58 +171,33 @@ export class LinkPreviewController {
                 };
             }
 
-            const response = await axios.get(normalizedUrl, {
-                headers: {
-                    'User-Agent': USER_AGENT,
-                    ...(request.locale
-                        ? { 'Accept-Language': request.locale }
-                        : {}),
-                },
-                responseType: 'text',
-                timeout: this._config.requestTimeoutMs,
-                maxRedirects: 5,
-                maxContentLength: this._config.maxResponseBytes,
-                maxBodyLength: this._config.maxResponseBytes,
-                validateStatus: () => true,
-            });
+            const result = isYouTubeHostname(target.hostname)
+                ? await this._getYouTubeOEmbedData(
+                      normalizedUrl,
+                      request.locale
+                  )
+                : await this._getGenericPreviewData(
+                      normalizedUrl,
+                      request.locale
+                  );
 
-            const contentType = (
-                (response.headers?.['content-type'] as string) ?? ''
-            ).toLowerCase();
-            if (
-                !contentType.includes('text/html') &&
-                !contentType.includes('application/xhtml+xml')
-            ) {
+            if (result.success === true) {
+                const expireTimeMs = Date.now() + result.expireSeconds * 1000;
+
+                await this._store.saveLinkPreview({
+                    cacheKey,
+                    data: result.data,
+                    expireTimeMs,
+                });
+
                 return {
-                    success: false,
-                    errorCode: 'url_not_html',
-                    errorMessage:
-                        'The given URL does not point to an HTML page.',
+                    success: true,
+                    ...result.data,
+                    cachedUntilMs: expireTimeMs,
                 };
             }
 
-            const finalUrl: string =
-                response.request?.res?.responseUrl ?? normalizedUrl;
-            const data = extractLinkPreviewData(response.data, finalUrl);
-            const expireSeconds = Math.max(
-                this._config.minCacheSeconds,
-                getCacheControlMaxAgeSeconds(
-                    response.headers?.['cache-control'] as string
-                ) ?? 0
-            );
-            const expireTimeMs = Date.now() + expireSeconds * 1000;
-
-            await this._store.saveLinkPreview({
-                cacheKey,
-                data,
-                expireTimeMs,
-            });
-
-            return {
-                success: true,
-                ...data,
-                cachedUntilMs: expireTimeMs,
-            };
+            return result;
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
@@ -197,6 +213,104 @@ export class LinkPreviewController {
                 errorMessage: 'A server error occurred.',
             };
         }
+    }
+
+    /**
+     * Fetches the page's HTML and scrapes OpenGraph/meta tags out of it.
+     */
+    private async _getGenericPreviewData(
+        normalizedUrl: string,
+        locale: string | undefined
+    ): Promise<PreviewDataResult> {
+        const response = await axios.get(normalizedUrl, {
+            headers: {
+                'User-Agent': USER_AGENT,
+                ...(locale ? { 'Accept-Language': locale } : {}),
+            },
+            responseType: 'text',
+            timeout: this._config.requestTimeoutMs,
+            maxRedirects: 5,
+            maxContentLength: this._config.maxResponseBytes,
+            maxBodyLength: this._config.maxResponseBytes,
+            validateStatus: () => true,
+        });
+
+        const contentType = (
+            (response.headers?.['content-type'] as string) ?? ''
+        ).toLowerCase();
+        if (
+            !contentType.includes('text/html') &&
+            !contentType.includes('application/xhtml+xml')
+        ) {
+            return {
+                success: false,
+                errorCode: 'url_not_html',
+                errorMessage: 'The given URL does not point to an HTML page.',
+            };
+        }
+
+        const finalUrl: string =
+            response.request?.res?.responseUrl ?? normalizedUrl;
+        const data = extractLinkPreviewData(response.data, finalUrl);
+        const expireSeconds = Math.max(
+            this._config.minCacheSeconds,
+            getCacheControlMaxAgeSeconds(
+                response.headers?.['cache-control'] as string
+            ) ?? 0
+        );
+
+        return {
+            success: true,
+            data,
+            expireSeconds,
+        };
+    }
+
+    /**
+     * Fetches preview data for a YouTube URL using YouTube's oEmbed endpoint.
+     */
+    private async _getYouTubeOEmbedData(
+        normalizedUrl: string,
+        locale: string | undefined
+    ): Promise<PreviewDataResult> {
+        const response = await axios.get(YOUTUBE_OEMBED_URL, {
+            params: {
+                url: normalizedUrl,
+                format: 'json',
+            },
+            headers: {
+                'User-Agent': USER_AGENT,
+                ...(locale ? { 'Accept-Language': locale } : {}),
+            },
+            timeout: this._config.requestTimeoutMs,
+            validateStatus: () => true,
+        });
+
+        const parsed =
+            response.status === 200
+                ? YOUTUBE_OEMBED_SCHEMA.safeParse(response.data)
+                : null;
+
+        if (!parsed || !parsed.success) {
+            return {
+                success: false,
+                errorCode: 'unacceptable_url',
+                errorMessage: 'The given URL is not able to be previewed.',
+            };
+        }
+
+        const expireSeconds = Math.max(
+            this._config.minCacheSeconds,
+            getCacheControlMaxAgeSeconds(
+                response.headers?.['cache-control'] as string
+            ) ?? 0
+        );
+
+        return {
+            success: true,
+            data: extractYouTubeOEmbedData(parsed.data, normalizedUrl),
+            expireSeconds,
+        };
     }
 
     private async _isBlockedHost(hostname: string): Promise<boolean> {
@@ -343,6 +457,37 @@ export function extractLinkPreviewData(
 }
 
 /**
+ * Maps a validated YouTube oEmbed response onto link preview data.
+ * @param oembed The validated oEmbed response.
+ * @param canonicalUrl The normalized URL that the oEmbed data was retrieved for.
+ */
+export function extractYouTubeOEmbedData(
+    oembed: YouTubeOEmbedResponse,
+    canonicalUrl: string
+): LinkPreviewData {
+    const meta: { [key: string]: string } = {};
+    for (const [key, value] of Object.entries(oembed)) {
+        if (value !== undefined && value !== null) {
+            meta[key] = String(value);
+        }
+    }
+
+    return {
+        title: oembed.title,
+        description: undefined,
+        imageUrl: oembed.thumbnail_url,
+        imageHeight: oembed.thumbnail_height,
+        imageWidth: oembed.thumbnail_width,
+        imageAlt: oembed.title,
+        type: 'video',
+        canonicalUrl,
+        siteName: oembed.provider_name ?? 'YouTube',
+        locale: undefined,
+        meta,
+    };
+}
+
+/**
  * Determines if the given IP address is a private, loopback, link-local, or otherwise
  * reserved address that should not be reachable from a public link preview request.
  * @param ip The IP address to check.
@@ -420,3 +565,15 @@ export interface GetLinkPreviewFailure {
         | 'site_rate_limited';
     errorMessage: string;
 }
+
+/**
+ * The result of fetching link preview data from a source (either the generic
+ * HTML scraper or a site-specific integration like YouTube's oEmbed endpoint).
+ */
+type PreviewDataResult =
+    | {
+          success: true;
+          data: LinkPreviewData;
+          expireSeconds: number;
+      }
+    | GetLinkPreviewFailure;

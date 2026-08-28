@@ -19,8 +19,10 @@ import { lookup as dnsLookup } from 'node:dns/promises';
 import {
     LinkPreviewController,
     extractLinkPreviewData,
+    extractYouTubeOEmbedData,
     getCacheKey,
     isPrivateOrReservedAddress,
+    isYouTubeHostname,
     normalizeUrl,
 } from './LinkPreviewController';
 import { MemoryLinkPreviewStore } from './MemoryLinkPreviewStore';
@@ -84,6 +86,17 @@ describe('LinkPreviewController', () => {
                     responseUrl: 'https://example.com/page',
                 },
             },
+        });
+    }
+
+    function mockOEmbedResponse(
+        data: object,
+        options: { status?: number; headers?: { [key: string]: string } } = {}
+    ) {
+        mockAxios.__setResponse({
+            status: options.status ?? 200,
+            data,
+            headers: options.headers ?? {},
         });
     }
 
@@ -331,6 +344,166 @@ describe('LinkPreviewController', () => {
                 }),
             ]);
         });
+
+        describe('YouTube oEmbed previews', () => {
+            it('should use the YouTube oEmbed endpoint for youtube.com URLs', async () => {
+                mockOEmbedResponse({
+                    title: 'Rick Astley - Never Gonna Give You Up',
+                    author_name: 'Rick Astley',
+                    author_url: 'https://www.youtube.com/@RickAstleyYT',
+                    provider_name: 'YouTube',
+                    provider_url: 'https://www.youtube.com/',
+                    thumbnail_url:
+                        'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+                    thumbnail_width: 480,
+                    thumbnail_height: 360,
+                    type: 'video',
+                    version: '1.0',
+                });
+
+                const result = await subject.getLinkPreview({
+                    url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    title: 'Rick Astley - Never Gonna Give You Up',
+                    description: undefined,
+                    imageUrl:
+                        'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+                    imageWidth: 480,
+                    imageHeight: 360,
+                    imageAlt: 'Rick Astley - Never Gonna Give You Up',
+                    type: 'video',
+                    canonicalUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+                    siteName: 'YouTube',
+                    locale: undefined,
+                    cachedUntilMs: 1800 * 1000,
+                    meta: expect.objectContaining({
+                        title: 'Rick Astley - Never Gonna Give You Up',
+                        author_name: 'Rick Astley',
+                        provider_name: 'YouTube',
+                    }),
+                });
+
+                expect(mockAxios.__getLastGet()).toEqual([
+                    'https://www.youtube.com/oembed',
+                    expect.objectContaining({
+                        params: {
+                            url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+                            format: 'json',
+                        },
+                    }),
+                ]);
+            });
+
+            it('should recognize youtu.be short links', async () => {
+                mockOEmbedResponse({
+                    title: 'Short link video',
+                    provider_name: 'YouTube',
+                    thumbnail_url:
+                        'https://i.ytimg.com/vi/abc123/hqdefault.jpg',
+                });
+
+                const result = await subject.getLinkPreview({
+                    url: 'https://youtu.be/abc123',
+                });
+
+                expect(result.success).toBe(true);
+                expect(mockAxios.__getLastGet()[0]).toBe(
+                    'https://www.youtube.com/oembed'
+                );
+                expect(mockAxios.__getLastGet()[1]).toEqual(
+                    expect.objectContaining({
+                        params: {
+                            url: 'https://youtu.be/abc123',
+                            format: 'json',
+                        },
+                    })
+                );
+            });
+
+            it('should recognize m.youtube.com links', async () => {
+                mockOEmbedResponse({
+                    title: 'Mobile video',
+                    provider_name: 'YouTube',
+                });
+
+                const result = await subject.getLinkPreview({
+                    url: 'https://m.youtube.com/watch?v=abc123',
+                });
+
+                expect(result.success).toBe(true);
+                expect(mockAxios.__getLastGet()[0]).toBe(
+                    'https://www.youtube.com/oembed'
+                );
+            });
+
+            it('should return unacceptable_url if the oEmbed request returns a non-200 status', async () => {
+                mockOEmbedResponse({ error: 'Unauthorized' }, { status: 401 });
+
+                const result = await subject.getLinkPreview({
+                    url: 'https://www.youtube.com/watch?v=private-video',
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'unacceptable_url',
+                    errorMessage: 'The given URL is not able to be previewed.',
+                });
+            });
+
+            it('should return unacceptable_url if the oEmbed response fails schema validation', async () => {
+                mockOEmbedResponse({
+                    thumbnail_width: 'not-a-number',
+                });
+
+                const result = await subject.getLinkPreview({
+                    url: 'https://www.youtube.com/watch?v=bad-shape',
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'unacceptable_url',
+                    errorMessage: 'The given URL is not able to be previewed.',
+                });
+            });
+
+            it('should cache successful YouTube previews and not fetch again while the cache is valid', async () => {
+                mockOEmbedResponse({
+                    title: 'Cached video',
+                    provider_name: 'YouTube',
+                });
+
+                const first = await subject.getLinkPreview({
+                    url: 'https://www.youtube.com/watch?v=cached',
+                });
+                expect(first.success).toBe(true);
+                expect(mockAxios.__getRequests().length).toBe(1);
+
+                const second = await subject.getLinkPreview({
+                    url: 'https://www.youtube.com/watch?v=cached',
+                });
+
+                expect(second).toEqual(first);
+                expect(mockAxios.__getRequests().length).toBe(1);
+            });
+
+            it('should not use the oEmbed endpoint for non-YouTube URLs', async () => {
+                mockHtmlResponse(
+                    '<html><head><title>Not YouTube</title></head></html>'
+                );
+
+                const result = await subject.getLinkPreview({
+                    url: 'https://example.com/page',
+                });
+
+                expect(result.success).toBe(true);
+                expect(mockAxios.__getLastGet()[0]).toBe(
+                    'https://example.com/page'
+                );
+            });
+        });
     });
 
     describe('normalizeUrl()', () => {
@@ -375,6 +548,67 @@ describe('LinkPreviewController', () => {
                 'og:title': 'Title',
                 'twitter:card': 'summary',
             });
+        });
+    });
+
+    describe('isYouTubeHostname()', () => {
+        it.each([
+            ['youtube.com', true],
+            ['www.youtube.com', true],
+            ['m.youtube.com', true],
+            ['youtube-nocookie.com', true],
+            ['www.youtube-nocookie.com', true],
+            ['youtu.be', true],
+            ['www.youtu.be', true],
+            ['YOUTUBE.COM', true],
+            ['example.com', false],
+            ['notyoutube.com', false],
+            ['youtube.com.evil.com', false],
+        ])('should classify %s as YouTube=%s', (hostname, expected) => {
+            expect(isYouTubeHostname(hostname)).toBe(expected);
+        });
+    });
+
+    describe('extractYouTubeOEmbedData()', () => {
+        it('should map the oEmbed fields onto link preview data', () => {
+            const data = extractYouTubeOEmbedData(
+                {
+                    title: 'Example Video',
+                    author_name: 'Example Author',
+                    provider_name: 'YouTube',
+                    thumbnail_url: 'https://i.ytimg.com/vi/abc/hqdefault.jpg',
+                    thumbnail_width: 480,
+                    thumbnail_height: 360,
+                },
+                'https://www.youtube.com/watch?v=abc'
+            );
+
+            expect(data).toEqual({
+                title: 'Example Video',
+                description: undefined,
+                imageUrl: 'https://i.ytimg.com/vi/abc/hqdefault.jpg',
+                imageWidth: 480,
+                imageHeight: 360,
+                imageAlt: 'Example Video',
+                type: 'video',
+                canonicalUrl: 'https://www.youtube.com/watch?v=abc',
+                siteName: 'YouTube',
+                locale: undefined,
+                meta: expect.objectContaining({
+                    title: 'Example Video',
+                    author_name: 'Example Author',
+                    provider_name: 'YouTube',
+                }),
+            });
+        });
+
+        it('should default siteName to YouTube when provider_name is missing', () => {
+            const data = extractYouTubeOEmbedData(
+                { title: 'No provider' },
+                'https://www.youtube.com/watch?v=xyz'
+            );
+
+            expect(data.siteName).toBe('YouTube');
         });
     });
 
