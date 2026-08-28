@@ -1,5 +1,14 @@
 # CasualOS Changelog
 
+## V4.2.8
+
+#### Date: TBD
+
+### :rocket: Features
+
+-   Improved link previews to suppport YouTube videos.
+-   Improved Custom OpenID Connect providers to support sending nonces.
+
 ## V4.2.7
 
 #### Date: 8/13/2026
