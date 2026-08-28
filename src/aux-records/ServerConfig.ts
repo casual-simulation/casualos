@@ -737,9 +737,9 @@ Because repo/add_updates is a very common permission, we periodically cache perm
     const linkPreviewSchema = z.object({
         rateLimit: rateLimitSchema
             .optional()
-            .prefault({ maxHits: 1000, windowMs: 60 * 1000 })
+            .prefault({ maxHits: 100, windowMs: 24 * 60 * 60 * 1000 })
             .describe(
-                'The rate limit that should be applied per-origin to prevent hammering a single site with link preview requests. Defaults to 1000 hits per minute.'
+                'The rate limit that should be applied per-origin to prevent hammering a single site with link preview requests. Defaults to 100 hits per day.'
             ),
         minCacheSeconds: z
             .number()

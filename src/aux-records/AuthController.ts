@@ -73,7 +73,10 @@ import type {
 } from './PrivoClient';
 import { DateTime } from 'luxon';
 import type { PrivoConfiguration } from './PrivoConfiguration';
-import type { GenericOpenIDClientInterface } from './GenericOpenIDClient';
+import type {
+    GenericOpenIDAuthorizationUrlResult,
+    GenericOpenIDClientInterface,
+} from './GenericOpenIDClient';
 import type { OpenIDProviderConfiguration } from './OpenIDConfiguration';
 import type { ZodIssue } from 'zod';
 import type {
@@ -893,6 +896,11 @@ export class AuthController {
                 provider: providerId,
                 codeMethod: authorizationUrlResult.codeMethod,
                 codeVerifier: authorizationUrlResult.codeVerifier,
+                nonce: providerConfig
+                    ? (
+                          authorizationUrlResult as GenericOpenIDAuthorizationUrlResult
+                      ).nonce
+                    : null,
                 authorizationUrl: authorizationUrlResult.authorizationUrl,
                 redirectUrl: authorizationUrlResult.redirectUrl,
                 completedTimeMs: null,
@@ -1273,6 +1281,7 @@ export class AuthController {
                     code: loginRequest.authorizationCode,
                     state: loginRequest.state,
                     codeVerifier: loginRequest.codeVerifier,
+                    nonce: loginRequest.nonce,
                     redirectUrl: loginRequest.redirectUrl,
                 }
             );

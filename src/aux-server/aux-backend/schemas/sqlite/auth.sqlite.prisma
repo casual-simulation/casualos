@@ -220,6 +220,7 @@ model OpenIDLoginRequest {
     provider String
     codeVerifier String
     codeMethod String
+    nonce String?
     authorizationUrl String
     redirectUrl String
     scope String
