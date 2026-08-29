@@ -43,6 +43,8 @@ import type { LivekitController } from './LivekitController';
 import type { RecordsController } from './RecordsController';
 import type { EventRecordsController } from './EventRecordsController';
 import type { DataRecordsController } from './DataRecordsController';
+import { parseDataFilter } from './DataRecordsFilters';
+import type { DataFilter } from './DataRecordsFilters';
 import type { FileRecordsController } from './FileRecordsController';
 import type {
     CreateManageSubscriptionRequest,
@@ -2049,11 +2051,19 @@ export class RecordsServer {
                             .nullable(),
                         instances:
                             INSTANCES_ARRAY_VALIDATION.optional().nullable(),
+                        filter: z.any().optional().nullable(),
                     })
                 )
                 .handler(
                     async (
-                        { recordName, address, instances, marker, sort },
+                        {
+                            recordName,
+                            address,
+                            instances,
+                            marker,
+                            sort,
+                            filter,
+                        },
                         context
                     ) => {
                         if (!recordName || typeof recordName !== 'string') {
@@ -2075,6 +2085,42 @@ export class RecordsServer {
                                 errorMessage:
                                     'address must be null or a string.',
                             } as const;
+                        }
+
+                        let parsedFilter: DataFilter | undefined;
+                        if (filter !== null && typeof filter !== 'undefined') {
+                            if (!marker) {
+                                return {
+                                    success: false,
+                                    errorCode: 'unacceptable_request',
+                                    errorMessage:
+                                        'filter can only be used when listing data by marker.',
+                                } as const;
+                            }
+
+                            let filterValue: unknown = filter;
+                            if (typeof filter === 'string') {
+                                const jsonResult = tryParseJson(filter);
+                                if (!jsonResult.success) {
+                                    return {
+                                        success: false,
+                                        errorCode: 'unacceptable_request',
+                                        errorMessage:
+                                            'filter must be valid JSON.',
+                                    } as const;
+                                }
+                                filterValue = jsonResult.value;
+                            }
+
+                            const filterResult = parseDataFilter(filterValue);
+                            if (filterResult.success === false) {
+                                return {
+                                    success: false,
+                                    errorCode: 'unacceptable_request',
+                                    errorMessage: filterResult.errorMessage,
+                                } as const;
+                            }
+                            parsedFilter = filterResult.filter;
                         }
 
                         const sessionKeyValidation =
@@ -2102,6 +2148,7 @@ export class RecordsServer {
                                 sort: sort,
                                 userId: sessionKeyValidation.userId,
                                 instances,
+                                filter: parsedFilter,
                             });
 
                             return result;
