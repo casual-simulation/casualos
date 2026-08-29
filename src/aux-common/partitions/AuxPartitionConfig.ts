@@ -280,6 +280,12 @@ export interface YjsPartitionConfig extends PartitionConfigBase {
         saveToIndexedDb: boolean;
 
         /**
+         * Whether local updates should be re-shared when connecting.
+         * Defaults to true.
+         */
+        syncWithServerOnConnect?: boolean;
+
+        /**
          * The encryption key that should be used.
          */
         encryptionKey?: string;
@@ -363,6 +369,12 @@ export interface RemoteYjsPartitionConfig extends PartitionConfigBase {
         saveToIndexedDb?: boolean;
 
         /**
+         * Whether local updates should be re-shared when connecting.
+         * Defaults to true.
+         */
+        syncWithServerOnConnect?: boolean;
+
+        /**
          * The encryption key that should be used.
          */
         encryptionKey?: string;
@@ -429,6 +441,12 @@ export interface YjsClientPartitionConfig extends PartitionConfigBase {
          * Whether to save partition updates to indexed db.
          */
         saveToIndexedDb?: boolean;
+
+        /**
+         * Whether local updates should be re-shared when connecting.
+         * Defaults to true.
+         */
+        syncWithServerOnConnect?: boolean;
 
         /**
          * The encryption key that should be used.
