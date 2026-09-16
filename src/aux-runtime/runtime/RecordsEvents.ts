@@ -19,6 +19,7 @@ import type {
     AIChatMessage,
     RecordFileFailure,
     WebhookRecord,
+    ProxyRecord,
     NotificationRecord,
     PushNotificationPayload,
     GrantEntitlementFailure,
@@ -789,6 +790,43 @@ export interface ListWebhooksOptions extends RecordActionOptions {
      * - "descending" means that the items should be sorted in alphebatically descending order by address.
      */
     sort?: 'ascending' | 'descending';
+}
+
+/**
+ * Defines the information that is needed to create or update a proxy.
+ *
+ * @dochash types/records/proxies
+ * @docName ProxyRecordInput
+ */
+export interface ProxyRecordInput extends ProxyRecord {}
+
+/**
+ * Defines an interface that represents the options for a list proxies action.
+ *
+ * @dochash types/records/proxies
+ * @docName ListProxiesOptions
+ */
+export interface ListProxiesOptions extends RecordActionOptions {
+    /**
+     * The order that items should be sorted in.
+     * - "ascending" means that the items should be sorted in alphebatically ascending order by address.
+     * - "descending" means that the items should be sorted in alphebatically descending order by address.
+     */
+    sort?: 'ascending' | 'descending';
+}
+
+/**
+ * Defines the options that can be used for a proxy request.
+ *
+ * @dochash types/records/proxies
+ * @docName ProxyRequestOptions
+ */
+export interface ProxyRequestOptions extends RecordActionOptions {
+    /**
+     * The HTTP method that should be used for the request.
+     * Defaults to "POST".
+     */
+    method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS';
 }
 
 /**
@@ -2576,6 +2614,185 @@ export function eraseWebhook(
                 input: {
                     recordName,
                     address,
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+/**
+ * Creates an action that records a proxy.
+ * @param recordName The name of the record.
+ * @param item The proxy that should be recorded.
+ * @param options The options that should be used for the action.
+ * @param taskId The ID of the task.
+ */
+export function recordProxy(
+    recordName: string,
+    item: ProxyRecordInput,
+    options: RecordActionOptions,
+    taskId: number | string
+): RecordsCallProcedureAction {
+    return recordsCallProcedure(
+        {
+            recordProxy: {
+                input: {
+                    recordName,
+                    item: {
+                        address: item.address,
+                        host: item.host,
+                        data: item.data as any,
+                        markers: item.markers as any,
+                    },
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+/**
+ * Creates an action that gets a proxy.
+ * @param recordName The name of the record.
+ * @param address The address of the proxy.
+ * @param options The options that should be used for the action.
+ * @param taskId The ID of the task.
+ */
+export function getProxy(
+    recordName: string,
+    address: string,
+    options: RecordActionOptions,
+    taskId?: number | string
+): RecordsCallProcedureAction {
+    return recordsCallProcedure(
+        {
+            getProxy: {
+                input: {
+                    recordName,
+                    address,
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+/**
+ * Creates an action that lists the proxies in a record.
+ * @param recordName The name of the record.
+ * @param startingAddress The address that the list should start with.
+ * @param options The options that should be used for the action.
+ * @param taskId The ID of the task.
+ */
+export function listProxies(
+    recordName: string,
+    startingAddress: string,
+    options: ListProxiesOptions,
+    taskId?: number | string
+): RecordsCallProcedureAction {
+    return recordsCallProcedure(
+        {
+            listProxies: {
+                input: {
+                    recordName,
+                    address: startingAddress,
+                    sort: options?.sort,
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+/**
+ * Creates an action that lists the proxies in a record that have the given marker.
+ * @param recordName The name of the record.
+ * @param marker The marker.
+ * @param startingAddress The address that the list should start with.
+ * @param options The options that should be used for the action.
+ * @param taskId The ID of the task.
+ */
+export function listProxiesByMarker(
+    recordName: string,
+    marker: string,
+    startingAddress: string,
+    options: ListProxiesOptions,
+    taskId?: number | string
+): RecordsCallProcedureAction {
+    return recordsCallProcedure(
+        {
+            listProxies: {
+                input: {
+                    recordName,
+                    address: startingAddress,
+                    sort: options?.sort,
+                    marker: marker,
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+/**
+ * Creates an action that erases a proxy.
+ * @param recordName The name of the record.
+ * @param address The address of the proxy.
+ * @param options The options that should be used for the action.
+ * @param taskId The ID of the task.
+ */
+export function eraseProxy(
+    recordName: string,
+    address: string,
+    options: RecordActionOptions,
+    taskId?: number | string
+): RecordsCallProcedureAction {
+    return recordsCallProcedure(
+        {
+            eraseProxy: {
+                input: {
+                    recordName,
+                    address,
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+/**
+ * Creates an action that sends a request through a proxy.
+ * @param recordName The name of the record.
+ * @param address The address of the proxy.
+ * @param path The path that the request should be sent to.
+ * @param body The body that should be sent with the request.
+ * @param options The options that should be used for the action.
+ * @param taskId The ID of the task.
+ */
+export function proxyRequest(
+    recordName: string,
+    address: string,
+    path: string,
+    body: any,
+    options: ProxyRequestOptions,
+    taskId?: number | string
+): RecordsCallProcedureAction {
+    return recordsCallProcedure(
+        {
+            proxyRequest: {
+                input: {
+                    recordName,
+                    address,
+                    path,
+                    body,
+                    method: options?.method,
                 },
             },
         },

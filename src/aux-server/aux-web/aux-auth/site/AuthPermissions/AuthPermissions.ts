@@ -116,6 +116,7 @@ export default class AuthPermissions extends Vue {
                     ['event', ['count']],
                     ['inst', ['read']],
                     ['webhook', ['run']],
+                    ['proxy', ['run']],
                     ['notification', ['read', 'list', 'subscribe']],
                 ];
 
@@ -153,6 +154,7 @@ export default class AuthPermissions extends Vue {
                         ],
                     ],
                     ['webhook', ['run']],
+                    ['proxy', ['run']],
                     ['notification', ['read', 'list', 'subscribe']],
                 ];
 

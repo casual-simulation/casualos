@@ -1418,6 +1418,34 @@ Object {
     },
     Object {
       "http": Object {
+        "method": "DELETE",
+        "path": "/api/v2/records/proxy",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "eraseProxy",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
         "method": "POST",
         "path": "/api/v2/records/purchasableItems/erase",
       },
@@ -2154,6 +2182,34 @@ Object {
       "origins": true,
     },
     Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/proxy",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getProxy",
+      "origins": "api",
+    },
+    Object {
       "inputs": Object {
         "schema": Object {},
         "type": "object",
@@ -2406,6 +2462,7 @@ Object {
               "package",
               "permissions",
               "webhook",
+              "proxy",
               "ai",
               "search",
               "database",
@@ -3060,6 +3117,51 @@ Object {
                   "resourceKind": Object {
                     "type": "literal",
                     "value": "webhook",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
+                    ],
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "delete",
+                      "list",
+                      "run",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "proxy",
                   },
                   "subjectId": Object {
                     "type": "string",
@@ -4171,6 +4273,7 @@ Object {
               "ai.image",
               "ai.skybox",
               "webhook",
+              "proxy",
               "notification",
               "package",
               "package.version",
@@ -4198,6 +4301,48 @@ Object {
       },
       "name": "listProcedures",
       "origins": true,
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/proxy/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "marker": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "sort": Object {
+            "optional": true,
+            "type": "enum",
+            "values": Array [
+              "ascending",
+              "descending",
+            ],
+          },
+        },
+        "type": "object",
+      },
+      "name": "listProxies",
+      "origins": "api",
     },
     Object {
       "http": Object {
@@ -4655,6 +4800,59 @@ Object {
       },
       "name": "processOAuthCode",
       "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/proxy/request",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "body": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "any",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "nullable": true,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "method": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "enum",
+            "values": Array [
+              "GET",
+              "POST",
+              "PUT",
+              "PATCH",
+              "DELETE",
+              "HEAD",
+              "OPTIONS",
+            ],
+          },
+          "path": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "proxyRequest",
+      "origins": "api",
     },
     Object {
       "http": Object {
@@ -5300,6 +5498,7 @@ Object {
                         "package",
                         "permissions",
                         "webhook",
+                        "proxy",
                         "ai",
                         "search",
                         "database",
@@ -5360,6 +5559,80 @@ Object {
         "type": "object",
       },
       "name": "recordPackageVersion",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/proxy",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "item": Object {
+            "optional": false,
+            "schema": Object {
+              "address": Object {
+                "type": "string",
+              },
+              "data": Object {
+                "defaultValue": Object {},
+                "hasDefault": true,
+                "nullable": true,
+                "optional": true,
+                "type": "record",
+                "valueSchema": Object {
+                  "options": Array [
+                    Object {
+                      "type": "string",
+                    },
+                    Object {
+                      "type": "number",
+                    },
+                    Object {
+                      "type": "boolean",
+                    },
+                    Object {
+                      "type": "null",
+                    },
+                  ],
+                  "type": "union",
+                },
+              },
+              "host": Object {
+                "type": "string",
+              },
+              "markers": Object {
+                "defaultValue": Array [
+                  "private",
+                ],
+                "hasDefault": true,
+                "maxLength": 10,
+                "nullable": true,
+                "optional": true,
+                "schema": Object {
+                  "type": "string",
+                },
+                "type": "array",
+              },
+            },
+            "type": "object",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "recordProxy",
       "origins": "api",
     },
     Object {
@@ -5653,6 +5926,7 @@ Object {
                   "ai.image",
                   "ai.skybox",
                   "webhook",
+                  "proxy",
                   "notification",
                   "package",
                   "package.version",
@@ -7279,6 +7553,44 @@ Object {
                             },
                             "type": "object",
                           },
+                          "proxies": Object {
+                            "defaultValue": Object {
+                              "allowed": false,
+                            },
+                            "description": "The configuration for proxy features. Defaults to not allowed.",
+                            "hasDefault": true,
+                            "optional": true,
+                            "schema": Object {
+                              "allowed": Object {
+                                "description": "Whether proxy features are granted for the subscription.",
+                                "type": "boolean",
+                              },
+                              "maxItems": Object {
+                                "description": "The maximum number of proxy items that are allowed for the subscription. If not specified, then there is no limit.",
+                                "optional": true,
+                                "type": "number",
+                              },
+                              "maxRequestsPerHour": Object {
+                                "description": "The maximum number of proxy requests allowed per hour for the subscription. If not specified, then there is no limit.",
+                                "optional": true,
+                                "type": "number",
+                              },
+                              "maxRequestsPerPeriod": Object {
+                                "description": "The maximum number of proxy requests allowed per subscription period. If not specified, then there is no limit.",
+                                "optional": true,
+                                "type": "number",
+                              },
+                              "requestTimeoutMs": Object {
+                                "defaultValue": 10000,
+                                "description": "The maximum number of miliseconds that the destination host has to respond to a proxied request. Defaults to 10000ms.",
+                                "hasDefault": true,
+                                "nullable": true,
+                                "optional": true,
+                                "type": "number",
+                              },
+                            },
+                            "type": "object",
+                          },
                           "records": Object {
                             "description": "The configuration for record features.",
                             "optional": true,
@@ -8023,6 +8335,44 @@ Object {
                               },
                               "maxPolicies": Object {
                                 "description": "Not currently implemented.",
+                                "optional": true,
+                                "type": "number",
+                              },
+                            },
+                            "type": "object",
+                          },
+                          "proxies": Object {
+                            "defaultValue": Object {
+                              "allowed": false,
+                            },
+                            "description": "The configuration for proxy features. Defaults to not allowed.",
+                            "hasDefault": true,
+                            "optional": true,
+                            "schema": Object {
+                              "allowed": Object {
+                                "description": "Whether proxy features are granted for the subscription.",
+                                "type": "boolean",
+                              },
+                              "maxItems": Object {
+                                "description": "The maximum number of proxy items that are allowed for the subscription. If not specified, then there is no limit.",
+                                "optional": true,
+                                "type": "number",
+                              },
+                              "maxRequestsPerHour": Object {
+                                "description": "The maximum number of proxy requests allowed per hour for the subscription. If not specified, then there is no limit.",
+                                "optional": true,
+                                "type": "number",
+                              },
+                              "maxRequestsPerPeriod": Object {
+                                "description": "The maximum number of proxy requests allowed per subscription period. If not specified, then there is no limit.",
+                                "optional": true,
+                                "type": "number",
+                              },
+                              "requestTimeoutMs": Object {
+                                "defaultValue": 10000,
+                                "description": "The maximum number of miliseconds that the destination host has to respond to a proxied request. Defaults to 10000ms.",
+                                "hasDefault": true,
+                                "nullable": true,
                                 "optional": true,
                                 "type": "number",
                               },
@@ -8931,6 +9281,44 @@ Object {
                                 },
                                 "maxPolicies": Object {
                                   "description": "Not currently implemented.",
+                                  "optional": true,
+                                  "type": "number",
+                                },
+                              },
+                              "type": "object",
+                            },
+                            "proxies": Object {
+                              "defaultValue": Object {
+                                "allowed": false,
+                              },
+                              "description": "The configuration for proxy features. Defaults to not allowed.",
+                              "hasDefault": true,
+                              "optional": true,
+                              "schema": Object {
+                                "allowed": Object {
+                                  "description": "Whether proxy features are granted for the subscription.",
+                                  "type": "boolean",
+                                },
+                                "maxItems": Object {
+                                  "description": "The maximum number of proxy items that are allowed for the subscription. If not specified, then there is no limit.",
+                                  "optional": true,
+                                  "type": "number",
+                                },
+                                "maxRequestsPerHour": Object {
+                                  "description": "The maximum number of proxy requests allowed per hour for the subscription. If not specified, then there is no limit.",
+                                  "optional": true,
+                                  "type": "number",
+                                },
+                                "maxRequestsPerPeriod": Object {
+                                  "description": "The maximum number of proxy requests allowed per subscription period. If not specified, then there is no limit.",
+                                  "optional": true,
+                                  "type": "number",
+                                },
+                                "requestTimeoutMs": Object {
+                                  "defaultValue": 10000,
+                                  "description": "The maximum number of miliseconds that the destination host has to respond to a proxied request. Defaults to 10000ms.",
+                                  "hasDefault": true,
+                                  "nullable": true,
                                   "optional": true,
                                   "type": "number",
                                 },
@@ -12190,6 +12578,34 @@ Object {
     },
     Object {
       "http": Object {
+        "method": "DELETE",
+        "path": "/api/v2/records/proxy",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "eraseProxy",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
         "method": "POST",
         "path": "/api/v2/records/purchasableItems/erase",
       },
@@ -12926,6 +13342,34 @@ Object {
       "origins": true,
     },
     Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/proxy",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getProxy",
+      "origins": "api",
+    },
+    Object {
       "inputs": Object {
         "schema": Object {},
         "type": "object",
@@ -13178,6 +13622,7 @@ Object {
               "package",
               "permissions",
               "webhook",
+              "proxy",
               "ai",
               "search",
               "database",
@@ -13832,6 +14277,51 @@ Object {
                   "resourceKind": Object {
                     "type": "literal",
                     "value": "webhook",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
+                    ],
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "delete",
+                      "list",
+                      "run",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "proxy",
                   },
                   "subjectId": Object {
                     "type": "string",
@@ -14943,6 +15433,7 @@ Object {
               "ai.image",
               "ai.skybox",
               "webhook",
+              "proxy",
               "notification",
               "package",
               "package.version",
@@ -14970,6 +15461,48 @@ Object {
       },
       "name": "listProcedures",
       "origins": true,
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/proxy/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "marker": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "sort": Object {
+            "optional": true,
+            "type": "enum",
+            "values": Array [
+              "ascending",
+              "descending",
+            ],
+          },
+        },
+        "type": "object",
+      },
+      "name": "listProxies",
+      "origins": "api",
     },
     Object {
       "http": Object {
@@ -15427,6 +15960,59 @@ Object {
       },
       "name": "processOAuthCode",
       "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/proxy/request",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "body": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "any",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "nullable": true,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "method": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "enum",
+            "values": Array [
+              "GET",
+              "POST",
+              "PUT",
+              "PATCH",
+              "DELETE",
+              "HEAD",
+              "OPTIONS",
+            ],
+          },
+          "path": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "proxyRequest",
+      "origins": "api",
     },
     Object {
       "http": Object {
@@ -16072,6 +16658,7 @@ Object {
                         "package",
                         "permissions",
                         "webhook",
+                        "proxy",
                         "ai",
                         "search",
                         "database",
@@ -16132,6 +16719,80 @@ Object {
         "type": "object",
       },
       "name": "recordPackageVersion",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/proxy",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "item": Object {
+            "optional": false,
+            "schema": Object {
+              "address": Object {
+                "type": "string",
+              },
+              "data": Object {
+                "defaultValue": Object {},
+                "hasDefault": true,
+                "nullable": true,
+                "optional": true,
+                "type": "record",
+                "valueSchema": Object {
+                  "options": Array [
+                    Object {
+                      "type": "string",
+                    },
+                    Object {
+                      "type": "number",
+                    },
+                    Object {
+                      "type": "boolean",
+                    },
+                    Object {
+                      "type": "null",
+                    },
+                  ],
+                  "type": "union",
+                },
+              },
+              "host": Object {
+                "type": "string",
+              },
+              "markers": Object {
+                "defaultValue": Array [
+                  "private",
+                ],
+                "hasDefault": true,
+                "maxLength": 10,
+                "nullable": true,
+                "optional": true,
+                "schema": Object {
+                  "type": "string",
+                },
+                "type": "array",
+              },
+            },
+            "type": "object",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "recordProxy",
       "origins": "api",
     },
     Object {
@@ -16425,6 +17086,7 @@ Object {
                   "ai.image",
                   "ai.skybox",
                   "webhook",
+                  "proxy",
                   "notification",
                   "package",
                   "package.version",
@@ -18051,6 +18713,44 @@ Object {
                             },
                             "type": "object",
                           },
+                          "proxies": Object {
+                            "defaultValue": Object {
+                              "allowed": false,
+                            },
+                            "description": "The configuration for proxy features. Defaults to not allowed.",
+                            "hasDefault": true,
+                            "optional": true,
+                            "schema": Object {
+                              "allowed": Object {
+                                "description": "Whether proxy features are granted for the subscription.",
+                                "type": "boolean",
+                              },
+                              "maxItems": Object {
+                                "description": "The maximum number of proxy items that are allowed for the subscription. If not specified, then there is no limit.",
+                                "optional": true,
+                                "type": "number",
+                              },
+                              "maxRequestsPerHour": Object {
+                                "description": "The maximum number of proxy requests allowed per hour for the subscription. If not specified, then there is no limit.",
+                                "optional": true,
+                                "type": "number",
+                              },
+                              "maxRequestsPerPeriod": Object {
+                                "description": "The maximum number of proxy requests allowed per subscription period. If not specified, then there is no limit.",
+                                "optional": true,
+                                "type": "number",
+                              },
+                              "requestTimeoutMs": Object {
+                                "defaultValue": 10000,
+                                "description": "The maximum number of miliseconds that the destination host has to respond to a proxied request. Defaults to 10000ms.",
+                                "hasDefault": true,
+                                "nullable": true,
+                                "optional": true,
+                                "type": "number",
+                              },
+                            },
+                            "type": "object",
+                          },
                           "records": Object {
                             "description": "The configuration for record features.",
                             "optional": true,
@@ -18795,6 +19495,44 @@ Object {
                               },
                               "maxPolicies": Object {
                                 "description": "Not currently implemented.",
+                                "optional": true,
+                                "type": "number",
+                              },
+                            },
+                            "type": "object",
+                          },
+                          "proxies": Object {
+                            "defaultValue": Object {
+                              "allowed": false,
+                            },
+                            "description": "The configuration for proxy features. Defaults to not allowed.",
+                            "hasDefault": true,
+                            "optional": true,
+                            "schema": Object {
+                              "allowed": Object {
+                                "description": "Whether proxy features are granted for the subscription.",
+                                "type": "boolean",
+                              },
+                              "maxItems": Object {
+                                "description": "The maximum number of proxy items that are allowed for the subscription. If not specified, then there is no limit.",
+                                "optional": true,
+                                "type": "number",
+                              },
+                              "maxRequestsPerHour": Object {
+                                "description": "The maximum number of proxy requests allowed per hour for the subscription. If not specified, then there is no limit.",
+                                "optional": true,
+                                "type": "number",
+                              },
+                              "maxRequestsPerPeriod": Object {
+                                "description": "The maximum number of proxy requests allowed per subscription period. If not specified, then there is no limit.",
+                                "optional": true,
+                                "type": "number",
+                              },
+                              "requestTimeoutMs": Object {
+                                "defaultValue": 10000,
+                                "description": "The maximum number of miliseconds that the destination host has to respond to a proxied request. Defaults to 10000ms.",
+                                "hasDefault": true,
+                                "nullable": true,
                                 "optional": true,
                                 "type": "number",
                               },
@@ -19703,6 +20441,44 @@ Object {
                                 },
                                 "maxPolicies": Object {
                                   "description": "Not currently implemented.",
+                                  "optional": true,
+                                  "type": "number",
+                                },
+                              },
+                              "type": "object",
+                            },
+                            "proxies": Object {
+                              "defaultValue": Object {
+                                "allowed": false,
+                              },
+                              "description": "The configuration for proxy features. Defaults to not allowed.",
+                              "hasDefault": true,
+                              "optional": true,
+                              "schema": Object {
+                                "allowed": Object {
+                                  "description": "Whether proxy features are granted for the subscription.",
+                                  "type": "boolean",
+                                },
+                                "maxItems": Object {
+                                  "description": "The maximum number of proxy items that are allowed for the subscription. If not specified, then there is no limit.",
+                                  "optional": true,
+                                  "type": "number",
+                                },
+                                "maxRequestsPerHour": Object {
+                                  "description": "The maximum number of proxy requests allowed per hour for the subscription. If not specified, then there is no limit.",
+                                  "optional": true,
+                                  "type": "number",
+                                },
+                                "maxRequestsPerPeriod": Object {
+                                  "description": "The maximum number of proxy requests allowed per subscription period. If not specified, then there is no limit.",
+                                  "optional": true,
+                                  "type": "number",
+                                },
+                                "requestTimeoutMs": Object {
+                                  "defaultValue": 10000,
+                                  "description": "The maximum number of miliseconds that the destination host has to respond to a proxied request. Defaults to 10000ms.",
+                                  "hasDefault": true,
+                                  "nullable": true,
                                   "optional": true,
                                   "type": "number",
                                 },

@@ -395,6 +395,9 @@ model Record {
     targetWebhookRecords WebhookRecord[] @relation("TargetWebookRecord")
     webhookRuns WebhookRun[]
 
+    proxyRecords ProxyRecord[]
+    proxyRequests ProxyRequest[]
+
     packageRecords PackageRecord[]
     packageRecordVersions PackageRecordVersion[]
 
@@ -905,6 +908,41 @@ model WebhookRun {
     
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
+}
+
+model ProxyRecord {
+    @@id([recordName, address])
+
+    recordName String @db.String(128)
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "ProxyRecord_recordName_fkey1")
+
+    address String @db.String(512)
+
+    host String @db.String(256)
+    data Json
+
+    markers String[]
+
+    requests ProxyRequest[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model ProxyRequest {
+    id String @id @db.Uuid
+
+    recordName String @db.String(128)
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "ProxyRequest_recordName_fkey1")
+
+    proxyAddress String @db.String(512)
+    proxy ProxyRecord @relation(fields: [recordName, proxyAddress], references: [recordName, address], onDelete: Cascade, map: "ProxyRequest_proxyAddress_fkey1")
+
+    requestTime DateTime
+
+    createdAt DateTime @default(now())
+
+    @@index([requestTime])
 }
 
 model NotificationRecord {

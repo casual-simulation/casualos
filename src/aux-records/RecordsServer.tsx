@@ -129,6 +129,9 @@ import {
     MARKER_VALIDATION,
     MARKERS_VALIDATION,
     NAME_VALIDATION,
+    PROXY_DATA_VALIDATION,
+    PROXY_HOST_VALIDATION,
+    PROXY_METHOD_VALIDATION,
     READ_FILE_SCHEMA,
     RECORD_DATA_SCHEMA,
     RECORD_FILE_SCHEMA,
@@ -139,6 +142,8 @@ import {
     UPDATE_FILE_SCHEMA,
 } from './Validations';
 import type { WebhookRecordsController } from './webhooks/WebhookRecordsController';
+import type { ProxyController } from './proxy/ProxyController';
+import type { ProxyRequestMethod } from './proxy/ProxyInterface';
 import {
     eraseItemProcedure,
     getItemProcedure,
@@ -443,6 +448,12 @@ export interface RecordsServerOptions {
     webhooksController?: WebhookRecordsController | null;
 
     /**
+     * The controller that should be used for handling proxies.
+     * If null, then proxies are not supported.
+     */
+    proxiesController?: ProxyController | null;
+
+    /**
      * The controller that should be used for handling rate limits for websockets.
      * If null, then the default rate limit controller will be used.
      */
@@ -519,6 +530,7 @@ export class RecordsServer {
     private _moderationController: ModerationController | null;
     private _loomController: LoomController | null;
     private _webhooksController: WebhookRecordsController | null;
+    private _proxiesController: ProxyController | null;
     private _notificationsController: NotificationRecordsController | null;
     private _packagesController: PackageRecordsController | null;
     private _packageVersionController: PackageVersionRecordsController | null;
@@ -605,6 +617,7 @@ export class RecordsServer {
         moderationController,
         loomController,
         webhooksController,
+        proxiesController,
         notificationsController,
         packagesController,
         packageVersionController,
@@ -642,6 +655,7 @@ export class RecordsServer {
         this._moderationController = moderationController;
         this._loomController = loomController;
         this._webhooksController = webhooksController;
+        this._proxiesController = proxiesController ?? null;
         this._notificationsController = notificationsController;
         this._packagesController = packagesController;
         this._packageVersionController = packageVersionController;
@@ -2377,6 +2391,107 @@ export class RecordsServer {
 
                     return result;
                 }),
+
+            recordProxy: recordItemProcedure(
+                this._auth,
+                this._proxiesController,
+                z.object({
+                    address: ADDRESS_VALIDATION,
+                    host: PROXY_HOST_VALIDATION,
+                    data: PROXY_DATA_VALIDATION.optional().nullable(),
+                    markers: MARKERS_VALIDATION.optional()
+                        .nullable()
+                        .prefault([PRIVATE_MARKER]),
+                }),
+                procedure().origins('api').http('POST', '/api/v2/records/proxy')
+            ),
+
+            getProxy: getItemProcedure(
+                this._auth,
+                this._proxiesController,
+                procedure().origins('api').http('GET', '/api/v2/records/proxy')
+            ),
+
+            listProxies: listItemsProcedure(
+                this._auth,
+                this._proxiesController,
+                procedure()
+                    .origins('api')
+                    .http('GET', '/api/v2/records/proxy/list')
+            ),
+
+            eraseProxy: eraseItemProcedure(
+                this._auth,
+                this._proxiesController,
+                procedure()
+                    .origins('api')
+                    .http('DELETE', '/api/v2/records/proxy')
+            ),
+
+            proxyRequest: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/records/proxy/request')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        address: ADDRESS_VALIDATION,
+                        path: z.string().max(2048).optional().nullable(),
+                        method: PROXY_METHOD_VALIDATION.optional().nullable(),
+                        body: z.any().optional().nullable(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
+                    })
+                )
+                .handler(
+                    async (
+                        { recordName, address, path, method, body, instances },
+                        context
+                    ) => {
+                        if (!this._proxiesController) {
+                            return {
+                                success: false,
+                                errorCode: 'not_supported',
+                                errorMessage: 'This feature is not supported.',
+                            };
+                        }
+
+                        const validation = await this._validateSessionKey(
+                            context.sessionKey
+                        );
+                        if (
+                            validation.success === false &&
+                            validation.errorCode !== 'no_session_key'
+                        ) {
+                            return validation;
+                        }
+
+                        const result =
+                            await this._proxiesController.handleProxyRequest({
+                                recordName,
+                                address,
+                                path,
+                                method: (method ??
+                                    undefined) as ProxyRequestMethod,
+                                body,
+                                userId: validation.userId,
+                                instances,
+                            });
+
+                        return result;
+                    },
+                    async (output, context) => {
+                        if (output.success === true && 'response' in output) {
+                            return {
+                                statusCode: output.response.statusCode,
+                                headers: output.response.headers,
+                                body: output.response.body,
+                            };
+                        }
+
+                        // Use defaults
+                        return {};
+                    }
+                ),
 
             recordNotification: recordItemProcedure(
                 this._auth,

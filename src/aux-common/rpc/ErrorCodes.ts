@@ -91,6 +91,8 @@ export type KnownErrorCodes =
     | 'session_is_not_revokable'
     | 'hume_api_error'
     | 'invalid_webhook_target'
+    | 'invalid_proxy_host'
+    | 'proxy_request_failed'
     | 'took_too_long'
     | 'parent_not_found'
     | 'service_unavailable'
@@ -220,6 +222,8 @@ export function getStatusCode(
             return 400;
         } else if (response.errorCode === 'site_rate_limited') {
             return 429;
+        } else if (response.errorCode === 'proxy_request_failed') {
+            return 502;
         } else if (response.errorCode === 'session_key_required_for_openid') {
             return 401;
         } else {

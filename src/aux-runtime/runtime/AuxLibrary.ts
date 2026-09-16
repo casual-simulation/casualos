@@ -308,6 +308,9 @@ import type {
     ListDataOptions,
     AISloydGenerateModelOptions,
     ListWebhooksOptions,
+    ListProxiesOptions,
+    ProxyRequestOptions,
+    ProxyRecordInput,
     ListNotificationsOptions,
     SendNotificationOptions,
     GrantEntitlementsRequest,
@@ -363,6 +366,12 @@ import {
     listWebhooksByMarker as calcListWebhooksByMarker,
     eraseWebhook as calcEraseWebhook,
     runWebhook as calcRunWebhook,
+    recordProxy as calcRecordProxy,
+    getProxy as calcGetProxy,
+    listProxies as calcListProxies,
+    listProxiesByMarker as calcListProxiesByMarker,
+    eraseProxy as calcEraseProxy,
+    proxyRequest as calcProxyRequest,
     recordNotification as calcRecordNotification,
     getNotification as calcGetNotification,
     listNotifications as calcListNotifications,
@@ -491,6 +500,7 @@ import type {
     SubscribeToNotificationResult,
     UnsubscribeToNotificationResult,
     WebhookRecord,
+    ProxyRecord,
     CreatePublicRecordKeyResult,
     GetDataResult,
     RecordDataResult,
@@ -558,6 +568,7 @@ import type {
     CrudRecordItemResult,
 } from '@casual-simulation/aux-records/crud/CrudRecordsController';
 import type { HandleWebhookResult } from '@casual-simulation/aux-records/webhooks/WebhookRecordsController';
+import type { HandleProxyRequestResult } from '@casual-simulation/aux-records/proxy/ProxyController';
 import type { SharedDocument } from '@casual-simulation/aux-common/documents/SharedDocument';
 import type { CreateRealtimeSessionTokenRequest } from '@casual-simulation/aux-records/AIOpenAIRealtimeInterface';
 import type {
@@ -3841,6 +3852,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 eraseWebhook,
                 listWebhooks,
                 listWebhooksByMarker,
+
+                recordProxy,
+                proxyRequest,
+                getProxy,
+                eraseProxy,
+                listProxies,
+                listProxiesByMarker,
 
                 recordNotification,
                 getNotification,
@@ -11507,6 +11525,227 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     ): Promise<CrudListItemsResult<WebhookRecord>> {
         const task = context.createTask();
         const event = calcListWebhooksByMarker(
+            recordName,
+            marker,
+            startingAddress,
+            options ?? {},
+            task.taskId
+        );
+        const final = addAsyncResultAction(task, event);
+        (final as any)[ORIGINAL_OBJECT] = event;
+        return final;
+    }
+
+    /**
+     * Creates or updates a [proxy](glossary:proxy-record) in the given record using the given options.
+     *
+     * Proxies make it possible to call a service that is secured by an API key without having to
+     * include the API key in the experience. Instead, the API key is stored in the proxy record and
+     * applied to the request right before it is sent to the destination host.
+     *
+     * Returns a promise that resolves with an object that contains whether the operation succeeded.
+     *
+     * @param recordName the name of the record.
+     * @param proxy the proxy that should be created or updated.
+     * @param options the options that should be used.
+     *
+     * @example Create a private proxy that adds a bearer token to requests.
+     * await os.recordProxy('myRecord', {
+     *   address: 'myProxy',
+     *   host: 'api.example.com',
+     *   data: {
+     *     'headers.authorization.bearer': 'my-secret-api-key'
+     *   }
+     * });
+     *
+     * @example Create a proxy that anyone can call and that adds an API key to the request body.
+     * await os.recordProxy('myRecord', {
+     *   address: 'myProxy',
+     *   host: 'api.example.com',
+     *   data: {
+     *     'body.apiKey': 'my-secret-api-key'
+     *   },
+     *   markers: ['publicRead']
+     * });
+     *
+     * @dochash actions/os/records
+     * @docgroup 05-records
+     * @docname os.recordProxy
+     */
+    function recordProxy(
+        recordName: string,
+        proxy: ProxyRecordInput,
+        options?: RecordActionOptions
+    ): Promise<CrudRecordItemResult> {
+        const task = context.createTask();
+        const event = calcRecordProxy(
+            recordName,
+            proxy,
+            options ?? {},
+            task.taskId
+        );
+        const final = addAsyncResultAction(task, event);
+        (final as any)[ORIGINAL_OBJECT] = event;
+        return final;
+    }
+
+    /**
+     * Sends a request through the [proxy](glossary:proxy-record) that is stored at the given address in the given record.
+     *
+     * The request is sent to the host that is configured on the proxy with the given path appended to it,
+     * and the properties that are configured on the proxy (like API keys) are applied to the request
+     * before it is sent. Returns a promise that resolves with the response from the destination host.
+     *
+     * @param recordName the name of the record.
+     * @param address the address of the proxy.
+     * @param path the path that the request should be sent to. (e.g. "/v1/chat")
+     * @param body the body that should be sent with the request. If not a string, then it will be sent as JSON.
+     * @param options the options to use.
+     *
+     * @example Call a proxy with some data.
+     * const result = await os.proxyRequest('myRecord', 'myProxy', '/v1/chat', {
+     *   message: 'Hello!'
+     * });
+     * os.toast(result.response.body);
+     *
+     * @example Call a proxy with a GET request.
+     * const result = await os.proxyRequest('myRecord', 'myProxy', '/v1/models', null, {
+     *   method: 'GET'
+     * });
+     *
+     * @dochash actions/os/records
+     * @docgroup 05-records
+     * @docname os.proxyRequest
+     */
+    function proxyRequest(
+        recordName: string,
+        address: string,
+        path: string,
+        body?: any,
+        options?: ProxyRequestOptions
+    ): Promise<HandleProxyRequestResult> {
+        const task = context.createTask();
+        const event = calcProxyRequest(
+            recordName,
+            address,
+            path,
+            body,
+            options ?? {},
+            task.taskId
+        );
+        const final = addAsyncResultAction(task, event);
+        (final as any)[ORIGINAL_OBJECT] = event;
+        return final;
+    }
+
+    /**
+     * Gets the [proxy](glossary:proxy-record) from the given record.
+     *
+     * Returns a promise that resolves with the proxy data.
+     *
+     * @param recordName the name of the record.
+     * @param address the address of the proxy.
+     * @param options the options to use.
+     *
+     * @dochash actions/os/records
+     * @docgroup 05-records
+     * @docname os.getProxy
+     */
+    function getProxy(
+        recordName: string,
+        address: string,
+        options?: RecordActionOptions
+    ): Promise<CrudGetItemResult<ProxyRecord>> {
+        const task = context.createTask();
+        const event = calcGetProxy(
+            recordName,
+            address,
+            options ?? {},
+            task.taskId
+        );
+        const final = addAsyncResultAction(task, event);
+        (final as any)[ORIGINAL_OBJECT] = event;
+        return final;
+    }
+
+    /**
+     * Deletes the [proxy](glossary:proxy-record) from the given record.
+     * @param recordName the name of the record.
+     * @param address the address of the proxy.
+     * @param options the options to use.
+     *
+     * @dochash actions/os/records
+     * @docgroup 05-records
+     * @docname os.eraseProxy
+     */
+    function eraseProxy(
+        recordName: string,
+        address: string,
+        options?: RecordActionOptions
+    ): Promise<CrudEraseItemResult> {
+        const task = context.createTask();
+        const event = calcEraseProxy(
+            recordName,
+            address,
+            options ?? {},
+            task.taskId
+        );
+        const final = addAsyncResultAction(task, event);
+        (final as any)[ORIGINAL_OBJECT] = event;
+        return final;
+    }
+
+    /**
+     * Lists the proxies that are in the given record.
+     * @param recordName the name of the record.
+     * @param startingAddress the address after which items will be included in the list.
+     * Since items are ordered within the record by address, this can be used as way to iterate through all the proxies in a record.
+     * If omitted, then the list will start with the first item.
+     * @param options the options to use.
+     *
+     * @dochash actions/os/records
+     * @docgroup 05-records
+     * @docname os.listProxies
+     */
+    function listProxies(
+        recordName: string,
+        startingAddress: string = null,
+        options?: ListProxiesOptions
+    ): Promise<CrudListItemsResult<ProxyRecord>> {
+        const task = context.createTask();
+        const event = calcListProxies(
+            recordName,
+            startingAddress,
+            options ?? {},
+            task.taskId
+        );
+        const final = addAsyncResultAction(task, event);
+        (final as any)[ORIGINAL_OBJECT] = event;
+        return final;
+    }
+
+    /**
+     * Lists the proxies that are in the given record and that have the given marker.
+     * @param recordName the name of the record.
+     * @param marker The marker that needs to be assigned to the proxies that should be included in the list.
+     * e.g. Using "publicRead" will return all proxies with the "publicRead" marker.
+     * @param startingAddress the address after which items will be included in the list.
+     * Since items are ordered within the record by address, this can be used as way to iterate through all the proxies in a record.
+     * If omitted, then the list will start with the first item.
+     * @param options the options to use.
+     *
+     * @dochash actions/os/records
+     * @docgroup 05-records
+     * @docname os.listProxiesByMarker
+     */
+    function listProxiesByMarker(
+        recordName: string,
+        marker: string,
+        startingAddress: string = null,
+        options?: ListProxiesOptions
+    ): Promise<CrudListItemsResult<ProxyRecord>> {
+        const task = context.createTask();
+        const event = calcListProxiesByMarker(
             recordName,
             marker,
             startingAddress,

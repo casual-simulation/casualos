@@ -42,6 +42,8 @@ import type {
     TiersConfiguration,
     WebhooksFeaturesConfiguration,
     WebhookFeaturesSchema,
+    ProxiesFeaturesConfiguration,
+    ProxyFeaturesSchema,
     StoreFeaturesSchema,
     ContractFeaturesSchema,
     DataFeaturesSchema,
@@ -58,6 +60,7 @@ import {
     getDataFeaturesSchema,
     denyAllFeatures,
     getWebhookFeaturesSchema,
+    getProxyFeaturesSchema,
 } from './SubscriptionConfiguration';
 import type z from 'zod';
 
@@ -262,6 +265,30 @@ export class FeaturesBuilder {
 
     withWebhookMaxRunsPerHour(maxRuns: number): this {
         this._features.webhooks.maxRunsPerHour = maxRuns;
+        return this;
+    }
+
+    withProxies(features?: ProxiesFeaturesConfiguration): this {
+        this._features.proxies =
+            features ??
+            getProxyFeaturesSchema().parse({
+                allowed: true,
+            } satisfies z.input<ProxyFeaturesSchema>);
+        return this;
+    }
+
+    withProxiesMaxItems(maxItems: number): this {
+        this._features.proxies.maxItems = maxItems;
+        return this;
+    }
+
+    withProxiesMaxRequestsPerPeriod(maxRequests: number): this {
+        this._features.proxies.maxRequestsPerPeriod = maxRequests;
+        return this;
+    }
+
+    withProxiesMaxRequestsPerHour(maxRequests: number): this {
+        this._features.proxies.maxRequestsPerHour = maxRequests;
         return this;
     }
 

@@ -230,6 +230,12 @@ import {
     listWebhooks,
     listWebhooksByMarker,
     runWebhook,
+    recordProxy,
+    getProxy,
+    eraseProxy,
+    listProxies,
+    listProxiesByMarker,
+    proxyRequest,
     recordNotification,
     eraseNotification,
     getNotification,
@@ -8797,6 +8803,149 @@ describe('AuxLibrary', () => {
                     'recordName',
                     'marker',
                     'webhook',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.recordProxy()', () => {
+            it('should emit a RecordProxyAction', async () => {
+                const action: any = library.api.os.recordProxy('recordName', {
+                    address: 'proxy',
+                    host: 'example.com:8443',
+                    data: {
+                        'headers.authorization.bearer': 'my-key',
+                    },
+                    markers: ['private'],
+                });
+                const expected = recordProxy(
+                    'recordName',
+                    {
+                        address: 'proxy',
+                        host: 'example.com:8443',
+                        data: {
+                            'headers.authorization.bearer': 'my-key',
+                        },
+                        markers: ['private'],
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.proxyRequest()', () => {
+            it('should emit a ProxyRequestAction', async () => {
+                const action: any = library.api.os.proxyRequest(
+                    'recordName',
+                    'proxy',
+                    '/v1/chat',
+                    {
+                        data: true,
+                    }
+                );
+                const expected = proxyRequest(
+                    'recordName',
+                    'proxy',
+                    '/v1/chat',
+                    { data: true },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support specifying the HTTP method', async () => {
+                const action: any = library.api.os.proxyRequest(
+                    'recordName',
+                    'proxy',
+                    '/v1/models',
+                    null,
+                    {
+                        method: 'GET',
+                    }
+                );
+                const expected = proxyRequest(
+                    'recordName',
+                    'proxy',
+                    '/v1/models',
+                    null,
+                    { method: 'GET' },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.getProxy()', () => {
+            it('should emit a GetProxyAction', async () => {
+                const action: any = library.api.os.getProxy(
+                    'recordName',
+                    'proxy'
+                );
+                const expected = getProxy(
+                    'recordName',
+                    'proxy',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.eraseProxy()', () => {
+            it('should emit an EraseProxyAction', async () => {
+                const action: any = library.api.os.eraseProxy(
+                    'recordName',
+                    'proxy'
+                );
+                const expected = eraseProxy(
+                    'recordName',
+                    'proxy',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listProxies()', () => {
+            it('should emit a ListProxiesAction', async () => {
+                const action: any = library.api.os.listProxies(
+                    'recordName',
+                    'proxy'
+                );
+                const expected = listProxies(
+                    'recordName',
+                    'proxy',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listProxiesByMarker()', () => {
+            it('should emit a ListProxiesAction', async () => {
+                const action: any = library.api.os.listProxiesByMarker(
+                    'recordName',
+                    'marker',
+                    'proxy'
+                );
+                const expected = listProxiesByMarker(
+                    'recordName',
+                    'marker',
+                    'proxy',
                     {},
                     context.tasks.size
                 );

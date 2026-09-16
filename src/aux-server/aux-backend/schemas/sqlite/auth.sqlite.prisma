@@ -395,6 +395,9 @@ model Record {
     targetWebhookRecords WebhookRecord[] @relation("TargetWebookRecord")
     webhookRuns WebhookRun[]
 
+    proxyRecords ProxyRecord[]
+    proxyRequests ProxyRequest[]
+
     packageRecords PackageRecord[]
     packageRecordVersions PackageRecordVersion[]
 
@@ -904,6 +907,41 @@ model WebhookRun {
     
     createdAt Decimal
     updatedAt Decimal
+}
+
+model ProxyRecord {
+    @@id([recordName, address])
+
+    recordName String
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade)
+
+    address String
+
+    host String
+    data Json
+
+    markers Json
+
+    requests ProxyRequest[]
+
+    createdAt Decimal
+    updatedAt Decimal
+}
+
+model ProxyRequest {
+    id String @id
+
+    recordName String
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade)
+
+    proxyAddress String
+    proxy ProxyRecord @relation(fields: [recordName, proxyAddress], references: [recordName, address], onDelete: Cascade)
+
+    requestTime Decimal
+
+    createdAt Decimal
+
+    @@index([requestTime])
 }
 
 model NotificationRecord {
