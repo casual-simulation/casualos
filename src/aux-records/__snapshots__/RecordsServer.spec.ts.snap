@@ -5584,8 +5584,6 @@ Object {
                 "type": "string",
               },
               "data": Object {
-                "defaultValue": Object {},
-                "hasDefault": true,
                 "nullable": true,
                 "optional": true,
                 "type": "record",
@@ -16744,8 +16742,6 @@ Object {
                 "type": "string",
               },
               "data": Object {
-                "defaultValue": Object {},
-                "hasDefault": true,
                 "nullable": true,
                 "optional": true,
                 "type": "record",
