@@ -91,6 +91,7 @@ export * from './ComIdConfig';
 export * from './ServerConfig';
 
 export * from './webhooks';
+export * from './proxy';
 export * from './notifications';
 export * from './packages';
 export * from './search';

@@ -30,4 +30,5 @@ export * from './SqlitePackageVersionRecordsStore';
 export * from './SqlitePrivoStore';
 export * from './SqliteSearchRecordsStore';
 export * from './SqliteWebhookRecordsStore';
+export * from './SqliteProxyRecordsStore';
 export * from './SqliteInstRecordsStore';

@@ -260,6 +260,10 @@ Object {
           "policies": Object {
             "allowed": false,
           },
+          "proxies": Object {
+            "allowed": false,
+            "requestTimeoutMs": 10000,
+          },
           "records": Object {
             "allowed": false,
           },
@@ -346,6 +350,10 @@ Object {
           },
           "policies": Object {
             "allowed": false,
+          },
+          "proxies": Object {
+            "allowed": false,
+            "requestTimeoutMs": 10000,
           },
           "records": Object {
             "allowed": false,
@@ -630,6 +638,10 @@ Object {
               "allowed": true,
               "maxPolicies": 32,
             },
+            "proxies": Object {
+              "allowed": false,
+              "requestTimeoutMs": 10000,
+            },
             "records": Object {
               "allowed": true,
               "maxRecords": 30,
@@ -736,6 +748,10 @@ Object {
               "allowed": true,
               "maxPolicies": 3200,
             },
+            "proxies": Object {
+              "allowed": false,
+              "requestTimeoutMs": 10000,
+            },
             "records": Object {
               "allowed": true,
               "maxRecords": 30000,
@@ -841,6 +857,10 @@ Object {
             "policies": Object {
               "allowed": true,
               "maxPolicies": 320,
+            },
+            "proxies": Object {
+              "allowed": false,
+              "requestTimeoutMs": 10000,
             },
             "records": Object {
               "allowed": true,
@@ -950,6 +970,10 @@ Object {
               "allowed": true,
               "maxPolicies": 320,
             },
+            "proxies": Object {
+              "allowed": false,
+              "requestTimeoutMs": 10000,
+            },
             "records": Object {
               "allowed": true,
               "maxRecords": 1500,
@@ -1055,6 +1079,10 @@ Object {
             "policies": Object {
               "allowed": true,
               "maxPolicies": 160,
+            },
+            "proxies": Object {
+              "allowed": false,
+              "requestTimeoutMs": 10000,
             },
             "records": Object {
               "allowed": true,
@@ -1164,6 +1192,10 @@ Object {
               "allowed": true,
               "maxPolicies": 32,
             },
+            "proxies": Object {
+              "allowed": false,
+              "requestTimeoutMs": 10000,
+            },
             "records": Object {
               "allowed": true,
               "maxRecords": 30,
@@ -1268,6 +1300,10 @@ Object {
               "allowed": true,
               "maxPolicies": 32,
             },
+            "proxies": Object {
+              "allowed": false,
+              "requestTimeoutMs": 10000,
+            },
             "records": Object {
               "allowed": true,
               "maxRecords": 30,
@@ -1369,6 +1405,10 @@ Object {
             "policies": Object {
               "allowed": true,
               "maxPolicies": 3200,
+            },
+            "proxies": Object {
+              "allowed": false,
+              "requestTimeoutMs": 10000,
             },
             "records": Object {
               "allowed": true,
@@ -1476,6 +1516,10 @@ Object {
               "allowed": true,
               "maxPolicies": 32,
             },
+            "proxies": Object {
+              "allowed": false,
+              "requestTimeoutMs": 10000,
+            },
             "records": Object {
               "allowed": true,
               "maxRecords": 30,
@@ -1579,6 +1623,10 @@ Object {
             "policies": Object {
               "allowed": true,
               "maxPolicies": 3200,
+            },
+            "proxies": Object {
+              "allowed": false,
+              "requestTimeoutMs": 10000,
             },
             "records": Object {
               "allowed": true,
@@ -1888,6 +1936,10 @@ Object {
           "policies": Object {
             "allowed": false,
           },
+          "proxies": Object {
+            "allowed": false,
+            "requestTimeoutMs": 10000,
+          },
           "records": Object {
             "allowed": false,
           },
@@ -1989,6 +2041,10 @@ Object {
           "policies": Object {
             "allowed": true,
             "maxPolicies": 32,
+          },
+          "proxies": Object {
+            "allowed": false,
+            "requestTimeoutMs": 10000,
           },
           "records": Object {
             "allowed": true,
@@ -2322,6 +2378,10 @@ Object {
           "policies": Object {
             "allowed": false,
           },
+          "proxies": Object {
+            "allowed": false,
+            "requestTimeoutMs": 10000,
+          },
           "records": Object {
             "allowed": false,
           },
@@ -2408,6 +2468,10 @@ Object {
           },
           "policies": Object {
             "allowed": false,
+          },
+          "proxies": Object {
+            "allowed": false,
+            "requestTimeoutMs": 10000,
           },
           "records": Object {
             "allowed": false,
@@ -2692,6 +2756,10 @@ Object {
               "allowed": true,
               "maxPolicies": 32,
             },
+            "proxies": Object {
+              "allowed": false,
+              "requestTimeoutMs": 10000,
+            },
             "records": Object {
               "allowed": true,
               "maxRecords": 30,
@@ -2798,6 +2866,10 @@ Object {
               "allowed": true,
               "maxPolicies": 3200,
             },
+            "proxies": Object {
+              "allowed": false,
+              "requestTimeoutMs": 10000,
+            },
             "records": Object {
               "allowed": true,
               "maxRecords": 30000,
@@ -2903,6 +2975,10 @@ Object {
             "policies": Object {
               "allowed": true,
               "maxPolicies": 320,
+            },
+            "proxies": Object {
+              "allowed": false,
+              "requestTimeoutMs": 10000,
             },
             "records": Object {
               "allowed": true,
@@ -3012,6 +3088,10 @@ Object {
               "allowed": true,
               "maxPolicies": 320,
             },
+            "proxies": Object {
+              "allowed": false,
+              "requestTimeoutMs": 10000,
+            },
             "records": Object {
               "allowed": true,
               "maxRecords": 1500,
@@ -3117,6 +3197,10 @@ Object {
             "policies": Object {
               "allowed": true,
               "maxPolicies": 160,
+            },
+            "proxies": Object {
+              "allowed": false,
+              "requestTimeoutMs": 10000,
             },
             "records": Object {
               "allowed": true,
@@ -3226,6 +3310,10 @@ Object {
               "allowed": true,
               "maxPolicies": 32,
             },
+            "proxies": Object {
+              "allowed": false,
+              "requestTimeoutMs": 10000,
+            },
             "records": Object {
               "allowed": true,
               "maxRecords": 30,
@@ -3330,6 +3418,10 @@ Object {
               "allowed": true,
               "maxPolicies": 32,
             },
+            "proxies": Object {
+              "allowed": false,
+              "requestTimeoutMs": 10000,
+            },
             "records": Object {
               "allowed": true,
               "maxRecords": 30,
@@ -3431,6 +3523,10 @@ Object {
             "policies": Object {
               "allowed": true,
               "maxPolicies": 3200,
+            },
+            "proxies": Object {
+              "allowed": false,
+              "requestTimeoutMs": 10000,
             },
             "records": Object {
               "allowed": true,
@@ -3538,6 +3634,10 @@ Object {
               "allowed": true,
               "maxPolicies": 32,
             },
+            "proxies": Object {
+              "allowed": false,
+              "requestTimeoutMs": 10000,
+            },
             "records": Object {
               "allowed": true,
               "maxRecords": 30,
@@ -3641,6 +3741,10 @@ Object {
             "policies": Object {
               "allowed": true,
               "maxPolicies": 3200,
+            },
+            "proxies": Object {
+              "allowed": false,
+              "requestTimeoutMs": 10000,
             },
             "records": Object {
               "allowed": true,

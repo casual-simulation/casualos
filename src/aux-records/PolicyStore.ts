@@ -924,6 +924,13 @@ export function getPublicReadPermission(
                 action,
             };
         }
+    } else if (resourceKind === 'proxy') {
+        if (action === 'run') {
+            return {
+                resourceKind,
+                action,
+            };
+        }
     } else if (resourceKind === 'notification') {
         if (action === 'read' || action === 'list' || action === 'subscribe') {
             return {
@@ -1034,6 +1041,13 @@ export function getPublicWritePermission(
             };
         }
     } else if (resourceKind === 'webhook') {
+        if (action === 'run') {
+            return {
+                resourceKind,
+                action,
+            };
+        }
+    } else if (resourceKind === 'proxy') {
         if (action === 'run') {
             return {
                 resourceKind,

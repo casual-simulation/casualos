@@ -118,6 +118,7 @@ const ALLOWED_STUDIO_MEMBER_RESOURCES: [ResourceKinds, ActionKinds[]][] = [
     ['ai.image', ['create']],
     ['ai.skybox', ['create']],
     ['webhook', ['read', 'create', 'delete', 'update', 'list', 'run']],
+    ['proxy', ['read', 'create', 'delete', 'update', 'list', 'run']],
     ['package', ['read', 'create', 'delete', 'update', 'list']],
     ['package.version', ['read', 'create', 'delete', 'update', 'list', 'run']],
 ];
@@ -4000,6 +4001,7 @@ function getEntitlementFeatureForAction(
         resourceKind === 'notification' ||
         resourceKind === 'package' ||
         resourceKind === 'webhook' ||
+        resourceKind === 'proxy' ||
         resourceKind === 'search' ||
         resourceKind === 'database'
     ) {

@@ -211,6 +211,8 @@ import { TransferFlags } from 'tigerbeetle-node';
 import { PurchasableItemRecordsController } from './purchasable-items/PurchasableItemRecordsController';
 import type { PurchasableItemRecordsStore } from './purchasable-items/PurchasableItemRecordsStore';
 import { MemoryPurchasableItemRecordsStore } from './purchasable-items/MemoryPurchasableItemRecordsStore';
+import { ProxyController } from './proxy/ProxyController';
+import { MemoryProxyRecordsStore } from './proxy/MemoryProxyRecordsStore';
 import type {
     FeaturesConfiguration,
     SubscriptionConfiguration,
@@ -440,6 +442,11 @@ describe('RecordsServer', () => {
     let policyController: PolicyController;
     let webhookController: WebhookRecordsController;
     let webhookStore: MemoryWebhookRecordsStore;
+    let proxyController: ProxyController;
+    let proxyStore: MemoryProxyRecordsStore;
+    let proxyInterface: {
+        sendRequest: jest.Mock<any, any>;
+    };
     let webhookEnvironment: {
         handleHttpRequest: jest.Mock<
             Promise<HandleHttpRequestResult>,
@@ -583,10 +590,16 @@ describe('RecordsServer', () => {
                         .withAllDefaultFeatures()
                 )
                 .withUserDefaultFeatures((features) =>
-                    features.withAllDefaultFeatures().withWebhooks()
+                    features
+                        .withAllDefaultFeatures()
+                        .withWebhooks()
+                        .withProxies()
                 )
                 .withStudioDefaultFeatures((features) =>
-                    features.withAllDefaultFeatures().withWebhooks()
+                    features
+                        .withAllDefaultFeatures()
+                        .withWebhooks()
+                        .withProxies()
                 )
         );
 
@@ -808,6 +821,17 @@ describe('RecordsServer', () => {
             websockets: websocketController,
         });
 
+        proxyStore = new MemoryProxyRecordsStore(store);
+        proxyInterface = {
+            sendRequest: jest.fn(),
+        };
+        proxyController = new ProxyController({
+            config: store,
+            store: proxyStore,
+            policies: policyController,
+            proxyInterface: proxyInterface as any,
+        });
+
         notificationStore = new MemoryNotificationRecordsStore(store);
         webPushInterface = {
             getServerApplicationKey: jest.fn(),
@@ -1022,6 +1046,7 @@ describe('RecordsServer', () => {
             loomController,
             websocketRateLimitController: rateLimitController,
             webhooksController: webhookController,
+            proxiesController: proxyController,
             notificationsController: notificationController,
             packagesController: packageController,
             packageVersionController: packageVersionController,
@@ -12392,6 +12417,462 @@ describe('RecordsServer', () => {
             `/api/v2/records/webhook/runs/info?runId=${'run1'}`,
             () => null,
             () => apiHeaders
+        );
+    });
+
+    describe('POST /api/v2/records/proxy', () => {
+        it('should return not_supported if the server doesnt have a proxies controller', async () => {
+            server = new RecordsServer({
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                policyController,
+            });
+
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/proxy`,
+                    JSON.stringify({
+                        recordName,
+                        item: {
+                            address: 'testAddress',
+                            host: 'example.com',
+                            data: {},
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This feature is not supported.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should save the given proxy record', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/proxy`,
+                    JSON.stringify({
+                        recordName,
+                        item: {
+                            address: 'testAddress',
+                            host: 'example.com:8443',
+                            data: {
+                                'headers.authorization.bearer': 'my-key',
+                            },
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    address: 'testAddress',
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const item = await proxyStore.getItemByAddress(
+                recordName,
+                'testAddress'
+            );
+            expect(item).toEqual({
+                address: 'testAddress',
+                host: 'example.com:8443',
+                data: {
+                    'headers.authorization.bearer': 'my-key',
+                },
+                markers: [PRIVATE_MARKER],
+            });
+        });
+
+        it('should reject proxies that have unsupported data properties', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/proxy`,
+                    JSON.stringify({
+                        recordName,
+                        item: {
+                            address: 'testAddress',
+                            host: 'example.com',
+                            data: {
+                                'headers.cookie': 'abc',
+                            },
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expect(result.statusCode).toBe(400);
+
+            const item = await proxyStore.getItemByAddress(
+                recordName,
+                'testAddress'
+            );
+            expect(item).toEqual(null);
+        });
+
+        testOrigin('POST', `/api/v2/records/proxy`, () =>
+            JSON.stringify({
+                recordName,
+                item: {
+                    address: 'testAddress',
+                    host: 'example.com',
+                    data: {},
+                },
+            })
+        );
+        testAuthorization(() =>
+            httpPost(
+                `/api/v2/records/proxy`,
+                JSON.stringify({
+                    recordName,
+                    item: {
+                        address: 'testAddress',
+                        host: 'example.com',
+                        data: {},
+                    },
+                }),
+                apiHeaders
+            )
+        );
+        testRateLimit('POST', `/api/v2/records/proxy`, () =>
+            JSON.stringify({
+                recordName,
+                item: {
+                    address: 'testAddress',
+                    host: 'example.com',
+                    data: {},
+                },
+            })
+        );
+    });
+
+    describe('GET /api/v2/records/proxy', () => {
+        beforeEach(async () => {
+            await proxyStore.createItem(recordName, {
+                address: 'testAddress',
+                host: 'example.com',
+                data: {},
+                markers: [PRIVATE_MARKER],
+            });
+
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+        });
+
+        it('should return the proxy record', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/proxy?recordName=${recordName}&address=testAddress`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    item: {
+                        address: 'testAddress',
+                        host: 'example.com',
+                        data: {},
+                        markers: [PRIVATE_MARKER],
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin(
+            'GET',
+            `/api/v2/records/proxy?recordName=recordName&address=testAddress`
+        );
+        testAuthorization(() =>
+            httpGet(
+                `/api/v2/records/proxy?recordName=${recordName}&address=testAddress`,
+                apiHeaders
+            )
+        );
+        testRateLimit(() =>
+            httpGet(
+                `/api/v2/records/proxy?recordName=${recordName}&address=testAddress`,
+                apiHeaders
+            )
+        );
+    });
+
+    describe('GET /api/v2/records/proxy/list', () => {
+        beforeEach(async () => {
+            await proxyStore.createItem(recordName, {
+                address: 'address1',
+                host: 'example.com',
+                data: {},
+                markers: [PRIVATE_MARKER],
+            });
+            await proxyStore.createItem(recordName, {
+                address: 'address2',
+                host: 'example.com',
+                data: {},
+                markers: [PRIVATE_MARKER],
+            });
+
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+        });
+
+        it('should return the list of proxies', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/proxy/list?recordName=${recordName}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    items: [
+                        {
+                            address: 'address1',
+                            host: 'example.com',
+                            data: {},
+                            markers: [PRIVATE_MARKER],
+                        },
+                        {
+                            address: 'address2',
+                            host: 'example.com',
+                            data: {},
+                            markers: [PRIVATE_MARKER],
+                        },
+                    ],
+                    totalCount: 2,
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin('GET', `/api/v2/records/proxy/list?recordName=recordName`);
+        testAuthorization(() =>
+            httpGet(
+                `/api/v2/records/proxy/list?recordName=${recordName}`,
+                apiHeaders
+            )
+        );
+        testRateLimit(() =>
+            httpGet(
+                `/api/v2/records/proxy/list?recordName=${recordName}`,
+                apiHeaders
+            )
+        );
+    });
+
+    describe('DELETE /api/v2/records/proxy', () => {
+        beforeEach(async () => {
+            await proxyStore.createItem(recordName, {
+                address: 'testAddress',
+                host: 'example.com',
+                data: {},
+                markers: [PRIVATE_MARKER],
+            });
+
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+        });
+
+        it('should delete the proxy record', async () => {
+            const result = await server.handleHttpRequest(
+                httpDelete(
+                    `/api/v2/records/proxy`,
+                    JSON.stringify({
+                        recordName,
+                        address: 'testAddress',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const item = await proxyStore.getItemByAddress(
+                recordName,
+                'testAddress'
+            );
+            expect(item).toEqual(null);
+        });
+
+        testOrigin('DELETE', `/api/v2/records/proxy`, () =>
+            JSON.stringify({
+                recordName,
+                address: 'testAddress',
+            })
+        );
+        testAuthorization(() =>
+            httpDelete(
+                `/api/v2/records/proxy`,
+                JSON.stringify({
+                    recordName,
+                    address: 'testAddress',
+                }),
+                apiHeaders
+            )
+        );
+        testRateLimit('DELETE', `/api/v2/records/proxy`, () =>
+            JSON.stringify({
+                recordName,
+                address: 'testAddress',
+            })
+        );
+    });
+
+    describe('POST /api/v2/records/proxy/request', () => {
+        beforeEach(async () => {
+            await proxyStore.createItem(recordName, {
+                address: 'testAddress',
+                host: 'example.com',
+                data: {
+                    'headers.authorization.bearer': 'my-key',
+                },
+                markers: [PRIVATE_MARKER],
+            });
+
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            proxyInterface.sendRequest.mockResolvedValue(
+                success({
+                    statusCode: 201,
+                    headers: {
+                        'content-type': 'application/json',
+                    },
+                    body: '{"hello":"world"}',
+                })
+            );
+        });
+
+        it('should return the response from the destination host', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/proxy/request`,
+                    JSON.stringify({
+                        recordName,
+                        address: 'testAddress',
+                        path: '/v1/chat',
+                        body: {
+                            message: 'hello',
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expect(result.statusCode).toBe(201);
+            expect(result.body).toBe('{"hello":"world"}');
+
+            expect(proxyInterface.sendRequest).toHaveBeenCalledTimes(1);
+            const request = proxyInterface.sendRequest.mock.calls[0][0];
+            expect(request.host).toBe('example.com');
+            expect(request.path).toBe('/v1/chat');
+            expect(request.headers['authorization']).toBe('Bearer my-key');
+        });
+
+        it('should return not_supported if the server doesnt have a proxies controller', async () => {
+            server = new RecordsServer({
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                policyController,
+            });
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/proxy/request`,
+                    JSON.stringify({
+                        recordName,
+                        address: 'testAddress',
+                        path: '/v1/chat',
+                        body: {},
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This feature is not supported.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin('POST', `/api/v2/records/proxy/request`, () =>
+            JSON.stringify({
+                recordName,
+                address: 'testAddress',
+                path: '/v1/chat',
+                body: {},
+            })
+        );
+        testRateLimit('POST', `/api/v2/records/proxy/request`, () =>
+            JSON.stringify({
+                recordName,
+                address: 'testAddress',
+                path: '/v1/chat',
+                body: {},
+            })
         );
     });
 
