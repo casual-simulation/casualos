@@ -31,6 +31,7 @@ import {
 import type {
     CompleteWebAuthnLoginResult,
     RequestWebAuthnLoginResult,
+    RequestWebAuthnLoginSuccess,
 } from '@casual-simulation/aux-records';
 import { ADDRESS_FIELD, getFormErrors } from '@casual-simulation/aux-common';
 import { Prop, Watch } from 'vue-property-decorator';
@@ -124,8 +125,11 @@ export default class EnterAddressDialog extends Vue {
     extraErrors: FormError[] = [];
     acceptedTerms: boolean = false;
     processing: boolean = false;
+    loadingWebAuthn: boolean = false;
 
     private _apiEndpoint: string;
+
+    private _webauthnOptions: RequestWebAuthnLoginSuccess = null;
 
     @Watch('status')
     onStatusChanged() {
@@ -149,6 +153,7 @@ export default class EnterAddressDialog extends Vue {
         this.address = '';
         this.acceptedTerms = false;
         this.processing = false;
+        this.loadingWebAuthn = false;
         this.showEnterAddress = true;
         this.processingKind = 'login';
     }
@@ -169,6 +174,8 @@ export default class EnterAddressDialog extends Vue {
                 console.log(
                     '[EnterAddressDialog] Safari detected, not using WebAuthn autofill'
                 );
+
+                await this._loadWebAuthnOptions();
             }
         }
     }
@@ -234,40 +241,56 @@ export default class EnterAddressDialog extends Vue {
         }
     }
 
-    async loginWithWebAuthn(useBrowserAutofill: boolean = false) {
-        const optionsResult = await this.getWebAuthnLoginOptions();
-        if (optionsResult.success === true) {
-            try {
-                const response = await startAuthentication(
-                    optionsResult.options,
-                    useBrowserAutofill
-                );
-                const result = await this.completeWebAuthnLogin(
-                    optionsResult.requestId,
-                    response
-                );
+    private async _loadWebAuthnOptions() {
+        try {
+            this.loadingWebAuthn = true;
+            const options = await this.getWebAuthnLoginOptions();
+            if (options.success === true) {
+                this._webauthnOptions = options;
+            }
+            return options;
+        } finally {
+            this.loadingWebAuthn = false;
+        }
+    }
 
+    async loginWithWebAuthn(useBrowserAutofill: boolean = false) {
+        if (!this._webauthnOptions) {
+            const result = await this._loadWebAuthnOptions();
+            if (result.success === false) {
                 return result;
-            } catch (err) {
-                if (err.name === 'AbortError') {
-                    return {
-                        success: false as const,
-                        errorCode: 'aborted' as const,
-                        errorMessage: 'The operation was aborted.',
-                    };
-                }
-                console.error(
-                    '[AuthManager] Error while logging in with WebAuthn:',
-                    err
-                );
-                return {
-                    success: false as const,
-                    errorCode: 'server_error' as const,
-                    errorMessage: err.message,
-                };
             }
         }
-        return optionsResult;
+
+        try {
+            const response = await startAuthentication(
+                this._webauthnOptions.options,
+                useBrowserAutofill
+            );
+            const result = await this.completeWebAuthnLogin(
+                this._webauthnOptions.requestId,
+                response
+            );
+
+            return result;
+        } catch (err) {
+            if (err.name === 'AbortError') {
+                return {
+                    success: false as const,
+                    errorCode: 'aborted' as const,
+                    errorMessage: 'The operation was aborted.',
+                };
+            }
+            console.error(
+                '[AuthManager] Error while logging in with WebAuthn:',
+                err
+            );
+            return {
+                success: false as const,
+                errorCode: 'server_error' as const,
+                errorMessage: err.message,
+            };
+        }
     }
 
     async getWebAuthnLoginOptions(): Promise<RequestWebAuthnLoginResult> {
