@@ -226,6 +226,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                 localPersistence: localPersistence
                     ? {
                           saveToIndexedDb: true,
+                          syncWithServerOnConnect: true,
                       }
                     : null,
             },

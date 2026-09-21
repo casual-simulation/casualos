@@ -78,6 +78,12 @@ export interface SharedDocumentConfig {
         saveToIndexedDb?: boolean;
 
         /**
+         * Whether local updates should be re-shared when connecting.
+         * Defaults to true.
+         */
+        syncWithServerOnConnect?: boolean;
+
+        /**
          * The key to use for encryption.
          */
         encryptionKey?: string;
