@@ -2369,7 +2369,8 @@ export class ServerBuilder implements SubscriptionLike {
         this._sharedPermissionsController = this._sharedPermissionsStore
             ? new SharedPermissionsController(
                   this._sharedPermissionsStore,
-                  this._policyController
+                  this._policyController,
+                  this._authStore
               )
             : null;
         this._dataController = new DataRecordsController({

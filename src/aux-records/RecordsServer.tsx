@@ -4575,6 +4575,7 @@ export class RecordsServer {
                         recordName: RECORD_NAME_VALIDATION,
                         permission: SHARED_MARKER_PERMISSION_VALIDATION(),
                         targetUserId: z.string().optional().nullable(),
+                        targetUserEmail: z.string().optional().nullable(),
                         expireTimeMs: z.number().optional().nullable(),
                         instances:
                             INSTANCES_ARRAY_VALIDATION.optional().nullable(),
@@ -4586,6 +4587,7 @@ export class RecordsServer {
                             recordName,
                             permission,
                             targetUserId,
+                            targetUserEmail,
                             expireTimeMs,
                             instances,
                         },
@@ -4618,6 +4620,7 @@ export class RecordsServer {
                                     recordName,
                                     permission: permission as any,
                                     targetUserId,
+                                    targetUserEmail,
                                     expireTimeMs,
                                     instances,
                                 }

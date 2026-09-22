@@ -140,7 +140,11 @@ export function createTestControllers(
         store,
         packageVersionStore
     );
-    const sharedPermissions = new SharedPermissionsController(store, policies);
+    const sharedPermissions = new SharedPermissionsController(
+        store,
+        policies,
+        store
+    );
     const files = new FileRecordsController({
         config: store,
         metrics: store,

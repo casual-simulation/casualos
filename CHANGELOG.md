@@ -29,6 +29,9 @@
         user's accepted shared permissions).
     -   Added the `SharedPermission` table/model and the `PrismaSharedPermissionsStore`/`SqliteSharedPermissionsStore`
         implementations (and migrations) for CockroachDB and SQLite.
+    -   `requestSharedPermission` now also accepts a `targetUserEmail` property as an alternative to
+        `targetUserId` (mutually exclusive, like `addStudioMember`'s `addedUserId`/`addedEmail`) to look
+        up the target user by their email address.
 -   Added support for proxying requests to services that require an API key.
     -   Added the `proxy` resource kind and the `ProxyController`.
     -   Proxy records store the `host` that requests should be sent to along with a `data` object

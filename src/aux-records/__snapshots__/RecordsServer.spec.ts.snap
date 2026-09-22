@@ -7334,6 +7334,11 @@ Object {
           "recordName": Object {
             "type": "string",
           },
+          "targetUserEmail": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
           "targetUserId": Object {
             "nullable": true,
             "optional": true,
@@ -19457,6 +19462,11 @@ Object {
             "type": "union",
           },
           "recordName": Object {
+            "type": "string",
+          },
+          "targetUserEmail": Object {
+            "nullable": true,
+            "optional": true,
             "type": "string",
           },
           "targetUserId": Object {

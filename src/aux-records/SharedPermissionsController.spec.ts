@@ -160,6 +160,46 @@ describe('SharedPermissionsController', () => {
             expect(result.success).toBe(false);
             expect((result as any).errorCode).toBe('not_authorized');
         });
+
+        it('should support requesting from a specific target user by email', async () => {
+            const result = await controller.requestSharedPermission({
+                userId: userA,
+                recordName: recordA,
+                permission,
+                targetUserEmail: 'userB@example.com',
+            });
+
+            expect(result.success).toBe(true);
+            const id = (result as RequestSharedPermissionSuccess)
+                .sharedPermissionId;
+            const sp = await store.findSharedPermissionById(id);
+            expect(sp.targetUserId).toBe(userB);
+        });
+
+        it('should fail if both targetUserId and targetUserEmail are provided', async () => {
+            const result = await controller.requestSharedPermission({
+                userId: userA,
+                recordName: recordA,
+                permission,
+                targetUserId: userB,
+                targetUserEmail: 'userB@example.com',
+            });
+
+            expect(result.success).toBe(false);
+            expect((result as any).errorCode).toBe('unacceptable_request');
+        });
+
+        it('should fail if the given targetUserEmail does not match a user', async () => {
+            const result = await controller.requestSharedPermission({
+                userId: userA,
+                recordName: recordA,
+                permission,
+                targetUserEmail: 'missing@example.com',
+            });
+
+            expect(result.success).toBe(false);
+            expect((result as any).errorCode).toBe('user_not_found');
+        });
     });
 
     describe('acceptSharedPermission()', () => {

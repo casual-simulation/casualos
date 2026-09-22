@@ -21,6 +21,7 @@ import type {
     SharedMarkerPermission,
 } from '@casual-simulation/aux-common';
 import { ACCOUNT_MARKER } from '@casual-simulation/aux-common';
+import type { AuthStore } from './AuthStore';
 import type {
     AuthorizeSubjectFailure,
     ConstructAuthorizationContextFailure,
@@ -55,10 +56,16 @@ export const SHARED_PERMISSION_REQUEST_LIFETIME_MS = 1000 * 60 * 60 * 24;
 export class SharedPermissionsController {
     private _store: SharedPermissionsStore;
     private _policies: PolicyController;
+    private _auth: AuthStore;
 
-    constructor(store: SharedPermissionsStore, policies: PolicyController) {
+    constructor(
+        store: SharedPermissionsStore,
+        policies: PolicyController,
+        auth: AuthStore
+    ) {
         this._store = store;
         this._policies = policies;
+        this._auth = auth;
     }
 
     /**
@@ -110,6 +117,34 @@ export class SharedPermissionsController {
                 };
             }
 
+            if (request.targetUserId && request.targetUserEmail) {
+                return {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'targetUserId and targetUserEmail are mutually exclusive. Only one may be provided.',
+                };
+            }
+
+            let targetUserId: string | null = request.targetUserId ?? null;
+            if (!targetUserId && request.targetUserEmail) {
+                const targetUser = await this._auth.findUserByAddress(
+                    request.targetUserEmail,
+                    'email'
+                );
+
+                if (!targetUser) {
+                    return {
+                        success: false,
+                        errorCode: 'user_not_found',
+                        errorMessage:
+                            'The user with the given email address could not be found.',
+                    };
+                }
+
+                targetUserId = targetUser.id;
+            }
+
             const recordName = context.context.recordName;
             const now = Date.now();
             const id = uuidv7();
@@ -118,7 +153,7 @@ export class SharedPermissionsController {
                 id,
                 recordName,
                 requestingUserId: request.userId,
-                targetUserId: request.targetUserId ?? null,
+                targetUserId,
                 permission: request.permission,
                 status: 'requested',
                 createdAtMs: now,
@@ -640,8 +675,16 @@ export interface RequestSharedPermissionRequest {
     /**
      * The ID of the other user that the user wants to share with.
      * If omitted, then the first user to accept the share will be used.
+     * Mutually exclusive with targetUserEmail.
      */
     targetUserId?: string | null;
+
+    /**
+     * The email address of the other user that the user wants to share with.
+     * If omitted, then the first user to accept the share will be used.
+     * Mutually exclusive with targetUserId.
+     */
+    targetUserEmail?: string | null;
 
     /**
      * The unix time in miliseconds that the shared permission request will expire.
@@ -674,7 +717,9 @@ export interface RequestSharedPermissionFailure {
         | ServerError
         | ConstructAuthorizationContextFailure['errorCode']
         | AuthorizeSubjectFailure['errorCode']
-        | 'unacceptable_expire_time';
+        | 'unacceptable_expire_time'
+        | 'unacceptable_request'
+        | 'user_not_found';
     errorMessage: string;
 }
 

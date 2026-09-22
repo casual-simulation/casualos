@@ -717,7 +717,8 @@ describe('RecordsServer', () => {
         );
         sharedPermissionsController = new SharedPermissionsController(
             store,
-            policyController
+            policyController,
+            store
         );
 
         eventsController = new EventRecordsController({
