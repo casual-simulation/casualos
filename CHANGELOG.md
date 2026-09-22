@@ -6,6 +6,23 @@
 
 ### :rocket: Features
 
+-   Added support for "shared" permissions.
+    -   Shared permissions are marker-based permissions that must be requested by one user and accepted
+        by another user before they take effect. Once accepted, both users are granted the permission
+        inside each other's respective records. This makes it possible to implement "friending"-like
+        patterns where both parties have to agree before either one gains access to the other's data.
+    -   Shared permissions have a lifecycle of `requested`, `accepted`, `rejected`, and `revoked`. Either
+        party can revoke an accepted shared permission, which removes the permissions that were granted
+        to both parties.
+    -   Added the `SharedPermissionsController` and `SharedPermissionsStore`.
+    -   Added the `POST /api/v2/records/permissions/shared/request`,
+        `POST /api/v2/records/permissions/shared/accept`,
+        `POST /api/v2/records/permissions/shared/reject`,
+        `POST /api/v2/records/permissions/shared/revoke`,
+        `GET /api/v2/records/permissions/shared/list`,
+        `GET /api/v2/records/permissions/shared/list/status`,
+        `GET /api/v2/records/permissions/shared/list/sent`, and
+        `GET /api/v2/records/permissions/shared/list/requested` endpoints.
 -   Added support for proxying requests to services that require an API key.
     -   Added the `proxy` resource kind and the `ProxyController`.
     -   Proxy records store the `host` that requests should be sent to along with a `data` object

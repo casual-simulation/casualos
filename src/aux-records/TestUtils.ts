@@ -18,6 +18,7 @@
 import { AuthController } from './AuthController';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import { PolicyController } from './PolicyController';
+import { SharedPermissionsController } from './SharedPermissionsController';
 import { RecordsController } from './RecordsController';
 import type { SubscriptionConfiguration } from './SubscriptionConfiguration';
 import { MemoryStore } from './MemoryStore';
@@ -139,6 +140,7 @@ export function createTestControllers(
         store,
         packageVersionStore
     );
+    const sharedPermissions = new SharedPermissionsController(store, policies);
     const files = new FileRecordsController({
         config: store,
         metrics: store,
@@ -170,6 +172,8 @@ export function createTestControllers(
         records,
         policyStore: store,
         policies,
+        sharedPermissionsStore: store,
+        sharedPermissions,
         configStore: store,
         files,
         packagesStore,

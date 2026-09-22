@@ -791,6 +791,7 @@ describe('PolicyController', () => {
 
             expect(result).toEqual({
                 success: true,
+                permissionAssignmentId: expect.any(String),
             });
 
             const permissions = await store.listPermissionsForMarker(
@@ -832,6 +833,7 @@ describe('PolicyController', () => {
 
             expect(result).toEqual({
                 success: true,
+                permissionAssignmentId: expect.any(String),
             });
 
             const permissions = await store.listPermissionsForMarker(
@@ -900,6 +902,7 @@ describe('PolicyController', () => {
 
             expect(result).toEqual({
                 success: true,
+                permissionAssignmentId: expect.any(String),
             });
 
             const permissions = await store.listPermissionsForMarker(
@@ -953,6 +956,7 @@ describe('PolicyController', () => {
 
             expect(result).toEqual({
                 success: true,
+                permissionAssignmentId: expect.any(String),
             });
 
             const permissions = await store.listPermissionsForMarker(
@@ -1077,6 +1081,7 @@ describe('PolicyController', () => {
 
             expect(result).toEqual({
                 success: true,
+                permissionAssignmentId: expect.any(String),
             });
 
             const permissions = await store.listPermissionsForMarker(

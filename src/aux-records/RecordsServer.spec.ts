@@ -70,6 +70,7 @@ import { MemoryPackageVersionRecordsStore } from './packages/version/MemoryPacka
 import { PackageRecordsController } from './packages/PackageRecordsController';
 import { PackageVersionRecordsController } from './packages/version/PackageVersionRecordsController';
 import { PolicyController } from './PolicyController';
+import { SharedPermissionsController } from './SharedPermissionsController';
 import {
     ACCOUNT_MARKER,
     ADMIN_ROLE_NAME,
@@ -440,6 +441,7 @@ describe('RecordsServer', () => {
     let purchasableItemsController: PurchasableItemRecordsController;
 
     let policyController: PolicyController;
+    let sharedPermissionsController: SharedPermissionsController;
     let webhookController: WebhookRecordsController;
     let webhookStore: MemoryWebhookRecordsStore;
     let proxyController: ProxyController;
@@ -712,6 +714,10 @@ describe('RecordsServer', () => {
             store,
             instStore,
             packageVersionsStore
+        );
+        sharedPermissionsController = new SharedPermissionsController(
+            store,
+            policyController
         );
 
         eventsController = new EventRecordsController({
@@ -1056,6 +1062,7 @@ describe('RecordsServer', () => {
             contractRecordsController: contractsController,
             viewTemplateRenderer: viewTemplateRenderer,
             linkPreviewController,
+            sharedPermissionsController,
         });
         defaultHeaders = {
             origin: 'test.com',
@@ -19878,6 +19885,7 @@ describe('RecordsServer', () => {
                     statusCode: 200,
                     body: {
                         success: true,
+                        permissionAssignmentId: expect.any(String),
                     },
                     headers: apiCorsHeaders,
                 });

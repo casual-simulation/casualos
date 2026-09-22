@@ -44,6 +44,8 @@ export * from './LinkPreviewController';
 
 export * from './PolicyController';
 export * from './PolicyStore';
+export * from './SharedPermissionsController';
+export * from './SharedPermissionsStore';
 
 export type {
     AIController,
