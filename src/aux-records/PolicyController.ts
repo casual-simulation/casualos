@@ -1913,6 +1913,8 @@ export class PolicyController {
 
             return {
                 success: true,
+                permissionAssignmentId:
+                    assignmentResult.permissionAssignment.id,
             };
         } catch (err) {
             const span = trace.getActiveSpan();
@@ -3124,6 +3126,11 @@ export type GrantMarkerPermissionResult =
  */
 export interface GrantMarkerPermissionSuccess {
     success: true;
+
+    /**
+     * The ID of the permission assignment that was created (or updated).
+     */
+    permissionAssignmentId?: string;
 }
 
 /**

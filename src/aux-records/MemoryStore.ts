@@ -111,6 +111,13 @@ import type {
 } from './PolicyStore';
 import { getExpireTime, getSubjectUserId } from './PolicyStore';
 import type {
+    ListedSharedPermissions,
+    SharedPermission,
+    SharedPermissionStatus,
+    SharedPermissionsStore,
+} from './SharedPermissionsStore';
+import { SHARED_PERMISSIONS_PAGE_SIZE } from './SharedPermissionsStore';
+import type {
     ActionKinds,
     PermissionOptions,
     ResourceKinds,
@@ -212,7 +219,8 @@ export class MemoryStore
         InstRecordsStore,
         ModerationStore,
         SystemNotificationMessenger,
-        FinancialStore
+        FinancialStore,
+        SharedPermissionsStore
 {
     private _users: AuthUser[] = [];
     private _userAuthenticators: AuthUserAuthenticator[] = [];
@@ -262,6 +270,7 @@ export class MemoryStore
     private _resourcePermissionAssignments: ResourcePermissionAssignment[] = [];
     private _markerPermissionAssignments: MarkerPermissionAssignment[] = [];
     private _grantedPackageEntitlements: GrantedPackageEntitlement[] = [];
+    private _sharedPermissions: SharedPermission[] = [];
     private _studioLoomConfigs: Map<string, LoomConfig> = new Map();
     private _studioHumeConfigs: Map<string, HumeConfig> = new Map();
 
@@ -1712,6 +1721,94 @@ export class MemoryStore
                 e.expireTimeMs > nowMs &&
                 e.revokeTimeMs === null
         );
+    }
+
+    async saveSharedPermission(
+        sharedPermission: SharedPermission
+    ): Promise<void> {
+        const existingIndex = this._sharedPermissions.findIndex(
+            (p) => p.id === sharedPermission.id
+        );
+
+        if (existingIndex >= 0) {
+            this._sharedPermissions[existingIndex] = {
+                ...sharedPermission,
+            };
+        } else {
+            this._sharedPermissions.push({
+                ...sharedPermission,
+            });
+        }
+    }
+
+    async findSharedPermissionById(
+        id: string
+    ): Promise<SharedPermission | null> {
+        return this._sharedPermissions.find((p) => p.id === id) ?? null;
+    }
+
+    async listSharedPermissionsForUser(
+        userId: string,
+        page?: number | null
+    ): Promise<ListedSharedPermissions> {
+        const matches = this._sharedPermissions.filter(
+            (p) =>
+                p.requestingUserId === userId ||
+                p.targetUserId === userId ||
+                p.recipientUserId === userId
+        );
+        return this._paginateSharedPermissions(matches, page);
+    }
+
+    async listSharedPermissionsForUserByStatus(
+        userId: string,
+        status: SharedPermissionStatus,
+        page?: number | null
+    ): Promise<ListedSharedPermissions> {
+        const matches = this._sharedPermissions.filter(
+            (p) =>
+                p.status === status &&
+                (p.requestingUserId === userId ||
+                    p.targetUserId === userId ||
+                    p.recipientUserId === userId)
+        );
+        return this._paginateSharedPermissions(matches, page);
+    }
+
+    async listSentSharedPermissions(
+        userId: string,
+        page?: number | null
+    ): Promise<ListedSharedPermissions> {
+        const matches = this._sharedPermissions.filter(
+            (p) => p.requestingUserId === userId
+        );
+        return this._paginateSharedPermissions(matches, page);
+    }
+
+    async listRequestedSharedPermissions(
+        userId: string,
+        page?: number | null
+    ): Promise<ListedSharedPermissions> {
+        const matches = this._sharedPermissions.filter(
+            (p) => p.targetUserId === userId
+        );
+        return this._paginateSharedPermissions(matches, page);
+    }
+
+    private _paginateSharedPermissions(
+        matches: SharedPermission[],
+        page?: number | null
+    ): ListedSharedPermissions {
+        const pageNumber = page && page > 0 ? page : 0;
+        const start = pageNumber * SHARED_PERMISSIONS_PAGE_SIZE;
+        const sorted = sortBy(matches, (p) => -p.createdAtMs);
+        return {
+            sharedPermissions: sorted.slice(
+                start,
+                start + SHARED_PERMISSIONS_PAGE_SIZE
+            ),
+            totalCount: matches.length,
+        };
     }
 
     async countRecords(filter: CountRecordsFilter): Promise<number> {

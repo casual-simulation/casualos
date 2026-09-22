@@ -48,6 +48,7 @@ import type {
     PurchasableItemRecordsStore,
     BackgroundJobs,
     LinkPreviewStore,
+    SharedPermissionsStore,
 } from '@casual-simulation/aux-records';
 import {
     DNSDomainNameValidator,
@@ -84,6 +85,7 @@ import {
     PackageRecordsController,
     LinkPreviewController,
     MemoryRateLimiter,
+    SharedPermissionsController,
 } from '@casual-simulation/aux-records';
 import type { SimpleEmailServiceAuthMessengerOptions } from '@casual-simulation/aux-records-aws';
 import {
@@ -133,6 +135,7 @@ import {
     PrismaFileRecordsLookup,
     PrismaPolicyStore,
     PrismaRecordsStore,
+    PrismaSharedPermissionsStore,
 } from '../prisma';
 import type {
     AIChatProviders,
@@ -236,6 +239,7 @@ import {
     SqliteSearchRecordsStore,
     SqliteFileRecordsLookup,
     SqliteInstRecordsStore,
+    SqliteSharedPermissionsStore,
 } from '../prisma/sqlite';
 import type {
     DatabaseInterface,
@@ -348,6 +352,9 @@ export class ServerBuilder implements SubscriptionLike {
 
     private _policyStore: PolicyStore;
     private _policyController: PolicyController;
+
+    private _sharedPermissionsStore: SharedPermissionsStore;
+    private _sharedPermissionsController: SharedPermissionsController;
 
     private _dataStore: DataRecordsStore;
     private _dataController: DataRecordsController;
@@ -801,6 +808,10 @@ export class ServerBuilder implements SubscriptionLike {
             options
         );
         this._policyStore = this._ensurePrismaPolicyStore(
+            prismaClient,
+            options
+        );
+        this._sharedPermissionsStore = this._ensurePrismaSharedPermissionsStore(
             prismaClient,
             options
         );
@@ -2355,6 +2366,13 @@ export class ServerBuilder implements SubscriptionLike {
             this._recordsController,
             this._policyStore
         );
+        this._sharedPermissionsController = this._sharedPermissionsStore
+            ? new SharedPermissionsController(
+                  this._sharedPermissionsStore,
+                  this._policyController,
+                  this._authStore
+              )
+            : null;
         this._dataController = new DataRecordsController({
             store: this._dataStore,
             config: this._configStore,
@@ -2577,6 +2595,7 @@ export class ServerBuilder implements SubscriptionLike {
             purchasableItemsController: this._purchasableItemsController,
             viewTemplateRenderer: this._viewTemplateRenderer,
             linkPreviewController: this._linkPreviewController,
+            sharedPermissionsController: this._sharedPermissionsController,
         });
 
         const buildReturn: BuildReturn = {
@@ -2901,6 +2920,15 @@ export class ServerBuilder implements SubscriptionLike {
         } else {
             return policyStore;
         }
+    }
+
+    private _ensurePrismaSharedPermissionsStore(
+        prismaClient: PrismaClient,
+        options: Pick<ServerConfig, 'prisma'>
+    ): SharedPermissionsStore {
+        return options.prisma.db === 'sqlite'
+            ? new SqliteSharedPermissionsStore(prismaClient as any)
+            : new PrismaSharedPermissionsStore(prismaClient);
     }
 
     private _ensurePrismaConfigurationStore(

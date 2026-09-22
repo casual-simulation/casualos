@@ -59,10 +59,12 @@ import {
     ENTITLEMENT_VALIDATION,
     PRIVATE_MARKER,
     RESOURCE_KIND_VALIDATION,
+    SHARED_MARKER_PERMISSION_VALIDATION,
     getProcedureMetadata,
     procedure,
 } from '@casual-simulation/aux-common';
 import type { PolicyController } from './PolicyController';
+import type { SharedPermissionsController } from './SharedPermissionsController';
 import type { AIController } from './AIController';
 import type { AIChatMessage } from './AIChatInterface';
 import { AI_CHAT_MESSAGE_SCHEMA } from './AIChatInterface';
@@ -511,6 +513,12 @@ export interface RecordsServerOptions {
      * If null, then link previews are not supported.
      */
     linkPreviewController?: LinkPreviewController | null;
+
+    /**
+     * The controller that should be used for handling shared permissions.
+     * If null, then shared permissions are not supported.
+     */
+    sharedPermissionsController?: SharedPermissionsController | null;
 }
 
 /**
@@ -539,6 +547,7 @@ export class RecordsServer {
     private _contractRecordsController: ContractRecordsController | null;
     private _viewTemplateRenderer: ViewTemplateRenderer | null;
     private _linkPreviewController: LinkPreviewController | null;
+    private _sharedPermissionsController: SharedPermissionsController | null;
 
     /**
      * The set of origins that are allowed for API requests.
@@ -627,6 +636,7 @@ export class RecordsServer {
         purchasableItemsController,
         viewTemplateRenderer,
         linkPreviewController,
+        sharedPermissionsController,
     }: RecordsServerOptions) {
         this._allowedAccountOrigins = allowedAccountOrigins;
         this._allowedApiOrigins = allowedApiOrigins;
@@ -664,6 +674,7 @@ export class RecordsServer {
         this._contractRecordsController = contractRecordsController;
         this._viewTemplateRenderer = viewTemplateRenderer;
         this._linkPreviewController = linkPreviewController ?? null;
+        this._sharedPermissionsController = sharedPermissionsController ?? null;
         this._tracer = trace.getTracer(
             'RecordsServer',
             typeof GIT_TAG === 'undefined' ? undefined : GIT_TAG
@@ -4552,6 +4563,433 @@ export class RecordsServer {
                             userId: sessionKeyValidation.userId,
                             packageId: packageId,
                         });
+
+                    return result;
+                }),
+
+            requestSharedPermission: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/records/permissions/shared/request')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        permission: SHARED_MARKER_PERMISSION_VALIDATION(),
+                        targetUserId: z.string().optional().nullable(),
+                        targetUserEmail: z.string().optional().nullable(),
+                        expireTimeMs: z.number().optional().nullable(),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
+                    })
+                )
+                .handler(
+                    async (
+                        {
+                            recordName,
+                            permission,
+                            targetUserId,
+                            targetUserEmail,
+                            expireTimeMs,
+                            instances,
+                        },
+                        context
+                    ) => {
+                        if (!this._sharedPermissionsController) {
+                            return {
+                                success: false,
+                                errorCode: 'not_supported',
+                                errorMessage: 'This feature is not supported.',
+                            } as const;
+                        }
+
+                        const sessionKeyValidation =
+                            await this._validateSessionKey(context.sessionKey);
+                        if (sessionKeyValidation.success === false) {
+                            if (
+                                sessionKeyValidation.errorCode ===
+                                'no_session_key'
+                            ) {
+                                return NOT_LOGGED_IN_RESULT;
+                            }
+                            return sessionKeyValidation;
+                        }
+
+                        const result =
+                            await this._sharedPermissionsController.requestSharedPermission(
+                                {
+                                    userId: sessionKeyValidation.userId,
+                                    recordName,
+                                    permission: permission as any,
+                                    targetUserId,
+                                    targetUserEmail,
+                                    expireTimeMs,
+                                    instances,
+                                }
+                            );
+
+                        return result;
+                    }
+                ),
+
+            acceptSharedPermission: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/records/permissions/shared/accept')
+                .inputs(
+                    z.object({
+                        sharedPermissionId: z
+                            .string({
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'sharedPermissionId is required.'
+                                        : 'sharedPermissionId must be a string.',
+                            })
+                            .nonempty('sharedPermissionId must not be empty'),
+                        recordName: RECORD_NAME_VALIDATION,
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
+                    })
+                )
+                .handler(
+                    async (
+                        { sharedPermissionId, recordName, instances },
+                        context
+                    ) => {
+                        if (!this._sharedPermissionsController) {
+                            return {
+                                success: false,
+                                errorCode: 'not_supported',
+                                errorMessage: 'This feature is not supported.',
+                            } as const;
+                        }
+
+                        const sessionKeyValidation =
+                            await this._validateSessionKey(context.sessionKey);
+                        if (sessionKeyValidation.success === false) {
+                            if (
+                                sessionKeyValidation.errorCode ===
+                                'no_session_key'
+                            ) {
+                                return NOT_LOGGED_IN_RESULT;
+                            }
+                            return sessionKeyValidation;
+                        }
+
+                        const result =
+                            await this._sharedPermissionsController.acceptSharedPermission(
+                                {
+                                    userId: sessionKeyValidation.userId,
+                                    sharedPermissionId,
+                                    recordName,
+                                    instances,
+                                }
+                            );
+
+                        return result;
+                    }
+                ),
+
+            rejectSharedPermission: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/records/permissions/shared/reject')
+                .inputs(
+                    z.object({
+                        sharedPermissionId: z
+                            .string({
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'sharedPermissionId is required.'
+                                        : 'sharedPermissionId must be a string.',
+                            })
+                            .nonempty('sharedPermissionId must not be empty'),
+                    })
+                )
+                .handler(async ({ sharedPermissionId }, context) => {
+                    if (!this._sharedPermissionsController) {
+                        return {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage: 'This feature is not supported.',
+                        } as const;
+                    }
+
+                    const sessionKeyValidation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (sessionKeyValidation.success === false) {
+                        if (
+                            sessionKeyValidation.errorCode === 'no_session_key'
+                        ) {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return sessionKeyValidation;
+                    }
+
+                    const result =
+                        await this._sharedPermissionsController.rejectSharedPermission(
+                            {
+                                userId: sessionKeyValidation.userId,
+                                sharedPermissionId,
+                            }
+                        );
+
+                    return result;
+                }),
+
+            revokeSharedPermission: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/records/permissions/shared/revoke')
+                .inputs(
+                    z.object({
+                        sharedPermissionId: z
+                            .string({
+                                error: (issue) =>
+                                    issue.input === undefined
+                                        ? 'sharedPermissionId is required.'
+                                        : 'sharedPermissionId must be a string.',
+                            })
+                            .nonempty('sharedPermissionId must not be empty'),
+                        instances:
+                            INSTANCES_ARRAY_VALIDATION.optional().nullable(),
+                    })
+                )
+                .handler(async ({ sharedPermissionId, instances }, context) => {
+                    if (!this._sharedPermissionsController) {
+                        return {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage: 'This feature is not supported.',
+                        } as const;
+                    }
+
+                    const sessionKeyValidation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (sessionKeyValidation.success === false) {
+                        if (
+                            sessionKeyValidation.errorCode === 'no_session_key'
+                        ) {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return sessionKeyValidation;
+                    }
+
+                    const result =
+                        await this._sharedPermissionsController.revokeSharedPermission(
+                            {
+                                userId: sessionKeyValidation.userId,
+                                sharedPermissionId,
+                                instances,
+                            }
+                        );
+
+                    return result;
+                }),
+
+            listSharedPermissions: procedure()
+                .origins('api')
+                .http('GET', '/api/v2/records/permissions/shared/list')
+                .inputs(
+                    z.object({
+                        page: z.number().optional().nullable(),
+                    })
+                )
+                .handler(async ({ page }, context) => {
+                    if (!this._sharedPermissionsController) {
+                        return {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage: 'This feature is not supported.',
+                        } as const;
+                    }
+
+                    const sessionKeyValidation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (sessionKeyValidation.success === false) {
+                        if (
+                            sessionKeyValidation.errorCode === 'no_session_key'
+                        ) {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return sessionKeyValidation;
+                    }
+
+                    const result =
+                        await this._sharedPermissionsController.listSharedPermissions(
+                            {
+                                userId: sessionKeyValidation.userId,
+                                page,
+                            }
+                        );
+
+                    return result;
+                }),
+
+            listSharedPermissionsByStatus: procedure()
+                .origins('api')
+                .http('GET', '/api/v2/records/permissions/shared/list/status')
+                .inputs(
+                    z.object({
+                        status: z.enum([
+                            'requested',
+                            'accepted',
+                            'rejected',
+                            'revoked',
+                        ]),
+                        page: z.number().optional().nullable(),
+                    })
+                )
+                .handler(async ({ status, page }, context) => {
+                    if (!this._sharedPermissionsController) {
+                        return {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage: 'This feature is not supported.',
+                        } as const;
+                    }
+
+                    const sessionKeyValidation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (sessionKeyValidation.success === false) {
+                        if (
+                            sessionKeyValidation.errorCode === 'no_session_key'
+                        ) {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return sessionKeyValidation;
+                    }
+
+                    const result =
+                        await this._sharedPermissionsController.listSharedPermissionsByStatus(
+                            {
+                                userId: sessionKeyValidation.userId,
+                                status,
+                                page,
+                            }
+                        );
+
+                    return result;
+                }),
+
+            listSentSharedPermissions: procedure()
+                .origins('api')
+                .http('GET', '/api/v2/records/permissions/shared/list/sent')
+                .inputs(
+                    z.object({
+                        page: z.number().optional().nullable(),
+                    })
+                )
+                .handler(async ({ page }, context) => {
+                    if (!this._sharedPermissionsController) {
+                        return {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage: 'This feature is not supported.',
+                        } as const;
+                    }
+
+                    const sessionKeyValidation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (sessionKeyValidation.success === false) {
+                        if (
+                            sessionKeyValidation.errorCode === 'no_session_key'
+                        ) {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return sessionKeyValidation;
+                    }
+
+                    const result =
+                        await this._sharedPermissionsController.listSentSharedPermissions(
+                            {
+                                userId: sessionKeyValidation.userId,
+                                page,
+                            }
+                        );
+
+                    return result;
+                }),
+
+            listRequestedSharedPermissions: procedure()
+                .origins('api')
+                .http(
+                    'GET',
+                    '/api/v2/records/permissions/shared/list/requested'
+                )
+                .inputs(
+                    z.object({
+                        page: z.number().optional().nullable(),
+                    })
+                )
+                .handler(async ({ page }, context) => {
+                    if (!this._sharedPermissionsController) {
+                        return {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage: 'This feature is not supported.',
+                        } as const;
+                    }
+
+                    const sessionKeyValidation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (sessionKeyValidation.success === false) {
+                        if (
+                            sessionKeyValidation.errorCode === 'no_session_key'
+                        ) {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return sessionKeyValidation;
+                    }
+
+                    const result =
+                        await this._sharedPermissionsController.listRequestedSharedPermissions(
+                            {
+                                userId: sessionKeyValidation.userId,
+                                page,
+                            }
+                        );
+
+                    return result;
+                }),
+
+            listSharedRecords: procedure()
+                .origins('api')
+                .http('GET', '/api/v2/records/permissions/shared/list/records')
+                .inputs(
+                    z.object({
+                        page: z.number().optional().nullable(),
+                    })
+                )
+                .handler(async ({ page }, context) => {
+                    if (!this._sharedPermissionsController) {
+                        return {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage: 'This feature is not supported.',
+                        } as const;
+                    }
+
+                    const sessionKeyValidation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (sessionKeyValidation.success === false) {
+                        if (
+                            sessionKeyValidation.errorCode === 'no_session_key'
+                        ) {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return sessionKeyValidation;
+                    }
+
+                    const result =
+                        await this._sharedPermissionsController.listSharedRecords(
+                            {
+                                userId: sessionKeyValidation.userId,
+                                page,
+                            }
+                        );
 
                     return result;
                 }),

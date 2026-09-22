@@ -104,7 +104,8 @@ export type KnownErrorCodes =
     | 'invalid_user'
     | 'url_not_html'
     | 'site_rate_limited'
-    | 'session_key_required_for_openid';
+    | 'session_key_required_for_openid'
+    | 'shared_permission_expired';
 
 /**
  * Gets the status code that should be used for the given response.
@@ -226,6 +227,8 @@ export function getStatusCode(
             return 502;
         } else if (response.errorCode === 'session_key_required_for_openid') {
             return 401;
+        } else if (response.errorCode === 'shared_permission_expired') {
+            return 403;
         } else {
             return 400;
         }

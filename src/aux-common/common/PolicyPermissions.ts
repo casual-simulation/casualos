@@ -1683,6 +1683,49 @@ export const AVAILABLE_PERMISSIONS_VALIDATION = z.discriminatedUnion(
     ]
 );
 
+/**
+ * Omits the given keys from each member of a union type individually, instead of
+ * collapsing the union into a single object first (as the built-in `Omit` does).
+ * This preserves discriminated unions.
+ */
+type DistributiveOmit<T, K extends keyof any> = T extends any
+    ? Omit<T, K>
+    : never;
+
+/**
+ * Defines a marker-based permission that has its subject information omitted.
+ * This is used by shared permissions, where the subject (the other user in the share)
+ * is automatically determined instead of being provided by the caller.
+ *
+ * @dochash types/permissions
+ * @docname SharedMarkerPermission
+ */
+export type SharedMarkerPermission = DistributiveOmit<
+    AvailablePermissions,
+    'subjectType' | 'subjectId'
+> & {
+    /**
+     * The marker that the permission is for.
+     */
+    marker: string;
+};
+
+/**
+ * The zod validation for a {@link SharedMarkerPermission}.
+ */
+export const SHARED_MARKER_PERMISSION_VALIDATION = memoize(() =>
+    z.discriminatedUnion(
+        'resourceKind',
+        AVAILABLE_PERMISSIONS_VALIDATION.options.map((option) =>
+            (option as z.ZodObject<any>)
+                .omit({ subjectType: true, subjectId: true })
+                .extend({
+                    marker: z.string().min(1).max(100),
+                })
+        ) as any
+    )
+);
+
 export type PermissionOptions = FilePermissionOptions | RolePermissionOptions;
 
 // /**

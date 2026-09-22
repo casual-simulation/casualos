@@ -31,3 +31,4 @@ export * from './PrismaPrivoStore';
 export * from './PrismaSearchRecordsStore';
 export * from './PrismaWebhookRecordsStore';
 export * from './PrismaProxyRecordsStore';
+export * from './PrismaSharedPermissionsStore';
