@@ -4951,6 +4951,46 @@ export class RecordsServer {
                     return result;
                 }),
 
+            listSharedRecords: procedure()
+                .origins('api')
+                .http('GET', '/api/v2/records/permissions/shared/list/records')
+                .inputs(
+                    z.object({
+                        page: z.number().optional().nullable(),
+                    })
+                )
+                .handler(async ({ page }, context) => {
+                    if (!this._sharedPermissionsController) {
+                        return {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage: 'This feature is not supported.',
+                        } as const;
+                    }
+
+                    const sessionKeyValidation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (sessionKeyValidation.success === false) {
+                        if (
+                            sessionKeyValidation.errorCode === 'no_session_key'
+                        ) {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return sessionKeyValidation;
+                    }
+
+                    const result =
+                        await this._sharedPermissionsController.listSharedRecords(
+                            {
+                                userId: sessionKeyValidation.userId,
+                                page,
+                            }
+                        );
+
+                    return result;
+                }),
+
             aiChat: procedure()
                 .origins('api')
                 .http('POST', '/api/v2/ai/chat')

@@ -21,8 +21,12 @@
         `POST /api/v2/records/permissions/shared/revoke`,
         `GET /api/v2/records/permissions/shared/list`,
         `GET /api/v2/records/permissions/shared/list/status`,
-        `GET /api/v2/records/permissions/shared/list/sent`, and
-        `GET /api/v2/records/permissions/shared/list/requested` endpoints.
+        `GET /api/v2/records/permissions/shared/list/sent`,
+        `GET /api/v2/records/permissions/shared/list/requested`, and
+        `GET /api/v2/records/permissions/shared/list/records` endpoints.
+    -   `GET /api/v2/records/permissions/shared/list/records` returns the list of records that have
+        been shared with the current user (i.e. the records owned by the other party of each of the
+        user's accepted shared permissions).
     -   Added the `SharedPermission` table/model and the `PrismaSharedPermissionsStore`/`SqliteSharedPermissionsStore`
         implementations (and migrations) for CockroachDB and SQLite.
 -   Added support for proxying requests to services that require an API key.

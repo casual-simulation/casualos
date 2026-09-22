@@ -558,6 +558,48 @@ export class SharedPermissionsController {
         }
     }
 
+    /**
+     * Lists the records that have been shared with the given user via accepted shared permissions.
+     * @param request The request.
+     */
+    @traced(TRACE_NAME)
+    async listSharedRecords(
+        request: ListSharedRecordsRequest
+    ): Promise<ListSharedRecordsResult> {
+        try {
+            const result =
+                await this._store.listSharedPermissionsForUserByStatus(
+                    request.userId,
+                    'accepted',
+                    request.page
+                );
+
+            const sharedRecords: SharedRecordListItem[] =
+                result.sharedPermissions.map((sp) => {
+                    const isRequestingUser =
+                        sp.requestingUserId === request.userId;
+                    return {
+                        recordName: isRequestingUser
+                            ? sp.recipientRecordName
+                            : sp.recordName,
+                        ownerUserId: isRequestingUser
+                            ? sp.recipientUserId
+                            : sp.requestingUserId,
+                        sharedPermissionId: sp.id,
+                        permission: sp.permission,
+                    };
+                });
+
+            return {
+                success: true,
+                sharedRecords,
+                totalCount: result.totalCount,
+            };
+        } catch (err) {
+            return this._handleError(err, 'listing shared records');
+        }
+    }
+
     private _handleError(
         err: any,
         action: string
@@ -781,4 +823,58 @@ export interface ListSharedPermissionsFailure {
     success: false;
     errorCode: ServerError;
     errorMessage: string;
+}
+
+export interface ListSharedRecordsRequest {
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string;
+
+    /**
+     * The page number to request. Defaults to 0.
+     */
+    page?: number | null;
+}
+
+export type ListSharedRecordsResult =
+    | ListSharedRecordsSuccess
+    | ListSharedRecordsFailure;
+
+export interface ListSharedRecordsSuccess {
+    success: true;
+    sharedRecords: SharedRecordListItem[];
+    totalCount: number;
+}
+
+export interface ListSharedRecordsFailure {
+    success: false;
+    errorCode: ServerError;
+    errorMessage: string;
+}
+
+/**
+ * Defines an interface that represents a record that has been shared with a user via an
+ * accepted shared permission.
+ */
+export interface SharedRecordListItem {
+    /**
+     * The name of the record that is shared with the user.
+     */
+    recordName: string;
+
+    /**
+     * The ID of the user that owns the record (the other party of the shared permission).
+     */
+    ownerUserId: string;
+
+    /**
+     * The ID of the shared permission that granted access to this record.
+     */
+    sharedPermissionId: string;
+
+    /**
+     * The marker-based permission that was granted.
+     */
+    permission: SharedMarkerPermission;
 }

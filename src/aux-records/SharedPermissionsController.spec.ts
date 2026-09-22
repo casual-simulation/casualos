@@ -506,5 +506,55 @@ describe('SharedPermissionsController', () => {
             const ids = (result as any).sharedPermissions.map((p: any) => p.id);
             expect(ids).toEqual([targetedId]);
         });
+
+        it('listSharedRecords() should return the other party record for the requesting user', async () => {
+            const result = await controller.listSharedRecords({
+                userId: userA,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                sharedRecords: [
+                    {
+                        recordName: recordB,
+                        ownerUserId: userB,
+                        sharedPermissionId: acceptedId,
+                        permission,
+                    },
+                ],
+                totalCount: 1,
+            });
+        });
+
+        it('listSharedRecords() should return the other party record for the recipient user', async () => {
+            const result = await controller.listSharedRecords({
+                userId: userB,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                sharedRecords: [
+                    {
+                        recordName: recordA,
+                        ownerUserId: userA,
+                        sharedPermissionId: acceptedId,
+                        permission,
+                    },
+                ],
+                totalCount: 1,
+            });
+        });
+
+        it('listSharedRecords() should not include pending or unrelated shared permissions', async () => {
+            const result = await controller.listSharedRecords({
+                userId: userC,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                sharedRecords: [],
+                totalCount: 0,
+            });
+        });
     });
 });
