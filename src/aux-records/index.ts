@@ -44,6 +44,8 @@ export * from './LinkPreviewController';
 
 export * from './PolicyController';
 export * from './PolicyStore';
+export * from './SharedPermissionsController';
+export * from './SharedPermissionsStore';
 
 export type {
     AIController,
@@ -91,6 +93,7 @@ export * from './ComIdConfig';
 export * from './ServerConfig';
 
 export * from './webhooks';
+export * from './proxy';
 export * from './notifications';
 export * from './packages';
 export * from './search';

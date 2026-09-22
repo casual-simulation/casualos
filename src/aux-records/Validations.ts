@@ -108,6 +108,46 @@ export const MARKERS_VALIDATION = z
     })
     .max(10, 'markers lists must not contain more than 10 markers.');
 
+/**
+ * The Zod validation for proxy hosts.
+ */
+export const PROXY_HOST_VALIDATION = z
+    .string({
+        error: (issue) =>
+            issue.input === undefined
+                ? 'host is required.'
+                : 'host must be a string.',
+    })
+    .min(1)
+    .max(256);
+
+/**
+ * The Zod validation for the data that a proxy applies to the requests that it makes.
+ */
+export const PROXY_DATA_VALIDATION = z.record(
+    z.string().min(1).max(256),
+    z.union([z.string().max(4096), z.number(), z.boolean(), z.null()]),
+    {
+        error: (issue) =>
+            issue.input === undefined
+                ? 'data is required.'
+                : 'data must be an object.',
+    }
+);
+
+/**
+ * The Zod validation for the HTTP methods that proxies support.
+ */
+export const PROXY_METHOD_VALIDATION = z.enum([
+    'GET',
+    'POST',
+    'PUT',
+    'PATCH',
+    'DELETE',
+    'HEAD',
+    'OPTIONS',
+]);
+
 export const NO_WHITESPACE_MESSAGE = 'The value cannot not contain spaces.';
 export const NO_WHITESPACE_REGEX = /^\S*$/g;
 export const NO_SPECIAL_CHARACTERS_MESSAGE =

@@ -6,6 +6,35 @@ Object {
     Object {
       "http": Object {
         "method": "POST",
+        "path": "/api/v2/records/permissions/shared/accept",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "nullable": true,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "sharedPermissionId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "acceptSharedPermission",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
         "path": "/api/v2/studios/domains",
       },
       "inputs": Object {
@@ -1418,6 +1447,34 @@ Object {
     },
     Object {
       "http": Object {
+        "method": "DELETE",
+        "path": "/api/v2/records/proxy",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "eraseProxy",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
         "method": "POST",
         "path": "/api/v2/records/purchasableItems/erase",
       },
@@ -2154,6 +2211,34 @@ Object {
       "origins": true,
     },
     Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/proxy",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getProxy",
+      "origins": "api",
+    },
+    Object {
       "inputs": Object {
         "schema": Object {},
         "type": "object",
@@ -2406,6 +2491,7 @@ Object {
               "package",
               "permissions",
               "webhook",
+              "proxy",
               "ai",
               "search",
               "database",
@@ -3060,6 +3146,51 @@ Object {
                   "resourceKind": Object {
                     "type": "literal",
                     "value": "webhook",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
+                    ],
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "delete",
+                      "list",
+                      "run",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "proxy",
                   },
                   "subjectId": Object {
                     "type": "string",
@@ -4171,6 +4302,7 @@ Object {
               "ai.image",
               "ai.skybox",
               "webhook",
+              "proxy",
               "notification",
               "package",
               "package.version",
@@ -4198,6 +4330,48 @@ Object {
       },
       "name": "listProcedures",
       "origins": true,
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/proxy/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "marker": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "sort": Object {
+            "optional": true,
+            "type": "enum",
+            "values": Array [
+              "ascending",
+              "descending",
+            ],
+          },
+        },
+        "type": "object",
+      },
+      "name": "listProxies",
+      "origins": "api",
     },
     Object {
       "http": Object {
@@ -4265,6 +4439,24 @@ Object {
         "type": "object",
       },
       "name": "listRecords",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/permissions/shared/list/requested",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "page": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "number",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listRequestedSharedPermissions",
       "origins": "api",
     },
     Object {
@@ -4348,6 +4540,24 @@ Object {
     Object {
       "http": Object {
         "method": "GET",
+        "path": "/api/v2/records/permissions/shared/list/sent",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "page": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "number",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listSentSharedPermissions",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
         "path": "/api/v2/sessions",
       },
       "inputs": Object {
@@ -4369,6 +4579,69 @@ Object {
       },
       "name": "listSessions",
       "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/permissions/shared/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "page": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "number",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listSharedPermissions",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/permissions/shared/list/status",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "page": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "number",
+          },
+          "status": Object {
+            "type": "enum",
+            "values": Array [
+              "requested",
+              "accepted",
+              "rejected",
+              "revoked",
+            ],
+          },
+        },
+        "type": "object",
+      },
+      "name": "listSharedPermissionsByStatus",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/permissions/shared/list/records",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "page": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "number",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listSharedRecords",
+      "origins": "api",
     },
     Object {
       "http": Object {
@@ -4655,6 +4928,59 @@ Object {
       },
       "name": "processOAuthCode",
       "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/proxy/request",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "body": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "any",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "nullable": true,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "method": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "enum",
+            "values": Array [
+              "GET",
+              "POST",
+              "PUT",
+              "PATCH",
+              "DELETE",
+              "HEAD",
+              "OPTIONS",
+            ],
+          },
+          "path": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "proxyRequest",
+      "origins": "api",
     },
     Object {
       "http": Object {
@@ -5300,6 +5626,7 @@ Object {
                         "package",
                         "permissions",
                         "webhook",
+                        "proxy",
                         "ai",
                         "search",
                         "database",
@@ -5360,6 +5687,78 @@ Object {
         "type": "object",
       },
       "name": "recordPackageVersion",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/proxy",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "item": Object {
+            "optional": false,
+            "schema": Object {
+              "address": Object {
+                "type": "string",
+              },
+              "data": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "record",
+                "valueSchema": Object {
+                  "options": Array [
+                    Object {
+                      "type": "string",
+                    },
+                    Object {
+                      "type": "number",
+                    },
+                    Object {
+                      "type": "boolean",
+                    },
+                    Object {
+                      "type": "null",
+                    },
+                  ],
+                  "type": "union",
+                },
+              },
+              "host": Object {
+                "type": "string",
+              },
+              "markers": Object {
+                "defaultValue": Array [
+                  "private",
+                ],
+                "hasDefault": true,
+                "maxLength": 10,
+                "nullable": true,
+                "optional": true,
+                "schema": Object {
+                  "type": "string",
+                },
+                "type": "array",
+              },
+            },
+            "type": "object",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "recordProxy",
       "origins": "api",
     },
     Object {
@@ -5653,6 +6052,7 @@ Object {
                   "ai.image",
                   "ai.skybox",
                   "webhook",
+                  "proxy",
                   "notification",
                   "package",
                   "package.version",
@@ -5926,6 +6326,22 @@ Object {
     },
     Object {
       "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/permissions/shared/reject",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "sharedPermissionId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "rejectSharedPermission",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
         "method": "DELETE",
         "path": "/api/v2/studios/members",
       },
@@ -6135,6 +6551,808 @@ Object {
     Object {
       "http": Object {
         "method": "POST",
+        "path": "/api/v2/records/permissions/shared/request",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "expireTimeMs": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "number",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "nullable": true,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "permission": Object {
+            "discriminator": "resourceKind",
+            "options": Array [
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "read",
+                      "create",
+                      "update",
+                      "delete",
+                      "list",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "data",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "read",
+                      "create",
+                      "update",
+                      "delete",
+                      "list",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "options": Object {
+                    "schema": Object {
+                      "allowedMimeTypes": Object {
+                        "optional": true,
+                        "options": Array [
+                          Object {
+                            "type": "literal",
+                            "value": true,
+                          },
+                          Object {
+                            "schema": Object {
+                              "type": "string",
+                            },
+                            "type": "array",
+                          },
+                        ],
+                        "type": "union",
+                      },
+                      "maxFileSizeInBytes": Object {
+                        "optional": true,
+                        "type": "number",
+                      },
+                    },
+                    "type": "object",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "file",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "increment",
+                      "count",
+                      "update",
+                      "list",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "event",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "assign",
+                      "unassign",
+                      "grantPermission",
+                      "revokePermission",
+                      "read",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "marker",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "grant",
+                      "revoke",
+                      "read",
+                      "update",
+                      "list",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "options": Object {
+                    "schema": Object {
+                      "maxDurationMs": Object {
+                        "optional": true,
+                        "type": "number",
+                      },
+                    },
+                    "type": "object",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "role",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "updateData",
+                      "delete",
+                      "list",
+                      "sendAction",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "inst",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "loom",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "ai.sloyd",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "ai.hume",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "ai.openai.realtime",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "ai.chat",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "ai.image",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "ai.skybox",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "delete",
+                      "list",
+                      "run",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "webhook",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "delete",
+                      "list",
+                      "run",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "proxy",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "delete",
+                      "list",
+                      "send",
+                      "subscribe",
+                      "unsubscribe",
+                      "listSubscriptions",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "notification",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "delete",
+                      "list",
+                      "run",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "package",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "delete",
+                      "list",
+                      "run",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "package.version",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "delete",
+                      "list",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "search",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "delete",
+                      "list",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "database",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "delete",
+                      "list",
+                      "purchase",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "purchasableItem",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "delete",
+                      "list",
+                      "purchase",
+                      "cancel",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "contract",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "delete",
+                      "list",
+                      "approve",
+                      "cancel",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "invoice",
+                  },
+                },
+                "type": "object",
+              },
+            ],
+            "type": "union",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "targetUserEmail": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "targetUserId": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "requestSharedPermission",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
         "path": "/api/v2/studios/requestComId",
       },
       "inputs": Object {
@@ -6323,6 +7541,32 @@ Object {
       },
       "name": "revokeSession",
       "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/permissions/shared/revoke",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "nullable": true,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "sharedPermissionId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "revokeSharedPermission",
+      "origins": "api",
     },
     Object {
       "http": Object {
@@ -7279,6 +8523,44 @@ Object {
                             },
                             "type": "object",
                           },
+                          "proxies": Object {
+                            "defaultValue": Object {
+                              "allowed": false,
+                            },
+                            "description": "The configuration for proxy features. Defaults to not allowed.",
+                            "hasDefault": true,
+                            "optional": true,
+                            "schema": Object {
+                              "allowed": Object {
+                                "description": "Whether proxy features are granted for the subscription.",
+                                "type": "boolean",
+                              },
+                              "maxItems": Object {
+                                "description": "The maximum number of proxy items that are allowed for the subscription. If not specified, then there is no limit.",
+                                "optional": true,
+                                "type": "number",
+                              },
+                              "maxRequestsPerHour": Object {
+                                "description": "The maximum number of proxy requests allowed per hour for the subscription. If not specified, then there is no limit.",
+                                "optional": true,
+                                "type": "number",
+                              },
+                              "maxRequestsPerPeriod": Object {
+                                "description": "The maximum number of proxy requests allowed per subscription period. If not specified, then there is no limit.",
+                                "optional": true,
+                                "type": "number",
+                              },
+                              "requestTimeoutMs": Object {
+                                "defaultValue": 10000,
+                                "description": "The maximum number of miliseconds that the destination host has to respond to a proxied request. Defaults to 10000ms.",
+                                "hasDefault": true,
+                                "nullable": true,
+                                "optional": true,
+                                "type": "number",
+                              },
+                            },
+                            "type": "object",
+                          },
                           "records": Object {
                             "description": "The configuration for record features.",
                             "optional": true,
@@ -8023,6 +9305,44 @@ Object {
                               },
                               "maxPolicies": Object {
                                 "description": "Not currently implemented.",
+                                "optional": true,
+                                "type": "number",
+                              },
+                            },
+                            "type": "object",
+                          },
+                          "proxies": Object {
+                            "defaultValue": Object {
+                              "allowed": false,
+                            },
+                            "description": "The configuration for proxy features. Defaults to not allowed.",
+                            "hasDefault": true,
+                            "optional": true,
+                            "schema": Object {
+                              "allowed": Object {
+                                "description": "Whether proxy features are granted for the subscription.",
+                                "type": "boolean",
+                              },
+                              "maxItems": Object {
+                                "description": "The maximum number of proxy items that are allowed for the subscription. If not specified, then there is no limit.",
+                                "optional": true,
+                                "type": "number",
+                              },
+                              "maxRequestsPerHour": Object {
+                                "description": "The maximum number of proxy requests allowed per hour for the subscription. If not specified, then there is no limit.",
+                                "optional": true,
+                                "type": "number",
+                              },
+                              "maxRequestsPerPeriod": Object {
+                                "description": "The maximum number of proxy requests allowed per subscription period. If not specified, then there is no limit.",
+                                "optional": true,
+                                "type": "number",
+                              },
+                              "requestTimeoutMs": Object {
+                                "defaultValue": 10000,
+                                "description": "The maximum number of miliseconds that the destination host has to respond to a proxied request. Defaults to 10000ms.",
+                                "hasDefault": true,
+                                "nullable": true,
                                 "optional": true,
                                 "type": "number",
                               },
@@ -8931,6 +10251,44 @@ Object {
                                 },
                                 "maxPolicies": Object {
                                   "description": "Not currently implemented.",
+                                  "optional": true,
+                                  "type": "number",
+                                },
+                              },
+                              "type": "object",
+                            },
+                            "proxies": Object {
+                              "defaultValue": Object {
+                                "allowed": false,
+                              },
+                              "description": "The configuration for proxy features. Defaults to not allowed.",
+                              "hasDefault": true,
+                              "optional": true,
+                              "schema": Object {
+                                "allowed": Object {
+                                  "description": "Whether proxy features are granted for the subscription.",
+                                  "type": "boolean",
+                                },
+                                "maxItems": Object {
+                                  "description": "The maximum number of proxy items that are allowed for the subscription. If not specified, then there is no limit.",
+                                  "optional": true,
+                                  "type": "number",
+                                },
+                                "maxRequestsPerHour": Object {
+                                  "description": "The maximum number of proxy requests allowed per hour for the subscription. If not specified, then there is no limit.",
+                                  "optional": true,
+                                  "type": "number",
+                                },
+                                "maxRequestsPerPeriod": Object {
+                                  "description": "The maximum number of proxy requests allowed per subscription period. If not specified, then there is no limit.",
+                                  "optional": true,
+                                  "type": "number",
+                                },
+                                "requestTimeoutMs": Object {
+                                  "defaultValue": 10000,
+                                  "description": "The maximum number of miliseconds that the destination host has to respond to a proxied request. Defaults to 10000ms.",
+                                  "hasDefault": true,
+                                  "nullable": true,
                                   "optional": true,
                                   "type": "number",
                                 },
@@ -10778,6 +12136,35 @@ Object {
     Object {
       "http": Object {
         "method": "POST",
+        "path": "/api/v2/records/permissions/shared/accept",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "nullable": true,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "sharedPermissionId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "acceptSharedPermission",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
         "path": "/api/v2/studios/domains",
       },
       "inputs": Object {
@@ -12190,6 +13577,34 @@ Object {
     },
     Object {
       "http": Object {
+        "method": "DELETE",
+        "path": "/api/v2/records/proxy",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "eraseProxy",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
         "method": "POST",
         "path": "/api/v2/records/purchasableItems/erase",
       },
@@ -12926,6 +14341,34 @@ Object {
       "origins": true,
     },
     Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/proxy",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getProxy",
+      "origins": "api",
+    },
+    Object {
       "inputs": Object {
         "schema": Object {},
         "type": "object",
@@ -13178,6 +14621,7 @@ Object {
               "package",
               "permissions",
               "webhook",
+              "proxy",
               "ai",
               "search",
               "database",
@@ -13832,6 +15276,51 @@ Object {
                   "resourceKind": Object {
                     "type": "literal",
                     "value": "webhook",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
+                    ],
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "delete",
+                      "list",
+                      "run",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "proxy",
                   },
                   "subjectId": Object {
                     "type": "string",
@@ -14943,6 +16432,7 @@ Object {
               "ai.image",
               "ai.skybox",
               "webhook",
+              "proxy",
               "notification",
               "package",
               "package.version",
@@ -14970,6 +16460,48 @@ Object {
       },
       "name": "listProcedures",
       "origins": true,
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/proxy/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "marker": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "sort": Object {
+            "optional": true,
+            "type": "enum",
+            "values": Array [
+              "ascending",
+              "descending",
+            ],
+          },
+        },
+        "type": "object",
+      },
+      "name": "listProxies",
+      "origins": "api",
     },
     Object {
       "http": Object {
@@ -15037,6 +16569,24 @@ Object {
         "type": "object",
       },
       "name": "listRecords",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/permissions/shared/list/requested",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "page": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "number",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listRequestedSharedPermissions",
       "origins": "api",
     },
     Object {
@@ -15120,6 +16670,24 @@ Object {
     Object {
       "http": Object {
         "method": "GET",
+        "path": "/api/v2/records/permissions/shared/list/sent",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "page": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "number",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listSentSharedPermissions",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
         "path": "/api/v2/sessions",
       },
       "inputs": Object {
@@ -15141,6 +16709,69 @@ Object {
       },
       "name": "listSessions",
       "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/permissions/shared/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "page": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "number",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listSharedPermissions",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/permissions/shared/list/status",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "page": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "number",
+          },
+          "status": Object {
+            "type": "enum",
+            "values": Array [
+              "requested",
+              "accepted",
+              "rejected",
+              "revoked",
+            ],
+          },
+        },
+        "type": "object",
+      },
+      "name": "listSharedPermissionsByStatus",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/permissions/shared/list/records",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "page": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "number",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listSharedRecords",
+      "origins": "api",
     },
     Object {
       "http": Object {
@@ -15427,6 +17058,59 @@ Object {
       },
       "name": "processOAuthCode",
       "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/proxy/request",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "body": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "any",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "nullable": true,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "method": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "enum",
+            "values": Array [
+              "GET",
+              "POST",
+              "PUT",
+              "PATCH",
+              "DELETE",
+              "HEAD",
+              "OPTIONS",
+            ],
+          },
+          "path": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "proxyRequest",
+      "origins": "api",
     },
     Object {
       "http": Object {
@@ -16072,6 +17756,7 @@ Object {
                         "package",
                         "permissions",
                         "webhook",
+                        "proxy",
                         "ai",
                         "search",
                         "database",
@@ -16132,6 +17817,78 @@ Object {
         "type": "object",
       },
       "name": "recordPackageVersion",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/proxy",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "item": Object {
+            "optional": false,
+            "schema": Object {
+              "address": Object {
+                "type": "string",
+              },
+              "data": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "record",
+                "valueSchema": Object {
+                  "options": Array [
+                    Object {
+                      "type": "string",
+                    },
+                    Object {
+                      "type": "number",
+                    },
+                    Object {
+                      "type": "boolean",
+                    },
+                    Object {
+                      "type": "null",
+                    },
+                  ],
+                  "type": "union",
+                },
+              },
+              "host": Object {
+                "type": "string",
+              },
+              "markers": Object {
+                "defaultValue": Array [
+                  "private",
+                ],
+                "hasDefault": true,
+                "maxLength": 10,
+                "nullable": true,
+                "optional": true,
+                "schema": Object {
+                  "type": "string",
+                },
+                "type": "array",
+              },
+            },
+            "type": "object",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "recordProxy",
       "origins": "api",
     },
     Object {
@@ -16425,6 +18182,7 @@ Object {
                   "ai.image",
                   "ai.skybox",
                   "webhook",
+                  "proxy",
                   "notification",
                   "package",
                   "package.version",
@@ -16698,6 +18456,22 @@ Object {
     },
     Object {
       "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/permissions/shared/reject",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "sharedPermissionId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "rejectSharedPermission",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
         "method": "DELETE",
         "path": "/api/v2/studios/members",
       },
@@ -16907,6 +18681,808 @@ Object {
     Object {
       "http": Object {
         "method": "POST",
+        "path": "/api/v2/records/permissions/shared/request",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "expireTimeMs": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "number",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "nullable": true,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "permission": Object {
+            "discriminator": "resourceKind",
+            "options": Array [
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "read",
+                      "create",
+                      "update",
+                      "delete",
+                      "list",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "data",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "read",
+                      "create",
+                      "update",
+                      "delete",
+                      "list",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "options": Object {
+                    "schema": Object {
+                      "allowedMimeTypes": Object {
+                        "optional": true,
+                        "options": Array [
+                          Object {
+                            "type": "literal",
+                            "value": true,
+                          },
+                          Object {
+                            "schema": Object {
+                              "type": "string",
+                            },
+                            "type": "array",
+                          },
+                        ],
+                        "type": "union",
+                      },
+                      "maxFileSizeInBytes": Object {
+                        "optional": true,
+                        "type": "number",
+                      },
+                    },
+                    "type": "object",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "file",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "increment",
+                      "count",
+                      "update",
+                      "list",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "event",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "assign",
+                      "unassign",
+                      "grantPermission",
+                      "revokePermission",
+                      "read",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "marker",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "grant",
+                      "revoke",
+                      "read",
+                      "update",
+                      "list",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "options": Object {
+                    "schema": Object {
+                      "maxDurationMs": Object {
+                        "optional": true,
+                        "type": "number",
+                      },
+                    },
+                    "type": "object",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "role",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "updateData",
+                      "delete",
+                      "list",
+                      "sendAction",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "inst",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "loom",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "ai.sloyd",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "ai.hume",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "ai.openai.realtime",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "ai.chat",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "ai.image",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "ai.skybox",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "delete",
+                      "list",
+                      "run",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "webhook",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "delete",
+                      "list",
+                      "run",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "proxy",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "delete",
+                      "list",
+                      "send",
+                      "subscribe",
+                      "unsubscribe",
+                      "listSubscriptions",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "notification",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "delete",
+                      "list",
+                      "run",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "package",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "delete",
+                      "list",
+                      "run",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "package.version",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "delete",
+                      "list",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "search",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "delete",
+                      "list",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "database",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "delete",
+                      "list",
+                      "purchase",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "purchasableItem",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "delete",
+                      "list",
+                      "purchase",
+                      "cancel",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "contract",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "delete",
+                      "list",
+                      "approve",
+                      "cancel",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "invoice",
+                  },
+                },
+                "type": "object",
+              },
+            ],
+            "type": "union",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "targetUserEmail": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "targetUserId": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "requestSharedPermission",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
         "path": "/api/v2/studios/requestComId",
       },
       "inputs": Object {
@@ -17095,6 +19671,32 @@ Object {
       },
       "name": "revokeSession",
       "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/permissions/shared/revoke",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "nullable": true,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "sharedPermissionId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "revokeSharedPermission",
+      "origins": "api",
     },
     Object {
       "http": Object {
@@ -18051,6 +20653,44 @@ Object {
                             },
                             "type": "object",
                           },
+                          "proxies": Object {
+                            "defaultValue": Object {
+                              "allowed": false,
+                            },
+                            "description": "The configuration for proxy features. Defaults to not allowed.",
+                            "hasDefault": true,
+                            "optional": true,
+                            "schema": Object {
+                              "allowed": Object {
+                                "description": "Whether proxy features are granted for the subscription.",
+                                "type": "boolean",
+                              },
+                              "maxItems": Object {
+                                "description": "The maximum number of proxy items that are allowed for the subscription. If not specified, then there is no limit.",
+                                "optional": true,
+                                "type": "number",
+                              },
+                              "maxRequestsPerHour": Object {
+                                "description": "The maximum number of proxy requests allowed per hour for the subscription. If not specified, then there is no limit.",
+                                "optional": true,
+                                "type": "number",
+                              },
+                              "maxRequestsPerPeriod": Object {
+                                "description": "The maximum number of proxy requests allowed per subscription period. If not specified, then there is no limit.",
+                                "optional": true,
+                                "type": "number",
+                              },
+                              "requestTimeoutMs": Object {
+                                "defaultValue": 10000,
+                                "description": "The maximum number of miliseconds that the destination host has to respond to a proxied request. Defaults to 10000ms.",
+                                "hasDefault": true,
+                                "nullable": true,
+                                "optional": true,
+                                "type": "number",
+                              },
+                            },
+                            "type": "object",
+                          },
                           "records": Object {
                             "description": "The configuration for record features.",
                             "optional": true,
@@ -18795,6 +21435,44 @@ Object {
                               },
                               "maxPolicies": Object {
                                 "description": "Not currently implemented.",
+                                "optional": true,
+                                "type": "number",
+                              },
+                            },
+                            "type": "object",
+                          },
+                          "proxies": Object {
+                            "defaultValue": Object {
+                              "allowed": false,
+                            },
+                            "description": "The configuration for proxy features. Defaults to not allowed.",
+                            "hasDefault": true,
+                            "optional": true,
+                            "schema": Object {
+                              "allowed": Object {
+                                "description": "Whether proxy features are granted for the subscription.",
+                                "type": "boolean",
+                              },
+                              "maxItems": Object {
+                                "description": "The maximum number of proxy items that are allowed for the subscription. If not specified, then there is no limit.",
+                                "optional": true,
+                                "type": "number",
+                              },
+                              "maxRequestsPerHour": Object {
+                                "description": "The maximum number of proxy requests allowed per hour for the subscription. If not specified, then there is no limit.",
+                                "optional": true,
+                                "type": "number",
+                              },
+                              "maxRequestsPerPeriod": Object {
+                                "description": "The maximum number of proxy requests allowed per subscription period. If not specified, then there is no limit.",
+                                "optional": true,
+                                "type": "number",
+                              },
+                              "requestTimeoutMs": Object {
+                                "defaultValue": 10000,
+                                "description": "The maximum number of miliseconds that the destination host has to respond to a proxied request. Defaults to 10000ms.",
+                                "hasDefault": true,
+                                "nullable": true,
                                 "optional": true,
                                 "type": "number",
                               },
@@ -19703,6 +22381,44 @@ Object {
                                 },
                                 "maxPolicies": Object {
                                   "description": "Not currently implemented.",
+                                  "optional": true,
+                                  "type": "number",
+                                },
+                              },
+                              "type": "object",
+                            },
+                            "proxies": Object {
+                              "defaultValue": Object {
+                                "allowed": false,
+                              },
+                              "description": "The configuration for proxy features. Defaults to not allowed.",
+                              "hasDefault": true,
+                              "optional": true,
+                              "schema": Object {
+                                "allowed": Object {
+                                  "description": "Whether proxy features are granted for the subscription.",
+                                  "type": "boolean",
+                                },
+                                "maxItems": Object {
+                                  "description": "The maximum number of proxy items that are allowed for the subscription. If not specified, then there is no limit.",
+                                  "optional": true,
+                                  "type": "number",
+                                },
+                                "maxRequestsPerHour": Object {
+                                  "description": "The maximum number of proxy requests allowed per hour for the subscription. If not specified, then there is no limit.",
+                                  "optional": true,
+                                  "type": "number",
+                                },
+                                "maxRequestsPerPeriod": Object {
+                                  "description": "The maximum number of proxy requests allowed per subscription period. If not specified, then there is no limit.",
+                                  "optional": true,
+                                  "type": "number",
+                                },
+                                "requestTimeoutMs": Object {
+                                  "defaultValue": 10000,
+                                  "description": "The maximum number of miliseconds that the destination host has to respond to a proxied request. Defaults to 10000ms.",
+                                  "hasDefault": true,
+                                  "nullable": true,
                                   "optional": true,
                                   "type": "number",
                                 },

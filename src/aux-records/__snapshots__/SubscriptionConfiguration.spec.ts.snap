@@ -64,6 +64,10 @@ Object {
   "policies": Object {
     "allowed": true,
   },
+  "proxies": Object {
+    "allowed": true,
+    "requestTimeoutMs": 10000,
+  },
   "records": Object {
     "allowed": true,
   },

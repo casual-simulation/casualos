@@ -47,6 +47,7 @@ export const AI_CHAT_RESOURCE_KIND = 'ai.chat';
 export const AI_IMAGE_RESOURCE_KIND = 'ai.image';
 export const AI_SKYBOX_RESOURCE_KIND = 'ai.skybox';
 export const WEBHOOK_RESOURCE_KIND = 'webhook';
+export const PROXY_RESOURCE_KIND = 'proxy';
 export const NOTIFICATION_RESOURCE_KIND = 'notification';
 export const PACKAGE_RESOURCE_KIND = 'package';
 export const PACKAGE_VERSION_RESOURCE_KIND = 'package.version';
@@ -70,6 +71,7 @@ export type ResourceKinds =
     | 'role'
     | 'inst'
     | 'webhook'
+    | 'proxy'
     | 'notification'
     | 'package'
     | 'package.version'
@@ -272,6 +274,20 @@ export type WebhookActionKinds =
     | 'run';
 
 /**
+ * The possible types of actions that can be performed on proxy resources.
+ *
+ * @dochash types/permissions
+ * @docname ProxyActionKinds
+ */
+export type ProxyActionKinds =
+    | 'create'
+    | 'read'
+    | 'update'
+    | 'delete'
+    | 'list'
+    | 'run';
+
+/**
  * The possible types of actions that can be performed on notification resources.
  *
  * @dochash types/permissions
@@ -411,6 +427,7 @@ export type AvailablePermissions =
     | AIImagePermission
     | AISkyboxPermission
     | WebhookPermission
+    | ProxyPermission
     | NotificationPermission
     | PackagePermission
     | PackageVersionPermission
@@ -503,6 +520,17 @@ export const AI_SKYBOX_ACTION_KINDS_VALIDATION = memoize(() =>
 );
 
 export const WEBHOOK_ACTION_KINDS_VALIDATION = memoize(() =>
+    z.enum([
+        CREATE_ACTION,
+        READ_ACTION,
+        UPDATE_ACTION,
+        DELETE_ACTION,
+        LIST_ACTION,
+        RUN_ACTION,
+    ])
+);
+
+export const PROXY_ACTION_KINDS_VALIDATION = memoize(() =>
     z.enum([
         CREATE_ACTION,
         READ_ACTION,
@@ -620,6 +648,7 @@ export const RESOURCE_KIND_VALIDATION = memoize(() =>
         AI_IMAGE_RESOURCE_KIND,
         AI_SKYBOX_RESOURCE_KIND,
         WEBHOOK_RESOURCE_KIND,
+        PROXY_RESOURCE_KIND,
         NOTIFICATION_RESOURCE_KIND,
         PACKAGE_RESOURCE_KIND,
         PACKAGE_VERSION_RESOURCE_KIND,
@@ -709,6 +738,7 @@ export type EntitlementFeature =
     | 'package'
     | 'permissions'
     | 'webhook'
+    | 'proxy'
     | 'ai'
     | 'search'
     | 'database';
@@ -756,6 +786,7 @@ export const ENTITLEMENT_FEATURE_VALIDATION = memoize(() =>
         'package',
         'permissions',
         'webhook',
+        'proxy',
         'ai',
         'search',
         'database',
@@ -1337,6 +1368,35 @@ type ZodWebhookPermissionAssertion = HasType<
 >;
 
 /**
+ * Defines an interface that describes common options for all permissions that affect proxy resources.
+ *
+ * @dochash types/permissions
+ * @docname ProxyPermission
+ */
+export interface ProxyPermission extends Permission {
+    /**
+     * The kind of the permission.
+     */
+    resourceKind: 'proxy';
+
+    /**
+     * The action that is allowed.
+     * If null, then all actions are allowed.
+     */
+    action: ProxyActionKinds | null;
+}
+export const PROXY_PERMISSION_VALIDATION = memoize(() =>
+    PERMISSION_VALIDATION().extend({
+        resourceKind: z.literal(PROXY_RESOURCE_KIND),
+        action: PROXY_ACTION_KINDS_VALIDATION().nullable(),
+    })
+);
+type ZodProxyPermission = z.infer<
+    ReturnType<typeof PROXY_PERMISSION_VALIDATION>
+>;
+type ZodProxyPermissionAssertion = HasType<ZodProxyPermission, ProxyPermission>;
+
+/**
  * Defines an interface that describes common options for all permissions that affect notification resources.
  *
  * @dochash types/permissions
@@ -1611,6 +1671,7 @@ export const AVAILABLE_PERMISSIONS_VALIDATION = z.discriminatedUnion(
         AI_IMAGE_PERMISSION_VALIDATION(),
         AI_SKYBOX_PERMISSION_VALIDATION(),
         WEBHOOK_PERMISSION_VALIDATION(),
+        PROXY_PERMISSION_VALIDATION(),
         NOTIFICATION_PERMISSION_VALIDATION(),
         PACKAGE_PERMISSION_VALIDATION(),
         PACKAGE_VERSION_PERMISSION_VALIDATION(),
@@ -1620,6 +1681,49 @@ export const AVAILABLE_PERMISSIONS_VALIDATION = z.discriminatedUnion(
         CONTRACT_PERMISSION_VALIDATION(),
         INVOICE_PERMISSION_VALIDATION(),
     ]
+);
+
+/**
+ * Omits the given keys from each member of a union type individually, instead of
+ * collapsing the union into a single object first (as the built-in `Omit` does).
+ * This preserves discriminated unions.
+ */
+type DistributiveOmit<T, K extends keyof any> = T extends any
+    ? Omit<T, K>
+    : never;
+
+/**
+ * Defines a marker-based permission that has its subject information omitted.
+ * This is used by shared permissions, where the subject (the other user in the share)
+ * is automatically determined instead of being provided by the caller.
+ *
+ * @dochash types/permissions
+ * @docname SharedMarkerPermission
+ */
+export type SharedMarkerPermission = DistributiveOmit<
+    AvailablePermissions,
+    'subjectType' | 'subjectId'
+> & {
+    /**
+     * The marker that the permission is for.
+     */
+    marker: string;
+};
+
+/**
+ * The zod validation for a {@link SharedMarkerPermission}.
+ */
+export const SHARED_MARKER_PERMISSION_VALIDATION = memoize(() =>
+    z.discriminatedUnion(
+        'resourceKind',
+        AVAILABLE_PERMISSIONS_VALIDATION.options.map((option) =>
+            (option as z.ZodObject<any>)
+                .omit({ subjectType: true, subjectId: true })
+                .extend({
+                    marker: z.string().min(1).max(100),
+                })
+        ) as any
+    )
 );
 
 export type PermissionOptions = FilePermissionOptions | RolePermissionOptions;

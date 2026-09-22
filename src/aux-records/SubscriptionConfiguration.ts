@@ -118,6 +118,59 @@ export const getWebhookFeaturesSchema = memoize(() =>
 
 export type WebhookFeaturesSchema = ReturnType<typeof getWebhookFeaturesSchema>;
 
+export const getProxyFeaturesSchema = memoize(() =>
+    z
+        .object({
+            allowed: z
+                .boolean()
+                .describe(
+                    'Whether proxy features are granted for the subscription.'
+                ),
+
+            maxItems: z
+                .int()
+                .optional()
+                .describe(
+                    'The maximum number of proxy items that are allowed for the subscription. If not specified, then there is no limit.'
+                ),
+
+            requestTimeoutMs: z
+                .int()
+                .positive()
+                .optional()
+                .nullable()
+                .prefault(10000)
+                .describe(
+                    'The maximum number of miliseconds that the destination host has to respond to a proxied request. Defaults to 10000ms.'
+                ),
+
+            maxRequestsPerPeriod: z
+                .int()
+                .positive()
+                .optional()
+                .describe(
+                    'The maximum number of proxy requests allowed per subscription period. If not specified, then there is no limit.'
+                ),
+
+            maxRequestsPerHour: z
+                .int()
+                .positive()
+                .optional()
+                .describe(
+                    'The maximum number of proxy requests allowed per hour for the subscription. If not specified, then there is no limit.'
+                ),
+        })
+        .optional()
+        .prefault({
+            allowed: false,
+        })
+        .describe(
+            'The configuration for proxy features. Defaults to not allowed.'
+        )
+);
+
+export type ProxyFeaturesSchema = ReturnType<typeof getProxyFeaturesSchema>;
+
 export const getCurrencyLimitsSchema = memoize(() =>
     z
         .object({})
@@ -684,6 +737,8 @@ export const getSubscriptionFeaturesSchema = memoize(() =>
             ),
 
         webhooks: getWebhookFeaturesSchema(),
+
+        proxies: getProxyFeaturesSchema(),
 
         notifications: z
             .object({
@@ -1406,6 +1461,11 @@ export interface FeaturesConfiguration {
     webhooks?: WebhooksFeaturesConfiguration;
 
     /**
+     * The configuration for proxy features.
+     */
+    proxies?: ProxiesFeaturesConfiguration;
+
+    /**
      * The configuration for notification features.
      */
     notifications?: NotificationFeaturesConfiguration;
@@ -1673,6 +1733,9 @@ export type StudioLoomFeaturesConfiguration =
 export type WebhooksFeaturesConfiguration =
     z.infer<SubscriptionFeaturesSchema>['webhooks'];
 
+export type ProxiesFeaturesConfiguration =
+    z.infer<SubscriptionFeaturesSchema>['proxies'];
+
 export type NotificationFeaturesConfiguration =
     z.infer<SubscriptionFeaturesSchema>['notifications'];
 
@@ -1752,6 +1815,9 @@ export function allowAllFeatures(): FeaturesConfiguration {
             allowed: true,
         },
         webhooks: {
+            allowed: true,
+        },
+        proxies: {
             allowed: true,
         },
         store: {
@@ -2050,6 +2116,36 @@ export function getWebhookFeatures(
     return (
         features.webhooks ??
         getWebhookFeaturesSchema().parse({ allowed: false })
+    );
+}
+
+/**
+ * Gets the proxy features that are available for the given subscription.
+ * @param config The configuration. If null, then all default features are allowed.
+ * @param subscriptionStatus The status of the subscription.
+ * @param subscriptionId The ID of the subscription.
+ * @param type The type of the user.
+ */
+export function getProxyFeatures(
+    config: SubscriptionConfiguration | null,
+    subscriptionStatus: string,
+    subscriptionId: string,
+    type: 'user' | 'studio',
+    periodStartMs?: number,
+    periodEndMs?: number,
+    nowMs: number = Date.now()
+): ProxiesFeaturesConfiguration {
+    const features = getSubscriptionFeatures(
+        config,
+        subscriptionStatus,
+        subscriptionId,
+        type,
+        periodStartMs,
+        periodEndMs,
+        nowMs
+    );
+    return (
+        features.proxies ?? getProxyFeaturesSchema().parse({ allowed: false })
     );
 }
 

@@ -2,10 +2,55 @@
 
 ## V4.2.8
 
-#### Date: 8/28/2026
+#### Date: 9/22/2026
 
 ### :rocket: Features
 
+-   Added support for "shared" permissions.
+    -   Shared permissions are marker-based permissions that must be requested by one user and accepted
+        by another user before they take effect. Once accepted, both users are granted the permission
+        inside each other's respective records. This makes it possible to implement "friending"-like
+        patterns where both parties have to agree before either one gains access to the other's data.
+    -   Shared permissions have a lifecycle of `requested`, `accepted`, `rejected`, and `revoked`. Either
+        party can revoke an accepted shared permission, which removes the permissions that were granted
+        to both parties.
+    -   Added the `SharedPermissionsController` and `SharedPermissionsStore`.
+    -   Added the `POST /api/v2/records/permissions/shared/request`,
+        `POST /api/v2/records/permissions/shared/accept`,
+        `POST /api/v2/records/permissions/shared/reject`,
+        `POST /api/v2/records/permissions/shared/revoke`,
+        `GET /api/v2/records/permissions/shared/list`,
+        `GET /api/v2/records/permissions/shared/list/status`,
+        `GET /api/v2/records/permissions/shared/list/sent`,
+        `GET /api/v2/records/permissions/shared/list/requested`, and
+        `GET /api/v2/records/permissions/shared/list/records` endpoints.
+    -   `GET /api/v2/records/permissions/shared/list/records` returns the list of records that have
+        been shared with the current user (i.e. the records owned by the other party of each of the
+        user's accepted shared permissions).
+    -   Added the `SharedPermission` table/model and the `PrismaSharedPermissionsStore`/`SqliteSharedPermissionsStore`
+        implementations (and migrations) for CockroachDB and SQLite.
+    -   `requestSharedPermission` now also accepts a `targetUserEmail` property as an alternative to
+        `targetUserId` (mutually exclusive, like `addStudioMember`'s `addedUserId`/`addedEmail`) to look
+        up the target user by their email address.
+-   Added support for proxying requests to services that require an API key.
+    -   Added the `proxy` resource kind and the `ProxyController`.
+    -   Proxy records store the `host` that requests should be sent to along with a `data` object
+        that describes the properties that should be applied to the request right before it is sent.
+        This makes it possible to call a service that is secured by an API key without ever shipping
+        the API key to the browser.
+    -   Supported `data` properties are `body.{property}`, `headers.authorization`, and `headers.authorization.bearer`.
+        Any other property is rejected.
+    -   Added `os.recordProxy(recordName, proxy, options?)` to create/update a proxy.
+    -   Added `os.proxyRequest(recordName, address, path, body?, options?)` to send a request through a proxy.
+    -   Added `os.getProxy(recordName, address, options?)` to get a proxy.
+    -   Added `os.eraseProxy(recordName, address, options?)` to delete a proxy.
+    -   Added `os.listProxies(recordName, startingAddress?, options?)` and `os.listProxiesByMarker(recordName, marker, startingAddress?, options?)` to list proxies.
+    -   Added the `POST /api/v2/records/proxy`, `GET /api/v2/records/proxy`, `GET /api/v2/records/proxy/list`,
+        `DELETE /api/v2/records/proxy`, and `POST /api/v2/records/proxy/request` endpoints.
+    -   Proxies are `private` by default. Adding the `publicRead` marker allows anyone to call the proxy.
+    -   Proxy hosts are resolved to IP addresses before requests are sent and the connection is pinned to
+        the resolved address. Requests to hosts that resolve to non-public IP addresses are rejected in order
+        to prevent internal network traversal.
 -   Improved link previews to suppport YouTube videos.
 -   Improved Custom OpenID Connect providers to support sending nonces.
 

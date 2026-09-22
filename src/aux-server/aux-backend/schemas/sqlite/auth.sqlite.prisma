@@ -110,6 +110,10 @@ model User {
     heldContracts ContractRecord[] @relation("HoldingUser")
     externalPayouts ExternalPayout[]
 
+    requestedSharedPermissions SharedPermission[] @relation("SharedPermission_requestingUser")
+    targetedSharedPermissions SharedPermission[] @relation("SharedPermission_targetUser")
+    acceptedSharedPermissions SharedPermission[] @relation("SharedPermission_recipientUser")
+
     createdAt Decimal
     updatedAt Decimal
 
@@ -395,6 +399,9 @@ model Record {
     targetWebhookRecords WebhookRecord[] @relation("TargetWebookRecord")
     webhookRuns WebhookRun[]
 
+    proxyRecords ProxyRecord[]
+    proxyRequests ProxyRequest[]
+
     packageRecords PackageRecord[]
     packageRecordVersions PackageRecordVersion[]
 
@@ -414,6 +421,9 @@ model Record {
     markerAssignments MarkerPermissionAssignment[]
 
     grantedEntitlements GrantedPackageEntitlement[]
+
+    sharedPermissions SharedPermission[] @relation("SharedPermission_record")
+    recipientSharedPermissions SharedPermission[] @relation("SharedPermission_recipientRecord")
 
     userInstReports UserInstReport[]
 
@@ -654,6 +664,59 @@ model GrantedPackageEntitlement {
 
     createdAt Decimal
     updatedAt Decimal
+}
+
+model SharedPermission {
+    id String @id
+
+    // The name of the record that the shared permission was requested for.
+    recordName String
+    record Record @relation("SharedPermission_record", fields: [recordName], references: [name], onDelete: Cascade)
+
+    // The ID of the user that requested the shared permission.
+    requestingUserId String
+    requestingUser User @relation("SharedPermission_requestingUser", fields: [requestingUserId], references: [id], onDelete: Cascade)
+
+    // The ID of the user that the shared permission was specifically requested from.
+    // Null if the shared permission is open to be accepted by anyone.
+    targetUserId String?
+    targetUser User? @relation("SharedPermission_targetUser", fields: [targetUserId], references: [id], onDelete: SetNull)
+
+    // The marker-based permission that is shared between the two parties.
+    permission Json
+
+    // The current status of the shared permission.
+    // One of "requested", "accepted", "rejected", or "revoked".
+    status String
+
+    createdAt Decimal
+    updatedAt Decimal
+
+    // The time that the shared permission request expires.
+    // Null if it does not expire.
+    expireTime Decimal?
+
+    // The name of the record that the other party shared in order to accept the request.
+    // Null until the shared permission has been accepted.
+    recipientRecordName String?
+    recipientRecord Record? @relation("SharedPermission_recipientRecord", fields: [recipientRecordName], references: [name], onDelete: SetNull)
+
+    // The ID of the user that accepted the shared permission.
+    // Null until the shared permission has been accepted.
+    recipientUserId String?
+    recipientUser User? @relation("SharedPermission_recipientUser", fields: [recipientUserId], references: [id], onDelete: SetNull)
+
+    // The ID of the permission assignment that was created in recordName to give
+    // recipientUserId access. Null until the shared permission has been accepted.
+    requestingPermissionAssignmentId String?
+
+    // The ID of the permission assignment that was created in recipientRecordName to give
+    // requestingUserId access. Null until the shared permission has been accepted.
+    recipientPermissionAssignmentId String?
+
+    @@index([requestingUserId])
+    @@index([targetUserId])
+    @@index([recipientUserId])
 }
 
 // Example query:
@@ -904,6 +967,41 @@ model WebhookRun {
     
     createdAt Decimal
     updatedAt Decimal
+}
+
+model ProxyRecord {
+    @@id([recordName, address])
+
+    recordName String
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade)
+
+    address String
+
+    host String
+    data Json
+
+    markers Json
+
+    requests ProxyRequest[]
+
+    createdAt Decimal
+    updatedAt Decimal
+}
+
+model ProxyRequest {
+    id String @id
+
+    recordName String
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade)
+
+    proxyAddress String
+    proxy ProxyRecord @relation(fields: [recordName, proxyAddress], references: [recordName, address], onDelete: Cascade)
+
+    requestTime Decimal
+
+    createdAt Decimal
+
+    @@index([requestTime])
 }
 
 model NotificationRecord {

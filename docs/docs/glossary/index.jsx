@@ -22,6 +22,7 @@ import EventRecord from './EventRecord.mdx';
 import ManualApprovalDataRecord from './ManualApprovalDataRecord.mdx';
 import ImageClassification from './ImageClassification.mdx';
 import WebhookRecord from './WebhookRecord.mdx';
+import ProxyRecord from './ProxyRecord.mdx';
 import React, { useState } from 'react';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import Tooltip from 'rc-tooltip';
@@ -56,7 +57,8 @@ export const Glossary = [
     { id: 'data-record', title: 'Data Record', content: () => <DataRecord/> },
     { id: 'event-record', title: 'Event Record', content: () => <EventRecord/> },
     { id: 'manual-approval-data-record', title: 'Manual Approval Data Record', content: () => <ManualApprovalDataRecord/> },
-    { id: 'webhook-record', title: 'Webhook Record', content: () => <WebhookRecord/> }
+    { id: 'webhook-record', title: 'Webhook Record', content: () => <WebhookRecord/> },
+    { id: 'proxy-record', title: 'Proxy Record', content: () => <ProxyRecord/> }
 ];
 
 const GlossaryWindow = ({item}) => (<div className="glossary-window">

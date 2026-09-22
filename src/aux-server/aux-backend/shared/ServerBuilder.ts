@@ -37,6 +37,8 @@ import type {
     ModerationJobProvider,
     WebhookRecordsStore,
     WebhookEnvironment,
+    ProxyRecordsStore,
+    ProxyInterface,
     NotificationRecordsStore,
     WebPushInterface,
     PrivoStore,
@@ -46,6 +48,7 @@ import type {
     PurchasableItemRecordsStore,
     BackgroundJobs,
     LinkPreviewStore,
+    SharedPermissionsStore,
 } from '@casual-simulation/aux-records';
 import {
     DNSDomainNameValidator,
@@ -76,11 +79,13 @@ import {
     LoomController,
     AnthropicAIChatInterface,
     WebhookRecordsController,
+    ProxyController,
     cleanupObject,
     NotificationRecordsController,
     PackageRecordsController,
     LinkPreviewController,
     MemoryRateLimiter,
+    SharedPermissionsController,
 } from '@casual-simulation/aux-records';
 import type { SimpleEmailServiceAuthMessengerOptions } from '@casual-simulation/aux-records-aws';
 import {
@@ -130,6 +135,7 @@ import {
     PrismaFileRecordsLookup,
     PrismaPolicyStore,
     PrismaRecordsStore,
+    PrismaSharedPermissionsStore,
 } from '../prisma';
 import type {
     AIChatProviders,
@@ -182,6 +188,8 @@ import { S3ControlClient } from '@aws-sdk/client-s3-control';
 import { SimulationWebhookEnvironment } from './webhooks/SimulationWebhookEnvironment';
 import { DenoSimulationImpl, DenoVM } from '@casual-simulation/aux-vm-deno';
 import { PrismaWebhookRecordsStore } from '../prisma/PrismaWebhookRecordsStore';
+import { PrismaProxyRecordsStore } from '../prisma/PrismaProxyRecordsStore';
+import { HttpProxyInterface } from '@casual-simulation/aux-records/proxy/HttpProxyInterface';
 import { AuxVMNode } from '@casual-simulation/aux-vm-node';
 import { MessageChannel, MessagePort } from 'deno-vm';
 import { LambdaWebhookEnvironment } from './webhooks/LambdaWebhookEnvironment';
@@ -224,12 +232,14 @@ import {
     SqliteEventRecordsStore,
     SqliteModerationStore,
     SqliteWebhookRecordsStore,
+    SqliteProxyRecordsStore,
     SqliteNotificationRecordsStore,
     SqlitePackageRecordsStore,
     SqlitePackageVersionRecordsStore,
     SqliteSearchRecordsStore,
     SqliteFileRecordsLookup,
     SqliteInstRecordsStore,
+    SqliteSharedPermissionsStore,
 } from '../prisma/sqlite';
 import type {
     DatabaseInterface,
@@ -343,6 +353,9 @@ export class ServerBuilder implements SubscriptionLike {
     private _policyStore: PolicyStore;
     private _policyController: PolicyController;
 
+    private _sharedPermissionsStore: SharedPermissionsStore;
+    private _sharedPermissionsController: SharedPermissionsController;
+
     private _dataStore: DataRecordsStore;
     private _dataController: DataRecordsController;
 
@@ -366,6 +379,9 @@ export class ServerBuilder implements SubscriptionLike {
     private _webhooksStore: WebhookRecordsStore;
     private _webhookEnvironment: WebhookEnvironment;
     private _webhooksController: WebhookRecordsController;
+    private _proxiesStore: ProxyRecordsStore | null = null;
+    private _proxyInterface: ProxyInterface | null = null;
+    private _proxiesController: ProxyController | null = null;
 
     private _notificationsStore: NotificationRecordsStore;
     private _pushInterface: WebPushInterface;
@@ -795,6 +811,10 @@ export class ServerBuilder implements SubscriptionLike {
             prismaClient,
             options
         );
+        this._sharedPermissionsStore = this._ensurePrismaSharedPermissionsStore(
+            prismaClient,
+            options
+        );
         if (options.prisma.db === 'sqlite') {
             const client: SqlitePrismaClient = prismaClient as any;
             const metricsStore = (this._metricsStore = new SqliteMetricsStore(
@@ -809,6 +829,10 @@ export class ServerBuilder implements SubscriptionLike {
             this._eventsStore = new SqliteEventRecordsStore(client);
             this._moderationStore = new SqliteModerationStore(client);
             this._webhooksStore = new SqliteWebhookRecordsStore(
+                client,
+                metricsStore
+            );
+            this._proxiesStore = new SqliteProxyRecordsStore(
                 client,
                 metricsStore
             );
@@ -854,6 +878,10 @@ export class ServerBuilder implements SubscriptionLike {
             this._eventsStore = new PrismaEventRecordsStore(prismaClient);
             this._moderationStore = new PrismaModerationStore(prismaClient);
             this._webhooksStore = new PrismaWebhookRecordsStore(
+                prismaClient,
+                metricsStore
+            );
+            this._proxiesStore = new PrismaProxyRecordsStore(
                 prismaClient,
                 metricsStore
             );
@@ -2338,6 +2366,13 @@ export class ServerBuilder implements SubscriptionLike {
             this._recordsController,
             this._policyStore
         );
+        this._sharedPermissionsController = this._sharedPermissionsStore
+            ? new SharedPermissionsController(
+                  this._sharedPermissionsStore,
+                  this._policyController,
+                  this._authStore
+              )
+            : null;
         this._dataController = new DataRecordsController({
             store: this._dataStore,
             config: this._configStore,
@@ -2478,6 +2513,16 @@ export class ServerBuilder implements SubscriptionLike {
             });
         }
 
+        if (this._proxiesStore) {
+            this._proxiesController = new ProxyController({
+                config: this._configStore,
+                store: this._proxiesStore,
+                policies: this._policyController,
+                proxyInterface:
+                    this._proxyInterface ?? new HttpProxyInterface(),
+            });
+        }
+
         if (this._notificationsStore && this._pushInterface) {
             this._notificationsController = new NotificationRecordsController({
                 config: this._configStore,
@@ -2540,6 +2585,7 @@ export class ServerBuilder implements SubscriptionLike {
             loomController: this._loomController,
             websocketRateLimitController: this._websocketRateLimitController,
             webhooksController: this._webhooksController,
+            proxiesController: this._proxiesController,
             notificationsController: this._notificationsController,
             packagesController: this._packagesController,
             packageVersionController: this._packageVersionController,
@@ -2549,6 +2595,7 @@ export class ServerBuilder implements SubscriptionLike {
             purchasableItemsController: this._purchasableItemsController,
             viewTemplateRenderer: this._viewTemplateRenderer,
             linkPreviewController: this._linkPreviewController,
+            sharedPermissionsController: this._sharedPermissionsController,
         });
 
         const buildReturn: BuildReturn = {
@@ -2873,6 +2920,15 @@ export class ServerBuilder implements SubscriptionLike {
         } else {
             return policyStore;
         }
+    }
+
+    private _ensurePrismaSharedPermissionsStore(
+        prismaClient: PrismaClient,
+        options: Pick<ServerConfig, 'prisma'>
+    ): SharedPermissionsStore {
+        return options.prisma.db === 'sqlite'
+            ? new SqliteSharedPermissionsStore(prismaClient as any)
+            : new PrismaSharedPermissionsStore(prismaClient);
     }
 
     private _ensurePrismaConfigurationStore(
