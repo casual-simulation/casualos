@@ -32,3 +32,4 @@ export * from './SqliteSearchRecordsStore';
 export * from './SqliteWebhookRecordsStore';
 export * from './SqliteProxyRecordsStore';
 export * from './SqliteInstRecordsStore';
+export * from './SqliteSharedPermissionsStore';

@@ -23,6 +23,8 @@
         `GET /api/v2/records/permissions/shared/list/status`,
         `GET /api/v2/records/permissions/shared/list/sent`, and
         `GET /api/v2/records/permissions/shared/list/requested` endpoints.
+    -   Added the `SharedPermission` table/model and the `PrismaSharedPermissionsStore`/`SqliteSharedPermissionsStore`
+        implementations (and migrations) for CockroachDB and SQLite.
 -   Added support for proxying requests to services that require an API key.
     -   Added the `proxy` resource kind and the `ProxyController`.
     -   Proxy records store the `host` that requests should be sent to along with a `data` object
