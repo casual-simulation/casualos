@@ -16,6 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import type { ServerError } from '@casual-simulation/aux-common/Errors';
+import type { DataFilter } from './DataRecordsFilters';
 
 /**
  * Defines an interface for objects that can store data records.
@@ -126,7 +127,7 @@ export interface ListDataStoreSuccess {
 
 export interface ListDataStoreFailure {
     success: false;
-    errorCode: ServerError;
+    errorCode: ServerError | 'not_supported';
     errorMessage: string;
 }
 
@@ -167,6 +168,12 @@ export interface ListDataStoreByMarkerRequest {
      * If not provided, a default value will be used.
      */
     count?: number;
+
+    /**
+     * The filter that should be used to narrow down the items that are returned.
+     * If not provided, then all items with the given marker will be returned.
+     */
+    filter?: DataFilter;
 }
 
 /**
