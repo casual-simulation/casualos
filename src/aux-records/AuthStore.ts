@@ -193,10 +193,12 @@ export interface AuthStore {
      * Returns null if no user has linked the given identity.
      * @param provider The ID of the OpenID provider.
      * @param subject The subject (user ID) that the OpenID provider reported.
+     * @param loginStudioId The ID of the studio that the identity is scoped to. Null/undefined for identities that are not scoped to a studio.
      */
     findUserIdForOpenIDIdentity(
         provider: string,
-        subject: string
+        subject: string,
+        loginStudioId?: string | null
     ): Promise<string | null>;
 
     /**
@@ -1040,6 +1042,12 @@ export interface AuthOpenIDLoginRequest {
      * The IP Address that the request came from.
      */
     ipAddress: string;
+
+    /**
+     * The ID of the studio that the user is logging into.
+     * Null/undefined if the login is not scoped to a studio (i.e. comId or custom domain).
+     */
+    loginStudioId?: string | null;
 }
 
 /**
@@ -1060,6 +1068,13 @@ export interface AuthCustomOpenIDIdentity {
      * The ID of the user that the identity is linked to.
      */
     userId: string;
+
+    /**
+     * The ID of the studio that the identity is scoped to.
+     * Each OpenID identity can be linked to one user per studio (and one user that is not scoped to a studio).
+     * Null/undefined if the identity is not scoped to a studio.
+     */
+    loginStudioId?: string | null;
 
     /**
      * The unix timestamp in miliseconds that the identity was linked at.

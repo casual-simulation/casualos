@@ -481,11 +481,13 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
 
     async findUserIdForOpenIDIdentity(
         provider: string,
-        subject: string
+        subject: string,
+        loginStudioId: string | null = null
     ): Promise<string | null> {
         const identity = await this._openIdIdentities.findOne({
             provider,
             subject,
+            loginStudioId: loginStudioId ?? null,
         });
         return identity?.userId ?? null;
     }
@@ -497,10 +499,12 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
             {
                 provider: identity.provider,
                 subject: identity.subject,
+                loginStudioId: identity.loginStudioId ?? null,
             },
             {
                 $set: {
                     ...identity,
+                    loginStudioId: identity.loginStudioId ?? null,
                 },
             },
             {
@@ -1612,6 +1616,7 @@ export interface MongoDBOpenIdIdentity {
     _id?: string;
     provider: string;
     subject: string;
+    loginStudioId?: string | null;
     userId: string;
     createdAtMs: number;
 }

@@ -2140,10 +2140,14 @@ export class MemoryStore
 
     async findUserIdForOpenIDIdentity(
         provider: string,
-        subject: string
+        subject: string,
+        loginStudioId: string | null = null
     ): Promise<string | null> {
         const identity = this._openIdIdentities.find(
-            (i) => i.provider === provider && i.subject === subject
+            (i) =>
+                i.provider === provider &&
+                i.subject === subject &&
+                (i.loginStudioId ?? null) === (loginStudioId ?? null)
         );
         return identity?.userId ?? null;
     }
@@ -2154,7 +2158,8 @@ export class MemoryStore
         const index = this._openIdIdentities.findIndex(
             (i) =>
                 i.provider === identity.provider &&
-                i.subject === identity.subject
+                i.subject === identity.subject &&
+                (i.loginStudioId ?? null) === (identity.loginStudioId ?? null)
         );
 
         if (index >= 0) {

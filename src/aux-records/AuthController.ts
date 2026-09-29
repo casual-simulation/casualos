@@ -78,6 +78,7 @@ import type {
     GenericOpenIDClientInterface,
 } from './GenericOpenIDClient';
 import type { OpenIDProviderConfiguration } from './OpenIDConfiguration';
+import { isComIdAllowedForOpenIDProvider } from './OpenIDConfiguration';
 import type { ZodIssue } from 'zod';
 import type {
     PublicKeyCredentialCreationOptionsJSON,
@@ -102,7 +103,7 @@ import type {
     StripeAccountStatus,
     StripeRequirementsStatus,
 } from './StripeInterface';
-import type { RecordsStore } from './RecordsStore';
+import type { RecordsStore, Studio } from './RecordsStore';
 
 const TRACE_NAME = 'AuthController';
 
@@ -880,6 +881,51 @@ export class AuthController {
                 providerId = providerConfig.id;
             }
 
+            let loginStudio: Studio | null = null;
+            if (request.comId) {
+                loginStudio = await this._records.getStudioByComId(
+                    request.comId
+                );
+
+                if (!loginStudio) {
+                    return {
+                        success: false,
+                        errorCode: 'not_found',
+                        errorMessage: 'The specified comID was not found.',
+                    };
+                }
+            } else if (request.customDomain) {
+                const customDomain =
+                    await this._records.getVerifiedCustomDomainByName(
+                        request.customDomain
+                    );
+
+                if (customDomain) {
+                    loginStudio = customDomain.studio;
+                }
+            }
+
+            if (loginStudio) {
+                if (
+                    !providerConfig ||
+                    !isComIdAllowedForOpenIDProvider(
+                        providerConfig,
+                        loginStudio.comId ?? null
+                    )
+                ) {
+                    return {
+                        success: false,
+                        errorCode: 'not_supported',
+                        errorMessage:
+                            'The given provider does not support logging into the specified comID.',
+                    };
+                }
+
+                console.log(
+                    `[AuthController] [requestOpenIDLogin] Logging into studio (${loginStudio.id}) with provider (${providerId}).`
+                );
+            }
+
             const requestId = uuid();
             const state = uuid();
 
@@ -908,6 +954,7 @@ export class AuthController {
                 scope: authorizationUrlResult.scope,
                 requestTimeMs: Date.now(),
                 expireTimeMs: Date.now() + OPEN_ID_LOGIN_REQUEST_LIFETIME_MS,
+                loginStudioId: loginStudio?.id ?? null,
             };
 
             await this._store.saveOpenIDLoginRequest(loginRequest);
@@ -1256,6 +1303,9 @@ export class AuthController {
      * caller is already authenticated as that user via a session key. Brand new
      * users don't need a session key, since there's no existing account that
      * could be hijacked.
+     *
+     * If the login request is for a studio (comId/custom domain), then identities,
+     * email matches, session keys, and new users are all scoped to that studio.
      */
     private async _completeGenericOpenIDLogin(
         loginRequest: AuthOpenIDLoginRequest,
@@ -1274,6 +1324,28 @@ export class AuthController {
             };
         }
 
+        if (loginRequest.loginStudioId) {
+            // Re-check that the provider still supports the studio,
+            // since the configuration may have changed since the login was requested.
+            const studio = await this._records.getStudioById(
+                loginRequest.loginStudioId
+            );
+            if (
+                !studio ||
+                !isComIdAllowedForOpenIDProvider(
+                    providerConfig,
+                    studio.comId ?? null
+                )
+            ) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'The given provider does not support logging into the specified comID.',
+                };
+            }
+        }
+
         const result =
             await this._genericOpenIDClient.processAuthorizationCallback(
                 providerConfig,
@@ -1290,24 +1362,18 @@ export class AuthController {
         const email = result.userInfo.email;
         const name = result.userInfo.name;
 
+        const loginStudioId = loginRequest.loginStudioId ?? null;
+
         const linkedUserId = await this._store.findUserIdForOpenIDIdentity(
             loginRequest.provider,
-            subject
+            subject,
+            loginStudioId
         );
 
         let user: AuthUser;
+        let sessionUser: AuthUser | null = null;
 
-        if (linkedUserId) {
-            user = await this._store.findUser(linkedUserId);
-
-            if (!user) {
-                return {
-                    success: false,
-                    errorCode: 'invalid_request',
-                    errorMessage: INVALID_REQUEST_ERROR_MESSAGE,
-                };
-            }
-        } else if (request.sessionKey) {
+        if (!linkedUserId && request.sessionKey) {
             const validation = await validateSessionKey(
                 this,
                 request.sessionKey
@@ -1324,9 +1390,9 @@ export class AuthController {
                 };
             }
 
-            user = await this._store.findUser(validation.userId);
+            sessionUser = await this._store.findUser(validation.userId);
 
-            if (!user) {
+            if (!sessionUser) {
                 return {
                     success: false,
                     errorCode: 'invalid_request',
@@ -1334,15 +1400,40 @@ export class AuthController {
                 };
             }
 
+            if ((sessionUser.loginStudioId ?? null) !== loginStudioId) {
+                // The session belongs to an account for a different studio (or no studio),
+                // so it cannot be used to link this identity.
+                sessionUser = null;
+            }
+        }
+
+        if (linkedUserId) {
+            user = await this._store.findUser(linkedUserId);
+
+            if (!user || (user.loginStudioId ?? null) !== loginStudioId) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: INVALID_REQUEST_ERROR_MESSAGE,
+                };
+            }
+        } else if (sessionUser) {
+            user = sessionUser;
+
             await this._store.saveOpenIDIdentity({
                 provider: loginRequest.provider,
                 subject,
                 userId: user.id,
+                loginStudioId,
                 createdAtMs: Date.now(),
             });
         } else {
             const existingUser = email
-                ? await this._store.findUserByAddress(email, 'email')
+                ? await this._store.findUserByAddress(
+                      email,
+                      'email',
+                      loginStudioId
+                  )
                 : null;
 
             if (existingUser) {
@@ -1361,6 +1452,7 @@ export class AuthController {
                 name: name ?? null,
                 allSessionRevokeTimeMs: null,
                 currentLoginRequestId: null,
+                loginStudioId,
             };
 
             const saveUserResult = await this._store.saveNewUser(user);
@@ -1381,6 +1473,7 @@ export class AuthController {
                 provider: loginRequest.provider,
                 subject,
                 userId: user.id,
+                loginStudioId,
                 createdAtMs: Date.now(),
             });
         }
@@ -3760,6 +3853,20 @@ export interface OpenIDLoginRequest {
      * The IP address that the request is from.
      */
     ipAddress: string;
+
+    /**
+     * The comId of the studio that the user should be logged into.
+     * The provider must be configured to support the comId.
+     * Takes precedence over customDomain.
+     */
+    comId?: string | null;
+
+    /**
+     * The custom domain that the user is logging in from.
+     * If the domain is verified, then the user will be logged into the studio that owns the domain.
+     * The provider must be configured to support the comId of the studio.
+     */
+    customDomain?: string | null;
 }
 
 export type OpenIDLoginRequestResult =
@@ -3782,7 +3889,7 @@ export interface OpenIDLoginRequestSuccess {
 
 export interface OpenIDLoginRequestFailure {
     success: false;
-    errorCode: ServerError | 'not_supported';
+    errorCode: ServerError | 'not_supported' | 'not_found';
     errorMessage: string;
 }
 
