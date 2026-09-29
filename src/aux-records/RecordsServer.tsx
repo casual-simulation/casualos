@@ -1312,12 +1312,16 @@ export class RecordsServer {
                 .inputs(
                     z.object({
                         provider: z.string().nonempty(),
+                        comId: z.string().nullable().optional(),
+                        customDomain: z.string().nullable().optional(),
                     })
                 )
-                .handler(async ({ provider }, context) => {
+                .handler(async ({ provider, comId, customDomain }, context) => {
                     const result = await this._auth.requestOpenIDLogin({
                         provider,
                         ipAddress: context.ipAddress,
+                        comId,
+                        customDomain,
                     });
 
                     return result;

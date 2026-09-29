@@ -616,6 +616,7 @@ export class PrismaAuthStore implements AuthStore {
             authorizationTimeMs: convertToMillis(request.authorizationTime),
             authorizationCode: request.authorizationCode,
             ipAddress: request.ipAddress,
+            loginStudioId: request.loginStudioId ?? null,
         };
     }
 
@@ -652,6 +653,7 @@ export class PrismaAuthStore implements AuthStore {
             authorizationTimeMs: convertToMillis(request.authorizationTime),
             authorizationCode: request.authorizationCode,
             ipAddress: request.ipAddress,
+            loginStudioId: request.loginStudioId ?? null,
         };
     }
 
@@ -679,6 +681,7 @@ export class PrismaAuthStore implements AuthStore {
                 authorizationTime: convertToDate(request.authorizationTimeMs),
                 authorizationCode: request.authorizationCode,
                 ipAddress: request.ipAddress,
+                loginStudioId: request.loginStudioId ?? null,
             },
             update: {
                 authorizationUrl: request.authorizationUrl,
@@ -695,6 +698,7 @@ export class PrismaAuthStore implements AuthStore {
                 authorizationTime: convertToDate(request.authorizationTimeMs),
                 authorizationCode: request.authorizationCode,
                 ipAddress: request.ipAddress,
+                loginStudioId: request.loginStudioId ?? null,
             },
         });
 
@@ -736,14 +740,14 @@ export class PrismaAuthStore implements AuthStore {
     @traced(TRACE_NAME)
     async findUserIdForOpenIDIdentity(
         provider: string,
-        subject: string
+        subject: string,
+        loginStudioId: string | null = null
     ): Promise<string | null> {
-        const identity = await this._client.openIdIdentity.findUnique({
+        const identity = await this._client.openIdIdentity.findFirst({
             where: {
-                provider_subject: {
-                    provider,
-                    subject,
-                },
+                provider,
+                subject,
+                loginStudioId: loginStudioId ?? null,
             },
         });
 
@@ -754,23 +758,35 @@ export class PrismaAuthStore implements AuthStore {
     async saveOpenIDIdentity(
         identity: AuthCustomOpenIDIdentity
     ): Promise<void> {
-        await this._client.openIdIdentity.upsert({
+        const loginStudioId = identity.loginStudioId ?? null;
+        const existing = await this._client.openIdIdentity.findFirst({
             where: {
-                provider_subject: {
-                    provider: identity.provider,
-                    subject: identity.subject,
-                },
-            },
-            create: {
                 provider: identity.provider,
                 subject: identity.subject,
-                userId: identity.userId,
-                createdAt: convertToDate(identity.createdAtMs),
-            },
-            update: {
-                userId: identity.userId,
+                loginStudioId,
             },
         });
+
+        if (existing) {
+            await this._client.openIdIdentity.update({
+                where: {
+                    id: existing.id,
+                },
+                data: {
+                    userId: identity.userId,
+                },
+            });
+        } else {
+            await this._client.openIdIdentity.create({
+                data: {
+                    provider: identity.provider,
+                    subject: identity.subject,
+                    loginStudioId,
+                    userId: identity.userId,
+                    createdAt: convertToDate(identity.createdAtMs),
+                },
+            });
+        }
     }
 
     @traced(TRACE_NAME)

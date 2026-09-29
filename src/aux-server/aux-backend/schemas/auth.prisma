@@ -234,6 +234,9 @@ model OpenIDLoginRequest {
     completedTime DateTime?
     ipAddress String
 
+    // The ID of the studio that the user is logging into.
+    loginStudioId String?
+
     authorizationCode String?
     authorizationTime DateTime?
 
@@ -244,15 +247,20 @@ model OpenIDLoginRequest {
 }
 
 model OpenIdIdentity {
+    id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
     provider String
     subject String
+
+    // The ID of the studio that the identity is scoped to.
+    // Null if the identity is not scoped to a studio.
+    loginStudioId String?
 
     userId String
     user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "OpenIdIdentity_userId_fkey1")
 
     createdAt DateTime @default(now())
 
-    @@id([provider, subject])
+    @@unique([provider, subject, loginStudioId])
     @@index([userId])
 }
 
