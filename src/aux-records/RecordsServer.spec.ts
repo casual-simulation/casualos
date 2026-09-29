@@ -4337,6 +4337,88 @@ describe('RecordsServer', () => {
             });
         });
 
+        it('should pass the comId and custom domain to the controller', async () => {
+            store.openIdConfiguration = {
+                providers: [{ ...providerConfig, comIds: ['comId1'] }],
+            };
+            await store.addStudio({
+                id: 'studio1',
+                displayName: 'My Studio',
+                comId: 'comId1',
+            });
+            genericOpenIDClientMock.generateAuthorizationUrl.mockResolvedValueOnce(
+                {
+                    authorizationUrl: 'https://authorization_url',
+                    codeMethod: 'method',
+                    codeVerifier: 'verifier',
+                    redirectUrl: 'https://redirect_url',
+                    scope: 'openid email profile',
+                    nonce: 'nonce',
+                }
+            );
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/login/openid`,
+                    JSON.stringify({
+                        provider: 'google',
+                        comId: 'comId1',
+                        customDomain: 'other.example.com',
+                    }),
+                    {
+                        origin: 'https://account-origin.com',
+                    },
+                    '123.456.789'
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    authorizationUrl: 'https://authorization_url',
+                    requestId: expect.any(String),
+                },
+                headers: accountCorsHeaders,
+            });
+
+            expect(store.openIdLoginRequests).toEqual([
+                expect.objectContaining({
+                    loginStudioId: 'studio1',
+                }),
+            ]);
+        });
+
+        it('should return not_supported if the provider does not support the comId', async () => {
+            await store.addStudio({
+                id: 'studio1',
+                displayName: 'My Studio',
+                comId: 'comId1',
+            });
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/login/openid`,
+                    JSON.stringify({ provider: 'google', comId: 'comId1' }),
+                    {
+                        origin: 'https://account-origin.com',
+                    },
+                    '123.456.789'
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'The given provider does not support logging into the specified comID.',
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
         it('should support procedures', async () => {
             genericOpenIDClientMock.generateAuthorizationUrl.mockResolvedValueOnce(
                 {

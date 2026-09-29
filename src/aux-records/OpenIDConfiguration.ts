@@ -104,6 +104,12 @@ export const openIdProviderSchema = z
             .optional()
             .prefault(['openid', 'email', 'profile'])
             .describe('The scopes that should be requested during login.'),
+        comIds: z
+            .union([z.boolean(), z.array(z.string().nonempty())])
+            .optional()
+            .describe(
+                'Whether the provider can be used to login to comId (studio) accounts. Set to true to allow all comIds, false to disallow all comIds, or a list of comIds that should be allowed. Studio logins via custom domains are checked against the comId of the studio that owns the domain. Defaults to false.'
+            ),
     })
     .refine((data) => !!data.discoveryUri || !!data.issuer, {
         message: 'Either discoveryUri or issuer must be specified.',
@@ -138,4 +144,22 @@ export function parseOpenIDConfiguration(
         }
     }
     return defaultConfig;
+}
+
+/**
+ * Determines whether the given OpenID provider can be used to login to the studio with the given comId.
+ * @param provider The provider configuration.
+ * @param comId The comId of the studio that is being logged into. Null if the studio does not have a comId.
+ */
+export function isComIdAllowedForOpenIDProvider(
+    provider: Pick<OpenIDProviderConfiguration, 'comIds'>,
+    comId: string | null
+): boolean {
+    const comIds = provider.comIds ?? false;
+    if (comIds === true) {
+        return true;
+    } else if (Array.isArray(comIds)) {
+        return !!comId && comIds.includes(comId);
+    }
+    return false;
 }

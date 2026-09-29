@@ -632,6 +632,7 @@ export class SqliteAuthStore implements AuthStore {
             authorizationTimeMs: request.authorizationTime?.toNumber(),
             authorizationCode: request.authorizationCode,
             ipAddress: request.ipAddress,
+            loginStudioId: request.loginStudioId ?? null,
         };
     }
 
@@ -668,6 +669,7 @@ export class SqliteAuthStore implements AuthStore {
             authorizationTimeMs: request.authorizationTime?.toNumber(),
             authorizationCode: request.authorizationCode,
             ipAddress: request.ipAddress,
+            loginStudioId: request.loginStudioId ?? null,
         };
     }
 
@@ -695,6 +697,7 @@ export class SqliteAuthStore implements AuthStore {
                 authorizationTime: request.authorizationTimeMs,
                 authorizationCode: request.authorizationCode,
                 ipAddress: request.ipAddress,
+                loginStudioId: request.loginStudioId ?? null,
                 createdAt: Date.now(),
                 updatedAt: Date.now(),
             },
@@ -713,6 +716,7 @@ export class SqliteAuthStore implements AuthStore {
                 authorizationTime: request.authorizationTimeMs,
                 authorizationCode: request.authorizationCode,
                 ipAddress: request.ipAddress,
+                loginStudioId: request.loginStudioId ?? null,
                 updatedAt: Date.now(),
             },
         });
@@ -757,14 +761,14 @@ export class SqliteAuthStore implements AuthStore {
     @traced(TRACE_NAME)
     async findUserIdForOpenIDIdentity(
         provider: string,
-        subject: string
+        subject: string,
+        loginStudioId: string | null = null
     ): Promise<string | null> {
-        const identity = await this._client.openIdIdentity.findUnique({
+        const identity = await this._client.openIdIdentity.findFirst({
             where: {
-                provider_subject: {
-                    provider,
-                    subject,
-                },
+                provider,
+                subject,
+                loginStudioId: loginStudioId ?? null,
             },
         });
 
@@ -775,23 +779,35 @@ export class SqliteAuthStore implements AuthStore {
     async saveOpenIDIdentity(
         identity: AuthCustomOpenIDIdentity
     ): Promise<void> {
-        await this._client.openIdIdentity.upsert({
+        const loginStudioId = identity.loginStudioId ?? null;
+        const existing = await this._client.openIdIdentity.findFirst({
             where: {
-                provider_subject: {
-                    provider: identity.provider,
-                    subject: identity.subject,
-                },
-            },
-            create: {
                 provider: identity.provider,
                 subject: identity.subject,
-                userId: identity.userId,
-                createdAt: identity.createdAtMs,
-            },
-            update: {
-                userId: identity.userId,
+                loginStudioId,
             },
         });
+
+        if (existing) {
+            await this._client.openIdIdentity.update({
+                where: {
+                    id: existing.id,
+                },
+                data: {
+                    userId: identity.userId,
+                },
+            });
+        } else {
+            await this._client.openIdIdentity.create({
+                data: {
+                    provider: identity.provider,
+                    subject: identity.subject,
+                    loginStudioId,
+                    userId: identity.userId,
+                    createdAt: identity.createdAtMs,
+                },
+            });
+        }
     }
 
     @traced(TRACE_NAME)

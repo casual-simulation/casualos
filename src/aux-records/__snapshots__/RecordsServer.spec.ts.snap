@@ -6479,6 +6479,16 @@ Object {
       },
       "inputs": Object {
         "schema": Object {
+          "comId": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "customDomain": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
           "provider": Object {
             "type": "string",
           },
@@ -10625,6 +10635,22 @@ Object {
                         "clientSecret": Object {
                           "description": "The client secret that should be used.",
                           "type": "string",
+                        },
+                        "comIds": Object {
+                          "description": "Whether the provider can be used to login to comId (studio) accounts. Set to true to allow all comIds, false to disallow all comIds, or a list of comIds that should be allowed. Studio logins via custom domains are checked against the comId of the studio that owns the domain. Defaults to false.",
+                          "optional": true,
+                          "options": Array [
+                            Object {
+                              "type": "boolean",
+                            },
+                            Object {
+                              "schema": Object {
+                                "type": "string",
+                              },
+                              "type": "array",
+                            },
+                          ],
+                          "type": "union",
                         },
                         "discoveryUri": Object {
                           "description": "The URI that OpenID configuration info should be discovered from. Either this or issuer must be specified.",
@@ -18609,6 +18635,16 @@ Object {
       },
       "inputs": Object {
         "schema": Object {
+          "comId": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "customDomain": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
           "provider": Object {
             "type": "string",
           },
@@ -22755,6 +22791,22 @@ Object {
                         "clientSecret": Object {
                           "description": "The client secret that should be used.",
                           "type": "string",
+                        },
+                        "comIds": Object {
+                          "description": "Whether the provider can be used to login to comId (studio) accounts. Set to true to allow all comIds, false to disallow all comIds, or a list of comIds that should be allowed. Studio logins via custom domains are checked against the comId of the studio that owns the domain. Defaults to false.",
+                          "optional": true,
+                          "options": Array [
+                            Object {
+                              "type": "boolean",
+                            },
+                            Object {
+                              "schema": Object {
+                                "type": "string",
+                              },
+                              "type": "array",
+                            },
+                          ],
+                          "type": "union",
                         },
                         "discoveryUri": Object {
                           "description": "The URI that OpenID configuration info should be discovered from. Either this or issuer must be specified.",

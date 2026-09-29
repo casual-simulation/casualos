@@ -2808,6 +2808,7 @@ describe('AuthController', () => {
                             OPEN_ID_LOGIN_REQUEST_LIFETIME_MS,
                         completedTimeMs: null,
                         ipAddress: '127.0.0.1',
+                        loginStudioId: null,
                     },
                 ]);
 
@@ -2918,6 +2919,7 @@ describe('AuthController', () => {
                             OPEN_ID_LOGIN_REQUEST_LIFETIME_MS,
                         completedTimeMs: null,
                         ipAddress: '127.0.0.1',
+                        loginStudioId: null,
                     },
                 ]);
 
@@ -2978,6 +2980,241 @@ describe('AuthController', () => {
                     success: false,
                     errorCode: 'server_error',
                     errorMessage: 'A server error occurred.',
+                });
+            });
+
+            describe('studios', () => {
+                beforeEach(async () => {
+                    await store.addStudio({
+                        id: 'studio1',
+                        displayName: 'My Studio',
+                        comId: 'comId1',
+                    });
+
+                    await store.addStudio({
+                        id: 'studio2',
+                        displayName: 'My Other Studio',
+                    });
+
+                    await store.saveCustomDomain({
+                        id: 'customdomain1',
+                        domainName: 'studio1.example.com',
+                        studioId: 'studio1',
+                        verificationKey: 'verification',
+                        verified: true,
+                    });
+
+                    await store.saveCustomDomain({
+                        id: 'customdomain2',
+                        domainName: 'studio2.example.com',
+                        studioId: 'studio2',
+                        verificationKey: 'verification',
+                        verified: true,
+                    });
+
+                    await store.saveCustomDomain({
+                        id: 'customdomain3',
+                        domainName: 'unverified.example.com',
+                        studioId: 'studio1',
+                        verificationKey: 'verification',
+                        verified: null,
+                    });
+
+                    uuidMock
+                        .mockReturnValueOnce('uuid')
+                        .mockReturnValueOnce('uuid2');
+                    genericOpenIDClientMock.generateAuthorizationUrl.mockResolvedValue(
+                        {
+                            codeVerifier: 'verifier',
+                            codeMethod: 'method',
+                            authorizationUrl: 'https://mock_authorization_url',
+                            redirectUrl: 'https://redirect_url',
+                            scope: 'openid email profile',
+                            nonce: 'nonce',
+                        }
+                    );
+                });
+
+                function setComIds(comIds: boolean | string[] | undefined) {
+                    store.openIdConfiguration = {
+                        providers: [
+                            {
+                                ...store.openIdConfiguration.providers[0],
+                                comIds,
+                            },
+                        ],
+                    };
+                }
+
+                const successCases: [
+                    string,
+                    boolean | string[],
+                    { comId?: string; customDomain?: string },
+                    string
+                ][] = [
+                    [
+                        'comId with comIds: true',
+                        true,
+                        { comId: 'comId1' },
+                        'studio1',
+                    ],
+                    [
+                        'comId in the list of comIds',
+                        ['other', 'comId1'],
+                        { comId: 'comId1' },
+                        'studio1',
+                    ],
+                    [
+                        'custom domain with comIds: true',
+                        true,
+                        { customDomain: 'studio1.example.com' },
+                        'studio1',
+                    ],
+                    [
+                        'custom domain whose studio comId is in the list of comIds',
+                        ['comId1'],
+                        { customDomain: 'studio1.example.com' },
+                        'studio1',
+                    ],
+                    [
+                        'custom domain for a studio without a comId with comIds: true',
+                        true,
+                        { customDomain: 'studio2.example.com' },
+                        'studio2',
+                    ],
+                ];
+
+                it.each(successCases)(
+                    'should save the login studio ID for %s',
+                    async (_desc, comIds, request, expectedStudioId) => {
+                        setComIds(comIds);
+
+                        const result = await controller.requestOpenIDLogin({
+                            provider: 'google',
+                            ipAddress: '127.0.0.1',
+                            ...request,
+                        });
+
+                        expect(result).toEqual({
+                            success: true,
+                            authorizationUrl: 'https://mock_authorization_url',
+                            requestId: 'uuid',
+                        });
+
+                        expect(store.openIdLoginRequests).toEqual([
+                            expect.objectContaining({
+                                requestId: 'uuid',
+                                loginStudioId: expectedStudioId,
+                            }),
+                        ]);
+                    }
+                );
+
+                const rejectedCases: [
+                    string,
+                    boolean | string[] | undefined,
+                    { comId?: string; customDomain?: string }
+                ][] = [
+                    ['comIds is not specified', undefined, { comId: 'comId1' }],
+                    ['comIds is false', false, { comId: 'comId1' }],
+                    [
+                        'the comId is not in the list of comIds',
+                        ['other'],
+                        { comId: 'comId1' },
+                    ],
+                    [
+                        'the custom domain studio comId is not in the list of comIds',
+                        ['other'],
+                        { customDomain: 'studio1.example.com' },
+                    ],
+                    [
+                        'the custom domain studio has no comId and a list of comIds is specified',
+                        ['comId1'],
+                        { customDomain: 'studio2.example.com' },
+                    ],
+                    [
+                        'comIds is not specified and a custom domain is used',
+                        undefined,
+                        { customDomain: 'studio1.example.com' },
+                    ],
+                ];
+
+                it.each(rejectedCases)(
+                    'should return not_supported when %s',
+                    async (_desc, comIds, request) => {
+                        setComIds(comIds);
+
+                        const result = await controller.requestOpenIDLogin({
+                            provider: 'google',
+                            ipAddress: '127.0.0.1',
+                            ...request,
+                        });
+
+                        expect(result).toEqual({
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage:
+                                'The given provider does not support logging into the specified comID.',
+                        });
+                        expect(store.openIdLoginRequests).toEqual([]);
+                    }
+                );
+
+                it('should return not_found if the comId does not exist', async () => {
+                    setComIds(true);
+
+                    const result = await controller.requestOpenIDLogin({
+                        provider: 'google',
+                        ipAddress: '127.0.0.1',
+                        comId: 'missing',
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'not_found',
+                        errorMessage: 'The specified comID was not found.',
+                    });
+                    expect(store.openIdLoginRequests).toEqual([]);
+                });
+
+                it('should prefer the comId over the custom domain', async () => {
+                    await store.addStudio({
+                        id: 'studio3',
+                        displayName: 'Studio 3',
+                        comId: 'comId3',
+                    });
+                    setComIds(true);
+
+                    const result = await controller.requestOpenIDLogin({
+                        provider: 'google',
+                        ipAddress: '127.0.0.1',
+                        comId: 'comId3',
+                        customDomain: 'studio1.example.com',
+                    });
+
+                    expect(result.success).toBe(true);
+                    expect(store.openIdLoginRequests).toEqual([
+                        expect.objectContaining({
+                            loginStudioId: 'studio3',
+                        }),
+                    ]);
+                });
+
+                it('should not use a studio for unverified custom domains', async () => {
+                    setComIds(false);
+
+                    const result = await controller.requestOpenIDLogin({
+                        provider: 'google',
+                        ipAddress: '127.0.0.1',
+                        customDomain: 'unverified.example.com',
+                    });
+
+                    expect(result.success).toBe(true);
+                    expect(store.openIdLoginRequests).toEqual([
+                        expect.objectContaining({
+                            loginStudioId: null,
+                        }),
+                    ]);
                 });
             });
         });
@@ -5697,6 +5934,287 @@ describe('AuthController', () => {
                     success: false,
                     errorCode: 'not_supported',
                     errorMessage: 'The given provider is not supported.',
+                });
+            });
+            describe('studios', () => {
+                beforeEach(async () => {
+                    store.openIdConfiguration = {
+                        providers: [
+                            {
+                                ...providerConfig,
+                                comIds: ['comId1'],
+                            },
+                        ],
+                    };
+
+                    await store.addStudio({
+                        id: 'studio1',
+                        displayName: 'My Studio',
+                        comId: 'comId1',
+                    });
+
+                    await store.saveOpenIDLoginRequest({
+                        requestId: 'requestId',
+                        state: 'state',
+                        authorizationUrl: 'https://mock_authorization_url',
+                        redirectUrl: 'https://redirect_url',
+                        codeVerifier: 'verifier',
+                        codeMethod: 'method',
+                        requestTimeMs: Date.now() - 100,
+                        expireTimeMs: Date.now() + 100,
+                        authorizationCode: 'code',
+                        authorizationTimeMs: Date.now(),
+                        completedTimeMs: null,
+                        ipAddress: '127.0.0.1',
+                        provider: 'google',
+                        scope: 'openid email profile',
+                        loginStudioId: 'studio1',
+                    });
+
+                    genericOpenIDClientMock.processAuthorizationCallback.mockResolvedValueOnce(
+                        {
+                            accessToken: 'accessToken',
+                            refreshToken: 'refreshToken',
+                            tokenType: 'Bearer',
+                            idToken: 'idToken',
+                            expiresIn: 1000,
+                            userInfo: {
+                                sub: 'sub1',
+                                email: 'test@example.com',
+                                name: 'Test Name',
+                            },
+                        }
+                    );
+                });
+
+                async function saveSessionForUser(userId: string) {
+                    const sessionId = toBase64String('sessionId');
+                    const code = 'code';
+                    await store.saveSession({
+                        requestId: 'sessionRequestId',
+                        sessionId,
+                        secretHash: hashLowEntropyPasswordWithSalt(
+                            code,
+                            sessionId
+                        ),
+                        connectionSecret: code,
+                        expireTimeMs: Date.now() + 1000,
+                        grantedTimeMs: Date.now(),
+                        previousSessionId: null,
+                        nextSessionId: null,
+                        revokeTimeMs: null,
+                        userId,
+                        ipAddress: '127.0.0.1',
+                    });
+                    return formatV1SessionKey(
+                        userId,
+                        sessionId,
+                        code,
+                        Date.now() + 1000
+                    );
+                }
+
+                it('should create a new studio user even if a non-studio user has the same email and identity', async () => {
+                    uuidMock.mockReturnValueOnce('newUserId');
+
+                    await store.saveNewUser({
+                        id: 'globalUserId',
+                        email: 'test@example.com',
+                        phoneNumber: null,
+                        allSessionRevokeTimeMs: null,
+                        currentLoginRequestId: null,
+                    });
+
+                    await store.saveOpenIDIdentity({
+                        provider: 'google',
+                        subject: 'sub1',
+                        userId: 'globalUserId',
+                        createdAtMs: Date.now(),
+                    });
+
+                    const result = await controller.completeOpenIDLogin({
+                        ipAddress: '127.0.0.1',
+                        requestId: 'requestId',
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                        userId: 'newUserId',
+                        sessionKey: expect.any(String),
+                        connectionKey: expect.any(String),
+                        expireTimeMs: Date.now() + SESSION_LIFETIME_MS,
+                        metadata: {
+                            hasUserAuthenticator: false,
+                            userAuthenticatorCredentialIds: [],
+                            hasPushSubscription: false,
+                            pushSubscriptionIds: [],
+                        },
+                    });
+
+                    const user = await store.findUser('newUserId');
+                    expect(user.email).toBe('test@example.com');
+                    expect(user.loginStudioId).toBe('studio1');
+
+                    expect(
+                        await store.findUserIdForOpenIDIdentity(
+                            'google',
+                            'sub1',
+                            'studio1'
+                        )
+                    ).toBe('newUserId');
+                    expect(
+                        await store.findUserIdForOpenIDIdentity(
+                            'google',
+                            'sub1'
+                        )
+                    ).toBe('globalUserId');
+                });
+
+                it('should log in the user that is linked to the identity for the studio', async () => {
+                    await store.saveNewUser({
+                        id: 'studioUserId',
+                        email: 'test@example.com',
+                        phoneNumber: null,
+                        allSessionRevokeTimeMs: null,
+                        currentLoginRequestId: null,
+                        loginStudioId: 'studio1',
+                    });
+
+                    await store.saveOpenIDIdentity({
+                        provider: 'google',
+                        subject: 'sub1',
+                        userId: 'studioUserId',
+                        loginStudioId: 'studio1',
+                        createdAtMs: Date.now(),
+                    });
+
+                    const result = await controller.completeOpenIDLogin({
+                        ipAddress: '127.0.0.1',
+                        requestId: 'requestId',
+                    });
+
+                    expect(result).toMatchObject({
+                        success: true,
+                        userId: 'studioUserId',
+                    });
+                });
+
+                it('should return session_key_required_for_openid if a studio user matches the email and no session key is provided', async () => {
+                    await store.saveNewUser({
+                        id: 'studioUserId',
+                        email: 'test@example.com',
+                        phoneNumber: null,
+                        allSessionRevokeTimeMs: null,
+                        currentLoginRequestId: null,
+                        loginStudioId: 'studio1',
+                    });
+
+                    const result = await controller.completeOpenIDLogin({
+                        ipAddress: '127.0.0.1',
+                        requestId: 'requestId',
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'session_key_required_for_openid',
+                        errorMessage: expect.any(String),
+                    });
+                });
+
+                it('should link the identity to the studio user when a session key for the studio user is provided', async () => {
+                    await store.saveNewUser({
+                        id: 'studioUserId',
+                        email: 'test@example.com',
+                        phoneNumber: null,
+                        allSessionRevokeTimeMs: null,
+                        currentLoginRequestId: null,
+                        loginStudioId: 'studio1',
+                    });
+                    const sessionKey = await saveSessionForUser('studioUserId');
+
+                    const result = await controller.completeOpenIDLogin({
+                        ipAddress: '127.0.0.1',
+                        requestId: 'requestId',
+                        sessionKey,
+                    });
+
+                    expect(result).toMatchObject({
+                        success: true,
+                        userId: 'studioUserId',
+                    });
+
+                    expect(
+                        await store.findUserIdForOpenIDIdentity(
+                            'google',
+                            'sub1',
+                            'studio1'
+                        )
+                    ).toBe('studioUserId');
+                    expect(
+                        await store.findUserIdForOpenIDIdentity(
+                            'google',
+                            'sub1'
+                        )
+                    ).toBe(null);
+                });
+
+                it('should not link the identity to a user from a different studio when their session key is provided', async () => {
+                    uuidMock.mockReturnValueOnce('newUserId');
+
+                    await store.saveNewUser({
+                        id: 'globalUserId',
+                        email: 'global@example.com',
+                        phoneNumber: null,
+                        allSessionRevokeTimeMs: null,
+                        currentLoginRequestId: null,
+                    });
+                    const sessionKey = await saveSessionForUser('globalUserId');
+
+                    const result = await controller.completeOpenIDLogin({
+                        ipAddress: '127.0.0.1',
+                        requestId: 'requestId',
+                        sessionKey,
+                    });
+
+                    expect(result).toMatchObject({
+                        success: true,
+                        userId: 'newUserId',
+                    });
+
+                    const user = await store.findUser('newUserId');
+                    expect(user.loginStudioId).toBe('studio1');
+                    expect(
+                        await store.findUserIdForOpenIDIdentity(
+                            'google',
+                            'sub1'
+                        )
+                    ).toBe(null);
+                });
+
+                it('should return not_supported if the provider no longer supports the comId', async () => {
+                    store.openIdConfiguration = {
+                        providers: [
+                            {
+                                ...providerConfig,
+                                comIds: false,
+                            },
+                        ],
+                    };
+
+                    const result = await controller.completeOpenIDLogin({
+                        ipAddress: '127.0.0.1',
+                        requestId: 'requestId',
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'not_supported',
+                        errorMessage:
+                            'The given provider does not support logging into the specified comID.',
+                    });
+                    expect(
+                        genericOpenIDClientMock.processAuthorizationCallback
+                    ).not.toHaveBeenCalled();
                 });
             });
         });

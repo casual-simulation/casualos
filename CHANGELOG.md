@@ -2,7 +2,7 @@
 
 ## V4.2.8
 
-#### Date: 9/22/2026
+#### Date: 9/29/2026
 
 ### :rocket: Features
 
@@ -53,6 +53,10 @@
         to prevent internal network traversal.
 -   Improved link previews to suppport YouTube videos.
 -   Improved Custom OpenID Connect providers to support sending nonces.
+-   Added support for logging into comId (studio) accounts via custom OpenID Connect providers.
+    -   `POST /api/v2/login/openid` (`requestOpenIDLogin`) now accepts optional `comId` and `customDomain` parameters. They work the same way as they do for email/SMS logins: `comId` takes precedence, and a `customDomain` is only used if it is verified.
+    -   Added the `comIds` option to `serverConfig.openid.providers[]`. Set it to `true` to allow any comId, or to a list of comIds that are allowed. Defaults to `false`, which means the provider can only be used for accounts that are not tied to a studio. Custom domain logins are checked against the comId of the studio that owns the domain.
+    -   OpenID identities are now scoped to the studio they are linked in, so the same OpenID account can have a separate CasualOS account in each studio (like how email addresses work). Session keys for accounts in a different studio are ignored when linking.
 
 ## V4.2.7
 
