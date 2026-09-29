@@ -7,6 +7,11 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where getting a package version required that the user be logged in.
+-   Fixed authorized collaborators being denied access to existing private expiring insts.
+
+### :rocket: Features
+
+-   Added independent Redis lifetime and expiry-mode settings for private expiring insts. The BIOS now displays the configured private expiry duration.
 
 ## V4.2.4
 

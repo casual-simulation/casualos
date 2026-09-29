@@ -641,6 +641,21 @@ function constructServerConfigSchema() {
             .describe(
                 'The Redis expire mode that should be used for public inst records. Defaults to NX. If null, then the expiration will update every time the inst data is updated. Only supported on Redis 7+. If set to something not null on Redis 6, then errors will occur.'
             ),
+        privateInstRecordsLifetimeSeconds: z
+            .number()
+            .positive()
+            .nullable()
+            .optional()
+            .prefault(60 * 60 * 24)
+            .describe(
+                'The lifetime of private expiring inst records in seconds. If null, then private expiring inst records never expire. Defaults to 1 day in seconds (86,400).'
+            ),
+        privateInstRecordsLifetimeExpireMode: expireModeSchema
+            .optional()
+            .prefault('NX')
+            .describe(
+                'The Redis expire mode that should be used for private expiring inst records. Defaults to NX. If null, then the expiration will update every time the inst data is updated. Only supported on Redis 7+. If set to something not null on Redis 6, then errors will occur.'
+            ),
 
         tempInstRecordsStoreNamespace: z
             .string()

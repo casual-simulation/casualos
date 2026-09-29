@@ -21,6 +21,22 @@ import { getServerConfigSchema } from './ServerConfig';
 describe('serverConfigSchema', () => {
     const serverConfigSchema = getServerConfigSchema();
 
+    it('should use defaults for private expiring inst lifetimes', () => {
+        const result = serverConfigSchema.safeParse({
+            redis: {},
+        });
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+            expect(result.data.redis.privateInstRecordsLifetimeSeconds).toBe(
+                60 * 60 * 24
+            );
+            expect(result.data.redis.privateInstRecordsLifetimeExpireMode).toBe(
+                'NX'
+            );
+        }
+    });
+
     it('should be able to parse a PublicOS-style config', () => {
         const config: any = {
             redis: {

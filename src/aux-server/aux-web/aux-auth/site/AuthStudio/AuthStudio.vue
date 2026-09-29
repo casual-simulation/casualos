@@ -311,7 +311,6 @@
                         <md-option value="temp">temp</md-option>
                         <md-option value="local inst">local inst</md-option>
                         <md-option value="free inst">free inst</md-option>
-                        <md-option value="free inst-expires">free inst-expires</md-option>
                         <md-option value="studio inst">studio inst</md-option>
                         <md-option value="studio inst-expires">studio inst-expires</md-option>
                         <md-option value="private inst-expires">private inst-expires</md-option>
@@ -336,7 +335,6 @@
                         <md-option value="temp">temp</md-option>
                         <md-option value="local inst">local inst</md-option>
                         <md-option value="free inst">free inst</md-option>
-                        <md-option value="free inst-expires">free inst-expires</md-option>
                         <md-option value="studio inst">studio inst</md-option>
                         <md-option value="studio inst-expires">studio inst-expires</md-option>
                         <md-option value="private inst-expires">private inst-expires</md-option>
@@ -361,7 +359,6 @@
                         <md-option value="temp">temp</md-option>
                         <md-option value="local inst">local inst</md-option>
                         <md-option value="free inst">free inst</md-option>
-                        <md-option value="free inst-expires">free inst-expires</md-option>
                         <md-option value="studio inst">studio inst</md-option>
                         <md-option value="studio inst-expires">studio inst-expires</md-option>
                         <md-option value="private inst-expires">private inst-expires</md-option>

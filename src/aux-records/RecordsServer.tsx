@@ -355,6 +355,16 @@ export interface RecordsServerOptions {
     publicInstRecordsLifetimeExpireMode?: 'NX' | 'XX' | 'GT' | 'LT' | null;
 
     /**
+     * The number of seconds that private expiring inst records should be kept for.
+     */
+    privateInstRecordsLifetimeSeconds?: number | null;
+
+    /**
+     * The expiration mode that should be used for private expiring inst records.
+     */
+    privateInstRecordsLifetimeExpireMode?: 'NX' | 'XX' | 'GT' | 'LT' | null;
+
+    /**
      * The controller that should be used for handling authentication requests.
      */
     authController: AuthController;
@@ -531,6 +541,13 @@ export class RecordsServer {
         | 'GT'
         | 'LT'
         | null;
+    private _privateInstRecordsLifetimeSeconds: number | null;
+    private _privateInstRecordsLifetimeExpireMode:
+        | 'NX'
+        | 'XX'
+        | 'GT'
+        | 'LT'
+        | null;
 
     private _rateLimit: RateLimitController;
     private _websocketRateLimit: RateLimitController;
@@ -575,6 +592,8 @@ export class RecordsServer {
         allowedApiOrigins,
         publicInstRecordsLifetimeSeconds = 60 * 60 * 24,
         publicInstRecordsLifetimeExpireMode = 'NX',
+        privateInstRecordsLifetimeSeconds = 60 * 60 * 24,
+        privateInstRecordsLifetimeExpireMode = 'NX',
         authController,
         livekitController,
         recordsController,
@@ -610,6 +629,10 @@ export class RecordsServer {
             publicInstRecordsLifetimeSeconds;
         this._publicInstRecordsLifetimeExpireMode =
             publicInstRecordsLifetimeExpireMode;
+        this._privateInstRecordsLifetimeSeconds =
+            privateInstRecordsLifetimeSeconds;
+        this._privateInstRecordsLifetimeExpireMode =
+            privateInstRecordsLifetimeExpireMode;
         this._auth = authController;
         this._livekit = livekitController;
         this._records = recordsController;
@@ -969,6 +992,10 @@ export class RecordsServer {
                         success: true,
                         lifetimeSeconds: this._publicInstRecordsLifetimeSeconds,
                         expireMode: this._publicInstRecordsLifetimeExpireMode,
+                        privateLifetimeSeconds:
+                            this._privateInstRecordsLifetimeSeconds,
+                        privateExpireMode:
+                            this._privateInstRecordsLifetimeExpireMode,
                     };
                 }),
 

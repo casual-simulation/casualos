@@ -16,6 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import { SplitInstRecordsStore } from './SplitInstRecordsStore';
+import type { InstWithSubscriptionInfo } from './InstRecordsStore';
 import type { TemporaryInstRecordsStore } from './TemporaryInstRecordsStore';
 import { MemoryTempInstRecordsStore } from './MemoryTempInstRecordsStore';
 import {
@@ -646,6 +647,49 @@ describe('SplitInstRecordsStore', () => {
                 subscriptionId: null,
                 subscriptionStatus: null,
             });
+        });
+
+        it('should return an expiring private inst from the temporary branch metadata', async () => {
+            const expiringInst: InstWithSubscriptionInfo = {
+                recordName,
+                inst: instName,
+                markers: ['test'],
+                subscriptionId: null,
+                subscriptionStatus: null,
+                subscriptionType: null,
+                expires: true,
+            };
+            await temp.saveBranchInfo({
+                recordName,
+                inst: instName,
+                branch: DEFAULT_BRANCH_NAME,
+                temporary: false,
+                expires: true,
+                linkedInst: expiringInst,
+            });
+
+            expect(await store.getInstByName(recordName, instName)).toEqual(
+                expiringInst
+            );
+        });
+
+        it('should not treat a non-expiring temporary branch as an inst record', async () => {
+            await temp.saveBranchInfo({
+                recordName,
+                inst: instName,
+                branch: DEFAULT_BRANCH_NAME,
+                temporary: false,
+                linkedInst: {
+                    recordName,
+                    inst: instName,
+                    markers: ['test'],
+                    subscriptionId: null,
+                    subscriptionStatus: null,
+                    subscriptionType: null,
+                },
+            });
+
+            expect(await store.getInstByName(recordName, instName)).toBeNull();
         });
     });
 

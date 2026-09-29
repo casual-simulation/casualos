@@ -68,5 +68,8 @@
     "typescript.tsserver.maxTsServerMemory": 8192,
     "jest.autoRun": "off",
     "cSpell.words": ["KASP"],
-    "js/ts.tsdk.path": "node_modules\\typescript\\lib"
+    "js/ts.tsdk.path": "node_modules\\typescript\\lib",
+    "chat.tools.terminal.autoApprove": {
+        "pnpm": true
+    }
 }

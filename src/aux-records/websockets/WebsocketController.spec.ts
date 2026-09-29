@@ -1847,6 +1847,76 @@ describe('WebsocketController', () => {
                                 ).toEqual([]);
                             });
 
+                            it('should allow a read-only collaborator to join an existing expiring private inst', async () => {
+                                const expiringInst = 'expiringInst';
+                                const ownerConnectionId = 'ownerConnection';
+                                const ownerToken = generateV1ConnectionToken(
+                                    connectionKey,
+                                    connectionId,
+                                    recordName,
+                                    expiringInst
+                                );
+                                otherUserToken = generateV1ConnectionToken(
+                                    otherUserConnectionKey,
+                                    otherUserConnectionId,
+                                    recordName,
+                                    expiringInst
+                                );
+
+                                await server.login(ownerConnectionId, 1, {
+                                    type: 'login',
+                                    connectionToken: ownerToken,
+                                });
+                                await server.watchBranch(ownerConnectionId, {
+                                    type: 'repo/watch_branch',
+                                    recordName,
+                                    inst: expiringInst,
+                                    branch: DEFAULT_BRANCH_NAME,
+                                    expires: true,
+                                });
+
+                                await services.policyStore.assignPermissionToSubjectAndMarker(
+                                    recordName,
+                                    'role',
+                                    'developer',
+                                    'inst',
+                                    PRIVATE_MARKER,
+                                    'read',
+                                    {},
+                                    null
+                                );
+                                services.store.roles[recordName] = {
+                                    [otherUserId]: new Set(['developer']),
+                                };
+
+                                await server.login(otherUserConnectionId, 1, {
+                                    type: 'login',
+                                    connectionToken: otherUserToken,
+                                });
+                                await server.watchBranch(
+                                    otherUserConnectionId,
+                                    {
+                                        type: 'repo/watch_branch',
+                                        recordName,
+                                        inst: expiringInst,
+                                        branch: DEFAULT_BRANCH_NAME,
+                                        expires: true,
+                                    }
+                                );
+
+                                expect(
+                                    messenger
+                                        .getMessages(otherUserConnectionId)
+                                        .slice(1)
+                                ).toContainEqual({
+                                    type: 'repo/watch_branch_result',
+                                    success: true,
+                                    recordName,
+                                    inst: expiringInst,
+                                    branch: DEFAULT_BRANCH_NAME,
+                                });
+                            });
+
                             it('should return a not_authorized error if insts are not allowed', async () => {
                                 store.subscriptionConfiguration =
                                     buildSubscriptionConfig((config) =>

@@ -1095,7 +1095,9 @@ export class ServerBuilder implements SubscriptionLike {
                 redis,
                 options.redis.publicInstRecordsLifetimeSeconds,
                 options.redis.publicInstRecordsLifetimeExpireMode,
-                true
+                true,
+                options.redis.privateInstRecordsLifetimeSeconds,
+                options.redis.privateInstRecordsLifetimeExpireMode
             ),
             options.prisma.db === 'sqlite'
                 ? new SqliteInstRecordsStore(prisma as any)
@@ -2462,6 +2464,16 @@ export class ServerBuilder implements SubscriptionLike {
                 undefined
                     ? 'NX'
                     : this._options.redis?.publicInstRecordsLifetimeExpireMode,
+            privateInstRecordsLifetimeSeconds:
+                this._options.redis?.privateInstRecordsLifetimeSeconds !==
+                undefined
+                    ? this._options.redis.privateInstRecordsLifetimeSeconds
+                    : 60 * 60 * 24,
+            privateInstRecordsLifetimeExpireMode:
+                this._options.redis?.privateInstRecordsLifetimeExpireMode ===
+                undefined
+                    ? 'NX'
+                    : this._options.redis?.privateInstRecordsLifetimeExpireMode,
             authController: this._authController,
             livekitController: this._livekitController,
             recordsController: this._recordsController,

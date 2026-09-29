@@ -1153,6 +1153,8 @@ describe('RecordsServer', () => {
                     success: true,
                     lifetimeSeconds: 60 * 60 * 24,
                     expireMode: 'NX',
+                    privateLifetimeSeconds: 60 * 60 * 24,
+                    privateExpireMode: 'NX',
                 },
                 headers: corsHeaders(unauthenticatedApiHeaders.origin),
             });
@@ -1164,6 +1166,8 @@ describe('RecordsServer', () => {
                 allowedApiOrigins,
                 publicInstRecordsLifetimeSeconds: 123,
                 publicInstRecordsLifetimeExpireMode: 'GT',
+                privateInstRecordsLifetimeSeconds: 321,
+                privateInstRecordsLifetimeExpireMode: 'XX',
                 authController,
                 livekitController,
                 recordsController,
@@ -1200,6 +1204,8 @@ describe('RecordsServer', () => {
                     success: true,
                     lifetimeSeconds: 123,
                     expireMode: 'GT',
+                    privateLifetimeSeconds: 321,
+                    privateExpireMode: 'XX',
                 },
                 headers: corsHeaders(apiHeaders.origin),
             });
@@ -1247,6 +1253,8 @@ describe('RecordsServer', () => {
                     success: true,
                     lifetimeSeconds: null,
                     expireMode: null,
+                    privateLifetimeSeconds: 60 * 60 * 24,
+                    privateExpireMode: 'NX',
                 },
                 headers: corsHeaders(apiHeaders.origin),
             });
@@ -1294,6 +1302,8 @@ describe('RecordsServer', () => {
                     success: true,
                     lifetimeSeconds: null,
                     expireMode: 'GT',
+                    privateLifetimeSeconds: 60 * 60 * 24,
+                    privateExpireMode: 'NX',
                 },
                 headers: corsHeaders(apiHeaders.origin),
             });
@@ -1341,6 +1351,8 @@ describe('RecordsServer', () => {
                     success: true,
                     lifetimeSeconds: 123,
                     expireMode: null,
+                    privateLifetimeSeconds: 60 * 60 * 24,
+                    privateExpireMode: 'NX',
                 },
                 headers: corsHeaders(apiHeaders.origin),
             });

@@ -16,6 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import { sortBy } from 'es-toolkit/compat';
+import { DEFAULT_BRANCH_NAME } from '@casual-simulation/aux-common';
 import type {
     AddUpdatesResult,
     BranchRecord,
@@ -117,7 +118,24 @@ export class SplitInstRecordsStore implements InstRecordsStore {
         recordName: string | null,
         inst: string
     ): Promise<InstWithSubscriptionInfo> {
-        return await this._permanent.getInstByName(recordName, inst);
+        const permanentInst = await this._permanent.getInstByName(
+            recordName,
+            inst
+        );
+        if (permanentInst || !recordName) {
+            return permanentInst;
+        }
+
+        const expiringBranch = await this._temp.getBranchByName(
+            recordName,
+            inst,
+            DEFAULT_BRANCH_NAME
+        );
+        if (expiringBranch?.expires === true) {
+            return expiringBranch.linkedInst;
+        }
+
+        return null;
     }
 
     listInstsByRecord(

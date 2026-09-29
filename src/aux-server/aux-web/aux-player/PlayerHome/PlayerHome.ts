@@ -90,10 +90,6 @@ function isExpiringPrivateBiosOption(option: BiosOption): boolean {
     );
 }
 
-function isExpiringPublicBiosOption(option: BiosOption): boolean {
-    return option === 'public inst-expires' || option === 'free inst-expires';
-}
-
 const ONE_MINUTE_MS = 60 * 1000;
 const ONE_HOUR_MS = 60 * ONE_MINUTE_MS;
 
@@ -132,7 +128,8 @@ function isPublicInst(
         biosOption === 'public inst' ||
         biosOption === 'free inst' ||
         biosOption === 'free' ||
-        isExpiringPublicBiosOption(biosOption)
+        biosOption === 'public inst-expires' ||
+        biosOption === 'free inst-expires'
     );
 }
 
@@ -223,6 +220,9 @@ export default class PlayerHome extends Vue {
     logoTitle: string = null;
     generatedName: string = null;
     publicInstLifetimeMs: number | null = null;
+    privateInstLifetimeMs: number | null =
+        DEFAULT_EXPIRING_INST_HOURS * ONE_HOUR_MS;
+    privateInstExpireMode: 'NX' | 'XX' | 'GT' | 'LT' | null = 'NX';
 
     errors: FormError[] = [];
 
@@ -314,11 +314,17 @@ export default class PlayerHome extends Vue {
             return 'bots are stored in your browser on your device';
         } else if (isPrivateInst(option)) {
             if (isExpiringPrivateBiosOption(option)) {
-                return `bots are stored in the cloud and shared with studio members, expires in ${DEFAULT_EXPIRING_INST_HOURS}h`;
+                const duration = this.getPrivateInstLifetimeSuffix();
+                return duration
+                    ? `bots are stored in the cloud and shared with studio members, expires in ${duration}`
+                    : 'bots are stored in the cloud and shared with studio members, does not expire';
             }
             return 'bots are stored in the cloud and shared with studio members';
         } else if (isPublicInst(option)) {
-            return `bots are stored in the cloud and shared publicly, expires in ${DEFAULT_EXPIRING_INST_HOURS}h`;
+            const duration = this.getPublicInstLifetimeSuffix();
+            return duration
+                ? `bots are stored in the cloud and shared publicly, expires in ${duration}`
+                : 'bots are stored in the cloud and shared publicly, does not expire';
         } else if (isJoinCode(option)) {
             return 'enter a join code to load an existing inst';
         } else if (isTempInst(option)) {
@@ -329,65 +335,51 @@ export default class PlayerHome extends Vue {
 
     getOptionLabel(option: BiosOption): string {
         if (isExpiringPrivateBiosOption(option)) {
-            const hours =
-                typeof this.publicInstLifetimeMs === 'number' &&
-                Number.isFinite(this.publicInstLifetimeMs) &&
-                this.publicInstLifetimeMs > 0
-                    ? Math.max(
-                          1,
-                          Math.ceil(this.publicInstLifetimeMs / ONE_HOUR_MS)
-                      )
-                    : DEFAULT_EXPIRING_INST_HOURS;
-            const duration = `${hours}h`;
+            const duration = this.getPrivateInstLifetimeSuffix();
+            const label = duration ?? 'no expiry';
 
             if (
                 option === 'private-expires' ||
                 option === 'private inst-expires'
             ) {
-                return `private ${duration}`;
+                return `private ${label}`;
             }
-            return `studio ${duration}`;
+            return `studio ${label}`;
         }
 
-        if (isExpiringPublicBiosOption(option)) {
-            const duration = this.getPublicInstLifetimeSuffix();
-            if (duration) {
-                if (option === 'public inst-expires') {
-                    return `public ${duration}`;
-                }
-                return `free ${duration}`;
-            }
-
-            if (option === 'public inst-expires') {
-                return `public ${DEFAULT_EXPIRING_INST_HOURS}h`;
-            }
-            return `free ${DEFAULT_EXPIRING_INST_HOURS}h`;
+        if (isPublicInst(option)) {
+            const label = this.getPublicInstLifetimeSuffix() ?? 'no expiry';
+            return option === 'public inst' || option === 'public inst-expires'
+                ? `public ${label}`
+                : `free ${label}`;
         }
 
         return option;
     }
 
     getPublicInstLifetimeSuffix(): string | null {
+        return this._getLifetimeSuffix(this.publicInstLifetimeMs);
+    }
+
+    getPrivateInstLifetimeSuffix(): string | null {
+        return this._getLifetimeSuffix(this.privateInstLifetimeMs);
+    }
+
+    private _getLifetimeSuffix(lifetimeMs: number | null): string | null {
         if (
-            typeof this.publicInstLifetimeMs !== 'number' ||
-            !Number.isFinite(this.publicInstLifetimeMs) ||
-            this.publicInstLifetimeMs <= 0
+            typeof lifetimeMs !== 'number' ||
+            !Number.isFinite(lifetimeMs) ||
+            lifetimeMs <= 0
         ) {
             return null;
         }
 
-        if (this.publicInstLifetimeMs < ONE_HOUR_MS) {
-            const minutes = Math.max(
-                1,
-                Math.ceil(this.publicInstLifetimeMs / ONE_MINUTE_MS)
-            );
+        if (lifetimeMs < ONE_HOUR_MS) {
+            const minutes = Math.max(1, Math.ceil(lifetimeMs / ONE_MINUTE_MS));
             return `${minutes}m`;
         }
 
-        const hours = Math.max(
-            1,
-            Math.ceil(this.publicInstLifetimeMs / ONE_HOUR_MS)
-        );
+        const hours = Math.max(1, Math.ceil(lifetimeMs / ONE_HOUR_MS));
         return `${hours}h`;
     }
 
@@ -691,7 +683,7 @@ export default class PlayerHome extends Vue {
                 isExpiringPrivateBiosOption(option)
             );
         } else if (isPublicInst(option)) {
-            this._loadPublicInst(inst, isExpiringPublicBiosOption(option));
+            this._loadPublicInst(inst);
         } else if (isJoinCode(option)) {
             this._loadJoinCode(joinCode);
         } else if (option === 'delete inst') {
@@ -855,14 +847,14 @@ export default class PlayerHome extends Vue {
         }
     }
 
-    private _loadPublicInst(inst?: string, expires: boolean = false) {
+    private _loadPublicInst(inst?: string) {
         const update: Dictionary<string | string[]> = {};
         inst ??= uniqueNamesGenerator(namesConfig);
 
         update.owner = PUBLIC_OWNER;
         update.inst = inst;
         update.bios = null;
-        update.expires = expires ? 'true' : null;
+        update.expires = 'true';
 
         this._addGridPortalToQuery(update);
 
@@ -870,7 +862,7 @@ export default class PlayerHome extends Vue {
             this._updateQuery(update);
         }
 
-        this._setServer(PUBLIC_OWNER, inst, 'default', expires);
+        this._setServer(PUBLIC_OWNER, inst, 'default', true);
     }
 
     private _addGridPortalToQuery(update: Dictionary<string | string[]>) {
@@ -889,18 +881,27 @@ export default class PlayerHome extends Vue {
         const authenticated = !!authData;
         const privacyFeatures =
             authData?.privacyFeatures ?? appManager.defaultPrivacyFeatures;
-        return (
-            appManager.config.allowedBiosOptions ?? [
-                'enter join code',
-                'temp',
-                'local',
-                'studio',
-                'free',
-                'sign in',
-                'sign up',
-                'sign out',
-            ]
-        ).filter((option) => {
+        const configuredOptions: BiosOption[] = appManager.config
+            .allowedBiosOptions ?? [
+            'enter join code',
+            'temp',
+            'local',
+            'studio',
+            'free',
+            'sign in',
+            'sign up',
+            'sign out',
+        ];
+        const options = configuredOptions.map((option) => {
+            if (option === 'public inst-expires') {
+                return 'public inst';
+            } else if (option === 'free inst-expires') {
+                return 'free inst';
+            }
+            return option;
+        });
+
+        return [...new Set(options)].filter((option) => {
             if (
                 isPrivateInst(option) &&
                 privacyFeatures.publishData &&
@@ -976,6 +977,22 @@ export default class PlayerHome extends Vue {
 
             this.publicInstLifetimeMs =
                 this._getDurationMsFromPublicInstOptionsResult(result);
+            if ('privateLifetimeSeconds' in result) {
+                this.privateInstLifetimeMs =
+                    typeof result.privateLifetimeSeconds === 'number'
+                        ? result.privateLifetimeSeconds * 1000
+                        : null;
+                this.privateInstExpireMode =
+                    result.privateExpireMode === undefined
+                        ? 'NX'
+                        : result.privateExpireMode;
+            } else {
+                this.privateInstLifetimeMs =
+                    this.publicInstLifetimeMs ??
+                    DEFAULT_EXPIRING_INST_HOURS * ONE_HOUR_MS;
+                this.privateInstExpireMode =
+                    result.expireMode === undefined ? 'NX' : result.expireMode;
+            }
         } catch (error) {
             console.error(
                 '[PlayerHome] Unable to load public inst options:',
@@ -1237,6 +1254,10 @@ export default class PlayerHome extends Vue {
         }
 
         const record = recordInfo.recordName;
+        if (!record && kind === 'default') {
+            expires = true;
+        }
+
         if (typeof newServer === 'string') {
             await this._loadPrimarySimulation(record, newServer, kind, expires);
 

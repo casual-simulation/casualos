@@ -27,8 +27,8 @@ import { z } from 'zod';
  * - "enter join code" indicates that the user should be prompted to enter a join code.
  * - "temp" indicates that a temporary instance should be created (no persistence).
  * - "static inst", "local inst", and "local" indicates that the instance should be loaded statically.
- * - "public inst", "free inst", and "free" indicates that the instance should be loaded from the public partition.
- * - "public inst-expires" and "free inst-expires" indicates that the instance should be loaded from the public partition and should expire.
+ * - "public inst", "free inst", and "free" indicates that the instance should be loaded from the public partition and expire according to the configured public inst lifetime.
+ * - "public inst-expires" and "free inst-expires" are legacy aliases for the public inst options and are accepted for compatibility.
  * - "private inst", "studio inst", "studio", and "locked" indicates that the instance should be loaded from the private partition.
  * - "private-expires", "studio-expires", "private inst-expires", and "studio inst-expires" indicates that the instance should be loaded from the private partition and should expire.
  * - "sign in" indicates that the user should be prompted to sign in.
@@ -45,7 +45,9 @@ export type BiosOption =
     | 'public inst'
     | 'free inst'
     | 'free'
+    /** @deprecated Use 'public inst' or 'free inst'; public insts always expire according to configuration. */
     | 'public inst-expires'
+    /** @deprecated Use 'free inst'; public insts always expire according to configuration. */
     | 'free inst-expires'
     | 'private inst'
     | 'studio inst'
