@@ -234,6 +234,9 @@ export class ProxyController extends CrudRecordsController<
             });
 
             if (response.success === false) {
+                console.error(
+                    `[ProxyController] Unable to send request through proxy (recordName: ${recordName}, address: ${proxy.address}, host: ${proxy.host}): [${response.error.errorCode}] ${response.error.errorMessage}`
+                );
                 return {
                     success: false,
                     ...response.error,
