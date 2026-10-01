@@ -209,9 +209,25 @@ export class HttpProxyInterface implements ProxyInterface {
                             let tooLarge = false;
 
                             response.on('data', (chunk: Buffer) => {
+                                if (tooLarge) {
+                                    return;
+                                }
                                 size += chunk.length;
                                 if (size > maxResponseSizeInBytes) {
                                     tooLarge = true;
+                                    chunks.length = 0;
+
+                                    // Settle here because destroying the response emits 'close' instead of 'end'
+                                    // and destroying the request without an error does not emit 'error'.
+                                    console.error(
+                                        `[HttpProxyInterface] The response from the proxy host (${hostname}) exceeded the maximum allowed size of ${maxResponseSizeInBytes} bytes.`
+                                    );
+                                    settle(
+                                        failure({
+                                            errorCode: 'proxy_request_failed',
+                                            errorMessage: `The response from the proxy host was too large. The maximum allowed size is ${maxResponseSizeInBytes} bytes.`,
+                                        })
+                                    );
                                     response.destroy();
                                     req.destroy();
                                     return;
@@ -221,12 +237,6 @@ export class HttpProxyInterface implements ProxyInterface {
 
                             response.on('end', () => {
                                 if (tooLarge) {
-                                    settle(
-                                        failure({
-                                            errorCode: 'proxy_request_failed',
-                                            errorMessage: `The response from the proxy host was too large. The maximum allowed size is ${maxResponseSizeInBytes} bytes.`,
-                                        })
-                                    );
                                     return;
                                 }
 
