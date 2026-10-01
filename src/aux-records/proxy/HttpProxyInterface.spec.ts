@@ -20,9 +20,15 @@ import type { ProxyInterfaceRequest } from './ProxyInterface';
 
 describe('HttpProxyInterface', () => {
     let subject: HttpProxyInterface;
+    let errorSpy: jest.SpyInstance;
 
     beforeEach(() => {
         subject = new HttpProxyInterface();
+        errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+        errorSpy.mockRestore();
     });
 
     function request(host: string): ProxyInterfaceRequest {
@@ -103,5 +109,49 @@ describe('HttpProxyInterface', () => {
 
         expect(result.success).toBe(false);
         expect((result as any).error.errorCode).toBe('proxy_request_failed');
+    });
+
+    it('should log errors that occur while sending the request', async () => {
+        const permissive = new HttpProxyInterface({
+            allowPrivateIpAddresses: true,
+        });
+
+        await permissive.sendRequest({
+            ...request('127.0.0.1:1'),
+            path: '/my/path?secret=abc',
+        });
+
+        expect(errorSpy).toHaveBeenCalledWith(
+            '[HttpProxyInterface] Unable to send the request to GET https://127.0.0.1:1/my/path (127.0.0.1):',
+            expect.objectContaining({ message: expect.any(String) })
+        );
+        expect(JSON.stringify(errorSpy.mock.calls)).not.toContain('secret');
+    });
+
+    it('should log errors that occur while creating the request', async () => {
+        const permissive = new HttpProxyInterface({
+            allowPrivateIpAddresses: true,
+        });
+
+        await permissive.sendRequest({
+            ...request('127.0.0.1:1'),
+            headers: {
+                authorization: 'Bearer bad\r\nX-Injected: true',
+            },
+        });
+
+        expect(errorSpy).toHaveBeenCalledWith(
+            '[HttpProxyInterface] Unable to create the request to GET https://127.0.0.1:1/ (127.0.0.1):',
+            expect.objectContaining({ message: expect.any(String) })
+        );
+    });
+
+    it('should log errors that occur while resolving the host', async () => {
+        await subject.sendRequest(request('this-host-does-not-exist.invalid'));
+
+        expect(errorSpy).toHaveBeenCalledWith(
+            '[HttpProxyInterface] Unable to resolve the host name (this-host-does-not-exist.invalid):',
+            expect.objectContaining({ message: expect.any(String) })
+        );
     });
 });
