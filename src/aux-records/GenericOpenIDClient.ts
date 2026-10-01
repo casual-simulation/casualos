@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import type { OpenIDProviderConfiguration } from './OpenIDConfiguration';
-import type { Client } from 'openid-client';
+import type { Client, ClientMetadata } from 'openid-client';
 import { Issuer, generators } from 'openid-client';
 import { z } from 'zod';
 import { traced } from './tracing/TracingDecorators';
@@ -170,12 +170,19 @@ export class GenericOpenIDClient implements GenericOpenIDClientInterface {
                     `The OpenID provider "${config.id}" must specify either a discoveryUri or an issuer.`
                 );
             }
-            client = new issuer.Client({
+            const metadata: ClientMetadata = {
                 client_id: config.clientId,
-                client_secret: config.clientSecret,
                 redirect_uris: [config.redirectUri],
                 response_types: ['code'],
-            });
+            };
+            if (config.tokenEndpointAuthMethod !== 'none') {
+                metadata.client_secret = config.clientSecret;
+            }
+            if (config.tokenEndpointAuthMethod) {
+                metadata.token_endpoint_auth_method =
+                    config.tokenEndpointAuthMethod;
+            }
+            client = new issuer.Client(metadata);
             this._clients.set(config.id, client);
         }
         return client;
