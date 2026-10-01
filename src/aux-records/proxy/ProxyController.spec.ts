@@ -664,6 +664,30 @@ describe('ProxyController', () => {
             });
         });
 
+        it('should log the error from the proxy interface', async () => {
+            proxyInterface.sendRequest.mockResolvedValue(
+                failure({
+                    errorCode: 'proxy_request_failed',
+                    errorMessage:
+                        'Unable to send the request to the proxy host.',
+                })
+            );
+            (console.error as jest.Mock).mockClear();
+
+            await manager.handleProxyRequest({
+                recordName,
+                address: 'proxy1',
+                userId,
+                instances: [],
+                path: '/v1/chat',
+                body: {},
+            });
+
+            expect(console.error).toHaveBeenCalledWith(
+                `[ProxyController] Unable to send request through proxy (recordName: ${recordName}, address: proxy1, host: example.com:8443): [proxy_request_failed] Unable to send the request to the proxy host.`
+            );
+        });
+
         it('should return subscription_limit_reached when the hourly limit has been reached', async () => {
             store.subscriptionConfiguration = buildSubscriptionConfig(
                 (config) =>

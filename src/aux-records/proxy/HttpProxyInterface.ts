@@ -125,6 +125,10 @@ export class HttpProxyInterface implements ProxyInterface {
                 }
             );
         } catch (err) {
+            console.error(
+                `[HttpProxyInterface] Unable to resolve the host name (${hostname}):`,
+                err
+            );
             return failure({
                 errorCode: 'invalid_proxy_host',
                 errorMessage: `Unable to resolve the host name (${hostname}) for the proxy.`,
@@ -168,6 +172,7 @@ export class HttpProxyInterface implements ProxyInterface {
     ): Promise<Result<ProxyInterfaceResponse, SimpleError>> {
         const maxResponseSizeInBytes = this._maxResponseSizeInBytes;
         const timeoutMs = request.timeoutMs ?? DEFAULT_PROXY_TIMEOUT_MS;
+        const target = describeRequest(request, hostname, port, address);
 
         return new Promise<Result<ProxyInterfaceResponse, SimpleError>>(
             (resolve) => {
@@ -220,7 +225,7 @@ export class HttpProxyInterface implements ProxyInterface {
                                     // Settle here because destroying the response emits 'close' instead of 'end'
                                     // and destroying the request without an error does not emit 'error'.
                                     console.error(
-                                        `[HttpProxyInterface] The response from the proxy host (${hostname}) exceeded the maximum allowed size of ${maxResponseSizeInBytes} bytes.`
+                                        `[HttpProxyInterface] The response from ${target} was larger than the maximum allowed size (${maxResponseSizeInBytes} bytes).`
                                     );
                                     settle(
                                         failure({
@@ -266,10 +271,14 @@ export class HttpProxyInterface implements ProxyInterface {
                                 );
                             });
 
-                            response.on('error', () => {
+                            response.on('error', (err) => {
                                 if (tooLarge) {
                                     return;
                                 }
+                                console.error(
+                                    `[HttpProxyInterface] Unable to read the response from ${target}:`,
+                                    err
+                                );
                                 settle(
                                     failure({
                                         errorCode: 'proxy_request_failed',
@@ -283,6 +292,10 @@ export class HttpProxyInterface implements ProxyInterface {
                 } catch (err) {
                     // Node throws synchronously when the request options are invalid.
                     // (e.g. when a header value contains a newline)
+                    console.error(
+                        `[HttpProxyInterface] Unable to create the request to ${target}:`,
+                        err
+                    );
                     settle(
                         failure({
                             errorCode: 'proxy_request_failed',
@@ -294,6 +307,9 @@ export class HttpProxyInterface implements ProxyInterface {
                 }
 
                 req.on('timeout', () => {
+                    console.error(
+                        `[HttpProxyInterface] The request to ${target} timed out after ${timeoutMs}ms.`
+                    );
                     req.destroy();
                     settle(
                         failure({
@@ -304,7 +320,16 @@ export class HttpProxyInterface implements ProxyInterface {
                     );
                 });
 
-                req.on('error', () => {
+                req.on('error', (err) => {
+                    if (settled) {
+                        // The request was already resolved (e.g. it timed out or the response was too large),
+                        // so the error was caused by destroying the request.
+                        return;
+                    }
+                    console.error(
+                        `[HttpProxyInterface] Unable to send the request to ${target}:`,
+                        err
+                    );
                     settle(
                         failure({
                             errorCode: 'proxy_request_failed',
@@ -327,6 +352,24 @@ export class HttpProxyInterface implements ProxyInterface {
 interface ResolvedAddress {
     address: string;
     family: number;
+}
+
+/**
+ * Creates a description of the given request that is safe to include in logs.
+ * Headers, bodies, and query strings are omitted because they may contain secrets.
+ */
+function describeRequest(
+    request: ProxyInterfaceRequest,
+    hostname: string,
+    port: number | null,
+    address: ResolvedAddress
+): string {
+    const queryIndex = request.path.indexOf('?');
+    const path =
+        queryIndex >= 0 ? request.path.slice(0, queryIndex) : request.path;
+    return `${request.method} https://${hostname}:${port ?? 443}${path} (${
+        address.address
+    })`;
 }
 
 function parseLiteralAddress(hostname: string): ResolvedAddress | null {

@@ -23,9 +23,15 @@ import type { AddressInfo } from 'node:net';
 
 describe('HttpProxyInterface', () => {
     let subject: HttpProxyInterface;
+    let errorSpy: jest.SpyInstance;
 
     beforeEach(() => {
         subject = new HttpProxyInterface();
+        errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+        errorSpy.mockRestore();
     });
 
     function request(host: string): ProxyInterfaceRequest {
@@ -108,10 +114,55 @@ describe('HttpProxyInterface', () => {
         expect((result as any).error.errorCode).toBe('proxy_request_failed');
     });
 
+    it('should log errors that occur while sending the request', async () => {
+        const permissive = new HttpProxyInterface({
+            allowPrivateIpAddresses: true,
+        });
+
+        await permissive.sendRequest({
+            ...request('127.0.0.1:1'),
+            path: '/my/path?secret=abc',
+        });
+
+        expect(errorSpy).toHaveBeenCalledWith(
+            '[HttpProxyInterface] Unable to send the request to GET https://127.0.0.1:1/my/path (127.0.0.1):',
+            expect.objectContaining({ message: expect.any(String) })
+        );
+        expect(JSON.stringify(errorSpy.mock.calls)).not.toContain('secret');
+    });
+
+    it('should log errors that occur while creating the request', async () => {
+        const permissive = new HttpProxyInterface({
+            allowPrivateIpAddresses: true,
+        });
+
+        await permissive.sendRequest({
+            ...request('127.0.0.1:1'),
+            headers: {
+                authorization: 'Bearer bad\r\nX-Injected: true',
+            },
+        });
+
+        expect(errorSpy).toHaveBeenCalledWith(
+            '[HttpProxyInterface] Unable to create the request to GET https://127.0.0.1:1/ (127.0.0.1):',
+            expect.objectContaining({ message: expect.any(String) })
+        );
+    });
+
+    it('should log errors that occur while resolving the host', async () => {
+        await subject.sendRequest(request('this-host-does-not-exist.invalid'));
+
+        expect(errorSpy).toHaveBeenCalledWith(
+            '[HttpProxyInterface] Unable to resolve the host name (this-host-does-not-exist.invalid):',
+            expect.objectContaining({ message: expect.any(String) })
+        );
+    });
+
     describe('local server', () => {
         let server: http.Server;
         let port: number;
         let handler: http.RequestListener;
+        let requestSpy: jest.SpyInstance;
 
         beforeEach(async () => {
             handler = (_req, res) => {
@@ -125,14 +176,14 @@ describe('HttpProxyInterface', () => {
 
             // Send the requests over plain HTTP so that the test server
             // does not need a trusted certificate.
-            jest.spyOn(https, 'request').mockImplementation(((
-                options: any,
-                callback: any
-            ) => http.request(options, callback)) as any);
+            requestSpy = jest
+                .spyOn(https, 'request')
+                .mockImplementation(((options: any, callback: any) =>
+                    http.request(options, callback)) as any);
         });
 
         afterEach(async () => {
-            jest.restoreAllMocks();
+            requestSpy.mockRestore();
             server.closeAllConnections();
             await new Promise<void>((resolve) => server.close(() => resolve()));
         });
@@ -160,9 +211,6 @@ describe('HttpProxyInterface', () => {
         });
 
         it('should fail when the response is larger than the maximum size', async () => {
-            const errorSpy = jest
-                .spyOn(console, 'error')
-                .mockImplementation(() => {});
             handler = (_req, res) => {
                 res.writeHead(200, { 'Content-Type': 'text/plain' });
                 // Stream more data than the limit allows and never end the response.
@@ -186,7 +234,9 @@ describe('HttpProxyInterface', () => {
                 'proxy_request_failed'
             );
             expect((result as any).error.errorMessage).toContain('too large');
-            expect(errorSpy).toHaveBeenCalled();
+            expect(errorSpy).toHaveBeenCalledWith(
+                `[HttpProxyInterface] The response from GET https://127.0.0.1:${port}/ (127.0.0.1) was larger than the maximum allowed size (2048 bytes).`
+            );
         }, 5000);
     });
 });
