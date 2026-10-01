@@ -214,18 +214,16 @@ export class HttpProxyInterface implements ProxyInterface {
                             let tooLarge = false;
 
                             response.on('data', (chunk: Buffer) => {
+                                if (tooLarge) {
+                                    return;
+                                }
                                 size += chunk.length;
                                 if (size > maxResponseSizeInBytes) {
                                     tooLarge = true;
-                                    response.destroy();
-                                    req.destroy();
-                                    return;
-                                }
-                                chunks.push(chunk);
-                            });
+                                    chunks.length = 0;
 
-                            response.on('end', () => {
-                                if (tooLarge) {
+                                    // Settle here because destroying the response emits 'close' instead of 'end'
+                                    // and destroying the request without an error does not emit 'error'.
                                     console.error(
                                         `[HttpProxyInterface] The response from ${target} was larger than the maximum allowed size (${maxResponseSizeInBytes} bytes).`
                                     );
@@ -235,6 +233,15 @@ export class HttpProxyInterface implements ProxyInterface {
                                             errorMessage: `The response from the proxy host was too large. The maximum allowed size is ${maxResponseSizeInBytes} bytes.`,
                                         })
                                     );
+                                    response.destroy();
+                                    req.destroy();
+                                    return;
+                                }
+                                chunks.push(chunk);
+                            });
+
+                            response.on('end', () => {
+                                if (tooLarge) {
                                     return;
                                 }
 
