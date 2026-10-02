@@ -69,6 +69,8 @@ export interface ProxyRecord extends CrudRecord {
      *   If the request doesn't contain JSON data, then the request is rejected.
      * - `headers.authorization` - Sets the `authorization` header on the target request.
      * - `headers.authorization.bearer` - Sets the `authorization` header on the target request to `Bearer {value}`.
+     * - `headers.x-{name}` - Sets the `x-{name}` header on the target request. (e.g. `headers.x-api-key`)
+     *   Only custom headers that start with `x-` are supported. Header names may only contain letters, numbers, `-`, and `_`.
      */
     data: ProxyRecordData;
 }

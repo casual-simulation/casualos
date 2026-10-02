@@ -11558,6 +11558,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *   }
      * });
      *
+     * @example Create a private proxy that adds an API key to the x-api-key header.
+     * await os.recordProxy('myRecord', {
+     *   address: 'myProxy',
+     *   host: 'api.example.com',
+     *   data: {
+     *     'headers.x-api-key': 'my-secret-api-key'
+     *   }
+     * });
+     *
      * @example Create a proxy that anyone can call and that adds an API key to the request body.
      * await os.recordProxy('myRecord', {
      *   address: 'myProxy',
