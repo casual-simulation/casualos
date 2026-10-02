@@ -98,7 +98,16 @@ export const openIdProviderSchema = z
         clientSecret: z
             .string()
             .nonempty()
-            .describe('The client secret that should be used.'),
+            .optional()
+            .describe(
+                'The client secret that should be used. Required unless tokenEndpointAuthMethod is "none".'
+            ),
+        tokenEndpointAuthMethod: z
+            .enum(['client_secret_basic', 'client_secret_post', 'none'])
+            .optional()
+            .describe(
+                'The method that should be used to authenticate the client when calling the token endpoint. "client_secret_basic" sends the client ID and secret in an HTTP Basic Authorization header. "client_secret_post" sends them in the request body. "none" sends only the client ID (for public clients that rely on PKCE). If omitted, client_secret_basic is used unless the issuer metadata indicates that only client_secret_post is supported.'
+            ),
         requestScopes: z
             .array(z.string().nonempty())
             .optional()
@@ -114,7 +123,16 @@ export const openIdProviderSchema = z
     .refine((data) => !!data.discoveryUri || !!data.issuer, {
         message: 'Either discoveryUri or issuer must be specified.',
         path: ['discoveryUri'],
-    });
+    })
+    .refine(
+        (data) =>
+            data.tokenEndpointAuthMethod === 'none' || !!data.clientSecret,
+        {
+            message:
+                'clientSecret must be specified unless tokenEndpointAuthMethod is "none".',
+            path: ['clientSecret'],
+        }
+    );
 
 export type OpenIDProviderConfiguration = z.infer<typeof openIdProviderSchema>;
 
