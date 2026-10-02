@@ -79,32 +79,32 @@ export class HttpProxyInterface implements ProxyInterface {
             return host;
         }
 
-        const address = await this._resolveHost(host.value.hostname);
-        if (address.success === false) {
-            return address;
+        const addresses = await this._resolveHost(host.value.hostname);
+        if (addresses.success === false) {
+            return addresses;
         }
 
         return await this._sendRequest(
             request,
             host.value.hostname,
             host.value.port,
-            address.value
+            addresses.value
         );
     }
 
     /**
-     * Resolves the given host name to an IP address that is safe to send requests to.
+     * Resolves the given host name to the list of IP addresses that are safe to send requests to.
      * @param hostname The host name that should be resolved.
      */
     private async _resolveHost(
         hostname: string
-    ): Promise<Result<ResolvedAddress, SimpleError>> {
+    ): Promise<Result<ResolvedAddress[], SimpleError>> {
         const literal = parseLiteralAddress(hostname);
         if (literal) {
             if (!this._isAllowedAddress(literal.address)) {
                 return privateAddressFailure(hostname, literal.address);
             }
-            return success(literal);
+            return success([literal]);
         }
 
         let addresses: dns.LookupAddress[];
@@ -151,10 +151,12 @@ export class HttpProxyInterface implements ProxyInterface {
             }
         }
 
-        return success({
-            address: addresses[0].address,
-            family: addresses[0].family,
-        });
+        return success(
+            addresses.map((a) => ({
+                address: a.address,
+                family: a.family,
+            }))
+        );
     }
 
     private _isAllowedAddress(address: string): boolean {
@@ -168,11 +170,11 @@ export class HttpProxyInterface implements ProxyInterface {
         request: ProxyInterfaceRequest,
         hostname: string,
         port: number | null,
-        address: ResolvedAddress
+        addresses: ResolvedAddress[]
     ): Promise<Result<ProxyInterfaceResponse, SimpleError>> {
         const maxResponseSizeInBytes = this._maxResponseSizeInBytes;
         const timeoutMs = request.timeoutMs ?? DEFAULT_PROXY_TIMEOUT_MS;
-        const target = describeRequest(request, hostname, port, address);
+        const target = describeRequest(request, hostname, port, addresses);
 
         return new Promise<Result<ProxyInterfaceResponse, SimpleError>>(
             (resolve) => {
@@ -198,26 +200,9 @@ export class HttpProxyInterface implements ProxyInterface {
                             headers: request.headers,
                             timeout: timeoutMs,
 
-                            // Pin the connection to the address that was verified above so that
+                            // Pin the connection to the addresses that were verified above so that
                             // the host name cannot be re-resolved to a private address.
-                            // Node calls the lookup with { all: true } when autoSelectFamily is enabled (the default since Node 20),
-                            // in which case the callback expects an array of addresses.
-                            lookup: (_hostname, options, callback) => {
-                                if (options?.all) {
-                                    (callback as any)(null, [
-                                        {
-                                            address: address.address,
-                                            family: address.family,
-                                        },
-                                    ]);
-                                } else {
-                                    (callback as any)(
-                                        null,
-                                        address.address,
-                                        address.family
-                                    );
-                                }
-                            },
+                            lookup: createPinnedLookup(addresses),
                         },
                         (response) => {
                             const chunks: Buffer[] = [];
@@ -360,7 +345,7 @@ export class HttpProxyInterface implements ProxyInterface {
     }
 }
 
-interface ResolvedAddress {
+export interface ResolvedAddress {
     address: string;
     family: number;
 }
@@ -373,14 +358,68 @@ function describeRequest(
     request: ProxyInterfaceRequest,
     hostname: string,
     port: number | null,
-    address: ResolvedAddress
+    addresses: ResolvedAddress[]
 ): string {
     const queryIndex = request.path.indexOf('?');
     const path =
         queryIndex >= 0 ? request.path.slice(0, queryIndex) : request.path;
-    return `${request.method} https://${hostname}:${port ?? 443}${path} (${
-        address.address
-    })`;
+    return `${request.method} https://${hostname}:${
+        port ?? 443
+    }${path} (${addresses.map((a) => a.address).join(', ')})`;
+}
+
+/**
+ * Creates a lookup function for net.connect() that only ever returns the given (already verified) addresses.
+ *
+ * Node calls the lookup with { all: true } when autoSelectFamily is enabled (the default since Node 20),
+ * in which case the callback expects the full list of addresses so that it can fall back between IPv6 and IPv4.
+ * Otherwise, the callback expects a single address.
+ * @param addresses The addresses that connections should be pinned to.
+ */
+export function createPinnedLookup(
+    addresses: ResolvedAddress[]
+): (
+    hostname: string,
+    options: any,
+    callback: (...args: any[]) => void
+) => void {
+    return (hostname, options, callback) => {
+        const family = normalizeFamily(options?.family);
+        const matching =
+            family === 4 || family === 6
+                ? addresses.filter((a) => a.family === family)
+                : addresses;
+
+        if (matching.length <= 0) {
+            const err: NodeJS.ErrnoException = new Error(
+                `getaddrinfo ENOTFOUND ${hostname}`
+            );
+            err.code = 'ENOTFOUND';
+            err.syscall = 'getaddrinfo';
+            callback(err);
+            return;
+        }
+
+        if (options?.all) {
+            callback(
+                null,
+                matching.map((a) => ({ address: a.address, family: a.family }))
+            );
+        } else {
+            callback(null, matching[0].address, matching[0].family);
+        }
+    };
+}
+
+function normalizeFamily(family: unknown): number {
+    if (family === 'IPv4') {
+        return 4;
+    } else if (family === 'IPv6') {
+        return 6;
+    } else if (typeof family === 'number') {
+        return family;
+    }
+    return 0;
 }
 
 function parseLiteralAddress(hostname: string): ResolvedAddress | null {

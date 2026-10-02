@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { HttpProxyInterface } from './HttpProxyInterface';
+import { createPinnedLookup, HttpProxyInterface } from './HttpProxyInterface';
 import type { ProxyInterfaceRequest } from './ProxyInterface';
 import http from 'node:http';
 import https from 'node:https';
@@ -159,6 +159,63 @@ describe('HttpProxyInterface', () => {
         );
     });
 
+    describe('createPinnedLookup()', () => {
+        const addresses = [
+            { address: '2001:db8::1', family: 6 },
+            { address: '93.184.216.34', family: 4 },
+            { address: '93.184.216.35', family: 4 },
+        ];
+
+        function lookup(options: any) {
+            const callback = jest.fn();
+            createPinnedLookup(addresses)('example.com', options, callback);
+            return callback;
+        }
+
+        it('should return all of the addresses when all is true', () => {
+            expect(lookup({ all: true })).toHaveBeenCalledWith(null, addresses);
+        });
+
+        it('should return the first address when all is not set', () => {
+            expect(lookup({})).toHaveBeenCalledWith(null, '2001:db8::1', 6);
+        });
+
+        it.each([
+            [4, 4],
+            ['IPv4', 4],
+            [6, 6],
+            ['IPv6', 6],
+        ] as const)(
+            'should only return addresses for family %s',
+            (family, expectedFamily) => {
+                const expected = addresses.filter(
+                    (a) => a.family === expectedFamily
+                );
+                expect(lookup({ family })).toHaveBeenCalledWith(
+                    null,
+                    expected[0].address,
+                    expectedFamily
+                );
+                expect(lookup({ family, all: true })).toHaveBeenCalledWith(
+                    null,
+                    expected
+                );
+            }
+        );
+
+        it('should return an error when no addresses match the family', () => {
+            const callback = jest.fn();
+            createPinnedLookup([{ address: '93.184.216.34', family: 4 }])(
+                'example.com',
+                { family: 6, all: true },
+                callback
+            );
+            expect(callback).toHaveBeenCalledWith(
+                expect.objectContaining({ code: 'ENOTFOUND' })
+            );
+        });
+    });
+
     describe('local server', () => {
         let server: http.Server;
         let port: number;
@@ -236,6 +293,65 @@ describe('HttpProxyInterface', () => {
                 expect(errorSpy).not.toHaveBeenCalled();
                 expect(result.success).toBe(true);
                 expect((result as any).value.body).toBe('hello');
+            } finally {
+                lookupSpy.mockRestore();
+            }
+        });
+
+        it('should fall back to IPv4 when the IPv6 address cannot be reached', async () => {
+            handler = (_req, res) => {
+                res.end('hello');
+            };
+
+            // The server only listens on 127.0.0.1, so connecting to ::1 fails.
+            const lookupSpy = jest.spyOn(dns, 'lookup').mockImplementation(((
+                _hostname: string,
+                _options: any,
+                callback: any
+            ) => {
+                callback(null, [
+                    { address: '::1', family: 6 },
+                    { address: '127.0.0.1', family: 4 },
+                ]);
+            }) as any);
+
+            try {
+                const permissive = new HttpProxyInterface({
+                    allowPrivateIpAddresses: true,
+                });
+
+                const result = await permissive.sendRequest(
+                    request(`example.com:${port}`)
+                );
+
+                expect(result.success).toBe(true);
+                expect((result as any).value.body).toBe('hello');
+            } finally {
+                lookupSpy.mockRestore();
+            }
+        });
+
+        it('should reject the host when any of the resolved addresses are private', async () => {
+            const lookupSpy = jest.spyOn(dns, 'lookup').mockImplementation(((
+                _hostname: string,
+                _options: any,
+                callback: any
+            ) => {
+                callback(null, [
+                    { address: '2001:4860:4860::8888', family: 6 },
+                    { address: '127.0.0.1', family: 4 },
+                ]);
+            }) as any);
+
+            try {
+                const result = await subject.sendRequest(
+                    request(`example.com:${port}`)
+                );
+
+                expect(result.success).toBe(false);
+                expect((result as any).error.errorCode).toBe(
+                    'invalid_proxy_host'
+                );
             } finally {
                 lookupSpy.mockRestore();
             }
