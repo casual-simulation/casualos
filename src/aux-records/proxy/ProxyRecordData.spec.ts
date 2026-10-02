@@ -65,6 +65,61 @@ describe('isSupportedProxyDataProperty()', () => {
     it.each(unsupported)('should not support %s', (property) => {
         expect(isSupportedProxyDataProperty(property)).toBe(false);
     });
+
+    const forbiddenHeaders = [
+        ['x-forwarded-for'],
+        ['X-Forwarded-For'],
+        ['x-forwarded-host'],
+        ['x-forwarded-proto'],
+        ['x-forwarded-anything'],
+        ['x-real-ip'],
+        ['X-Real-IP'],
+        ['x-client-ip'],
+        ['x-cluster-client-ip'],
+        ['x-true-client-ip'],
+        ['x-originating-ip'],
+        ['x-remote-ip'],
+        ['x-remote-addr'],
+        ['x-proxyuser-ip'],
+        ['x-host'],
+        ['x-http-host-override'],
+        ['x-original-host'],
+        ['x-original-url'],
+        ['x-original-uri'],
+        ['x-original-forwarded-for'],
+        ['x-rewrite-url'],
+        ['x-http-method'],
+        ['x-http-method-override'],
+        ['x-method-override'],
+        ['x-middleware-subrequest'],
+        ['x-envoy-original-path'],
+        ['x-amzn-trace-id'],
+    ];
+
+    it.each(forbiddenHeaders)(
+        'should not support the forbidden %s header',
+        (header) => {
+            expect(isSupportedProxyDataProperty(`headers.${header}`)).toBe(
+                false
+            );
+        }
+    );
+
+    const allowedLookalikes = [
+        ['x-forwarded'],
+        ['x-hosted-by'],
+        ['x-amz-date'],
+        ['x-real-ip-key'],
+    ];
+
+    it.each(allowedLookalikes)(
+        'should support the %s header that looks similar to a forbidden header',
+        (header) => {
+            expect(isSupportedProxyDataProperty(`headers.${header}`)).toBe(
+                true
+            );
+        }
+    );
 });
 
 describe('validateProxyData()', () => {

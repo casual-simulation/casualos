@@ -48,6 +48,57 @@ export const HEADER_PROPERTY_PREFIX = 'headers.';
 const CUSTOM_HEADER_NAME_REGEX = /^x-[a-z0-9_-]+$/i;
 
 /**
+ * The set of "x-" headers that proxies are not allowed to set.
+ * These are headers that proxies, load balancers, and frameworks commonly use to
+ * convey information about the original client or request, so allowing them to be set
+ * could be used to spoof that information to the target host.
+ */
+export const FORBIDDEN_CUSTOM_HEADER_NAMES: ReadonlySet<string> = new Set([
+    'x-real-ip',
+    'x-client-ip',
+    'x-cluster-client-ip',
+    'x-true-client-ip',
+    'x-originating-ip',
+    'x-remote-ip',
+    'x-remote-addr',
+    'x-proxyuser-ip',
+    'x-host',
+    'x-http-host-override',
+    'x-original-host',
+    'x-original-url',
+    'x-original-uri',
+    'x-original-forwarded-for',
+    'x-rewrite-url',
+    'x-http-method',
+    'x-http-method-override',
+    'x-method-override',
+    'x-middleware-subrequest',
+]);
+
+/**
+ * The prefixes of "x-" headers that proxies are not allowed to set.
+ * (e.g. x-forwarded-for, x-forwarded-host, x-forwarded-proto)
+ */
+export const FORBIDDEN_CUSTOM_HEADER_PREFIXES: readonly string[] = [
+    'x-forwarded-',
+    'x-envoy-',
+    'x-amzn-',
+];
+
+/**
+ * Determines whether the given (lowercase) custom header name is forbidden.
+ * @param name The name of the header.
+ */
+function isForbiddenCustomHeaderName(name: string): boolean {
+    return (
+        FORBIDDEN_CUSTOM_HEADER_NAMES.has(name) ||
+        FORBIDDEN_CUSTOM_HEADER_PREFIXES.some((prefix) =>
+            name.startsWith(prefix)
+        )
+    );
+}
+
+/**
  * The regex that matches characters that are not allowed in header values.
  */
 const INVALID_HEADER_VALUE_REGEX = /[\r\n\0]/;
@@ -70,7 +121,12 @@ function getCustomHeaderName(property: string): string | null {
         return null;
     }
 
-    return name.toLowerCase();
+    const lower = name.toLowerCase();
+    if (isForbiddenCustomHeaderName(lower)) {
+        return null;
+    }
+
+    return lower;
 }
 
 /**
