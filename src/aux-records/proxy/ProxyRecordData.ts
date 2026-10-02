@@ -36,6 +36,100 @@ export const AUTHORIZATION_BEARER_HEADER_PROPERTY =
     'headers.authorization.bearer';
 
 /**
+ * The prefix that is used for properties that should be set as headers on the target request.
+ */
+export const HEADER_PROPERTY_PREFIX = 'headers.';
+
+/**
+ * The regex that custom header names must match.
+ * Only custom "x-" headers are supported so that proxies cannot override
+ * headers that control how the request is transmitted (e.g. host, content-length).
+ */
+const CUSTOM_HEADER_NAME_REGEX = /^x-[a-z0-9_-]+$/i;
+
+/**
+ * The set of "x-" headers that proxies are not allowed to set.
+ * These are headers that proxies, load balancers, and frameworks commonly use to
+ * convey information about the original client or request, so allowing them to be set
+ * could be used to spoof that information to the target host.
+ */
+export const FORBIDDEN_CUSTOM_HEADER_NAMES: ReadonlySet<string> = new Set([
+    'x-real-ip',
+    'x-client-ip',
+    'x-cluster-client-ip',
+    'x-true-client-ip',
+    'x-originating-ip',
+    'x-remote-ip',
+    'x-remote-addr',
+    'x-proxyuser-ip',
+    'x-host',
+    'x-http-host-override',
+    'x-original-host',
+    'x-original-url',
+    'x-original-uri',
+    'x-original-forwarded-for',
+    'x-rewrite-url',
+    'x-http-method',
+    'x-http-method-override',
+    'x-method-override',
+    'x-middleware-subrequest',
+]);
+
+/**
+ * The prefixes of "x-" headers that proxies are not allowed to set.
+ * (e.g. x-forwarded-for, x-forwarded-host, x-forwarded-proto)
+ */
+export const FORBIDDEN_CUSTOM_HEADER_PREFIXES: readonly string[] = [
+    'x-forwarded-',
+    'x-envoy-',
+    'x-amzn-',
+];
+
+/**
+ * Determines whether the given (lowercase) custom header name is forbidden.
+ * @param name The name of the header.
+ */
+function isForbiddenCustomHeaderName(name: string): boolean {
+    return (
+        FORBIDDEN_CUSTOM_HEADER_NAMES.has(name) ||
+        FORBIDDEN_CUSTOM_HEADER_PREFIXES.some((prefix) =>
+            name.startsWith(prefix)
+        )
+    );
+}
+
+/**
+ * The regex that matches characters that are not allowed in header values.
+ */
+const INVALID_HEADER_VALUE_REGEX = /[\r\n\0]/;
+
+/**
+ * Gets the name of the custom header that the given proxy data property sets.
+ * Returns null if the property does not set a custom header.
+ * @param property The property.
+ */
+function getCustomHeaderName(property: string): string | null {
+    if (
+        property.slice(0, HEADER_PROPERTY_PREFIX.length).toLowerCase() !==
+        HEADER_PROPERTY_PREFIX
+    ) {
+        return null;
+    }
+
+    const name = property.slice(HEADER_PROPERTY_PREFIX.length);
+    if (!CUSTOM_HEADER_NAME_REGEX.test(name)) {
+        return null;
+    }
+
+    const lower = name.toLowerCase();
+    if (isForbiddenCustomHeaderName(lower)) {
+        return null;
+    }
+
+    return lower;
+}
+
+/**
  * The set of property names that are never allowed in a body property path.
  * These are disallowed in order to prevent prototype pollution.
  */
@@ -55,6 +149,10 @@ export function isSupportedProxyDataProperty(property: string): boolean {
         lower === AUTHORIZATION_HEADER_PROPERTY ||
         lower === AUTHORIZATION_BEARER_HEADER_PROPERTY
     ) {
+        return true;
+    }
+
+    if (getCustomHeaderName(property) !== null) {
         return true;
     }
 
@@ -93,7 +191,17 @@ export function validateProxyData(
         if (!isSupportedProxyDataProperty(property)) {
             return failure({
                 errorCode: 'unacceptable_request',
-                errorMessage: `The proxy data property "${property}" is not supported. Supported properties are "body.{property}", "${AUTHORIZATION_HEADER_PROPERTY}", and "${AUTHORIZATION_BEARER_HEADER_PROPERTY}".`,
+                errorMessage: `The proxy data property "${property}" is not supported. Supported properties are "body.{property}", "headers.x-{name}", "${AUTHORIZATION_HEADER_PROPERTY}", and "${AUTHORIZATION_BEARER_HEADER_PROPERTY}".`,
+            });
+        }
+
+        if (
+            getCustomHeaderName(property) !== null &&
+            INVALID_HEADER_VALUE_REGEX.test(String(data[property]))
+        ) {
+            return failure({
+                errorCode: 'unacceptable_request',
+                errorMessage: `The proxy data property "${property}" contains invalid characters. Header values must not contain line breaks or null characters.`,
             });
         }
     }
@@ -172,6 +280,12 @@ export function applyProxyData(
         } else if (lower === AUTHORIZATION_BEARER_HEADER_PROPERTY) {
             deleteHeader(headers, 'authorization');
             headers['authorization'] = `Bearer ${String(data[property])}`;
+        } else {
+            const headerName = getCustomHeaderName(property);
+            if (headerName !== null) {
+                deleteHeader(headers, headerName);
+                headers[headerName] = String(data[property]);
+            }
         }
     }
 

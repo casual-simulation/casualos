@@ -38,7 +38,9 @@
         that describes the properties that should be applied to the request right before it is sent.
         This makes it possible to call a service that is secured by an API key without ever shipping
         the API key to the browser.
-    -   Supported `data` properties are `body.{property}`, `headers.authorization`, and `headers.authorization.bearer`.
+    -   Supported `data` properties are `body.{property}`, `headers.authorization`, `headers.authorization.bearer`,
+        and `headers.x-{name}` (e.g. `headers.x-api-key`) for custom `x-` headers.
+        Common proxy headers (e.g. `x-forwarded-*`, `x-real-ip`, `x-original-url`) cannot be set.
         Any other property is rejected.
     -   Added `os.recordProxy(recordName, proxy, options?)` to create/update a proxy.
     -   Added `os.proxyRequest(recordName, address, path, body?, options?)` to send a request through a proxy.

@@ -30,6 +30,10 @@ describe('isSupportedProxyDataProperty()', () => {
         ['Headers.Authorization'],
         ['headers.authorization.bearer'],
         ['HEADERS.AUTHORIZATION.BEARER'],
+        ['headers.x-api-key'],
+        ['headers.X-Api-Key'],
+        ['Headers.x-api-key'],
+        ['headers.x-my_header-2'],
     ];
 
     it.each(supported)('should support %s', (property) => {
@@ -41,8 +45,17 @@ describe('isSupportedProxyDataProperty()', () => {
         ['body.'],
         ['body'],
         ['body..key'],
-        ['headers.x-api-key'],
         ['headers.cookie'],
+        ['headers.host'],
+        ['headers.content-length'],
+        ['headers.x-'],
+        ['headers.x'],
+        ['headers.xapi-key'],
+        ['headers.x-api.key'],
+        ['headers.x-api key'],
+        ['headers.x-api:key'],
+        ['headers.'],
+        ['headers..x-api-key'],
         ['query.apiKey'],
         ['body.__proto__'],
         ['body.constructor.prototype'],
@@ -52,6 +65,61 @@ describe('isSupportedProxyDataProperty()', () => {
     it.each(unsupported)('should not support %s', (property) => {
         expect(isSupportedProxyDataProperty(property)).toBe(false);
     });
+
+    const forbiddenHeaders = [
+        ['x-forwarded-for'],
+        ['X-Forwarded-For'],
+        ['x-forwarded-host'],
+        ['x-forwarded-proto'],
+        ['x-forwarded-anything'],
+        ['x-real-ip'],
+        ['X-Real-IP'],
+        ['x-client-ip'],
+        ['x-cluster-client-ip'],
+        ['x-true-client-ip'],
+        ['x-originating-ip'],
+        ['x-remote-ip'],
+        ['x-remote-addr'],
+        ['x-proxyuser-ip'],
+        ['x-host'],
+        ['x-http-host-override'],
+        ['x-original-host'],
+        ['x-original-url'],
+        ['x-original-uri'],
+        ['x-original-forwarded-for'],
+        ['x-rewrite-url'],
+        ['x-http-method'],
+        ['x-http-method-override'],
+        ['x-method-override'],
+        ['x-middleware-subrequest'],
+        ['x-envoy-original-path'],
+        ['x-amzn-trace-id'],
+    ];
+
+    it.each(forbiddenHeaders)(
+        'should not support the forbidden %s header',
+        (header) => {
+            expect(isSupportedProxyDataProperty(`headers.${header}`)).toBe(
+                false
+            );
+        }
+    );
+
+    const allowedLookalikes = [
+        ['x-forwarded'],
+        ['x-hosted-by'],
+        ['x-amz-date'],
+        ['x-real-ip-key'],
+    ];
+
+    it.each(allowedLookalikes)(
+        'should support the %s header that looks similar to a forbidden header',
+        (header) => {
+            expect(isSupportedProxyDataProperty(`headers.${header}`)).toBe(
+                true
+            );
+        }
+    );
 });
 
 describe('validateProxyData()', () => {
@@ -61,11 +129,39 @@ describe('validateProxyData()', () => {
 
     it('should reject unsupported properties', () => {
         const result = validateProxyData({
-            'headers.x-api-key': 'abc',
+            'headers.cookie': 'abc',
         });
         expect(result.success).toBe(false);
         expect((result as any).error.errorCode).toBe('unacceptable_request');
     });
+
+    it('should allow custom x- headers', () => {
+        expect(
+            validateProxyData({
+                'headers.x-api-key': 'abc',
+            }).success
+        ).toBe(true);
+    });
+
+    const invalidHeaderValues = [
+        ['carriage return', 'abc\rdef'],
+        ['line feed', 'abc\ndef'],
+        ['CRLF', 'abc\r\nx-other: def'],
+        ['null character', 'abc\0def'],
+    ];
+
+    it.each(invalidHeaderValues)(
+        'should reject custom header values that contain a %s',
+        (desc, value) => {
+            const result = validateProxyData({
+                'headers.x-api-key': value,
+            });
+            expect(result.success).toBe(false);
+            expect((result as any).error.errorCode).toBe(
+                'unacceptable_request'
+            );
+        }
+    );
 
     it('should reject data that is not an object', () => {
         expect(validateProxyData(null as any).success).toBe(false);
@@ -135,6 +231,67 @@ describe('applyProxyData()', () => {
             },
             body: null,
         });
+    });
+
+    it('should set custom x- headers', () => {
+        const result = applyProxyData(
+            {
+                'headers.x-api-key': 'my-key',
+                'headers.X-Other': 123,
+            },
+            {
+                headers: {
+                    'content-type': 'application/json',
+                },
+                body: null,
+            }
+        );
+
+        expect(result.success).toBe(true);
+        expect(unwrap(result)).toEqual({
+            headers: {
+                'content-type': 'application/json',
+                'x-api-key': 'my-key',
+                'x-other': '123',
+            },
+            body: null,
+        });
+    });
+
+    it('should overwrite existing custom headers regardless of case', () => {
+        const result = applyProxyData(
+            {
+                'headers.x-api-key': 'my-key',
+            },
+            {
+                headers: {
+                    'X-API-KEY': 'other-key',
+                },
+                body: null,
+            }
+        );
+
+        expect(result.success).toBe(true);
+        expect(unwrap(result)).toEqual({
+            headers: {
+                'x-api-key': 'my-key',
+            },
+            body: null,
+        });
+    });
+
+    it('should reject custom header values that contain line breaks', () => {
+        const result = applyProxyData(
+            {
+                'headers.x-api-key': 'my-key\r\nx-injected: true',
+            },
+            {
+                headers: {},
+                body: null,
+            }
+        );
+
+        expect(result.success).toBe(false);
     });
 
     it('should set properties on the JSON body', () => {
