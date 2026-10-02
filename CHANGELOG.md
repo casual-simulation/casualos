@@ -2,7 +2,7 @@
 
 ## V4.2.8
 
-#### Date: 10/1/2026
+#### Date: 10/2/2026
 
 ### :rocket: Features
 
@@ -53,6 +53,10 @@
         to prevent internal network traversal.
 -   Improved link previews to suppport YouTube videos.
 -   Improved Custom OpenID Connect providers to support sending nonces.
+-   Added the `tokenEndpointAuthMethod` option to `serverConfig.openid.providers[]`.
+    -   Controls how the client authenticates when exchanging an authorization code for tokens. Supported values are `client_secret_basic` (send the client ID and secret in an HTTP Basic `Authorization` header), `client_secret_post` (send them in the request body), and `none` (send only the client ID, for public clients that rely on PKCE).
+    -   When omitted, `client_secret_basic` is used unless the issuer metadata (`token_endpoint_auth_methods_supported`) indicates that only `client_secret_post` is supported.
+    -   `clientSecret` is now optional when `tokenEndpointAuthMethod` is `none`.
 -   Added support for logging into comId (studio) accounts via custom OpenID Connect providers.
     -   `POST /api/v2/login/openid` (`requestOpenIDLogin`) now accepts optional `comId` and `customDomain` parameters. They work the same way as they do for email/SMS logins: `comId` takes precedence, and a `customDomain` is only used if it is verified.
     -   Added the `comIds` option to `serverConfig.openid.providers[]`. Set it to `true` to allow any comId, or to a list of comIds that are allowed. Defaults to `false`, which means the provider can only be used for accounts that are not tied to a studio. Custom domain logins are checked against the comId of the studio that owns the domain.
