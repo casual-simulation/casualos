@@ -19,6 +19,7 @@ import { HttpProxyInterface } from './HttpProxyInterface';
 import type { ProxyInterfaceRequest } from './ProxyInterface';
 import http from 'node:http';
 import https from 'node:https';
+import dns from 'node:dns';
 import type { AddressInfo } from 'node:net';
 
 describe('HttpProxyInterface', () => {
@@ -208,6 +209,36 @@ describe('HttpProxyInterface', () => {
                 'text/plain'
             );
             expect((result as any).value.body).toBe('hello');
+        });
+
+        it('should connect to the resolved address when the host is a domain name', async () => {
+            handler = (_req, res) => {
+                res.end('hello');
+            };
+
+            const lookupSpy = jest.spyOn(dns, 'lookup').mockImplementation(((
+                _hostname: string,
+                _options: any,
+                callback: any
+            ) => {
+                callback(null, [{ address: '127.0.0.1', family: 4 }]);
+            }) as any);
+
+            try {
+                const permissive = new HttpProxyInterface({
+                    allowPrivateIpAddresses: true,
+                });
+
+                const result = await permissive.sendRequest(
+                    request(`example.com:${port}`)
+                );
+
+                expect(errorSpy).not.toHaveBeenCalled();
+                expect(result.success).toBe(true);
+                expect((result as any).value.body).toBe('hello');
+            } finally {
+                lookupSpy.mockRestore();
+            }
         });
 
         it('should fail when the response is larger than the maximum size', async () => {

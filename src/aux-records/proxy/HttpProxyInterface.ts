@@ -200,12 +200,23 @@ export class HttpProxyInterface implements ProxyInterface {
 
                             // Pin the connection to the address that was verified above so that
                             // the host name cannot be re-resolved to a private address.
-                            lookup: (_hostname, _options, callback) => {
-                                (callback as any)(
-                                    null,
-                                    address.address,
-                                    address.family
-                                );
+                            // Node calls the lookup with { all: true } when autoSelectFamily is enabled (the default since Node 20),
+                            // in which case the callback expects an array of addresses.
+                            lookup: (_hostname, options, callback) => {
+                                if (options?.all) {
+                                    (callback as any)(null, [
+                                        {
+                                            address: address.address,
+                                            family: address.family,
+                                        },
+                                    ]);
+                                } else {
+                                    (callback as any)(
+                                        null,
+                                        address.address,
+                                        address.family
+                                    );
+                                }
                             },
                         },
                         (response) => {
