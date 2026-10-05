@@ -273,6 +273,28 @@ describe('ProxyController', () => {
             });
         });
 
+        it('should reject proxies that have custom headers with line breaks', async () => {
+            const result = await manager.recordItem({
+                recordKeyOrRecordName: recordName,
+                userId,
+                instances: [],
+                item: {
+                    address: 'proxy1',
+                    host: 'example.com',
+                    data: {
+                        'headers.x-api-key': 'abc\r\nx-injected: true',
+                    },
+                    markers: [PRIVATE_MARKER],
+                },
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: expect.any(String),
+            });
+        });
+
         it('should return subscription_limit_reached when the user has reached their limit', async () => {
             store.subscriptionConfiguration = buildSubscriptionConfig(
                 (config) =>
@@ -466,6 +488,39 @@ describe('ProxyController', () => {
             expect(request.method).toBe('GET');
             expect(request.body).toBe(null);
             expect(request.headers['authorization']).toBe('my-key');
+        });
+
+        it('should send custom x- headers to the host of the proxy', async () => {
+            await itemsStore.putItem(recordName, {
+                address: 'proxy2',
+                host: 'example.com',
+                data: {
+                    'headers.x-api-key': 'my-key',
+                },
+                markers: [PRIVATE_MARKER],
+            });
+
+            setResponse({
+                statusCode: 200,
+                headers: {},
+                body: '[]',
+            });
+
+            const result = await manager.handleProxyRequest({
+                recordName,
+                address: 'proxy2',
+                userId,
+                instances: [],
+                path: '/v1/models',
+                method: 'GET',
+            });
+
+            expect(result.success).toBe(true);
+
+            const request = proxyInterface.sendRequest.mock.calls[0][0];
+            expect(request.headers).toEqual({
+                'x-api-key': 'my-key',
+            });
         });
 
         it('should remove headers that the server manages from the response', async () => {
