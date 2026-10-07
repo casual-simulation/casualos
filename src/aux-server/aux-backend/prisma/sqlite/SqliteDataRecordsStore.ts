@@ -24,6 +24,7 @@ import type {
     UserPolicy,
     ListDataStoreByMarkerRequest,
 } from '@casual-simulation/aux-records';
+import { matchesDataFilter } from '@casual-simulation/aux-records';
 
 import type {
     PrismaClient,
@@ -219,11 +220,42 @@ export class SqliteDataRecordsStore implements DataRecordsStore {
         //     }),
         // ]);
 
+        const limit = request.count || 10;
+
+        if (request.filter) {
+            // SQLite can't push JSON filters into SQL, so LIMIT is dropped and the filter is applied in JS before slicing the page.
+            const recordsPromise: Prisma.PrismaPromise<PrismaDataRecord[]> =
+                !!request.startingAddress
+                    ? request.sort === 'descending'
+                        ? this._client
+                              .$queryRaw`SELECT "address", "data", "markers" FROM "DataRecord" WHERE "recordName" = ${request.recordName} AND ${request.marker} IN json_each("markers") AND "address" < ${request.startingAddress} ORDER BY "address" DESC`
+                        : this._client
+                              .$queryRaw`SELECT "address", "data", "markers" FROM "DataRecord" WHERE "recordName" = ${request.recordName} AND ${request.marker} IN json_each("markers") AND "address" > ${request.startingAddress} ORDER BY "address" ASC`
+                    : this._client
+                          .$queryRaw`SELECT "address", "data", "markers" FROM "DataRecord" WHERE "recordName" = ${request.recordName} AND ${request.marker} IN json_each("markers") ORDER BY "address" ASC`;
+
+            const records = await recordsPromise;
+            const filtered = records.filter((r) =>
+                matchesDataFilter(r.data, request.filter)
+            );
+            const page = filtered.slice(0, limit);
+
+            return {
+                success: true,
+                items: page.map((r) => ({
+                    address: r.address,
+                    data: r.data,
+                    markers: convertMarkers(r.markers as string[]),
+                })),
+                totalCount: filtered.length,
+                marker: null,
+            };
+        }
+
         const countPromise = this._client.$queryRaw<
             { count: number }[]
         >`SELECT COUNT(*) as count FROM "DataRecord" WHERE "recordName" = ${request.recordName} AND ${request.marker} IN json_each("markers")`;
 
-        const limit = request.count || 10;
         const recordsPromise: Prisma.PrismaPromise<PrismaDataRecord[]> =
             !!request.startingAddress
                 ? request.sort === 'descending'

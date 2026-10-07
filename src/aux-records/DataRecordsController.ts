@@ -26,6 +26,7 @@ import type {
     UserPolicy,
     ListDataStoreFailure,
 } from './DataRecordsStore';
+import type { DataFilter } from './DataRecordsFilters';
 import { doesSubjectMatchPolicy, isValidUserPolicy } from './DataRecordsStore';
 import type { ValidatePublicRecordKeyFailure } from './RecordsController';
 import type {
@@ -697,6 +698,7 @@ export class DataRecordsController {
                 marker: request.marker,
                 startingAddress: request.startingAddress,
                 sort: request.sort,
+                filter: request.filter,
             });
 
             if (result2.success === false) {
@@ -1119,6 +1121,12 @@ export interface ListDataByMarkerRequest {
      * Defaults to "ascending".
      */
     sort?: 'ascending' | 'descending';
+
+    /**
+     * The filter that should be used to narrow down the items that are returned.
+     * Only supported when listing by marker.
+     */
+    filter?: DataFilter;
 }
 
 /**
