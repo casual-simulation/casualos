@@ -33,8 +33,9 @@
         `targetUserId` (mutually exclusive, like `addStudioMember`'s `addedUserId`/`addedEmail`) to look
         up the target user by their email address.
     -   A shared permission now holds a set of permissions instead of a single one. `requestSharedPermission`
-        takes a `permissions` array (1 to 10 marker-based permissions) instead of `permission`, and accepting,
-        rejecting, or revoking the shared permission applies to the whole set.
+        takes a `permissions` array (1 to 10 marker-based permissions), and accepting, rejecting, or revoking the
+        shared permission applies to the whole set. `permission` is still accepted as a deprecated shorthand for a
+        set with a single permission (it is mutually exclusive with `permissions`).
         -   This makes it possible to share several actions/resource kinds with one request. For example, a
             "friends" marker that grants `data.read`, `data.list`, and `inst.read` (like `publicRead` does).
         -   When a shared permission is accepted, every permission in the set is granted in both records. If any

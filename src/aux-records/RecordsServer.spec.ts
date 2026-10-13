@@ -20525,6 +20525,41 @@ describe('RecordsServer', () => {
             expect(sharedPermission.permissions).toEqual(permissions);
         });
 
+        it('should support the deprecated permission field', async () => {
+            const permission: SharedMarkerPermission = {
+                marker: 'friends',
+                resourceKind: 'data',
+                action: 'read',
+                options: {},
+                expireTimeMs: null,
+            };
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/permissions/shared/request`,
+                    JSON.stringify({
+                        recordName,
+                        permission,
+                    }),
+                    apiHeaders
+                )
+            );
+
+            const body = await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    sharedPermissionId: expect.any(String),
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const sharedPermission = await store.findSharedPermissionById(
+                body.sharedPermissionId
+            );
+            expect(sharedPermission.permissions).toEqual([permission]);
+        });
+
         it('should return unacceptable_request if no permissions are provided', async () => {
             const result = await server.handleHttpRequest(
                 httpPost(

@@ -106,7 +106,19 @@ export class SharedPermissionsController {
                 return authorization;
             }
 
-            if (!request.permissions || request.permissions.length <= 0) {
+            if (request.permissions && request.permission) {
+                return {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'permissions and permission are mutually exclusive. Only one may be provided.',
+                };
+            }
+
+            const permissions =
+                request.permissions ??
+                (request.permission ? [request.permission] : []);
+            if (permissions.length <= 0) {
                 return {
                     success: false,
                     errorCode: 'unacceptable_request',
@@ -162,7 +174,7 @@ export class SharedPermissionsController {
                 recordName,
                 requestingUserId: request.userId,
                 targetUserId,
-                permissions: request.permissions,
+                permissions,
                 status: 'requested',
                 createdAtMs: now,
                 updatedAtMs: now,
@@ -706,8 +718,18 @@ export interface RequestSharedPermissionRequest {
     /**
      * The marker-based permissions that the user wants to share and receive.
      * The permissions are accepted, rejected, and revoked together as a single set.
+     * Mutually exclusive with permission.
      */
-    permissions: SharedMarkerPermission[];
+    permissions?: SharedMarkerPermission[] | null;
+
+    /**
+     * The marker-based permission that the user wants to share and receive.
+     * Shorthand for a permissions set that contains only this permission.
+     * Mutually exclusive with permissions.
+     *
+     * @deprecated Use permissions instead.
+     */
+    permission?: SharedMarkerPermission | null;
 
     /**
      * The ID of the other user that the user wants to share with.

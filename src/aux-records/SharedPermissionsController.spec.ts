@@ -184,6 +184,32 @@ describe('SharedPermissionsController', () => {
             expect((result as any).errorCode).toBe('unacceptable_expire_time');
         });
 
+        it('should support the permission shorthand for a single permission', async () => {
+            const result = await controller.requestSharedPermission({
+                userId: userA,
+                recordName: recordA,
+                permission: permissions[0],
+            });
+
+            expect(result.success).toBe(true);
+            const id = (result as RequestSharedPermissionSuccess)
+                .sharedPermissionId;
+            const sp = await store.findSharedPermissionById(id);
+            expect(sp.permissions).toEqual([permissions[0]]);
+        });
+
+        it('should fail if both permissions and permission are provided', async () => {
+            const result = await controller.requestSharedPermission({
+                userId: userA,
+                recordName: recordA,
+                permissions,
+                permission: permissions[0],
+            });
+
+            expect(result.success).toBe(false);
+            expect((result as any).errorCode).toBe('unacceptable_request');
+        });
+
         it('should fail if no permissions are provided', async () => {
             const result = await controller.requestSharedPermission({
                 userId: userA,

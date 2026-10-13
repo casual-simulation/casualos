@@ -4580,7 +4580,12 @@ export class RecordsServer {
                         permissions: z
                             .array(SHARED_MARKER_PERMISSION_VALIDATION())
                             .min(1)
-                            .max(10),
+                            .max(10)
+                            .optional()
+                            .nullable(),
+                        permission: SHARED_MARKER_PERMISSION_VALIDATION()
+                            .optional()
+                            .nullable(),
                         targetUserId: z.string().optional().nullable(),
                         targetUserEmail: z.string().optional().nullable(),
                         expireTimeMs: z.number().optional().nullable(),
@@ -4593,6 +4598,7 @@ export class RecordsServer {
                         {
                             recordName,
                             permissions,
+                            permission,
                             targetUserId,
                             targetUserEmail,
                             expireTimeMs,
@@ -4626,6 +4632,7 @@ export class RecordsServer {
                                     userId: sessionKeyValidation.userId,
                                     recordName,
                                     permissions: permissions as any,
+                                    permission: permission as any,
                                     targetUserId,
                                     targetUserEmail,
                                     expireTimeMs,
