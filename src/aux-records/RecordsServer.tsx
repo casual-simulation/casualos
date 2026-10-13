@@ -4577,7 +4577,10 @@ export class RecordsServer {
                 .inputs(
                     z.object({
                         recordName: RECORD_NAME_VALIDATION,
-                        permission: SHARED_MARKER_PERMISSION_VALIDATION(),
+                        permissions: z
+                            .array(SHARED_MARKER_PERMISSION_VALIDATION())
+                            .min(1)
+                            .max(10),
                         targetUserId: z.string().optional().nullable(),
                         targetUserEmail: z.string().optional().nullable(),
                         expireTimeMs: z.number().optional().nullable(),
@@ -4589,7 +4592,7 @@ export class RecordsServer {
                     async (
                         {
                             recordName,
-                            permission,
+                            permissions,
                             targetUserId,
                             targetUserEmail,
                             expireTimeMs,
@@ -4622,7 +4625,7 @@ export class RecordsServer {
                                 {
                                     userId: sessionKeyValidation.userId,
                                     recordName,
-                                    permission: permission as any,
+                                    permissions: permissions as any,
                                     targetUserId,
                                     targetUserEmail,
                                     expireTimeMs,

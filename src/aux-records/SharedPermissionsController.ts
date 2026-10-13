@@ -106,6 +106,14 @@ export class SharedPermissionsController {
                 return authorization;
             }
 
+            if (!request.permissions || request.permissions.length <= 0) {
+                return {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage: 'At least one permission must be provided.',
+                };
+            }
+
             if (
                 typeof request.expireTimeMs === 'number' &&
                 request.expireTimeMs <= Date.now()
@@ -154,7 +162,7 @@ export class SharedPermissionsController {
                 recordName,
                 requestingUserId: request.userId,
                 targetUserId,
-                permission: request.permission,
+                permissions: request.permissions,
                 status: 'requested',
                 createdAtMs: now,
                 updatedAtMs: now,
@@ -163,8 +171,8 @@ export class SharedPermissionsController {
                     now + SHARED_PERMISSION_REQUEST_LIFETIME_MS,
                 recipientRecordName: null,
                 recipientUserId: null,
-                requestingPermissionAssignmentId: null,
-                recipientPermissionAssignmentId: null,
+                requestingPermissionAssignmentIds: [],
+                recipientPermissionAssignmentIds: [],
             };
 
             await this._store.saveSharedPermission(sharedPermission);
@@ -241,57 +249,87 @@ export class SharedPermissionsController {
                 };
             }
 
-            // Grant the permission to the requesting user inside the recipient's record.
-            const recipientGrant = await this._policies.grantMarkerPermission({
-                recordKeyOrRecordName: request.recordName,
-                marker: sharedPermission.permission.marker,
-                userId: request.userId,
-                permission: {
-                    ...sharedPermission.permission,
-                    subjectType: 'user',
-                    subjectId: sharedPermission.requestingUserId,
-                    resourceId: null,
-                } as AvailablePermissions,
-                instances: request.instances,
-            });
-
-            if (recipientGrant.success === false) {
-                return {
-                    success: false,
-                    errorCode: recipientGrant.errorCode,
-                    errorMessage: recipientGrant.errorMessage,
-                };
-            }
-
-            // Grant the permission to the recipient user inside the requester's record.
-            const requesterGrant = await this._policies.grantMarkerPermission({
-                recordKeyOrRecordName: sharedPermission.recordName,
-                marker: sharedPermission.permission.marker,
-                userId: sharedPermission.requestingUserId,
-                permission: {
-                    ...sharedPermission.permission,
-                    subjectType: 'user',
-                    subjectId: request.userId,
-                    resourceId: null,
-                } as AvailablePermissions,
-                instances: request.instances,
-            });
-
-            if (requesterGrant.success === false) {
-                // Roll back the grant that was made to the recipient's record.
-                if (recipientGrant.permissionAssignmentId) {
+            // Grant every permission to the requesting user inside the recipient's record,
+            // and to the recipient user inside the requester's record.
+            // If any grant fails, then all of the grants that were made are rolled back
+            // so that the shared permission is never partially granted.
+            const recipientPermissionAssignmentIds: string[] = [];
+            const requestingPermissionAssignmentIds: string[] = [];
+            const rollback = async () => {
+                for (const permissionId of recipientPermissionAssignmentIds) {
                     await this._policies.revokeMarkerPermission({
-                        permissionId: recipientGrant.permissionAssignmentId,
+                        permissionId,
                         userId: request.userId,
                         instances: request.instances,
                     });
                 }
+                for (const permissionId of requestingPermissionAssignmentIds) {
+                    await this._policies.revokeMarkerPermission({
+                        permissionId,
+                        userId: sharedPermission.requestingUserId,
+                        instances: request.instances,
+                    });
+                }
+            };
 
-                return {
-                    success: false,
-                    errorCode: requesterGrant.errorCode,
-                    errorMessage: requesterGrant.errorMessage,
-                };
+            for (const permission of sharedPermission.permissions) {
+                const recipientGrant =
+                    await this._policies.grantMarkerPermission({
+                        recordKeyOrRecordName: request.recordName,
+                        marker: permission.marker,
+                        userId: request.userId,
+                        permission: {
+                            ...permission,
+                            subjectType: 'user',
+                            subjectId: sharedPermission.requestingUserId,
+                            resourceId: null,
+                        } as AvailablePermissions,
+                        instances: request.instances,
+                    });
+
+                if (recipientGrant.success === false) {
+                    await rollback();
+                    return {
+                        success: false,
+                        errorCode: recipientGrant.errorCode,
+                        errorMessage: recipientGrant.errorMessage,
+                    };
+                }
+
+                if (recipientGrant.permissionAssignmentId) {
+                    recipientPermissionAssignmentIds.push(
+                        recipientGrant.permissionAssignmentId
+                    );
+                }
+
+                const requesterGrant =
+                    await this._policies.grantMarkerPermission({
+                        recordKeyOrRecordName: sharedPermission.recordName,
+                        marker: permission.marker,
+                        userId: sharedPermission.requestingUserId,
+                        permission: {
+                            ...permission,
+                            subjectType: 'user',
+                            subjectId: request.userId,
+                            resourceId: null,
+                        } as AvailablePermissions,
+                        instances: request.instances,
+                    });
+
+                if (requesterGrant.success === false) {
+                    await rollback();
+                    return {
+                        success: false,
+                        errorCode: requesterGrant.errorCode,
+                        errorMessage: requesterGrant.errorMessage,
+                    };
+                }
+
+                if (requesterGrant.permissionAssignmentId) {
+                    requestingPermissionAssignmentIds.push(
+                        requesterGrant.permissionAssignmentId
+                    );
+                }
             }
 
             const updated: SharedPermission = {
@@ -301,10 +339,8 @@ export class SharedPermissionsController {
                 expireTimeMs: null,
                 recipientRecordName: request.recordName,
                 recipientUserId: request.userId,
-                requestingPermissionAssignmentId:
-                    requesterGrant.permissionAssignmentId ?? null,
-                recipientPermissionAssignmentId:
-                    recipientGrant.permissionAssignmentId ?? null,
+                requestingPermissionAssignmentIds,
+                recipientPermissionAssignmentIds,
             };
 
             await this._store.saveSharedPermission(updated);
@@ -436,10 +472,11 @@ export class SharedPermissionsController {
             }
 
             if (sharedPermission.status === 'accepted') {
-                if (sharedPermission.requestingPermissionAssignmentId) {
+                // Permissions that were already revoked are skipped so that a revoke that
+                // failed partway through can be retried.
+                for (const permissionId of sharedPermission.requestingPermissionAssignmentIds) {
                     const result = await this._policies.revokeMarkerPermission({
-                        permissionId:
-                            sharedPermission.requestingPermissionAssignmentId,
+                        permissionId,
                         userId: sharedPermission.requestingUserId,
                         instances: request.instances,
                     });
@@ -452,10 +489,9 @@ export class SharedPermissionsController {
                     }
                 }
 
-                if (sharedPermission.recipientPermissionAssignmentId) {
+                for (const permissionId of sharedPermission.recipientPermissionAssignmentIds) {
                     const result = await this._policies.revokeMarkerPermission({
-                        permissionId:
-                            sharedPermission.recipientPermissionAssignmentId,
+                        permissionId,
                         userId: sharedPermission.recipientUserId,
                         instances: request.instances,
                     });
@@ -621,7 +657,7 @@ export class SharedPermissionsController {
                             ? sp.recipientUserId
                             : sp.requestingUserId,
                         sharedPermissionId: sp.id,
-                        permission: sp.permission,
+                        permissions: sp.permissions,
                     };
                 });
 
@@ -668,9 +704,10 @@ export interface RequestSharedPermissionRequest {
     recordName: string;
 
     /**
-     * The marker-based permission that the user wants to share and receive.
+     * The marker-based permissions that the user wants to share and receive.
+     * The permissions are accepted, rejected, and revoked together as a single set.
      */
-    permission: SharedMarkerPermission;
+    permissions: SharedMarkerPermission[];
 
     /**
      * The ID of the other user that the user wants to share with.
@@ -919,7 +956,7 @@ export interface SharedRecordListItem {
     sharedPermissionId: string;
 
     /**
-     * The marker-based permission that was granted.
+     * The marker-based permissions that were granted.
      */
-    permission: SharedMarkerPermission;
+    permissions: SharedMarkerPermission[];
 }
