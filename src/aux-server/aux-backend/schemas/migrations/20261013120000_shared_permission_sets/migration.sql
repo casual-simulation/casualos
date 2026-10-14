@@ -1,3 +1,6 @@
+-- Unlock the table so that its schema can be changed.
+ALTER TABLE "public"."SharedPermission" SET (schema_locked = false);
+
 -- AlterTable
 ALTER TABLE "public"."SharedPermission" ADD COLUMN     "permissions" JSONB;
 ALTER TABLE "public"."SharedPermission" ADD COLUMN     "recipientPermissionAssignmentIds" UUID[];
@@ -14,3 +17,6 @@ ALTER TABLE "public"."SharedPermission" ALTER COLUMN "permissions" SET NOT NULL;
 ALTER TABLE "public"."SharedPermission" DROP COLUMN "permission";
 ALTER TABLE "public"."SharedPermission" DROP COLUMN "recipientPermissionAssignmentId";
 ALTER TABLE "public"."SharedPermission" DROP COLUMN "requestingPermissionAssignmentId";
+
+-- Lock the table again now that the schema change is complete.
+ALTER TABLE "public"."SharedPermission" SET (schema_locked = true);
