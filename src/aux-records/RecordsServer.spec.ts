@@ -20522,7 +20522,28 @@ describe('RecordsServer', () => {
             const sharedPermission = await store.findSharedPermissionById(
                 body.sharedPermissionId
             );
-            expect(sharedPermission.permissions).toEqual(permissions);
+            // options is not part of the input schema, so it is not stored.
+            expect(sharedPermission.permissions).toEqual([
+                {
+                    marker: 'friends',
+                    resourceKind: 'data',
+                    action: 'read',
+                    expireTimeMs: null,
+                },
+                {
+                    marker: 'friends',
+                    resourceKind: 'data',
+                    action: 'list',
+                    expireTimeMs: null,
+                },
+                {
+                    marker: 'friends',
+                    resourceKind: 'inst',
+                    resourceId: null,
+                    action: 'read',
+                    expireTimeMs: null,
+                },
+            ]);
         });
 
         it('should support the deprecated permission field', async () => {
@@ -20557,7 +20578,15 @@ describe('RecordsServer', () => {
             const sharedPermission = await store.findSharedPermissionById(
                 body.sharedPermissionId
             );
-            expect(sharedPermission.permissions).toEqual([permission]);
+            // options is not part of the input schema, so it is not stored.
+            expect(sharedPermission.permissions).toEqual([
+                {
+                    marker: 'friends',
+                    resourceKind: 'data',
+                    action: 'read',
+                    expireTimeMs: null,
+                },
+            ]);
         });
 
         it('should return unacceptable_request if no permissions are provided', async () => {
