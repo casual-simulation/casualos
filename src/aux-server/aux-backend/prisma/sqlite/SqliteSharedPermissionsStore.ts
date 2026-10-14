@@ -55,34 +55,34 @@ export class SqliteSharedPermissionsStore implements SharedPermissionsStore {
                 recordName: sharedPermission.recordName,
                 requestingUserId: sharedPermission.requestingUserId,
                 targetUserId: sharedPermission.targetUserId,
-                permission:
-                    sharedPermission.permission as unknown as Prisma.InputJsonValue,
+                permissions:
+                    sharedPermission.permissions as unknown as Prisma.InputJsonValue,
                 status: sharedPermission.status,
                 createdAt: sharedPermission.createdAtMs,
                 updatedAt: sharedPermission.updatedAtMs,
                 expireTime: sharedPermission.expireTimeMs,
                 recipientRecordName: sharedPermission.recipientRecordName,
                 recipientUserId: sharedPermission.recipientUserId,
-                requestingPermissionAssignmentId:
-                    sharedPermission.requestingPermissionAssignmentId,
-                recipientPermissionAssignmentId:
-                    sharedPermission.recipientPermissionAssignmentId,
+                requestingPermissionAssignmentIds:
+                    sharedPermission.requestingPermissionAssignmentIds as unknown as Prisma.InputJsonValue,
+                recipientPermissionAssignmentIds:
+                    sharedPermission.recipientPermissionAssignmentIds as unknown as Prisma.InputJsonValue,
             },
             update: {
                 recordName: sharedPermission.recordName,
                 requestingUserId: sharedPermission.requestingUserId,
                 targetUserId: sharedPermission.targetUserId,
-                permission:
-                    sharedPermission.permission as unknown as Prisma.InputJsonValue,
+                permissions:
+                    sharedPermission.permissions as unknown as Prisma.InputJsonValue,
                 status: sharedPermission.status,
                 updatedAt: sharedPermission.updatedAtMs,
                 expireTime: sharedPermission.expireTimeMs,
                 recipientRecordName: sharedPermission.recipientRecordName,
                 recipientUserId: sharedPermission.recipientUserId,
-                requestingPermissionAssignmentId:
-                    sharedPermission.requestingPermissionAssignmentId,
-                recipientPermissionAssignmentId:
-                    sharedPermission.recipientPermissionAssignmentId,
+                requestingPermissionAssignmentIds:
+                    sharedPermission.requestingPermissionAssignmentIds as unknown as Prisma.InputJsonValue,
+                recipientPermissionAssignmentIds:
+                    sharedPermission.recipientPermissionAssignmentIds as unknown as Prisma.InputJsonValue,
             },
         });
     }
@@ -189,16 +189,17 @@ export class SqliteSharedPermissionsStore implements SharedPermissionsStore {
             recordName: p.recordName,
             requestingUserId: p.requestingUserId,
             targetUserId: p.targetUserId,
-            permission: p.permission as unknown as SharedMarkerPermission,
+            permissions: p.permissions as unknown as SharedMarkerPermission[],
             status: p.status as SharedPermissionStatus,
             createdAtMs: p.createdAt?.toNumber(),
             updatedAtMs: p.updatedAt?.toNumber(),
             expireTimeMs: p.expireTime?.toNumber() ?? null,
             recipientRecordName: p.recipientRecordName,
             recipientUserId: p.recipientUserId,
-            requestingPermissionAssignmentId:
-                p.requestingPermissionAssignmentId,
-            recipientPermissionAssignmentId: p.recipientPermissionAssignmentId,
+            requestingPermissionAssignmentIds:
+                p.requestingPermissionAssignmentIds as unknown as string[],
+            recipientPermissionAssignmentIds:
+                p.recipientPermissionAssignmentIds as unknown as string[],
         };
     }
 }

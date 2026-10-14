@@ -691,8 +691,9 @@ model SharedPermission {
     targetUserId String?
     targetUser User? @relation("SharedPermission_targetUser", fields: [targetUserId], references: [id], onDelete: SetNull, map: "SharedPermission_targetUserId_fkey1")
 
-    // The marker-based permission that is shared between the two parties.
-    permission Json
+    // The marker-based permissions that are shared between the two parties.
+    // Stored as a JSON array. The permissions are granted and revoked together as a single set.
+    permissions Json
 
     // The current status of the shared permission.
     // One of "requested", "accepted", "rejected", or "revoked".
@@ -715,13 +716,13 @@ model SharedPermission {
     recipientUserId String?
     recipientUser User? @relation("SharedPermission_recipientUser", fields: [recipientUserId], references: [id], onDelete: SetNull, map: "SharedPermission_recipientUserId_fkey1")
 
-    // The ID of the permission assignment that was created in recordName to give
-    // recipientUserId access. Null until the shared permission has been accepted.
-    requestingPermissionAssignmentId String? @db.Uuid
+    // The IDs of the permission assignments that were created in recordName to give
+    // recipientUserId access. Empty until the shared permission has been accepted.
+    requestingPermissionAssignmentIds String[] @db.Uuid
 
-    // The ID of the permission assignment that was created in recipientRecordName to give
-    // requestingUserId access. Null until the shared permission has been accepted.
-    recipientPermissionAssignmentId String? @db.Uuid
+    // The IDs of the permission assignments that were created in recipientRecordName to give
+    // requestingUserId access. Empty until the shared permission has been accepted.
+    recipientPermissionAssignmentIds String[] @db.Uuid
 
     @@index([requestingUserId])
     @@index([targetUserId])

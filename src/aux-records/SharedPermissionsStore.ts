@@ -72,9 +72,10 @@ export interface SharedPermission {
     targetUserId: string | null;
 
     /**
-     * The marker-based permission that is shared between the two parties.
+     * The marker-based permissions that are shared between the two parties.
+     * The permissions are granted, rejected, and revoked together as a single set.
      */
-    permission: SharedMarkerPermission;
+    permissions: SharedMarkerPermission[];
 
     /**
      * The current status of the shared permission.
@@ -111,16 +112,16 @@ export interface SharedPermission {
     recipientUserId: string | null;
 
     /**
-     * The ID of the permission assignment that was created in recordName to give recipientUserId
-     * access to the shared permission. Null until the shared permission has been accepted.
+     * The IDs of the permission assignments that were created in recordName to give recipientUserId
+     * access to the shared permissions. Empty until the shared permission has been accepted.
      */
-    requestingPermissionAssignmentId: string | null;
+    requestingPermissionAssignmentIds: string[];
 
     /**
-     * The ID of the permission assignment that was created in recipientRecordName to give
-     * requestingUserId access to the shared permission. Null until the shared permission has been accepted.
+     * The IDs of the permission assignments that were created in recipientRecordName to give
+     * requestingUserId access to the shared permissions. Empty until the shared permission has been accepted.
      */
-    recipientPermissionAssignmentId: string | null;
+    recipientPermissionAssignmentIds: string[];
 }
 
 /**
