@@ -56,33 +56,33 @@ export class PrismaSharedPermissionsStore implements SharedPermissionsStore {
                 recordName: sharedPermission.recordName,
                 requestingUserId: sharedPermission.requestingUserId,
                 targetUserId: sharedPermission.targetUserId,
-                permission:
-                    sharedPermission.permission as unknown as Prisma.InputJsonValue,
+                permissions:
+                    sharedPermission.permissions as unknown as Prisma.InputJsonValue,
                 status: sharedPermission.status,
                 createdAt: convertToDate(sharedPermission.createdAtMs),
                 updatedAt: convertToDate(sharedPermission.updatedAtMs),
                 expireTime: convertToDate(sharedPermission.expireTimeMs),
                 recipientRecordName: sharedPermission.recipientRecordName,
                 recipientUserId: sharedPermission.recipientUserId,
-                requestingPermissionAssignmentId:
-                    sharedPermission.requestingPermissionAssignmentId,
-                recipientPermissionAssignmentId:
-                    sharedPermission.recipientPermissionAssignmentId,
+                requestingPermissionAssignmentIds:
+                    sharedPermission.requestingPermissionAssignmentIds,
+                recipientPermissionAssignmentIds:
+                    sharedPermission.recipientPermissionAssignmentIds,
             },
             update: {
                 recordName: sharedPermission.recordName,
                 requestingUserId: sharedPermission.requestingUserId,
                 targetUserId: sharedPermission.targetUserId,
-                permission:
-                    sharedPermission.permission as unknown as Prisma.InputJsonValue,
+                permissions:
+                    sharedPermission.permissions as unknown as Prisma.InputJsonValue,
                 status: sharedPermission.status,
                 expireTime: convertToDate(sharedPermission.expireTimeMs),
                 recipientRecordName: sharedPermission.recipientRecordName,
                 recipientUserId: sharedPermission.recipientUserId,
-                requestingPermissionAssignmentId:
-                    sharedPermission.requestingPermissionAssignmentId,
-                recipientPermissionAssignmentId:
-                    sharedPermission.recipientPermissionAssignmentId,
+                requestingPermissionAssignmentIds:
+                    sharedPermission.requestingPermissionAssignmentIds,
+                recipientPermissionAssignmentIds:
+                    sharedPermission.recipientPermissionAssignmentIds,
             },
         });
     }
@@ -189,16 +189,17 @@ export class PrismaSharedPermissionsStore implements SharedPermissionsStore {
             recordName: p.recordName,
             requestingUserId: p.requestingUserId,
             targetUserId: p.targetUserId,
-            permission: p.permission as unknown as SharedMarkerPermission,
+            permissions: p.permissions as unknown as SharedMarkerPermission[],
             status: p.status as SharedPermissionStatus,
             createdAtMs: convertToMillis(p.createdAt),
             updatedAtMs: convertToMillis(p.updatedAt),
             expireTimeMs: convertToMillis(p.expireTime),
             recipientRecordName: p.recipientRecordName,
             recipientUserId: p.recipientUserId,
-            requestingPermissionAssignmentId:
-                p.requestingPermissionAssignmentId,
-            recipientPermissionAssignmentId: p.recipientPermissionAssignmentId,
+            requestingPermissionAssignmentIds:
+                p.requestingPermissionAssignmentIds,
+            recipientPermissionAssignmentIds:
+                p.recipientPermissionAssignmentIds,
         };
     }
 }

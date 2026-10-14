@@ -6582,6 +6582,8 @@ Object {
           },
           "permission": Object {
             "discriminator": "resourceKind",
+            "nullable": true,
+            "optional": true,
             "options": Array [
               Object {
                 "schema": Object {
@@ -7340,6 +7342,774 @@ Object {
               },
             ],
             "type": "union",
+          },
+          "permissions": Object {
+            "maxLength": 10,
+            "minLength": 1,
+            "nullable": true,
+            "optional": true,
+            "schema": Object {
+              "discriminator": "resourceKind",
+              "options": Array [
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "read",
+                        "create",
+                        "update",
+                        "delete",
+                        "list",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "data",
+                    },
+                  },
+                  "type": "object",
+                },
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "read",
+                        "create",
+                        "update",
+                        "delete",
+                        "list",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "options": Object {
+                      "schema": Object {
+                        "allowedMimeTypes": Object {
+                          "optional": true,
+                          "options": Array [
+                            Object {
+                              "type": "literal",
+                              "value": true,
+                            },
+                            Object {
+                              "schema": Object {
+                                "type": "string",
+                              },
+                              "type": "array",
+                            },
+                          ],
+                          "type": "union",
+                        },
+                        "maxFileSizeInBytes": Object {
+                          "optional": true,
+                          "type": "number",
+                        },
+                      },
+                      "type": "object",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "file",
+                    },
+                  },
+                  "type": "object",
+                },
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "increment",
+                        "count",
+                        "update",
+                        "list",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "event",
+                    },
+                  },
+                  "type": "object",
+                },
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "assign",
+                        "unassign",
+                        "grantPermission",
+                        "revokePermission",
+                        "read",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "marker",
+                    },
+                  },
+                  "type": "object",
+                },
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "grant",
+                        "revoke",
+                        "read",
+                        "update",
+                        "list",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "options": Object {
+                      "schema": Object {
+                        "maxDurationMs": Object {
+                          "optional": true,
+                          "type": "number",
+                        },
+                      },
+                      "type": "object",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "role",
+                    },
+                  },
+                  "type": "object",
+                },
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "create",
+                        "read",
+                        "update",
+                        "updateData",
+                        "delete",
+                        "list",
+                        "sendAction",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "inst",
+                    },
+                  },
+                  "type": "object",
+                },
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "create",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "loom",
+                    },
+                  },
+                  "type": "object",
+                },
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "create",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "ai.sloyd",
+                    },
+                  },
+                  "type": "object",
+                },
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "create",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "ai.hume",
+                    },
+                  },
+                  "type": "object",
+                },
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "create",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "ai.openai.realtime",
+                    },
+                  },
+                  "type": "object",
+                },
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "create",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "ai.chat",
+                    },
+                  },
+                  "type": "object",
+                },
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "create",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "ai.image",
+                    },
+                  },
+                  "type": "object",
+                },
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "create",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "ai.skybox",
+                    },
+                  },
+                  "type": "object",
+                },
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "create",
+                        "read",
+                        "update",
+                        "delete",
+                        "list",
+                        "run",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "webhook",
+                    },
+                  },
+                  "type": "object",
+                },
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "create",
+                        "read",
+                        "update",
+                        "delete",
+                        "list",
+                        "run",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "proxy",
+                    },
+                  },
+                  "type": "object",
+                },
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "create",
+                        "read",
+                        "update",
+                        "delete",
+                        "list",
+                        "send",
+                        "subscribe",
+                        "unsubscribe",
+                        "listSubscriptions",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "notification",
+                    },
+                  },
+                  "type": "object",
+                },
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "create",
+                        "read",
+                        "update",
+                        "delete",
+                        "list",
+                        "run",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "package",
+                    },
+                  },
+                  "type": "object",
+                },
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "create",
+                        "read",
+                        "update",
+                        "delete",
+                        "list",
+                        "run",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "package.version",
+                    },
+                  },
+                  "type": "object",
+                },
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "create",
+                        "read",
+                        "update",
+                        "delete",
+                        "list",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "search",
+                    },
+                  },
+                  "type": "object",
+                },
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "create",
+                        "read",
+                        "update",
+                        "delete",
+                        "list",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "database",
+                    },
+                  },
+                  "type": "object",
+                },
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "create",
+                        "read",
+                        "update",
+                        "delete",
+                        "list",
+                        "purchase",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "purchasableItem",
+                    },
+                  },
+                  "type": "object",
+                },
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "create",
+                        "read",
+                        "update",
+                        "delete",
+                        "list",
+                        "purchase",
+                        "cancel",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "contract",
+                    },
+                  },
+                  "type": "object",
+                },
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "create",
+                        "read",
+                        "update",
+                        "delete",
+                        "list",
+                        "approve",
+                        "cancel",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "invoice",
+                    },
+                  },
+                  "type": "object",
+                },
+              ],
+              "type": "union",
+            },
+            "type": "array",
           },
           "recordName": Object {
             "type": "string",
@@ -18749,6 +19519,8 @@ Object {
           },
           "permission": Object {
             "discriminator": "resourceKind",
+            "nullable": true,
+            "optional": true,
             "options": Array [
               Object {
                 "schema": Object {
@@ -19507,6 +20279,774 @@ Object {
               },
             ],
             "type": "union",
+          },
+          "permissions": Object {
+            "maxLength": 10,
+            "minLength": 1,
+            "nullable": true,
+            "optional": true,
+            "schema": Object {
+              "discriminator": "resourceKind",
+              "options": Array [
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "read",
+                        "create",
+                        "update",
+                        "delete",
+                        "list",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "data",
+                    },
+                  },
+                  "type": "object",
+                },
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "read",
+                        "create",
+                        "update",
+                        "delete",
+                        "list",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "options": Object {
+                      "schema": Object {
+                        "allowedMimeTypes": Object {
+                          "optional": true,
+                          "options": Array [
+                            Object {
+                              "type": "literal",
+                              "value": true,
+                            },
+                            Object {
+                              "schema": Object {
+                                "type": "string",
+                              },
+                              "type": "array",
+                            },
+                          ],
+                          "type": "union",
+                        },
+                        "maxFileSizeInBytes": Object {
+                          "optional": true,
+                          "type": "number",
+                        },
+                      },
+                      "type": "object",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "file",
+                    },
+                  },
+                  "type": "object",
+                },
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "increment",
+                        "count",
+                        "update",
+                        "list",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "event",
+                    },
+                  },
+                  "type": "object",
+                },
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "assign",
+                        "unassign",
+                        "grantPermission",
+                        "revokePermission",
+                        "read",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "marker",
+                    },
+                  },
+                  "type": "object",
+                },
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "grant",
+                        "revoke",
+                        "read",
+                        "update",
+                        "list",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "options": Object {
+                      "schema": Object {
+                        "maxDurationMs": Object {
+                          "optional": true,
+                          "type": "number",
+                        },
+                      },
+                      "type": "object",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "role",
+                    },
+                  },
+                  "type": "object",
+                },
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "create",
+                        "read",
+                        "update",
+                        "updateData",
+                        "delete",
+                        "list",
+                        "sendAction",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "inst",
+                    },
+                  },
+                  "type": "object",
+                },
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "create",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "loom",
+                    },
+                  },
+                  "type": "object",
+                },
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "create",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "ai.sloyd",
+                    },
+                  },
+                  "type": "object",
+                },
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "create",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "ai.hume",
+                    },
+                  },
+                  "type": "object",
+                },
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "create",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "ai.openai.realtime",
+                    },
+                  },
+                  "type": "object",
+                },
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "create",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "ai.chat",
+                    },
+                  },
+                  "type": "object",
+                },
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "create",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "ai.image",
+                    },
+                  },
+                  "type": "object",
+                },
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "create",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "ai.skybox",
+                    },
+                  },
+                  "type": "object",
+                },
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "create",
+                        "read",
+                        "update",
+                        "delete",
+                        "list",
+                        "run",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "webhook",
+                    },
+                  },
+                  "type": "object",
+                },
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "create",
+                        "read",
+                        "update",
+                        "delete",
+                        "list",
+                        "run",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "proxy",
+                    },
+                  },
+                  "type": "object",
+                },
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "create",
+                        "read",
+                        "update",
+                        "delete",
+                        "list",
+                        "send",
+                        "subscribe",
+                        "unsubscribe",
+                        "listSubscriptions",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "notification",
+                    },
+                  },
+                  "type": "object",
+                },
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "create",
+                        "read",
+                        "update",
+                        "delete",
+                        "list",
+                        "run",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "package",
+                    },
+                  },
+                  "type": "object",
+                },
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "create",
+                        "read",
+                        "update",
+                        "delete",
+                        "list",
+                        "run",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "package.version",
+                    },
+                  },
+                  "type": "object",
+                },
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "create",
+                        "read",
+                        "update",
+                        "delete",
+                        "list",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "search",
+                    },
+                  },
+                  "type": "object",
+                },
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "create",
+                        "read",
+                        "update",
+                        "delete",
+                        "list",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "database",
+                    },
+                  },
+                  "type": "object",
+                },
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "create",
+                        "read",
+                        "update",
+                        "delete",
+                        "list",
+                        "purchase",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "purchasableItem",
+                    },
+                  },
+                  "type": "object",
+                },
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "create",
+                        "read",
+                        "update",
+                        "delete",
+                        "list",
+                        "purchase",
+                        "cancel",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "contract",
+                    },
+                  },
+                  "type": "object",
+                },
+                Object {
+                  "schema": Object {
+                    "action": Object {
+                      "nullable": true,
+                      "type": "enum",
+                      "values": Array [
+                        "create",
+                        "read",
+                        "update",
+                        "delete",
+                        "list",
+                        "approve",
+                        "cancel",
+                      ],
+                    },
+                    "expireTimeMs": Object {
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "marker": Object {
+                      "type": "string",
+                    },
+                    "resourceId": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "resourceKind": Object {
+                      "type": "literal",
+                      "value": "invoice",
+                    },
+                  },
+                  "type": "object",
+                },
+              ],
+              "type": "union",
+            },
+            "type": "array",
           },
           "recordName": Object {
             "type": "string",

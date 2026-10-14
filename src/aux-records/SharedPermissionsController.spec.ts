@@ -36,13 +36,47 @@ describe('SharedPermissionsController', () => {
     let recordA: string;
     let recordB: string;
 
-    const permission: SharedMarkerPermission = {
-        marker: 'testMarker',
-        resourceKind: 'data',
-        action: 'read',
-        options: {},
-        expireTimeMs: null,
-    };
+    const permissions: SharedMarkerPermission[] = [
+        {
+            marker: 'testMarker',
+            resourceKind: 'data',
+            action: 'read',
+            options: {},
+            expireTimeMs: null,
+        },
+        {
+            marker: 'testMarker',
+            resourceKind: 'data',
+            action: 'list',
+            options: {},
+            expireTimeMs: null,
+        },
+        {
+            marker: 'testMarker',
+            resourceKind: 'inst',
+            resourceId: null,
+            action: 'read',
+            options: {},
+            expireTimeMs: null,
+        },
+    ];
+
+    async function listMarkerAssignments(
+        recordName: string,
+        subjectId: string
+    ) {
+        const result = await store.listPermissionsInRecord(recordName);
+        expect(result.success).toBe(true);
+        return (result as any).markerAssignments
+            .filter(
+                (a: any) =>
+                    a.subjectType === 'user' &&
+                    a.subjectId === subjectId &&
+                    a.marker === 'testMarker'
+            )
+            .map((a: any) => `${a.resourceKind}.${a.action}`)
+            .sort();
+    }
 
     beforeEach(async () => {
         services = createTestControllers();
@@ -72,7 +106,7 @@ describe('SharedPermissionsController', () => {
         const result = (await controller.requestSharedPermission({
             userId: userA,
             recordName: recordA,
-            permission,
+            permissions,
             targetUserId,
             expireTimeMs,
         })) as RequestSharedPermissionSuccess;
@@ -84,7 +118,7 @@ describe('SharedPermissionsController', () => {
             const result = await controller.requestSharedPermission({
                 userId: userA,
                 recordName: recordA,
-                permission,
+                permissions,
             });
 
             expect(result).toEqual({
@@ -101,7 +135,7 @@ describe('SharedPermissionsController', () => {
                 requestingUserId: userA,
                 targetUserId: null,
                 status: 'requested',
-                permission,
+                permissions,
                 recipientRecordName: null,
                 recipientUserId: null,
             });
@@ -112,7 +146,7 @@ describe('SharedPermissionsController', () => {
             const result = await controller.requestSharedPermission({
                 userId: userA,
                 recordName: recordA,
-                permission,
+                permissions,
                 targetUserId: userB,
             });
 
@@ -128,7 +162,7 @@ describe('SharedPermissionsController', () => {
             const result = await controller.requestSharedPermission({
                 userId: userA,
                 recordName: recordA,
-                permission,
+                permissions,
                 expireTimeMs,
             });
 
@@ -142,7 +176,7 @@ describe('SharedPermissionsController', () => {
             const result = await controller.requestSharedPermission({
                 userId: userA,
                 recordName: recordA,
-                permission,
+                permissions,
                 expireTimeMs: Date.now() - 1000,
             });
 
@@ -150,11 +184,48 @@ describe('SharedPermissionsController', () => {
             expect((result as any).errorCode).toBe('unacceptable_expire_time');
         });
 
+        it('should support the permission shorthand for a single permission', async () => {
+            const result = await controller.requestSharedPermission({
+                userId: userA,
+                recordName: recordA,
+                permission: permissions[0],
+            });
+
+            expect(result.success).toBe(true);
+            const id = (result as RequestSharedPermissionSuccess)
+                .sharedPermissionId;
+            const sp = await store.findSharedPermissionById(id);
+            expect(sp.permissions).toEqual([permissions[0]]);
+        });
+
+        it('should fail if both permissions and permission are provided', async () => {
+            const result = await controller.requestSharedPermission({
+                userId: userA,
+                recordName: recordA,
+                permissions,
+                permission: permissions[0],
+            });
+
+            expect(result.success).toBe(false);
+            expect((result as any).errorCode).toBe('unacceptable_request');
+        });
+
+        it('should fail if no permissions are provided', async () => {
+            const result = await controller.requestSharedPermission({
+                userId: userA,
+                recordName: recordA,
+                permissions: [],
+            });
+
+            expect(result.success).toBe(false);
+            expect((result as any).errorCode).toBe('unacceptable_request');
+        });
+
         it('should fail if the user is not an admin of the record', async () => {
             const result = await controller.requestSharedPermission({
                 userId: userC,
                 recordName: recordA,
-                permission,
+                permissions,
             });
 
             expect(result.success).toBe(false);
@@ -165,7 +236,7 @@ describe('SharedPermissionsController', () => {
             const result = await controller.requestSharedPermission({
                 userId: userA,
                 recordName: recordA,
-                permission,
+                permissions,
                 targetUserEmail: 'userB@example.com',
             });
 
@@ -180,7 +251,7 @@ describe('SharedPermissionsController', () => {
             const result = await controller.requestSharedPermission({
                 userId: userA,
                 recordName: recordA,
-                permission,
+                permissions,
                 targetUserId: userB,
                 targetUserEmail: 'userB@example.com',
             });
@@ -193,7 +264,7 @@ describe('SharedPermissionsController', () => {
             const result = await controller.requestSharedPermission({
                 userId: userA,
                 recordName: recordA,
-                permission,
+                permissions,
                 targetUserEmail: 'missing@example.com',
             });
 
@@ -219,34 +290,70 @@ describe('SharedPermissionsController', () => {
             expect(sp.expireTimeMs).toBeNull();
             expect(sp.recipientRecordName).toBe(recordB);
             expect(sp.recipientUserId).toBe(userB);
-            expect(sp.requestingPermissionAssignmentId).toEqual(
-                expect.any(String)
-            );
-            expect(sp.recipientPermissionAssignmentId).toEqual(
-                expect.any(String)
-            );
+            expect(sp.requestingPermissionAssignmentIds).toEqual([
+                expect.any(String),
+                expect.any(String),
+                expect.any(String),
+            ]);
+            expect(sp.recipientPermissionAssignmentIds).toEqual([
+                expect.any(String),
+                expect.any(String),
+                expect.any(String),
+            ]);
 
-            const permsInA = await store.listPermissionsInRecord(recordA);
-            expect(permsInA.success).toBe(true);
-            expect(
-                (permsInA as any).markerAssignments.some(
-                    (a: any) =>
-                        a.subjectType === 'user' &&
-                        a.subjectId === userB &&
-                        a.marker === 'testMarker'
-                )
-            ).toBe(true);
+            expect(await listMarkerAssignments(recordA, userB)).toEqual([
+                'data.list',
+                'data.read',
+                'inst.read',
+            ]);
+            expect(await listMarkerAssignments(recordB, userA)).toEqual([
+                'data.list',
+                'data.read',
+                'inst.read',
+            ]);
+        });
 
-            const permsInB = await store.listPermissionsInRecord(recordB);
-            expect(permsInB.success).toBe(true);
-            expect(
-                (permsInB as any).markerAssignments.some(
-                    (a: any) =>
-                        a.subjectType === 'user' &&
-                        a.subjectId === userA &&
-                        a.marker === 'testMarker'
-                )
-            ).toBe(true);
+        it('should roll back every grant if any permission in the set cannot be granted', async () => {
+            const sharedPermissionId = await requestPermission();
+
+            const grant = services.policies.grantMarkerPermission.bind(
+                services.policies
+            );
+            let calls = 0;
+            jest.spyOn(
+                services.policies,
+                'grantMarkerPermission'
+            ).mockImplementation(async (request) => {
+                calls += 1;
+                if (calls === 4) {
+                    return {
+                        success: false,
+                        errorCode: 'server_error',
+                        errorMessage: 'Failed.',
+                    };
+                }
+                return grant(request);
+            });
+
+            const result = await controller.acceptSharedPermission({
+                userId: userB,
+                sharedPermissionId,
+                recordName: recordB,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'Failed.',
+            });
+
+            const sp = await store.findSharedPermissionById(sharedPermissionId);
+            expect(sp.status).toBe('requested');
+            expect(sp.requestingPermissionAssignmentIds).toEqual([]);
+            expect(sp.recipientPermissionAssignmentIds).toEqual([]);
+
+            expect(await listMarkerAssignments(recordA, userB)).toEqual([]);
+            expect(await listMarkerAssignments(recordB, userA)).toEqual([]);
         });
 
         it('should do nothing if already accepted', async () => {
@@ -427,19 +534,32 @@ describe('SharedPermissionsController', () => {
             const sp = await store.findSharedPermissionById(sharedPermissionId);
             expect(sp.status).toBe('revoked');
 
-            const permsInA = await store.listPermissionsInRecord(recordA);
-            expect(
-                (permsInA as any).markerAssignments.some(
-                    (a: any) => a.subjectId === userB
-                )
-            ).toBe(false);
+            expect(await listMarkerAssignments(recordA, userB)).toEqual([]);
+            expect(await listMarkerAssignments(recordB, userA)).toEqual([]);
+        });
 
-            const permsInB = await store.listPermissionsInRecord(recordB);
-            expect(
-                (permsInB as any).markerAssignments.some(
-                    (a: any) => a.subjectId === userA
-                )
-            ).toBe(false);
+        it('should succeed if some of the granted permissions were already removed', async () => {
+            const sharedPermissionId = await requestPermission();
+            await controller.acceptSharedPermission({
+                userId: userB,
+                sharedPermissionId,
+                recordName: recordB,
+            });
+
+            const sp = await store.findSharedPermissionById(sharedPermissionId);
+            await services.policies.revokeMarkerPermission({
+                permissionId: sp.requestingPermissionAssignmentIds[0],
+                userId: userA,
+            });
+
+            const result = await controller.revokeSharedPermission({
+                userId: userA,
+                sharedPermissionId,
+            });
+
+            expect(result).toEqual({ success: true });
+            expect(await listMarkerAssignments(recordA, userB)).toEqual([]);
+            expect(await listMarkerAssignments(recordB, userA)).toEqual([]);
         });
 
         it('should fail if an unrelated user tries to revoke', async () => {
@@ -559,7 +679,7 @@ describe('SharedPermissionsController', () => {
                         recordName: recordB,
                         ownerUserId: userB,
                         sharedPermissionId: acceptedId,
-                        permission,
+                        permissions,
                     },
                 ],
                 totalCount: 1,
@@ -578,7 +698,7 @@ describe('SharedPermissionsController', () => {
                         recordName: recordA,
                         ownerUserId: userA,
                         sharedPermissionId: acceptedId,
-                        permission,
+                        permissions,
                     },
                 ],
                 totalCount: 1,

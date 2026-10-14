@@ -26,6 +26,7 @@ import type {
     GenericHttpHeaders,
     GenericHttpRequest,
     GenericHttpResponse,
+    SharedMarkerPermission,
     UserRole,
     WebConfig,
 } from '@casual-simulation/aux-common';
@@ -20463,6 +20464,154 @@ describe('RecordsServer', () => {
                 defaultHeaders
             )
         );
+    });
+
+    describe('POST /api/v2/records/permissions/shared/request', () => {
+        beforeEach(async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+        });
+
+        it('should request a shared permission that contains a set of permissions', async () => {
+            const permissions: SharedMarkerPermission[] = [
+                {
+                    marker: 'friends',
+                    resourceKind: 'data',
+                    action: 'read',
+                    options: {},
+                    expireTimeMs: null,
+                },
+                {
+                    marker: 'friends',
+                    resourceKind: 'data',
+                    action: 'list',
+                    options: {},
+                    expireTimeMs: null,
+                },
+                {
+                    marker: 'friends',
+                    resourceKind: 'inst',
+                    resourceId: null,
+                    action: 'read',
+                    options: {},
+                    expireTimeMs: null,
+                },
+            ];
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/permissions/shared/request`,
+                    JSON.stringify({
+                        recordName,
+                        permissions,
+                    }),
+                    apiHeaders
+                )
+            );
+
+            const body = await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    sharedPermissionId: expect.any(String),
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const sharedPermission = await store.findSharedPermissionById(
+                body.sharedPermissionId
+            );
+            // options is not part of the input schema, so it is not stored.
+            expect(sharedPermission.permissions).toEqual([
+                {
+                    marker: 'friends',
+                    resourceKind: 'data',
+                    action: 'read',
+                    expireTimeMs: null,
+                },
+                {
+                    marker: 'friends',
+                    resourceKind: 'data',
+                    action: 'list',
+                    expireTimeMs: null,
+                },
+                {
+                    marker: 'friends',
+                    resourceKind: 'inst',
+                    resourceId: null,
+                    action: 'read',
+                    expireTimeMs: null,
+                },
+            ]);
+        });
+
+        it('should support the deprecated permission field', async () => {
+            const permission: SharedMarkerPermission = {
+                marker: 'friends',
+                resourceKind: 'data',
+                action: 'read',
+                options: {},
+                expireTimeMs: null,
+            };
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/permissions/shared/request`,
+                    JSON.stringify({
+                        recordName,
+                        permission,
+                    }),
+                    apiHeaders
+                )
+            );
+
+            const body = await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    sharedPermissionId: expect.any(String),
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const sharedPermission = await store.findSharedPermissionById(
+                body.sharedPermissionId
+            );
+            // options is not part of the input schema, so it is not stored.
+            expect(sharedPermission.permissions).toEqual([
+                {
+                    marker: 'friends',
+                    resourceKind: 'data',
+                    action: 'read',
+                    expireTimeMs: null,
+                },
+            ]);
+        });
+
+        it('should return unacceptable_request if no permissions are provided', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/permissions/shared/request`,
+                    JSON.stringify({
+                        recordName,
+                        permissions: [],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage: expect.any(String),
+                    issues: expect.any(Array),
+                },
+                headers: apiCorsHeaders,
+            });
+        });
     });
 
     describe('POST /api/v2/records/permissions/revoke', () => {
