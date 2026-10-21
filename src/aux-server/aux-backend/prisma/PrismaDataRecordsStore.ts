@@ -24,6 +24,7 @@ import type {
     UserPolicy,
     ListDataStoreByMarkerRequest,
 } from '@casual-simulation/aux-records';
+import { buildPrismaJsonWhereFilter } from '@casual-simulation/aux-records';
 
 import type { PrismaClient } from './generated';
 import { Prisma } from './generated';
@@ -197,12 +198,23 @@ export class PrismaDataRecordsStore implements DataRecordsStore {
             }
         }
 
+        let countQuery: Prisma.DataRecordWhereInput = {
+            recordName: request.recordName,
+            markers: { has: request.marker },
+        };
+
+        if (request.filter) {
+            const filterCondition = buildPrismaJsonWhereFilter(
+                request.filter,
+                'data'
+            ) as Prisma.DataRecordWhereInput;
+            query = { AND: [query, filterCondition] };
+            countQuery = { AND: [countQuery, filterCondition] };
+        }
+
         const [count, records] = await Promise.all([
             (this._collection.count as PrismaClient['dataRecord']['count'])({
-                where: {
-                    recordName: request.recordName,
-                    markers: { has: request.marker },
-                },
+                where: countQuery,
             }),
             (
                 this._collection
