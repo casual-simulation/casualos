@@ -7672,8 +7672,17 @@ describe('AuxRuntime', () => {
                     if (type === 'interpreted') {
                         expect(keys).toEqual(['console', 'testValue'].sort());
                     } else {
+                        // Object.keys() on a VM context global (like Jest's) can omit
+                        // enumerable properties in newer Node versions, so compute the
+                        // expected keys from the property descriptors instead.
+                        const expectedKeys = Reflect.ownKeys(globalThis).filter(
+                            (k): k is string =>
+                                typeof k === 'string' &&
+                                Object.getOwnPropertyDescriptor(globalThis, k)
+                                    ?.enumerable === true
+                        );
                         expect(keys).toEqual(
-                            [...Object.keys(globalThis), 'testValue'].sort()
+                            [...expectedKeys, 'testValue'].sort()
                         );
                     }
                 });
