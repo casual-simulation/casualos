@@ -536,7 +536,7 @@ Object {
         "type": "object",
       },
       "name": "completeLogin",
-      "origins": "account",
+      "origins": "login",
     },
     Object {
       "http": Object {
@@ -2386,7 +2386,7 @@ Object {
         "type": "object",
       },
       "name": "getUserInfo",
-      "origins": "account",
+      "origins": "login",
     },
     Object {
       "http": Object {
@@ -4578,7 +4578,7 @@ Object {
         "type": "object",
       },
       "name": "listSessions",
-      "origins": "account",
+      "origins": "login",
     },
     Object {
       "http": Object {
@@ -6367,7 +6367,7 @@ Object {
         "path": "/api/v2/replaceSession",
       },
       "name": "replaceSession",
-      "origins": "account",
+      "origins": "login",
     },
     Object {
       "http": Object {
@@ -6466,11 +6466,16 @@ Object {
             "optional": true,
             "type": "string",
           },
+          "strictCustomDomain": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "boolean",
+          },
         },
         "type": "object",
       },
       "name": "requestLogin",
-      "origins": "account",
+      "origins": "login",
     },
     Object {
       "http": Object {
@@ -8211,7 +8216,7 @@ Object {
         "type": "object",
       },
       "name": "revokeAllSessions",
-      "origins": "account",
+      "origins": "login",
     },
     Object {
       "http": Object {
@@ -8320,7 +8325,7 @@ Object {
         "type": "object",
       },
       "name": "revokeSession",
-      "origins": "account",
+      "origins": "login",
     },
     Object {
       "http": Object {
@@ -13473,7 +13478,7 @@ Object {
         "type": "object",
       },
       "name": "completeLogin",
-      "origins": "account",
+      "origins": "login",
     },
     Object {
       "http": Object {
@@ -15323,7 +15328,7 @@ Object {
         "type": "object",
       },
       "name": "getUserInfo",
-      "origins": "account",
+      "origins": "login",
     },
     Object {
       "http": Object {
@@ -17515,7 +17520,7 @@ Object {
         "type": "object",
       },
       "name": "listSessions",
-      "origins": "account",
+      "origins": "login",
     },
     Object {
       "http": Object {
@@ -19304,7 +19309,7 @@ Object {
         "path": "/api/v2/replaceSession",
       },
       "name": "replaceSession",
-      "origins": "account",
+      "origins": "login",
     },
     Object {
       "http": Object {
@@ -19403,11 +19408,16 @@ Object {
             "optional": true,
             "type": "string",
           },
+          "strictCustomDomain": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "boolean",
+          },
         },
         "type": "object",
       },
       "name": "requestLogin",
-      "origins": "account",
+      "origins": "login",
     },
     Object {
       "http": Object {
@@ -21148,7 +21158,7 @@ Object {
         "type": "object",
       },
       "name": "revokeAllSessions",
-      "origins": "account",
+      "origins": "login",
     },
     Object {
       "http": Object {
@@ -21257,7 +21267,7 @@ Object {
         "type": "object",
       },
       "name": "revokeSession",
-      "origins": "account",
+      "origins": "login",
     },
     Object {
       "http": Object {

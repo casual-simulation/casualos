@@ -75,6 +75,19 @@
     -   `POST /api/v2/login/openid` (`requestOpenIDLogin`) now accepts optional `comId` and `customDomain` parameters. They work the same way as they do for email/SMS logins: `comId` takes precedence, and a `customDomain` is only used if it is verified.
     -   Added the `comIds` option to `serverConfig.openid.providers[]`. Set it to `true` to allow any comId, or to a list of comIds that are allowed. Defaults to `false`, which means the provider can only be used for accounts that are not tied to a studio. Custom domain logins are checked against the comId of the studio that owns the domain.
     -   OpenID identities are now scoped to the studio they are linked in, so the same OpenID account can have a separate CasualOS account in each studio (like how email addresses work). Session keys for accounts in a different studio are ignored when linking.
+-   Apps on verified custom domains can now sign users in ([#899](https://github.com/casual-simulation/casualos/issues/899)).
+    -   `requestLogin`, `completeLogin`, `getUserInfo`, `listSessions`, `replaceSession`, `revokeSession` and `revokeAllSessions` now accept requests from verified custom domains as well as from `ALLOWED_ORIGINS`. Other account endpoints are unchanged.
+    -   A login started from a verified custom domain always goes to the user pool of the studio that owns the domain. A login from that domain that asks for a different `comId`, `loginStudioId` or `customDomain` is rejected with `invalid_origin`.
+    -   `completeLogin` from a verified custom domain only completes logins for users in that domain's studio.
+    -   Added the `'login'` option for procedure origins, which allows the configured account origins and verified custom domains.
+-   Added the `strictCustomDomain` option to `requestLogin` ([#908](https://github.com/casual-simulation/casualos/issues/908)).
+    -   When `true`, a login whose `customDomain` is not a verified custom domain fails with `not_found` and creates no user, instead of falling back to `loginStudioId` or the global user pool.
+    -   Defaults to `false`, because the auth site sends the referrer's hostname as `customDomain`, which usually isn't a custom domain.
+
+### :bug: Bug Fixes
+
+-   Fixed `verifyCustomDomain` failing with a server error when the domain had no TXT records or no CNAME record. Missing records are now treated as empty, and the error message says which records were not found ([#903](https://github.com/casual-simulation/casualos/issues/903)).
+-   Custom domain names are now normalized when they are added and looked up: they are lower-cased, a trailing dot is removed and internationalized names are converted to punycode. `addCustomDomain` now rejects values that aren't valid host names, such as values with a scheme, port, path or wildcard, and IP addresses ([#904](https://github.com/casual-simulation/casualos/issues/904)).
 
 ## V4.2.7
 
