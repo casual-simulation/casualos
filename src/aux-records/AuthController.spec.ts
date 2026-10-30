@@ -25,6 +25,7 @@ import type {
 import {
     AuthController,
     findRelyingPartyForOrigin,
+    INVALID_REQUEST_ERROR_MESSAGE,
     getPrivacyFeaturesFromPermissions,
     INVALID_KEY_ERROR_MESSAGE,
     INVALID_TOKEN_ERROR_MESSAGE,
@@ -1142,6 +1143,170 @@ describe('AuthController', () => {
             expect(randomBytesMock).toHaveBeenCalledWith(4);
         });
 
+        describe('custom domains', () => {
+            beforeEach(async () => {
+                await store.addStudio({
+                    id: 'studio1',
+                    displayName: 'Studio 1',
+                    comId: 'comId1',
+                });
+                await store.addStudio({
+                    id: 'studio2',
+                    displayName: 'Studio 2',
+                    comId: 'comId2',
+                });
+
+                await store.saveCustomDomain({
+                    id: 'customdomain1',
+                    domainName: 'studio1.example.com',
+                    studioId: 'studio1',
+                    verificationKey: 'verification',
+                    verified: true,
+                });
+                await store.saveCustomDomain({
+                    id: 'customdomain2',
+                    domainName: 'unverified.example.com',
+                    studioId: 'studio1',
+                    verificationKey: 'verification',
+                    verified: null,
+                });
+
+                nowMock.mockReturnValue(100);
+                randomBytesMock
+                    .mockReturnValueOnce(new Uint8Array([1, 2, 3]))
+                    .mockReturnValueOnce(new Uint8Array([4, 5, 6, 7]));
+                uuidMock.mockReturnValueOnce('uuid1');
+            });
+
+            it.each([
+                ['unverified', 'unverified.example.com'],
+                ['unknown', 'missing.example.com'],
+                ['invalid', 'https://studio1.example.com/path'],
+            ])(
+                'should ignore %s custom domains',
+                async (desc, customDomain) => {
+                    const response = await controller.requestLogin({
+                        address: 'test@example.com',
+                        addressType: 'email',
+                        ipAddress: '127.0.0.1',
+                        customDomain,
+                    });
+
+                    expect(response.success).toBe(true);
+                    expect(store.users).toEqual([
+                        expect.objectContaining({
+                            id: 'uuid1',
+                            loginStudioId: undefined,
+                        }),
+                    ]);
+                }
+            );
+
+            it('should reject an unverified custom domain when the request comes from a custom domain', async () => {
+                const response = await controller.requestLogin({
+                    address: 'test@example.com',
+                    addressType: 'email',
+                    ipAddress: '127.0.0.1',
+                    customDomain: 'unverified.example.com',
+                    originStudioId: 'studio1',
+                });
+
+                expect(response).toEqual({
+                    success: false,
+                    errorCode: 'invalid_origin',
+                    errorMessage:
+                        'Logins from this domain can only be made for the comID that owns it.',
+                });
+                expect(store.users).toEqual([]);
+            });
+
+            it('should normalize the custom domain name', async () => {
+                const response = await controller.requestLogin({
+                    address: 'test@example.com',
+                    addressType: 'email',
+                    ipAddress: '127.0.0.1',
+                    customDomain: 'Studio1.Example.com.',
+                });
+
+                expect(response.success).toBe(true);
+                expect(store.users).toEqual([
+                    expect.objectContaining({
+                        id: 'uuid1',
+                        loginStudioId: 'studio1',
+                    }),
+                ]);
+            });
+
+            it('should use the origin studio when no studio is requested', async () => {
+                const response = await controller.requestLogin({
+                    address: 'test@example.com',
+                    addressType: 'email',
+                    ipAddress: '127.0.0.1',
+                    originStudioId: 'studio1',
+                });
+
+                expect(response.success).toBe(true);
+                expect(store.users).toEqual([
+                    expect.objectContaining({
+                        id: 'uuid1',
+                        loginStudioId: 'studio1',
+                    }),
+                ]);
+            });
+
+            it.each([
+                ['comId', { comId: 'comId1' }],
+                ['loginStudioId', { loginStudioId: 'studio1' }],
+                ['customDomain', { customDomain: 'studio1.example.com' }],
+            ] as const)(
+                'should allow a %s that matches the origin studio',
+                async (desc, studio) => {
+                    const response = await controller.requestLogin({
+                        address: 'test@example.com',
+                        addressType: 'email',
+                        ipAddress: '127.0.0.1',
+                        originStudioId: 'studio1',
+                        ...studio,
+                    });
+
+                    expect(response.success).toBe(true);
+                    expect(store.users).toEqual([
+                        expect.objectContaining({
+                            id: 'uuid1',
+                            loginStudioId: 'studio1',
+                        }),
+                    ]);
+                }
+            );
+
+            it.each([
+                ['comId', { comId: 'comId2' }],
+                ['loginStudioId', { loginStudioId: 'studio2' }],
+                ['customDomain', { customDomain: 'studio1.example.com' }],
+            ] as const)(
+                'should reject a %s that does not match the origin studio',
+                async (desc, studio) => {
+                    const response = await controller.requestLogin({
+                        address: 'test@example.com',
+                        addressType: 'email',
+                        ipAddress: '127.0.0.1',
+                        originStudioId:
+                            desc === 'customDomain' ? 'studio2' : 'studio1',
+                        ...studio,
+                    });
+
+                    expect(response).toEqual({
+                        success: false,
+                        errorCode: 'invalid_origin',
+                        errorMessage:
+                            'Logins from this domain can only be made for the comID that owns it.',
+                    });
+                    expect(store.users).toEqual([]);
+                    expect(messenger.messages).toEqual([]);
+                }
+            );
+        });
+
         it('should fail if the given email is longer than 200 characters long', async () => {
             const salt = new Uint8Array([1, 2, 3]);
             const code = new Uint8Array([4, 5, 6, 7]);
@@ -1512,6 +1677,74 @@ describe('AuthController', () => {
                         currentLoginRequestId: requestId,
                     },
                 ]);
+            });
+
+            describe('originStudioId', () => {
+                const requestId = fromByteArray(new Uint8Array([1, 2, 3]));
+                const code = codeNumber(new Uint8Array([4, 5, 6, 7]));
+
+                beforeEach(async () => {
+                    await store.saveUser({
+                        id: 'myid',
+                        email: type === 'email' ? address : null,
+                        phoneNumber: type === 'phone' ? address : null,
+                        currentLoginRequestId: requestId,
+                        allSessionRevokeTimeMs: undefined,
+                        loginStudioId: 'studio1',
+                    });
+
+                    await store.saveLoginRequest({
+                        userId: 'myid',
+                        requestId: requestId,
+                        secretHash: hashLowEntropyPasswordWithSalt(
+                            code,
+                            requestId
+                        ),
+                        expireTimeMs: 200,
+                        requestTimeMs: 100,
+                        completedTimeMs: null,
+                        attemptCount: 0,
+                        address,
+                        addressType: type,
+                        ipAddress: '127.0.0.1',
+                    });
+
+                    nowMock.mockReturnValue(150);
+                    randomBytesMock
+                        .mockReturnValueOnce(new Uint8Array([7, 8, 9]))
+                        .mockReturnValueOnce(new Uint8Array([10, 11, 12]))
+                        .mockReturnValueOnce(new Uint8Array([11, 12, 13]));
+                });
+
+                it('should complete the login if the user belongs to the origin studio', async () => {
+                    const response = await controller.completeLogin({
+                        userId: 'myid',
+                        requestId: requestId,
+                        code: code,
+                        ipAddress: '127.0.0.1',
+                        originStudioId: 'studio1',
+                    });
+
+                    expect(response.success).toBe(true);
+                    expect(store.sessions).toHaveLength(1);
+                });
+
+                it('should reject the login if the user belongs to a different studio', async () => {
+                    const response = await controller.completeLogin({
+                        userId: 'myid',
+                        requestId: requestId,
+                        code: code,
+                        ipAddress: '127.0.0.1',
+                        originStudioId: 'studio2',
+                    });
+
+                    expect(response).toEqual({
+                        success: false,
+                        errorCode: 'invalid_request',
+                        errorMessage: INVALID_REQUEST_ERROR_MESSAGE,
+                    });
+                    expect(store.sessions).toEqual([]);
+                });
             });
 
             it('should fail if the request doesnt exist', async () => {

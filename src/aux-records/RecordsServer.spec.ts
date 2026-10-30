@@ -49,6 +49,7 @@ import type { RelyingParty } from './AuthController';
 import {
     AuthController,
     INVALID_KEY_ERROR_MESSAGE,
+    INVALID_REQUEST_ERROR_MESSAGE,
     PRIVO_OPEN_ID_PROVIDER,
 } from './AuthController';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
@@ -4087,6 +4088,252 @@ describe('RecordsServer', () => {
             });
 
             expect(loginResult.success).toBe(true);
+        });
+
+        describe('custom domains', () => {
+            const customOrigin = 'https://bible.church.org';
+
+            beforeEach(async () => {
+                await store.addStudio({
+                    id: 'studio1',
+                    displayName: 'Studio 1',
+                    comId: 'comId1',
+                });
+                await store.addStudio({
+                    id: 'studio2',
+                    displayName: 'Studio 2',
+                    comId: 'comId2',
+                });
+                await store.saveCustomDomain({
+                    id: 'customDomain1',
+                    studioId: 'studio1',
+                    domainName: 'bible.church.org',
+                    verificationKey: 'verificationKey',
+                    verified: true,
+                });
+                await store.saveCustomDomain({
+                    id: 'customDomain2',
+                    studioId: 'studio1',
+                    domainName: 'unverified.church.org',
+                    verificationKey: 'verificationKey',
+                    verified: null,
+                });
+            });
+
+            it('should allow logins from a verified custom domain into the domain studio', async () => {
+                const result = await server.handleHttpRequest(
+                    httpPost(
+                        `/api/v2/login`,
+                        JSON.stringify({
+                            address: 'custom@example.com',
+                            addressType: 'email',
+                        }),
+                        {
+                            origin: customOrigin,
+                        },
+                        '123.456.789'
+                    )
+                );
+
+                await expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: expect.objectContaining({
+                        success: true,
+                    }),
+                    headers: corsHeaders(customOrigin),
+                });
+
+                const data = JSON.parse(result.body as string);
+                const user = await store.findUser(data.userId);
+                expect(user?.loginStudioId).toBe('studio1');
+
+                const messages = authMessenger.messages.filter(
+                    (m) => m.address === 'custom@example.com'
+                );
+                const lastMessage = messages[messages.length - 1];
+
+                const completeResult = await server.handleHttpRequest(
+                    httpPost(
+                        `/api/v2/completeLogin`,
+                        JSON.stringify({
+                            userId: data.userId,
+                            requestId: data.requestId,
+                            code: lastMessage.code,
+                        }),
+                        {
+                            origin: customOrigin,
+                        },
+                        '123.456.789'
+                    )
+                );
+
+                await expectResponseBodyToEqual(completeResult, {
+                    statusCode: 200,
+                    body: expect.objectContaining({
+                        success: true,
+                        userId: data.userId,
+                    }),
+                    headers: corsHeaders(customOrigin),
+                });
+            });
+
+            it('should support procedures', async () => {
+                const result = await server.handleHttpRequest(
+                    procedureRequest(
+                        `requestLogin`,
+                        {
+                            address: 'custom@example.com',
+                            addressType: 'email',
+                        },
+                        {
+                            origin: customOrigin,
+                        },
+                        '123.456.789'
+                    )
+                );
+
+                await expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: expect.objectContaining({
+                        success: true,
+                    }),
+                    headers: corsHeaders(customOrigin),
+                });
+
+                const data = JSON.parse(result.body as string);
+                const user = await store.findUser(data.userId);
+                expect(user?.loginStudioId).toBe('studio1');
+            });
+
+            it('should reject logins from a verified custom domain for a different comId', async () => {
+                const result = await server.handleHttpRequest(
+                    httpPost(
+                        `/api/v2/login`,
+                        JSON.stringify({
+                            address: 'custom@example.com',
+                            addressType: 'email',
+                            comId: 'comId2',
+                        }),
+                        {
+                            origin: customOrigin,
+                        },
+                        '123.456.789'
+                    )
+                );
+
+                await expectResponseBodyToEqual(result, {
+                    statusCode: 403,
+                    body: {
+                        success: false,
+                        errorCode: 'invalid_origin',
+                        errorMessage:
+                            'Logins from this domain can only be made for the comID that owns it.',
+                    },
+                    headers: corsHeaders(customOrigin),
+                });
+            });
+
+            it('should reject completing a login from a custom domain for a user in a different studio', async () => {
+                const loginResult = await authController.requestLogin({
+                    address: 'custom@example.com',
+                    addressType: 'email',
+                    ipAddress: '123.456.789',
+                    comId: 'comId2',
+                });
+
+                if (loginResult.success === false) {
+                    throw new Error('Login request failed.');
+                }
+
+                const messages = authMessenger.messages.filter(
+                    (m) => m.address === 'custom@example.com'
+                );
+                const lastMessage = messages[messages.length - 1];
+
+                const result = await server.handleHttpRequest(
+                    httpPost(
+                        `/api/v2/completeLogin`,
+                        JSON.stringify({
+                            userId: loginResult.userId,
+                            requestId: loginResult.requestId,
+                            code: lastMessage.code,
+                        }),
+                        {
+                            origin: customOrigin,
+                        },
+                        '123.456.789'
+                    )
+                );
+
+                await expectResponseBodyToEqual(result, {
+                    statusCode: 403,
+                    body: {
+                        success: false,
+                        errorCode: 'invalid_request',
+                        errorMessage: INVALID_REQUEST_ERROR_MESSAGE,
+                    },
+                    headers: corsHeaders(customOrigin),
+                });
+            });
+
+            it.each([
+                ['unverified', 'https://unverified.church.org'],
+                ['unknown', 'https://unknown.church.org'],
+            ])(
+                'should reject logins from %s custom domains',
+                async (desc, origin) => {
+                    const result = await server.handleHttpRequest(
+                        httpPost(
+                            `/api/v2/login`,
+                            JSON.stringify({
+                                address: 'custom@example.com',
+                                addressType: 'email',
+                            }),
+                            {
+                                origin,
+                            },
+                            '123.456.789'
+                        )
+                    );
+
+                    await expectResponseBodyToEqual(result, {
+                        statusCode: 403,
+                        body: {
+                            success: false,
+                            errorCode: 'invalid_origin',
+                            errorMessage:
+                                'The request must be made from an authorized origin.',
+                        },
+                        headers: {},
+                    });
+                }
+            );
+
+            it('should not allow other account endpoints from custom domains', async () => {
+                const result = await server.handleHttpRequest(
+                    httpPost(
+                        `/api/v2/email/valid`,
+                        JSON.stringify({
+                            email: 'custom@example.com',
+                        }),
+                        {
+                            origin: customOrigin,
+                        },
+                        '123.456.789'
+                    )
+                );
+
+                await expectResponseBodyToEqual(result, {
+                    statusCode: 403,
+                    body: {
+                        success: false,
+                        errorCode: 'invalid_origin',
+                        errorMessage:
+                            'The request must be made from an authorized origin.',
+                    },
+                    headers: {},
+                });
+            });
         });
 
         testOrigin('POST', '/api/v2/login', () =>

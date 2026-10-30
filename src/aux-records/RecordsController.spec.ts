@@ -5381,6 +5381,32 @@ describe('RecordsController', () => {
                 })
             );
         });
+
+        it('should normalize the hostname before looking up the custom domain', async () => {
+            await store.addStudio({
+                id: 'studioId',
+                comId: 'customComId',
+                displayName: 'Studio',
+            });
+
+            await store.saveCustomDomain({
+                id: 'customDomainId',
+                domainName: 'custom.example.com',
+                studioId: 'studioId',
+                verificationKey: 'key',
+                verified: true,
+            });
+
+            const result = await manager.getWebConfig('Custom.Example.com.');
+
+            expect(result).toEqual(
+                success(
+                    expect.objectContaining({
+                        comId: 'customComId',
+                    })
+                )
+            );
+        });
     });
 
     describe('getAb1Bootstrap()', () => {
@@ -5599,6 +5625,60 @@ describe('RecordsController', () => {
                 'example.com',
                 domains[0].verificationKey,
                 'example.com'
+            );
+        });
+
+        it('should normalize the domain name', async () => {
+            domainNameValidator.getVerificationDNSRecord.mockResolvedValue(
+                success([])
+            );
+
+            const result = await manager.addCustomDomain({
+                userId,
+                studioId,
+                domain: 'Bible.Church.org.',
+            });
+
+            expect(result).toEqual(success([]));
+
+            const domains = await store.listCustomDomainsByStudioId(studioId);
+            expect(domains).toEqual([
+                expect.objectContaining({
+                    domainName: 'bible.church.org',
+                }),
+            ]);
+            expect(
+                domainNameValidator.getVerificationDNSRecord
+            ).toHaveBeenCalledWith(
+                'bible.church.org',
+                domains[0].verificationKey,
+                'example.com'
+            );
+        });
+
+        it.each([
+            ['https://example.com'],
+            ['example.com/path'],
+            ['example.com:8080'],
+            ['*.example.com'],
+            ['127.0.0.1'],
+            ['invalid..domain'],
+        ])('should reject %s', async (domain) => {
+            const result = await manager.addCustomDomain({
+                userId,
+                studioId,
+                domain,
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The given domain is not a valid host name. It should look like "app.example.com", without a scheme, port, path or wildcard.',
+                })
+            );
+            expect(await store.listCustomDomainsByStudioId(studioId)).toEqual(
+                []
             );
         });
 
@@ -5852,7 +5932,7 @@ describe('RecordsController', () => {
             const result = await manager.addCustomDomain({
                 userId,
                 studioId,
-                domain: 'invalid..domain',
+                domain: 'example.com',
             });
 
             expect(result).toEqual(
