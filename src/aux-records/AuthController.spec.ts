@@ -1202,6 +1202,50 @@ describe('AuthController', () => {
                 }
             );
 
+            it.each([
+                ['unverified', 'unverified.example.com'],
+                ['unknown', 'missing.example.com'],
+                ['invalid', 'https://studio1.example.com/path'],
+            ])(
+                'should reject %s custom domains when strictCustomDomain is true',
+                async (desc, customDomain) => {
+                    const response = await controller.requestLogin({
+                        address: 'test@example.com',
+                        addressType: 'email',
+                        ipAddress: '127.0.0.1',
+                        customDomain,
+                        strictCustomDomain: true,
+                    });
+
+                    expect(response).toEqual({
+                        success: false,
+                        errorCode: 'not_found',
+                        errorMessage:
+                            'The specified custom domain was not found.',
+                    });
+                    expect(store.users).toEqual([]);
+                    expect(messenger.messages).toEqual([]);
+                }
+            );
+
+            it('should allow verified custom domains when strictCustomDomain is true', async () => {
+                const response = await controller.requestLogin({
+                    address: 'test@example.com',
+                    addressType: 'email',
+                    ipAddress: '127.0.0.1',
+                    customDomain: 'studio1.example.com',
+                    strictCustomDomain: true,
+                });
+
+                expect(response.success).toBe(true);
+                expect(store.users).toEqual([
+                    expect.objectContaining({
+                        id: 'uuid1',
+                        loginStudioId: 'studio1',
+                    }),
+                ]);
+            });
+
             it('should reject an unverified custom domain when the request comes from a custom domain', async () => {
                 const response = await controller.requestLogin({
                     address: 'test@example.com',

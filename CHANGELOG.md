@@ -80,6 +80,9 @@
     -   A login started from a verified custom domain always goes to the user pool of the studio that owns the domain. A login from that domain that asks for a different `comId`, `loginStudioId` or `customDomain` is rejected with `invalid_origin`.
     -   `completeLogin` from a verified custom domain only completes logins for users in that domain's studio.
     -   Added the `'login'` option for procedure origins, which allows the configured account origins and verified custom domains.
+-   Added the `strictCustomDomain` option to `requestLogin` ([#908](https://github.com/casual-simulation/casualos/issues/908)).
+    -   When `true`, a login whose `customDomain` is not a verified custom domain fails with `not_found` and creates no user, instead of falling back to `loginStudioId` or the global user pool.
+    -   Defaults to `false`, because the auth site sends the referrer's hostname as `customDomain`, which usually isn't a custom domain.
 
 ### :bug: Bug Fixes
 

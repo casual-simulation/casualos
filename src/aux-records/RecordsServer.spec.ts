@@ -4205,6 +4205,35 @@ describe('RecordsServer', () => {
                 expect(user?.loginStudioId).toBe('studio1');
             });
 
+            it('should pass strictCustomDomain to the controller', async () => {
+                const result = await server.handleHttpRequest(
+                    httpPost(
+                        `/api/v2/login`,
+                        JSON.stringify({
+                            address: 'custom@example.com',
+                            addressType: 'email',
+                            customDomain: 'unverified.church.org',
+                            strictCustomDomain: true,
+                        }),
+                        {
+                            origin: 'https://account-origin.com',
+                        },
+                        '123.456.789'
+                    )
+                );
+
+                await expectResponseBodyToEqual(result, {
+                    statusCode: 404,
+                    body: {
+                        success: false,
+                        errorCode: 'not_found',
+                        errorMessage:
+                            'The specified custom domain was not found.',
+                    },
+                    headers: accountCorsHeaders,
+                });
+            });
+
             it('should reject logins from a verified custom domain for a different comId', async () => {
                 const result = await server.handleHttpRequest(
                     httpPost(

@@ -1261,6 +1261,7 @@ export class RecordsServer {
                         loginStudioId: z.string().nullable().optional(),
                         comId: z.string().nullable().optional(),
                         customDomain: z.string().nullable().optional(),
+                        strictCustomDomain: z.boolean().nullable().optional(),
                     })
                 )
                 .handler(
@@ -1271,6 +1272,7 @@ export class RecordsServer {
                             loginStudioId,
                             comId,
                             customDomain,
+                            strictCustomDomain,
                         },
                         context
                     ) => {
@@ -1281,6 +1283,7 @@ export class RecordsServer {
                             loginStudioId,
                             comId,
                             customDomain,
+                            strictCustomDomain,
                             originStudioId: await this._getOriginStudioId(
                                 context
                             ),

@@ -517,8 +517,17 @@ export class AuthController {
                       )
                     : null;
 
+                if (!customDomain && request.strictCustomDomain) {
+                    return {
+                        success: false,
+                        errorCode: 'not_found',
+                        errorMessage:
+                            'The specified custom domain was not found.',
+                    };
+                }
+
                 // The auth site sends the referrer's hostname as the custom domain,
-                // so hostnames that aren't verified custom domains have to be ignored.
+                // so by default hostnames that aren't verified custom domains have to be ignored.
                 if (customDomain) {
                     console.log(
                         `[AuthController] [requestLogin] Logging into studio (${customDomain.studioId}) for custom domain: ${request.customDomain}.`
@@ -4162,9 +4171,15 @@ export interface LoginRequest {
      * The custom domain (i.e. hostname) that the login is for.
      *
      * If specified, then the hostname will be used to determine the studio/comID that the login is for.
-     * Hostnames that are not verified custom domains are ignored.
+     * Hostnames that are not verified custom domains are ignored, unless strictCustomDomain is true.
      */
     customDomain?: string | null;
+
+    /**
+     * Whether the login should be rejected with a not_found error if customDomain is not a verified custom domain.
+     * If false or omitted, then unverified custom domains are ignored and the login uses loginStudioId or the global user pool.
+     */
+    strictCustomDomain?: boolean | null;
 
     /**
      * The ID of the studio that owns the verified custom domain that the request was sent from.
