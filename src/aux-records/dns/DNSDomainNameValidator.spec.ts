@@ -147,6 +147,82 @@ describe('DNSDomainNameValidator', () => {
             );
         });
 
+        it('should say which records are missing when only a mismatched CNAME exists', async () => {
+            resolveTxtMock.mockRejectedValue(dnsError('ENODATA'));
+            resolveCnameMock.mockResolvedValue(['other.example.com']);
+
+            const result = await validator.validateDomainName(
+                'app.example.com',
+                'key',
+                'casualos.example.com'
+            );
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_found',
+                    errorMessage:
+                        'No DNS TXT records were found for the domain name, and the CNAME record does not point to the expected host name.',
+                })
+            );
+        });
+
+        it('should say that both records are wrong when neither matches', async () => {
+            resolveTxtMock.mockResolvedValue([['casualos-verification=wrong']]);
+            resolveCnameMock.mockResolvedValue(['other.example.com']);
+
+            const result = await validator.validateDomainName(
+                'app.example.com',
+                'key',
+                'casualos.example.com'
+            );
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_found',
+                    errorMessage:
+                        'The DNS TXT records do not contain the expected verification value, and the CNAME record does not point to the expected host name.',
+                })
+            );
+        });
+
+        it('should return record_already_exists when there are multiple CNAME records', async () => {
+            resolveTxtMock.mockRejectedValue(dnsError('ENODATA'));
+            resolveCnameMock.mockResolvedValue([
+                'casualos.example.com',
+                'other.example.com',
+            ]);
+
+            const result = await validator.validateDomainName(
+                'app.example.com',
+                'key',
+                'casualos.example.com'
+            );
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'record_already_exists',
+                    errorMessage:
+                        'Multiple CNAME records found for the domain name. Please ensure that only one CNAME record is set for the domain name.',
+                })
+            );
+        });
+
+        it('should ignore TXT records that are not verification records', async () => {
+            resolveTxtMock.mockResolvedValue([
+                ['v=spf1 include:example.com ~all'],
+                ['other', expectedTxt],
+            ]);
+            resolveCnameMock.mockRejectedValue(dnsError('ENODATA'));
+
+            const result = await validator.validateDomainName(
+                'app.example.com',
+                'key',
+                'casualos.example.com'
+            );
+
+            expect(result).toEqual(success());
+        });
+
         it('should rethrow other DNS errors', async () => {
             resolveTxtMock.mockRejectedValue(dnsError('ETIMEOUT'));
 

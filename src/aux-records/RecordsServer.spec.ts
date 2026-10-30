@@ -3824,6 +3824,149 @@ describe('RecordsServer', () => {
         );
     });
 
+    describe('session endpoints from custom domains', () => {
+        const customOrigin = 'https://bible.church.org';
+
+        beforeEach(async () => {
+            await store.addStudio({
+                id: 'customStudio',
+                displayName: 'Custom Studio',
+                comId: 'customComId',
+            });
+            await store.saveCustomDomain({
+                id: 'customDomain1',
+                studioId: 'customStudio',
+                domainName: 'bible.church.org',
+                verificationKey: 'verificationKey',
+                verified: true,
+            });
+            await store.saveCustomDomain({
+                id: 'customDomain2',
+                studioId: 'customStudio',
+                domainName: 'unverified.church.org',
+                verificationKey: 'verificationKey',
+                verified: null,
+            });
+        });
+
+        const endpoints: [
+            string,
+            () => GenericHttpRequest['method'],
+            () => string,
+            () => string | null
+        ][] = [
+            [
+                'GET /api/v2/sessions',
+                () => 'GET',
+                () => '/api/v2/sessions',
+                () => null,
+            ],
+            [
+                'POST /api/v2/replaceSession',
+                () => 'POST',
+                () => '/api/v2/replaceSession',
+                () => '',
+            ],
+            [
+                'POST /api/v2/revokeSession',
+                () => 'POST',
+                () => '/api/v2/revokeSession',
+                () => JSON.stringify({ userId, sessionId }),
+            ],
+            [
+                'POST /api/v2/revokeAllSessions',
+                () => 'POST',
+                () => '/api/v2/revokeAllSessions',
+                () => JSON.stringify({ userId }),
+            ],
+            [
+                'getUserInfo',
+                () => 'POST',
+                () => '/api/v3/callProcedure',
+                () =>
+                    JSON.stringify({
+                        procedure: 'getUserInfo',
+                        input: { userId },
+                    }),
+            ],
+        ];
+
+        describe.each(endpoints)('%s', (desc, method, url, body) => {
+            it('should allow requests from a verified custom domain', async () => {
+                const result = await server.handleHttpRequest(
+                    httpRequest(method(), url(), body(), {
+                        origin: customOrigin,
+                        authorization: `Bearer ${sessionKey}`,
+                    })
+                );
+
+                await expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: expect.objectContaining({
+                        success: true,
+                    }),
+                    headers: expect.objectContaining(corsHeaders(customOrigin)),
+                });
+            });
+
+            it.each([
+                ['unverified', 'https://unverified.church.org'],
+                ['unknown', 'https://unknown.church.org'],
+            ])(
+                'should reject requests from %s custom domains',
+                async (originDesc, origin) => {
+                    const result = await server.handleHttpRequest(
+                        httpRequest(method(), url(), body(), {
+                            origin,
+                            authorization: `Bearer ${sessionKey}`,
+                        })
+                    );
+
+                    await expectResponseBodyToEqual(result, {
+                        statusCode: 403,
+                        body: {
+                            success: false,
+                            errorCode: 'invalid_origin',
+                            errorMessage:
+                                'The request must be made from an authorized origin.',
+                        },
+                        headers: expect.any(Object),
+                    });
+                }
+            );
+        });
+
+        it('should allow CORS preflight requests from a verified custom domain', async () => {
+            const result = await server.handleHttpRequest(
+                httpRequest('OPTIONS', `/api/v2/login`, null, {
+                    origin: customOrigin,
+                })
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 204,
+                body: undefined,
+                headers: {
+                    'Access-Control-Allow-Origin': customOrigin,
+                    'Access-Control-Allow-Methods':
+                        'POST, PUT, DELETE, OPTIONS',
+                    'Access-Control-Allow-Headers':
+                        'Content-Type, Authorization',
+                },
+            });
+        });
+
+        it('should reject CORS preflight requests from unknown custom domains', async () => {
+            const result = await server.handleHttpRequest(
+                httpRequest('OPTIONS', `/api/v2/login`, null, {
+                    origin: 'https://unknown.church.org',
+                })
+            );
+
+            expect(result.statusCode).toBe(403);
+        });
+    });
+
     describe('POST /api/v2/completeLogin', () => {
         let requestId: string;
         let code: string;
@@ -4232,6 +4375,94 @@ describe('RecordsServer', () => {
                     },
                     headers: accountCorsHeaders,
                 });
+            });
+
+            it('should reject logins from a verified custom domain for a different loginStudioId', async () => {
+                const result = await server.handleHttpRequest(
+                    httpPost(
+                        `/api/v2/login`,
+                        JSON.stringify({
+                            address: 'custom@example.com',
+                            addressType: 'email',
+                            loginStudioId: 'studio2',
+                        }),
+                        {
+                            origin: customOrigin,
+                        },
+                        '123.456.789'
+                    )
+                );
+
+                await expectResponseBodyToEqual(result, {
+                    statusCode: 403,
+                    body: {
+                        success: false,
+                        errorCode: 'invalid_origin',
+                        errorMessage:
+                            'Logins from this domain can only be made for the comID that owns it.',
+                    },
+                    headers: corsHeaders(customOrigin),
+                });
+            });
+
+            it('should use the host header when the request has no origin', async () => {
+                const result = await server.handleHttpRequest(
+                    httpPost(
+                        `/api/v2/login`,
+                        JSON.stringify({
+                            address: 'custom@example.com',
+                            addressType: 'email',
+                        }),
+                        {
+                            host: 'bible.church.org',
+                        },
+                        '123.456.789'
+                    )
+                );
+
+                expect(result.statusCode).toBe(200);
+
+                const data = JSON.parse(result.body as string);
+                expect(data.success).toBe(true);
+                const user = await store.findUser(data.userId);
+                expect(user?.loginStudioId).toBe('studio1');
+            });
+
+            it('should not tie logins to a studio when the origin is also an allowed account origin', async () => {
+                await store.saveCustomDomain({
+                    id: 'customDomain3',
+                    studioId: 'studio2',
+                    domainName: 'account-origin.com',
+                    verificationKey: 'verificationKey',
+                    verified: true,
+                });
+
+                const result = await server.handleHttpRequest(
+                    httpPost(
+                        `/api/v2/login`,
+                        JSON.stringify({
+                            address: 'custom@example.com',
+                            addressType: 'email',
+                            comId: 'comId1',
+                        }),
+                        {
+                            origin: accountOrigin,
+                        },
+                        '123.456.789'
+                    )
+                );
+
+                await expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: expect.objectContaining({
+                        success: true,
+                    }),
+                    headers: accountCorsHeaders,
+                });
+
+                const data = JSON.parse(result.body as string);
+                const user = await store.findUser(data.userId);
+                expect(user?.loginStudioId).toBe('studio1');
             });
 
             it('should reject logins from a verified custom domain for a different comId', async () => {

@@ -6740,6 +6740,63 @@ describe('RecordsController', () => {
         });
     });
 
+    describe('getVerifiedCustomDomainByName()', () => {
+        beforeEach(async () => {
+            await store.addStudio({
+                id: 'studioId',
+                displayName: 'Test Studio',
+            });
+
+            await store.saveCustomDomain({
+                id: 'domain-1',
+                domainName: 'customdomain.com',
+                studioId: 'studioId',
+                verificationKey: 'key-1',
+                verified: true,
+            });
+            await store.saveCustomDomain({
+                id: 'domain-2',
+                domainName: 'unverified.com',
+                studioId: 'studioId',
+                verificationKey: 'key-2',
+                verified: null,
+            });
+        });
+
+        it.each([
+            ['customdomain.com'],
+            ['CustomDomain.COM'],
+            ['customdomain.com.'],
+        ])(
+            'should find the verified custom domain for %s',
+            async (hostname) => {
+                const result = await manager.getVerifiedCustomDomainByName(
+                    hostname
+                );
+                expect(result).toEqual(
+                    success(
+                        expect.objectContaining({
+                            id: 'domain-1',
+                            studioId: 'studioId',
+                        })
+                    )
+                );
+            }
+        );
+
+        it.each([
+            ['unverified.com'],
+            ['missing.com'],
+            ['https://customdomain.com'],
+            [''],
+        ])('should return null for %s', async (hostname) => {
+            const result = await manager.getVerifiedCustomDomainByName(
+                hostname
+            );
+            expect(result).toEqual(success(null));
+        });
+    });
+
     describe('getPlayerWebManifest()', () => {
         const studioId = 'studioId';
 
@@ -6797,6 +6854,31 @@ describe('RecordsController', () => {
 
             const result = await manager.getPlayerWebManifest(
                 'customdomain.com'
+            );
+            expect(result).toEqual(success(studioManifest));
+        });
+
+        it('should normalize the hostname before looking up the custom domain', async () => {
+            const studioManifest = WEB_MANIFEST_SCHEMA.parse({
+                name: 'Custom Domain Test',
+                short_name: 'CD Test',
+            } satisfies z.input<typeof WEB_MANIFEST_SCHEMA>);
+            await store.addStudio({
+                id: studioId,
+                displayName: 'Test Studio',
+                playerWebManifest: studioManifest,
+            });
+
+            await store.saveCustomDomain({
+                id: 'domain-1',
+                domainName: 'customdomain.com',
+                studioId,
+                verificationKey: 'key-1',
+                verified: true,
+            });
+
+            const result = await manager.getPlayerWebManifest(
+                'CustomDomain.com.'
             );
             expect(result).toEqual(success(studioManifest));
         });

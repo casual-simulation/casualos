@@ -1246,6 +1246,43 @@ describe('AuthController', () => {
                 ]);
             });
 
+            it('should return not_found for an unverified custom domain when strictCustomDomain is true and the request comes from a custom domain', async () => {
+                const response = await controller.requestLogin({
+                    address: 'test@example.com',
+                    addressType: 'email',
+                    ipAddress: '127.0.0.1',
+                    customDomain: 'unverified.example.com',
+                    strictCustomDomain: true,
+                    originStudioId: 'studio1',
+                });
+
+                expect(response).toEqual({
+                    success: false,
+                    errorCode: 'not_found',
+                    errorMessage: 'The specified custom domain was not found.',
+                });
+                expect(store.users).toEqual([]);
+            });
+
+            it('should allow strictCustomDomain with a custom domain that matches the origin studio', async () => {
+                const response = await controller.requestLogin({
+                    address: 'test@example.com',
+                    addressType: 'email',
+                    ipAddress: '127.0.0.1',
+                    customDomain: 'studio1.example.com',
+                    strictCustomDomain: true,
+                    originStudioId: 'studio1',
+                });
+
+                expect(response.success).toBe(true);
+                expect(store.users).toEqual([
+                    expect.objectContaining({
+                        id: 'uuid1',
+                        loginStudioId: 'studio1',
+                    }),
+                ]);
+            });
+
             it('should reject an unverified custom domain when the request comes from a custom domain', async () => {
                 const response = await controller.requestLogin({
                     address: 'test@example.com',
