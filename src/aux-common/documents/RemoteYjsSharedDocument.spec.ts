@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import { Subject, Subscription } from 'rxjs';
-import { Map as YMap, Text as YText } from 'yjs';
+import { applyUpdate, Map as YMap, Text as YText } from 'yjs';
 import { waitAsync } from '../test/TestHelpers';
 import { createDocFromUpdates, getUpdates } from '../test/YjsTestHelpers';
 import type {
@@ -34,8 +34,22 @@ import { PartitionAuthSource } from '../partitions/PartitionAuthSource';
 import { RemoteYjsSharedDocument } from './RemoteYjsSharedDocument';
 import type { SharedDocumentConfig } from './SharedDocumentConfig';
 import { testDocumentImplementation } from './test/DocumentTests';
-import { fromByteArray } from 'base64-js';
+import { fromByteArray, toByteArray } from 'base64-js';
 import type { RemoteClientEvent } from './SharedDocument';
+
+let mockWhenSynced: Promise<void> = Promise.resolve();
+let mockIndexedDbInstances: { name: string }[] = [];
+
+jest.mock('../yjs/YjsIndexedDBPersistence', () => ({
+    YjsIndexedDBPersistence: jest
+        .fn()
+        .mockImplementation((name: string, doc: unknown) => {
+            mockIndexedDbInstances.push({ name });
+            return {
+                whenSynced: mockWhenSynced,
+            };
+        }),
+}));
 
 console.log = jest.fn();
 
@@ -119,6 +133,8 @@ describe('RemoteYjsSharedDocument', () => {
 
             beforeEach(async () => {
                 connection = new MemoryConnectionClient();
+                mockWhenSynced = Promise.resolve();
+                mockIndexedDbInstances = [];
                 receiveEvent = new Subject<ReceiveDeviceActionMessage>();
                 addAtoms = new Subject<AddUpdatesMessage>();
                 updatesReceived = new Subject<UpdatesReceivedMessage>();
@@ -1818,6 +1834,41 @@ describe('RemoteYjsSharedDocument', () => {
             });
 
             describe('updates', () => {
+                it('should wait for IndexedDB hydration before watching the branch', async () => {
+                    let resolveHydration: () => void;
+                    const hydrationPromise = new Promise<void>((resolve) => {
+                        resolveHydration = resolve;
+                    });
+                    mockWhenSynced = hydrationPromise;
+
+                    setupPartition({
+                        recordName: recordName,
+                        inst: 'inst',
+                        branch: 'testBranch',
+                        localPersistence: {
+                            saveToIndexedDb: true,
+                        },
+                    });
+
+                    document.connect();
+                    await waitAsync();
+
+                    expect(connection.sentMessages).toEqual([]);
+                    expect(mockIndexedDbInstances.length).toBe(1);
+
+                    resolveHydration!();
+                    await waitAsync();
+
+                    expect(connection.sentMessages).toEqual([
+                        {
+                            type: 'repo/watch_branch',
+                            recordName,
+                            inst: 'inst',
+                            branch: 'testBranch',
+                        },
+                    ]);
+                });
+
                 it('should not send new updates to the server if in readOnly mode', async () => {
                     setupPartition({
                         recordName: recordName,
@@ -2031,6 +2082,218 @@ describe('RemoteYjsSharedDocument', () => {
                         initial: true,
                     });
 
+                    await waitAsync();
+
+                    const sentUpdates = connection.sentMessages.filter(
+                        (m) => m.type === 'repo/add_updates'
+                    );
+                    expect(sentUpdates.length).toBe(0);
+                });
+
+                it('should not send reconciliation updates when local state matches initial server state', async () => {
+                    setupPartition({
+                        recordName: recordName,
+                        inst: 'inst',
+                        branch: 'testBranch',
+                        localPersistence: {
+                            saveToIndexedDb: true,
+                        },
+                    });
+
+                    const updates = getUpdates((doc) => {
+                        doc.getMap('test').set('abc', 123);
+                    });
+
+                    for (let update of updates) {
+                        applyUpdate(document.doc, toByteArray(update));
+                    }
+
+                    document.connect();
+                    await waitAsync();
+
+                    addAtoms.next({
+                        type: 'repo/add_updates',
+                        recordName: recordName,
+                        inst: 'inst',
+                        branch: 'testBranch',
+                        updates,
+                        initial: true,
+                    });
+                    await waitAsync();
+
+                    const sentUpdates = connection.sentMessages.filter(
+                        (m) => m.type === 'repo/add_updates'
+                    );
+                    expect(sentUpdates.length).toBe(0);
+                });
+
+                it('should send exactly one reconciliation update with the missing local changes', async () => {
+                    setupPartition({
+                        recordName: recordName,
+                        inst: 'inst',
+                        branch: 'testBranch',
+                        localPersistence: {
+                            saveToIndexedDb: true,
+                        },
+                    });
+
+                    document.doc.transact(() => {
+                        const test = document.doc.getMap('test');
+                        test.set('shared', true);
+                        test.set('localOnly', 999);
+                    });
+
+                    const serverUpdates = getUpdates((doc) => {
+                        doc.getMap('test').set('shared', true);
+                    });
+
+                    document.connect();
+                    await waitAsync();
+
+                    addAtoms.next({
+                        type: 'repo/add_updates',
+                        recordName: recordName,
+                        inst: 'inst',
+                        branch: 'testBranch',
+                        updates: serverUpdates,
+                        initial: true,
+                    });
+                    await waitAsync();
+
+                    const sentUpdates = connection.sentMessages.filter(
+                        (m) => m.type === 'repo/add_updates'
+                    ) as any[];
+
+                    expect(sentUpdates.length).toBe(1);
+
+                    const reconciliationUpdates = sentUpdates[0].updates as
+                        | string[]
+                        | undefined;
+                    expect(reconciliationUpdates).toBeDefined();
+                    expect(reconciliationUpdates.length).toBe(1);
+
+                    const reconciledDoc = createDocFromUpdates([
+                        ...serverUpdates,
+                        ...reconciliationUpdates,
+                    ]);
+
+                    expect(reconciledDoc.getMap('test').toJSON()).toEqual(
+                        document.doc.getMap('test').toJSON()
+                    );
+                });
+
+                it('should not send reconciliation updates when syncWithServerOnConnect is false', async () => {
+                    setupPartition({
+                        recordName: recordName,
+                        inst: 'inst',
+                        branch: 'testBranch',
+                        localPersistence: {
+                            saveToIndexedDb: true,
+                            syncWithServerOnConnect: false,
+                        },
+                    });
+
+                    document.doc.transact(() => {
+                        document.doc.getMap('test').set('localOnly', 321);
+                    });
+
+                    document.connect();
+                    await waitAsync();
+
+                    addAtoms.next({
+                        type: 'repo/add_updates',
+                        recordName: recordName,
+                        inst: 'inst',
+                        branch: 'testBranch',
+                        updates: [],
+                        initial: true,
+                    });
+                    await waitAsync();
+
+                    const sentUpdates = connection.sentMessages.filter(
+                        (m) => m.type === 'repo/add_updates'
+                    );
+                    expect(sentUpdates.length).toBe(0);
+                });
+
+                it('should not trigger reconciliation from non-initial updates', async () => {
+                    setupPartition({
+                        recordName: recordName,
+                        inst: 'inst',
+                        branch: 'testBranch',
+                        localPersistence: {
+                            saveToIndexedDb: true,
+                        },
+                    });
+
+                    const initialUpdates = getUpdates((doc) => {
+                        doc.getMap('test').set('abc', 123);
+                    });
+
+                    for (let update of initialUpdates) {
+                        applyUpdate(document.doc, toByteArray(update));
+                    }
+
+                    document.connect();
+                    await waitAsync();
+
+                    addAtoms.next({
+                        type: 'repo/add_updates',
+                        recordName: recordName,
+                        inst: 'inst',
+                        branch: 'testBranch',
+                        updates: initialUpdates,
+                        initial: true,
+                    });
+                    await waitAsync();
+
+                    const remoteIncrementalUpdate = getUpdates((doc) => {
+                        doc.getMap('test').set('remoteOnly', 456);
+                    })[0];
+
+                    addAtoms.next({
+                        type: 'repo/add_updates',
+                        recordName: recordName,
+                        inst: 'inst',
+                        branch: 'testBranch',
+                        updates: [remoteIncrementalUpdate],
+                    });
+                    await waitAsync();
+
+                    const sentUpdates = connection.sentMessages.filter(
+                        (m) => m.type === 'repo/add_updates'
+                    );
+                    expect(sentUpdates.length).toBe(0);
+                });
+
+                it('should skip local persistence hydration and reconciliation for temporary documents', async () => {
+                    setupPartition({
+                        recordName: recordName,
+                        inst: 'inst',
+                        branch: 'testBranch',
+                        temporary: true,
+                        localPersistence: {
+                            saveToIndexedDb: true,
+                        },
+                    });
+
+                    document.doc.transact(() => {
+                        document.doc.getMap('test').set('localOnly', 777);
+                    });
+
+                    document.connect();
+                    await waitAsync();
+
+                    expect(mockIndexedDbInstances.length).toBe(0);
+
+                    addAtoms.next({
+                        type: 'repo/add_updates',
+                        recordName: recordName,
+                        inst: 'inst',
+                        branch: 'testBranch',
+                        updates: [],
+                        initial: true,
+                    });
                     await waitAsync();
 
                     const sentUpdates = connection.sentMessages.filter(
