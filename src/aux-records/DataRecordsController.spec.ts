@@ -2635,6 +2635,50 @@ describe('DataRecordsController', () => {
                 },
             });
         });
+
+        it('should only return items that match the given filter', async () => {
+            for (let i = 0; i < 5; i++) {
+                await store.setData(
+                    'testRecord',
+                    'address/' + i,
+                    { num: i },
+                    userId,
+                    'subjectId',
+                    true,
+                    true,
+                    [PUBLIC_READ_MARKER]
+                );
+            }
+
+            const result = await manager.listDataByMarker({
+                recordKeyOrName: 'testRecord',
+                startingAddress: null,
+                userId,
+                marker: PUBLIC_READ_MARKER,
+                filter: {
+                    num: { $gt: 2 },
+                },
+            });
+
+            expect(result).toEqual({
+                success: true,
+                recordName: 'testRecord',
+                items: [
+                    {
+                        address: 'address/3',
+                        data: { num: 3 },
+                        markers: [PUBLIC_READ_MARKER],
+                    },
+                    {
+                        address: 'address/4',
+                        data: { num: 4 },
+                        markers: [PUBLIC_READ_MARKER],
+                    },
+                ],
+                totalCount: 2,
+                marker: PUBLIC_READ_MARKER,
+            });
+        });
     });
 
     describe('eraseData()', () => {
