@@ -56,7 +56,7 @@
         "es-toolkit": "1.39.10",
         "livekit-client": "2.1.3",
         "rxjs": "8.0.0-alpha.14",
-        "uuid": "10.0.0"
+        "uuid": "14.0.1"
     },
     "devDependencies": {
         "base64-js": "^1.5.1"
