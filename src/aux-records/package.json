@@ -50,7 +50,7 @@
         "@opentelemetry/semantic-conventions": "^1.25.1",
         "@simplewebauthn/server": "9.0.3",
         "@simplewebauthn/types": "9.0.1",
-        "axios": "1.7.7",
+        "axios": "1.21.0",
         "base64-js": "^1.5.1",
         "es-toolkit": "1.39.10",
         "hash.js": "1.1.7",
@@ -69,6 +69,6 @@
         "typesense": "3.0.5",
         "uuid": "10.0.0",
         "yjs": "13.6.8",
-        "zod": "4.1.12"
+        "zod": "4.6.7"
     }
 }

@@ -76,6 +76,14 @@
     -   Added the `comIds` option to `serverConfig.openid.providers[]`. Set it to `true` to allow any comId, or to a list of comIds that are allowed. Defaults to `false`, which means the provider can only be used for accounts that are not tied to a studio. Custom domain logins are checked against the comId of the studio that owns the domain.
     -   OpenID identities are now scoped to the studio they are linked in, so the same OpenID account can have a separate CasualOS account in each studio (like how email addresses work). Session keys for accounts in a different studio are ignored when linking.
 
+### :bug: Bug Fixes
+
+-   Updated NPM packages to fix security vulnerabilities reported by `pnpm audit`.
+    -   Updated `vite` to v6.4.5 (along with `@vitejs/plugin-vue2`, `@vitejs/plugin-basic-ssl`, `vite-plugin-pwa`, and `vite-plugin-singlefile`).
+    -   Updated `axios`, `zod`, `minio`, `cassandra-driver`, `prisma`, `rollup`, `simple-git`, `tar`, `lerna`, `eslint`, `@pulumi/pulumi`, and `@playwright/test`.
+    -   Added `pnpm` overrides that move vulnerable transitive dependencies to patched versions within the same major version.
+    -   Removed the unused `precise-commits` dev dependency.
+
 ## V4.2.7
 
 #### Date: 8/13/2026

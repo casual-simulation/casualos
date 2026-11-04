@@ -23,7 +23,7 @@ import { resolve } from 'path';
 import { mkdir, writeFile } from 'fs/promises';
 import { createOAuthDeviceAuth } from '@octokit/auth-oauth-device';
 import { Octokit } from 'octokit';
-import simpleGit from 'simple-git';
+import { simpleGit } from 'simple-git';
 import { exec as nodeExec } from 'child_process';
 import { existsSync } from 'fs';
 import { v4 as uuid } from 'uuid';

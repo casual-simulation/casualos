@@ -13,7 +13,7 @@
         "@pulumi/aws-apigateway": "^2.0.0",
         "@pulumi/aws-native": "^0.116.0",
         "@pulumi/awsx": "^2.0.2",
-        "@pulumi/pulumi": "^3.113.0",
+        "@pulumi/pulumi": "^3.274.0",
         "es-toolkit": "1.39.10"
     },
     "repository": {
