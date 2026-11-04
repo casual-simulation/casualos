@@ -44,7 +44,7 @@ export interface DeviceAction extends Action {
 export const deviceActionSchema = z.object({
     type: z.literal('device'),
     connection: connectionInfoSchema(),
-    event: z.any(),
+    event: z.any().optional(),
     taskId: z.union([z.string(), z.number()]).optional(),
 });
 type ZodDeviceAction = z.infer<typeof deviceActionSchema>;
@@ -116,7 +116,7 @@ export interface RemoteAction extends Action, DeviceSelector {
 }
 export const remoteActionSchema = deviceSelectorSchema.extend({
     type: z.literal('remote'),
-    event: z.any(),
+    event: z.any().optional(),
     allowBatching: z.boolean().optional(),
     taskId: z.union([z.string(), z.number()]).optional(),
 });
@@ -168,7 +168,7 @@ export interface RemoteActionError extends Action, DeviceSelector {
 }
 export const remoteActionErrorSchema = deviceSelectorSchema.extend({
     type: z.literal('remote_error'),
-    error: z.any(),
+    error: z.any().optional(),
     taskId: z.union([z.string(), z.number()]).optional(),
 });
 type ZodRemoteActionError = z.infer<typeof remoteActionErrorSchema>;
@@ -208,7 +208,7 @@ export interface DeviceActionResult extends Action {
 }
 export const deviceActionResultSchema = z.object({
     type: z.literal('device_result'),
-    result: z.any(),
+    result: z.any().optional(),
     taskId: z.union([z.string(), z.number()]).optional(),
     connection: connectionInfoSchema(),
 });
@@ -241,7 +241,7 @@ export interface DeviceActionError extends Action {
 }
 export const deviceActionErrorSchema = z.object({
     type: z.literal('device_error'),
-    error: z.any(),
+    error: z.any().optional(),
     taskId: z.union([z.string(), z.number()]).optional(),
     connection: connectionInfoSchema(),
 });

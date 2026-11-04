@@ -5247,6 +5247,7 @@ Object {
             "type": "string",
           },
           "data": Object {
+            "optional": true,
             "type": "any",
           },
           "deletePolicy": Object {
@@ -5410,6 +5411,7 @@ Object {
             "type": "string",
           },
           "data": Object {
+            "optional": true,
             "type": "any",
           },
           "deletePolicy": Object {
@@ -18184,6 +18186,7 @@ Object {
             "type": "string",
           },
           "data": Object {
+            "optional": true,
             "type": "any",
           },
           "deletePolicy": Object {
@@ -18347,6 +18350,7 @@ Object {
             "type": "string",
           },
           "data": Object {
+            "optional": true,
             "type": "any",
           },
           "deletePolicy": Object {
