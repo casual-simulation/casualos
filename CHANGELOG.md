@@ -83,6 +83,13 @@
     -   Updated `axios`, `zod`, `minio`, `cassandra-driver`, `prisma`, `rollup`, `simple-git`, `tar`, `lerna`, `eslint`, `@pulumi/pulumi`, and `@playwright/test`.
     -   Added `pnpm` overrides that move vulnerable transitive dependencies to patched versions within the same major version.
     -   Removed the unused `precise-commits` dev dependency.
+    -   Updated the OpenTelemetry SDK packages to v2 (`@opentelemetry/sdk-node` and the related exporter and instrumentation packages to v0.223, `@opentelemetry/auto-instrumentations-node` to v0.81).
+        -   Replaced the deprecated `@opentelemetry/instrumentation-redis-4` package with `@opentelemetry/instrumentation-redis`.
+        -   **Telemetry changes:** The HTTP instrumentation now uses the stable OpenTelemetry semantic conventions. Dashboards, alerts, and queries that use the old names need to be updated:
+            -   `http.method` is now `http.request.method`.
+            -   `http.status_code` is now `http.response.status_code`.
+            -   `http.url` and `http.target` are now `url.full` and `url.path`.
+            -   The `http.server.duration` and `http.client.duration` metrics (in milliseconds) are now `http.server.request.duration` and `http.client.request.duration` (in seconds).
 
 ## V4.2.7
 

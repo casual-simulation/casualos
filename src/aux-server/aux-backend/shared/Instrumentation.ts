@@ -18,7 +18,7 @@
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-proto';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto';
-import { Resource } from '@opentelemetry/resources';
+import { resourceFromAttributes } from '@opentelemetry/resources';
 import {
     ConsoleMetricExporter,
     PeriodicExportingMetricReader,
@@ -116,7 +116,7 @@ export function setupInstrumentation(options: ServerConfig) {
         console.log(`[Instrumentation] Skipping Prisma instrumentation.`);
     }
 
-    const resource = new Resource({
+    const resource = resourceFromAttributes({
         [SEMRESATTRS_SERVICE_NAME]: 'casualos',
         [SEMRESATTRS_SERVICE_VERSION]: GIT_TAG || 'dev',
         ...options.telemetry.resource,

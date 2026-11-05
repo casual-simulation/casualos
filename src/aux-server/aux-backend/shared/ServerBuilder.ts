@@ -177,7 +177,7 @@ import {
     PeriodicExportingMetricReader,
 } from '@opentelemetry/sdk-metrics';
 import { PrismaInstrumentation } from '@prisma/instrumentation';
-import { Resource } from '@opentelemetry/resources';
+import { resourceFromAttributes } from '@opentelemetry/resources';
 import {
     SEMRESATTRS_SERVICE_NAME,
     SEMRESATTRS_SERVICE_VERSION,
@@ -623,7 +623,7 @@ export class ServerBuilder implements SubscriptionLike {
         }
 
         const sdk = new NodeSDK({
-            resource: new Resource({
+            resource: resourceFromAttributes({
                 [SEMRESATTRS_SERVICE_NAME]: 'casualos',
                 [SEMRESATTRS_SERVICE_VERSION]: GIT_TAG || 'dev',
             }),
