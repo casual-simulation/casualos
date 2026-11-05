@@ -1688,7 +1688,9 @@ export class RecordsServer {
                         ownerId: z
                             .string({
                                 error: (issue) =>
-                                    issue.input === undefined
+                                    issue.code !== 'invalid_type'
+                                        ? undefined
+                                        : issue.input === undefined
                                         ? 'ownerId is required.'
                                         : 'ownerId must be a string.',
                             })
@@ -1698,7 +1700,9 @@ export class RecordsServer {
                         studioId: z
                             .string({
                                 error: (issue) =>
-                                    issue.input === undefined
+                                    issue.code !== 'invalid_type'
+                                        ? undefined
+                                        : issue.input === undefined
                                         ? 'studioId is required.'
                                         : 'studioId must be a string.',
                             })
@@ -1746,7 +1750,9 @@ export class RecordsServer {
                         eventName: EVENT_NAME_VALIDATION,
                         count: z.number({
                             error: (issue) =>
-                                issue.input === undefined
+                                issue.code !== 'invalid_type'
+                                    ? undefined
+                                    : issue.input === undefined
                                     ? 'count is required.'
                                     : 'count must be a number.',
                         }),
@@ -1793,7 +1799,9 @@ export class RecordsServer {
                         eventName: z
                             .string({
                                 error: (issue) =>
-                                    issue.input === undefined
+                                    issue.code !== 'invalid_type'
+                                        ? undefined
+                                        : issue.input === undefined
                                         ? 'eventName is required.'
                                         : 'eventName must be a string.',
                             })
@@ -1835,7 +1843,9 @@ export class RecordsServer {
                         eventName: z
                             .string({
                                 error: (issue) =>
-                                    issue.input === undefined
+                                    issue.code !== 'invalid_type'
+                                        ? undefined
+                                        : issue.input === undefined
                                         ? 'eventName is required.'
                                         : 'eventName must be a string.',
                             })
@@ -3935,7 +3945,9 @@ export class RecordsServer {
                         recordName: RECORD_NAME_VALIDATION,
                         policy: z.string({
                             error: (issue) =>
-                                issue.input === undefined
+                                issue.code !== 'invalid_type'
+                                    ? undefined
+                                    : issue.input === undefined
                                     ? 'policy is required.'
                                     : 'policy must be a string.',
                         }),
@@ -4042,7 +4054,9 @@ export class RecordsServer {
                         permissionId: z
                             .string({
                                 error: (issue) =>
-                                    issue.input === undefined
+                                    issue.code !== 'invalid_type'
+                                        ? undefined
+                                        : issue.input === undefined
                                         ? 'permissionId is required.'
                                         : 'permissionId must be a string.',
                             })
@@ -4087,7 +4101,9 @@ export class RecordsServer {
                         resourceId: z
                             .string({
                                 error: (issue) =>
-                                    issue.input === undefined
+                                    issue.code !== 'invalid_type'
+                                        ? undefined
+                                        : issue.input === undefined
                                         ? 'resourceId is required.'
                                         : 'resourceId must be a string.',
                             })
@@ -4149,7 +4165,9 @@ export class RecordsServer {
                         userId: z
                             .string({
                                 error: (issue) =>
-                                    issue.input === undefined
+                                    issue.code !== 'invalid_type'
+                                        ? undefined
+                                        : issue.input === undefined
                                         ? 'userId is required.'
                                         : 'userId must be a string.',
                             })
@@ -4190,7 +4208,9 @@ export class RecordsServer {
                         inst: z
                             .string({
                                 error: (issue) =>
-                                    issue.input === undefined
+                                    issue.code !== 'invalid_type'
+                                        ? undefined
+                                        : issue.input === undefined
                                         ? 'inst is required.'
                                         : 'inst must be a string.',
                             })
@@ -4231,7 +4251,9 @@ export class RecordsServer {
                         startingRole: z
                             .string({
                                 error: (issue) =>
-                                    issue.input === undefined
+                                    issue.code !== 'invalid_type'
+                                        ? undefined
+                                        : issue.input === undefined
                                         ? 'startingRole is required.'
                                         : 'startingRole must be a string.',
                             })
@@ -4241,7 +4263,9 @@ export class RecordsServer {
                         role: z
                             .string({
                                 error: (issue) =>
-                                    issue.input === undefined
+                                    issue.code !== 'invalid_type'
+                                        ? undefined
+                                        : issue.input === undefined
                                         ? 'role is required.'
                                         : 'role must be a string.',
                             })
@@ -4302,7 +4326,9 @@ export class RecordsServer {
                         userId: z
                             .string({
                                 error: (issue) =>
-                                    issue.input === undefined
+                                    issue.code !== 'invalid_type'
+                                        ? undefined
+                                        : issue.input === undefined
                                         ? 'userId is required.'
                                         : 'userId must be a string.',
                             })
@@ -4312,7 +4338,9 @@ export class RecordsServer {
                         inst: z
                             .string({
                                 error: (issue) =>
-                                    issue.input === undefined
+                                    issue.code !== 'invalid_type'
+                                        ? undefined
+                                        : issue.input === undefined
                                         ? 'inst is required.'
                                         : 'inst must be a string.',
                             })
@@ -4322,7 +4350,9 @@ export class RecordsServer {
                         role: z
                             .string({
                                 error: (issue) =>
-                                    issue.input === undefined
+                                    issue.code !== 'invalid_type'
+                                        ? undefined
+                                        : issue.input === undefined
                                         ? 'role is required.'
                                         : 'role must be a string.',
                             })
@@ -4330,7 +4360,9 @@ export class RecordsServer {
                         expireTimeMs: z
                             .number({
                                 error: (issue) =>
-                                    issue.input === undefined
+                                    issue.code !== 'invalid_type'
+                                        ? undefined
+                                        : issue.input === undefined
                                         ? 'expireTimeMs is required.'
                                         : 'expireTimeMs must be a number.',
                             })
@@ -4390,7 +4422,9 @@ export class RecordsServer {
                         userId: z
                             .string({
                                 error: (issue) =>
-                                    issue.input === undefined
+                                    issue.code !== 'invalid_type'
+                                        ? undefined
+                                        : issue.input === undefined
                                         ? 'userId is required.'
                                         : 'userId must be a string.',
                             })
@@ -4400,7 +4434,9 @@ export class RecordsServer {
                         inst: z
                             .string({
                                 error: (issue) =>
-                                    issue.input === undefined
+                                    issue.code !== 'invalid_type'
+                                        ? undefined
+                                        : issue.input === undefined
                                         ? 'inst is required.'
                                         : 'inst must be a string.',
                             })
@@ -4410,7 +4446,9 @@ export class RecordsServer {
                         role: z
                             .string({
                                 error: (issue) =>
-                                    issue.input === undefined
+                                    issue.code !== 'invalid_type'
+                                        ? undefined
+                                        : issue.input === undefined
                                         ? 'role is required.'
                                         : 'role must be a string.',
                             })
@@ -4652,7 +4690,9 @@ export class RecordsServer {
                         sharedPermissionId: z
                             .string({
                                 error: (issue) =>
-                                    issue.input === undefined
+                                    issue.code !== 'invalid_type'
+                                        ? undefined
+                                        : issue.input === undefined
                                         ? 'sharedPermissionId is required.'
                                         : 'sharedPermissionId must be a string.',
                             })
@@ -4709,7 +4749,9 @@ export class RecordsServer {
                         sharedPermissionId: z
                             .string({
                                 error: (issue) =>
-                                    issue.input === undefined
+                                    issue.code !== 'invalid_type'
+                                        ? undefined
+                                        : issue.input === undefined
                                         ? 'sharedPermissionId is required.'
                                         : 'sharedPermissionId must be a string.',
                             })
@@ -4756,7 +4798,9 @@ export class RecordsServer {
                         sharedPermissionId: z
                             .string({
                                 error: (issue) =>
-                                    issue.input === undefined
+                                    issue.code !== 'invalid_type'
+                                        ? undefined
+                                        : issue.input === undefined
                                         ? 'sharedPermissionId is required.'
                                         : 'sharedPermissionId must be a string.',
                             })
@@ -5269,7 +5313,9 @@ export class RecordsServer {
                         skyboxId: z
                             .string({
                                 error: (issue) =>
-                                    issue.input === undefined
+                                    issue.code !== 'invalid_type'
+                                        ? undefined
+                                        : issue.input === undefined
                                         ? 'skyboxId is required.'
                                         : 'skyboxId must be a string.',
                             })
@@ -5313,7 +5359,9 @@ export class RecordsServer {
                         prompt: z
                             .string({
                                 error: (issue) =>
-                                    issue.input === undefined
+                                    issue.code !== 'invalid_type'
+                                        ? undefined
+                                        : issue.input === undefined
                                         ? 'prompt is required.'
                                         : 'prompt must be a string.',
                             })
@@ -5323,7 +5371,9 @@ export class RecordsServer {
                         model: z
                             .string({
                                 error: (issue) =>
-                                    issue.input === undefined
+                                    issue.code !== 'invalid_type'
+                                        ? undefined
+                                        : issue.input === undefined
                                         ? 'model is required.'
                                         : 'model must be a string.',
                             })
@@ -5754,7 +5804,9 @@ export class RecordsServer {
                         ownerStudioComId: z
                             .string({
                                 error: (issue) =>
-                                    issue.input === undefined
+                                    issue.code !== 'invalid_type'
+                                        ? undefined
+                                        : issue.input === undefined
                                         ? 'ownerStudioComId is required.'
                                         : 'ownerStudioComId must be a string.',
                             })
@@ -5804,7 +5856,9 @@ export class RecordsServer {
                         logoBackgroundColor: z
                             .string({
                                 error: (issue) =>
-                                    issue.input === undefined
+                                    issue.code !== 'invalid_type'
+                                        ? undefined
+                                        : issue.input === undefined
                                         ? 'logoBackgroundColor is required.'
                                         : 'logoBackgroundColor must be a string.',
                             })
@@ -6112,7 +6166,9 @@ export class RecordsServer {
                         addedUserId: z
                             .string({
                                 error: (issue) =>
-                                    issue.input === undefined
+                                    issue.code !== 'invalid_type'
+                                        ? undefined
+                                        : issue.input === undefined
                                         ? 'addedUserId is required.'
                                         : 'addedUserId must be a string.',
                             })
@@ -6122,7 +6178,9 @@ export class RecordsServer {
                         addedEmail: z
                             .string({
                                 error: (issue) =>
-                                    issue.input === undefined
+                                    issue.code !== 'invalid_type'
+                                        ? undefined
+                                        : issue.input === undefined
                                         ? 'addedEmail is required.'
                                         : 'addedEmail must be a string.',
                             })
@@ -6132,7 +6190,9 @@ export class RecordsServer {
                         addedPhoneNumber: z
                             .string({
                                 error: (issue) =>
-                                    issue.input === undefined
+                                    issue.code !== 'invalid_type'
+                                        ? undefined
+                                        : issue.input === undefined
                                         ? 'addedPhoneNumber is required.'
                                         : 'addedPhoneNumber must be a string.',
                             })
@@ -6142,7 +6202,9 @@ export class RecordsServer {
                         addedDisplayName: z
                             .string({
                                 error: (issue) =>
-                                    issue.input === undefined
+                                    issue.code !== 'invalid_type'
+                                        ? undefined
+                                        : issue.input === undefined
                                         ? 'addedDisplayName is required.'
                                         : 'addedDisplayName must be a string.',
                             })
@@ -6201,7 +6263,9 @@ export class RecordsServer {
                         removedUserId: z
                             .string({
                                 error: (issue) =>
-                                    issue.input === undefined
+                                    issue.code !== 'invalid_type'
+                                        ? undefined
+                                        : issue.input === undefined
                                         ? 'removedUserId is required.'
                                         : 'removedUserId must be a string.',
                             })
@@ -6239,7 +6303,9 @@ export class RecordsServer {
                         studioId: z
                             .string({
                                 error: (issue) =>
-                                    issue.input === undefined
+                                    issue.code !== 'invalid_type'
+                                        ? undefined
+                                        : issue.input === undefined
                                         ? 'studioId is required.'
                                         : 'studioId must be a string.',
                             })
@@ -6521,7 +6587,9 @@ export class RecordsServer {
                         studioId: z
                             .string({
                                 error: (issue) =>
-                                    issue.input === undefined
+                                    issue.code !== 'invalid_type'
+                                        ? undefined
+                                        : issue.input === undefined
                                         ? 'studioId is required.'
                                         : 'studioId must be a string.',
                             })
@@ -6531,7 +6599,9 @@ export class RecordsServer {
                         userId: z
                             .string({
                                 error: (issue) =>
-                                    issue.input === undefined
+                                    issue.code !== 'invalid_type'
+                                        ? undefined
+                                        : issue.input === undefined
                                         ? 'userId is required.'
                                         : 'userId must be a string.',
                             })
@@ -6609,7 +6679,9 @@ export class RecordsServer {
                         userId: z
                             .string({
                                 error: (issue) =>
-                                    issue.input === undefined
+                                    issue.code !== 'invalid_type'
+                                        ? undefined
+                                        : issue.input === undefined
                                         ? 'userId is required.'
                                         : 'userId must be a string.',
                             })
@@ -6619,7 +6691,9 @@ export class RecordsServer {
                         studioId: z
                             .string({
                                 error: (issue) =>
-                                    issue.input === undefined
+                                    issue.code !== 'invalid_type'
+                                        ? undefined
+                                        : issue.input === undefined
                                         ? 'studioId is required.'
                                         : 'studioId must be a string.',
                             })
@@ -6829,7 +6903,9 @@ export class RecordsServer {
                     holdingUser: z
                         .string({
                             error: (issue) =>
-                                issue.input === undefined
+                                issue.code !== 'invalid_type'
+                                    ? undefined
+                                    : issue.input === undefined
                                     ? 'holdingUser is required.'
                                     : 'holdingUser must be a string.',
                         })

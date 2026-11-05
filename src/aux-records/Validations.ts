@@ -24,7 +24,9 @@ import { z } from 'zod';
 export const RECORD_KEY_VALIDATION = z
     .string({
         error: (issue) =>
-            issue.input === undefined
+            issue.code !== 'invalid_type'
+                ? undefined
+                : issue.input === undefined
                 ? 'recordKey is required.'
                 : 'recordKey must be a string.',
     })
@@ -36,7 +38,9 @@ export const RECORD_KEY_VALIDATION = z
 export const ADDRESS_VALIDATION = z
     .string({
         error: (issue) =>
-            issue.input === undefined
+            issue.code !== 'invalid_type'
+                ? undefined
+                : issue.input === undefined
                 ? 'address is required.'
                 : 'address must be a string.',
     })
@@ -49,7 +53,9 @@ export const ADDRESS_VALIDATION = z
 export const EVENT_NAME_VALIDATION = z
     .string({
         error: (issue) =>
-            issue.input === undefined
+            issue.code !== 'invalid_type'
+                ? undefined
+                : issue.input === undefined
                 ? 'eventName is required.'
                 : 'eventName must be a string.',
     })
@@ -59,7 +65,9 @@ export const EVENT_NAME_VALIDATION = z
 export const STUDIO_ID_VALIDATION = z
     .string({
         error: (issue) =>
-            issue.input === undefined
+            issue.code !== 'invalid_type'
+                ? undefined
+                : issue.input === undefined
                 ? 'studioId is required.'
                 : 'studioId must be a string.',
     })
@@ -69,7 +77,9 @@ export const STUDIO_ID_VALIDATION = z
 export const COM_ID_VALIDATION = z
     .string({
         error: (issue) =>
-            issue.input === undefined
+            issue.code !== 'invalid_type'
+                ? undefined
+                : issue.input === undefined
                 ? 'comId is required.'
                 : 'comId must be a string.',
     })
@@ -79,7 +89,9 @@ export const COM_ID_VALIDATION = z
 export const STUDIO_DISPLAY_NAME_VALIDATION = z
     .string({
         error: (issue) =>
-            issue.input === undefined
+            issue.code !== 'invalid_type'
+                ? undefined
+                : issue.input === undefined
                 ? 'displayName is required.'
                 : 'displayName must be a string.',
     })
@@ -89,7 +101,9 @@ export const STUDIO_DISPLAY_NAME_VALIDATION = z
 export const MARKER_VALIDATION = z
     .string({
         error: (issue) =>
-            issue.input === undefined
+            issue.code !== 'invalid_type'
+                ? undefined
+                : issue.input === undefined
                 ? 'invidiaul markers must not be null or empty.'
                 : 'individual markers must be strings.',
     })
@@ -102,7 +116,9 @@ export const MARKER_VALIDATION = z
 export const MARKERS_VALIDATION = z
     .array(MARKER_VALIDATION, {
         error: (issue) =>
-            issue.input === undefined
+            issue.code !== 'invalid_type'
+                ? undefined
+                : issue.input === undefined
                 ? 'markers is required.'
                 : 'markers must be an array of strings.',
     })
@@ -114,7 +130,9 @@ export const MARKERS_VALIDATION = z
 export const PROXY_HOST_VALIDATION = z
     .string({
         error: (issue) =>
-            issue.input === undefined
+            issue.code !== 'invalid_type'
+                ? undefined
+                : issue.input === undefined
                 ? 'host is required.'
                 : 'host must be a string.',
     })
@@ -129,7 +147,9 @@ export const PROXY_DATA_VALIDATION = z.record(
     z.union([z.string().max(4096), z.number(), z.boolean(), z.null()]),
     {
         error: (issue) =>
-            issue.input === undefined
+            issue.code !== 'invalid_type'
+                ? undefined
+                : issue.input === undefined
                 ? 'data is required.'
                 : 'data must be an object.',
     }
@@ -177,7 +197,9 @@ export const NAME_VALIDATION = z
 export const RECORD_NAME_VALIDATION = z
     .string({
         error: (issue) =>
-            issue.input === undefined
+            issue.code !== 'invalid_type'
+                ? undefined
+                : issue.input === undefined
                 ? 'recordName is required.'
                 : 'recordName must be a string.',
     })
@@ -199,7 +221,9 @@ export const RECORD_FILE_SCHEMA = z.object({
     fileSha256Hex: z
         .string({
             error: (issue) =>
-                issue.input === undefined
+                issue.code !== 'invalid_type'
+                    ? undefined
+                    : issue.input === undefined
                     ? 'fileSha256Hex is required.'
                     : 'fileSha256Hex must be a string.',
         })
@@ -212,7 +236,9 @@ export const RECORD_FILE_SCHEMA = z.object({
     fileMimeType: z
         .string({
             error: (issue) =>
-                issue.input === undefined
+                issue.code !== 'invalid_type'
+                    ? undefined
+                    : issue.input === undefined
                     ? 'fileMimeType is required.'
                     : 'fileMimeType must be a string.',
         })
@@ -222,7 +248,9 @@ export const RECORD_FILE_SCHEMA = z.object({
     fileExtension: z
         .string({
             error: (issue) =>
-                issue.input === undefined
+                issue.code !== 'invalid_type'
+                    ? undefined
+                    : issue.input === undefined
                     ? 'fileExtension is required.'
                     : 'fileExtension must be a string.',
         })
@@ -234,7 +262,9 @@ export const RECORD_FILE_SCHEMA = z.object({
     fileDescription: z
         .string({
             error: (issue) =>
-                issue.input === undefined
+                issue.code !== 'invalid_type'
+                    ? undefined
+                    : issue.input === undefined
                     ? 'fileDescription is required.'
                     : 'fileDescription must be a string.',
         })
@@ -250,7 +280,9 @@ export const UPDATE_FILE_SCHEMA = z.object({
     fileUrl: z
         .string({
             error: (issue) =>
-                issue.input === undefined
+                issue.code !== 'invalid_type'
+                    ? undefined
+                    : issue.input === undefined
                     ? 'fileUrl is required.'
                     : 'fileUrl must be a string.',
         })
@@ -264,7 +296,9 @@ export const READ_FILE_SCHEMA = z.object({
     fileName: z
         .string({
             error: (issue) =>
-                issue.input === undefined
+                issue.code !== 'invalid_type'
+                    ? undefined
+                    : issue.input === undefined
                     ? 'fileName is required.'
                     : 'fileName must be a string.',
         })
@@ -273,7 +307,9 @@ export const READ_FILE_SCHEMA = z.object({
     fileUrl: z
         .string({
             error: (issue) =>
-                issue.input === undefined
+                issue.code !== 'invalid_type'
+                    ? undefined
+                    : issue.input === undefined
                     ? 'fileUrl is required.'
                     : 'fileUrl must be a string.',
         })
@@ -287,7 +323,9 @@ export const LIST_FILES_SCHEMA = z.object({
     fileName: z
         .string({
             error: (issue) =>
-                issue.input === undefined
+                issue.code !== 'invalid_type'
+                    ? undefined
+                    : issue.input === undefined
                     ? 'fileName is required.'
                     : 'fileName must be a string.',
         })
@@ -300,7 +338,9 @@ export const ERASE_FILE_SCHEMA = z.object({
     recordKey: RECORD_KEY_VALIDATION,
     fileUrl: z.string({
         error: (issue) =>
-            issue.input === undefined
+            issue.code !== 'invalid_type'
+                ? undefined
+                : issue.input === undefined
                 ? 'fileUrl is required.'
                 : 'fileUrl must be a string.',
     }),
@@ -310,7 +350,7 @@ export const ERASE_FILE_SCHEMA = z.object({
 export const RECORD_DATA_SCHEMA = z.object({
     recordKey: RECORD_KEY_VALIDATION,
     address: ADDRESS_VALIDATION,
-    data: z.any(),
+    data: z.any().optional(),
     updatePolicy: z
         .union([z.literal(true), z.array(z.string())], {
             error: (issue) =>
@@ -336,7 +376,9 @@ export const GET_DATA_SCHEMA = z.object({
     address: z
         .string({
             error: (issue) =>
-                issue.input === undefined
+                issue.code !== 'invalid_type'
+                    ? undefined
+                    : issue.input === undefined
                     ? 'address is required.'
                     : 'address must be a string.',
         })

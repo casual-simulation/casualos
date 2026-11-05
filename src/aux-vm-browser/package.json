@@ -50,7 +50,7 @@
         "@casual-simulation/crypto": "^4.0.5",
         "@casual-simulation/crypto-browser": "^4.0.5",
         "@casual-simulation/websocket": "^4.0.0",
-        "axios": "1.7.7",
+        "axios": "1.21.0",
         "bowser": "^2.4.0",
         "comlink": "4.3.1",
         "es-toolkit": "1.39.10",
