@@ -302,7 +302,7 @@ export interface WebConfig {
     /**
      * The default maximum number of frames per second that the 3D portals should run at.
      * Does not apply while in AR or VR.
-     * Can be overridden by setting the maxFrameRate tag on the gridPortalBot.
+     * Can be overridden by setting the maxFrameRate tag on the configBot.
      * If null, then the frame rate is limited only by the display refresh rate.
      * Defaults to null.
      */
@@ -477,7 +477,7 @@ export const WEB_CONFIG_SCHEMA = z.object({
         .nullable()
         .optional()
         .describe(
-            'The default maximum number of frames per second that the 3D portals should run at. Does not apply while in AR or VR. Can be overridden by setting the maxFrameRate tag on the gridPortalBot. If null, then the frame rate is limited only by the display refresh rate. Defaults to null.'
+            'The default maximum number of frames per second that the 3D portals should run at. Does not apply while in AR or VR. Can be overridden by setting the maxFrameRate tag on the configBot. If null, then the frame rate is limited only by the display refresh rate. Defaults to null.'
         ),
 });
 
