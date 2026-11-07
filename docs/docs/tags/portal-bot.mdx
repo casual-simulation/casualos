@@ -1259,6 +1259,30 @@ The [pixel ratio](https://developer.mozilla.org/en-US/docs/Web/API/Window/device
 This value is determined by the web browser and cannot be changed. High resolution/Retina displays tend to have a pixel ratio of 2 or higher 
 while devices with lower resolution displays tend to have a pixel ratio of 1.
 
+### `maxFrameRate`
+
+<Badges>
+    <GridPortalBadge/>
+</Badges>
+
+The maximum number of frames per second that the 3D portals should run at.
+Does not apply while in AR or VR.
+
+When not set, the `defaultMaxFrameRate` option from the server's web config is used.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    Use the server's default maximum frame rate. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='0'>
+    Do not limit the frame rate. The portals run at the display refresh rate.
+  </PossibleValueCode>
+  <PossibleValue value='Any Number > 0'>
+    The maximum number of frames per second.
+  </PossibleValue>
+</PossibleValuesTable>
+
 ### `pointerPixel`
 
 <Badges>

@@ -268,7 +268,7 @@ export abstract class Game {
         await this.onBeforeSetupComplete();
 
         this._setupFrameScheduler();
-        this.frameUpdate = this.frameUpdate.bind(this);
+        this._onAnimationFrame = this._onAnimationFrame.bind(this);
         this.startRenderAnimationLoop();
     }
 
@@ -276,6 +276,7 @@ export abstract class Game {
         const config = appManager.config;
         this._frameScheduler = new FrameScheduler({
             renderOnDemand: config?.renderOnDemand ?? false,
+            maxFrameRate: this.getMaxFrameRate(),
         });
 
         if (this._frameScheduler.renderOnDemand) {
@@ -321,7 +322,16 @@ export abstract class Game {
     }
 
     protected startRenderAnimationLoop() {
-        this.renderer.setAnimationLoop(this.frameUpdate as any);
+        this.renderer.setAnimationLoop(this._onAnimationFrame as any);
+    }
+
+    private _onAnimationFrame(time: number, xrFrame?: XRFrame) {
+        this._frameScheduler.maxFrameRate = this.getMaxFrameRate();
+        const immersive = !!this.xrSession && !!xrFrame;
+        if (!this._frameScheduler.shouldProcessFrame(time, immersive)) {
+            return;
+        }
+        this.frameUpdate(time, xrFrame);
     }
 
     protected stopRenderAnimationLoop() {
@@ -1063,6 +1073,15 @@ export abstract class Game {
      */
     protected needsContinuousRender(): boolean {
         return DebugObjectManager.enabled;
+    }
+
+    /**
+     * Gets the maximum number of frames per second that the 3D portals should run at.
+     * Null if the frame rate should not be limited.
+     * Defaults to the defaultMaxFrameRate web config option.
+     */
+    protected getMaxFrameRate(): number {
+        return appManager.config?.defaultMaxFrameRate ?? null;
     }
 
     private _haveCamerasChanged(): boolean {

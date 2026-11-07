@@ -11054,6 +11054,12 @@ Object {
                       "delete inst",
                     ],
                   },
+                  "defaultMaxFrameRate": Object {
+                    "description": "The default maximum number of frames per second that the 3D portals should run at. Does not apply while in AR or VR. Can be overridden by setting the maxFrameRate tag on the gridPortalBot. If null, then the frame rate is limited only by the display refresh rate. Defaults to null.",
+                    "nullable": true,
+                    "optional": true,
+                    "type": "number",
+                  },
                   "disableCollaboration": Object {
                     "nullable": true,
                     "optional": true,
@@ -23226,6 +23232,12 @@ Object {
                       "sign out",
                       "delete inst",
                     ],
+                  },
+                  "defaultMaxFrameRate": Object {
+                    "description": "The default maximum number of frames per second that the 3D portals should run at. Does not apply while in AR or VR. Can be overridden by setting the maxFrameRate tag on the gridPortalBot. If null, then the frame rate is limited only by the display refresh rate. Defaults to null.",
+                    "nullable": true,
+                    "optional": true,
+                    "type": "number",
                   },
                   "disableCollaboration": Object {
                     "nullable": true,

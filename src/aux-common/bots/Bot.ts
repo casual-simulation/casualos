@@ -2709,6 +2709,7 @@ export const KNOWN_TAGS: string[] = [
     'pixelHeight',
     'pixelRatio',
     'defaultPixelRatio',
+    'maxFrameRate',
     'defaultLighting',
     'pageTitle',
     'pointerPixelX',

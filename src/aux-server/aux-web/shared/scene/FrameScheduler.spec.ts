@@ -64,10 +64,136 @@ describe('FrameScheduler', () => {
         RenderRequests.reset();
     });
 
+    /**
+     * Simulates animation frames at the given refresh rate and returns the number of frames that were processed.
+     */
+    function countProcessedFrames(
+        scheduler: FrameScheduler,
+        refreshRate: number,
+        durationMs: number,
+        startTime: number = 0
+    ) {
+        const interval = 1000 / refreshRate;
+        let processed = 0;
+        for (
+            let time = startTime;
+            time < startTime + durationMs;
+            time += interval
+        ) {
+            if (scheduler.shouldProcessFrame(time, false)) {
+                processed += 1;
+            }
+        }
+        return processed;
+    }
+
+    describe('shouldProcessFrame()', () => {
+        it('should process every frame when there is no max frame rate', () => {
+            const scheduler = new FrameScheduler({
+                renderOnDemand: false,
+                maxFrameRate: null,
+            });
+
+            expect(countProcessedFrames(scheduler, 120, 1000)).toBe(120);
+        });
+
+        it('should process every frame when the max frame rate is 0', () => {
+            const scheduler = new FrameScheduler({
+                renderOnDemand: false,
+                maxFrameRate: 0,
+            });
+
+            expect(countProcessedFrames(scheduler, 120, 1000)).toBe(120);
+        });
+
+        const cases = [
+            // [refresh rate, max frame rate]
+            [60, 30],
+            [120, 60],
+            [120, 30],
+            [120, 50],
+            [144, 60],
+            [60, 60],
+        ] as const;
+
+        it.each(cases)(
+            'should limit a %s hz display to about %s fps',
+            (refreshRate, maxFrameRate) => {
+                const scheduler = new FrameScheduler({
+                    renderOnDemand: false,
+                    maxFrameRate,
+                });
+
+                const processed = countProcessedFrames(
+                    scheduler,
+                    refreshRate,
+                    10000
+                );
+                const fps = processed / 10;
+                expect(fps).toBeLessThanOrEqual(maxFrameRate + 1);
+                expect(fps).toBeGreaterThanOrEqual(maxFrameRate * 0.9);
+            }
+        );
+
+        it('should not process the same frame twice when frames arrive slightly early', () => {
+            const scheduler = new FrameScheduler({
+                renderOnDemand: false,
+                maxFrameRate: 30,
+            });
+
+            expect(scheduler.shouldProcessFrame(0, false)).toBe(true);
+            expect(scheduler.shouldProcessFrame(16.6, false)).toBe(false);
+            expect(scheduler.shouldProcessFrame(33.2, false)).toBe(true);
+            expect(scheduler.shouldProcessFrame(49.8, false)).toBe(false);
+            expect(scheduler.shouldProcessFrame(66.4, false)).toBe(true);
+        });
+
+        it('should always process immersive frames', () => {
+            const scheduler = new FrameScheduler({
+                renderOnDemand: false,
+                maxFrameRate: 30,
+            });
+
+            expect(scheduler.shouldProcessFrame(0, true)).toBe(true);
+            expect(scheduler.shouldProcessFrame(11, true)).toBe(true);
+            expect(scheduler.shouldProcessFrame(22, true)).toBe(true);
+        });
+
+        it('should process the next frame after a long pause', () => {
+            const scheduler = new FrameScheduler({
+                renderOnDemand: false,
+                maxFrameRate: 30,
+            });
+
+            expect(scheduler.shouldProcessFrame(0, false)).toBe(true);
+            expect(scheduler.shouldProcessFrame(5000, false)).toBe(true);
+            expect(scheduler.shouldProcessFrame(5016, false)).toBe(false);
+            expect(scheduler.shouldProcessFrame(5034, false)).toBe(true);
+        });
+
+        it('should use the new max frame rate when it is changed', () => {
+            const scheduler = new FrameScheduler({
+                renderOnDemand: false,
+                maxFrameRate: null,
+            });
+
+            expect(countProcessedFrames(scheduler, 120, 1000)).toBe(120);
+
+            scheduler.maxFrameRate = 30;
+            const processed = countProcessedFrames(scheduler, 120, 1000, 1000);
+            expect(processed).toBeLessThanOrEqual(31);
+            expect(processed).toBeGreaterThanOrEqual(27);
+
+            scheduler.maxFrameRate = null;
+            expect(countProcessedFrames(scheduler, 120, 1000, 2000)).toBe(120);
+        });
+    });
+
     describe('shouldRender()', () => {
         it('should always render when render on demand is disabled', () => {
             const scheduler = new FrameScheduler({
                 renderOnDemand: false,
+                maxFrameRate: null,
             });
 
             for (let time = 0; time < 1000; time += 16) {
@@ -78,6 +204,7 @@ describe('FrameScheduler', () => {
         it('should render the first frame', () => {
             const scheduler = new FrameScheduler({
                 renderOnDemand: true,
+                maxFrameRate: null,
             });
 
             expect(scheduler.shouldRender(10000, false)).toBe(true);
@@ -87,6 +214,7 @@ describe('FrameScheduler', () => {
         it('should only render while a render is requested', () => {
             const scheduler = new FrameScheduler({
                 renderOnDemand: true,
+                maxFrameRate: null,
             });
 
             expect(scheduler.shouldRender(10000, false)).toBe(true);
@@ -103,6 +231,7 @@ describe('FrameScheduler', () => {
         it('should render when forced', () => {
             const scheduler = new FrameScheduler({
                 renderOnDemand: true,
+                maxFrameRate: null,
             });
 
             expect(scheduler.shouldRender(10000, false)).toBe(true);
@@ -114,6 +243,7 @@ describe('FrameScheduler', () => {
         it('should render while a continuous render is requested', () => {
             const scheduler = new FrameScheduler({
                 renderOnDemand: true,
+                maxFrameRate: null,
             });
 
             expect(scheduler.shouldRender(10000, false)).toBe(true);
@@ -130,6 +260,7 @@ describe('FrameScheduler', () => {
         it('should render periodically while idle', () => {
             const scheduler = new FrameScheduler({
                 renderOnDemand: true,
+                maxFrameRate: null,
             });
 
             expect(scheduler.shouldRender(10000, false)).toBe(true);

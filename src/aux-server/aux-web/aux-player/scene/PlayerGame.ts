@@ -393,6 +393,13 @@ export class PlayerGame extends Game {
         return this._getSimulationValue(this.playerSimulations, 'pixelRatio');
     }
 
+    protected getMaxFrameRate(): number {
+        return (
+            this._getSimulationValue(this.playerSimulations, 'maxFrameRate') ??
+            super.getMaxFrameRate()
+        );
+    }
+
     getMiniPortalVisible(): boolean {
         return this._getSimulationValue(
             this.miniSimulations,

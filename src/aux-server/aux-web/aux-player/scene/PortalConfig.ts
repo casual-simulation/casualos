@@ -77,6 +77,7 @@ export class PortalConfig implements SubscriptionLike {
     private _cameraType: PortalCameraType;
     private _cursor: BotCursorType;
     private _portalHDRAddress: string = null;
+    private _maxFrameRate: number = null;
 
     private _onGridScaleUpdated: Subject<void>;
 
@@ -307,6 +308,14 @@ export class PortalConfig implements SubscriptionLike {
         }
     }
 
+    /**
+     * Gets the maximum number of frames per second that the portal should run at.
+     * Null if the portal does not specify a maximum frame rate.
+     */
+    get maxFrameRate() {
+        return this._maxFrameRate;
+    }
+
     unsubscribe(): void {
         this._sub.unsubscribe();
     }
@@ -371,6 +380,7 @@ export class PortalConfig implements SubscriptionLike {
         this._disableCanvasTransparency = null;
         this._cameraType = null;
         this._cursor = null;
+        this._maxFrameRate = null;
         this.gridScale = this._getDefaultGridScale();
     }
 
@@ -406,6 +416,12 @@ export class PortalConfig implements SubscriptionLike {
             calc,
             bot,
             'portalHDRAddress',
+            null
+        );
+        this._maxFrameRate = calculateNumericalTagValue(
+            calc,
+            bot,
+            'maxFrameRate',
             null
         );
 

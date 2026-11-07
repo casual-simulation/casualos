@@ -298,6 +298,15 @@ export interface WebConfig {
      * Defaults to false.
      */
     renderOnDemand?: boolean | null;
+
+    /**
+     * The default maximum number of frames per second that the 3D portals should run at.
+     * Does not apply while in AR or VR.
+     * Can be overridden by setting the maxFrameRate tag on the gridPortalBot.
+     * If null, then the frame rate is limited only by the display refresh rate.
+     * Defaults to null.
+     */
+    defaultMaxFrameRate?: number | null;
 }
 
 /**
@@ -460,6 +469,15 @@ export const WEB_CONFIG_SCHEMA = z.object({
         .optional()
         .describe(
             'Whether the 3D portals should only be rendered when something has changed. When enabled, the portals stop rendering frames while the scene is idle, which reduces GPU usage and power consumption. Defaults to false.'
+        ),
+
+    defaultMaxFrameRate: z
+        .number()
+        .positive()
+        .nullable()
+        .optional()
+        .describe(
+            'The default maximum number of frames per second that the 3D portals should run at. Does not apply while in AR or VR. Can be overridden by setting the maxFrameRate tag on the gridPortalBot. If null, then the frame rate is limited only by the display refresh rate. Defaults to null.'
         ),
 });
 

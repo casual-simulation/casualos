@@ -238,6 +238,10 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
         return this.pageConfig.portalHDRAddress;
     }
 
+    get maxFrameRate() {
+        return this.pageConfig.maxFrameRate;
+    }
+
     /**
      * Gets if zooming is allowed in the miniGridPortal that the simulation defines.
      */

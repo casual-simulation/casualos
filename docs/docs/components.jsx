@@ -262,6 +262,7 @@ export const tagMap = {
     pixelHeight: 'tags/portal-bot',
     pixelRatio: 'tags/portal-bot',
     defaultPixelRatio: 'tags/portal-bot',
+    maxFrameRate: 'tags/portal-bot',
     pointerPixel: 'tags/portal-bot',
     cameraPosition: 'tags/portal-bot',
     cameraPositionOffset: 'tags/portal-bot',
