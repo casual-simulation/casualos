@@ -47,6 +47,7 @@ import {
     ON_ANY_FORM_ANIMATION_STOPPED,
 } from '@casual-simulation/aux-common';
 import type { Simulation } from '@casual-simulation/aux-vm';
+import { RenderRequests } from './RenderRequests';
 
 const CANCEL_SYMBOL = Symbol('cancel');
 
@@ -96,6 +97,7 @@ export class AnimationHelper {
         if (this._numAnimations <= 0) {
             return;
         }
+        RenderRequests.requestRender();
         for (let [id, group] of this._mixers) {
             group.mixer.update(deltaTime);
             for (let sub of group.subscriptions) {

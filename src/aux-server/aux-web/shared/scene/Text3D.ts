@@ -32,6 +32,7 @@ import type {
 } from '@casual-simulation/aux-common';
 import { isFloatingAnchor } from '@casual-simulation/aux-common';
 import { Text as TextMesh } from 'troika-three-text';
+import { RenderRequests } from './RenderRequests';
 import Roboto from '@casual-simulation/aux-components/fonts/Roboto/roboto-v18-latin-regular.woff';
 
 export interface Text3DFont {
@@ -136,6 +137,8 @@ export class Text3D extends Object3D {
         let width = Text3D.defaultWidth;
 
         this._mesh = new TextMesh();
+        // Text layout happens asynchronously, so the label needs to be rendered again once it is ready.
+        (<any>this._mesh).addEventListener('synccomplete', onTextSyncComplete);
 
         this._mesh.text = '';
         this._mesh.textAlign = 'center';
@@ -771,4 +774,8 @@ export class Text3D extends Object3D {
 function midpoint(lower: number, upper: number) {
     let half = (upper - lower) * 0.5;
     return lower + half;
+}
+
+function onTextSyncComplete() {
+    RenderRequests.requestRender();
 }

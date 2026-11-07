@@ -31,6 +31,7 @@ import {
     PMREMGenerator,
     EquirectangularReflectionMapping,
     SRGBColorSpace,
+    Matrix4,
 } from '@casual-simulation/three';
 import type { IGameView } from '../vue-components/IGameView';
 import { ArgEvent } from '@casual-simulation/aux-common/Event';
@@ -104,8 +105,27 @@ import Bowser from 'bowser';
 import type { EnableXRModalRequestParameters } from '../vue-components/EnableXRModal/EnableXRModal';
 import { getMediaForCasualOSUrl } from '../MediaUtils';
 import { parseCasualOSUrl } from '../UrlUtils';
+import { RenderRequests } from './RenderRequests';
+import { FrameScheduler, matrixElementsNearlyEqual } from './FrameScheduler';
 
 export const PREFERRED_XR_REFERENCE_SPACE = 'local-floor';
+
+/**
+ * The DOM events that should cause the 3D portals to render when render on demand is enabled.
+ */
+const RENDER_ON_DEMAND_INPUT_EVENTS = [
+    'pointerdown',
+    'pointermove',
+    'pointerup',
+    'pointercancel',
+    'wheel',
+    'keydown',
+    'keyup',
+    'touchstart',
+    'touchmove',
+    'touchend',
+    'touchcancel',
+];
 
 // Set the default UP direction
 Object3D.DEFAULT_UP.copy(WORLD_UP);
@@ -140,6 +160,9 @@ export abstract class Game {
     private _backgroundVideoSubscription: Subscription;
     private _ambientLight: AmbientLight;
     private _directionalLight: DirectionalLight;
+    private _frameScheduler: FrameScheduler;
+    private _cameraStates: WeakMap<object, [Matrix4, Matrix4]> = new WeakMap();
+    private _viewportStates: WeakMap<Viewport, number[]> = new WeakMap();
 
     mainCameraRig: CameraRig = null;
     mainViewport: Viewport = null;
@@ -244,8 +267,38 @@ export abstract class Game {
 
         await this.onBeforeSetupComplete();
 
+        this._setupFrameScheduler();
         this.frameUpdate = this.frameUpdate.bind(this);
         this.startRenderAnimationLoop();
+    }
+
+    private _setupFrameScheduler() {
+        const config = appManager.config;
+        this._frameScheduler = new FrameScheduler({
+            renderOnDemand: config?.renderOnDemand ?? false,
+        });
+
+        if (this._frameScheduler.renderOnDemand) {
+            console.log('[Game] Render on demand is enabled.');
+            const onInput = () => RenderRequests.requestRender();
+            for (let event of RENDER_ON_DEMAND_INPUT_EVENTS) {
+                window.addEventListener(event, onInput, {
+                    capture: true,
+                    passive: true,
+                });
+            }
+            document.addEventListener('visibilitychange', onInput);
+            this.subs.push(
+                new Subscription(() => {
+                    for (let event of RENDER_ON_DEMAND_INPUT_EVENTS) {
+                        window.removeEventListener(event, onInput, {
+                            capture: true,
+                        });
+                    }
+                    document.removeEventListener('visibilitychange', onInput);
+                })
+            );
+        }
     }
 
     loadEXRTextureIntoScene(portalHDRAddress: string, scene: Scene) {
@@ -262,6 +315,7 @@ export abstract class Game {
             texture.mapping = EquirectangularReflectionMapping;
             let renderTarget = this.pmremGenerator.fromEquirectangular(texture);
             scene.environment = renderTarget.texture;
+            RenderRequests.requestRender();
             console.log('[Game] EXR texture loaded into scene.');
         });
     }
@@ -413,6 +467,7 @@ export abstract class Game {
         // Resize html view and the webgl renderer.
         this.renderer.setPixelRatio(this._pixelRatio);
         this.renderer.setSize(width, height);
+        RenderRequests.requestRender();
 
         // Resize html mixer css3d renderer.
         if (this.htmlMixerContext) {
@@ -439,6 +494,7 @@ export abstract class Game {
                 default: window.devicePixelRatio || 1,
             });
             this.renderer.setPixelRatio(ratio);
+            RenderRequests.requestRender();
         }
     }
 
@@ -830,6 +886,8 @@ export abstract class Game {
             }
             this._backgroundVideoElement.play();
         }
+
+        RenderRequests.requestRender();
     }
 
     protected _resizeBackgroundVideoElement() {
@@ -953,7 +1011,9 @@ export abstract class Game {
         }
 
         updateMeshUI();
-        this.renderUpdate(xrFrame);
+        if (this._shouldRender(time, xrFrame)) {
+            this.renderUpdate(xrFrame);
+        }
         this.time.update();
         this.renderCursor();
         this.input.resetEvents();
@@ -972,6 +1032,96 @@ export abstract class Game {
 
     protected updateInteraction() {
         this.interaction.update();
+    }
+
+    /**
+     * Determines whether the scene should be rendered for the current frame.
+     * Always true unless render on demand is enabled.
+     */
+    private _shouldRender(time: number, xrFrame?: XRFrame): boolean {
+        if (!this._frameScheduler.renderOnDemand) {
+            return true;
+        }
+
+        // Always check for camera and viewport changes so that the
+        // stored states stay up to date.
+        const cameraChanged = this._haveCamerasChanged();
+        const viewportChanged = this._haveViewportsChanged();
+        if (cameraChanged || viewportChanged) {
+            RenderRequests.requestRender();
+        }
+
+        return this._frameScheduler.shouldRender(
+            time,
+            (!!this.xrSession && !!xrFrame) || this.needsContinuousRender()
+        );
+    }
+
+    /**
+     * Determines whether the scene needs to be rendered every frame regardless of whether a render was requested.
+     * Only used when render on demand is enabled.
+     */
+    protected needsContinuousRender(): boolean {
+        return DebugObjectManager.enabled;
+    }
+
+    private _haveCamerasChanged(): boolean {
+        let changed = false;
+        for (let rig of this.getCameraRigs()) {
+            const camera = rig?.mainCamera;
+            if (!camera) {
+                continue;
+            }
+            camera.updateWorldMatrix(true, false);
+            let state = this._cameraStates.get(camera);
+            if (!state) {
+                state = [new Matrix4(), new Matrix4()];
+                this._cameraStates.set(camera, state);
+                changed = true;
+            }
+            const [world, projection] = state;
+            if (
+                !matrixElementsNearlyEqual(
+                    world.elements,
+                    camera.matrixWorld.elements
+                ) ||
+                !matrixElementsNearlyEqual(
+                    projection.elements,
+                    camera.projectionMatrix.elements
+                )
+            ) {
+                world.copy(camera.matrixWorld);
+                projection.copy(camera.projectionMatrix);
+                changed = true;
+            }
+        }
+        return changed;
+    }
+
+    private _haveViewportsChanged(): boolean {
+        let changed = false;
+        for (let viewport of this.getViewports()) {
+            if (!viewport) {
+                continue;
+            }
+            const state = this._viewportStates.get(viewport);
+            if (
+                !state ||
+                state[0] !== viewport.x ||
+                state[1] !== viewport.y ||
+                state[2] !== viewport.width ||
+                state[3] !== viewport.height
+            ) {
+                this._viewportStates.set(viewport, [
+                    viewport.x,
+                    viewport.y,
+                    viewport.width,
+                    viewport.height,
+                ]);
+                changed = true;
+            }
+        }
+        return changed;
     }
 
     protected renderCursor() {

@@ -1681,6 +1681,14 @@ export class PlayerGame extends Game {
         }
     }
 
+    protected needsContinuousRender(): boolean {
+        return (
+            super.needsContinuousRender() ||
+            this._screenshotTasks.length > 0 ||
+            TWEEN.getAll().length > 0
+        );
+    }
+
     private async _capturePortalScreenshots() {
         const tasks = this._screenshotTasks.splice(
             0,

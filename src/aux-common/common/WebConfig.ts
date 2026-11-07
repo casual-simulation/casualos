@@ -291,6 +291,13 @@ export interface WebConfig {
      * Whether to disable loading the grid portal by default.
      */
     noAutomaticGridPortal?: boolean | null;
+
+    /**
+     * Whether the 3D portals should only be rendered when something has changed.
+     * When enabled, the portals stop rendering frames while the scene is idle, which reduces GPU usage and power consumption.
+     * Defaults to false.
+     */
+    renderOnDemand?: boolean | null;
 }
 
 /**
@@ -445,6 +452,14 @@ export const WEB_CONFIG_SCHEMA = z.object({
         .optional()
         .describe(
             'Whether to disable loading the grid portal by default. Defaults to false.'
+        ),
+
+    renderOnDemand: z
+        .boolean()
+        .nullable()
+        .optional()
+        .describe(
+            'Whether the 3D portals should only be rendered when something has changed. When enabled, the portals stop rendering frames while the scene is idle, which reduces GPU usage and power consumption. Defaults to false.'
         ),
 });
 

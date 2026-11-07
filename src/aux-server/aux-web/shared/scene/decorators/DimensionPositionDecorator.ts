@@ -54,6 +54,7 @@ import {
 } from '@casual-simulation/three';
 import { calculateGridTileLocalCenter } from '../grid/Grid';
 import { calculateScale } from '../SceneUtils';
+import { RenderRequests } from '../RenderRequests';
 import type { Game } from '../Game';
 import TWEEN from '@tweenjs/tween.js';
 import { DimensionGroup3D } from '../DimensionGroup3D';
@@ -248,6 +249,7 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
 
             if (!this._atPosition || !this._atRotation) {
                 this.bot3D.updateMatrixWorld(true);
+                RenderRequests.requestRender();
             }
         } else {
             let update = false;

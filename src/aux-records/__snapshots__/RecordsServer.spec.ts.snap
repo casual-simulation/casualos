@@ -11167,6 +11167,12 @@ Object {
                     "optional": true,
                     "type": "string",
                   },
+                  "renderOnDemand": Object {
+                    "description": "Whether the 3D portals should only be rendered when something has changed. When enabled, the portals stop rendering frames while the scene is idle, which reduces GPU usage and power consumption. Defaults to false.",
+                    "nullable": true,
+                    "optional": true,
+                    "type": "boolean",
+                  },
                   "requirePrivoLogin": Object {
                     "defaultValue": false,
                     "hasDefault": true,
@@ -23333,6 +23339,12 @@ Object {
                     "nullable": true,
                     "optional": true,
                     "type": "string",
+                  },
+                  "renderOnDemand": Object {
+                    "description": "Whether the 3D portals should only be rendered when something has changed. When enabled, the portals stop rendering frames while the scene is idle, which reduces GPU usage and power consumption. Defaults to false.",
+                    "nullable": true,
+                    "optional": true,
+                    "type": "boolean",
                   },
                   "requirePrivoLogin": Object {
                     "defaultValue": false,
