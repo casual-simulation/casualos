@@ -2491,6 +2491,7 @@ export class PlayerGame extends Game {
 
     private _updateConfigBotValues() {
         const devicePixelRatio = window.devicePixelRatio || 1;
+        const defaultMaxFrameRate = super.getMaxFrameRate();
         for (let [id, sim] of appManager.simulationManager.simulations) {
             const config = sim.helper.userBot;
             if (config) {
@@ -2498,6 +2499,13 @@ export class PlayerGame extends Game {
                 let hasUpdate = false;
                 if (config.tags['defaultPixelRatio'] !== devicePixelRatio) {
                     update.defaultPixelRatio = devicePixelRatio;
+                    hasUpdate = true;
+                }
+                if (
+                    (config.tags['defaultMaxFrameRate'] ?? null) !==
+                    defaultMaxFrameRate
+                ) {
+                    update.defaultMaxFrameRate = defaultMaxFrameRate;
                     hasUpdate = true;
                 }
 

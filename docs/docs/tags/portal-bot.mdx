@@ -1268,7 +1268,7 @@ while devices with lower resolution displays tend to have a pixel ratio of 1.
 The maximum number of frames per second that the 3D portals should run at.
 Does not apply while in AR or VR.
 
-When not set, the `defaultMaxFrameRate` option from the server's web config is used.
+When not set, the <TagLink tag='defaultMaxFrameRate'/> is used.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1282,6 +1282,17 @@ When not set, the `defaultMaxFrameRate` option from the server's web config is u
     The maximum number of frames per second.
   </PossibleValue>
 </PossibleValuesTable>
+
+### `defaultMaxFrameRate`
+
+<Badges>
+    <AutomaticBadge/>
+    <ConfigBotBadge/>
+</Badges>
+
+The maximum frame rate that is used when the <TagLink tag='maxFrameRate'/> tag is not set.
+This value comes from the `defaultMaxFrameRate` option in the server's web config.
+If the server does not specify a default maximum frame rate, then this tag is not set and the frame rate is limited only by the display refresh rate.
 
 ### `pointerPixel`
 
