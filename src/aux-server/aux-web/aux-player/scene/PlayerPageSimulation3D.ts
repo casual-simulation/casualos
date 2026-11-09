@@ -158,6 +158,19 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
         }
     }
 
+    get maxFrameRate(): number {
+        if (this.simulation.helper.userBot) {
+            return calculateNumericalTagValue(
+                null,
+                this.simulation.helper.userBot,
+                'maxFrameRate',
+                null
+            );
+        } else {
+            return null;
+        }
+    }
+
     get pageConfig() {
         return this.getPortalConfig('gridPortal');
     }

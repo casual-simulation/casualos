@@ -393,6 +393,13 @@ export class PlayerGame extends Game {
         return this._getSimulationValue(this.playerSimulations, 'pixelRatio');
     }
 
+    protected getMaxFrameRate(): number {
+        return (
+            this._getSimulationValue(this.playerSimulations, 'maxFrameRate') ??
+            super.getMaxFrameRate()
+        );
+    }
+
     getMiniPortalVisible(): boolean {
         return this._getSimulationValue(
             this.miniSimulations,
@@ -1681,6 +1688,14 @@ export class PlayerGame extends Game {
         }
     }
 
+    protected needsContinuousRender(): boolean {
+        return (
+            super.needsContinuousRender() ||
+            this._screenshotTasks.length > 0 ||
+            TWEEN.getAll().length > 0
+        );
+    }
+
     private async _capturePortalScreenshots() {
         const tasks = this._screenshotTasks.splice(
             0,
@@ -2476,6 +2491,7 @@ export class PlayerGame extends Game {
 
     private _updateConfigBotValues() {
         const devicePixelRatio = window.devicePixelRatio || 1;
+        const defaultMaxFrameRate = super.getMaxFrameRate();
         for (let [id, sim] of appManager.simulationManager.simulations) {
             const config = sim.helper.userBot;
             if (config) {
@@ -2483,6 +2499,13 @@ export class PlayerGame extends Game {
                 let hasUpdate = false;
                 if (config.tags['defaultPixelRatio'] !== devicePixelRatio) {
                     update.defaultPixelRatio = devicePixelRatio;
+                    hasUpdate = true;
+                }
+                if (
+                    (config.tags['defaultMaxFrameRate'] ?? null) !==
+                    defaultMaxFrameRate
+                ) {
+                    update.defaultMaxFrameRate = defaultMaxFrameRate;
                     hasUpdate = true;
                 }
 

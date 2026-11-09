@@ -24,6 +24,7 @@ import {
 import { addCorsQueryParam } from './SceneUtils';
 import { appManager } from '../AppManager';
 import { parseCasualOSUrl } from '../UrlUtils';
+import { RenderRequests } from './RenderRequests';
 
 // TODO: Put a max size on the cache.
 const cache = new Map<string, Promise<Texture>>();
@@ -81,6 +82,7 @@ export class AuxTextureLoader {
 
                 this.image = null;
                 resolve(texture);
+                RenderRequests.requestRender();
             };
             onImageLoad = onImageLoad.bind(this);
 
@@ -101,6 +103,7 @@ export class AuxTextureLoader {
 
     private async _loadVideo(url: string): Promise<Texture> {
         const el = await this._loadVideoElement(url);
+        RenderRequests.trackVideo(el);
         return new VideoTexture(el);
     }
 

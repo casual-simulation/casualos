@@ -11824,6 +11824,12 @@ Object {
                       "delete inst",
                     ],
                   },
+                  "defaultMaxFrameRate": Object {
+                    "description": "The default maximum number of frames per second that the 3D portals should run at. Does not apply while in AR or VR. Can be overridden by setting the maxFrameRate tag on the configBot. If null, then the frame rate is limited only by the display refresh rate. Defaults to null.",
+                    "nullable": true,
+                    "optional": true,
+                    "type": "number",
+                  },
                   "disableCollaboration": Object {
                     "nullable": true,
                     "optional": true,
@@ -11936,6 +11942,12 @@ Object {
                     "nullable": true,
                     "optional": true,
                     "type": "string",
+                  },
+                  "renderOnDemand": Object {
+                    "description": "Whether the 3D portals should only be rendered when something has changed. When enabled, the portals stop rendering frames while the scene is idle, which reduces GPU usage and power consumption. Defaults to false.",
+                    "nullable": true,
+                    "optional": true,
+                    "type": "boolean",
                   },
                   "requirePrivoLogin": Object {
                     "defaultValue": false,
@@ -24761,6 +24773,12 @@ Object {
                       "delete inst",
                     ],
                   },
+                  "defaultMaxFrameRate": Object {
+                    "description": "The default maximum number of frames per second that the 3D portals should run at. Does not apply while in AR or VR. Can be overridden by setting the maxFrameRate tag on the configBot. If null, then the frame rate is limited only by the display refresh rate. Defaults to null.",
+                    "nullable": true,
+                    "optional": true,
+                    "type": "number",
+                  },
                   "disableCollaboration": Object {
                     "nullable": true,
                     "optional": true,
@@ -24873,6 +24891,12 @@ Object {
                     "nullable": true,
                     "optional": true,
                     "type": "string",
+                  },
+                  "renderOnDemand": Object {
+                    "description": "Whether the 3D portals should only be rendered when something has changed. When enabled, the portals stop rendering frames while the scene is idle, which reduces GPU usage and power consumption. Defaults to false.",
+                    "nullable": true,
+                    "optional": true,
+                    "type": "boolean",
                   },
                   "requirePrivoLogin": Object {
                     "defaultValue": false,

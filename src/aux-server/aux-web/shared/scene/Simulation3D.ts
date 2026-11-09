@@ -62,6 +62,7 @@ import type { Grid3D } from './Grid3D';
 import type { CoordinateTransformer } from './CoordinateSystem';
 import { latLonToCartesian } from './CoordinateSystem';
 import { AnimationHelper } from './AnimationHelper';
+import { RenderRequests } from './RenderRequests';
 import {
     Rotation,
     Vector3 as CasualOSVector3,
@@ -343,6 +344,7 @@ export abstract class Simulation3D
     }
 
     private _dimensionsUpdated(update: BotDimensionsUpdate): void {
+        RenderRequests.requestRender();
         this._currentContext = update.calc;
         const calc = update.calc;
         for (let event of update.events) {
@@ -563,8 +565,10 @@ export abstract class Simulation3D
             e.type === 'add_bot_map_layer' ||
             e.type === 'remove_bot_map_layer'
         ) {
+            RenderRequests.requestRender();
             this._queueEventForBot(e, e.botId);
         } else if (e.type === 'local_tween') {
+            RenderRequests.requestRender();
             this._queueEventForBot(e, e.botId, e.dimension);
         }
     }
@@ -640,6 +644,7 @@ export abstract class Simulation3D
      * @param botIds The IDs of the bots to update.
      */
     ensureUpdate(botIds: string[]): void {
+        RenderRequests.requestRender();
         for (let id of botIds) {
             this._updateList.add(id);
         }
@@ -702,18 +707,21 @@ export abstract class Simulation3D
     }
 
     protected _botsUpdated(updates: UpdatedBotInfo[], initialUpdate: boolean) {
+        RenderRequests.requestRender();
         for (let bot of updates) {
             this._onBotUpdated(this._currentContext, bot);
         }
     }
 
     protected _botsRemoved(bots: string[]) {
+        RenderRequests.requestRender();
         for (let bot of bots) {
             this._onBotRemoved(this._currentContext, bot);
         }
     }
 
     protected _botsAdded(bots: PrecalculatedBot[]) {
+        RenderRequests.requestRender();
         for (let bot of bots) {
             this._onBotAdded(this._currentContext, bot);
         }

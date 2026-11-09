@@ -69,6 +69,7 @@ import HelixUrl from '../../public/meshes/dna_form.glb';
 import EggUrl from '../../public/meshes/egg.glb';
 import { AuxBot3D } from '../AuxBot3D';
 import { AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
+import { RenderRequests } from '../RenderRequests';
 import { getGLTFPool } from '../GLTFHelpers';
 import type { Game } from '../Game';
 import { HtmlMixer, HtmlMixerHelpers } from '../HtmlMixer';
@@ -228,6 +229,7 @@ export class BotShapeDecorator
         if (this._game && this._animationMixer && this._animationEnabled) {
             this._animationMixer.update(this._game.getTime().deltaTime);
             this.scene?.updateMatrixWorld(true);
+            RenderRequests.requestRender();
         }
         this._updateLightTarget(null);
     }
@@ -1364,11 +1366,16 @@ export class BotShapeDecorator
                 if (this._splat !== mesh) {
                     return;
                 }
+                RenderRequests.requestRender();
                 const localBox = mesh.getBoundingBox();
 
                 // Apply -90° X rotation to the bounding box.
                 const box = new Box3(
-                    new Vector3(localBox.min.x, localBox.min.z, -localBox.max.y),
+                    new Vector3(
+                        localBox.min.x,
+                        localBox.min.z,
+                        -localBox.max.y
+                    ),
                     new Vector3(localBox.max.x, localBox.max.z, -localBox.min.y)
                 );
 
@@ -1464,6 +1471,7 @@ export class BotShapeDecorator
     }
 
     private _setGltf(gltf: GLTF) {
+        RenderRequests.requestRender();
         // Positioning
         gltf.scene.quaternion.setFromAxisAngle(
             new Vector3(1, 0, 0),
@@ -1631,6 +1639,7 @@ export class BotShapeDecorator
     }
 
     private _setLDraw(ldraw: Group) {
+        RenderRequests.requestRender();
         const group = new Group();
         group.add(ldraw);
 
@@ -1741,6 +1750,7 @@ export class BotShapeDecorator
     }
 
     private _setJsonObject(obj: Object3D) {
+        RenderRequests.requestRender();
         const group = new Group();
         group.add(obj);
 
