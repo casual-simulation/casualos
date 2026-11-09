@@ -105,6 +105,7 @@ import type {
     DomainNameValidator,
     DomainNameVerificationDNSRecord,
 } from './dns/DomainNameValidator';
+import { normalizeDomainName } from './dns/DomainNames';
 import type { WebManifest } from '@casual-simulation/aux-common/common/WebManifest';
 import axios from 'axios';
 import { STORED_AUX_SCHEMA } from './webhooks';
@@ -1421,6 +1422,15 @@ export class RecordsController {
 
         const expectedDomainName = new URL(meta.frontendOrigin).hostname;
 
+        const domainName = normalizeDomainName(request.domain);
+        if (!domainName) {
+            return failure({
+                errorCode: 'unacceptable_request',
+                errorMessage:
+                    'The given domain is not a valid host name. It should look like "app.example.com", without a scheme, port, path or wildcard.',
+            });
+        }
+
         const studio = await this._store.getStudioById(request.studioId);
 
         if (!studio) {
@@ -1477,7 +1487,7 @@ export class RecordsController {
         const verificationKey = fromByteArray(randomBytes(16));
         const customDomain: CustomDomain = {
             id: uuidv7(),
-            domainName: request.domain,
+            domainName,
             studioId: request.studioId,
             verificationKey,
             expectedHostName: expectedDomainName,
@@ -1807,7 +1817,7 @@ export class RecordsController {
             this._config.getWebConfig(),
             this._config.getSubscriptionConfiguration(),
             this._config.getPrivoConfiguration(),
-            this._store.getVerifiedCustomDomainByName(hostname),
+            this._getVerifiedCustomDomain(hostname),
         ]);
 
         const webConfig = {
@@ -1845,9 +1855,7 @@ export class RecordsController {
         console.log(
             `[RecordsController] [getPlayerWebManifest] Attempting to get web manifest for hostname: ${hostname}`
         );
-        const customDomain = await this._store.getVerifiedCustomDomainByName(
-            hostname
-        );
+        const customDomain = await this._getVerifiedCustomDomain(hostname);
 
         if (customDomain?.studio.playerWebManifest) {
             console.log(
@@ -1882,10 +1890,26 @@ export class RecordsController {
     async getVerifiedCustomDomainByName(
         hostname: string
     ): Promise<Result<CustomDomainWithStudio | null, SimpleError>> {
-        const customDomain = await this._store.getVerifiedCustomDomainByName(
-            hostname
-        );
+        const customDomain = await this._getVerifiedCustomDomain(hostname);
         return success(customDomain);
+    }
+
+    /**
+     * Normalizes the given host name and finds the verified custom domain for it.
+     * Returns null if the host name is invalid or doesn't match a verified custom domain.
+     * @param hostname The host name.
+     */
+    private async _getVerifiedCustomDomain(
+        hostname: string
+    ): Promise<CustomDomainWithStudio | null> {
+        if (!hostname) {
+            return null;
+        }
+        const domainName = normalizeDomainName(hostname);
+        if (!domainName) {
+            return null;
+        }
+        return await this._store.getVerifiedCustomDomainByName(domainName);
     }
 
     @traced(TRACE_NAME)

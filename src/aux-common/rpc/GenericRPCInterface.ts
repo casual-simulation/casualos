@@ -130,9 +130,10 @@ export interface Procedure<
      * If 'account', then only the configured account origins are allowed.
      * If 'api', then only the configured API origins are allowed.
      * If 'self', then either the API or account origins are allowed.
+     * If 'login', then the configured account origins and verified custom domains are allowed.
      * If omitted, then it is up to the handler to determine if the origin is allowed.
      */
-    allowedOrigins?: Set<string> | true | 'account' | 'api' | 'self';
+    allowedOrigins?: Set<string> | true | 'account' | 'api' | 'self' | 'login';
 
     /**
      * The HTTP-specific configuration for the procedure.
@@ -283,7 +284,13 @@ export interface ProcedureBuilder {
      * @param allowedOrigins The origins that are allowed.
      */
     origins(
-        allowedOrigins: Set<string> | true | 'account' | 'api' | 'self'
+        allowedOrigins:
+            | Set<string>
+            | true
+            | 'account'
+            | 'api'
+            | 'self'
+            | 'login'
     ): this;
 
     /**
@@ -362,13 +369,28 @@ export function procedure(): InputlessProcedureBuilder {
 class ProcBuilder
     implements OutputlessProcedureBuilder<any, any>, InputlessProcedureBuilder
 {
-    private _allowedOrigins: Set<string> | true | 'account' | 'api' | undefined;
+    private _allowedOrigins:
+        | Set<string>
+        | true
+        | 'account'
+        | 'api'
+        | 'self'
+        | 'login'
+        | undefined;
     private _schema: z.ZodType;
     private _querySchema: z.ZodType;
     private _http: Procedure<any, any, any>['http'];
     private _view: Procedure<any, any, any>['view'];
 
-    origins(allowedOrigins: Set<string> | true | 'account' | 'api'): this {
+    origins(
+        allowedOrigins:
+            | Set<string>
+            | true
+            | 'account'
+            | 'api'
+            | 'self'
+            | 'login'
+    ): this {
         this._allowedOrigins = allowedOrigins;
         return this;
     }
@@ -466,9 +488,10 @@ export interface ProcedureMetadata {
      * If 'account', then only the configured account origins are allowed.
      * If 'api', then only the configured API origins are allowed.
      * If 'self', then either the API or account origins are allowed.
+     * If 'login', then the configured account origins and verified custom domains are allowed.
      * If omitted, then it is up to the handler to determine if the origin is allowed.
      */
-    origins?: Set<string> | true | 'account' | 'api' | 'self';
+    origins?: Set<string> | true | 'account' | 'api' | 'self' | 'login';
 
     /**
      * The HTTP-specific configuration for the procedure.

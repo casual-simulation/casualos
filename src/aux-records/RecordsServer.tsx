@@ -51,6 +51,7 @@ import type {
 import type { ZodError } from 'zod';
 import { z } from 'zod';
 import { HUME_CONFIG, LOOM_CONFIG } from './RecordsStore';
+import type { CustomDomainWithStudio } from './RecordsStore';
 import type { RateLimitController } from './RateLimitController';
 import { tryParseJson } from '@casual-simulation/aux-common';
 import {
@@ -340,9 +341,10 @@ export interface Route<
      * If 'account', then only the configured account origins are allowed.
      * If 'api', then only the configured API origins are allowed.
      * If 'self', then either the API or account origins are allowed.
+     * If 'login', then the configured account origins and verified custom domains are allowed.
      * If omitted, then it is up to the handler to determine if the origin is allowed.
      */
-    allowedOrigins?: Set<string> | true | 'account' | 'api' | 'self';
+    allowedOrigins?: Set<string> | true | 'account' | 'api' | 'self' | 'login';
 }
 
 const RECORDS_SERVER_METER = 'RecordsServer';
@@ -1014,7 +1016,7 @@ export class RecordsServer {
                 }),
 
             getUserInfo: procedure()
-                .origins('account')
+                .origins('login')
                 .inputs(
                     z.object({
                         userId: z.string(),
@@ -1110,7 +1112,7 @@ export class RecordsServer {
                 }),
 
             listSessions: procedure()
-                .origins('account')
+                .origins('login')
                 .http('GET', '/api/v2/sessions')
                 .inputs(
                     z
@@ -1148,7 +1150,7 @@ export class RecordsServer {
                     return result;
                 }),
             replaceSession: procedure()
-                .origins('account')
+                .origins('login')
                 .http('POST', '/api/v2/replaceSession')
                 .handler(async (_, context) => {
                     const sessionKey = context.sessionKey;
@@ -1164,7 +1166,7 @@ export class RecordsServer {
                     return result;
                 }),
             revokeAllSessions: procedure()
-                .origins('account')
+                .origins('login')
                 .http('POST', '/api/v2/revokeAllSessions')
                 .inputs(
                     z.object({
@@ -1187,7 +1189,7 @@ export class RecordsServer {
                 }),
 
             revokeSession: procedure()
-                .origins('account')
+                .origins('login')
                 .http('POST', '/api/v2/revokeSession')
                 .inputs(
                     z.object({
@@ -1228,7 +1230,7 @@ export class RecordsServer {
                 ),
 
             completeLogin: procedure()
-                .origins('account')
+                .origins('login')
                 .http('POST', '/api/v2/completeLogin')
                 .inputs(
                     z.object({
@@ -1243,13 +1245,14 @@ export class RecordsServer {
                         requestId,
                         code,
                         ipAddress: context.ipAddress,
+                        originStudioId: await this._getOriginStudioId(context),
                     });
 
                     return result;
                 }),
 
             requestLogin: procedure()
-                .origins('account')
+                .origins('login')
                 .http('POST', '/api/v2/login')
                 .inputs(
                     z.object({
@@ -1258,6 +1261,7 @@ export class RecordsServer {
                         loginStudioId: z.string().nullable().optional(),
                         comId: z.string().nullable().optional(),
                         customDomain: z.string().nullable().optional(),
+                        strictCustomDomain: z.boolean().nullable().optional(),
                     })
                 )
                 .handler(
@@ -1268,6 +1272,7 @@ export class RecordsServer {
                             loginStudioId,
                             comId,
                             customDomain,
+                            strictCustomDomain,
                         },
                         context
                     ) => {
@@ -1278,6 +1283,10 @@ export class RecordsServer {
                             loginStudioId,
                             comId,
                             customDomain,
+                            strictCustomDomain,
+                            originStudioId: await this._getOriginStudioId(
+                                context
+                            ),
                         });
 
                         return result;
@@ -7931,7 +7940,8 @@ export class RecordsServer {
                 }
 
                 let origins =
-                    proc.allowedOrigins === 'account'
+                    proc.allowedOrigins === 'account' ||
+                    proc.allowedOrigins === 'login'
                         ? this._allowedAccountOrigins
                         : proc.allowedOrigins === 'api'
                         ? this._allowedApiOrigins
@@ -7941,6 +7951,7 @@ export class RecordsServer {
 
                 const allowCustomDomains =
                     proc.allowedOrigins === 'api' ||
+                    proc.allowedOrigins === 'login' ||
                     proc.allowedOrigins === true;
                 const validOrigin = await this.verifyOrigins(
                     request,
@@ -8271,34 +8282,14 @@ export class RecordsServer {
         }
 
         if (allowCustomDomains) {
-            if (!request.headers.host && !request.headers.origin) {
-                // If the request doesn't have a host or origin header, then we can't verify the origin. Reject the request.
-                return failure(INVALID_ORIGIN_RESULT);
-            }
+            // Fallback to checking custom domains
+            // Custom domains are allowed if the true origin matches a verified custom domain in our system.
+            const customDomain = await this._findRequestCustomDomain(request);
 
-            let originHostname: string;
-
-            try {
-                // Fallback to checking custom domains
-                // Custom domains are allowed if the true origin matches a verified custom domain in our system.
-                const origin = new URL(
-                    request.headers.origin ?? `http://${request.headers.host}`
-                );
-                originHostname = origin.hostname;
-            } catch (err) {
-                // Malformed origin or host header. Reject the request.
-                return failure(INVALID_ORIGIN_RESULT);
-            }
-
-            const customDomain =
-                await this._records.getVerifiedCustomDomainByName(
-                    originHostname
-                );
-
-            if (isSuccess(customDomain) && customDomain.value) {
+            if (customDomain) {
                 console.log(
                     '[RecordsServer] Verified custom domain origin:',
-                    originHostname
+                    customDomain.domainName
                 );
 
                 // allow the request
@@ -8309,6 +8300,58 @@ export class RecordsServer {
         }
 
         return failure(INVALID_ORIGIN_RESULT);
+    }
+
+    /**
+     * Finds the verified custom domain that the given request was sent from.
+     * Uses the origin header, or the host header if the request has no origin.
+     * Returns null if the request was not sent from a verified custom domain.
+     * @param request The request.
+     */
+    private async _findRequestCustomDomain(
+        request: GenericHttpRequest
+    ): Promise<CustomDomainWithStudio | null> {
+        if (!request.headers.host && !request.headers.origin) {
+            // If the request doesn't have a host or origin header, then we can't verify the origin.
+            return null;
+        }
+
+        let originHostname: string;
+        try {
+            const origin = new URL(
+                request.headers.origin ?? `http://${request.headers.host}`
+            );
+            originHostname = origin.hostname;
+        } catch (err) {
+            // Malformed origin or host header.
+            return null;
+        }
+
+        const customDomain = await this._records.getVerifiedCustomDomainByName(
+            originHostname
+        );
+
+        if (isSuccess(customDomain) && customDomain.value) {
+            return customDomain.value;
+        }
+        return null;
+    }
+
+    /**
+     * Gets the ID of the studio whose verified custom domain the given request was sent from.
+     * Returns null if the request was sent from one of the configured account origins, or not from a verified custom domain.
+     * @param context The context of the request.
+     */
+    private async _getOriginStudioId(
+        context: RPCContext
+    ): Promise<string | null> {
+        const request = context.httpRequest;
+        if (!request || validateOrigin(request, this._allowedAccountOrigins)) {
+            return null;
+        }
+
+        const customDomain = await this._findRequestCustomDomain(request);
+        return customDomain?.studioId ?? null;
     }
 
     @traceHttpResponse()
@@ -8442,7 +8485,8 @@ export class RecordsServer {
                 }
 
                 let origins =
-                    route.allowedOrigins === 'account'
+                    route.allowedOrigins === 'account' ||
+                    route.allowedOrigins === 'login'
                         ? this._allowedAccountOrigins
                         : route.allowedOrigins === 'api'
                         ? this._allowedApiOrigins
@@ -8453,7 +8497,8 @@ export class RecordsServer {
                 try {
                     const allowCustomDomains =
                         route.allowedOrigins === 'api' ||
-                        route.allowedOrigins === 'self';
+                        route.allowedOrigins === 'self' ||
+                        route.allowedOrigins === 'login';
                     const validOrigin = await this.verifyOrigins(
                         request,
                         origins,

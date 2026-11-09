@@ -41,7 +41,7 @@ export class DNSDomainNameValidator implements DomainNameValidator {
         console.log(
             `[DNSDomainNameValidator] Validating domain name: ${domainName}`
         );
-        const records = await dns.resolveTxt(domainName);
+        const records = await resolveOrEmpty(() => dns.resolveTxt(domainName));
 
         const expectedHash = this._generateVerificationHash(
             domainName,
@@ -59,7 +59,9 @@ export class DNSDomainNameValidator implements DomainNameValidator {
             }
         }
 
-        const cnameRecords = await dns.resolveCname(domainName);
+        const cnameRecords = await resolveOrEmpty(() =>
+            dns.resolveCname(domainName)
+        );
         console.log(
             `[DNSDomainNameValidator] Retrieved CNAME records:`,
             cnameRecords
@@ -79,8 +81,10 @@ export class DNSDomainNameValidator implements DomainNameValidator {
 
         return failure({
             errorCode: 'not_found',
-            errorMessage:
-                'Valid DNS TXT and CNAME records were not found for the domain name.',
+            errorMessage: getMissingRecordsMessage(
+                records.length > 0,
+                cnameRecords.length > 0
+            ),
         });
     }
 
@@ -115,4 +119,36 @@ export class DNSDomainNameValidator implements DomainNameValidator {
         const sha = hmac(<any>sha256, verificationKey);
         return sha.update(domainName).digest('hex');
     }
+}
+
+/**
+ * The DNS error codes that indicate that a domain has no records of the requested type.
+ */
+const NO_RECORDS_ERROR_CODES = new Set(['ENODATA', 'ENOTFOUND']);
+
+/**
+ * Runs the given DNS lookup and returns an empty list if the domain has no records of the requested type.
+ * Other errors are rethrown.
+ * @param lookup The function that performs the lookup.
+ */
+async function resolveOrEmpty<T>(lookup: () => Promise<T[]>): Promise<T[]> {
+    try {
+        return await lookup();
+    } catch (err) {
+        if (err && NO_RECORDS_ERROR_CODES.has(err.code)) {
+            return [];
+        }
+        throw err;
+    }
+}
+
+function getMissingRecordsMessage(hasTxt: boolean, hasCname: boolean): string {
+    if (!hasTxt && !hasCname) {
+        return 'No DNS TXT or CNAME records were found for the domain name.';
+    } else if (!hasTxt) {
+        return 'No DNS TXT records were found for the domain name, and the CNAME record does not point to the expected host name.';
+    } else if (!hasCname) {
+        return 'No DNS CNAME records were found for the domain name, and the TXT records do not contain the expected verification value.';
+    }
+    return 'The DNS TXT records do not contain the expected verification value, and the CNAME record does not point to the expected host name.';
 }

@@ -104,6 +104,7 @@ import type {
     StripeRequirementsStatus,
 } from './StripeInterface';
 import type { RecordsStore, Studio } from './RecordsStore';
+import { normalizeDomainName } from './dns/DomainNames';
 
 const TRACE_NAME = 'AuthController';
 
@@ -509,17 +510,51 @@ export class AuthController {
                 );
                 loginStudioId = studio.id;
             } else if (request.customDomain) {
-                const customDomain =
-                    await this._records.getVerifiedCustomDomainByName(
-                        request.customDomain
-                    );
+                const domainName = normalizeDomainName(request.customDomain);
+                const customDomain = domainName
+                    ? await this._records.getVerifiedCustomDomainByName(
+                          domainName
+                      )
+                    : null;
 
+                if (!customDomain && request.strictCustomDomain) {
+                    return {
+                        success: false,
+                        errorCode: 'not_found',
+                        errorMessage:
+                            'The specified custom domain was not found.',
+                    };
+                }
+
+                // The auth site sends the referrer's hostname as the custom domain,
+                // so by default hostnames that aren't verified custom domains have to be ignored.
                 if (customDomain) {
                     console.log(
                         `[AuthController] [requestLogin] Logging into studio (${customDomain.studioId}) for custom domain: ${request.customDomain}.`
                     );
                     loginStudioId = customDomain.studioId;
                 }
+            }
+
+            if (request.originStudioId) {
+                if (
+                    (request.loginStudioId ||
+                        request.comId ||
+                        request.customDomain) &&
+                    loginStudioId !== request.originStudioId
+                ) {
+                    console.log(
+                        `[AuthController] [requestLogin] Login rejected because the requested studio (${loginStudioId}) does not match the studio (${request.originStudioId}) that owns the request's custom domain.`
+                    );
+                    return {
+                        success: false,
+                        errorCode: 'invalid_origin',
+                        errorMessage:
+                            'Logins from this domain can only be made for the comID that owns it.',
+                    };
+                }
+
+                loginStudioId = request.originStudioId;
             }
 
             let user = await this._store.findUserByAddress(
@@ -798,6 +833,20 @@ export class AuthController {
             }
 
             if (user.currentLoginRequestId !== loginRequest.requestId) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: INVALID_REQUEST_ERROR_MESSAGE,
+                };
+            }
+
+            if (
+                request.originStudioId &&
+                user.loginStudioId !== request.originStudioId
+            ) {
+                console.log(
+                    `[AuthController] [completeLogin] Login rejected because the user's studio (${user.loginStudioId}) does not match the studio (${request.originStudioId}) that owns the request's custom domain.`
+                );
                 return {
                     success: false,
                     errorCode: 'invalid_request',
@@ -4122,8 +4171,23 @@ export interface LoginRequest {
      * The custom domain (i.e. hostname) that the login is for.
      *
      * If specified, then the hostname will be used to determine the studio/comID that the login is for.
+     * Hostnames that are not verified custom domains are ignored, unless strictCustomDomain is true.
      */
     customDomain?: string | null;
+
+    /**
+     * Whether the login should be rejected with a not_found error if customDomain is not a verified custom domain.
+     * If false or omitted, then unverified custom domains are ignored and the login uses loginStudioId or the global user pool.
+     */
+    strictCustomDomain?: boolean | null;
+
+    /**
+     * The ID of the studio that owns the verified custom domain that the request was sent from.
+     *
+     * If specified, then the login always goes to this studio's user pool, and the login is rejected if
+     * loginStudioId, comId or customDomain refer to a different studio.
+     */
+    originStudioId?: string | null;
 }
 
 export type LoginRequestResult = LoginRequestSuccess | LoginRequestFailure;
@@ -4177,6 +4241,7 @@ export interface LoginRequestFailure {
         | 'address_type_not_supported'
         | 'user_is_banned'
         | 'not_found'
+        | 'invalid_origin'
         | ServerError;
 
     /**
@@ -4210,6 +4275,13 @@ export interface CompleteLoginRequest {
      * The IP address that the request is coming from.
      */
     ipAddress: string;
+
+    /**
+     * The ID of the studio that owns the verified custom domain that the request was sent from.
+     *
+     * If specified, then only logins for users in this studio's user pool can be completed.
+     */
+    originStudioId?: string | null;
 }
 
 export type CompleteLoginResult = CompleteLoginSuccess | CompleteLoginFailure;
