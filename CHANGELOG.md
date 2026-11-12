@@ -89,6 +89,21 @@
 -   Fixed `verifyCustomDomain` failing with a server error when the domain had no TXT records or no CNAME record. Missing records are now treated as empty, and the error message says which records were not found ([#903](https://github.com/casual-simulation/casualos/issues/903)).
 -   Custom domain names are now normalized when they are added and looked up: they are lower-cased, a trailing dot is removed and internationalized names are converted to punycode. `addCustomDomain` now rejects values that aren't valid host names, such as values with a scheme, port, path or wildcard, and IP addresses ([#904](https://github.com/casual-simulation/casualos/issues/904)).
 
+### :bug: Bug Fixes
+
+-   Updated NPM packages to fix security vulnerabilities reported by `pnpm audit`.
+    -   Updated `vite` to v6.4.5 (along with `@vitejs/plugin-vue2`, `@vitejs/plugin-basic-ssl`, `vite-plugin-pwa`, and `vite-plugin-singlefile`).
+    -   Updated `axios`, `zod`, `minio`, `cassandra-driver`, `prisma`, `rollup`, `simple-git`, `tar`, `lerna`, `eslint`, `@pulumi/pulumi`, and `@playwright/test`.
+    -   Added `pnpm` overrides that move vulnerable transitive dependencies to patched versions within the same major version.
+    -   Removed the unused `precise-commits` dev dependency.
+    -   Updated the OpenTelemetry SDK packages to v2 (`@opentelemetry/sdk-node` and the related exporter and instrumentation packages to v0.223, `@opentelemetry/auto-instrumentations-node` to v0.81).
+        -   Replaced the deprecated `@opentelemetry/instrumentation-redis-4` package with `@opentelemetry/instrumentation-redis`.
+        -   **Telemetry changes:** The HTTP instrumentation now uses the stable OpenTelemetry semantic conventions. Dashboards, alerts, and queries that use the old names need to be updated:
+            -   `http.method` is now `http.request.method`.
+            -   `http.status_code` is now `http.response.status_code`.
+            -   `http.url` and `http.target` are now `url.full` and `url.path`.
+            -   The `http.server.duration` and `http.client.duration` metrics (in milliseconds) are now `http.server.request.duration` and `http.client.request.duration` (in seconds).
+
 ## V4.2.7
 
 #### Date: 8/13/2026

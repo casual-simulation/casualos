@@ -1137,10 +1137,12 @@ describe('WebhookRecordsController', () => {
                         issues: [
                             {
                                 code: 'invalid_union',
-                                message: 'Invalid input',
+                                message:
+                                    "Invalid discriminator value. Expected '1' | '2'",
                                 note: 'No matching discriminator',
                                 path: ['version'],
                                 discriminator: 'version',
+                                options: [1, 2],
                                 errors: [],
                             },
                         ],

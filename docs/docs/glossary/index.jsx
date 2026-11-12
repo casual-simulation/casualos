@@ -30,7 +30,7 @@ import Tooltip from 'rc-tooltip';
 import 'rc-tooltip/assets/bootstrap.css';
 
 function relativeLink(path) {
-    return new URL(path, import.meta.url).href;
+    return useBaseUrl(path);
 }
 
 export const Glossary = [

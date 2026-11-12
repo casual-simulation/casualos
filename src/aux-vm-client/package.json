@@ -47,7 +47,7 @@
         "@casual-simulation/crypto": "^4.0.5",
         "@casual-simulation/timesync": "^4.0.0",
         "@casual-simulation/websocket": "^4.0.0",
-        "axios": "1.7.7",
+        "axios": "1.21.0",
         "comlink": "4.3.1",
         "es-toolkit": "1.39.10",
         "rxjs": "8.0.0-alpha.14",
