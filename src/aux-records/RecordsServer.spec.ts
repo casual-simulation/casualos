@@ -28017,6 +28017,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                 statusCode: 200,
                 body: {
                     success: true,
+                    status: 'pending',
                 },
                 headers: accountCorsHeaders,
             });

@@ -711,6 +711,12 @@ export const getSubscriptionFeaturesSchema = memoize(() =>
                     .describe(
                         'The maximum number of custom domains that can be used with this comId. If omitted, then there is no limit.'
                     ),
+                autoApprove: z
+                    .boolean()
+                    .optional()
+                    .describe(
+                        'Whether comId requests from studios with this subscription should be approved automatically when the requested comId is valid, not reserved, and not already taken. Defaults to false, which means that comId requests have to be approved manually.'
+                    ),
             })
             .optional()
             .prefault({
@@ -1105,6 +1111,20 @@ export const getSubscriptionConfigSchema = memoize(() =>
                 'Configuration for purchasing credits. Defaults to an empty object, which means that purchasing credits is not supported.'
             ),
 
+        comIds: z
+            .object({
+                reservedComIds: z
+                    .array(z.string().min(1))
+                    .optional()
+                    .describe(
+                        'The list of comIds that cannot be automatically approved. Matching is case-insensitive.'
+                    ),
+            })
+            .optional()
+            .describe(
+                'Server-wide configuration for comIds. If omitted, then no comIds are reserved.'
+            ),
+
         subscriptions: z
             .array(getSubscriptionSchema())
             .describe('The list of subscriptions that are in use.'),
@@ -1261,6 +1281,19 @@ export interface SubscriptionConfiguration {
         maxQuantity?: number;
         minQuantity?: number;
     };
+
+    /**
+     * Server-wide configuration for comIds.
+     */
+    comIds?: ComIdsConfiguration;
+}
+
+export interface ComIdsConfiguration {
+    /**
+     * The list of comIds that cannot be automatically approved.
+     * Matching is case-insensitive.
+     */
+    reservedComIds?: string[];
 }
 
 // export interface APISubscription {
@@ -1708,12 +1741,11 @@ export interface StudioComIdFeaturesConfiguration {
      */
     allowed: boolean;
 
-    // TODO:
-    // /**
-    //  * Whether the studio is allowed to set their own comId.
-    //  * If false, then the user will be able to request changes to their comId, but they will not automatically apply.
-    //  */
-    // allowCustomComId: boolean;
+    /**
+     * Whether comId requests should be approved automatically.
+     * If false or omitted, then the user will be able to request changes to their comId, but they will not automatically apply.
+     */
+    autoApprove?: boolean;
 
     /**
      * The maximum number of studios that are allowed to be created in this comId.
@@ -2175,7 +2207,6 @@ export function getComIdFeatures(
     return (
         features.comId ?? {
             allowed: false,
-            // allowCustomComId: false,
         }
     );
 }

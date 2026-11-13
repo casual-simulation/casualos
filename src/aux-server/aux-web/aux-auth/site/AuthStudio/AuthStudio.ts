@@ -153,6 +153,7 @@ export default class AuthStudio extends Vue {
     showUpdateComIdConfig: boolean = false;
     showUpdateStudioInfo: boolean = false;
     showRequestComId: boolean = false;
+    comIdRequestPending: boolean = false;
     showUpdateLoomConfig: boolean = false;
     showUpdateHumeConfig: boolean = false;
     showUpdateStoreConfig: boolean = false;
@@ -895,7 +896,13 @@ export default class AuthStudio extends Vue {
             this.errors = getFormErrors(result);
             if (result.success === true) {
                 this.showRequestComId = false;
-                this.comId = this.requestedComId = comId;
+                if (result.status === 'approved') {
+                    this.comId = this.requestedComId = result.comId ?? comId;
+                    this.comIdRequestPending = false;
+                } else {
+                    this.comIdRequestPending = true;
+                    this.requestedComId = this.comId;
+                }
             }
         } finally {
             this.isSavingStudio = false;

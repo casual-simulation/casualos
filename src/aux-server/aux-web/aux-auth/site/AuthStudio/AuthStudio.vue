@@ -86,7 +86,12 @@
                 <md-table-row v-if="allowComId" @click="startRequestComId()">
                     <md-tooltip>The comID for this studio. Click to request new comID.</md-tooltip>
                     <md-table-cell>comID</md-table-cell>
-                    <md-table-cell>{{ comId || '(null)' }}</md-table-cell>
+                    <md-table-cell
+                        >{{ comId || '(null)' }}
+                        <span v-if="comIdRequestPending"
+                            >(request pending approval)</span
+                        ></md-table-cell
+                    >
                 </md-table-row>
                 <md-table-row v-if="allowComId" @click="updateComIdConfig()">
                     <md-tooltip
