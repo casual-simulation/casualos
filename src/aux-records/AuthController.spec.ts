@@ -677,6 +677,168 @@ describe('AuthController', () => {
             });
         });
 
+        describe('replay protection', () => {
+            it('should not allow the same token to be used twice', async () => {
+                const token = await signToken({ sub: userId });
+
+                const first = await controller.completeJwtLogin({
+                    token,
+                    ipAddress: '127.0.0.1',
+                });
+                expect(first).toEqual(
+                    expectedSession(userId, nowMs + SESSION_LIFETIME_MS)
+                );
+
+                randomBytesMock
+                    .mockReturnValueOnce(new Uint8Array([1, 2, 3]))
+                    .mockReturnValueOnce(new Uint8Array([4, 5, 6]))
+                    .mockReturnValueOnce(new Uint8Array([7, 8, 9]));
+
+                const second = await controller.completeJwtLogin({
+                    token,
+                    ipAddress: '127.0.0.1',
+                });
+                expect(second).toEqual({
+                    success: false,
+                    errorCode: 'invalid_token',
+                    errorMessage: 'The token has already been used.',
+                });
+
+                const sessions = await store.listSessions(userId, null);
+                expect(
+                    sessions.success === true ? sessions.sessions.length : -1
+                ).toBe(1);
+            });
+
+            it('should only issue one session when the same token is used concurrently', async () => {
+                randomBytesMock
+                    .mockReturnValueOnce(new Uint8Array([1, 2, 3]))
+                    .mockReturnValueOnce(new Uint8Array([4, 5, 6]))
+                    .mockReturnValueOnce(new Uint8Array([7, 8, 9]));
+                const token = await signToken({ sub: userId });
+
+                const results = await Promise.all([
+                    controller.completeJwtLogin({
+                        token,
+                        ipAddress: '127.0.0.1',
+                    }),
+                    controller.completeJwtLogin({
+                        token,
+                        ipAddress: '127.0.0.1',
+                    }),
+                ]);
+
+                expect(results.filter((r) => r.success)).toHaveLength(1);
+                expect(results.filter((r) => !r.success)).toEqual([
+                    {
+                        success: false,
+                        errorCode: 'invalid_token',
+                        errorMessage: 'The token has already been used.',
+                    },
+                ]);
+            });
+
+            it('should treat tokens with the same payload but a different signature as the same token', async () => {
+                // ECDSA signatures are randomized, so signing the same claims twice produces different token strings.
+                const token1 = await signToken({ sub: userId });
+                const token2 = await signToken({ sub: userId });
+                expect(token1).not.toEqual(token2);
+
+                const first = await controller.completeJwtLogin({
+                    token: token1,
+                    ipAddress: '127.0.0.1',
+                });
+                expect(first.success).toBe(true);
+
+                const second = await controller.completeJwtLogin({
+                    token: token2,
+                    ipAddress: '127.0.0.1',
+                });
+                expect(second).toEqual({
+                    success: false,
+                    errorCode: 'invalid_token',
+                    errorMessage: 'The token has already been used.',
+                });
+            });
+
+            it('should allow different tokens for the same user', async () => {
+                const first = await controller.completeJwtLogin({
+                    token: await signToken({ sub: userId, jti: 'token1' }),
+                    ipAddress: '127.0.0.1',
+                });
+                expect(first.success).toBe(true);
+
+                randomBytesMock
+                    .mockReturnValueOnce(new Uint8Array([1, 2, 3]))
+                    .mockReturnValueOnce(new Uint8Array([4, 5, 6]))
+                    .mockReturnValueOnce(new Uint8Array([7, 8, 9]));
+
+                const second = await controller.completeJwtLogin({
+                    token: await signToken({ sub: userId, jti: 'token2' }),
+                    ipAddress: '127.0.0.1',
+                });
+                expect(second.success).toBe(true);
+            });
+
+            it('should not record tokens that fail verification', async () => {
+                await controller.completeJwtLogin({
+                    token: await signToken(
+                        { sub: userId },
+                        { key: otherKeyPair.privateKey }
+                    ),
+                    ipAddress: '127.0.0.1',
+                });
+
+                expect(store.usedJwtLoginTokens.size).toBe(0);
+            });
+
+            it('should keep used tokens until they expire and then clean them up', async () => {
+                const token = await signToken(
+                    { sub: userId },
+                    { exp: nowSeconds + 60 }
+                );
+
+                await controller.completeJwtLogin({
+                    token,
+                    ipAddress: '127.0.0.1',
+                });
+
+                expect([...store.usedJwtLoginTokens.values()]).toEqual([
+                    (nowSeconds + 60 + 30) * 1000,
+                ]);
+
+                // After the token (and clock tolerance) expires, the next login cleans it up.
+                nowMock.mockReturnValue((nowSeconds + 91) * 1000);
+                randomBytesMock
+                    .mockReturnValueOnce(new Uint8Array([1, 2, 3]))
+                    .mockReturnValueOnce(new Uint8Array([4, 5, 6]))
+                    .mockReturnValueOnce(new Uint8Array([7, 8, 9]));
+
+                const replay = await controller.completeJwtLogin({
+                    token,
+                    ipAddress: '127.0.0.1',
+                });
+                // The expired token itself is still rejected by verification.
+                expect(replay).toEqual({
+                    success: false,
+                    errorCode: 'invalid_token',
+                    errorMessage: 'The token is invalid.',
+                });
+
+                const fresh = await controller.completeJwtLogin({
+                    token: await signToken(
+                        { sub: userId },
+                        { iat: nowSeconds + 91, exp: nowSeconds + 151 }
+                    ),
+                    ipAddress: '127.0.0.1',
+                });
+                expect(fresh.success).toBe(true);
+                expect([...store.usedJwtLoginTokens.values()]).toEqual([
+                    (nowSeconds + 151 + 30) * 1000,
+                ]);
+            });
+        });
+
         it('should use the configured session lifetime', async () => {
             controller.jwtLogin = {
                 ...controller.jwtLogin,

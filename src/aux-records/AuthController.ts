@@ -106,6 +106,7 @@ import type {
 import type { RecordsStore, Studio } from './RecordsStore';
 import { normalizeDomainName } from './dns/DomainNames';
 import * as jose from 'jose';
+import { getHash } from '@casual-simulation/crypto';
 import type {
     JwtLoginConfiguration,
     JwtLoginTrustedKey,
@@ -557,6 +558,29 @@ export class AuthController {
                     success: false,
                     errorCode: 'invalid_token',
                     errorMessage: 'The token is invalid.',
+                };
+            }
+
+            // Ensure that each JWT can only be used once.
+            // The token is identified by a hash of its (signature-verified) payload instead of the raw token string
+            // so that alternate encodings of the same token (e.g. re-encoded signatures) are treated as the same token.
+            // Issuers that need to issue multiple tokens for the same user within the same second should include a unique "jti" claim.
+            const tokenId = getHash(payload);
+            const tokenExpireTimeMs =
+                (payload.exp + this._jwtLogin.clockToleranceSeconds) * 1000;
+            const firstUse = await this._store.markJwtLoginTokenUsed(
+                tokenId,
+                tokenExpireTimeMs,
+                Date.now()
+            );
+            if (!firstUse) {
+                console.log(
+                    `[AuthController] [completeJwtLogin] JWT login rejected because the token has already been used (iss: ${payload.iss}, jti: ${payload.jti}).`
+                );
+                return {
+                    success: false,
+                    errorCode: 'invalid_token',
+                    errorMessage: 'The token has already been used.',
                 };
             }
 

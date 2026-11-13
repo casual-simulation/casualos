@@ -78,6 +78,7 @@ export const STUDIOS_COLLECTION_NAME = 'studios';
 export const STUDIO_COM_ID_REQEUSTS_COLLECTION_NAME = 'studioComIdRequests';
 export const WEB_AUTHN_LOGIN_REQUESTS_COLLECTION_NAME = 'webAuthnLoginRequests';
 export const OPENID_IDENTITIES_COLLECTION_NAME = 'openIdIdentities';
+export const USED_JWT_LOGIN_TOKENS_COLLECTION_NAME = 'usedJwtLoginTokens';
 
 export class MongoDBAuthStore implements AuthStore, RecordsStore {
     private _users: Collection<MongoDBAuthUser>;
@@ -95,6 +96,7 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
     private _userAuthenticators: Collection<MongoDBUserAuthenticator>;
     private _webauthnLoginRequests: Collection<MongoDBWebAuthnLoginRequest>;
     private _openIdIdentities: Collection<MongoDBOpenIdIdentity>;
+    private _usedJwtLoginTokens: Collection<MongoDBUsedJwtLoginToken>;
 
     private _db: Db;
 
@@ -142,6 +144,9 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
             );
         this._openIdIdentities = db.collection<MongoDBOpenIdIdentity>(
             OPENID_IDENTITIES_COLLECTION_NAME
+        );
+        this._usedJwtLoginTokens = db.collection<MongoDBUsedJwtLoginToken>(
+            USED_JWT_LOGIN_TOKENS_COLLECTION_NAME
         );
     }
 
@@ -292,6 +297,32 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
         );
 
         return request;
+    }
+
+    async markJwtLoginTokenUsed(
+        tokenId: string,
+        expireTimeMs: number,
+        usedTimeMs: number
+    ): Promise<boolean> {
+        // Clean up tokens that can no longer be used.
+        await this._usedJwtLoginTokens.deleteMany({
+            expireTimeMs: { $lt: usedTimeMs },
+        });
+
+        try {
+            await this._usedJwtLoginTokens.insertOne({
+                _id: tokenId,
+                expireTimeMs,
+                usedTimeMs,
+            });
+            return true;
+        } catch (err) {
+            // Duplicate key error
+            if ((err as any)?.code === 11000) {
+                return false;
+            }
+            throw err;
+        }
     }
 
     async markWebAuthnLoginRequestComplete(
@@ -1610,6 +1641,12 @@ export interface MongoDBUserAuthenticator extends AuthUserAuthenticator {
 
 export interface MongoDBWebAuthnLoginRequest extends AuthWebAuthnLoginRequest {
     _id: string;
+}
+
+export interface MongoDBUsedJwtLoginToken {
+    _id: string;
+    expireTimeMs: number;
+    usedTimeMs: number;
 }
 
 export interface MongoDBOpenIdIdentity {

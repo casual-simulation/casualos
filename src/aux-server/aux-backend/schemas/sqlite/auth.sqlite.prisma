@@ -282,6 +282,17 @@ model WebAuthnLoginRequest {
     authSessions AuthSession[]
 }
 
+model UsedJwtLoginToken {
+    // The hash of the JWT payload.
+    tokenId String @id
+
+    // The time after which the token can no longer be used.
+    expireTime Decimal
+    usedTime Decimal
+
+    @@index([expireTime])
+}
+
 model EmailRule {
     id BigInt @id @default(autoincrement())
     type String
