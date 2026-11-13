@@ -519,6 +519,22 @@ Object {
     Object {
       "http": Object {
         "method": "POST",
+        "path": "/api/v2/login/jwt",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "token": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "completeJwtLogin",
+      "origins": true,
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
         "path": "/api/v2/completeLogin",
       },
       "inputs": Object {
@@ -13469,6 +13485,22 @@ Object {
       },
       "name": "claimActivationKey",
       "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/login/jwt",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "token": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "completeJwtLogin",
+      "origins": true,
     },
     Object {
       "http": Object {

@@ -177,6 +177,25 @@ export interface AuthStore {
     ): Promise<void>;
 
     /**
+     * Atomically records that the JWT login token with the given ID has been used.
+     * Returns true if the token was recorded by this call.
+     * Returns false if the token has already been recorded as used (and has not expired).
+     *
+     * Implementations must guarantee that concurrent calls with the same token ID
+     * result in at most one call returning true.
+     * Implementations may also delete records for tokens that expired before the given used time.
+     *
+     * @param tokenId The unique ID of the token.
+     * @param expireTimeMs The unix time in miliseconds after which the token can no longer be used. The record only needs to be kept until this time.
+     * @param usedTimeMs The unix time in miliseconds that the token was used at.
+     */
+    markJwtLoginTokenUsed(
+        tokenId: string,
+        expireTimeMs: number,
+        usedTimeMs: number
+    ): Promise<boolean>;
+
+    /**
      * Saves the given authorization code for the given login request.
      * @param requestId The ID of the request.
      * @param authorizationCode The authorization code that should be saved.

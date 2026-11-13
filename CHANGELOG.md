@@ -6,6 +6,33 @@
 
 ### :rocket: Features
 
+-   Added support for logging in via JWTs that are signed by a trusted external service.
+
+    -   Configure the trusted public key(s) with the new `jwtLogin` server config option. Example:
+        ```json
+        {
+            "jwtLogin": {
+                "trustedKeys": [
+                    {
+                        "id": "my-key",
+                        "publicKey": "-----BEGIN PUBLIC KEY-----\n...\n-----END PUBLIC KEY-----",
+                        "algorithm": "ES256",
+                        "issuer": "https://auth.example.com",
+                        "audience": "casualos"
+                    }
+                ],
+                "maxTokenAgeSeconds": 300,
+                "allowUserCreation": false
+            }
+        }
+        ```
+    -   `publicKey` can be either a PEM-encoded SPKI public key or a JSON-encoded public JWK. Only asymmetric algorithms (`RS*`, `PS*`, `ES*`, `EdDSA`) are supported.
+    -   Added the `POST /api/v2/login/jwt` endpoint, which accepts `{ "token": "<jwt>" }` and returns a session key (and connection key) for the user specified by the JWT.
+    -   The JWT must identify the user with either a `sub` claim (the user ID) or an `email` claim. If both are included, the email must match the user's email.
+    -   The JWT must include `iat` and `exp` claims and cannot be older than `maxTokenAgeSeconds` (default 5 minutes). If `issuer`/`audience` are configured, the `iss`/`aud` claims must match. If the JWT has a `kid` header, only the trusted key with the matching `id` is used.
+    -   If `allowUserCreation` is `true`, then a new user will be created when the JWT has an `email` that does not belong to an existing user.
+    -   Each JWT can only be used once. Used tokens are recorded (by a hash of their payload) in the new `UsedJwtLoginToken` table until they expire, and attempting to reuse a token returns an `invalid_token` error. Issuers that may issue multiple tokens with identical claims (e.g. for the same user within the same second) should include a unique `jti` claim.
+
 -   Added support for "shared" permissions.
     -   Shared permissions are marker-based permissions that must be requested by one user and accepted
         by another user before they take effect. Once accepted, both users are granted the permission

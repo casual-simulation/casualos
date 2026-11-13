@@ -844,6 +844,41 @@ export class PrismaAuthStore implements AuthStore {
     }
 
     @traced(TRACE_NAME)
+    async markJwtLoginTokenUsed(
+        tokenId: string,
+        expireTimeMs: number,
+        usedTimeMs: number
+    ): Promise<boolean> {
+        // Clean up tokens that can no longer be used.
+        await this._client.usedJwtLoginToken.deleteMany({
+            where: {
+                expireTime: {
+                    lt: convertToDate(usedTimeMs),
+                },
+            },
+        });
+
+        try {
+            await this._client.usedJwtLoginToken.create({
+                data: {
+                    tokenId: tokenId,
+                    expireTime: convertToDate(expireTimeMs),
+                    usedTime: convertToDate(usedTimeMs),
+                },
+            });
+            return true;
+        } catch (err) {
+            if (
+                err instanceof Prisma.PrismaClientKnownRequestError &&
+                err.code === 'P2002'
+            ) {
+                return false;
+            }
+            throw err;
+        }
+    }
+
+    @traced(TRACE_NAME)
     async markWebAuthnLoginRequestComplete(
         requestId: string,
         userId: string,

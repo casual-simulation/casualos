@@ -228,6 +228,7 @@ export class MemoryStore
     private _oidLoginRequests: AuthOpenIDLoginRequest[] = [];
     private _openIdIdentities: AuthCustomOpenIDIdentity[] = [];
     private _webauthnLoginRequests: AuthWebAuthnLoginRequest[] = [];
+    private _usedJwtLoginTokens: Map<string, number> = new Map();
     private _sessions: AuthSession[] = [];
     private _subscriptions: AuthSubscription[] = [];
     private _periods: AuthSubscriptionPeriod[] = [];
@@ -359,6 +360,13 @@ export class MemoryStore
 
     get webauthnLoginRequests() {
         return this._webauthnLoginRequests;
+    }
+
+    /**
+     * The map of JWT login token IDs that have been used to their expiration times.
+     */
+    get usedJwtLoginTokens() {
+        return this._usedJwtLoginTokens;
     }
 
     get sessions() {
@@ -2004,6 +2012,25 @@ export class MemoryStore
             request.completedTimeMs = completedTimeMs;
             this._webauthnLoginRequests[index] = { ...request };
         }
+    }
+
+    async markJwtLoginTokenUsed(
+        tokenId: string,
+        expireTimeMs: number,
+        usedTimeMs: number
+    ): Promise<boolean> {
+        for (let [id, expire] of this._usedJwtLoginTokens) {
+            if (expire < usedTimeMs) {
+                this._usedJwtLoginTokens.delete(id);
+            }
+        }
+
+        if (this._usedJwtLoginTokens.has(tokenId)) {
+            return false;
+        }
+
+        this._usedJwtLoginTokens.set(tokenId, expireTimeMs);
+        return true;
     }
 
     async findUserAuthenticatorByCredentialId(

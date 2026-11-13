@@ -17,6 +17,7 @@
  */
 export * from './AuthController';
 export * from './AuthStore';
+export * from './JwtLoginConfiguration';
 
 export * from './RecordsController';
 export * from './RecordsStore';

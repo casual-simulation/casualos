@@ -4613,6 +4613,160 @@ describe('RecordsServer', () => {
         );
     });
 
+    describe('POST /api/v2/login/jwt', () => {
+        let keyPair: jose.GenerateKeyPairResult<jose.KeyLike>;
+
+        beforeAll(async () => {
+            keyPair = await jose.generateKeyPair('ES256');
+        });
+
+        beforeEach(async () => {
+            authController.jwtLogin = {
+                trustedKeys: [
+                    {
+                        publicKey: await jose.exportSPKI(keyPair.publicKey),
+                        algorithm: 'ES256',
+                        issuer: 'https://issuer.example.com',
+                    },
+                ],
+                maxTokenAgeSeconds: 300,
+                clockToleranceSeconds: 30,
+                allowUserCreation: false,
+            };
+        });
+
+        function signToken(claims: jose.JWTPayload) {
+            return new jose.SignJWT(claims)
+                .setProtectedHeader({ alg: 'ES256' })
+                .setIssuer('https://issuer.example.com')
+                .setIssuedAt()
+                .setExpirationTime('1m')
+                .sign(keyPair.privateKey);
+        }
+
+        it('should return a session key for the user in the JWT', async () => {
+            const token = await signToken({ sub: userId });
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/login/jwt`,
+                    JSON.stringify({ token }),
+                    {
+                        origin: 'https://account-origin.com',
+                    },
+                    '123.456.789'
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    userId,
+                    sessionKey: expect.any(String),
+                    expireTimeMs: expect.any(Number),
+                    connectionKey: expect.any(String),
+                    metadata: expect.any(Object),
+                },
+                headers: accountCorsHeaders,
+            });
+
+            const data = JSON.parse(result.body as string);
+            const validation = await authController.validateSessionKey(
+                data.sessionKey
+            );
+            expect(validation).toMatchObject({
+                success: true,
+                userId,
+            });
+        });
+
+        it('should allow requests that do not have an origin', async () => {
+            const token = await signToken({ sub: userId });
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/login/jwt`,
+                    JSON.stringify({ token }),
+                    {},
+                    '123.456.789'
+                )
+            );
+
+            expect(result.statusCode).toBe(200);
+            expect(JSON.parse(result.body as string)).toMatchObject({
+                success: true,
+                userId,
+                sessionKey: expect.any(String),
+            });
+        });
+
+        it('should return invalid_token if the JWT is not signed by a trusted key', async () => {
+            const otherKeyPair = await jose.generateKeyPair('ES256');
+            const token = await new jose.SignJWT({ sub: userId })
+                .setProtectedHeader({ alg: 'ES256' })
+                .setIssuer('https://issuer.example.com')
+                .setIssuedAt()
+                .setExpirationTime('1m')
+                .sign(otherKeyPair.privateKey);
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/login/jwt`,
+                    JSON.stringify({ token }),
+                    {
+                        origin: 'https://account-origin.com',
+                    },
+                    '123.456.789'
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'invalid_token',
+                    errorMessage: 'The token is invalid.',
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return not_supported if JWT logins are not configured', async () => {
+            authController.jwtLogin = null;
+            const token = await signToken({ sub: userId });
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/login/jwt`,
+                    JSON.stringify({ token }),
+                    {
+                        origin: 'https://account-origin.com',
+                    },
+                    '123.456.789'
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'JWT logins are not supported.',
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testBodyIsJson((body) =>
+            httpPost(`/api/v2/login/jwt`, body, {
+                origin: 'https://account-origin.com',
+            })
+        );
+
+        testRateLimit('POST', `/api/v2/login/jwt`, () =>
+            JSON.stringify({ token: 'abc' })
+        );
+    });
+
     describe('POST /api/v2/login/privo', () => {
         let tenYearsAgo: DateTime;
 
