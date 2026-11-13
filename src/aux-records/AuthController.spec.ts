@@ -53,6 +53,7 @@ import { padStart } from 'es-toolkit/compat';
 import { allowAllDefaultFeatures } from './SubscriptionConfiguration';
 import { MemoryStore } from './MemoryStore';
 import { DateTime } from 'luxon';
+import * as jose from 'jose';
 import type { PrivoClientInterface } from './PrivoClient';
 import type { GenericOpenIDClientInterface } from './GenericOpenIDClient';
 import type {
@@ -489,6 +490,563 @@ describe('AuthController', () => {
                 });
             }
         );
+    });
+
+    describe('completeJwtLogin()', () => {
+        const userId = 'myid';
+        const nowMs = 1_700_000_000_000;
+        const nowSeconds = Math.floor(nowMs / 1000);
+        let keyPair: jose.GenerateKeyPairResult<jose.KeyLike>;
+        let otherKeyPair: jose.GenerateKeyPairResult<jose.KeyLike>;
+        let publicKeyPem: string;
+
+        const sessionId = new Uint8Array([7, 8, 9]);
+        const sessionSecret = new Uint8Array([10, 11, 12]);
+        const connectionSecret = new Uint8Array([11, 12, 13]);
+
+        beforeAll(async () => {
+            keyPair = await jose.generateKeyPair('ES256');
+            otherKeyPair = await jose.generateKeyPair('ES256');
+            publicKeyPem = await jose.exportSPKI(keyPair.publicKey);
+        });
+
+        beforeEach(async () => {
+            nowMock.mockReturnValue(nowMs);
+            randomBytesMock
+                .mockReturnValueOnce(sessionId)
+                .mockReturnValueOnce(sessionSecret)
+                .mockReturnValueOnce(connectionSecret);
+
+            controller.jwtLogin = {
+                trustedKeys: [
+                    {
+                        publicKey: publicKeyPem,
+                        algorithm: 'ES256',
+                    },
+                ],
+                maxTokenAgeSeconds: 300,
+                clockToleranceSeconds: 30,
+                allowUserCreation: false,
+            };
+
+            await store.saveUser({
+                id: userId,
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+        });
+
+        function signToken(
+            claims: jose.JWTPayload,
+            options: {
+                key?: jose.KeyLike | Uint8Array;
+                alg?: string;
+                kid?: string;
+                iat?: number | null;
+                exp?: number | null;
+            } = {}
+        ) {
+            let jwt = new jose.SignJWT(claims).setProtectedHeader({
+                alg: options.alg ?? 'ES256',
+                ...(options.kid ? { kid: options.kid } : {}),
+            });
+            const iat = options.iat === undefined ? nowSeconds : options.iat;
+            if (iat !== null) {
+                jwt = jwt.setIssuedAt(iat);
+            }
+            const exp =
+                options.exp === undefined ? nowSeconds + 60 : options.exp;
+            if (exp !== null) {
+                jwt = jwt.setExpirationTime(exp);
+            }
+            return jwt.sign(options.key ?? keyPair.privateKey);
+        }
+
+        function expectedSession(id: string, expireTimeMs: number | null) {
+            return {
+                success: true,
+                userId: id,
+                sessionKey: formatV1SessionKey(
+                    id,
+                    fromByteArray(sessionId),
+                    fromByteArray(sessionSecret),
+                    expireTimeMs
+                ),
+                connectionKey: formatV1ConnectionKey(
+                    id,
+                    fromByteArray(sessionId),
+                    fromByteArray(connectionSecret),
+                    expireTimeMs
+                ),
+                expireTimeMs: expireTimeMs,
+                metadata: {
+                    hasUserAuthenticator: false,
+                    userAuthenticatorCredentialIds: [] as string[],
+                    hasPushSubscription: false,
+                    pushSubscriptionIds: [] as string[],
+                },
+            };
+        }
+
+        it('should return not_supported if JWT logins are not configured', async () => {
+            controller.jwtLogin = null;
+            const token = await signToken({ sub: userId });
+
+            const result = await controller.completeJwtLogin({
+                token,
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'JWT logins are not supported.',
+            });
+        });
+
+        it('should issue a session for the user specified by the sub claim', async () => {
+            const token = await signToken({ sub: userId });
+
+            const result = await controller.completeJwtLogin({
+                token,
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toEqual(
+                expectedSession(userId, nowMs + SESSION_LIFETIME_MS)
+            );
+
+            expect(
+                await store.findSession(userId, fromByteArray(sessionId))
+            ).toMatchObject({
+                userId,
+                sessionId: fromByteArray(sessionId),
+                grantedTimeMs: nowMs,
+                expireTimeMs: nowMs + SESSION_LIFETIME_MS,
+                revokeTimeMs: null,
+                ipAddress: '127.0.0.1',
+            });
+        });
+
+        it('should issue a session for the user specified by the email claim', async () => {
+            const token = await signToken({ email: 'test@example.com' });
+
+            const result = await controller.completeJwtLogin({
+                token,
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toEqual(
+                expectedSession(userId, nowMs + SESSION_LIFETIME_MS)
+            );
+        });
+
+        it('should accept tokens that include a matching sub and email', async () => {
+            const token = await signToken({
+                sub: userId,
+                email: 'test@example.com',
+            });
+
+            const result = await controller.completeJwtLogin({
+                token,
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toEqual(
+                expectedSession(userId, nowMs + SESSION_LIFETIME_MS)
+            );
+        });
+
+        it('should reject tokens where the email does not match the user', async () => {
+            const token = await signToken({
+                sub: userId,
+                email: 'other@example.com',
+            });
+
+            const result = await controller.completeJwtLogin({
+                token,
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'invalid_token',
+                errorMessage: 'The email in the token does not match the user.',
+            });
+        });
+
+        it('should use the configured session lifetime', async () => {
+            controller.jwtLogin = {
+                ...controller.jwtLogin,
+                sessionLifetimeMs: 1000,
+            };
+            const token = await signToken({ sub: userId });
+
+            const result = await controller.completeJwtLogin({
+                token,
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toEqual(expectedSession(userId, nowMs + 1000));
+        });
+
+        it('should issue sessions that do not expire if the session lifetime is null', async () => {
+            controller.jwtLogin = {
+                ...controller.jwtLogin,
+                sessionLifetimeMs: null,
+            };
+            const token = await signToken({ sub: userId });
+
+            const result = await controller.completeJwtLogin({
+                token,
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toEqual(expectedSession(userId, null));
+        });
+
+        it('should return user_not_found if the user does not exist', async () => {
+            const token = await signToken({ sub: 'missing' });
+
+            const result = await controller.completeJwtLogin({
+                token,
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'user_not_found',
+                errorMessage: 'The user could not be found.',
+            });
+        });
+
+        it('should return user_not_found if no user has the email and user creation is disabled', async () => {
+            const token = await signToken({ email: 'new@example.com' });
+
+            const result = await controller.completeJwtLogin({
+                token,
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'user_not_found',
+                errorMessage: 'The user could not be found.',
+            });
+            expect(
+                await store.findUserByAddress('new@example.com', 'email')
+            ).toBeFalsy();
+        });
+
+        it('should create a new user for the email if user creation is enabled', async () => {
+            controller.jwtLogin = {
+                ...controller.jwtLogin,
+                allowUserCreation: true,
+            };
+            uuidMock.mockReturnValueOnce('newUserId');
+            const token = await signToken({ email: 'new@example.com' });
+
+            const result = await controller.completeJwtLogin({
+                token,
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toEqual(
+                expectedSession('newUserId', nowMs + SESSION_LIFETIME_MS)
+            );
+            expect(await store.findUser('newUserId')).toMatchObject({
+                id: 'newUserId',
+                email: 'new@example.com',
+            });
+        });
+
+        it('should not create users when given a sub claim for a missing user', async () => {
+            controller.jwtLogin = {
+                ...controller.jwtLogin,
+                allowUserCreation: true,
+            };
+            const token = await signToken({
+                sub: 'missing',
+                email: 'new@example.com',
+            });
+
+            const result = await controller.completeJwtLogin({
+                token,
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toMatchObject({
+                success: false,
+                errorCode: 'user_not_found',
+            });
+            expect(
+                await store.findUserByAddress('new@example.com', 'email')
+            ).toBeFalsy();
+        });
+
+        it('should return user_is_banned if the user is banned', async () => {
+            await store.saveUser({
+                id: userId,
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                banTimeMs: 100,
+                banReason: 'terms_of_service_violation',
+            });
+            const token = await signToken({ sub: userId });
+
+            const result = await controller.completeJwtLogin({
+                token,
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'user_is_banned',
+                errorMessage: 'The user has been banned.',
+                banReason: 'terms_of_service_violation',
+            });
+        });
+
+        it('should return invalid_token if the token does not specify a user', async () => {
+            const token = await signToken({});
+
+            const result = await controller.completeJwtLogin({
+                token,
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toMatchObject({
+                success: false,
+                errorCode: 'invalid_token',
+            });
+        });
+
+        const invalidTokenCases: [string, () => Promise<string> | string][] = [
+            [
+                'is signed by an untrusted key',
+                () =>
+                    signToken(
+                        { sub: userId },
+                        { key: otherKeyPair.privateKey }
+                    ),
+            ],
+            [
+                'is expired',
+                () =>
+                    signToken(
+                        { sub: userId },
+                        { iat: nowSeconds - 120, exp: nowSeconds - 60 }
+                    ),
+            ],
+            [
+                'is older than the max token age',
+                () =>
+                    signToken(
+                        { sub: userId },
+                        { iat: nowSeconds - 600, exp: nowSeconds + 60 }
+                    ),
+            ],
+            [
+                'does not have an exp claim',
+                () => signToken({ sub: userId }, { exp: null }),
+            ],
+            [
+                'does not have an iat claim',
+                () => signToken({ sub: userId }, { iat: null }),
+            ],
+            [
+                'is issued in the future',
+                () =>
+                    signToken(
+                        { sub: userId },
+                        { iat: nowSeconds + 600, exp: nowSeconds + 900 }
+                    ),
+            ],
+            [
+                'is signed with a symmetric key',
+                () =>
+                    signToken(
+                        { sub: userId },
+                        {
+                            alg: 'HS256',
+                            key: new TextEncoder().encode(publicKeyPem),
+                        }
+                    ),
+            ],
+            [
+                'is unsigned',
+                () =>
+                    new jose.UnsecuredJWT({ sub: userId })
+                        .setIssuedAt(nowSeconds)
+                        .setExpirationTime(nowSeconds + 60)
+                        .encode(),
+            ],
+            ['is not a JWT', () => 'not a jwt'],
+        ];
+
+        it.each(invalidTokenCases)(
+            'should return invalid_token if the token %s',
+            async (desc, makeToken) => {
+                const token = await makeToken();
+
+                const result = await controller.completeJwtLogin({
+                    token,
+                    ipAddress: '127.0.0.1',
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'invalid_token',
+                    errorMessage: 'The token is invalid.',
+                });
+            }
+        );
+
+        it('should validate the issuer and audience if configured', async () => {
+            controller.jwtLogin = {
+                ...controller.jwtLogin,
+                trustedKeys: [
+                    {
+                        publicKey: publicKeyPem,
+                        algorithm: 'ES256',
+                        issuer: 'https://issuer.example.com',
+                        audience: 'casualos',
+                    },
+                ],
+            };
+
+            const wrongIssuer = await controller.completeJwtLogin({
+                token: await signToken({
+                    sub: userId,
+                    iss: 'https://other.example.com',
+                    aud: 'casualos',
+                }),
+                ipAddress: '127.0.0.1',
+            });
+            expect(wrongIssuer).toMatchObject({
+                success: false,
+                errorCode: 'invalid_token',
+            });
+
+            const wrongAudience = await controller.completeJwtLogin({
+                token: await signToken({
+                    sub: userId,
+                    iss: 'https://issuer.example.com',
+                    aud: 'other',
+                }),
+                ipAddress: '127.0.0.1',
+            });
+            expect(wrongAudience).toMatchObject({
+                success: false,
+                errorCode: 'invalid_token',
+            });
+
+            const valid = await controller.completeJwtLogin({
+                token: await signToken({
+                    sub: userId,
+                    iss: 'https://issuer.example.com',
+                    aud: 'casualos',
+                }),
+                ipAddress: '127.0.0.1',
+            });
+            expect(valid).toEqual(
+                expectedSession(userId, nowMs + SESSION_LIFETIME_MS)
+            );
+        });
+
+        it('should support multiple trusted keys selected by key ID', async () => {
+            controller.jwtLogin = {
+                ...controller.jwtLogin,
+                trustedKeys: [
+                    {
+                        id: 'key1',
+                        publicKey: publicKeyPem,
+                        algorithm: 'ES256',
+                    },
+                    {
+                        id: 'key2',
+                        publicKey: await jose.exportSPKI(
+                            otherKeyPair.publicKey
+                        ),
+                        algorithm: 'ES256',
+                    },
+                ],
+            };
+
+            const wrongKid = await controller.completeJwtLogin({
+                token: await signToken(
+                    { sub: userId },
+                    { key: otherKeyPair.privateKey, kid: 'key1' }
+                ),
+                ipAddress: '127.0.0.1',
+            });
+            expect(wrongKid).toMatchObject({
+                success: false,
+                errorCode: 'invalid_token',
+            });
+
+            const valid = await controller.completeJwtLogin({
+                token: await signToken(
+                    { sub: userId },
+                    { key: otherKeyPair.privateKey, kid: 'key2' }
+                ),
+                ipAddress: '127.0.0.1',
+            });
+            expect(valid).toEqual(
+                expectedSession(userId, nowMs + SESSION_LIFETIME_MS)
+            );
+        });
+
+        it('should support public keys in JWK format', async () => {
+            controller.jwtLogin = {
+                ...controller.jwtLogin,
+                trustedKeys: [
+                    {
+                        publicKey: JSON.stringify(
+                            await jose.exportJWK(keyPair.publicKey)
+                        ),
+                        algorithm: 'ES256',
+                    },
+                ],
+            };
+
+            const result = await controller.completeJwtLogin({
+                token: await signToken({ sub: userId }),
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toEqual(
+                expectedSession(userId, nowMs + SESSION_LIFETIME_MS)
+            );
+        });
+
+        it('should return server_error if the configured key is a private JWK', async () => {
+            controller.jwtLogin = {
+                ...controller.jwtLogin,
+                trustedKeys: [
+                    {
+                        publicKey: JSON.stringify(
+                            await jose.exportJWK(keyPair.privateKey)
+                        ),
+                        algorithm: 'ES256',
+                    },
+                ],
+            };
+
+            const result = await controller.completeJwtLogin({
+                token: await signToken({ sub: userId }),
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toMatchObject({
+                success: false,
+                errorCode: 'server_error',
+            });
+        });
     });
 
     describe('requestLogin()', () => {

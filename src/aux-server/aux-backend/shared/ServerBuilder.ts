@@ -346,6 +346,7 @@ export class ServerBuilder implements SubscriptionLike {
     private _authMessenger: AuthMessenger;
     private _authController: AuthController;
     private _relyingParties: RelyingParty[];
+    private _jwtLogin: ServerConfig['jwtLogin'] | null = null;
 
     private _recordsStore: RecordsStore;
     private _recordsController: RecordsController;
@@ -1231,6 +1232,15 @@ export class ServerBuilder implements SubscriptionLike {
             name: rp.name,
             origin: rp.origin,
         }));
+        return this;
+    }
+
+    useJwtLogin(options: Pick<ServerConfig, 'jwtLogin'> = this._options): this {
+        console.log('[ServerBuilder] Using JWT logins.');
+        if (!options.jwtLogin) {
+            throw new Error('JWT login options must be provided.');
+        }
+        this._jwtLogin = options.jwtLogin;
         return this;
     }
 
@@ -2350,7 +2360,8 @@ export class ServerBuilder implements SubscriptionLike {
             this._recordsStore,
             this._privoClient,
             this._relyingParties ?? [],
-            this._genericOpenIDClient
+            this._genericOpenIDClient,
+            this._jwtLogin ?? null
         );
         this._recordsController = new RecordsController({
             store: this._recordsStore,

@@ -105,6 +105,11 @@ import type {
 } from './StripeInterface';
 import type { RecordsStore, Studio } from './RecordsStore';
 import { normalizeDomainName } from './dns/DomainNames';
+import * as jose from 'jose';
+import type {
+    JwtLoginConfiguration,
+    JwtLoginTrustedKey,
+} from './JwtLoginConfiguration';
 
 const TRACE_NAME = 'AuthController';
 
@@ -218,6 +223,10 @@ export class AuthController {
     private _genericOpenIDClient: GenericOpenIDClientInterface = null;
     private _webAuthNRelyingParties: RelyingParty[];
     private _privoEnabled: boolean;
+    private _jwtLogin: JwtLoginConfiguration | null = null;
+    private _jwtLoginKeys: Promise<
+        { config: JwtLoginTrustedKey; key: jose.KeyLike | Uint8Array }[]
+    > | null = null;
 
     get relyingParties() {
         return this._webAuthNRelyingParties;
@@ -234,7 +243,8 @@ export class AuthController {
         recordsStore: RecordsStore,
         privoClient: PrivoClientInterface = null,
         relyingParties: RelyingParty[] = [],
-        genericOpenIDClient: GenericOpenIDClientInterface = null
+        genericOpenIDClient: GenericOpenIDClientInterface = null,
+        jwtLogin: JwtLoginConfiguration | null = null
     ) {
         this._store = authStore;
         this._messenger = messenger;
@@ -244,6 +254,24 @@ export class AuthController {
         this._webAuthNRelyingParties = relyingParties;
         this._privoEnabled = this._privoClient !== null;
         this._genericOpenIDClient = genericOpenIDClient;
+        this.jwtLogin = jwtLogin;
+    }
+
+    /**
+     * Gets the configuration that is used for JWT logins.
+     * If null, then JWT logins are disabled.
+     */
+    get jwtLogin(): JwtLoginConfiguration | null {
+        return this._jwtLogin;
+    }
+
+    /**
+     * Sets the configuration that is used for JWT logins.
+     * If null, then JWT logins are disabled.
+     */
+    set jwtLogin(value: JwtLoginConfiguration | null) {
+        this._jwtLogin = value ?? null;
+        this._jwtLoginKeys = null;
     }
 
     /**
@@ -396,6 +424,245 @@ export class AuthController {
 
             console.error(
                 '[AuthController] Error occurred while issuing session',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Imports the trusted keys that are configured for JWT logins.
+     * The result is cached so that keys only need to be parsed once.
+     */
+    private _getJwtLoginKeys(): Promise<
+        { config: JwtLoginTrustedKey; key: jose.KeyLike | Uint8Array }[]
+    > {
+        if (!this._jwtLoginKeys) {
+            const trustedKeys = this._jwtLogin?.trustedKeys ?? [];
+            const promise = Promise.all(
+                trustedKeys.map(async (config) => {
+                    const publicKey = config.publicKey.trim();
+                    let key: jose.KeyLike | Uint8Array;
+                    if (publicKey.startsWith('{')) {
+                        const jwk = JSON.parse(publicKey) as jose.JWK;
+                        if ('d' in jwk || jwk.kty === 'oct') {
+                            throw new Error(
+                                'JWT login keys must be public asymmetric keys.'
+                            );
+                        }
+                        key = await jose.importJWK(jwk, config.algorithm);
+                    } else {
+                        key = await jose.importSPKI(
+                            publicKey,
+                            config.algorithm
+                        );
+                    }
+                    return { config, key };
+                })
+            );
+            // Allow a later call to retry if importing failed.
+            promise.catch(() => {
+                if (this._jwtLoginKeys === promise) {
+                    this._jwtLoginKeys = null;
+                }
+            });
+            this._jwtLoginKeys = promise;
+        }
+        return this._jwtLoginKeys;
+    }
+
+    /**
+     * Verifies the given JWT against the configured trusted keys.
+     * Returns the payload of the JWT if it is valid. Returns null otherwise.
+     * @param token The JWT that should be verified.
+     */
+    private async _verifyLoginJwt(
+        token: string
+    ): Promise<jose.JWTPayload | null> {
+        const config = this._jwtLogin;
+        const keys = await this._getJwtLoginKeys();
+
+        let header: jose.ProtectedHeaderParameters;
+        try {
+            header = jose.decodeProtectedHeader(token);
+        } catch (err) {
+            return null;
+        }
+
+        const candidates = keys.filter(
+            (k) =>
+                k.config.algorithm === header.alg &&
+                (!header.kid || !k.config.id || k.config.id === header.kid)
+        );
+
+        for (let { config: keyConfig, key } of candidates) {
+            try {
+                const result = await jose.jwtVerify(token, key, {
+                    algorithms: [keyConfig.algorithm],
+                    issuer: keyConfig.issuer,
+                    audience: keyConfig.audience,
+                    maxTokenAge: config.maxTokenAgeSeconds,
+                    clockTolerance: config.clockToleranceSeconds,
+                    requiredClaims: ['exp', 'iat'],
+                    currentDate: new Date(Date.now()),
+                });
+                return result.payload;
+            } catch (err) {
+                // Try the next key
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Attempts to issue a session for the user that is specified by the given JWT.
+     * The JWT must be signed by one of the trusted keys that are configured for JWT logins.
+     *
+     * The JWT should specify the user either via the "sub" claim (the ID of the user)
+     * or via the "email" claim (the email address of the user).
+     * @param request The request.
+     */
+    @traced(TRACE_NAME)
+    async completeJwtLogin(
+        request: CompleteJwtLoginRequest
+    ): Promise<CompleteJwtLoginResult> {
+        try {
+            if (!this._jwtLogin || this._jwtLogin.trustedKeys.length <= 0) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'JWT logins are not supported.',
+                };
+            }
+
+            if (typeof request.token !== 'string' || request.token === '') {
+                return {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage: 'The given token is invalid.',
+                };
+            }
+
+            const payload = await this._verifyLoginJwt(request.token);
+            if (!payload) {
+                console.log(
+                    '[AuthController] [completeJwtLogin] JWT login rejected because the token could not be verified.'
+                );
+                return {
+                    success: false,
+                    errorCode: 'invalid_token',
+                    errorMessage: 'The token is invalid.',
+                };
+            }
+
+            const userId =
+                typeof payload.sub === 'string' && payload.sub !== ''
+                    ? payload.sub
+                    : null;
+            const email =
+                typeof payload.email === 'string' && payload.email !== ''
+                    ? payload.email
+                    : null;
+
+            if (!userId && !email) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_token',
+                    errorMessage:
+                        'The token must include either a "sub" claim (user ID) or an "email" claim.',
+                };
+            }
+
+            let user: AuthUser | null;
+            if (userId) {
+                user = await this._store.findUser(userId);
+                if (user && email && user.email !== email) {
+                    console.log(
+                        `[AuthController] [completeJwtLogin] JWT login rejected because the email in the token does not match the email of the user (${userId}).`
+                    );
+                    return {
+                        success: false,
+                        errorCode: 'invalid_token',
+                        errorMessage:
+                            'The email in the token does not match the user.',
+                    };
+                }
+            } else {
+                user = await this._store.findUserByAddress(email, 'email');
+
+                if (!user && this._jwtLogin.allowUserCreation) {
+                    const newUser: AuthUser = {
+                        id: uuid(),
+                        email: email,
+                        phoneNumber: null,
+                        allSessionRevokeTimeMs: null,
+                        currentLoginRequestId: null,
+                    };
+
+                    const saveResult = await this._store.saveNewUser(newUser);
+                    if (saveResult.success === false) {
+                        // The user may have been created concurrently.
+                        user = await this._store.findUserByAddress(
+                            email,
+                            'email'
+                        );
+                    } else {
+                        console.log(
+                            `[AuthController] [completeJwtLogin] Created new user (${newUser.id}).`
+                        );
+                        user = newUser;
+                    }
+                }
+            }
+
+            if (!user) {
+                return {
+                    success: false,
+                    errorCode: 'user_not_found',
+                    errorMessage: 'The user could not be found.',
+                };
+            }
+
+            if (user.banTimeMs > 0) {
+                return {
+                    success: false,
+                    errorCode: 'user_is_banned',
+                    errorMessage: 'The user has been banned.',
+                    banReason: user.banReason,
+                };
+            }
+
+            const lifetimeMs =
+                this._jwtLogin.sessionLifetimeMs === undefined
+                    ? SESSION_LIFETIME_MS
+                    : this._jwtLogin.sessionLifetimeMs;
+
+            const { info } = await this._issueSession({
+                userId: user.id,
+                lifetimeMs,
+                ipAddress: request.ipAddress,
+            });
+
+            console.log(
+                `[AuthController] [completeJwtLogin] Issued session for user (${user.id}) from JWT (iss: ${payload.iss}, jti: ${payload.jti}).`
+            );
+
+            return {
+                success: true,
+                ...info,
+            };
+        } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
+            console.error(
+                '[AuthController] Error occurred while completing JWT login',
                 err
             );
             return {
@@ -3749,6 +4016,43 @@ export async function validateSessionKey(
         }
     }
     return result;
+}
+
+export interface CompleteJwtLoginRequest {
+    /**
+     * The JWT that should be used to log in.
+     */
+    token: string;
+
+    /**
+     * The IP address that the request is coming from.
+     */
+    ipAddress: string | null;
+}
+
+export type CompleteJwtLoginResult =
+    | CompleteJwtLoginSuccess
+    | CompleteJwtLoginFailure;
+
+export interface CompleteJwtLoginSuccess extends AuthSessionInfo {
+    success: true;
+}
+
+export interface CompleteJwtLoginFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | NotSupportedError
+        | 'unacceptable_request'
+        | 'invalid_token'
+        | 'user_not_found'
+        | 'user_is_banned';
+    errorMessage: string;
+
+    /**
+     * The reason that the user was banned.
+     */
+    banReason?: AuthUser['banReason'];
 }
 
 export interface IssueSessionRequest {

@@ -1306,6 +1306,25 @@ export class RecordsServer {
                     return result;
                 }),
 
+            completeJwtLogin: procedure()
+                // The JWT itself is the credential, so requests are allowed from any origin
+                // (including server-to-server requests that do not include an origin).
+                .origins(true)
+                .http('POST', '/api/v2/login/jwt')
+                .inputs(
+                    z.object({
+                        token: z.string().nonempty(),
+                    })
+                )
+                .handler(async ({ token }, context) => {
+                    const result = await this._auth.completeJwtLogin({
+                        token,
+                        ipAddress: context.ipAddress,
+                    });
+
+                    return result;
+                }),
+
             listOpenIDProviders: procedure()
                 .origins('account')
                 .http('GET', '/api/v2/login/openid/list')

@@ -19,6 +19,7 @@ import { moderationSchema } from './ModerationConfiguration';
 import { notificationsSchema } from './SystemNotificationMessenger';
 import { privoSchema } from './PrivoConfiguration';
 import { openIdSchema } from './OpenIDConfiguration';
+import { jwtLoginSchema } from './JwtLoginConfiguration';
 import { getSubscriptionConfigSchema } from './SubscriptionConfiguration';
 import { z } from 'zod';
 import { WEB_CONFIG_SCHEMA } from '@casual-simulation/aux-common';
@@ -1507,6 +1508,12 @@ Because repo/add_updates is a very common permission, we periodically cache perm
             .optional()
             .describe(
                 'Custom OpenID Connect provider configuration options. If omitted, then no custom OpenID providers will be available.'
+            ),
+
+        jwtLogin: jwtLoginSchema
+            .optional()
+            .describe(
+                'JWT login configuration options. Allows a trusted external service to obtain session keys for users by signing JWTs with a configured key pair. If omitted, then JWT logins will be disabled.'
             ),
 
         webauthn: webauthnSchema

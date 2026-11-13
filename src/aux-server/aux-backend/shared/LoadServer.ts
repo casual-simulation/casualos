@@ -254,6 +254,10 @@ export function constructServerBuilder(
         builder.useWebAuthn();
     }
 
+    if (config.jwtLogin) {
+        builder.useJwtLogin();
+    }
+
     if (config.rekognition?.moderation && config.s3) {
         builder.useRekognitionModeration();
     }
