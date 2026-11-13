@@ -30,7 +30,33 @@ import dns from 'node:dns/promises';
 import { hmac, sha256 } from 'hash.js';
 
 /**
+ * The prefix of the host name that the verification TXT record should be placed on.
+ * The TXT record lives on its own name (e.g. "_casualos-verification.app.example.com") so that it doesn't conflict with
+ * the CNAME record that routes traffic for the domain.
+ */
+export const VERIFICATION_RECORD_PREFIX = '_casualos-verification';
+
+/**
+ * The prefix of the value of the verification TXT record.
+ */
+export const VERIFICATION_VALUE_PREFIX = 'casualos-verification=';
+
+/**
+ * Gets the host name that the verification TXT record should be placed on for the given domain name.
+ * @param domainName The domain name.
+ */
+export function getVerificationRecordName(domainName: string): string {
+    return `${VERIFICATION_RECORD_PREFIX}.${domainName}`;
+}
+
+/**
  * Defines a DNS-based domain name validator.
+ *
+ * A domain is only considered valid when a TXT record containing the per-domain verification hash exists.
+ * The hash is an HMAC of the domain name keyed by a secret that is unique to the custom domain (and therefore the studio),
+ * so it proves which studio the domain belongs to.
+ *
+ * The CNAME record is only used for routing traffic and is never accepted as proof of ownership, since it is the same for every studio.
  */
 export class DNSDomainNameValidator implements DomainNameValidator {
     async validateDomainName(
@@ -41,50 +67,43 @@ export class DNSDomainNameValidator implements DomainNameValidator {
         console.log(
             `[DNSDomainNameValidator] Validating domain name: ${domainName}`
         );
-        const records = await resolveOrEmpty(() => dns.resolveTxt(domainName));
-
         const expectedHash = this._generateVerificationHash(
             domainName,
             verificationKey
         );
-        console.log(`[DNSDomainNameValidator] Retrieved TXT records:`, records);
-        for (let r of records) {
-            for (let txt of r) {
-                if (txt.startsWith(`casualos-verification=`)) {
-                    const hash = txt.slice('casualos-verification='.length);
-                    if (hash === expectedHash) {
-                        return success();
-                    }
-                }
-            }
+
+        const recordName = getVerificationRecordName(domainName);
+        const records = await resolveOrEmpty(() => dns.resolveTxt(recordName));
+        console.log(
+            `[DNSDomainNameValidator] Retrieved TXT records for ${recordName}:`,
+            records
+        );
+        if (hasVerificationHash(records, expectedHash)) {
+            return success();
         }
 
-        const cnameRecords = await resolveOrEmpty(() =>
-            dns.resolveCname(domainName)
+        // Older setups placed the TXT record directly on the domain name.
+        // The hash is still unique to the studio, so it still proves ownership.
+        const legacyRecords = await resolveOrEmpty(() =>
+            dns.resolveTxt(domainName)
         );
         console.log(
-            `[DNSDomainNameValidator] Retrieved CNAME records:`,
-            cnameRecords
+            `[DNSDomainNameValidator] Retrieved TXT records for ${domainName}:`,
+            legacyRecords
         );
-        if (cnameRecords.length >= 2) {
-            return failure({
-                errorCode: 'record_already_exists',
-                errorMessage:
-                    'Multiple CNAME records found for the domain name. Please ensure that only one CNAME record is set for the domain name.',
-            });
+        if (hasVerificationHash(legacyRecords, expectedHash)) {
+            return success();
         }
-        for (let cname of cnameRecords) {
-            if (cname.trim() === expectedHostName) {
-                return success();
-            }
-        }
+
+        const hasAnyVerificationRecord =
+            hasVerificationRecord(records) ||
+            hasVerificationRecord(legacyRecords);
 
         return failure({
             errorCode: 'not_found',
-            errorMessage: getMissingRecordsMessage(
-                records.length > 0,
-                cnameRecords.length > 0
-            ),
+            errorMessage: hasAnyVerificationRecord
+                ? `The DNS TXT record on ${recordName} does not contain the expected verification value.`
+                : `No DNS TXT verification record was found on ${recordName}.`,
         });
     }
 
@@ -97,17 +116,20 @@ export class DNSDomainNameValidator implements DomainNameValidator {
             domainName,
             verificationKey
         );
-        const record: DomainNameVerificationDNSRecord = {
-            recordType: 'TXT',
-            value: `casualos-verification=${hash}`,
-            ttlSeconds: 32600,
-        };
         return success([
-            record,
+            {
+                recordType: 'TXT',
+                name: getVerificationRecordName(domainName),
+                value: `${VERIFICATION_VALUE_PREFIX}${hash}`,
+                ttlSeconds: 32600,
+                purpose: 'verification',
+            },
             {
                 recordType: 'CNAME',
+                name: domainName,
                 value: expectedHostName,
                 ttlSeconds: 32600,
+                purpose: 'routing',
             },
         ]);
     }
@@ -119,6 +141,38 @@ export class DNSDomainNameValidator implements DomainNameValidator {
         const sha = hmac(<any>sha256, verificationKey);
         return sha.update(domainName).digest('hex');
     }
+}
+
+/**
+ * Determines whether the given TXT records contain a verification record with the given hash.
+ * @param records The TXT records.
+ * @param expectedHash The expected hash.
+ */
+function hasVerificationHash(
+    records: string[][],
+    expectedHash: string
+): boolean {
+    for (let r of records) {
+        for (let txt of r) {
+            if (
+                txt.startsWith(VERIFICATION_VALUE_PREFIX) &&
+                txt.slice(VERIFICATION_VALUE_PREFIX.length) === expectedHash
+            ) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+/**
+ * Determines whether the given TXT records contain any verification record.
+ * @param records The TXT records.
+ */
+function hasVerificationRecord(records: string[][]): boolean {
+    return records.some((r) =>
+        r.some((txt) => txt.startsWith(VERIFICATION_VALUE_PREFIX))
+    );
 }
 
 /**
@@ -140,15 +194,4 @@ async function resolveOrEmpty<T>(lookup: () => Promise<T[]>): Promise<T[]> {
         }
         throw err;
     }
-}
-
-function getMissingRecordsMessage(hasTxt: boolean, hasCname: boolean): string {
-    if (!hasTxt && !hasCname) {
-        return 'No DNS TXT or CNAME records were found for the domain name.';
-    } else if (!hasTxt) {
-        return 'No DNS TXT records were found for the domain name, and the CNAME record does not point to the expected host name.';
-    } else if (!hasCname) {
-        return 'No DNS CNAME records were found for the domain name, and the TXT records do not contain the expected verification value.';
-    }
-    return 'The DNS TXT records do not contain the expected verification value, and the CNAME record does not point to the expected host name.';
 }

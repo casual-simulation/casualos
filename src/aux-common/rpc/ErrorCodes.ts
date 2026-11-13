@@ -80,6 +80,7 @@ export type KnownErrorCodes =
     | 'permission_already_exists'
     | 'comId_not_found'
     | 'comId_already_taken'
+    | 'domain_already_verified'
     | 'permission_not_found'
     | 'unacceptable_connection_token'
     | 'invalid_token'
@@ -200,6 +201,8 @@ export function getStatusCode(
         } else if (response.errorCode === 'comId_not_found') {
             return 404;
         } else if (response.errorCode === 'comId_already_taken') {
+            return 409;
+        } else if (response.errorCode === 'domain_already_verified') {
             return 409;
         } else if (response.errorCode === 'permission_not_found') {
             return 404;

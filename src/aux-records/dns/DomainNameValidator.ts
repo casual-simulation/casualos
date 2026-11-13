@@ -19,14 +19,24 @@
 import type { Result, SimpleError } from '@casual-simulation/aux-common';
 
 /**
+ * The default number of DNS checks in a row that a verified custom domain can fail before it is marked as unverified.
+ */
+export const DEFAULT_MAX_CONSECUTIVE_DOMAIN_CHECK_FAILURES = 3;
+
+/**
  * Defines an interface that helps validate domain names via DNS.
  */
 export interface DomainNameValidator {
     /**
-     * Validates the given domain name using the provided verification key.
+     * Validates that the given domain name is owned by whoever holds the provided verification key.
+     *
+     * Validation only succeeds if a TXT record containing the HMAC of the domain name (keyed by the verification key) exists.
+     * Routing records (like a CNAME that points at the expected host name) are not enough to prove ownership because
+     * they are the same for every studio.
+     *
      * @param domainName The domain name to validate.
      * @param verificationKey The verification key to use for validation.
-     * @param expectedHostName The expected host name that should be set in the CNAME record for validation.
+     * @param expectedHostName The host name that the domain should point to (via a CNAME record) for traffic to be routed to this server.
      */
     validateDomainName(
         domainName: string,
@@ -38,7 +48,7 @@ export interface DomainNameValidator {
      * Gets the DNS records that should be set for verifying the given domain name.
      * @param domainName The domain name to get the verification records for.
      * @param verificationKey The verification key to use for generating the records.
-     * @param expectedHostName The expected host name that should be set in the CNAME record for validation.
+     * @param expectedHostName The host name that should be set in the CNAME record for routing traffic to this server.
      */
     getVerificationDNSRecord(
         domainName: string,
@@ -55,6 +65,19 @@ export interface DomainNameVerificationDNSRecord {
      * The type of DNS record that should be set for the verification.
      */
     recordType: 'TXT' | 'CNAME';
+
+    /**
+     * The fully qualified name (host) that the record should be created on.
+     */
+    name: string;
+
+    /**
+     * Why the record is needed.
+     *
+     * - "verification" records prove that the studio owns the domain and are required for verification.
+     * - "routing" records direct traffic for the domain to this server.
+     */
+    purpose: 'verification' | 'routing';
 
     /**
      * The value that should be set for the verification record.

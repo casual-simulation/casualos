@@ -52,6 +52,7 @@ import type {
 } from '@casual-simulation/aux-records';
 import {
     DNSDomainNameValidator,
+    CustomDomainsProcessor,
     PurchasableItemRecordsController,
     getServerConfigSchema,
 } from '@casual-simulation/aux-records';
@@ -483,6 +484,7 @@ export class ServerBuilder implements SubscriptionLike {
 
     private _financialQueue: IQueue<any> | null = null;
     private _financialWorker: BullWorker | null = null;
+    private _customDomainsProcessor: CustomDomainsProcessor | null = null;
     private _financialProcessor: FinancialProcessor | null = null;
 
     private _databasesStore: DatabaseRecordsStore | null = null;
@@ -2261,6 +2263,58 @@ export class ServerBuilder implements SubscriptionLike {
                                     queue.queue.removeJobScheduler(id);
                                 }
                             }
+                        }
+                    }
+                },
+            });
+        }
+
+        if (options.jobs.customDomains) {
+            const customDomainsJobs = options.jobs.customDomains;
+            console.log('[ServerBuilder] Using Custom Domain background jobs.');
+
+            if (!redisServerOptions) {
+                throw new Error(
+                    'Redis options must be provided when using BullMQ.'
+                );
+            }
+            redis ??= this._createIORedisClient(redisServerOptions);
+
+            this._initActions.push({
+                priority: 0,
+                action: async () => {
+                    if (!this._recordsController) {
+                        throw new Error(
+                            'The records controller is not available when it should be.'
+                        );
+                    }
+
+                    this._customDomainsProcessor = new CustomDomainsProcessor(
+                        this._recordsController
+                    );
+                    const { queue } = this._setupJob(
+                        'custom domains',
+                        customDomainsJobs,
+                        redis,
+                        (job) => this._customDomainsProcessor.process(job.data)
+                    );
+
+                    if (queue instanceof BullQueue) {
+                        const reverifyJobId = 'aux-custom-domains-reverify';
+                        if (customDomainsJobs.reverify) {
+                            console.log(
+                                '[ServerBuilder] Setting up Custom Domain Reverification job schedule.'
+                            );
+                            await queue.queue.upsertJobScheduler(
+                                reverifyJobId,
+                                customDomainsJobs.reverify.repeatOptions,
+                                customDomainsJobs.reverify.jobTemplate
+                            );
+                        } else {
+                            console.log(
+                                '[ServerBuilder] No Custom Domain Reverification job schedule configured.'
+                            );
+                            await queue.queue.removeJobScheduler(reverifyJobId);
                         }
                     }
                 },

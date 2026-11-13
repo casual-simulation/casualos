@@ -36,6 +36,23 @@ function dnsError(code: string) {
     return err;
 }
 
+/**
+ * Mocks resolveTxt so that it returns the given records for each host name.
+ * Host names that are not in the map fail with ENOTFOUND.
+ */
+function mockTxtRecords(records: Record<string, string[][] | Error>) {
+    resolveTxtMock.mockImplementation(async (name: string) => {
+        const value = records[name];
+        if (!value) {
+            throw dnsError('ENOTFOUND');
+        }
+        if (value instanceof Error) {
+            throw value;
+        }
+        return value;
+    });
+}
+
 describe('DNSDomainNameValidator', () => {
     let validator: DNSDomainNameValidator;
     let expectedTxt: string;
@@ -61,12 +78,71 @@ describe('DNSDomainNameValidator', () => {
         jest.restoreAllMocks();
     });
 
-    describe('validateDomainName()', () => {
-        const noRecordCodes = ['ENODATA', 'ENOTFOUND'];
+    describe('getVerificationDNSRecord()', () => {
+        it('should return a TXT verification record on its own name and a CNAME routing record', async () => {
+            const result = await validator.getVerificationDNSRecord(
+                'app.example.com',
+                'key',
+                'casualos.example.com'
+            );
 
-        it('should succeed when only the TXT record exists', async () => {
-            resolveTxtMock.mockResolvedValue([[expectedTxt]]);
-            resolveCnameMock.mockRejectedValue(dnsError('ENODATA'));
+            expect(result).toEqual(
+                success([
+                    {
+                        recordType: 'TXT',
+                        name: '_casualos-verification.app.example.com',
+                        value: expect.stringMatching(
+                            /^casualos-verification=[0-9a-f]{64}$/
+                        ),
+                        ttlSeconds: 32600,
+                        purpose: 'verification',
+                    },
+                    {
+                        recordType: 'CNAME',
+                        name: 'app.example.com',
+                        value: 'casualos.example.com',
+                        ttlSeconds: 32600,
+                        purpose: 'routing',
+                    },
+                ])
+            );
+        });
+
+        it('should produce a different TXT value for a different verification key', async () => {
+            const other = await validator.getVerificationDNSRecord(
+                'app.example.com',
+                'other-key',
+                'casualos.example.com'
+            );
+            if (other.success === false) {
+                throw new Error('Unable to get records');
+            }
+            expect(other.value[0].value).not.toEqual(expectedTxt);
+        });
+    });
+
+    describe('validateDomainName()', () => {
+        it('should succeed when the TXT record exists on the verification name', async () => {
+            mockTxtRecords({
+                '_casualos-verification.app.example.com': [[expectedTxt]],
+            });
+
+            const result = await validator.validateDomainName(
+                'app.example.com',
+                'key',
+                'casualos.example.com'
+            );
+
+            expect(result).toEqual(success());
+            expect(resolveTxtMock).toHaveBeenCalledWith(
+                '_casualos-verification.app.example.com'
+            );
+        });
+
+        it('should succeed when the TXT record exists on the domain itself', async () => {
+            mockTxtRecords({
+                'app.example.com': [[expectedTxt]],
+            });
 
             const result = await validator.validateDomainName(
                 'app.example.com',
@@ -77,24 +153,8 @@ describe('DNSDomainNameValidator', () => {
             expect(result).toEqual(success());
         });
 
-        it.each(noRecordCodes)(
-            'should succeed when only the CNAME record exists (%s)',
-            async (code) => {
-                resolveTxtMock.mockRejectedValue(dnsError(code));
-                resolveCnameMock.mockResolvedValue(['casualos.example.com']);
-
-                const result = await validator.validateDomainName(
-                    'app.example.com',
-                    'key',
-                    'casualos.example.com'
-                );
-
-                expect(result).toEqual(success());
-            }
-        );
-
-        it('should succeed when both records exist', async () => {
-            resolveTxtMock.mockResolvedValue([[expectedTxt]]);
+        it('should fail when only the CNAME record exists', async () => {
+            mockTxtRecords({});
             resolveCnameMock.mockResolvedValue(['casualos.example.com']);
 
             const result = await validator.validateDomainName(
@@ -103,14 +163,19 @@ describe('DNSDomainNameValidator', () => {
                 'casualos.example.com'
             );
 
-            expect(result).toEqual(success());
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_found',
+                    errorMessage:
+                        'No DNS TXT verification record was found on _casualos-verification.app.example.com.',
+                })
+            );
         });
 
-        it.each(noRecordCodes)(
-            'should return not_found when neither record exists (%s)',
+        it.each(['ENODATA', 'ENOTFOUND'])(
+            'should return not_found when no TXT records exist (%s)',
             async (code) => {
                 resolveTxtMock.mockRejectedValue(dnsError(code));
-                resolveCnameMock.mockRejectedValue(dnsError(code));
 
                 const result = await validator.validateDomainName(
                     'app.example.com',
@@ -122,15 +187,26 @@ describe('DNSDomainNameValidator', () => {
                     failure({
                         errorCode: 'not_found',
                         errorMessage:
-                            'No DNS TXT or CNAME records were found for the domain name.',
+                            'No DNS TXT verification record was found on _casualos-verification.app.example.com.',
                     })
                 );
             }
         );
 
-        it('should say which records are missing when the records do not match', async () => {
-            resolveTxtMock.mockResolvedValue([['casualos-verification=wrong']]);
-            resolveCnameMock.mockRejectedValue(dnsError('ENODATA'));
+        it('should fail when the TXT record was generated with a different verification key', async () => {
+            const other = await validator.getVerificationDNSRecord(
+                'app.example.com',
+                'other-studio-key',
+                'casualos.example.com'
+            );
+            if (other.success === false) {
+                throw new Error('Unable to get records');
+            }
+            mockTxtRecords({
+                '_casualos-verification.app.example.com': [
+                    [other.value[0].value],
+                ],
+            });
 
             const result = await validator.validateDomainName(
                 'app.example.com',
@@ -142,77 +218,18 @@ describe('DNSDomainNameValidator', () => {
                 failure({
                     errorCode: 'not_found',
                     errorMessage:
-                        'No DNS CNAME records were found for the domain name, and the TXT records do not contain the expected verification value.',
-                })
-            );
-        });
-
-        it('should say which records are missing when only a mismatched CNAME exists', async () => {
-            resolveTxtMock.mockRejectedValue(dnsError('ENODATA'));
-            resolveCnameMock.mockResolvedValue(['other.example.com']);
-
-            const result = await validator.validateDomainName(
-                'app.example.com',
-                'key',
-                'casualos.example.com'
-            );
-
-            expect(result).toEqual(
-                failure({
-                    errorCode: 'not_found',
-                    errorMessage:
-                        'No DNS TXT records were found for the domain name, and the CNAME record does not point to the expected host name.',
-                })
-            );
-        });
-
-        it('should say that both records are wrong when neither matches', async () => {
-            resolveTxtMock.mockResolvedValue([['casualos-verification=wrong']]);
-            resolveCnameMock.mockResolvedValue(['other.example.com']);
-
-            const result = await validator.validateDomainName(
-                'app.example.com',
-                'key',
-                'casualos.example.com'
-            );
-
-            expect(result).toEqual(
-                failure({
-                    errorCode: 'not_found',
-                    errorMessage:
-                        'The DNS TXT records do not contain the expected verification value, and the CNAME record does not point to the expected host name.',
-                })
-            );
-        });
-
-        it('should return record_already_exists when there are multiple CNAME records', async () => {
-            resolveTxtMock.mockRejectedValue(dnsError('ENODATA'));
-            resolveCnameMock.mockResolvedValue([
-                'casualos.example.com',
-                'other.example.com',
-            ]);
-
-            const result = await validator.validateDomainName(
-                'app.example.com',
-                'key',
-                'casualos.example.com'
-            );
-
-            expect(result).toEqual(
-                failure({
-                    errorCode: 'record_already_exists',
-                    errorMessage:
-                        'Multiple CNAME records found for the domain name. Please ensure that only one CNAME record is set for the domain name.',
+                        'The DNS TXT record on _casualos-verification.app.example.com does not contain the expected verification value.',
                 })
             );
         });
 
         it('should ignore TXT records that are not verification records', async () => {
-            resolveTxtMock.mockResolvedValue([
-                ['v=spf1 include:example.com ~all'],
-                ['other', expectedTxt],
-            ]);
-            resolveCnameMock.mockRejectedValue(dnsError('ENODATA'));
+            mockTxtRecords({
+                '_casualos-verification.app.example.com': [
+                    ['v=spf1 include:example.com ~all'],
+                    ['other', expectedTxt],
+                ],
+            });
 
             const result = await validator.validateDomainName(
                 'app.example.com',

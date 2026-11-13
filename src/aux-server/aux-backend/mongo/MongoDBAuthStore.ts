@@ -34,6 +34,7 @@ import type {
     HumeConfig,
     LoomConfig,
     CustomDomain,
+    CustomDomainVerificationUpdate,
     CustomDomainWithStudio,
 } from '@casual-simulation/aux-records';
 import type {
@@ -169,7 +170,17 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
         throw new Error('Method not implemented.');
     }
 
-    markCustomDomainAsVerified(domainId: string): Promise<void> {
+    listVerifiedCustomDomains(
+        afterId: string | null,
+        limit: number
+    ): Promise<CustomDomain[]> {
+        throw new Error('Method not implemented.');
+    }
+
+    updateCustomDomainVerification(
+        domainId: string,
+        update: CustomDomainVerificationUpdate
+    ): Promise<void> {
         throw new Error('Method not implemented.');
     }
 

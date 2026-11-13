@@ -1882,8 +1882,15 @@ model CustomDomain {
     expectedHostName String? @db.String(256)
 
     // Whether the domain has been verified
-    // Null if not yet verified
+    // Null if not yet verified.
+    // Only one custom domain can be verified for a domain name at a time (see the unique constraint below).
     verified Boolean?
+
+    // The last time that the domain's DNS records were checked
+    lastCheckedAt DateTime?
+
+    // The number of verification checks in a row that have failed
+    consecutiveFailedChecks Int @default(0)
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt

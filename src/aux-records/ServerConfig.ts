@@ -30,6 +30,7 @@ import {
     FINANCIAL_JOB_PERIODIC_BILLING_SCHEMA,
     FINANCIAL_JOB_REVENUE_CREDIT_SWEEP_SCHEMA,
 } from './financial/FinancialProcessor';
+import { CUSTOM_DOMAINS_JOB_REVERIFY_SCHEMA } from './dns/CustomDomainsProcessor';
 
 let serverConfigSchema: ServerConfigSchema;
 
@@ -1704,6 +1705,37 @@ Because repo/add_updates is a very common permission, we periodically cache perm
                     })
                     .describe(
                         'Configuration options for financial background jobs. If omitted, then financial background jobs will default to BullMQ.'
+                    ),
+
+                customDomains: bullmqSchema()
+                    .extend({
+                        reverify: bullmqScheduledJobSchema(
+                            CUSTOM_DOMAINS_JOB_REVERIFY_SCHEMA
+                        )
+                            .nullable()
+                            .describe(
+                                'A scheduled job that periodically re-checks the DNS records of verified custom domains and marks domains that fail too many checks in a row as unverified. If null, then custom domains will not be re-verified.'
+                            ),
+                    })
+                    .prefault({
+                        type: 'bullmq',
+                        queueName: 'aux-custom-domain-jobs',
+                        process: true,
+                        queue: true,
+                        reverify: {
+                            repeatOptions: {
+                                pattern: '7 4 * * *', // Daily at 4:07am
+                            },
+                            jobTemplate: {
+                                data: {
+                                    type: 'custom-domains-reverify',
+                                },
+                                name: 'custom-domains-reverify',
+                            },
+                        },
+                    })
+                    .describe(
+                        'Configuration options for custom domain background jobs. If omitted, then custom domain jobs will default to BullMQ.'
                     ),
             })
             .optional()

@@ -19,3 +19,4 @@
 export * from './DomainNameValidator';
 export * from './DNSDomainNameValidator';
 export * from './DomainNames';
+export * from './CustomDomainsProcessor';

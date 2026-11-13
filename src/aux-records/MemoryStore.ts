@@ -57,6 +57,7 @@ import type {
     LoomConfig,
     HumeConfig,
     CustomDomain,
+    CustomDomainVerificationUpdate,
     CustomDomainWithStudio,
 } from './RecordsStore';
 import { v4 as uuid } from 'uuid';
@@ -658,6 +659,8 @@ export class MemoryStore
             verificationKey: domain.verificationKey,
             verified: domain.verified,
             expectedHostName: domain.expectedHostName,
+            lastCheckedAtMs: domain.lastCheckedAtMs,
+            consecutiveFailedChecks: domain.consecutiveFailedChecks,
             studio,
         };
     }
@@ -682,18 +685,54 @@ export class MemoryStore
             verificationKey: domain.verificationKey,
             verified: domain.verified,
             expectedHostName: domain.expectedHostName,
+            lastCheckedAtMs: domain.lastCheckedAtMs,
+            consecutiveFailedChecks: domain.consecutiveFailedChecks,
             studio,
         };
     }
 
-    async markCustomDomainAsVerified(domainId: string): Promise<void> {
+    async listVerifiedCustomDomains(
+        afterId: string | null,
+        limit: number
+    ): Promise<CustomDomain[]> {
+        return sortBy(
+            this._customDomains.filter(
+                (d) =>
+                    d.verified === true && (afterId === null || d.id > afterId)
+            ),
+            (d) => d.id
+        ).slice(0, limit);
+    }
+
+    async updateCustomDomainVerification(
+        domainId: string,
+        update: CustomDomainVerificationUpdate
+    ): Promise<void> {
         const index = this._customDomains.findIndex((d) => d.id === domainId);
-        if (index >= 0) {
-            this._customDomains[index] = {
-                ...this._customDomains[index],
-                verified: true,
-            };
+        if (index < 0) {
+            return;
         }
+        const domain = this._customDomains[index];
+        if (update.verified === true) {
+            const conflict = this._customDomains.find(
+                (d) =>
+                    d.id !== domainId &&
+                    d.domainName === domain.domainName &&
+                    d.verified === true
+            );
+            if (conflict) {
+                // Mirrors the unique (domainName, verified) constraint in the database.
+                throw new Error(
+                    'Unique constraint failed: a verified custom domain with the same domain name already exists.'
+                );
+            }
+        }
+        this._customDomains[index] = {
+            ...domain,
+            verified: update.verified,
+            lastCheckedAtMs: update.lastCheckedAtMs,
+            consecutiveFailedChecks: update.consecutiveFailedChecks,
+        };
     }
 
     async createExternalPayout(payout: ExternalPayout): Promise<void> {

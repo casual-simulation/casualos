@@ -658,16 +658,29 @@
                         <md-table-row>
                             <md-table-head>Domain Name</md-table-head>
                             <md-table-head>Status</md-table-head>
+                            <md-table-head>Last Checked</md-table-head>
                             <md-table-head>Actions</md-table-head>
                         </md-table-row>
                         <md-table-row v-for="domain of customDomains" :key="domain.id">
                             <md-table-cell>{{ domain.domainName }}</md-table-cell>
                             <md-table-cell>
-                                <md-chip v-if="domain.verified" class="md-primary"
+                                <md-chip
+                                    v-if="domain.verified && domain.consecutiveFailedChecks > 0"
+                                    class="md-accent"
+                                >
+                                    Check Failing
+                                    <md-tooltip
+                                        >The last {{ domain.consecutiveFailedChecks }} DNS check(s)
+                                        failed. The domain will be unverified if the verification
+                                        TXT record is not restored.</md-tooltip
+                                    >
+                                </md-chip>
+                                <md-chip v-else-if="domain.verified" class="md-primary"
                                     >Verified</md-chip
                                 >
                                 <md-chip v-else>Pending</md-chip>
                             </md-table-cell>
+                            <md-table-cell>{{ formatDomainLastChecked(domain) }}</md-table-cell>
                             <md-table-cell>
                                 <md-button
                                     v-if="!domain.verified"
@@ -721,15 +734,25 @@
                         <div
                             class="dns-record"
                             v-for="record in verificationRecords"
-                            :key="record.id"
+                            :key="record.recordType + record.name"
                         >
+                            <p>
+                                <strong>{{
+                                    record.purpose === 'routing'
+                                        ? 'Routes traffic to this server'
+                                        : 'Proves that this comID owns the domain (required)'
+                                }}</strong>
+                            </p>
                             <p><strong>Type:</strong> {{ record.recordType }}</p>
+                            <p><strong>Name:</strong> {{ record.name }}</p>
                             <p><strong>Value:</strong> {{ record.value }}</p>
                             <p><strong>TTL:</strong> {{ record.ttlSeconds }} seconds</p>
                         </div>
                         <p>
                             After adding the DNS records, click the verify button next to the domain
-                            to check verification status.
+                            to check verification status. Keep the TXT record in place after the
+                            domain is verified. Domains are checked periodically and will be
+                            unverified if the TXT record is removed.
                         </p>
                     </div>
                 </div>

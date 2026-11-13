@@ -274,10 +274,51 @@ export interface RecordsStore {
     ): Promise<CustomDomainWithStudio | null>;
 
     /**
-     * Marks the custom domain with the given ID as verified.
-     * @param domainId The ID of the custom domain to mark as verified.
+     * Lists the custom domains that are currently verified, ordered by ID.
+     * Used to periodically re-verify domains.
+     *
+     * @param afterId The ID of the domain that the list should start after. If null, then the list starts at the beginning.
+     * @param limit The maximum number of domains to return.
      */
-    markCustomDomainAsVerified(domainId: string): Promise<void>;
+    listVerifiedCustomDomains(
+        afterId: string | null,
+        limit: number
+    ): Promise<CustomDomain[]>;
+
+    /**
+     * Records the result of a verification check for the custom domain with the given ID.
+     *
+     * Implementations must ensure that a domain name can only be verified by one custom domain at a time.
+     * If another custom domain with the same domain name is already verified and update.verified is true, then this should throw an error.
+     *
+     * @param domainId The ID of the custom domain.
+     * @param update The verification status that should be saved.
+     */
+    updateCustomDomainVerification(
+        domainId: string,
+        update: CustomDomainVerificationUpdate
+    ): Promise<void>;
+}
+
+/**
+ * Defines the verification status that should be saved for a custom domain.
+ */
+export interface CustomDomainVerificationUpdate {
+    /**
+     * Whether the custom domain is verified.
+     * Null if not verified.
+     */
+    verified: true | null;
+
+    /**
+     * The unix time in miliseconds that the domain was last checked.
+     */
+    lastCheckedAtMs: number;
+
+    /**
+     * The number of verification checks in a row that have failed.
+     */
+    consecutiveFailedChecks: number;
 }
 
 export interface CountRecordsFilter {
@@ -778,11 +819,27 @@ export interface CustomDomain {
      * Null if not verified.
      */
     verified: true | null;
+
+    /**
+     * The unix time in miliseconds that the domain's DNS records were last checked.
+     * Null or undefined if the domain has never been checked.
+     */
+    lastCheckedAtMs?: number | null;
+
+    /**
+     * The number of verification checks in a row that have failed.
+     * Reset to 0 whenever a check succeeds.
+     */
+    consecutiveFailedChecks?: number | null;
 }
 
 export type ListedCustomDomain = Pick<
     CustomDomain,
-    'id' | 'domainName' | 'verified'
+    | 'id'
+    | 'domainName'
+    | 'verified'
+    | 'lastCheckedAtMs'
+    | 'consecutiveFailedChecks'
 >;
 
 export interface CustomDomainWithStudio extends CustomDomain {
