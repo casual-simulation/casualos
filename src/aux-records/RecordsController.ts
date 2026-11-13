@@ -105,6 +105,7 @@ import type {
     DomainNameValidator,
     DomainNameVerificationDNSRecord,
 } from './dns/DomainNameValidator';
+import { DEFAULT_MAX_CONSECUTIVE_DOMAIN_CHECK_FAILURES } from './dns/DomainNameValidator';
 import { normalizeDomainName } from './dns/DomainNames';
 import type { WebManifest } from '@casual-simulation/aux-common/common/WebManifest';
 import axios from 'axios';
@@ -1470,6 +1471,19 @@ export class RecordsController {
             });
         }
 
+        const existingVerifiedDomain =
+            await this._store.getVerifiedCustomDomainByName(domainName);
+        if (
+            existingVerifiedDomain &&
+            existingVerifiedDomain.studioId !== request.studioId
+        ) {
+            return failure({
+                errorCode: 'domain_already_verified',
+                errorMessage:
+                    'The domain has already been verified by another studio.',
+            });
+        }
+
         if (typeof features.maxDomains === 'number') {
             const domainCount = (
                 await this._store.listCustomDomainsByStudioId(request.studioId)
@@ -1605,6 +1619,8 @@ export class RecordsController {
                         id: d.id,
                         domainName: d.domainName,
                         verified: d.verified,
+                        lastCheckedAtMs: d.lastCheckedAtMs ?? null,
+                        consecutiveFailedChecks: d.consecutiveFailedChecks ?? 0,
                     } satisfies ListedCustomDomain)
             ),
         });
@@ -1653,24 +1669,34 @@ export class RecordsController {
             });
         }
 
-        let expectedDomainName: string | undefined =
-            customDomain.expectedHostName;
+        const expectedDomainName = await this._getExpectedHostName(
+            customDomain
+        );
 
         if (!expectedDomainName) {
-            const meta = await this._config.getConfiguration(METADATA_KEY);
+            console.warn(
+                '[RecordsController] [verifyCustomDomain] Frontend origin is not configured. Custom domain verification may not work properly.'
+            );
+            return failure({
+                errorCode: 'not_supported',
+                errorMessage:
+                    'Custom domains are not supported on this server.',
+            });
+        }
 
-            if (!meta?.frontendOrigin) {
-                console.warn(
-                    '[RecordsController] [verifyCustomDomain] Frontend origin is not configured. Custom domain verification may not work properly.'
-                );
-                return failure({
-                    errorCode: 'not_supported',
-                    errorMessage:
-                        'Custom domains are not supported on this server.',
-                });
-            }
-
-            expectedDomainName = new URL(meta.frontendOrigin).hostname;
+        const existingVerifiedDomain =
+            await this._store.getVerifiedCustomDomainByName(
+                customDomain.domainName
+            );
+        if (
+            existingVerifiedDomain &&
+            existingVerifiedDomain.id !== customDomain.id
+        ) {
+            return failure({
+                errorCode: 'domain_already_verified',
+                errorMessage:
+                    'The domain has already been verified by another studio.',
+            });
         }
 
         const result = await this._domainNameValidator.validateDomainName(
@@ -1683,9 +1709,163 @@ export class RecordsController {
             return result;
         }
 
-        await this._store.markCustomDomainAsVerified(customDomain.id);
+        await this._store.updateCustomDomainVerification(customDomain.id, {
+            verified: true,
+            lastCheckedAtMs: Date.now(),
+            consecutiveFailedChecks: 0,
+        });
 
         return success();
+    }
+
+    /**
+     * Re-checks the DNS records of every verified custom domain.
+     *
+     * Domains that fail maxConsecutiveFailures checks in a row are marked as unverified so that they are no longer trusted
+     * (for allowed origins, comID login routing, web config, etc.).
+     * A single failed check (e.g. a temporary DNS outage) does not unverify a domain.
+     *
+     * @param request The request.
+     */
+    @traced(TRACE_NAME)
+    async reverifyCustomDomains(
+        request: ReverifyCustomDomainsRequest
+    ): Promise<ReverifyCustomDomainsResult> {
+        if (!this._domainNameValidator) {
+            return failure({
+                errorCode: 'not_supported',
+                errorMessage:
+                    'Custom domains are not supported on this server.',
+            });
+        }
+
+        const maxConsecutiveFailures = Math.max(
+            1,
+            request.maxConsecutiveFailures ??
+                DEFAULT_MAX_CONSECUTIVE_DOMAIN_CHECK_FAILURES
+        );
+        const batchSize = Math.max(1, request.batchSize ?? 100);
+
+        let checked = 0;
+        let failed = 0;
+        const unverifiedDomainIds: string[] = [];
+
+        // Pages are read by ID so that domains that become unverified
+        // during the run don't cause other domains to be skipped.
+        let afterId: string | null = null;
+        while (true) {
+            const domains = await this._store.listVerifiedCustomDomains(
+                afterId,
+                batchSize
+            );
+            if (domains.length <= 0) {
+                break;
+            }
+            afterId = domains[domains.length - 1].id;
+
+            for (let domain of domains) {
+                checked += 1;
+                const checkResult = await this._checkCustomDomain(domain);
+                const nowMs = Date.now();
+
+                if (checkResult.success === true) {
+                    await this._store.updateCustomDomainVerification(
+                        domain.id,
+                        {
+                            verified: true,
+                            lastCheckedAtMs: nowMs,
+                            consecutiveFailedChecks: 0,
+                        }
+                    );
+                    continue;
+                }
+
+                failed += 1;
+                const consecutiveFailedChecks =
+                    (domain.consecutiveFailedChecks ?? 0) + 1;
+                const shouldUnverify =
+                    consecutiveFailedChecks >= maxConsecutiveFailures;
+
+                if (shouldUnverify) {
+                    console.warn(
+                        `[RecordsController] [reverifyCustomDomains] Custom domain ${domain.domainName} (${domain.id}) for studio ${domain.studioId} failed ${consecutiveFailedChecks} verification checks in a row and is being marked as unverified. Last error: ${checkResult.error.errorCode}: ${checkResult.error.errorMessage}`
+                    );
+                    unverifiedDomainIds.push(domain.id);
+                } else {
+                    console.log(
+                        `[RecordsController] [reverifyCustomDomains] Custom domain ${domain.domainName} (${domain.id}) failed verification check ${consecutiveFailedChecks} of ${maxConsecutiveFailures}: ${checkResult.error.errorCode}: ${checkResult.error.errorMessage}`
+                    );
+                }
+
+                await this._store.updateCustomDomainVerification(domain.id, {
+                    verified: shouldUnverify ? null : true,
+                    lastCheckedAtMs: nowMs,
+                    consecutiveFailedChecks,
+                });
+            }
+
+            if (domains.length < batchSize) {
+                break;
+            }
+        }
+
+        console.log(
+            `[RecordsController] [reverifyCustomDomains] Checked ${checked} custom domains. ${failed} failed. ${unverifiedDomainIds.length} were marked as unverified.`
+        );
+
+        return success({
+            checked,
+            failed,
+            unverifiedDomainIds,
+        });
+    }
+
+    /**
+     * Runs the DNS verification for the given domain.
+     * Errors thrown by the validator (e.g. DNS timeouts) are treated as failed checks.
+     * @param domain The domain to check.
+     */
+    private async _checkCustomDomain(
+        domain: CustomDomain
+    ): Promise<Result<void, SimpleError>> {
+        try {
+            const expectedHostName = await this._getExpectedHostName(domain);
+            return await this._domainNameValidator.validateDomainName(
+                domain.domainName,
+                domain.verificationKey,
+                expectedHostName ?? ''
+            );
+        } catch (err) {
+            console.error(
+                `[RecordsController] [reverifyCustomDomains] Error while checking custom domain ${domain.domainName} (${domain.id}):`,
+                err
+            );
+            return failure({
+                errorCode: 'server_error',
+                errorMessage: `An error occurred while checking the domain: ${
+                    err?.code ?? err?.message ?? err
+                }`,
+            });
+        }
+    }
+
+    /**
+     * Gets the host name that the given custom domain should point to.
+     * Returns null if no host name is stored for the domain and the server has no frontend origin configured.
+     * @param domain The custom domain.
+     */
+    private async _getExpectedHostName(
+        domain: CustomDomain
+    ): Promise<string | null> {
+        if (domain.expectedHostName) {
+            return domain.expectedHostName;
+        }
+
+        const meta = await this._config.getConfiguration(METADATA_KEY);
+        if (!meta?.frontendOrigin) {
+            return null;
+        }
+        return new URL(meta.frontendOrigin).hostname;
     }
 
     /**
@@ -3262,6 +3442,40 @@ export interface ListCustomDomainsRequest {
      */
     studioId: string;
 }
+
+export interface ReverifyCustomDomainsRequest {
+    /**
+     * The number of checks in a row that a domain has to fail before it is marked as unverified.
+     * Defaults to DEFAULT_MAX_CONSECUTIVE_DOMAIN_CHECK_FAILURES.
+     */
+    maxConsecutiveFailures?: number;
+
+    /**
+     * The number of domains that should be loaded from the store at a time.
+     * Defaults to 100.
+     */
+    batchSize?: number;
+}
+
+export type ReverifyCustomDomainsResult = Result<
+    {
+        /**
+         * The number of domains that were checked.
+         */
+        checked: number;
+
+        /**
+         * The number of domains that failed their check.
+         */
+        failed: number;
+
+        /**
+         * The IDs of the domains that were marked as unverified.
+         */
+        unverifiedDomainIds: string[];
+    },
+    SimpleError
+>;
 
 export type ListCustomDomainsResult = Result<
     {

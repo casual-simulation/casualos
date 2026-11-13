@@ -5586,6 +5586,8 @@ describe('RecordsController', () => {
                 success([
                     {
                         recordType: 'TXT',
+                        name: '_casualos-verification.example.com',
+                        purpose: 'verification',
                         value: 'verification-value',
                         ttlSeconds: 300,
                     },
@@ -5602,6 +5604,8 @@ describe('RecordsController', () => {
                 success([
                     {
                         recordType: 'TXT',
+                        name: '_casualos-verification.example.com',
+                        purpose: 'verification',
                         value: 'verification-value',
                         ttlSeconds: 300,
                     },
@@ -5626,6 +5630,73 @@ describe('RecordsController', () => {
                 domains[0].verificationKey,
                 'example.com'
             );
+        });
+
+        it('should return domain_already_verified if another studio has already verified the domain', async () => {
+            await store.addStudio({
+                id: 'other-studio',
+                displayName: 'Other Studio',
+                ownerStudioComId: null,
+                subscriptionPeriodStartMs: null,
+                subscriptionPeriodEndMs: null,
+                comId: 'other-comid',
+            });
+            await store.saveCustomDomain({
+                id: 'other-domain-id',
+                domainName: 'bible.church.org',
+                studioId: 'other-studio',
+                verificationKey: 'other-key',
+                verified: true,
+            });
+
+            const result = await manager.addCustomDomain({
+                userId,
+                studioId,
+                domain: 'Bible.Church.org',
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'domain_already_verified',
+                    errorMessage:
+                        'The domain has already been verified by another studio.',
+                })
+            );
+            expect(await store.listCustomDomainsByStudioId(studioId)).toEqual(
+                []
+            );
+        });
+
+        it('should allow adding a domain that another studio has added but not verified', async () => {
+            domainNameValidator.getVerificationDNSRecord.mockResolvedValue(
+                success([])
+            );
+            await store.addStudio({
+                id: 'other-studio',
+                displayName: 'Other Studio',
+                ownerStudioComId: null,
+                subscriptionPeriodStartMs: null,
+                subscriptionPeriodEndMs: null,
+                comId: 'other-comid',
+            });
+            await store.saveCustomDomain({
+                id: 'other-domain-id',
+                domainName: 'bible.church.org',
+                studioId: 'other-studio',
+                verificationKey: 'other-key',
+                verified: null,
+            });
+
+            const result = await manager.addCustomDomain({
+                userId,
+                studioId,
+                domain: 'bible.church.org',
+            });
+
+            expect(result).toEqual(success([]));
+            expect(
+                await store.listCustomDomainsByStudioId(studioId)
+            ).toHaveLength(1);
         });
 
         it('should normalize the domain name', async () => {
@@ -5846,6 +5917,8 @@ describe('RecordsController', () => {
                 success([
                     {
                         recordType: 'TXT',
+                        name: '_casualos-verification.example.com',
+                        purpose: 'verification',
                         value: 'verification-value',
                         ttlSeconds: 300,
                     },
@@ -5879,6 +5952,8 @@ describe('RecordsController', () => {
                 success([
                     {
                         recordType: 'TXT',
+                        name: '_casualos-verification.example.com',
+                        purpose: 'verification',
                         value: 'verification-value',
                         ttlSeconds: 300,
                     },
@@ -5894,6 +5969,8 @@ describe('RecordsController', () => {
                 success([
                     {
                         recordType: 'TXT',
+                        name: '_casualos-verification.example.com',
+                        purpose: 'verification',
                         value: 'verification-value',
                         ttlSeconds: 300,
                     },
@@ -6297,11 +6374,15 @@ describe('RecordsController', () => {
                             id: 'domain-1',
                             domainName: 'example1.com',
                             verified: true,
+                            lastCheckedAtMs: null,
+                            consecutiveFailedChecks: 0,
                         },
                         {
                             id: 'domain-2',
                             domainName: 'example2.com',
                             verified: null,
+                            lastCheckedAtMs: null,
+                            consecutiveFailedChecks: 0,
                         },
                     ],
                 })
@@ -6347,6 +6428,8 @@ describe('RecordsController', () => {
                             id: 'domain-1',
                             domainName: 'example1.com',
                             verified: true,
+                            lastCheckedAtMs: null,
+                            consecutiveFailedChecks: 0,
                         },
                     ],
                 })
@@ -6390,6 +6473,8 @@ describe('RecordsController', () => {
                             id: 'domain-1',
                             domainName: 'example.com',
                             verified: true,
+                            lastCheckedAtMs: null,
+                            consecutiveFailedChecks: 0,
                         },
                     ],
                 })
@@ -6441,21 +6526,29 @@ describe('RecordsController', () => {
                             id: 'domain-1',
                             domainName: 'verified1.com',
                             verified: true,
+                            lastCheckedAtMs: null,
+                            consecutiveFailedChecks: 0,
                         },
                         {
                             id: 'domain-2',
                             domainName: 'unverified1.com',
                             verified: null,
+                            lastCheckedAtMs: null,
+                            consecutiveFailedChecks: 0,
                         },
                         {
                             id: 'domain-3',
                             domainName: 'verified2.com',
                             verified: true,
+                            lastCheckedAtMs: null,
+                            consecutiveFailedChecks: 0,
                         },
                         {
                             id: 'domain-4',
                             domainName: 'unverified2.com',
                             verified: null,
+                            lastCheckedAtMs: null,
+                            consecutiveFailedChecks: 0,
                         },
                     ],
                 })
@@ -6699,6 +6792,76 @@ describe('RecordsController', () => {
             expect(domain2?.verified).toBe(true);
         });
 
+        it('should record when the domain was checked and reset the failure count', async () => {
+            const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(123);
+            await store.saveCustomDomain({
+                id: domainId,
+                domainName: 'example.com',
+                studioId,
+                verificationKey: 'verification-key',
+                verified: null,
+                consecutiveFailedChecks: 2,
+            });
+            domainNameValidator.validateDomainName.mockResolvedValue(success());
+
+            const result = await manager.verifyCustomDomain({
+                userId,
+                customDomainId: domainId,
+            });
+
+            expect(result).toEqual(success());
+
+            const domain = await store.getCustomDomainById(domainId);
+            expect(domain).toMatchObject({
+                verified: true,
+                lastCheckedAtMs: 123,
+                consecutiveFailedChecks: 0,
+            });
+            nowSpy.mockRestore();
+        });
+
+        it('should return domain_already_verified if another studio has already verified the domain name', async () => {
+            await store.addStudio({
+                id: 'other-studio',
+                displayName: 'Other Studio',
+                ownerStudioComId: null,
+                subscriptionPeriodStartMs: null,
+                subscriptionPeriodEndMs: null,
+                comId: 'other-comid',
+            });
+            await store.saveCustomDomain({
+                id: 'other-domain-id',
+                domainName: 'example.com',
+                studioId: 'other-studio',
+                verificationKey: 'other-key',
+                verified: true,
+            });
+            domainNameValidator.validateDomainName.mockResolvedValue(success());
+
+            const result = await manager.verifyCustomDomain({
+                userId,
+                customDomainId: domainId,
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'domain_already_verified',
+                    errorMessage:
+                        'The domain has already been verified by another studio.',
+                })
+            );
+            expect(
+                domainNameValidator.validateDomainName
+            ).not.toHaveBeenCalled();
+
+            const domain = await store.getCustomDomainById(domainId);
+            expect(domain?.verified).toBe(null);
+            const otherDomain = await store.getVerifiedCustomDomainByName(
+                'example.com'
+            );
+            expect(otherDomain?.id).toBe('other-domain-id');
+        });
+
         it('should not verify domains from other studios if the user does not have access', async () => {
             const otherStudioId = 'other-studio';
             const otherDomainId = 'other-domain-id';
@@ -6737,6 +6900,329 @@ describe('RecordsController', () => {
             // Verify domain was not marked as verified
             const domain = await store.getCustomDomainById(otherDomainId);
             expect(domain?.verified).toBe(null);
+        });
+    });
+
+    describe('reverifyCustomDomains()', () => {
+        const studioId = 'studioId';
+        let spies: jest.SpyInstance[] = [];
+
+        beforeEach(async () => {
+            spies = [
+                jest.spyOn(console, 'log').mockImplementation(() => {}),
+                jest.spyOn(console, 'warn').mockImplementation(() => {}),
+                jest.spyOn(console, 'error').mockImplementation(() => {}),
+                jest.spyOn(Date, 'now').mockReturnValue(1000),
+            ];
+
+            await store.addStudio({
+                id: studioId,
+                displayName: 'Test Studio',
+            });
+
+            await store.setConfiguration(METADATA_KEY, {
+                frontendOrigin: 'https://casualos.example.com',
+                apiOrigin: 'https://api.example.com',
+            });
+
+            await store.saveCustomDomain({
+                id: 'domain-1',
+                domainName: 'one.example.com',
+                studioId,
+                verificationKey: 'key-1',
+                expectedHostName: 'host.example.com',
+                verified: true,
+            });
+            await store.saveCustomDomain({
+                id: 'domain-2',
+                domainName: 'two.example.com',
+                studioId,
+                verificationKey: 'key-2',
+                verified: true,
+            });
+            await store.saveCustomDomain({
+                id: 'domain-3',
+                domainName: 'unverified.example.com',
+                studioId,
+                verificationKey: 'key-3',
+                verified: null,
+            });
+        });
+
+        afterEach(() => {
+            for (let spy of spies) {
+                spy.mockRestore();
+            }
+        });
+
+        it('should return not_supported if domainNameValidator is not configured', async () => {
+            manager = new RecordsController({
+                store,
+                auth: store,
+                metrics: store,
+                config: store,
+                messenger: store,
+                privo: null,
+                domainNameValidator: null,
+            });
+
+            const result = await manager.reverifyCustomDomains({});
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'Custom domains are not supported on this server.',
+                })
+            );
+        });
+
+        it('should only check verified domains', async () => {
+            domainNameValidator.validateDomainName.mockResolvedValue(success());
+
+            const result = await manager.reverifyCustomDomains({});
+
+            expect(result).toEqual(
+                success({
+                    checked: 2,
+                    failed: 0,
+                    unverifiedDomainIds: [],
+                })
+            );
+            expect(
+                domainNameValidator.validateDomainName
+            ).toHaveBeenCalledTimes(2);
+            expect(domainNameValidator.validateDomainName).toHaveBeenCalledWith(
+                'one.example.com',
+                'key-1',
+                'host.example.com'
+            );
+            expect(domainNameValidator.validateDomainName).toHaveBeenCalledWith(
+                'two.example.com',
+                'key-2',
+                'casualos.example.com'
+            );
+
+            expect(await store.getCustomDomainById('domain-1')).toMatchObject({
+                verified: true,
+                lastCheckedAtMs: 1000,
+                consecutiveFailedChecks: 0,
+            });
+            expect(await store.getCustomDomainById('domain-3')).toMatchObject({
+                verified: null,
+            });
+            expect(
+                (await store.getCustomDomainById('domain-3'))?.lastCheckedAtMs
+            ).toBeUndefined();
+        });
+
+        it('should not unverify a domain after a single failed check', async () => {
+            domainNameValidator.validateDomainName.mockImplementation(
+                async (domainName: string) =>
+                    domainName === 'one.example.com'
+                        ? failure({
+                              errorCode: 'not_found',
+                              errorMessage: 'No TXT record.',
+                          })
+                        : success()
+            );
+
+            const result = await manager.reverifyCustomDomains({});
+
+            expect(result).toEqual(
+                success({
+                    checked: 2,
+                    failed: 1,
+                    unverifiedDomainIds: [],
+                })
+            );
+            expect(await store.getCustomDomainById('domain-1')).toMatchObject({
+                verified: true,
+                lastCheckedAtMs: 1000,
+                consecutiveFailedChecks: 1,
+            });
+            expect(
+                await store.getVerifiedCustomDomainByName('one.example.com')
+            ).not.toBe(null);
+        });
+
+        it('should unverify a domain after the configured number of failed checks in a row', async () => {
+            domainNameValidator.validateDomainName.mockImplementation(
+                async (domainName: string) =>
+                    domainName === 'one.example.com'
+                        ? failure({
+                              errorCode: 'not_found',
+                              errorMessage: 'No TXT record.',
+                          })
+                        : success()
+            );
+
+            for (let i = 0; i < 2; i++) {
+                const result = await manager.reverifyCustomDomains({
+                    maxConsecutiveFailures: 3,
+                });
+                expect(result).toEqual(
+                    success({
+                        checked: 2,
+                        failed: 1,
+                        unverifiedDomainIds: [],
+                    })
+                );
+            }
+
+            const result = await manager.reverifyCustomDomains({
+                maxConsecutiveFailures: 3,
+            });
+            expect(result).toEqual(
+                success({
+                    checked: 2,
+                    failed: 1,
+                    unverifiedDomainIds: ['domain-1'],
+                })
+            );
+
+            expect(await store.getCustomDomainById('domain-1')).toMatchObject({
+                verified: null,
+                lastCheckedAtMs: 1000,
+                consecutiveFailedChecks: 3,
+            });
+            expect(
+                await store.getVerifiedCustomDomainByName('one.example.com')
+            ).toBe(null);
+            expect(await store.getCustomDomainById('domain-2')).toMatchObject({
+                verified: true,
+                consecutiveFailedChecks: 0,
+            });
+
+            // Unverified domains are no longer checked
+            domainNameValidator.validateDomainName.mockClear();
+            const nextResult = await manager.reverifyCustomDomains({
+                maxConsecutiveFailures: 3,
+            });
+            expect(nextResult).toEqual(
+                success({
+                    checked: 1,
+                    failed: 0,
+                    unverifiedDomainIds: [],
+                })
+            );
+        });
+
+        it('should default to unverifying after 3 failed checks', async () => {
+            await store.saveCustomDomain({
+                id: 'domain-1',
+                domainName: 'one.example.com',
+                studioId,
+                verificationKey: 'key-1',
+                verified: true,
+                consecutiveFailedChecks: 2,
+            });
+            domainNameValidator.validateDomainName.mockImplementation(
+                async (domainName: string) =>
+                    domainName === 'one.example.com'
+                        ? failure({
+                              errorCode: 'not_found',
+                              errorMessage: 'No TXT record.',
+                          })
+                        : success()
+            );
+
+            const result = await manager.reverifyCustomDomains({});
+
+            expect(result).toEqual(
+                success({
+                    checked: 2,
+                    failed: 1,
+                    unverifiedDomainIds: ['domain-1'],
+                })
+            );
+        });
+
+        it('should reset the failure count when a check succeeds', async () => {
+            await store.saveCustomDomain({
+                id: 'domain-1',
+                domainName: 'one.example.com',
+                studioId,
+                verificationKey: 'key-1',
+                verified: true,
+                consecutiveFailedChecks: 2,
+            });
+            domainNameValidator.validateDomainName.mockResolvedValue(success());
+
+            await manager.reverifyCustomDomains({});
+
+            expect(await store.getCustomDomainById('domain-1')).toMatchObject({
+                verified: true,
+                consecutiveFailedChecks: 0,
+            });
+        });
+
+        it('should count errors thrown by the validator as failed checks', async () => {
+            domainNameValidator.validateDomainName.mockImplementation(
+                async (domainName: string) => {
+                    if (domainName === 'one.example.com') {
+                        const err = new Error('queryTxt ETIMEOUT') as any;
+                        err.code = 'ETIMEOUT';
+                        throw err;
+                    }
+                    return success();
+                }
+            );
+
+            const result = await manager.reverifyCustomDomains({
+                maxConsecutiveFailures: 1,
+            });
+
+            expect(result).toEqual(
+                success({
+                    checked: 2,
+                    failed: 1,
+                    unverifiedDomainIds: ['domain-1'],
+                })
+            );
+            expect(await store.getCustomDomainById('domain-1')).toMatchObject({
+                verified: null,
+                consecutiveFailedChecks: 1,
+            });
+        });
+
+        it('should check every domain when there are multiple pages', async () => {
+            for (let i = 0; i < 5; i++) {
+                await store.saveCustomDomain({
+                    id: `domain-page-${i}`,
+                    domainName: `page${i}.example.com`,
+                    studioId,
+                    verificationKey: `key-page-${i}`,
+                    verified: true,
+                });
+            }
+            domainNameValidator.validateDomainName.mockResolvedValue(
+                failure({
+                    errorCode: 'not_found',
+                    errorMessage: 'No TXT record.',
+                })
+            );
+
+            const result = await manager.reverifyCustomDomains({
+                maxConsecutiveFailures: 1,
+                batchSize: 2,
+            });
+
+            expect(result).toEqual(
+                success({
+                    checked: 7,
+                    failed: 7,
+                    unverifiedDomainIds: [
+                        'domain-1',
+                        'domain-2',
+                        'domain-page-0',
+                        'domain-page-1',
+                        'domain-page-2',
+                        'domain-page-3',
+                        'domain-page-4',
+                    ],
+                })
+            );
         });
     });
 

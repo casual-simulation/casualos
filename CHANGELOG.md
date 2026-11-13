@@ -83,9 +83,21 @@
 -   Added the `strictCustomDomain` option to `requestLogin` ([#908](https://github.com/casual-simulation/casualos/issues/908)).
     -   When `true`, a login whose `customDomain` is not a verified custom domain fails with `not_found` and creates no user, instead of falling back to `loginStudioId` or the global user pool.
     -   Defaults to `false`, because the auth site sends the referrer's hostname as `customDomain`, which usually isn't a custom domain.
+-   Verified custom domains are now re-checked periodically ([#902](https://github.com/casual-simulation/casualos/issues/902)).
+    -   A scheduled background job re-runs DNS verification for every verified domain (daily at 4:07am by default) and records when each domain was last checked and how many checks in a row have failed.
+    -   A domain that fails a set number of checks in a row (3 by default) is marked as unverified, so it is no longer trusted for allowed origins, comID login routing, web config or the web manifest. A single failed check, such as a temporary DNS outage, does not unverify a domain.
+    -   Configure the job with `serverConfig.jobs.customDomains`. Set `jobs.customDomains.reverify` to `null` to disable it, or set `jobs.customDomains.reverify.jobTemplate.data.maxConsecutiveFailures` to change the number of failed checks allowed.
+    -   `listCustomDomains` now returns `lastCheckedAtMs` and `consecutiveFailedChecks` for each domain, and the Custom Domains dialog shows when each domain was last checked and whether its checks are failing.
+    -   Added the `lastCheckedAt` and `consecutiveFailedChecks` columns to the `CustomDomain` table.
 
 ### :bug: Bug Fixes
 
+-   Custom domain verification now proves which studio owns the domain ([#901](https://github.com/casual-simulation/casualos/issues/901)).
+    -   A domain is only verified when a TXT record with the studio's verification value exists. A CNAME record that points to the server is no longer enough, because it is the same for every studio.
+    -   The TXT record now goes on its own name, `_casualos-verification.<domain>`, so that it doesn't conflict with the CNAME record on the domain ([#837](https://github.com/casual-simulation/casualos/issues/837)). TXT records placed on the domain itself are still accepted.
+    -   `addCustomDomain` now returns the `name` and `purpose` (`verification` or `routing`) of each DNS record.
+    -   `addCustomDomain` and `verifyCustomDomain` now fail with `domain_already_verified` when another studio has already verified the domain. The database already only allows one verified custom domain per domain name, and the in-memory store now enforces this too.
+    -   Domains that were verified with only a CNAME record will be unverified by the re-verification job unless the TXT record is added.
 -   Fixed `verifyCustomDomain` failing with a server error when the domain had no TXT records or no CNAME record. Missing records are now treated as empty, and the error message says which records were not found ([#903](https://github.com/casual-simulation/casualos/issues/903)).
 -   Custom domain names are now normalized when they are added and looked up: they are lower-cased, a trailing dot is removed and internationalized names are converted to punycode. `addCustomDomain` now rejects values that aren't valid host names, such as values with a scheme, port, path or wildcard, and IP addresses ([#904](https://github.com/casual-simulation/casualos/issues/904)).
 

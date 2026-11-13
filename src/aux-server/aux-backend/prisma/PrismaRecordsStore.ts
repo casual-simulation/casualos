@@ -35,6 +35,7 @@ import type {
     StripeAccountStatus,
     StripeRequirementsStatus,
     CustomDomain,
+    CustomDomainVerificationUpdate,
     CustomDomainWithStudio,
 } from '@casual-simulation/aux-records';
 import {
@@ -43,7 +44,12 @@ import {
     LOOM_CONFIG,
     HUME_CONFIG,
 } from '@casual-simulation/aux-records';
-import type { PrismaClient, Prisma, Studio as PrismaStudio } from './generated';
+import type {
+    PrismaClient,
+    Prisma,
+    Studio as PrismaStudio,
+    CustomDomain as PrismaCustomDomain,
+} from './generated';
 import { convertToDate, convertToMillis } from './Utils';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 import type z from 'zod';
@@ -106,12 +112,7 @@ export class PrismaRecordsStore implements RecordsStore {
         }
 
         return {
-            id: domain.id,
-            domainName: domain.domainName,
-            studioId: domain.studioId,
-            verificationKey: domain.verificationKey,
-            verified: domain.verified as true | null,
-            expectedHostName: domain.expectedHostName,
+            ...this._convertToCustomDomain(domain),
             studio: this._convertToStudio(domain.studio),
         };
     }
@@ -125,14 +126,7 @@ export class PrismaRecordsStore implements RecordsStore {
             },
         });
 
-        return domains.map((domain) => ({
-            id: domain.id,
-            domainName: domain.domainName,
-            studioId: domain.studioId,
-            verificationKey: domain.verificationKey,
-            verified: domain.verified as true | null,
-            expectedHostName: domain.expectedHostName,
-        }));
+        return domains.map((domain) => this._convertToCustomDomain(domain));
     }
 
     async getVerifiedCustomDomainByName(
@@ -158,25 +152,56 @@ export class PrismaRecordsStore implements RecordsStore {
         }
 
         return {
+            ...this._convertToCustomDomain(domain),
+            studio: this._convertToStudio(domain.studio),
+        };
+    }
+
+    async listVerifiedCustomDomains(
+        afterId: string | null,
+        limit: number
+    ): Promise<CustomDomain[]> {
+        const domains = await this._client.customDomain.findMany({
+            where: {
+                verified: true,
+                ...(afterId ? { id: { gt: afterId } } : {}),
+            },
+            orderBy: {
+                id: 'asc',
+            },
+            take: limit,
+        });
+
+        return domains.map((domain) => this._convertToCustomDomain(domain));
+    }
+
+    async updateCustomDomainVerification(
+        domainId: string,
+        update: CustomDomainVerificationUpdate
+    ): Promise<void> {
+        await this._client.customDomain.update({
+            where: {
+                id: domainId,
+            },
+            data: {
+                verified: update.verified,
+                lastCheckedAt: new Date(update.lastCheckedAtMs),
+                consecutiveFailedChecks: update.consecutiveFailedChecks,
+            },
+        });
+    }
+
+    private _convertToCustomDomain(domain: PrismaCustomDomain): CustomDomain {
+        return {
             id: domain.id,
             domainName: domain.domainName,
             studioId: domain.studioId,
             verificationKey: domain.verificationKey,
             verified: domain.verified as true | null,
             expectedHostName: domain.expectedHostName,
-            studio: this._convertToStudio(domain.studio),
+            lastCheckedAtMs: domain.lastCheckedAt?.getTime() ?? null,
+            consecutiveFailedChecks: domain.consecutiveFailedChecks,
         };
-    }
-
-    async markCustomDomainAsVerified(domainId: string): Promise<void> {
-        await this._client.customDomain.update({
-            where: {
-                id: domainId,
-            },
-            data: {
-                verified: true,
-            },
-        });
     }
 
     async getStudioHumeConfig(studioId: string): Promise<HumeConfig | null> {

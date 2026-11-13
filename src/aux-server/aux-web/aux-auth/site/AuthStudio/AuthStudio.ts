@@ -421,6 +421,13 @@ export default class AuthStudio extends Vue {
         }
     }
 
+    formatDomainLastChecked(domain: ListedCustomDomain): string {
+        if (!domain.lastCheckedAtMs) {
+            return 'Never';
+        }
+        return new Date(domain.lastCheckedAtMs).toLocaleString();
+    }
+
     async verifyDomain(domain: ListedCustomDomain) {
         try {
             this.verifyingDomain = domain.id;
