@@ -80,6 +80,8 @@ export type KnownErrorCodes =
     | 'permission_already_exists'
     | 'comId_not_found'
     | 'comId_already_taken'
+    | 'comId_invalid'
+    | 'comId_reserved'
     | 'permission_not_found'
     | 'unacceptable_connection_token'
     | 'invalid_token'
@@ -201,6 +203,10 @@ export function getStatusCode(
             return 404;
         } else if (response.errorCode === 'comId_already_taken') {
             return 409;
+        } else if (response.errorCode === 'comId_invalid') {
+            return 400;
+        } else if (response.errorCode === 'comId_reserved') {
+            return 403;
         } else if (response.errorCode === 'permission_not_found') {
             return 404;
         } else if (response.errorCode === 'message_not_found') {

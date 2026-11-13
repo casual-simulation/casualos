@@ -3283,6 +3283,7 @@ describe('RecordsController', () => {
 
             expect(result).toEqual({
                 success: true,
+                status: 'pending',
             });
 
             expect(store.recordsNotifications).toEqual([
@@ -3362,6 +3363,217 @@ describe('RecordsController', () => {
                 success: false,
                 errorCode: 'comId_already_taken',
                 errorMessage: 'The given comID is already taken.',
+            });
+        });
+
+        it('should not change the studio comId when auto approval is disabled', async () => {
+            uuidMock.mockReturnValueOnce('requestId');
+            const result = await manager.requestComId({
+                studioId: 'studioId',
+                userId: 'userId',
+                requestedComId: 'Not Valid!',
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toEqual({
+                success: true,
+                status: 'pending',
+            });
+
+            const studio = await store.getStudioById('studioId');
+            expect(studio.comId).toBe('comId1');
+        });
+
+        describe('auto approve', () => {
+            beforeEach(() => {
+                store.subscriptionConfiguration = buildSubscriptionConfig(
+                    (config) =>
+                        config
+                            .withComIdsConfig({
+                                reservedComIds: ['admin', 'WWW'],
+                            })
+                            .addSubscription('sub1', (sub) =>
+                                sub
+                                    .withTier('tier1')
+                                    .withAllDefaultFeatures()
+                                    .withComId({
+                                        allowed: true,
+                                        maxStudios: 100,
+                                        autoApprove: true,
+                                    })
+                            )
+                            .addSubscription('sub2', (sub) =>
+                                sub
+                                    .withTier('tier2')
+                                    .withAllDefaultFeatures()
+                                    .withComId({
+                                        allowed: false,
+                                        autoApprove: true,
+                                    })
+                            )
+                );
+            });
+
+            it('should assign the comId to the studio immediately', async () => {
+                uuidMock.mockReturnValueOnce('requestId');
+                const result = await manager.requestComId({
+                    studioId: 'studioId',
+                    userId: 'userId',
+                    requestedComId: 'my-com-id',
+                    ipAddress: '127.0.0.1',
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    status: 'approved',
+                    comId: 'my-com-id',
+                });
+
+                const studio = await store.getStudioById('studioId');
+                expect(studio.comId).toBe('my-com-id');
+
+                expect(store.recordsNotifications).toEqual([
+                    {
+                        resource: 'studio_com_id_request',
+                        action: 'created',
+                        resourceId: 'studioId',
+                        recordName: null,
+                        timeMs: expect.any(Number),
+                        autoApproved: true,
+                        request: {
+                            id: 'requestId',
+                            studioId: 'studioId',
+                            userId: 'userId',
+                            requestingIpAddress: '127.0.0.1',
+                            requestedComId: 'my-com-id',
+                            createdAtMs: expect.any(Number),
+                            updatedAtMs: expect.any(Number),
+                        },
+                    },
+                ]);
+            });
+
+            const invalidCases = [
+                ['too short', 'ab'],
+                ['too long', 'a'.repeat(64)],
+                ['uppercase letters', 'MyComId'],
+                ['spaces', 'my com id'],
+                ['special characters', 'my_com.id'],
+                ['a leading hyphen', '-mycomid'],
+                ['a trailing hyphen', 'mycomid-'],
+            ];
+
+            it.each(invalidCases)(
+                'should return comId_invalid if the comId has %s',
+                async (desc, comId) => {
+                    const result = await manager.requestComId({
+                        studioId: 'studioId',
+                        userId: 'userId',
+                        requestedComId: comId,
+                        ipAddress: '127.0.0.1',
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'comId_invalid',
+                        errorMessage: expect.any(String),
+                    });
+
+                    const studio = await store.getStudioById('studioId');
+                    expect(studio.comId).toBe('comId1');
+                    expect(store.recordsNotifications).toEqual([]);
+                }
+            );
+
+            it.each([['admin'], ['www']])(
+                'should return comId_reserved if the comId is reserved (%s)',
+                async (comId) => {
+                    const result = await manager.requestComId({
+                        studioId: 'studioId',
+                        userId: 'userId',
+                        requestedComId: comId,
+                        ipAddress: '127.0.0.1',
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'comId_reserved',
+                        errorMessage: 'The given comID is reserved.',
+                    });
+
+                    const studio = await store.getStudioById('studioId');
+                    expect(studio.comId).toBe('comId1');
+                    expect(store.recordsNotifications).toEqual([]);
+                }
+            );
+
+            it('should return comId_already_taken if the comId is already taken', async () => {
+                await store.addStudio({
+                    id: 'studioId2',
+                    comId: 'taken',
+                    displayName: 'studio2',
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                });
+
+                const result = await manager.requestComId({
+                    studioId: 'studioId',
+                    userId: 'userId',
+                    requestedComId: 'taken',
+                    ipAddress: '127.0.0.1',
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'comId_already_taken',
+                    errorMessage: 'The given comID is already taken.',
+                });
+            });
+
+            it('should fall back to a manual request if the subscription does not grant comId features', async () => {
+                await store.updateStudio({
+                    ...(await store.getStudioById('studioId')),
+                    subscriptionId: 'sub2',
+                });
+
+                uuidMock.mockReturnValueOnce('requestId');
+                const result = await manager.requestComId({
+                    studioId: 'studioId',
+                    userId: 'userId',
+                    requestedComId: 'my-com-id',
+                    ipAddress: '127.0.0.1',
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    status: 'pending',
+                });
+
+                const studio = await store.getStudioById('studioId');
+                expect(studio.comId).toBe('comId1');
+            });
+
+            it('should fall back to a manual request if the subscription is not active', async () => {
+                await store.updateStudio({
+                    ...(await store.getStudioById('studioId')),
+                    subscriptionStatus: 'canceled',
+                });
+
+                uuidMock.mockReturnValueOnce('requestId');
+                const result = await manager.requestComId({
+                    studioId: 'studioId',
+                    userId: 'userId',
+                    requestedComId: 'my-com-id',
+                    ipAddress: '127.0.0.1',
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    status: 'pending',
+                });
+
+                const studio = await store.getStudioById('studioId');
+                expect(studio.comId).toBe('comId1');
             });
         });
     });

@@ -88,6 +88,8 @@ describe('getStatusCode()', () => {
         ['permission_already_exists', 400] as const,
         ['comId_not_found', 404] as const,
         ['comId_already_taken', 409] as const,
+        ['comId_invalid', 400] as const,
+        ['comId_reserved', 403] as const,
         ['permission_not_found', 404] as const,
         ['unacceptable_connection_token', 400] as const,
         ['invalid_token', 400] as const,

@@ -72,6 +72,8 @@ const fieldMap: Map<KnownErrorCodes, string | null> = new Map([
     ['invalid_display_name', DISPLAY_NAME_FIELD],
     ['user_is_banned', null],
     ['comId_already_taken', COM_ID_FIELD],
+    ['comId_invalid', COM_ID_FIELD],
+    ['comId_reserved', COM_ID_FIELD],
 ]);
 
 /**

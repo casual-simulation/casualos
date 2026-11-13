@@ -8699,6 +8699,21 @@ Object {
                     "schema": Object {},
                     "type": "object",
                   },
+                  "comIds": Object {
+                    "description": "Server-wide configuration for comIds. If omitted, then no comIds are reserved.",
+                    "optional": true,
+                    "schema": Object {
+                      "reservedComIds": Object {
+                        "description": "The list of comIds that cannot be automatically approved. Matching is case-insensitive.",
+                        "optional": true,
+                        "schema": Object {
+                          "type": "string",
+                        },
+                        "type": "array",
+                      },
+                    },
+                    "type": "object",
+                  },
                   "defaultFeatures": Object {
                     "optional": true,
                     "schema": Object {
@@ -8939,6 +8954,11 @@ Object {
                             "schema": Object {
                               "allowed": Object {
                                 "description": "Whether comId features are granted to the studio.",
+                                "type": "boolean",
+                              },
+                              "autoApprove": Object {
+                                "description": "Whether comId requests from studios with this subscription should be approved automatically when the requested comId is valid, not reserved, and not already taken. Defaults to false, which means that comId requests have to be approved manually.",
+                                "optional": true,
                                 "type": "boolean",
                               },
                               "maxDomains": Object {
@@ -9727,6 +9747,11 @@ Object {
                             "schema": Object {
                               "allowed": Object {
                                 "description": "Whether comId features are granted to the studio.",
+                                "type": "boolean",
+                              },
+                              "autoApprove": Object {
+                                "description": "Whether comId requests from studios with this subscription should be approved automatically when the requested comId is valid, not reserved, and not already taken. Defaults to false, which means that comId requests have to be approved manually.",
+                                "optional": true,
                                 "type": "boolean",
                               },
                               "maxDomains": Object {
@@ -10673,6 +10698,11 @@ Object {
                               "schema": Object {
                                 "allowed": Object {
                                   "description": "Whether comId features are granted to the studio.",
+                                  "type": "boolean",
+                                },
+                                "autoApprove": Object {
+                                  "description": "Whether comId requests from studios with this subscription should be approved automatically when the requested comId is valid, not reserved, and not already taken. Defaults to false, which means that comId requests have to be approved manually.",
+                                  "optional": true,
                                   "type": "boolean",
                                 },
                                 "maxDomains": Object {
@@ -21653,6 +21683,21 @@ Object {
                     "schema": Object {},
                     "type": "object",
                   },
+                  "comIds": Object {
+                    "description": "Server-wide configuration for comIds. If omitted, then no comIds are reserved.",
+                    "optional": true,
+                    "schema": Object {
+                      "reservedComIds": Object {
+                        "description": "The list of comIds that cannot be automatically approved. Matching is case-insensitive.",
+                        "optional": true,
+                        "schema": Object {
+                          "type": "string",
+                        },
+                        "type": "array",
+                      },
+                    },
+                    "type": "object",
+                  },
                   "defaultFeatures": Object {
                     "optional": true,
                     "schema": Object {
@@ -21893,6 +21938,11 @@ Object {
                             "schema": Object {
                               "allowed": Object {
                                 "description": "Whether comId features are granted to the studio.",
+                                "type": "boolean",
+                              },
+                              "autoApprove": Object {
+                                "description": "Whether comId requests from studios with this subscription should be approved automatically when the requested comId is valid, not reserved, and not already taken. Defaults to false, which means that comId requests have to be approved manually.",
+                                "optional": true,
                                 "type": "boolean",
                               },
                               "maxDomains": Object {
@@ -22681,6 +22731,11 @@ Object {
                             "schema": Object {
                               "allowed": Object {
                                 "description": "Whether comId features are granted to the studio.",
+                                "type": "boolean",
+                              },
+                              "autoApprove": Object {
+                                "description": "Whether comId requests from studios with this subscription should be approved automatically when the requested comId is valid, not reserved, and not already taken. Defaults to false, which means that comId requests have to be approved manually.",
+                                "optional": true,
                                 "type": "boolean",
                               },
                               "maxDomains": Object {
@@ -23627,6 +23682,11 @@ Object {
                               "schema": Object {
                                 "allowed": Object {
                                   "description": "Whether comId features are granted to the studio.",
+                                  "type": "boolean",
+                                },
+                                "autoApprove": Object {
+                                  "description": "Whether comId requests from studios with this subscription should be approved automatically when the requested comId is valid, not reserved, and not already taken. Defaults to false, which means that comId requests have to be approved manually.",
+                                  "optional": true,
                                   "type": "boolean",
                                 },
                                 "maxDomains": Object {

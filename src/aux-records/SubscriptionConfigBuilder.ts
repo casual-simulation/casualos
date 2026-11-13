@@ -610,6 +610,11 @@ export class SubscriptionConfigBuilder {
         return this;
     }
 
+    withComIdsConfig(config: SubscriptionConfiguration['comIds']): this {
+        this._config.comIds = config;
+        return this;
+    }
+
     addSubscription(
         id: string,
         build: (sub: SubscriptionBuilder) => SubscriptionBuilder

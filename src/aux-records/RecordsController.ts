@@ -2397,8 +2397,47 @@ export class RecordsController {
                 };
             }
 
+            const config = await this._config.getSubscriptionConfiguration();
+            const features = getComIdFeatures(
+                config,
+                existingStudio.subscriptionStatus,
+                existingStudio.subscriptionId,
+                existingStudio.subscriptionPeriodStartMs,
+                existingStudio.subscriptionPeriodEndMs
+            );
+            const autoApprove =
+                features.allowed && features.autoApprove === true;
+
+            if (autoApprove) {
+                if (!isValidAutoApprovedComId(request.requestedComId)) {
+                    return {
+                        success: false,
+                        errorCode: 'comId_invalid',
+                        errorMessage: `The given comID is invalid. ComIDs must be between ${MIN_AUTO_APPROVED_COM_ID_LENGTH} and ${MAX_AUTO_APPROVED_COM_ID_LENGTH} characters long, contain only lowercase letters, numbers, and hyphens, and must start and end with a letter or number.`,
+                    };
+                }
+
+                const requested = request.requestedComId.toLowerCase();
+                const reserved = config?.comIds?.reservedComIds ?? [];
+                if (reserved.some((r) => r.toLowerCase() === requested)) {
+                    return {
+                        success: false,
+                        errorCode: 'comId_reserved',
+                        errorMessage: 'The given comID is reserved.',
+                    };
+                }
+            }
+
             const id = uuid();
             const now = Date.now();
+
+            if (autoApprove) {
+                await this._store.updateStudio({
+                    ...existingStudio,
+                    comId: request.requestedComId,
+                });
+            }
+
             const comIdRequest: StudioComIdRequest = {
                 id,
                 userId: request.userId,
@@ -2418,11 +2457,21 @@ export class RecordsController {
                     recordName: null,
                     resourceId: comIdRequest.studioId,
                     request: comIdRequest,
+                    ...(autoApprove ? { autoApproved: true } : {}),
                 });
+            }
+
+            if (autoApprove) {
+                return {
+                    success: true,
+                    status: 'approved',
+                    comId: request.requestedComId,
+                };
             }
 
             return {
                 success: true,
+                status: 'pending',
             };
         } catch (err) {
             const span = trace.getActiveSpan();
@@ -3178,6 +3227,20 @@ export type ComIdRequestResult = ComIdRequestSuccess | ComIdRequestFailure;
 
 export interface ComIdRequestSuccess {
     success: true;
+
+    /**
+     * The status of the request.
+     *
+     * - "approved" means that the comID was automatically approved and has been assigned to the studio.
+     * - "pending" means that the request has been saved and needs to be approved manually.
+     */
+    status: 'approved' | 'pending';
+
+    /**
+     * The comID that was assigned to the studio.
+     * Only set when the request was approved.
+     */
+    comId?: string;
 }
 
 export interface ComIdRequestFailure {
@@ -3185,9 +3248,38 @@ export interface ComIdRequestFailure {
     errorCode:
         | 'studio_not_found'
         | 'comId_already_taken'
+        | 'comId_invalid'
+        | 'comId_reserved'
         | 'not_authorized'
         | ServerError;
     errorMessage: string;
+}
+
+/**
+ * The minimum length that a comID needs to be in order to be automatically approved.
+ */
+export const MIN_AUTO_APPROVED_COM_ID_LENGTH = 3;
+
+/**
+ * The maximum length that a comID can be in order to be automatically approved.
+ */
+export const MAX_AUTO_APPROVED_COM_ID_LENGTH = 63;
+
+const AUTO_APPROVED_COM_ID_REGEX = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/;
+
+/**
+ * Determines whether the given comID is valid for automatic approval.
+ * That is, it is between 3 and 63 characters long, only contains lowercase letters, numbers, and hyphens,
+ * and starts and ends with a letter or number.
+ * @param comId The comID to check.
+ */
+export function isValidAutoApprovedComId(comId: string): boolean {
+    return (
+        typeof comId === 'string' &&
+        comId.length >= MIN_AUTO_APPROVED_COM_ID_LENGTH &&
+        comId.length <= MAX_AUTO_APPROVED_COM_ID_LENGTH &&
+        AUTO_APPROVED_COM_ID_REGEX.test(comId)
+    );
 }
 
 export interface AddCustomDomainRequest {

@@ -198,6 +198,12 @@ export interface StudioComIdRequestNotification extends ResourceNotification {
      * The request that this notification is for.
      */
     request: StudioComIdRequest;
+
+    /**
+     * Whether the request was automatically approved.
+     * If true, then the comId has already been assigned to the studio and no action is needed.
+     */
+    autoApproved?: boolean;
 }
 
 export type NotificationResourceActions =
@@ -323,7 +329,11 @@ Studio ID: ${notification.request.studioId}
 Requested comID: ${notification.request.requestedComId}
 Time: ${time}
 Reporting User: ${notification.request.userId ?? '(null)'}
-Requesting IP: ${notification.request.requestingIpAddress ?? '(null)'}`;
+Requesting IP: ${notification.request.requestingIpAddress ?? '(null)'}${
+        notification.autoApproved
+            ? '\nStatus: Automatically approved (no action needed)'
+            : ''
+    }`;
 }
 
 export function formatModerationResourceScanNotificationAsString(
