@@ -530,7 +530,12 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
             console.log(
                 `[OtherPlayersPartitionImpl] Unloading partition for ${device.connectionId}`
             );
-            const partition = await this._partitionPromises.get(branch);
+            const promise = this._partitionPromises.get(branch);
+            const partition = await promise;
+            // Another unload may have completed, or a new peer may now own this branch.
+            if (this._partitionPromises.get(branch) !== promise) {
+                return;
+            }
             this._partitions.delete(branch);
             this._partitionPromises.delete(branch);
             const sub = this._partitionSubs.get(branch);
@@ -545,6 +550,9 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
             let deleted = [] as string[];
             for (let id of ids) {
                 const bot = this._state[id];
+                if (!bot) {
+                    continue;
+                }
                 if (bot.id) {
                     deleted.push(id);
                     update[id] = null;

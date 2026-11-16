@@ -36,8 +36,8 @@ import { createBot } from '@casual-simulation/aux-common/bots/BotCalculations';
 import { v4 as uuid, v7 as uuidv7 } from 'uuid';
 import type { YjsPartitionImpl } from '@casual-simulation/aux-common/partitions/YjsPartition';
 import { createYjsPartition } from '@casual-simulation/aux-common/partitions/YjsPartition';
-import { encodeStateAsUpdate } from 'yjs';
-import { fromByteArray } from 'base64-js';
+import { encodeStateAsUpdate, Doc, applyUpdate } from 'yjs';
+import { fromByteArray, toByteArray } from 'base64-js';
 import {
     device,
     deviceError,
@@ -388,6 +388,253 @@ describe('WebsocketController', () => {
                 expect(
                     await tempUpdatesStore.getUpdates(null, inst, 'testBranch')
                 ).toEqual(null);
+            });
+        });
+
+        describe('watch compaction', () => {
+            function makeUpdates() {
+                const doc = new Doc();
+                const updates: string[] = [];
+                doc.on('update', (update: Uint8Array) =>
+                    updates.push(fromByteArray(update))
+                );
+                doc.getMap('data').set('first', 1);
+                doc.getMap('data').set('second', 2);
+                doc.getMap('data').set('third', 3);
+                doc.destroy();
+                return updates;
+            }
+            function readState(updates: string[]) {
+                const doc = new Doc();
+                updates.forEach((update) =>
+                    applyUpdate(doc, toByteArray(update))
+                );
+                const result = doc.getMap('data').toJSON();
+                doc.destroy();
+                return result;
+            }
+            async function configure(threshold: number) {
+                const config =
+                    await services.configStore.getSubscriptionConfiguration();
+                jest.spyOn(
+                    services.configStore,
+                    'getSubscriptionConfiguration'
+                ).mockResolvedValue({
+                    ...config,
+                    defaultFeatures: {
+                        ...config?.defaultFeatures,
+                        instUpdateCompactionThreshold: threshold,
+                    },
+                });
+            }
+            it.each([false, true])(
+                'compacts concurrent joins and preserves appended writes (temporary=%s)',
+                async (temporary) => {
+                    await configure(2);
+                    const storage = temporary
+                        ? tempUpdatesStore
+                        : instStore.temp;
+                    const updates = makeUpdates();
+                    await storage.addUpdates(
+                        null,
+                        inst,
+                        'testBranch',
+                        updates.slice(0, 2),
+                        updates[0].length + updates[1].length
+                    );
+                    await connectionStore.saveConnection(device1Info);
+                    await connectionStore.saveConnection(device2Info);
+                    await connectionStore.saveConnection(device3Info);
+                    const compact = storage.compactUpdates.bind(storage);
+                    let appended = false;
+                    jest.spyOn(storage, 'compactUpdates').mockImplementation(
+                        async (...args) => {
+                            if (!appended) {
+                                appended = true;
+                                await server.addUpdates(
+                                    device3Info.serverConnectionId,
+                                    {
+                                        type: 'repo/add_updates',
+                                        recordName: null,
+                                        inst,
+                                        branch: 'testBranch',
+                                        updates: [updates[2]],
+                                        updateId: 1,
+                                    }
+                                );
+                            }
+                            return compact(...args);
+                        }
+                    );
+                    const event = {
+                        type: 'repo/watch_branch' as const,
+                        recordName: null as string | null,
+                        inst,
+                        branch: 'testBranch',
+                        temporary,
+                    };
+                    await Promise.all([
+                        server.watchBranch(
+                            device1Info.serverConnectionId,
+                            event
+                        ),
+                        server.watchBranch(
+                            device2Info.serverConnectionId,
+                            event
+                        ),
+                    ]);
+                    const saved = await storage.getUpdates(
+                        null,
+                        inst,
+                        'testBranch'
+                    );
+                    expect(readState(saved.updates)).toEqual({
+                        first: 1,
+                        second: 2,
+                        third: 3,
+                    });
+                    expect(saved.updates.length).toBeLessThan(3);
+                    expect(await storage.getInstSize(null, inst)).toBe(
+                        saved.updates.reduce((sum, u) => sum + u.length, 0)
+                    );
+                    for (const device of [device1Info, device2Info]) {
+                        const initial = messenger
+                            .getMessages(device.serverConnectionId)
+                            .find(
+                                (m) =>
+                                    m.type === 'repo/add_updates' && m.initial
+                            ) as any;
+                        expect(readState(initial.updates)).toMatchObject({
+                            first: 1,
+                            second: 2,
+                        });
+                        const delivered = messenger
+                            .getMessages(device.serverConnectionId)
+                            .filter((m) => m.type === 'repo/add_updates')
+                            .flatMap((m) => (m as any).updates);
+                        expect(readState(delivered)).toEqual({
+                            first: 1,
+                            second: 2,
+                            third: 3,
+                        });
+                    }
+                }
+            );
+            it.each([0, 3])(
+                'does not compact when disabled or below threshold (%s)',
+                async (threshold) => {
+                    await configure(threshold);
+                    const updates = makeUpdates().slice(0, 2);
+                    await instStore.temp.addUpdates(
+                        null,
+                        inst,
+                        'testBranch',
+                        updates,
+                        updates.reduce((s, u) => s + u.length, 0)
+                    );
+                    await connectionStore.saveConnection(device1Info);
+                    const compact = jest.spyOn(
+                        instStore.temp,
+                        'compactUpdates'
+                    );
+                    await server.watchBranch(device1Info.serverConnectionId, {
+                        type: 'repo/watch_branch',
+                        recordName: null,
+                        inst,
+                        branch: 'testBranch',
+                    });
+                    expect(compact).not.toHaveBeenCalled();
+                    expect(
+                        (
+                            await instStore.temp.getUpdates(
+                                null,
+                                inst,
+                                'testBranch'
+                            )
+                        ).updates
+                    ).toEqual(updates);
+                }
+            );
+            it.each([false, true])(
+                'only compacts record branches when expiring (%s)',
+                async (expires) => {
+                    await configure(2);
+                    await services.records.createRecord({
+                        userId,
+                        recordName,
+                        ownerId: userId,
+                    });
+                    await server.login(serverConnectionId, 1, {
+                        type: 'login',
+                        connectionToken,
+                    });
+                    const event = {
+                        type: 'repo/watch_branch' as const,
+                        recordName,
+                        inst,
+                        branch: 'testBranch',
+                        expires,
+                    };
+                    await server.watchBranch(serverConnectionId, event);
+                    const updates = makeUpdates().slice(0, 2);
+                    await server.addUpdates(serverConnectionId, {
+                        type: 'repo/add_updates',
+                        recordName,
+                        inst,
+                        branch: 'testBranch',
+                        updates,
+                        updateId: 1,
+                    });
+                    const compact = jest.spyOn(
+                        instStore.temp,
+                        'compactUpdates'
+                    );
+                    await server.watchBranch(serverConnectionId, event);
+                    expect(compact).toHaveBeenCalledTimes(expires ? 1 : 0);
+                    expect(
+                        (
+                            await instStore.temp.getUpdates(
+                                recordName,
+                                inst,
+                                'testBranch'
+                            )
+                        ).updates
+                    ).toHaveLength(expires ? 1 : 2);
+                }
+            );
+
+            it('still joins if compaction fails', async () => {
+                await configure(2);
+                const updates = makeUpdates().slice(0, 2);
+                await instStore.temp.addUpdates(
+                    null,
+                    inst,
+                    'testBranch',
+                    updates,
+                    updates.reduce((s, u) => s + u.length, 0)
+                );
+                await connectionStore.saveConnection(device1Info);
+                jest.spyOn(instStore.temp, 'compactUpdates').mockRejectedValue(
+                    new Error('Redis unavailable')
+                );
+                await server.watchBranch(device1Info.serverConnectionId, {
+                    type: 'repo/watch_branch',
+                    recordName: null,
+                    inst,
+                    branch: 'testBranch',
+                });
+                expect(
+                    messenger.getMessages(device1Info.serverConnectionId)
+                ).toContainEqual(
+                    expect.objectContaining({
+                        type: 'repo/watch_branch_result',
+                        success: true,
+                    })
+                );
+                expect(
+                    (await instStore.temp.getUpdates(null, inst, 'testBranch'))
+                        .updates
+                ).toEqual(updates);
             });
         });
 

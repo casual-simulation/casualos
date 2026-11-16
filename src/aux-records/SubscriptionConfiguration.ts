@@ -1174,6 +1174,13 @@ export const getSubscriptionConfigSchema = memoize(() =>
                     .describe(
                         'The feature limits for public insts (insts that do not belong to a record and will expire after a preset time). Defaults to an object that allows all features.'
                     ),
+                instUpdateCompactionThreshold: z
+                    .int()
+                    .nonnegative()
+                    .optional()
+                    .describe(
+                        'Compact public and temporary branch updates on join at this count. Defaults to 100. Zero disables compaction.'
+                    ),
                 numberOfInstUpdatesToKeep: z
                     .int()
                     .positive()
@@ -1390,6 +1397,9 @@ export interface DefaultFeaturesConfiguration {
      * If omitted, then all updates are kept.
      */
     numberOfInstUpdatesToKeep?: number;
+
+    /** Update count that triggers public/temp branch compaction on join. Default 100; 0 disables it. */
+    instUpdateCompactionThreshold?: number;
 }
 
 export interface PublicInstsConfiguration {

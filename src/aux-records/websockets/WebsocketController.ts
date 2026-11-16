@@ -45,7 +45,7 @@ import {
     deviceResult,
 } from '@casual-simulation/aux-common/common/RemoteActions';
 import { fromByteArray, toByteArray } from 'base64-js';
-import { applyUpdate, Doc, encodeStateAsUpdate } from 'yjs';
+import { applyUpdate, Doc, encodeStateAsUpdate, mergeUpdates } from 'yjs';
 import type {
     DeviceConnection,
     WebsocketConnectionStore,
@@ -595,6 +595,43 @@ export class WebsocketController {
                 event.inst,
                 event.branch
             );
+        }
+
+        const compactionThreshold =
+            config?.defaultFeatures?.instUpdateCompactionThreshold ?? 100;
+        const compactionStore = branch.temporary
+            ? this._temporaryStore
+            : (!recordName || branch.expires === true) &&
+              this._instStore instanceof SplitInstRecordsStore
+            ? this._instStore.temp
+            : null;
+        if (
+            compactionStore &&
+            compactionThreshold > 0 &&
+            updates?.updates.length >= Math.max(2, compactionThreshold)
+        ) {
+            try {
+                // Merge the exact snapshot being sent. Atomic prefix replacement keeps
+                // concurrent appends and refuses stale snapshots from other joiners.
+                // mergeUpdates also preserves updates with unresolved dependencies.
+                const merged = fromByteArray(
+                    mergeUpdates(updates.updates.map(toByteArray))
+                );
+                await compactionStore.compactUpdates(
+                    recordName,
+                    event.inst,
+                    event.branch,
+                    updates,
+                    merged
+                );
+                updates = { ...updates, updates: [merged] };
+            } catch (err) {
+                // Compaction is an optimization; a failure must not prevent joining.
+                console.error(
+                    '[WebsocketController] Unable to compact branch updates.',
+                    err
+                );
+            }
         }
 
         if (!updates) {

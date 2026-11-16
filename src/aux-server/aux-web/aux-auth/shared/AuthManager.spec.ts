@@ -91,6 +91,137 @@ describe('AuthManager', () => {
         return require('axios').__getRequests();
     }
 
+    describe('session persistence', () => {
+        const sessionKey = formatV1SessionKey(
+            'user',
+            'session',
+            'secret',
+            1000000
+        );
+        const connectionKey = formatV1ConnectionKey(
+            'user',
+            'session',
+            'secret',
+            1000000
+        );
+        beforeEach(() => {
+            manager.savedSessionKey = sessionKey;
+            manager.savedConnectionKey = connectionKey;
+            require('axios').__reset();
+        });
+        afterEach(() => require('axios').__reset());
+
+        it('deduplicates refreshes and stores temporary keys without overwriting saved credentials', async () => {
+            const temporary = formatV1SessionKey(
+                'user',
+                'temp',
+                'secret',
+                1000000
+            );
+            manager.useTemporaryKeys(temporary, connectionKey);
+            let resolve: (result: any) => void;
+            const replace = jest
+                .spyOn(manager.client, 'replaceSession')
+                .mockImplementation(() => new Promise((r) => (resolve = r)));
+            const first = manager.replaceSession();
+            const second = manager.replaceSession();
+            expect(first).toBe(second);
+            const next = formatV1SessionKey('user', 'next', 'secret', 2000000);
+            resolve({
+                success: true,
+                userId: 'user',
+                sessionKey: next,
+                connectionKey: 'next-connection',
+            });
+            await first;
+            expect(replace).toHaveBeenCalledTimes(1);
+            expect(manager.currentSessionKey).toBe(next);
+            expect(manager.client.sessionKey).toBe(next);
+            expect(manager.currentConnectionKey).toBe('next-connection');
+            expect(manager.savedSessionKey).toBe(sessionKey);
+            expect(manager.sessionId).toBe('next');
+        });
+
+        it('does not restore a session after logout during refresh', async () => {
+            manager.useTemporaryKeys(sessionKey, connectionKey);
+            let resolve: (result: any) => void;
+            jest.spyOn(manager.client, 'replaceSession').mockImplementation(
+                () => new Promise((r) => (resolve = r))
+            );
+            const pending = manager.replaceSession();
+            await manager.logout(false);
+            resolve({
+                success: true,
+                userId: 'user',
+                sessionKey: formatV1SessionKey(
+                    'user',
+                    'next',
+                    'secret',
+                    2000000
+                ),
+                connectionKey,
+            });
+            await pending;
+            expect(manager.currentSessionKey).toBeNull();
+        });
+
+        it.each([undefined, 429, 500, 503])(
+            'keeps credentials after a transient failure (%s)',
+            async (status) => {
+                if (status) setResponse({ error: true, status });
+                else require('axios').__setFail(true);
+                expect(await manager.loadUserInfo()).toBe(false);
+                expect(manager.currentSessionKey).toBe(sessionKey);
+                expect(manager.currentConnectionKey).toBe(connectionKey);
+                expect(manager.isLoggedIn()).toBe(true);
+                require('axios').__setFail(false);
+                setResponse({ data: { name: 'Recovered' } });
+                expect(await manager.loadUserInfo()).toBe(true);
+                expect(manager.name).toBe('Recovered');
+            }
+        );
+
+        it.each([401, 403, 404])(
+            'clears credentials after authoritative rejection (%s)',
+            async (status) => {
+                setResponse({ error: true, status });
+                expect(await manager.loadUserInfo()).toBe(false);
+                expect(manager.currentSessionKey).toBeNull();
+                expect(manager.currentConnectionKey).toBeNull();
+            }
+        );
+
+        it('keeps cached user info during a network interruption', async () => {
+            setResponse({ data: { name: 'Cached' } });
+            await manager.loadUserInfo();
+            require('axios').__setFail(true);
+            expect(await manager.loadUserInfo()).toBe(true);
+            expect(manager.name).toBe('Cached');
+            expect(manager.currentSessionKey).toBe(sessionKey);
+        });
+
+        it('does not clear a new login when an older request is rejected', async () => {
+            let reject: (err: any) => void;
+            const get = jest
+                .spyOn(require('axios'), 'get')
+                .mockImplementationOnce(
+                    () => new Promise((_, r) => (reject = r))
+                );
+            const pending = manager.loadUserInfo();
+            const next = formatV1SessionKey(
+                'other',
+                'session2',
+                'secret',
+                1000000
+            );
+            manager.savedSessionKey = next;
+            reject({ response: { status: 401 } });
+            await pending;
+            expect(manager.currentSessionKey).toBe(next);
+            get.mockRestore();
+        });
+    });
+
     describe('loginWithEmail()', () => {
         it('should send a login request with the given email', async () => {
             fetch.mockResolvedValueOnce({

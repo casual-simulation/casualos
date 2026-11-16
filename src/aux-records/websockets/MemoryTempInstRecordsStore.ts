@@ -151,9 +151,48 @@ export class MemoryTempInstRecordsStore implements TemporaryInstRecordsStore {
             (await this.getBranchSize(recordName, inst, branch)) ?? 0;
         return {
             ...updates,
+            updates: [...updates.updates],
+            timestamps: [...updates.timestamps],
             instSizeInBytes: instSize,
             branchSizeInBytes: branchSize,
         };
+    }
+
+    async compactUpdates(
+        recordName: string | null,
+        inst: string,
+        branch: string,
+        snapshot: Pick<BranchUpdates, 'updates' | 'timestamps'>,
+        mergedUpdate: string
+    ): Promise<boolean> {
+        const key = this.getBranchKey(recordName, inst, branch);
+        const current = this._updates.get(key);
+        const count = snapshot.updates.length;
+        if (
+            !current ||
+            count < 2 ||
+            snapshot.updates.some(
+                (update, i) =>
+                    current.updates[i] !== update ||
+                    current.timestamps[i] !== snapshot.timestamps[i]
+            )
+        ) {
+            return false;
+        }
+        // No awaits: compare, replace and accounting form one atomic operation.
+        const delta =
+            Buffer.byteLength(mergedUpdate, 'utf8') -
+            snapshot.updates.reduce(
+                (size, update) => size + Buffer.byteLength(update, 'utf8'),
+                0
+            );
+        current.updates.splice(0, count, mergedUpdate);
+        current.timestamps.splice(0, count, snapshot.timestamps[count - 1]);
+        const instKey = this.getInstKey(recordName, inst);
+        this._sizes.set(instKey, (this._sizes.get(instKey) ?? 0) + delta);
+        this._sizes.set(key, (this._sizes.get(key) ?? 0) + delta);
+        this._counts.set(key, (this._counts.get(key) ?? count) - count + 1);
+        return true;
     }
 
     async addUpdates(

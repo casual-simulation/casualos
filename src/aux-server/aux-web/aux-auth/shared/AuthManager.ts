@@ -94,6 +94,9 @@ export class AuthManager {
     private _gitTag: string;
     private _client: ReturnType<typeof createRecordsClient>;
 
+    private _replaceSessionPromise: ReturnType<
+        ReturnType<typeof createRecordsClient>['replaceSession']
+    >;
     private _temporarySessionKey: string;
     private _temporaryConnectionKey: string;
 
@@ -274,11 +277,24 @@ export class AuthManager {
     }
 
     async loadUserInfo() {
-        const [userId, sessionId, sessionSecret, expireTimeMs] =
-            parseSessionKey(this.currentSessionKey);
+        const sessionKey = this.currentSessionKey;
+        const parsed = parseSessionKey(sessionKey);
+        if (!parsed) {
+            return false;
+        }
+        const [userId, sessionId] = parsed;
         this._userId = userId;
         this._sessionId = sessionId;
-        this._appMetadata = await this._loadAppMetadata();
+        const metadata = await this._loadAppMetadata();
+        if (this.currentSessionKey !== sessionKey) {
+            return this.userInfoLoaded;
+        }
+        if (metadata === undefined) {
+            // Safari can suspend requests while backgrounded. A transport/server
+            // failure is not evidence that the user's session has been revoked.
+            return this.userInfoLoaded;
+        }
+        this._appMetadata = metadata;
 
         if (!this._appMetadata) {
             this._userId = null;
@@ -733,14 +749,34 @@ export class AuthManager {
         return result;
     }
 
-    async replaceSession() {
-        const result = await this.client.replaceSession();
-
-        if (result.success && result.userId === this.userId) {
-            this.savedSessionKey = result.sessionKey;
-            this.savedConnectionKey = result.connectionKey;
+    replaceSession() {
+        // Multiple resume/reconnect requests must not rotate the same session twice.
+        if (!this._replaceSessionPromise) {
+            this._replaceSessionPromise = this._replaceSession().finally(() => {
+                this._replaceSessionPromise = null;
+            });
         }
+        return this._replaceSessionPromise;
+    }
 
+    private async _replaceSession() {
+        const sessionKey = this.currentSessionKey;
+        const temporary = !!this._temporarySessionKey;
+        this._updateClientSessionKey();
+        const result = await this.client.replaceSession();
+        if (
+            result.success &&
+            result.userId === this.userId &&
+            this.currentSessionKey === sessionKey
+        ) {
+            if (temporary) {
+                this.useTemporaryKeys(result.sessionKey, result.connectionKey);
+            } else {
+                this.savedSessionKey = result.sessionKey;
+                this.savedConnectionKey = result.connectionKey;
+                this._sessionId = parseSessionKey(result.sessionKey)[1];
+            }
+        }
         return result;
     }
 
@@ -841,7 +877,7 @@ export class AuthManager {
         }
     }
 
-    private async _loadAppMetadata(): Promise<AppMetadata> {
+    private async _loadAppMetadata(): Promise<AppMetadata | null | undefined> {
         try {
             const response = await axios.get(
                 `${this.apiEndpoint}/api/${encodeURIComponent(

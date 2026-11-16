@@ -127,6 +127,70 @@ describe('OtherPlayersPartition', () => {
                     sub.unsubscribe();
                 });
 
+                it('unloads a pending peer only once', async () => {
+                    const branch = (partition as any)._branchNameForDevice(
+                        device1
+                    );
+                    let resolve: (value: any) => void;
+                    const pending = new Promise<any>((r) => (resolve = r));
+                    const peer = {
+                        state: {
+                            test: createBot('test'),
+                            missing: createBot('missing'),
+                        },
+                    };
+                    const unsubscribe = jest.fn();
+                    (partition as any)._partitionPromises.set(branch, pending);
+                    (partition as any)._partitionSubs.set(branch, {
+                        unsubscribe,
+                    });
+                    (partition as any)._state = { test: createBot('test') };
+                    const first = (partition as any)._tryUnloadBranchForDevice(
+                        device1
+                    );
+                    const second = (partition as any)._tryUnloadBranchForDevice(
+                        device1
+                    );
+                    resolve(peer);
+                    await Promise.all([first, second]);
+                    expect(unsubscribe).toHaveBeenCalledTimes(1);
+                    expect(removed).toEqual(['test']);
+                    expect(partition.state).toEqual({});
+                    expect(updates).toHaveLength(1);
+                });
+
+                it('does not unload a replacement peer after an old promise resolves', async () => {
+                    const branch = (partition as any)._branchNameForDevice(
+                        device1
+                    );
+                    let resolve: (value: any) => void;
+                    const pending = new Promise<any>((r) => (resolve = r));
+                    (partition as any)._partitionPromises.set(branch, pending);
+                    const unloading = (
+                        partition as any
+                    )._tryUnloadBranchForDevice(device1);
+                    const replacement = Promise.resolve({ state: {} });
+                    const unsubscribe = jest.fn();
+                    (partition as any)._partitionPromises.set(
+                        branch,
+                        replacement
+                    );
+                    (partition as any)._partitionSubs.set(branch, {
+                        unsubscribe,
+                    });
+                    (partition as any)._state = { test: createBot('test') };
+                    resolve({ state: { test: createBot('test') } });
+                    await unloading;
+                    expect(
+                        (partition as any)._partitionPromises.get(branch)
+                    ).toBe(replacement);
+                    expect(unsubscribe).not.toHaveBeenCalled();
+                    expect(partition.state).toEqual({
+                        test: createBot('test'),
+                    });
+                    expect(removed).toEqual([]);
+                });
+
                 it('should return delayed for the realtimeStrategy', () => {
                     expect(partition.realtimeStrategy).toEqual('delayed');
                 });

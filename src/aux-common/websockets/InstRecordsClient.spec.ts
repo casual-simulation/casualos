@@ -1974,6 +1974,92 @@ describe('InstRecordsClient', () => {
             jest.useRealTimers();
         });
 
+        it.each([null, 'record'])(
+            'preserves pending updates through disconnected retries (%s)',
+            (recordName) => {
+                client.resendUpdatesAfterMs = 1000;
+                client.resendUpdatesIntervalMs = 1000;
+                const ack = new Subject<UpdatesReceivedMessage>();
+                const watched = new Subject<WatchBranchResultMessage>();
+                connection.events.set('repo/updates_received', ack);
+                connection.events.set('repo/watch_branch_result', watched);
+                connection.connect();
+                const branch = { recordName, inst: 'inst', branch: 'shared' };
+                const sub = client
+                    .watchBranchUpdates({
+                        type: 'repo/watch_branch',
+                        ...branch,
+                    })
+                    .subscribe();
+                client.addUpdates(recordName, 'inst', 'shared', ['first']);
+                connection.disconnect();
+                connection.sentMessages.length = 0;
+                const send = jest.spyOn(connection, 'send');
+                expect(() =>
+                    client.addUpdates(recordName, 'inst', 'shared', ['offline'])
+                ).not.toThrow();
+                jest.advanceTimersByTime(30000);
+                expect(send).not.toHaveBeenCalled();
+                connection.connect();
+                watched.next({
+                    type: 'repo/watch_branch_result',
+                    ...branch,
+                    success: true,
+                });
+                const replay = connection.sentMessages.filter(
+                    (m) => m.type === 'repo/add_updates'
+                );
+                expect(replay).toEqual([
+                    {
+                        type: 'repo/add_updates',
+                        ...branch,
+                        updates: ['first'],
+                        updateId: 1,
+                    },
+                    {
+                        type: 'repo/add_updates',
+                        ...branch,
+                        updates: ['offline'],
+                        updateId: 2,
+                    },
+                ]);
+                for (const updateId of [1, 2]) {
+                    ack.next({
+                        type: 'repo/updates_received',
+                        ...branch,
+                        updateId,
+                    });
+                }
+                connection.sentMessages.length = 0;
+                jest.advanceTimersByTime(60000);
+                expect(connection.sentMessages).toEqual([]);
+                sub.unsubscribe();
+                client.resendUpdatesIntervalMs = null;
+            }
+        );
+
+        it('does not confuse equally named branches in different insts', () => {
+            client.watchBranchUpdates({
+                type: 'repo/watch_branch',
+                recordName: 'r',
+                inst: 'a',
+                branch: 'shared',
+            });
+            client.addUpdates('r', 'a', 'shared', ['held']);
+            expect(connection.sentMessages).toEqual([]);
+            client.addUpdates('r', 'b', 'shared', ['unwatched']);
+            expect(connection.sentMessages).toEqual([
+                {
+                    type: 'repo/add_updates',
+                    recordName: 'r',
+                    inst: 'b',
+                    branch: 'shared',
+                    updates: ['unwatched'],
+                    updateId: 2,
+                },
+            ]);
+        });
+
         it('should resend updates that were not acknowledged after a set amount of time', async () => {
             // Set the resend time to 5 seconds.
             client.resendUpdatesAfterMs = 5000;

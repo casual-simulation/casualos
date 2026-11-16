@@ -155,11 +155,19 @@ export class AuthHandler implements AuxAuth {
         }
 
         // check session validity
+        const sessionKey = this.sessionKey;
         const result = await authManager.client.getUserInfo({
             userId: authManager.userId,
         });
 
-        if (result.success === false) {
+        if (
+            result.success === false &&
+            this.sessionKey === sessionKey &&
+            (result.errorCode === 'not_logged_in' ||
+                result.errorCode === 'unacceptable_session_key' ||
+                result.errorCode === 'invalid_key' ||
+                result.errorCode === 'session_expired')
+        ) {
             this._loggedIn = false;
             await authManager.logout(false);
             return await this.login();
@@ -208,6 +216,14 @@ export class AuthHandler implements AuxAuth {
 
     async isLoggedIn(): Promise<boolean> {
         await this._init();
+        if (
+            !this._loggedIn &&
+            authManager.isLoggedIn() &&
+            (await this._checkLoginStatus())
+        ) {
+            // Retry metadata loading after a suspended/offline initial request.
+            await this._loadUserInfo();
+        }
         if (this._loggedIn) {
             const expiry = getSessionKeyExpiration(this.sessionKey);
             if (!isExpired(expiry)) {
@@ -293,6 +309,7 @@ export class AuthHandler implements AuxAuth {
     }
 
     async logout(): Promise<void> {
+        clearTimeout(this._refreshTimeout);
         await authManager.logout();
         this._loggedIn = false;
         this._loginData = null;
@@ -1185,7 +1202,7 @@ export class AuthHandler implements AuxAuth {
             );
             this._refreshTimeout = setTimeout(() => {
                 this._refreshToken();
-            }, refreshTimeMs);
+            }, Math.min(refreshTimeMs, 2_147_483_647));
         }
     }
 
@@ -1195,11 +1212,41 @@ export class AuthHandler implements AuxAuth {
             console.log('[AuthHandler] Unable to refresh. No login data.');
             return;
         }
-        const result = await authManager.replaceSession();
-        if (result.success) {
-            console.log('[AuthHandler] Token refreshed!');
-        } else {
-            console.error('[AuthHandler] Failed to refresh token.', result);
+        const sessionKey = this.sessionKey;
+        if (!sessionKey || isExpired(getSessionKeyExpiration(sessionKey))) {
+            return;
+        }
+        // Recheck the deadline after a clamped timer or a browser suspension.
+        if (timeUntilRefresh(getSessionKeyExpiration(sessionKey)) > 0) {
+            this._queueTokenRefresh(sessionKey);
+            return;
+        }
+        try {
+            const result = await authManager.replaceSession();
+            if (
+                result.success &&
+                this._loginData &&
+                this.sessionKey !== sessionKey
+            ) {
+                console.log('[AuthHandler] Token refreshed!');
+                this._queueTokenRefresh(this.sessionKey);
+                return;
+            }
+        } catch (err) {
+            console.error('[AuthHandler] Unable to refresh token.', err);
+        }
+        // A temporary network failure must neither clear credentials nor stop
+        // future refresh attempts. Never restart refresh after logout.
+        if (
+            this._loginData &&
+            this.sessionKey === sessionKey &&
+            authManager.isLoggedIn()
+        ) {
+            clearTimeout(this._refreshTimeout);
+            this._refreshTimeout = setTimeout(
+                () => this._refreshToken(),
+                60_000
+            );
         }
     }
 
