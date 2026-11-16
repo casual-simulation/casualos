@@ -18,7 +18,11 @@
 import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
 import { clientsClaim } from 'workbox-core';
 import { registerRoute } from 'workbox-routing';
-import { StaleWhileRevalidate, CacheFirst } from 'workbox-strategies';
+import {
+    StaleWhileRevalidate,
+    CacheFirst,
+    NetworkFirst,
+} from 'workbox-strategies';
 import { ExpirationPlugin } from 'workbox-expiration';
 import type { PushNotificationPayload } from '@casual-simulation/aux-records';
 import '../shared/service-worker';
@@ -27,6 +31,35 @@ declare let self: ServiceWorkerGlobalScope;
 declare let GIT_TAG: string;
 
 cleanupOutdatedCaches();
+// Runtime configuration and injected bootstrap HTML must be fresh when online.
+// Register before precaching so / and /index.html cannot use a stale app shell.
+registerRoute(
+    ({ url }) => /\/api\/config$/.test(url.pathname),
+    new NetworkFirst({
+        cacheName: 'web-config',
+        plugins: [
+            new ExpirationPlugin({
+                maxEntries: 1,
+            }),
+        ],
+    })
+);
+
+registerRoute(
+    ({ url }) =>
+        (url.pathname === '/' || url.pathname === '/index.html') &&
+        !url.searchParams.has('comId') &&
+        !url.searchParams.has('comID'),
+    new NetworkFirst({
+        cacheName: 'root',
+        plugins: [
+            new ExpirationPlugin({
+                maxEntries: 1,
+            }),
+        ],
+    })
+);
+
 precacheAndRoute(self.__WB_MANIFEST);
 
 self.addEventListener('message', (event) => {
@@ -146,33 +179,6 @@ registerRoute(
         plugins: [
             new ExpirationPlugin({
                 maxAgeSeconds: 604800, // 7 days in seconds
-            }),
-        ],
-    })
-);
-
-registerRoute(
-    ({ url }) => /\/api\/config$/.test(url.pathname),
-    new StaleWhileRevalidate({
-        cacheName: 'web-config',
-        plugins: [
-            new ExpirationPlugin({
-                maxEntries: 1,
-            }),
-        ],
-    })
-);
-
-registerRoute(
-    ({ url }) =>
-        /\/$/.test(url.pathname) &&
-        !url.searchParams.has('comId') &&
-        !url.searchParams.has('comID'),
-    new StaleWhileRevalidate({
-        cacheName: 'root',
-        plugins: [
-            new ExpirationPlugin({
-                maxEntries: 1,
             }),
         ],
     })

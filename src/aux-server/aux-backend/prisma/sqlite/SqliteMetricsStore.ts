@@ -61,8 +61,8 @@ export class SqliteMetricsStore implements MetricsStore {
 
         const where: Prisma.AiOpenAIRealtimeMetricsWhereInput = {
             createdAt: {
-                lt: metrics.currentPeriodEndMs,
-                gte: metrics.currentPeriodStartMs,
+                lt: metrics.currentPeriodEndMs ?? undefined,
+                gte: metrics.currentPeriodStartMs ?? undefined,
             },
         };
 
@@ -109,8 +109,8 @@ export class SqliteMetricsStore implements MetricsStore {
 
         const where: Prisma.AiSloydMetricsWhereInput = {
             createdAt: {
-                lt: metrics.currentPeriodEndMs,
-                gte: metrics.currentPeriodStartMs,
+                lt: metrics.currentPeriodEndMs ?? undefined,
+                gte: metrics.currentPeriodStartMs ?? undefined,
             },
         };
 
@@ -354,8 +354,8 @@ export class SqliteMetricsStore implements MetricsStore {
 
         const where: Prisma.AiImageMetricsWhereInput = {
             createdAt: {
-                lt: metrics.currentPeriodEndMs,
-                gte: metrics.currentPeriodStartMs,
+                lt: metrics.currentPeriodEndMs ?? undefined,
+                gte: metrics.currentPeriodStartMs ?? undefined,
             },
         };
 
@@ -402,8 +402,8 @@ export class SqliteMetricsStore implements MetricsStore {
 
         const where: Prisma.AiSkyboxMetricsWhereInput = {
             createdAt: {
-                lt: metrics.currentPeriodEndMs,
-                gte: metrics.currentPeriodStartMs,
+                lt: metrics.currentPeriodEndMs ?? undefined,
+                gte: metrics.currentPeriodStartMs ?? undefined,
             },
         };
 
@@ -462,8 +462,8 @@ export class SqliteMetricsStore implements MetricsStore {
 
         const where: Prisma.AiChatMetricsWhereInput = {
             createdAt: {
-                lt: metrics.currentPeriodEndMs,
-                gte: metrics.currentPeriodStartMs,
+                lt: metrics.currentPeriodEndMs ?? undefined,
+                gte: metrics.currentPeriodStartMs ?? undefined,
             },
         };
 
