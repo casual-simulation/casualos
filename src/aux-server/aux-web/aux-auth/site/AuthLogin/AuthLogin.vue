@@ -68,7 +68,25 @@
             </md-card>
         </form>
         <div v-else>
-            <has-account-card @hasAccount="hasAccount"> </has-account-card>
+            <md-card v-if="choosePrivoProvider">
+                <md-card-header><div class="md-title">Sign In</div></md-card-header>
+                <md-card-content
+                    >Choose the sign-in service you used to create your account.</md-card-content
+                >
+                <md-card-actions>
+                    <md-button
+                        v-for="provider in privoProviders"
+                        :key="provider.id"
+                        class="md-primary"
+                        :disabled="processing"
+                        @click="loginWithPrivo(provider.id)"
+                    >
+                        {{ provider.name }}
+                    </md-button>
+                </md-card-actions>
+            </md-card>
+            <has-account-card v-else @hasAccount="hasAccount"> </has-account-card>
+            <field-errors :field="null" :errors="errors" />
         </div>
     </div>
 </template>

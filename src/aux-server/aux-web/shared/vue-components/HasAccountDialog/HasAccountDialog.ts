@@ -94,10 +94,10 @@ export default class HasAccountDialog extends Vue {
         this._sub = new Subscription();
     }
 
-    hasAccount(hasAccount: boolean) {
+    hasAccount(hasAccount: boolean, provider: 'privo' | 'privo2' = 'privo') {
         this.processing = true;
         this.hasAccountValue = hasAccount;
-        this._endpoint.provideHasAccount(hasAccount);
+        this._endpoint.provideHasAccount(hasAccount, provider);
     }
 
     cancelHasAccount() {

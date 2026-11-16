@@ -1233,6 +1233,7 @@ export class MemoryStore
                     email: user.email,
                     phoneNumber: user.phoneNumber,
                     privoServiceId: user.privoServiceId,
+                    privo2ServiceId: user.privo2ServiceId,
                 },
             });
         }
@@ -1836,6 +1837,16 @@ export class MemoryStore
     }
 
     async saveNewUser(user: AuthUser): Promise<SaveNewUserResult> {
+        if (
+            user.privo2ServiceId &&
+            this._users.some((u) => u.privo2ServiceId === user.privo2ServiceId)
+        ) {
+            return {
+                success: false,
+                errorCode: 'user_already_exists',
+                errorMessage: 'The user already exists.',
+            };
+        }
         let index = this._users.findIndex(
             (u) =>
                 ((!!user.email && u.email === user.email) ||
@@ -1906,6 +1917,10 @@ export class MemoryStore
     async findUserByPrivoServiceId(serviceId: string): Promise<AuthUser> {
         const user = this._users.find((u) => u.privoServiceId === serviceId);
         return user;
+    }
+
+    async findUserByPrivo2ServiceId(serviceId: string): Promise<AuthUser> {
+        return this._users.find((u) => u.privo2ServiceId === serviceId);
     }
 
     async findLoginRequest(

@@ -6517,6 +6517,18 @@ Object {
     Object {
       "http": Object {
         "method": "POST",
+        "path": "/api/v2/privo2/credentials",
+      },
+      "inputs": Object {
+        "schema": Object {},
+        "type": "object",
+      },
+      "name": "requestPrivo2CredentialSetup",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
         "path": "/api/v2/login/privo",
       },
       "inputs": Object {
@@ -11345,6 +11357,101 @@ Object {
                     "description": "The Privo API (aslo called the Gateway) URL.",
                     "type": "string",
                   },
+                  "loginProvider": Object {
+                    "description": "The allowed PRIVO sign-in provider. Omitted or both preserves the available provider chooser. Independent of registrationProvider.",
+                    "optional": true,
+                    "type": "enum",
+                    "values": Array [
+                      "privo",
+                      "privo2",
+                      "both",
+                    ],
+                  },
+                  "privo2": Object {
+                    "description": "PRIVO2 service configuration. Enable it to support PRIVO2 accounts alongside legacy PRIVO; registrationProvider controls new registrations.",
+                    "optional": true,
+                    "schema": Object {
+                      "authEndpoint": Object {
+                        "description": "The PRIVO2 identity service base URL.",
+                        "type": "string",
+                      },
+                      "clientId": Object {
+                        "description": "The PRIVO2 client ID.",
+                        "type": "string",
+                      },
+                      "clientSecret": Object {
+                        "description": "The PRIVO2 client secret.",
+                        "type": "string",
+                      },
+                      "consentEndpoint": Object {
+                        "description": "The PRIVO2 consent service base URL.",
+                        "type": "string",
+                      },
+                      "credentialRedirectUri": Object {
+                        "description": "The registered URL to return to after credential setup.",
+                        "optional": true,
+                        "type": "string",
+                      },
+                      "enabled": Object {
+                        "description": "Whether PRIVO2 login and account operations are enabled. Defaults to false.",
+                        "optional": true,
+                        "type": "boolean",
+                      },
+                      "featureIds": Object {
+                        "description": "PRIVO2 feature identifiers. These are independent of legacy PRIVO feature IDs.",
+                        "optional": true,
+                        "schema": Object {
+                          "account": Object {
+                            "type": "string",
+                          },
+                          "buildAIEggs": Object {
+                            "type": "string",
+                          },
+                          "joinAndCollaborate": Object {
+                            "type": "string",
+                          },
+                          "projectDevelopment": Object {
+                            "type": "string",
+                          },
+                          "publishProjects": Object {
+                            "type": "string",
+                          },
+                        },
+                        "type": "object",
+                      },
+                      "redirectUri": Object {
+                        "description": "The registered OIDC callback URL.",
+                        "optional": true,
+                        "type": "string",
+                      },
+                      "scope": Object {
+                        "defaultValue": "openid",
+                        "description": "The scopes requested for service access tokens.",
+                        "hasDefault": true,
+                        "type": "string",
+                      },
+                      "serviceIdentifier": Object {
+                        "description": "The PRIVO service identifier.",
+                        "type": "string",
+                      },
+                      "timeoutMs": Object {
+                        "defaultValue": 10000,
+                        "description": "The timeout in milliseconds for PRIVO2 HTTP requests.",
+                        "hasDefault": true,
+                        "type": "number",
+                      },
+                      "tokenEndpoint": Object {
+                        "description": "The client credentials token endpoint.",
+                        "type": "string",
+                      },
+                      "webhookSecret": Object {
+                        "description": "The secret sent in the x-privo2-key webhook header. Use separate values for INT and PROD.",
+                        "optional": true,
+                        "type": "string",
+                      },
+                    },
+                    "type": "object",
+                  },
                   "publicEndpoint": Object {
                     "description": "The Privo Public API URL.",
                     "type": "string",
@@ -11352,6 +11459,15 @@ Object {
                   "redirectUri": Object {
                     "description": "The URI that Privo users should be redirected to after a login.",
                     "type": "string",
+                  },
+                  "registrationProvider": Object {
+                    "description": "The provider for new registrations. Defaults to privo. Existing accounts retain their provider.",
+                    "optional": true,
+                    "type": "enum",
+                    "values": Array [
+                      "privo",
+                      "privo2",
+                    ],
                   },
                   "roleIds": Object {
                     "schema": Object {
@@ -19454,6 +19570,18 @@ Object {
     Object {
       "http": Object {
         "method": "POST",
+        "path": "/api/v2/privo2/credentials",
+      },
+      "inputs": Object {
+        "schema": Object {},
+        "type": "object",
+      },
+      "name": "requestPrivo2CredentialSetup",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
         "path": "/api/v2/login/privo",
       },
       "inputs": Object {
@@ -24282,6 +24410,101 @@ Object {
                     "description": "The Privo API (aslo called the Gateway) URL.",
                     "type": "string",
                   },
+                  "loginProvider": Object {
+                    "description": "The allowed PRIVO sign-in provider. Omitted or both preserves the available provider chooser. Independent of registrationProvider.",
+                    "optional": true,
+                    "type": "enum",
+                    "values": Array [
+                      "privo",
+                      "privo2",
+                      "both",
+                    ],
+                  },
+                  "privo2": Object {
+                    "description": "PRIVO2 service configuration. Enable it to support PRIVO2 accounts alongside legacy PRIVO; registrationProvider controls new registrations.",
+                    "optional": true,
+                    "schema": Object {
+                      "authEndpoint": Object {
+                        "description": "The PRIVO2 identity service base URL.",
+                        "type": "string",
+                      },
+                      "clientId": Object {
+                        "description": "The PRIVO2 client ID.",
+                        "type": "string",
+                      },
+                      "clientSecret": Object {
+                        "description": "The PRIVO2 client secret.",
+                        "type": "string",
+                      },
+                      "consentEndpoint": Object {
+                        "description": "The PRIVO2 consent service base URL.",
+                        "type": "string",
+                      },
+                      "credentialRedirectUri": Object {
+                        "description": "The registered URL to return to after credential setup.",
+                        "optional": true,
+                        "type": "string",
+                      },
+                      "enabled": Object {
+                        "description": "Whether PRIVO2 login and account operations are enabled. Defaults to false.",
+                        "optional": true,
+                        "type": "boolean",
+                      },
+                      "featureIds": Object {
+                        "description": "PRIVO2 feature identifiers. These are independent of legacy PRIVO feature IDs.",
+                        "optional": true,
+                        "schema": Object {
+                          "account": Object {
+                            "type": "string",
+                          },
+                          "buildAIEggs": Object {
+                            "type": "string",
+                          },
+                          "joinAndCollaborate": Object {
+                            "type": "string",
+                          },
+                          "projectDevelopment": Object {
+                            "type": "string",
+                          },
+                          "publishProjects": Object {
+                            "type": "string",
+                          },
+                        },
+                        "type": "object",
+                      },
+                      "redirectUri": Object {
+                        "description": "The registered OIDC callback URL.",
+                        "optional": true,
+                        "type": "string",
+                      },
+                      "scope": Object {
+                        "defaultValue": "openid",
+                        "description": "The scopes requested for service access tokens.",
+                        "hasDefault": true,
+                        "type": "string",
+                      },
+                      "serviceIdentifier": Object {
+                        "description": "The PRIVO service identifier.",
+                        "type": "string",
+                      },
+                      "timeoutMs": Object {
+                        "defaultValue": 10000,
+                        "description": "The timeout in milliseconds for PRIVO2 HTTP requests.",
+                        "hasDefault": true,
+                        "type": "number",
+                      },
+                      "tokenEndpoint": Object {
+                        "description": "The client credentials token endpoint.",
+                        "type": "string",
+                      },
+                      "webhookSecret": Object {
+                        "description": "The secret sent in the x-privo2-key webhook header. Use separate values for INT and PROD.",
+                        "optional": true,
+                        "type": "string",
+                      },
+                    },
+                    "type": "object",
+                  },
                   "publicEndpoint": Object {
                     "description": "The Privo Public API URL.",
                     "type": "string",
@@ -24289,6 +24512,15 @@ Object {
                   "redirectUri": Object {
                     "description": "The URI that Privo users should be redirected to after a login.",
                     "type": "string",
+                  },
+                  "registrationProvider": Object {
+                    "description": "The provider for new registrations. Defaults to privo. Existing accounts retain their provider.",
+                    "optional": true,
+                    "type": "enum",
+                    "values": Array [
+                      "privo",
+                      "privo2",
+                    ],
                   },
                   "roleIds": Object {
                     "schema": Object {

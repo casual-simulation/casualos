@@ -4,8 +4,22 @@
             v-if="updatePasswordUrl"
             :updatePasswordUrl="updatePasswordUrl"
             :requireParentEmail="requireParentEmail"
+            :credentialSetup="privoProvider === 'privo2'"
             @close="goHome()"
         ></update-password-card>
+        <md-card v-else-if="credentialSetupPending">
+            <md-card-header><div class="md-title">Finish Account Setup</div></md-card-header>
+            <md-card-content>
+                Your registration is saved. Create your sign-in credentials to finish setup. Email
+                consent approval does not complete this step.
+                <field-errors :field="null" :errors="errors" />
+            </md-card-content>
+            <md-card-actions
+                ><md-button :disabled="processing" @click="retryCredentialSetup"
+                    >Continue credential setup</md-button
+                ></md-card-actions
+            >
+        </md-card>
         <md-card v-else>
             <form v-if="enterDateOfBirth" @submit.prevent="provideDateOfBirth()">
                 <md-card-header><div class="md-title">Register</div></md-card-header>

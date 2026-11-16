@@ -155,6 +155,7 @@ import { Subscription } from 'rxjs';
 import { WSWebsocketMessenger } from '../ws/WSWebsocketMessenger';
 import { PrismaInstRecordsStore } from '../prisma/PrismaInstRecordsStore';
 import { RedisMultiCache } from '../redis/RedisMultiCache';
+import { Privo2Client } from '@casual-simulation/aux-records/Privo2Client';
 import { PrivoClient } from '@casual-simulation/aux-records/PrivoClient';
 import { PrismaPrivoStore } from '../prisma/PrismaPrivoStore';
 import type { PrivoConfiguration } from '@casual-simulation/aux-records/PrivoConfiguration';
@@ -336,6 +337,7 @@ export class ServerBuilder implements SubscriptionLike {
     private _multiCache: MultiCache;
 
     private _privoClient: PrivoClient;
+    private _privo2Client: Privo2Client;
     private _privoStore: PrivoStore;
     private _genericOpenIDClient: GenericOpenIDClient =
         new GenericOpenIDClient();
@@ -1580,6 +1582,7 @@ export class ServerBuilder implements SubscriptionLike {
         if (!this._privoStore) {
             throw new Error('A privo store must be configured!');
         }
+        this._privo2Client = new Privo2Client(this._configStore);
         this._privoClient = new PrivoClient(
             this._privoStore,
             this._configStore
@@ -2350,7 +2353,8 @@ export class ServerBuilder implements SubscriptionLike {
             this._recordsStore,
             this._privoClient,
             this._relyingParties ?? [],
-            this._genericOpenIDClient
+            this._genericOpenIDClient,
+            this._privo2Client
         );
         this._recordsController = new RecordsController({
             store: this._recordsStore,
@@ -2359,6 +2363,7 @@ export class ServerBuilder implements SubscriptionLike {
             metrics: this._metricsStore,
             messenger: this._notificationMessenger,
             privo: this._privoClient ?? null,
+            privo2: this._privo2Client ?? null,
             domainNameValidator: new DNSDomainNameValidator(),
         });
         this._policyController = new PolicyController(
@@ -2426,6 +2431,7 @@ export class ServerBuilder implements SubscriptionLike {
                 config: this._configStore,
                 policies: this._policyController,
                 privo: this._privoClient,
+                privo2: this._privo2Client,
                 store: this._contractsStore,
             });
         }

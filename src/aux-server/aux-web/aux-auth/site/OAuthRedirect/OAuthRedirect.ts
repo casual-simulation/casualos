@@ -26,6 +26,7 @@ import { redirectAfterLogin } from '../AuthRedirectHelpers';
 })
 export default class OAuthRedirect extends Vue {
     errorMessage: string = null;
+    completed: boolean = false;
 
     async mounted() {
         this.errorMessage = null;
@@ -79,9 +80,10 @@ export default class OAuthRedirect extends Vue {
                         }
                     }
                 } else {
-                    console.error(
-                        '[OAuthRedirect] No request ID found in localStorage'
-                    );
+                    // CLI and popup flows complete the request in the initiating
+                    // client. Keep a usable page if the browser refuses close().
+                    this.completed = true;
+                    channel.close();
                     setTimeout(() => {
                         window.close();
                     }, 0);

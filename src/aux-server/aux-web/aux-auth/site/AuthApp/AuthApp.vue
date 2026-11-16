@@ -156,6 +156,31 @@
                 </md-list>
             </md-app-drawer>
             <md-app-content>
+                <md-card v-if="setupPending" role="status">
+                    <md-card-header
+                        ><div class="md-title">Finish setting up your sign-in</div></md-card-header
+                    >
+                    <md-card-content>
+                        <p>
+                            Your registration is saved. Create your PRIVO sign-in credentials to
+                            finish setup. Approving consent by email does not complete this step.
+                        </p>
+                        <p>
+                            Already created credentials? Sign out and sign in with PRIVO to confirm
+                            setup is complete.
+                        </p>
+                        <p v-if="setupError" role="alert">{{ setupError }}</p>
+                    </md-card-content>
+                    <md-card-actions>
+                        <md-button
+                            class="md-raised md-primary"
+                            :disabled="setupProcessing"
+                            @click="resumeCredentialSetup"
+                        >
+                            {{ setupProcessing ? 'Opening setup…' : 'Continue credential setup' }}
+                        </md-button>
+                    </md-card-actions>
+                </md-card>
                 <router-view></router-view>
             </md-app-content>
         </md-app>

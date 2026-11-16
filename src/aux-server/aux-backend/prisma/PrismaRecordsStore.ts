@@ -707,6 +707,7 @@ export class PrismaRecordsStore implements RecordsStore {
                         email: true,
                         phoneNumber: true,
                         privoServiceId: true,
+                        privo2ServiceId: true,
                     },
                 },
                 role: true,
@@ -738,6 +739,7 @@ export class PrismaRecordsStore implements RecordsStore {
                     email: a.user.email,
                     phoneNumber: a.user.phoneNumber,
                     privoServiceId: a.user.privoServiceId,
+                    privo2ServiceId: a.user.privo2ServiceId,
                 },
             };
 

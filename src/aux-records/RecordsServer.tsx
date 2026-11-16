@@ -1297,6 +1297,16 @@ export class RecordsServer {
                     return result;
                 }),
 
+            requestPrivo2CredentialSetup: procedure()
+                .origins('account')
+                .http('POST', '/api/v2/privo2/credentials')
+                .inputs(z.object({}))
+                .handler(async (_, context) => {
+                    return this._auth.requestPrivo2CredentialSetup(
+                        context.sessionKey
+                    );
+                }),
+
             listOpenIDProviders: procedure()
                 .origins('account')
                 .http('GET', '/api/v2/login/openid/list')
@@ -8007,6 +8017,37 @@ export class RecordsServer {
 
         this.addRoute({
             method: 'POST',
+            path: '/api/v2/privo2/webhook',
+            name: 'privo2Webhook',
+            allowedOrigins: true,
+            handler: async (request) => {
+                let body: unknown;
+                try {
+                    const raw =
+                        typeof request.body === 'string'
+                            ? request.body
+                            : ArrayBuffer.isView(request.body)
+                            ? new TextDecoder().decode(request.body)
+                            : '';
+                    body = JSON.parse(raw);
+                } catch {
+                    return returnResult({
+                        success: false,
+                        errorCode: 'unacceptable_request',
+                        errorMessage: 'Invalid JSON.',
+                    });
+                }
+                return returnResult(
+                    await this._auth.handlePrivo2Webhook(
+                        request.headers['x-privo2-key'],
+                        body
+                    )
+                );
+            },
+        });
+
+        this.addRoute({
+            method: 'POST',
             path: '/api/stripeWebhook',
             name: 'stripeWebhook',
             allowedOrigins: true,
@@ -8335,7 +8376,8 @@ export class RecordsServer {
                 skipRateLimitCheck = true;
             } else if (
                 request.method == 'POST' &&
-                request.path === '/api/stripeWebhook'
+                (request.path === '/api/stripeWebhook' ||
+                    request.path === '/api/v2/privo2/webhook')
             ) {
                 skipRateLimitCheck = true;
             }

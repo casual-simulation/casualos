@@ -186,7 +186,13 @@ export interface AuthHelperInterface extends SubscriptionLike {
      * Only supported on protocol version 9 or more.
      * @param hasAccount Whether the user has an account.
      */
-    provideHasAccount(hasAccount: boolean): Promise<void>;
+    provideHasAccount(
+        hasAccount: boolean,
+        provider?: 'privo' | 'privo2'
+    ): Promise<void>;
+
+    /** Retries hosted setup for the currently authenticated PRIVO2 account. */
+    retryPrivo2CredentialSetup?(): Promise<string | null>;
 
     /**
      * Provides the given login code to finish logging in.

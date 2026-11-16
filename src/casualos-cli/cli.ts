@@ -88,6 +88,7 @@ import path from 'path';
 import { readFile } from 'fs/promises';
 import { setupInfraCommands } from 'infra';
 import type { CliConfig } from './config';
+import { logoutSession } from './logout';
 import { z } from 'zod';
 import { existsSync, statSync } from 'node:fs';
 import { mkdir, readdir, stat, writeFile } from 'node:fs/promises';
@@ -154,9 +155,25 @@ program
     .description('Logout of the CasualOS API')
     .action(async () => {
         const opts = program.optsWithGlobals();
-        const endpoint = await getEndpoint(opts.endpoint);
-        saveSessionKey(endpoint, null);
-        console.log('Logged out!');
+        const client = await getClientWithoutSessionKey(opts, true);
+        const sessionKey = opts.sessionKey ?? getSessionKey(client.endpoint);
+        try {
+            const open = (await import('open')).default;
+            await logoutSession(
+                client,
+                sessionKey,
+                () => saveSessionKey(client.endpoint, null),
+                async (url) => {
+                    await open(url);
+                }
+            );
+            console.log('Logged out!');
+        } catch (err) {
+            console.error(
+                err instanceof Error ? err.message : 'Logout failed.'
+            );
+            process.exitCode = 1;
+        }
     });
 
 program
@@ -2108,7 +2125,27 @@ async function loginWithCode(
 }
 
 async function loginWithPrivo(client: ReturnType<typeof createRecordsClient>) {
-    const result = await client.requestPrivoLogin({});
+    const providers = await client.listOpenIDProviders();
+    let provider = 'privo';
+    if (providers.success) {
+        const choices = providers.providers.filter(
+            (p) => p.id === 'privo' || p.id === 'privo2'
+        );
+        if (choices.length > 1) {
+            const answer = await prompts({
+                type: 'select',
+                name: 'provider',
+                message: 'Choose your account sign-in service',
+                choices: choices.map((p) => ({ title: p.name, value: p.id })),
+            });
+            if (!answer.provider) return null;
+            provider = answer.provider;
+        } else if (choices.length === 1) provider = choices[0].id;
+    }
+    const result =
+        provider === 'privo'
+            ? await client.requestPrivoLogin({})
+            : await client.requestOpenIDLogin({ provider });
 
     if (result.success === false) {
         saveLoginResult(client, null);

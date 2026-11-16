@@ -3146,6 +3146,50 @@ describe('RecordsServer', () => {
         );
     });
 
+    describe('PRIVO2 routes', () => {
+        it('passes the webhook header and JSON body to the authenticated handler', async () => {
+            const body = {
+                id: 'event',
+                sid: 'sid',
+                event_types: ['consent_updated'],
+            };
+            const handler = jest
+                .spyOn(authController, 'handlePrivo2Webhook')
+                .mockResolvedValue({ success: true });
+            const result = await server.handleHttpRequest(
+                httpPost('/api/v2/privo2/webhook', JSON.stringify(body), {
+                    'x-privo2-key': 'test-webhook-secret',
+                })
+            );
+            expect(result.statusCode).toBe(200);
+            expect(handler).toHaveBeenCalledWith('test-webhook-secret', body);
+        });
+
+        it('rejects a webhook without valid credentials', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/privo2/webhook',
+                    JSON.stringify({
+                        id: 'event',
+                        sid: 'sid',
+                        event_types: ['consent_updated'],
+                    }),
+                    {}
+                )
+            );
+            expect(result.statusCode).toBe(403);
+        });
+
+        it('requires a session to retry credential setup', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost('/api/v2/privo2/credentials', '{}', {
+                    origin: 'https://account-origin.com',
+                })
+            );
+            expect(result.statusCode).toBe(403);
+        });
+    });
+
     describe('POST /api/stripeWebhook', () => {
         let user: AuthUser;
         beforeEach(async () => {

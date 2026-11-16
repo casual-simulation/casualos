@@ -23,6 +23,7 @@ import {
     type SimpleError,
 } from '@casual-simulation/aux-common';
 
+import type { Privo2ClientInterface } from '../Privo2Client';
 import type {
     AuthorizationContext,
     AuthorizeUserAndInstancesSuccess,
@@ -59,6 +60,7 @@ export interface ContractRecordsConfiguration
     authStore: AuthStore;
 
     privo: PrivoClientInterface | null;
+    privo2?: Privo2ClientInterface | null;
 }
 
 export interface ContractRecordInput {
@@ -103,6 +105,7 @@ export class ContractRecordsController extends CrudRecordsController<
 > {
     private _authStore: AuthStore;
     private _privo: PrivoClientInterface | null;
+    private _privo2: Privo2ClientInterface | null;
 
     constructor(config: ContractRecordsConfiguration) {
         super({
@@ -113,6 +116,7 @@ export class ContractRecordsController extends CrudRecordsController<
 
         this._authStore = config.authStore;
         this._privo = config.privo;
+        this._privo2 = config.privo2;
     }
 
     // TODO: decide how to prevent users from deleting/updating contracts
@@ -160,6 +164,27 @@ export class ContractRecordsController extends CrudRecordsController<
                     user = await this._authStore.findUserByPrivoServiceId(
                         serviceId
                     );
+                }
+            }
+
+            if (
+                !user &&
+                this._privo2 &&
+                (await this._privo2.getConfiguration())
+            ) {
+                const identifiers = item.holdingUser.includes('@')
+                    ? { email: item.holdingUser }
+                    : /^\+[0-9]+$/.test(item.holdingUser)
+                    ? { phone_number: item.holdingUser }
+                    : null;
+                if (identifiers) {
+                    const account = await (
+                        await this._privo2.getClient()
+                    ).lookupAccount(identifiers);
+                    if (account)
+                        user = await this._authStore.findUserByPrivo2ServiceId(
+                            account.sub
+                        );
                 }
             }
 

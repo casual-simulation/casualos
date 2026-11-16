@@ -24,6 +24,7 @@ import { Prop } from 'vue-property-decorator';
 })
 export default class UpdatePasswordCard extends Vue {
     @Prop() updatePasswordUrl: string;
+    @Prop({ default: false }) credentialSetup: boolean;
     @Prop() requireParentEmail: boolean;
 
     get checkEmailText() {

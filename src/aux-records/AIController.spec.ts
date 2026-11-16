@@ -2359,7 +2359,7 @@ describe('AIController', () => {
             });
         });
 
-        it('should return a not_authorized result if the user privacy features do not allow AI access', async () => {
+        it('should block AI chat while privacy permission is off and resume after it is restored', async () => {
             controller = new AIController({
                 chat: {
                     interfaces: {
@@ -2470,6 +2470,26 @@ describe('AIController', () => {
                 errorMessage: 'AI Access is not allowed',
             });
             expect(chatInterface.chat).not.toHaveBeenCalled();
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                privacyFeatures: {
+                    ...user.privacyFeatures,
+                    allowAI: true,
+                },
+            });
+
+            const restored = await controller.chat({
+                model: 'test-model1',
+                messages: [{ role: 'user', content: 'test' }],
+                temperature: 0.5,
+                userId,
+                userSubscriptionTier,
+            });
+
+            expect(restored).toMatchObject({ success: true });
+            expect(chatInterface.chat).toHaveBeenCalledTimes(1);
         });
     });
 

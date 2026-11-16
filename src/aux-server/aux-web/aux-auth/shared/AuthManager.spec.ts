@@ -91,6 +91,50 @@ describe('AuthManager', () => {
         return require('axios').__getRequests();
     }
 
+    describe('PRIVO provider selection', () => {
+        it.each([
+            ['privo', 'requestPrivoLogin', {}],
+            ['privo2', 'requestOpenIDLogin', { provider: 'privo2' }],
+        ] as const)(
+            'routes %s login to its provider',
+            async (provider, procedure, input) => {
+                fetch.mockResolvedValueOnce({
+                    status: 200,
+                    json: async () => ({
+                        success: true,
+                        requestId: 'request',
+                        authorizationUrl: 'https://idp.example.com/login',
+                    }),
+                });
+                await manager.loginWithPrivo(provider);
+                expect(fetch).toHaveBeenCalledWith(
+                    'http://myendpoint.localhost/api/v3/callProcedure',
+                    expect.objectContaining({
+                        body: JSON.stringify({ procedure, input }),
+                    })
+                );
+            }
+        );
+
+        it('shows only PRIVO providers in the account chooser', async () => {
+            fetch.mockResolvedValueOnce({
+                status: 200,
+                json: async () => ({
+                    success: true,
+                    providers: [
+                        { id: 'privo', name: 'Privo' },
+                        { id: 'privo2', name: 'PRIVO iD' },
+                        { id: 'google', name: 'Google' },
+                    ],
+                }),
+            });
+            expect(await manager.getPrivoLoginProviders()).toEqual([
+                { id: 'privo', name: 'Privo' },
+                { id: 'privo2', name: 'PRIVO iD' },
+            ]);
+        });
+    });
+
     describe('loginWithEmail()', () => {
         it('should send a login request with the given email', async () => {
             fetch.mockResolvedValueOnce({
@@ -278,7 +322,114 @@ describe('AuthManager', () => {
         });
     });
 
+    describe('PRIVO2 setup recovery', () => {
+        const session = formatV1SessionKey(
+            'setup-user',
+            'setup-session',
+            'secret',
+            10000
+        );
+        async function register() {
+            fetch.mockResolvedValueOnce({
+                status: 200,
+                json: async () => ({
+                    success: true,
+                    userId: 'setup-user',
+                    sessionKey: session,
+                    connectionKey: 'connection',
+                    privoProvider: 'privo2',
+                    updatePasswordUrl: 'https://idp.example/setup',
+                }),
+            });
+            await (manager as any)._privoRegister({
+                email: 'test@example.com',
+                displayName: 'test',
+                name: 'Test',
+                dateOfBirth: new Date(2000, 0, 1),
+            });
+        }
+
+        it('persists pending setup across manager recreation without saving the hosted URL', async () => {
+            await register();
+            expect(manager.hasPendingPrivo2CredentialSetup).toBe(true);
+            const reloaded = new AuthManager(
+                { recordsOrigin: 'http://myendpoint.localhost' } as any,
+                'test'
+            );
+            expect(reloaded.hasPendingPrivo2CredentialSetup).toBe(true);
+            expect(
+                localStorage.getItem(
+                    'privo2:credentialSetup:http://myendpoint.localhost:setup-user'
+                )
+            ).toBe('pending');
+        });
+
+        it('does not show another account or expired session the setup prompt', async () => {
+            await register();
+            manager.savedSessionKey = formatV1SessionKey(
+                'other-user',
+                'session',
+                'secret',
+                10000
+            );
+            expect(manager.hasPendingPrivo2CredentialSetup).toBe(false);
+            manager.savedSessionKey = session;
+            nowMock.mockReturnValue(10001);
+            expect(manager.hasPendingPrivo2CredentialSetup).toBe(false);
+        });
+
+        it('keeps setup pending after URL retry and clears it after successful OIDC login', async () => {
+            await register();
+            fetch.mockResolvedValueOnce({
+                status: 200,
+                json: async () => ({
+                    success: true,
+                    url: 'https://idp.example/new-setup',
+                }),
+            });
+            await manager.retryPrivo2CredentialSetup();
+            expect(manager.hasPendingPrivo2CredentialSetup).toBe(true);
+            fetch.mockResolvedValueOnce({
+                status: 200,
+                json: async () => ({
+                    success: true,
+                    userId: 'setup-user',
+                    sessionKey: session,
+                    connectionKey: 'connection',
+                }),
+            });
+            await manager.completeOAuthLogin('request');
+            expect(manager.hasPendingPrivo2CredentialSetup).toBe(false);
+        });
+    });
+
     describe('logout()', () => {
+        it('returns the provider URL without navigating when the embedding page handles logout', async () => {
+            manager.savedSessionKey = 'mysessionkey';
+            manager.savedConnectionKey = 'myconnectionkey';
+            fetch.mockResolvedValueOnce({
+                status: 200,
+                json: async () => ({
+                    success: true,
+                    logoutUrl: 'https://idp.example.com/logout',
+                }),
+            });
+
+            const result = await manager.logout(true, false);
+
+            expect(result).toBe('https://idp.example.com/logout');
+            expect(globalThis.location.href).toBeUndefined();
+            expect(manager.savedSessionKey).toBeNull();
+            expect(manager.savedConnectionKey).toBeNull();
+        });
+
+        it('returns no redirect for local-only logout', async () => {
+            manager.savedSessionKey = 'mysessionkey';
+            expect(await manager.logout(false, false)).toBeUndefined();
+            expect(fetch).not.toHaveBeenCalled();
+            expect(manager.savedSessionKey).toBeNull();
+        });
+
         it('should send a revoke token request', async () => {
             manager.savedSessionKey = 'mysessionkey';
             // @ts-expect-error 2341

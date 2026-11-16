@@ -40,6 +40,8 @@ declare let ENABLE_SMS_AUTHENTICATION: boolean;
 })
 export default class AuthLogin extends Vue {
     address: string = '';
+    privoProviders: { id: string; name: string }[] = [];
+    choosePrivoProvider = false;
     processing: boolean = false;
 
     acceptedTerms: boolean = false;
@@ -99,9 +101,30 @@ export default class AuthLogin extends Vue {
         await this._loadInfoAndNavigate();
     }
 
-    hasAccount(hasAccount: boolean) {
+    async hasAccount(hasAccount: boolean) {
         if (hasAccount) {
-            this._loginWithPrivo();
+            this.processing = true;
+            try {
+                this.privoProviders =
+                    await authManager.getPrivoLoginProviders();
+                if (this.privoProviders.length > 1)
+                    this.choosePrivoProvider = true;
+                else if (this.privoProviders.length === 1)
+                    await this.loginWithPrivo(
+                        this.privoProviders[0].id as 'privo' | 'privo2'
+                    );
+            } catch {
+                this.errors = [
+                    {
+                        for: null,
+                        errorCode: 'server_error',
+                        errorMessage:
+                            'Unable to load sign-in options. Please try again.',
+                    },
+                ];
+            } finally {
+                this.processing = false;
+            }
         } else {
             this.$router.push({
                 name: 'sign-up',
@@ -109,17 +132,28 @@ export default class AuthLogin extends Vue {
         }
     }
 
-    private async _loginWithPrivo(): Promise<string | null> {
-        const result = await authManager.loginWithPrivo();
-        if (result.success) {
-            const requestId = result.requestId;
-
-            // Store the request ID and current page info in localStorage for the redirect flow
-            localStorage.setItem('privo_oauth_request_id', requestId);
-            localStorage.setItem('privo_oauth_after', this.after || '');
-
-            // Redirect to the authorization URL instead of opening a popup
-            location.href = result.authorizationUrl;
+    async loginWithPrivo(provider: 'privo' | 'privo2'): Promise<string | null> {
+        this.processing = true;
+        try {
+            const result = await authManager.loginWithPrivo(provider);
+            if (result.success) {
+                localStorage.setItem(
+                    'privo_oauth_request_id',
+                    result.requestId
+                );
+                localStorage.setItem('privo_oauth_after', this.after || '');
+                location.href = result.authorizationUrl;
+            } else this.errors = getFormErrors(result);
+        } catch {
+            this.errors = [
+                {
+                    for: null,
+                    errorCode: 'server_error',
+                    errorMessage: 'Unable to start sign-in. Please try again.',
+                },
+            ];
+        } finally {
+            this.processing = false;
         }
         return null;
     }

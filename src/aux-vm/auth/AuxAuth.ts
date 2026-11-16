@@ -152,6 +152,9 @@ export interface LoginUIShowIframe {
 export interface LoginUIHasAccount {
     page: 'has_account';
 
+    /** Available account sign-in services. */
+    privoProviders?: { id: 'privo' | 'privo2'; name: string }[];
+
     /**
      * The page that should be linked to as the privacy policy.
      */
@@ -219,6 +222,8 @@ export interface LoginUIPrivoSignUp {
 
 export interface LoginUIUpdatePasswordLink {
     page: 'show_update_password_link';
+    credentialSetupPending?: boolean;
+    privoProvider?: 'privo' | 'privo2';
 
     /**
      * The link used to update the user's password.
@@ -343,6 +348,12 @@ export interface AuxAuth {
      * Only supported on protocol version 8 or more.
      */
     logout(): Promise<void>;
+
+    /**
+     * Logs out locally and returns the provider logout URL for navigation by
+     * the embedding page. Does not open a popup. Requires protocol version 13.
+     */
+    logoutWithRedirect(): Promise<string | undefined>;
 
     /**
      * Ensures that the user is logged in.
@@ -482,7 +493,13 @@ export interface AuxAuth {
      * Only supported on protocol version 9 or more.
      * @param hasAccount Whether the user has an account.
      */
-    provideHasAccount(hasAccount: boolean): Promise<void>;
+    provideHasAccount(
+        hasAccount: boolean,
+        provider?: 'privo' | 'privo2'
+    ): Promise<void>;
+
+    /** Retries hosted setup for the currently authenticated PRIVO2 account. */
+    retryPrivo2CredentialSetup?(): Promise<string | null>;
 
     /**
      * Specifies when the user has completed the OAuth login process.

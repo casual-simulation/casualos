@@ -607,6 +607,7 @@ export interface ListedStudioAssignmentUser {
      * The ID of the privo service that the user is associated with.
      */
     privoServiceId: string | null;
+    privo2ServiceId?: string | null;
 }
 
 /**

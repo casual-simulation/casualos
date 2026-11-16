@@ -15,6 +15,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+import type { Privo2ClientInterface } from './Privo2Client';
+import { PRIVO2_OPEN_ID_PROVIDER } from './Privo2Client';
+import { Privo2ApiError } from './Privo2ConsentClient';
+import { z } from 'zod';
+
 import type {
     AddressType,
     AuthListedUserAuthenticator,
@@ -233,7 +238,8 @@ export class AuthController {
         recordsStore: RecordsStore,
         privoClient: PrivoClientInterface = null,
         relyingParties: RelyingParty[] = [],
-        genericOpenIDClient: GenericOpenIDClientInterface = null
+        genericOpenIDClient: GenericOpenIDClientInterface = null,
+        private _privo2Client: Privo2ClientInterface = null
     ) {
         this._store = authStore;
         this._messenger = messenger;
@@ -841,6 +847,24 @@ export class AuthController {
             let providerId: string;
             let providerConfig: OpenIDProviderConfiguration = null;
 
+            if (
+                request.provider === PRIVO_OPEN_ID_PROVIDER ||
+                request.provider === PRIVO2_OPEN_ID_PROVIDER
+            ) {
+                const config = await this._config.getPrivoConfiguration();
+                if (
+                    config?.loginProvider &&
+                    config.loginProvider !== 'both' &&
+                    config.loginProvider !== request.provider
+                ) {
+                    return {
+                        success: false,
+                        errorCode: 'not_supported',
+                        errorMessage: 'This sign-in provider is disabled.',
+                    };
+                }
+            }
+
             if (request.provider === PRIVO_OPEN_ID_PROVIDER) {
                 if (!this._privoClient) {
                     return {
@@ -863,6 +887,17 @@ export class AuthController {
                 }
 
                 providerId = PRIVO_OPEN_ID_PROVIDER;
+            } else if (request.provider === PRIVO2_OPEN_ID_PROVIDER) {
+                providerConfig =
+                    await this._privo2Client?.getOpenIDConfiguration();
+                if (!providerConfig || !this._genericOpenIDClient) {
+                    return {
+                        success: false,
+                        errorCode: 'not_supported',
+                        errorMessage: 'PRIVO2 is not supported on this server.',
+                    };
+                }
+                providerId = PRIVO2_OPEN_ID_PROVIDER;
             } else {
                 const openIdConfig =
                     await this._config.getOpenIDConfiguration();
@@ -1019,6 +1054,17 @@ export class AuthController {
                             'Privo features are not supported on this server.',
                     };
                 }
+            } else if (loginRequest.provider === PRIVO2_OPEN_ID_PROVIDER) {
+                if (
+                    !this._genericOpenIDClient ||
+                    !(await this._privo2Client?.getOpenIDConfiguration())
+                ) {
+                    return {
+                        success: false,
+                        errorCode: 'not_supported',
+                        errorMessage: 'PRIVO2 is not supported on this server.',
+                    };
+                }
             } else {
                 const openIdConfig =
                     await this._config.getOpenIDConfiguration();
@@ -1133,6 +1179,13 @@ export class AuthController {
                 );
             }
 
+            if (loginRequest.provider === PRIVO2_OPEN_ID_PROVIDER) {
+                return await this._completePrivo2OpenIDLogin(
+                    loginRequest,
+                    request
+                );
+            }
+
             return await this._completeGenericOpenIDLogin(
                 loginRequest,
                 request
@@ -1150,6 +1203,401 @@ export class AuthController {
                 success: false,
                 errorCode: 'server_error',
                 errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    private async _completePrivo2OpenIDLogin(
+        loginRequest: AuthOpenIDLoginRequest,
+        request: CompleteOpenIDLoginRequest
+    ): Promise<CompleteOpenIDLoginResult> {
+        const config = await this._privo2Client?.getOpenIDConfiguration();
+        if (
+            !config ||
+            !this._genericOpenIDClient ||
+            loginRequest.loginStudioId
+        ) {
+            return {
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'PRIVO2 is not supported for this login.',
+            };
+        }
+        const result =
+            await this._genericOpenIDClient.processAuthorizationCallback(
+                config,
+                {
+                    code: loginRequest.authorizationCode,
+                    state: loginRequest.state,
+                    codeVerifier: loginRequest.codeVerifier,
+                    nonce: loginRequest.nonce,
+                    redirectUrl: loginRequest.redirectUrl,
+                }
+            );
+        // Match only this provider's principal. Never link by email or legacy SID.
+        const user = await this._store.findUserByPrivo2ServiceId(
+            result.userInfo.sub
+        );
+        if (!user || user.loginStudioId) {
+            return {
+                success: false,
+                errorCode: 'invalid_request',
+                errorMessage: INVALID_REQUEST_ERROR_MESSAGE,
+            };
+        }
+        const account = await this._privo2Client.getAccount(
+            user.privo2ServiceId
+        );
+        if (
+            account.sub !== user.privo2ServiceId ||
+            !(await this._privo2Client.isAccountApproved(account))
+        ) {
+            return {
+                success: false,
+                errorCode: 'invalid_request',
+                errorMessage: 'Account consent is required before signing in.',
+            };
+        }
+        await this._store.saveUser({
+            ...user,
+            privacyFeatures: await this._privo2Client.getPrivacyFeatures(
+                account
+            ),
+        });
+        const { info } = await this._issueSession({
+            userId: user.id,
+            lifetimeMs: SESSION_LIFETIME_MS,
+            oidRequestId: loginRequest.requestId,
+            oidAccessToken: result.accessToken,
+            oidRefreshToken: result.refreshToken,
+            oidIdToken: result.idToken,
+            oidScope: loginRequest.scope,
+            oidTokenType: result.tokenType,
+            oidExpiresAtMs: Date.now() + result.expiresIn * 1000,
+            oidProvider: PRIVO2_OPEN_ID_PROVIDER,
+            ipAddress: request.ipAddress,
+        });
+        return { success: true, ...info };
+    }
+
+    private async _requestPrivo2SignUp(
+        request: PrivoSignUpRequest,
+        years: number,
+        ageOfConsent: number
+    ): Promise<PrivoSignUpRequestResult> {
+        const config = await this._privo2Client?.getConfiguration();
+        if (!config)
+            return {
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'PRIVO2 is not enabled.',
+            };
+        if (!Number.isFinite(years))
+            return {
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'A valid date of birth is required.',
+            };
+        const minor = years < ageOfConsent;
+        if (minor && !request.parentEmail)
+            return {
+                success: false,
+                errorCode: 'parent_email_required',
+                errorMessage: 'A parent email is required to sign up a child.',
+            };
+        if (!minor && !request.email)
+            return {
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'An email is required to sign up an adult.',
+            };
+        const client = await this._privo2Client.getClient();
+        const id = uuid();
+        let consent;
+        try {
+            consent = await client.createConsentRequest({
+                principal: {
+                    eid: id,
+                    birthdate: DateTime.fromJSDate(request.dateOfBirth, {
+                        zone: 'utc',
+                    }).toFormat('yyyyMMdd'),
+                    birthdate_precision: 'yyyymmdd',
+                    given_name: request.name,
+                    display_name: request.displayName,
+                    email: request.email || undefined,
+                },
+                granter: minor
+                    ? { email: request.parentEmail }
+                    : { eid: id, email: request.email },
+                features: [...new Set(Object.values(config.featureIds))],
+            });
+        } catch (error) {
+            if (error instanceof Privo2ApiError && error.status === 470) {
+                console.warn('[AuthController] PRIVO2 registration rejected.', {
+                    status: error.status,
+                    serviceCode: error.serviceCode,
+                });
+                return {
+                    success: false,
+                    errorCode:
+                        error.serviceCode === 915
+                            ? 'invalid_display_name'
+                            : 'unacceptable_request',
+                    errorMessage:
+                        'PRIVO could not accept the registration details.',
+                };
+            }
+            throw error;
+        }
+        const user: AuthUser = {
+            id,
+            email: null,
+            phoneNumber: null,
+            name: null,
+            allSessionRevokeTimeMs: null,
+            currentLoginRequestId: null,
+            privo2ServiceId: consent.principal_identifiers.sid,
+            privo2GranterServiceId: consent.granter_identifiers.sid,
+            privo2ConsentId: consent.consent_identifier,
+            // Registration is not evidence that consent has been granted.
+            privacyFeatures: {
+                publishData: false,
+                allowPublicData: false,
+                allowPublicInsts: false,
+                allowAI: false,
+            },
+        };
+        // The unique PRIVO2 SID constraint prevents a registration replay from
+        // claiming an existing account, including concurrent registrations.
+        const saved = await this._store.saveNewUser(user);
+        if (!saved.success)
+            return {
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage:
+                    'The account could not be registered. Please sign in if you already have an account.',
+            };
+        const { info } = await this._issueSession({
+            userId: id,
+            lifetimeMs: SESSION_LIFETIME_MS,
+            ipAddress: request.ipAddress,
+        });
+        // Persist all consent IDs before calling the separate identity service.
+        // A failed credential request can be retried with the same local session.
+        try {
+            const setup = await client.createCredentialSetup(
+                user.privo2ServiceId,
+                config.credentialRedirectUri
+            );
+            return {
+                success: true,
+                ...info,
+                updatePasswordUrl: setup.url,
+                privoProvider: 'privo2',
+            };
+        } catch {
+            return {
+                success: true,
+                ...info,
+                updatePasswordUrl: null,
+                credentialSetupPending: true,
+                privoProvider: 'privo2',
+            };
+        }
+    }
+
+    async requestPrivo2CredentialSetup(sessionKey: string): Promise<
+        | { success: true; url: string }
+        | {
+              success: false;
+              errorCode: 'invalid_key' | 'not_supported' | 'server_error';
+              errorMessage: string;
+          }
+    > {
+        try {
+            const validation = await this.validateSessionKey(sessionKey);
+            if (!validation.success)
+                return {
+                    success: false,
+                    errorCode: 'invalid_key',
+                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                };
+            const user = await this._store.findUser(validation.userId);
+            const config = await this._privo2Client?.getConfiguration();
+            if (!user?.privo2ServiceId || !config)
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'PRIVO2 credential setup is unavailable.',
+                };
+            const result = await (
+                await this._privo2Client.getClient()
+            ).createCredentialSetup(
+                user.privo2ServiceId,
+                config.credentialRedirectUri
+            );
+            return { success: true, url: result.url };
+        } catch {
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage:
+                    'Credential setup could not be started. Please try again.',
+            };
+        }
+    }
+
+    async handlePrivo2Webhook(
+        secret: string,
+        body: unknown
+    ): Promise<
+        | { success: true }
+        | {
+              success: false;
+              errorCode:
+                  | 'not_authorized'
+                  | 'unacceptable_request'
+                  | 'server_error';
+              errorMessage: string;
+          }
+    > {
+        if (!(await this._privo2Client?.verifyWebhookSecret(secret))) {
+            console.log(
+                '[AuthController] PRIVO2 webhook',
+                JSON.stringify({
+                    timestamp: new Date().toISOString(),
+                    outcome: 'rejected',
+                    reason: 'invalid_credentials',
+                })
+            );
+            return {
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'Invalid webhook credentials.',
+            };
+        }
+        const parsed = z
+            .object({
+                id: z.string().min(1),
+                sid: z.string().min(1),
+                event_types: z.array(z.string()).min(1),
+            })
+            .safeParse(body);
+        if (!parsed.success) {
+            console.log(
+                '[AuthController] PRIVO2 webhook',
+                JSON.stringify({
+                    timestamp: new Date().toISOString(),
+                    outcome: 'rejected',
+                    reason: 'invalid_payload',
+                })
+            );
+            return {
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'Invalid webhook payload.',
+            };
+        }
+        // Log correlation metadata only, never the secret or profile payload.
+        const logWebhook = (outcome: string, details: object = {}) => {
+            console.log(
+                '[AuthController] PRIVO2 webhook',
+                JSON.stringify({
+                    timestamp: new Date().toISOString(),
+                    eventId: parsed.data.id.slice(0, 256),
+                    eventTypes: parsed.data.event_types
+                        .slice(0, 32)
+                        .map((type) => type.slice(0, 128)),
+                    outcome,
+                    ...details,
+                })
+            );
+        };
+        logWebhook('received');
+        try {
+            const user = await this._store.findUserByPrivo2ServiceId(
+                parsed.data.sid
+            );
+            if (!user) {
+                logWebhook('ignored', { reason: 'account_not_found' });
+                return { success: true };
+            }
+            logWebhook('account_matched', { userId: user.id });
+            let privacyFeatures: PrivacyFeatures;
+            let revokeSessions = false;
+            try {
+                // Refresh authoritative state instead of trusting event ordering
+                // or permission claims in the webhook body. Replays are harmless.
+                const account = await this._privo2Client.getAccount(
+                    user.privo2ServiceId
+                );
+                const approved = await this._privo2Client.isAccountApproved(
+                    account
+                );
+                const config = await this._privo2Client.getConfiguration();
+                const state = account.features.find(
+                    (f) => f.feature_identifier === config.featureIds.account
+                )?.state;
+                // A pending consent notice must not revoke the session needed
+                // to finish credential setup. Revocations still invalidate it.
+                revokeSessions =
+                    !approved &&
+                    ((!!state && state !== 'pending') ||
+                        Object.values(user.privacyFeatures ?? {}).some(
+                            Boolean
+                        ));
+                privacyFeatures = await this._privo2Client.getPrivacyFeatures(
+                    account
+                );
+            } catch (error) {
+                if (
+                    !parsed.data.event_types.includes(
+                        'service_account_deleted'
+                    ) ||
+                    !(error instanceof Privo2ApiError) ||
+                    !(error.status === 404 || error.serviceCode === 544)
+                )
+                    throw error;
+                revokeSessions = true;
+                privacyFeatures = {
+                    publishData: false,
+                    allowPublicData: false,
+                    allowPublicInsts: false,
+                    allowAI: false,
+                };
+            }
+            await this._store.saveUser({ ...user, privacyFeatures });
+            if (revokeSessions)
+                await this._store.setRevokeAllSessionsTimeForUser(
+                    user.id,
+                    Date.now()
+                );
+            logWebhook('processed', {
+                userId: user.id,
+                permissionsChanged: (
+                    Object.keys(privacyFeatures) as (keyof PrivacyFeatures)[]
+                ).some(
+                    (key) =>
+                        privacyFeatures[key] !== user.privacyFeatures?.[key]
+                ),
+                sessionsRevoked: revokeSessions,
+            });
+            return { success: true };
+        } catch (error) {
+            logWebhook(
+                'failed',
+                error instanceof Privo2ApiError
+                    ? {
+                          status: error.status,
+                          serviceCode: error.serviceCode,
+                      }
+                    : {}
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage:
+                    'Unable to refresh PRIVO2 consent. Retry the webhook.',
             };
         }
     }
@@ -1215,6 +1663,14 @@ export class AuthController {
             console.log(
                 '[AuthController] [completeOpenIDLogin] Could not find user.'
             );
+            return {
+                success: false,
+                errorCode: 'invalid_request',
+                errorMessage: INVALID_REQUEST_ERROR_MESSAGE,
+            };
+        }
+
+        if (user.privo2ServiceId) {
             return {
                 success: false,
                 errorCode: 'invalid_request',
@@ -1509,8 +1965,10 @@ export class AuthController {
     async listOpenIDProviders(): Promise<ListOpenIDProvidersResult> {
         try {
             const providers: OpenIDProviderInfo[] = [];
+            const loginProvider = (await this._config.getPrivoConfiguration())
+                ?.loginProvider;
 
-            if (this._privoClient) {
+            if (this._privoClient && loginProvider !== 'privo2') {
                 const privoConfig = await this._config.getPrivoConfiguration();
                 if (privoConfig) {
                     providers.push({
@@ -1520,10 +1978,26 @@ export class AuthController {
                 }
             }
 
+            if (
+                loginProvider !== 'privo' &&
+                this._genericOpenIDClient &&
+                (await this._privo2Client?.getConfiguration())
+            ) {
+                providers.push({
+                    id: PRIVO2_OPEN_ID_PROVIDER,
+                    name: 'PRIVO iD',
+                });
+            }
+
             if (this._genericOpenIDClient) {
                 const openIdConfig =
                     await this._config.getOpenIDConfiguration();
                 for (const provider of openIdConfig?.providers ?? []) {
+                    if (
+                        provider.id === PRIVO2_OPEN_ID_PROVIDER ||
+                        provider.id === PRIVO_OPEN_ID_PROVIDER
+                    )
+                        continue;
                     providers.push({
                         id: provider.id,
                         name: provider.name,
@@ -1622,6 +2096,14 @@ export class AuthController {
                     errorMessage:
                         'The given date of birth cannot be in the future.',
                 };
+            }
+
+            if (config.registrationProvider === 'privo2') {
+                return await this._requestPrivo2SignUp(
+                    request,
+                    years,
+                    config.ageOfConsent
+                );
             }
 
             let privacyFeatures: PrivacyFeatures;
@@ -2658,6 +3140,15 @@ export class AuthController {
                 );
             }
 
+            if (
+                session.oidProvider === PRIVO2_OPEN_ID_PROVIDER &&
+                session.oidIdToken
+            ) {
+                logoutUrl = await this._privo2Client?.generateLogoutUrl(
+                    session.oidIdToken
+                );
+            }
+
             return {
                 success: true,
                 logoutUrl,
@@ -3055,6 +3546,23 @@ export class AuthController {
         let email: string = user.email;
         let name: string = user.name;
         const privoConfig = await this._config.getPrivoConfiguration();
+        if (user.privo2ServiceId) {
+            if (!this._privo2Client) throw new Error('PRIVO2 is unavailable.');
+            const account = await this._privo2Client.getAccount(
+                user.privo2ServiceId
+            );
+            privacyFeatures = await this._privo2Client.getPrivacyFeatures(
+                account
+            );
+            await this._store.saveUser({ ...user, privacyFeatures });
+            return {
+                privacyFeatures,
+                displayName:
+                    account.preferred_username ?? account.display_name ?? null,
+                email: account.email ?? null,
+                name: account.given_name ?? null,
+            };
+        }
         if (privoConfig && user.privoServiceId) {
             const userInfo = await this._privoClient.getUserInfo(
                 user.privoServiceId
@@ -3136,6 +3644,14 @@ export class AuthController {
                     result.privoServiceId
                 );
                 displayName = userInfo.displayName;
+            }
+
+            if (result.privo2ServiceId) {
+                const account = await this._privo2Client.getAccount(
+                    result.privo2ServiceId
+                );
+                displayName =
+                    account.preferred_username ?? account.display_name ?? null;
             }
 
             return {
@@ -3354,6 +3870,20 @@ export class AuthController {
                 );
             }
 
+            if (user.privo2ServiceId) {
+                if (!user.privo2ConsentId || !this._privo2Client) {
+                    return {
+                        success: false,
+                        errorCode: 'not_supported',
+                        errorMessage: 'PRIVO2 consent is unavailable.',
+                    };
+                }
+                await (
+                    await this._privo2Client.getClient()
+                ).resendConsentRequest(user.privo2ConsentId);
+                return { success: true };
+            }
+
             if (!user.privoServiceId) {
                 return {
                     success: false,
@@ -3470,6 +4000,9 @@ export class AuthController {
 
             if (this._privoClient) {
                 const config = await this._config.getPrivoConfiguration();
+                if (config?.registrationProvider === 'privo2') {
+                    return { success: true, allowed: true };
+                }
                 if (config) {
                     const result = await this._privoClient.checkEmail(email);
                     const allowed = result.available && !result.profanity;
@@ -3526,6 +4059,12 @@ export class AuthController {
                 }
 
                 const config = await this._config.getPrivoConfiguration();
+                if (config?.registrationProvider === 'privo2') {
+                    return {
+                        success: true,
+                        allowed: displayName.trim().length > 0,
+                    };
+                }
                 if (config) {
                     const result = await this._privoClient.checkDisplayName(
                         displayName
@@ -4010,6 +4549,10 @@ export interface PrivoSignUpRequestSuccess extends AuthSessionInfo {
      * The URL that the user can be sent to in order to complete the sign up and set their password.
      */
     updatePasswordUrl: string;
+    /** The account exists, but hosted credential setup needs to be retried. */
+    credentialSetupPending?: boolean;
+    /** Identifies the credential setup flow presented to the user. */
+    privoProvider?: 'privo' | 'privo2';
 }
 
 export interface PrivoSignUpRequestFailure {

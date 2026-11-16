@@ -35,6 +35,29 @@ document.title = comId ?? location.hostname;
     },
 })
 export default class AuthApp extends Vue {
+    setupPending = false;
+    setupProcessing = false;
+    setupError = '';
+
+    async resumeCredentialSetup() {
+        this.setupProcessing = true;
+        this.setupError = '';
+        try {
+            const result = await authManager.retryPrivo2CredentialSetup();
+            if (result.success === true) {
+                // Navigate in this tab so recovery never depends on a popup.
+                location.href = result.url;
+            } else {
+                this.setupError = result.errorMessage;
+            }
+        } catch {
+            this.setupError =
+                'Unable to open credential setup. Please try again.';
+        } finally {
+            this.setupProcessing = false;
+        }
+    }
+
     showLogout: boolean = false;
     showRecords: boolean = false;
 
@@ -114,6 +137,10 @@ export default class AuthApp extends Vue {
     }
 
     created() {
+        this.setupPending = authManager.hasPendingPrivo2CredentialSetup;
+        this.$watch('$route', () => {
+            this.setupPending = authManager.hasPendingPrivo2CredentialSetup;
+        });
         this.showLogout = false;
         this.showRecords = false;
         this.showCreateStudio = false;
@@ -136,6 +163,7 @@ export default class AuthApp extends Vue {
             .subscribe((state) => {
                 this.userId = authManager.userId;
                 this.showLogout = authManager.isLoggedIn();
+                this.setupPending = authManager.hasPendingPrivo2CredentialSetup;
 
                 if (state) {
                     this.loadStudios();

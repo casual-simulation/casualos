@@ -31,6 +31,9 @@ model User {
     privoServiceId String? @unique
     privoParentServiceId String?
     privoConsentUrl String?
+    privo2ServiceId String? @unique
+    privo2GranterServiceId String?
+    privo2ConsentId String?
 
     subscriptionInfoId String? @unique @db.Uuid
     subscriptionInfo Subscription? @relation(fields: [subscriptionInfoId], references: [id])

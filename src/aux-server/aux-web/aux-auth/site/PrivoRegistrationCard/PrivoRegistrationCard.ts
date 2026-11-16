@@ -47,6 +47,8 @@ export default class PrivoRegistrationCard extends Vue {
     dateOfBirth: string = null;
     parentEmail: string = null;
     updatePasswordUrl: string = '';
+    credentialSetupPending = false;
+    privoProvider: 'privo' | 'privo2' = 'privo';
     enterDateOfBirth: boolean = true;
 
     errors: FormError[] = [];
@@ -140,6 +142,10 @@ export default class PrivoRegistrationCard extends Vue {
         this.enterDateOfBirth = true;
         this.resetFields();
         this.resetErrors();
+        if (authManager.hasPendingPrivo2CredentialSetup) {
+            this.credentialSetupPending = true;
+            this.privoProvider = 'privo2';
+        }
     }
 
     disabledDates(date: Date) {
@@ -277,6 +283,19 @@ export default class PrivoRegistrationCard extends Vue {
         this.enterDateOfBirth = false;
     }
 
+    async retryCredentialSetup() {
+        this.processing = true;
+        try {
+            const result = await authManager.retryPrivo2CredentialSetup();
+            if (result.success) {
+                this.updatePasswordUrl = result.url;
+                this.credentialSetupPending = false;
+            } else this.errors = getFormErrors(result);
+        } finally {
+            this.processing = false;
+        }
+    }
+
     async register() {
         try {
             this.processing = true;
@@ -386,6 +405,9 @@ export default class PrivoRegistrationCard extends Vue {
 
             if (result.success) {
                 this.updatePasswordUrl = result.updatePasswordUrl;
+                this.credentialSetupPending =
+                    result.credentialSetupPending ?? false;
+                this.privoProvider = result.privoProvider ?? 'privo';
             } else if (result.success === false) {
                 this.errors = getFormErrors(result);
             }

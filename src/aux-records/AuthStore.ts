@@ -79,6 +79,9 @@ export interface AuthStore {
      */
     findUserByPrivoServiceId(serviceId: string): Promise<AuthUser | null>;
 
+    /** Finds a PRIVO2 principal without matching legacy PRIVO identities. */
+    findUserByPrivo2ServiceId(serviceId: string): Promise<AuthUser | null>;
+
     /**
      * Finds a login request for the given user and request ID.
      * @param userId The ID of the user.
@@ -568,6 +571,11 @@ export interface AuthUser {
      * The URL that the user or user's parent can visit to grant consent for the user to use the system.
      */
     privoConsentUrl?: string;
+
+    /** PRIVO2 identifiers. Legacy PRIVO IDs are stored separately. */
+    privo2ServiceId?: string | null;
+    privo2GranterServiceId?: string | null;
+    privo2ConsentId?: string | null;
 
     /**
      * The privacy-related features that the user has access to.

@@ -360,6 +360,20 @@ export class PrismaAuthStore implements AuthStore {
     }
 
     @traced(TRACE_NAME)
+    async findUserByPrivo2ServiceId(serviceId: string): Promise<AuthUser> {
+        if (!serviceId) {
+            return null;
+        }
+        const user = await this._client.user.findUnique({
+            where: {
+                privo2ServiceId: serviceId,
+            },
+        });
+
+        return this._convertToAuthUser(user);
+    }
+
+    @traced(TRACE_NAME)
     async setRevokeAllSessionsTimeForUser(
         userId: string,
         allSessionRevokeTimeMs: number
@@ -450,6 +464,9 @@ export class PrismaAuthStore implements AuthStore {
             privoServiceId: user.privoServiceId as string,
             privoParentServiceId: user.privoParentServiceId as string,
             privoConsentUrl: user.privoConsentUrl,
+            privo2ServiceId: user.privo2ServiceId,
+            privo2GranterServiceId: user.privo2GranterServiceId,
+            privo2ConsentId: user.privo2ConsentId,
             allowPublishData: user.privacyFeatures?.publishData ?? true,
             allowPublicData: user.privacyFeatures?.allowPublicData ?? true,
             allowAI: user.privacyFeatures?.allowAI ?? true,
@@ -500,6 +517,9 @@ export class PrismaAuthStore implements AuthStore {
                 privoServiceId: user.privoServiceId as string,
                 privoParentServiceId: user.privoParentServiceId as string,
                 privoConsentUrl: user.privoConsentUrl,
+                privo2ServiceId: user.privo2ServiceId,
+                privo2GranterServiceId: user.privo2GranterServiceId,
+                privo2ConsentId: user.privo2ConsentId,
                 allowPublishData: user.privacyFeatures?.publishData ?? true,
                 allowPublicData: user.privacyFeatures?.allowPublicData ?? true,
                 allowAI: user.privacyFeatures?.allowAI ?? true,
@@ -1614,6 +1634,9 @@ export class PrismaAuthStore implements AuthStore {
                     | string
                     | undefined,
                 privoConsentUrl: user.privoConsentUrl,
+                privo2ServiceId: user.privo2ServiceId,
+                privo2GranterServiceId: user.privo2GranterServiceId,
+                privo2ConsentId: user.privo2ConsentId,
                 privacyFeatures: {
                     publishData: user.allowPublishData ?? true,
                     allowPublicData: user.allowPublicData ?? true,

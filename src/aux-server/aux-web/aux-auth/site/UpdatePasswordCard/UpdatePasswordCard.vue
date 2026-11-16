@@ -1,11 +1,26 @@
 <template>
     <div>
         <md-card>
-            <md-card-header><div class="md-title">Account Created</div></md-card-header>
+            <md-card-header
+                ><div class="md-title">
+                    {{ credentialSetup ? 'Finish setting up your sign-in' : 'Account Created' }}
+                </div></md-card-header
+            >
             <md-card-content class="input-dialog-content">
                 <div class="md-layout md-gutter">
                     <div class="md-layout-item">
-                        <p>Your account has been created.</p>
+                        <p>
+                            {{
+                                credentialSetup
+                                    ? 'Your registration is saved, but sign-in setup is not finished.'
+                                    : 'Your account has been created.'
+                            }}
+                        </p>
+                        <p v-if="credentialSetup">
+                            Consent approval and sign-in credentials are separate steps. You need
+                            both to use your account. Keep this browser session open until you
+                            finish.
+                        </p>
 
                         <p v-if="requireParentEmail">
                             Ask your parent to check their email for a message from
@@ -24,7 +39,13 @@
                             >. If you don't see it, check your spam folder.
                         </p>
 
-                        <p>Do you want to set your account password?</p>
+                        <p>
+                            {{
+                                credentialSetup
+                                    ? 'Create your sign-in credentials to finish setting up your account.'
+                                    : 'Do you want to set your account password?'
+                            }}
+                        </p>
                     </div>
                 </div>
             </md-card-content>
@@ -32,12 +53,17 @@
                 <md-button
                     :href="updatePasswordUrl"
                     target="_blank"
-                    class="md-primary"
-                    @click="close()"
+                    class="md-raised md-primary"
+                    @click="credentialSetup ? null : close()"
                 >
-                    Set Password
+                    {{ credentialSetup ? 'Create sign-in credentials' : 'Set Password' }}
                 </md-button>
-                <md-button type="button" @click="close()">Go Home</md-button>
+                <md-button v-if="!credentialSetup" type="button" @click="close()"
+                    >Go Home</md-button
+                >
+                <md-button v-else type="button" @click="close()"
+                    >Return to account — setup still required</md-button
+                >
             </md-card-actions>
         </md-card>
     </div>

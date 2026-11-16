@@ -395,7 +395,10 @@ export class AuthManager {
         return optionsResult;
     }
 
-    async logout(revokeSessionKey: boolean = true) {
+    async logout(
+        revokeSessionKey: boolean = true,
+        navigateToProvider: boolean = true
+    ): Promise<string | undefined> {
         let logoutUrl: string;
         if (this.currentSessionKey === this.savedSessionKey) {
             const sessionKey = this.savedSessionKey;
@@ -416,14 +419,15 @@ export class AuthManager {
         this._saveEmail(null);
         this._loginState.next(false);
 
-        if (logoutUrl) {
+        if (logoutUrl && navigateToProvider) {
             if (inIframe()) {
-                console.log('[AuthManager] Logging out in iframe', logoutUrl);
+                console.log('[AuthManager] Logging out in iframe');
                 window.open(logoutUrl);
             } else {
                 location.href = logoutUrl;
             }
         }
+        return logoutUrl;
     }
 
     async listSubscriptions(): Promise<GetSubscriptionStatusSuccess> {
@@ -630,8 +634,40 @@ export class AuthManager {
         return this._login(phoneNumber, 'phone');
     }
 
-    async loginWithPrivo() {
-        return this.client.requestPrivoLogin({});
+    async loginWithPrivo(provider: 'privo' | 'privo2' = 'privo') {
+        return provider === 'privo'
+            ? this.client.requestPrivoLogin({})
+            : this.client.requestOpenIDLogin({ provider });
+    }
+
+    async getPrivoLoginProviders() {
+        const result = await this.client.listOpenIDProviders();
+        if (!result.success) throw new Error('Unable to load sign-in options.');
+        return result.providers.filter(
+            (p): p is { id: 'privo' | 'privo2'; name: string } =>
+                p.id === 'privo' || p.id === 'privo2'
+        );
+    }
+
+    private _credentialSetupKey(userId: string) {
+        return `privo2:credentialSetup:${this.apiEndpoint}:${userId}`;
+    }
+
+    get hasPendingPrivo2CredentialSetup(): boolean {
+        if (!this.isLoggedIn()) return false;
+        const parsed = parseSessionKey(this.currentSessionKey);
+        return (
+            !!parsed &&
+            localStorage.getItem(this._credentialSetupKey(parsed[0])) ===
+                'pending'
+        );
+    }
+
+    async retryPrivo2CredentialSetup() {
+        return this.client.requestPrivo2CredentialSetup(
+            {},
+            { sessionKey: this.currentSessionKey }
+        );
     }
 
     async signUpWithPrivo(info: PrivoSignUpInfo) {
@@ -654,6 +690,7 @@ export class AuthManager {
         });
 
         if (result.success === true) {
+            localStorage.removeItem(this._credentialSetupKey(result.userId));
             this.updateLoginStateFromResult(result);
         }
 
@@ -672,6 +709,12 @@ export class AuthManager {
         });
 
         if (result.success === true) {
+            if (result.privoProvider === 'privo2') {
+                localStorage.setItem(
+                    this._credentialSetupKey(result.userId),
+                    'pending'
+                );
+            }
             this.updateLoginStateFromResult(result);
         }
 

@@ -85,7 +85,7 @@ import type { PublicRecordKeyPolicy } from '@casual-simulation/aux-common/record
 
 declare let ENABLE_SMS_AUTHENTICATION: boolean;
 
-const CURRENT_PROTOCOL_VERSION = 12;
+const CURRENT_PROTOCOL_VERSION = 13;
 
 /**
  * Defines a class that implements the backend for an AuxAuth instance.
@@ -107,6 +107,7 @@ export class AuthHandler implements AuxAuth {
     private _canceledLogins: Subject<void> = new Subject();
     private _providedCodes: Subject<string> = new Subject();
     private _providedHasAccount: Subject<boolean> = new Subject();
+    private _selectedPrivoProvider: 'privo' | 'privo2' = 'privo';
     private _providedPrivoSignUpInfo: Subject<PrivoSignUpInfo> = new Subject();
     private _providedLoginResults: Subject<
         CompleteLoginSuccess | CompleteWebAuthnLoginSuccess
@@ -293,13 +294,22 @@ export class AuthHandler implements AuxAuth {
     }
 
     async logout(): Promise<void> {
-        await authManager.logout();
+        await this._logout(true);
+    }
+
+    async logoutWithRedirect(): Promise<string | undefined> {
+        return await this._logout(false);
+    }
+
+    private async _logout(navigateToProvider: boolean) {
+        const logoutUrl = await authManager.logout(true, navigateToProvider);
         this._loggedIn = false;
         this._loginData = null;
         this._loginStatus.next({});
         this._loginUIStatus.next({
             page: false,
         });
+        return logoutUrl;
     }
 
     async createPublicRecordKey(
@@ -560,8 +570,12 @@ export class AuthHandler implements AuxAuth {
         this._providedCodes.next(code);
     }
 
-    async provideHasAccount(hasAccount: boolean): Promise<void> {
+    async provideHasAccount(
+        hasAccount: boolean,
+        provider: 'privo' | 'privo2' = 'privo'
+    ): Promise<void> {
         console.log('[AuthHandler] Has account:', hasAccount);
+        this._selectedPrivoProvider = provider;
         this._providedHasAccount.next(hasAccount);
     }
 
@@ -960,7 +974,10 @@ export class AuthHandler implements AuxAuth {
             canceled: boolean;
         }
     ): Promise<string> {
-        if (hint === 'sign in') {
+        const providers = await authManager.getPrivoLoginProviders();
+        this._selectedPrivoProvider =
+            providers.length === 1 ? providers[0].id : 'privo';
+        if (hint === 'sign in' && providers.length <= 1) {
             console.log(
                 '[AuthHandler] Hint: sign in. Logging in with Privo...'
             );
@@ -973,6 +990,7 @@ export class AuthHandler implements AuxAuth {
         } else {
             this._loginUIStatus.next({
                 page: 'has_account',
+                privoProviders: providers,
                 privacyPolicyUrl: this.privacyPolicyUrl,
                 codeOfConductUrl: this.codeOfConductUrl,
                 termsOfServiceUrl: this.termsOfServiceUrl,
@@ -997,7 +1015,9 @@ export class AuthHandler implements AuxAuth {
     private async _loginWithPrivo(cancelSignal: {
         canceled: boolean;
     }): Promise<string> {
-        const result = await authManager.loginWithPrivo();
+        const result = await authManager.loginWithPrivo(
+            this._selectedPrivoProvider
+        );
         if (result.success) {
             const requestId = result.requestId;
 
@@ -1051,6 +1071,8 @@ export class AuthHandler implements AuxAuth {
             );
 
             let updatePasswordUrl: string;
+            let credentialSetupPending = false;
+            let privoProvider: 'privo' | 'privo2' = 'privo';
             try {
                 const result = await authManager.signUpWithPrivo({
                     acceptedTermsOfService: info.acceptedTermsOfService,
@@ -1081,6 +1103,8 @@ export class AuthHandler implements AuxAuth {
                     continue;
                 }
                 updatePasswordUrl = result.updatePasswordUrl;
+                credentialSetupPending = result.credentialSetupPending ?? false;
+                privoProvider = result.privoProvider ?? 'privo';
             } catch (err) {
                 console.error(
                     '[AuthHandler] Error signing up with Privo.',
@@ -1110,12 +1134,19 @@ export class AuthHandler implements AuxAuth {
 
             this._loginUIStatus.next({
                 page: 'show_update_password_link',
+                credentialSetupPending,
+                privoProvider,
                 updatePasswordUrl: updatePasswordUrl,
                 providedParentEmail: !!info.parentEmail,
             });
 
             return authManager.userId;
         }
+    }
+
+    async retryPrivo2CredentialSetup(): Promise<string | null> {
+        const result = await authManager.retryPrivo2CredentialSetup();
+        return result.success ? result.url : null;
     }
 
     private _loginWithNewTab(): Promise<string> {

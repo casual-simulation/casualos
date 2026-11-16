@@ -22,3 +22,14 @@ extensions
 infra
 .qodo
 .devdbrc
+
+# Local PRIVO integration material, credentials, and manual test artifacts
+/api-info/
+/src/aux-server/aux-backend/privo2.local.env.json
+/src/aux-server/aux-web/aux-auth/shared/static/ai-permission-test.htm
+/src/aux-server/aux-web/aux-auth/shared/static/publishing-permission-test.htm
+/src/aux-server/aux-web/aux-auth/shared/static/publishing-reader-test.htm
+
+# Private review reports and PDF rendering intermediates
+/output/pdf/
+/tmp/pdfs/

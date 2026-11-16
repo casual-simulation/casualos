@@ -16,104 +16,146 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import z from 'zod';
+import { privo2ConfigurationSchema } from './Privo2Configuration';
 
-export const privoSchema = z.object({
-    gatewayEndpoint: z
-        .string()
-        .nonempty()
-        .describe('The Privo API (aslo called the Gateway) URL.'),
-    publicEndpoint: z.string().nonempty().describe('The Privo Public API URL.'),
-    clientId: z
-        .string()
-        .nonempty()
-        .describe('The Client ID that should be used.'),
-    clientSecret: z
-        .string()
-        .nonempty()
-        .describe('The client secret that should be used.'),
-    redirectUri: z
-        .string()
-        .nonempty()
-        .describe(
-            'The URI that Privo users should be redirected to after a login.'
-        ),
-
-    // verificationIntegration: z
-    //     .string()
-    //     .describe('The verification integration that should be used.')
-    //     .nonempty(),
-    // verificationServiceId: z
-    //     .string()
-    //     .describe('The service ID that should be used.')
-    //     .nonempty(),
-    // verificationSiteId: z
-    //     .string()
-    //     .describe('The site ID that should be used.')
-    //     .nonempty(),
-
-    roleIds: z.object({
-        child: z.string().nonempty().describe('The ID of the child role.'),
-        parent: z.string().nonempty().describe('The ID of the parent role.'),
-        adult: z.string().nonempty().describe('The ID of the adult role.'),
-    }),
-
-    featureIds: z.object({
-        childPrivoSSO: z
+export const privoSchema = z
+    .object({
+        loginProvider: z
+            .enum(['privo', 'privo2', 'both'])
+            .optional()
+            .describe(
+                'The allowed PRIVO sign-in provider. Omitted or both preserves the available provider chooser. Independent of registrationProvider.'
+            ),
+        registrationProvider: z
+            .enum(['privo', 'privo2'])
+            .optional()
+            .describe(
+                'The provider for new registrations. Defaults to privo. Existing accounts retain their provider.'
+            ),
+        privo2: privo2ConfigurationSchema
+            .optional()
+            .describe(
+                'PRIVO2 service configuration. Enable it to support PRIVO2 accounts alongside legacy PRIVO; registrationProvider controls new registrations.'
+            ),
+        gatewayEndpoint: z
             .string()
             .nonempty()
-            .describe('The ID of the child Privo ID Single Sign-On feature'),
-        adultPrivoSSO: z
+            .describe('The Privo API (aslo called the Gateway) URL.'),
+        publicEndpoint: z
             .string()
             .nonempty()
-            .describe('The ID of the adult Privo ID Single Sign-On feature'),
-        joinAndCollaborate: z
+            .describe('The Privo Public API URL.'),
+        clientId: z
             .string()
             .nonempty()
-            .describe('The ID of the "Join & Collaborate" feature.'),
-        publishProjects: z
+            .describe('The Client ID that should be used.'),
+        clientSecret: z
+            .string()
+            .nonempty()
+            .describe('The client secret that should be used.'),
+        redirectUri: z
             .string()
             .nonempty()
             .describe(
-                'The ID of the "Publish Projects" feature. Also known as the "Publish Public Eggs" feature.'
+                'The URI that Privo users should be redirected to after a login.'
             ),
-        projectDevelopment: z
+
+        // verificationIntegration: z
+        //     .string()
+        //     .describe('The verification integration that should be used.')
+        //     .nonempty(),
+        // verificationServiceId: z
+        //     .string()
+        //     .describe('The service ID that should be used.')
+        //     .nonempty(),
+        // verificationSiteId: z
+        //     .string()
+        //     .describe('The site ID that should be used.')
+        //     .nonempty(),
+
+        roleIds: z.object({
+            child: z.string().nonempty().describe('The ID of the child role.'),
+            parent: z
+                .string()
+                .nonempty()
+                .describe('The ID of the parent role.'),
+            adult: z.string().nonempty().describe('The ID of the adult role.'),
+        }),
+
+        featureIds: z.object({
+            childPrivoSSO: z
+                .string()
+                .nonempty()
+                .describe(
+                    'The ID of the child Privo ID Single Sign-On feature'
+                ),
+            adultPrivoSSO: z
+                .string()
+                .nonempty()
+                .describe(
+                    'The ID of the adult Privo ID Single Sign-On feature'
+                ),
+            joinAndCollaborate: z
+                .string()
+                .nonempty()
+                .describe('The ID of the "Join & Collaborate" feature.'),
+            publishProjects: z
+                .string()
+                .nonempty()
+                .describe(
+                    'The ID of the "Publish Projects" feature. Also known as the "Publish Public Eggs" feature.'
+                ),
+            projectDevelopment: z
+                .string()
+                .nonempty()
+                .describe(
+                    'The ID of the "Project Development" feature. Also known as the "Build Private Eggs" feature.'
+                ),
+            buildAIEggs: z
+                .string()
+                .nonempty()
+                .describe('The ID of the "Build AI Eggs" feature.'),
+        }),
+
+        clientTokenScopes: z
             .string()
             .nonempty()
+            .optional()
+            .prefault(
+                'openid profile email user_profile offline_access address additional_info TRUST delete_account service_profile connected_profiles manage_consent consent_url update_password_link'
+            )
+            .describe('The scopes that should be requested for client tokens.'),
+
+        userTokenScopes: z
+            .string()
+            .nonempty()
+            .optional()
+            .prefault(
+                'TRUST openid profile user_profile address service_profile connected_profiles manage_consent email additional_info offline_access delete_account consent_url update_password_link'
+            )
+            .describe('The scopes that should be requested for user tokens.'),
+
+        ageOfConsent: z
+            .int()
+            .positive()
+            .prefault(18)
             .describe(
-                'The ID of the "Project Development" feature. Also known as the "Build Private Eggs" feature.'
+                'The age of consent for users. Users who are under this age must have consent given for them via a parent account.'
             ),
-        buildAIEggs: z
-            .string()
-            .nonempty()
-            .describe('The ID of the "Build AI Eggs" feature.'),
-    }),
-
-    clientTokenScopes: z
-        .string()
-        .nonempty()
-        .optional()
-        .prefault(
-            'openid profile email user_profile offline_access address additional_info TRUST delete_account service_profile connected_profiles manage_consent consent_url update_password_link'
-        )
-        .describe('The scopes that should be requested for client tokens.'),
-
-    userTokenScopes: z
-        .string()
-        .nonempty()
-        .optional()
-        .prefault(
-            'TRUST openid profile user_profile address service_profile connected_profiles manage_consent email additional_info offline_access delete_account consent_url update_password_link'
-        )
-        .describe('The scopes that should be requested for user tokens.'),
-
-    ageOfConsent: z
-        .int()
-        .positive()
-        .prefault(18)
-        .describe(
-            'The age of consent for users. Users who are under this age must have consent given for them via a parent account.'
-        ),
-});
+    })
+    .refine(
+        (c) =>
+            c.registrationProvider !== 'privo2' || c.privo2?.enabled === true,
+        {
+            message:
+                'PRIVO2 registration requires an enabled PRIVO2 configuration.',
+            path: ['registrationProvider'],
+        }
+    )
+    .refine((c) => c.loginProvider !== 'privo2' || c.privo2?.enabled === true, {
+        message: 'PRIVO2 login requires an enabled PRIVO2 configuration.',
+        path: ['loginProvider'],
+    });
 
 export type PrivoConfiguration = z.infer<typeof privoSchema>;
 
@@ -126,6 +168,13 @@ export function parsePrivoConfiguration(
         if (result.success) {
             return result.data as PrivoConfiguration;
         } else {
+            if (
+                config.registrationProvider === 'privo2' ||
+                config.loginProvider !== undefined ||
+                config.privo2?.enabled
+            ) {
+                throw new Error('Invalid PRIVO2 configuration.');
+            }
             console.error('[PrivoConfiguration] Invalid privo config', result);
         }
     }

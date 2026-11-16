@@ -15,6 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+import type { Privo2ClientInterface } from './Privo2Client';
 import type {
     ListedRecord,
     ListedStudioAssignment,
@@ -118,6 +119,7 @@ export interface RecordsControllerConfig {
     config: ConfigurationStore;
     messenger: SystemNotificationMessenger | null;
     privo: PrivoClientInterface | null;
+    privo2?: Privo2ClientInterface | null;
     domainNameValidator: DomainNameValidator | null;
 }
 
@@ -131,6 +133,7 @@ export class RecordsController {
     private _config: ConfigurationStore;
     private _messenger: SystemNotificationMessenger | null;
     private _privo: PrivoClientInterface | null;
+    private _privo2: Privo2ClientInterface | null;
     private _domainNameValidator: DomainNameValidator | null;
 
     constructor(config: RecordsControllerConfig) {
@@ -140,6 +143,7 @@ export class RecordsController {
         this._config = config.config;
         this._messenger = config.messenger;
         this._privo = config.privo;
+        this._privo2 = config.privo2;
         this._domainNameValidator = config.domainNameValidator;
     }
 
@@ -2052,6 +2056,24 @@ export class RecordsController {
 
             const resultMembers: ListedStudioMember[] = await Promise.all(
                 members.map(async (m) => {
+                    if (m.user.privo2ServiceId && this._privo2) {
+                        const account = await this._privo2.getAccount(
+                            m.user.privo2ServiceId
+                        );
+                        return {
+                            studioId: m.studioId,
+                            userId: m.userId,
+                            isPrimaryContact: m.isPrimaryContact,
+                            role: m.role,
+                            user: {
+                                id: m.user.id,
+                                name: account.given_name,
+                                displayName:
+                                    account.preferred_username ??
+                                    account.display_name,
+                            },
+                        };
+                    }
                     if (this._privo && m.user.privoServiceId) {
                         const result = await this._privo.getUserInfo(
                             m.user.privoServiceId
@@ -2200,6 +2222,27 @@ export class RecordsController {
                         addedUserId = user.id;
                     }
                 }
+            }
+
+            if (
+                !addedUserId &&
+                this._privo2 &&
+                (request.addedEmail || request.addedPhoneNumber) &&
+                (await this._privo2.getConfiguration())
+            ) {
+                const account = await (
+                    await this._privo2.getClient()
+                ).lookupAccount({
+                    email: request.addedEmail || undefined,
+                    phone_number: request.addedPhoneNumber || undefined,
+                });
+                if (account)
+                    addedUserId =
+                        (
+                            await this._auth.findUserByPrivo2ServiceId(
+                                account.sub
+                            )
+                        )?.id ?? null;
             }
 
             if (!addedUserId) {

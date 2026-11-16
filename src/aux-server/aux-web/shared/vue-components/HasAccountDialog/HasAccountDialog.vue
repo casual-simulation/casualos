@@ -49,7 +49,18 @@
                 <span>Close</span>
             </md-button>
             <span class="spacer"></span>
-            <md-button type="button" @click="hasAccount(true)" :disabled="processing">
+            <template v-if="status.privoProviders && status.privoProviders.length > 1">
+                <md-button
+                    v-for="provider in status.privoProviders"
+                    :key="provider.id"
+                    type="button"
+                    @click="hasAccount(true, provider.id)"
+                    :disabled="processing"
+                >
+                    Sign In with {{ provider.name }}
+                </md-button>
+            </template>
+            <md-button v-else type="button" @click="hasAccount(true)" :disabled="processing">
                 <md-progress-spinner
                     v-if="processing && hasAccountValue === true"
                     md-mode="indeterminate"

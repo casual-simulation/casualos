@@ -39,9 +39,29 @@ export default class UpdatePasswordLinkDialog extends Vue {
     status: LoginUIUpdatePasswordLink;
 
     showUpdatePassword: boolean = false;
+    setupUrl: string = null;
+    processing = false;
+    retryFailed = false;
+
+    get setupPending() {
+        return this.status.credentialSetupPending && !this.setupUrl;
+    }
+
+    async retryCredentialSetup() {
+        this.processing = true;
+        this.retryFailed = false;
+        try {
+            this.setupUrl = await this._endpoint.retryPrivo2CredentialSetup();
+            this.retryFailed = !this.setupUrl;
+        } catch {
+            this.retryFailed = true;
+        } finally {
+            this.processing = false;
+        }
+    }
 
     get updatePasswordUrl() {
-        return this.status.updatePasswordUrl;
+        return this.setupUrl || this.status.updatePasswordUrl;
     }
 
     get providedParentEmail() {

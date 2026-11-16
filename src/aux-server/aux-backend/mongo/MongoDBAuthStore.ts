@@ -579,6 +579,22 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
         return null;
     }
 
+    async findUserByPrivo2ServiceId(serviceId: string): Promise<AuthUser> {
+        const user = await this._users.findOne({
+            privo2ServiceId: serviceId,
+        });
+
+        if (user) {
+            const { _id, ...rest } = user;
+            return {
+                id: _id,
+                ...rest,
+            };
+        }
+
+        return null;
+    }
+
     async setRevokeAllSessionsTimeForUser(
         userId: string,
         allSessionRevokeTimeMs: number
@@ -660,6 +676,9 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
                     banTimeMs: user.banTimeMs,
                     banReason: user.banReason,
                     privoServiceId: user.privoServiceId,
+                    privo2ServiceId: user.privo2ServiceId,
+                    privo2GranterServiceId: user.privo2GranterServiceId,
+                    privo2ConsentId: user.privo2ConsentId,
                     privoParentServiceId: user.privoParentServiceId,
                     role: user.role,
                 },
@@ -704,6 +723,9 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
             banTimeMs: user.banTimeMs,
             banReason: user.banReason,
             privoServiceId: user.privoServiceId,
+            privo2ServiceId: user.privo2ServiceId,
+            privo2GranterServiceId: user.privo2GranterServiceId,
+            privo2ConsentId: user.privo2ConsentId,
             privoParentServiceId: user.privoParentServiceId,
             role: user.role,
         });
@@ -1530,6 +1552,7 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
                     email: user.email,
                     phoneNumber: user.phoneNumber,
                     privoServiceId: user.privoServiceId,
+                    privo2ServiceId: user.privo2ServiceId,
                 },
             });
         }
@@ -1598,6 +1621,9 @@ export interface MongoDBAuthUser {
     banReason?: AuthUser['banReason'];
 
     privoServiceId?: string;
+    privo2ServiceId?: string | null;
+    privo2GranterServiceId?: string | null;
+    privo2ConsentId?: string | null;
     privoParentServiceId?: string;
 
     privacyFeatures?: PrivacyFeatures;

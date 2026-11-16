@@ -617,7 +617,10 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         return await this._proxy.providePrivoSignUpInfo(info);
     }
 
-    async provideHasAccount(hasAccount: boolean): Promise<void> {
+    async provideHasAccount(
+        hasAccount: boolean,
+        provider?: 'privo' | 'privo2'
+    ): Promise<void> {
         if (!hasValue(this._origin)) {
             return;
         }
@@ -633,7 +636,15 @@ export class AuthEndpointHelper implements AuthHelperInterface {
             return;
         }
 
-        return await this._proxy.provideHasAccount(hasAccount);
+        return provider
+            ? await this._proxy.provideHasAccount(hasAccount, provider)
+            : await this._proxy.provideHasAccount(hasAccount);
+    }
+
+    async retryPrivo2CredentialSetup(): Promise<string | null> {
+        if (!hasValue(this._origin)) return null;
+        if (!this._initialized) await this._init();
+        return await this._proxy.retryPrivo2CredentialSetup();
     }
 
     async cancelLogin() {
@@ -663,6 +674,13 @@ export class AuthEndpointHelper implements AuthHelperInterface {
     }
 
     protected async _logoutCore() {
+        if (this._protocolVersion >= 13) {
+            const logoutUrl = await this._proxy.logoutWithRedirect();
+            if (logoutUrl) {
+                window.location.href = logoutUrl;
+            }
+            return;
+        }
         return await this._proxy.logout();
     }
 
