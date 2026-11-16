@@ -42,7 +42,7 @@
     "dependencies": {
         "commander": "4.0.1",
         "rxjs": "8.0.0-alpha.14",
-        "uuid": "10.0.0",
+        "uuid": "14.0.1",
         "ws": "8.18.0"
     }
 }
