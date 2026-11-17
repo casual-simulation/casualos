@@ -340,13 +340,14 @@ export class AuthHandler implements AuxAuth {
             };
         }
 
+        const sessionKey = this.sessionKey;
         const key = await authManager.client.createRecordKey({
             recordName,
             policy,
         });
         console.log('[AuthHandler] Record key created.');
 
-        if (key.success === false) {
+        if (key.success === false && this.sessionKey === sessionKey) {
             if (
                 key.errorCode === 'not_logged_in' ||
                 key.errorCode === 'unacceptable_session_key' ||

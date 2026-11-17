@@ -91,6 +91,133 @@ describe('AuthManager', () => {
         return require('axios').__getRequests();
     }
 
+    describe('passkey login races', () => {
+        function deferred<T>() {
+            let resolve: (value: T) => void;
+            const promise = new Promise<T>((r) => (resolve = r));
+            return { promise, resolve: (value: T) => resolve(value) };
+        }
+
+        const result = (id: string) => ({
+            success: true as const,
+            userId: id,
+            expireTimeMs: 1000000,
+            sessionKey: formatV1SessionKey(id, 'session', 'secret', 1000000),
+            connectionKey: formatV1ConnectionKey(
+                id,
+                'session',
+                'secret',
+                1000000
+            ),
+        });
+
+        beforeEach(() => {
+            require('@simplewebauthn/browser').startAuthentication.mockReset();
+            require('@simplewebauthn/browser').startAuthentication.mockResolvedValue(
+                {}
+            );
+            jest.spyOn(
+                manager.client,
+                'getWebAuthnLoginOptions'
+            ).mockResolvedValue({
+                success: true,
+                requestId: 'request',
+                options: {},
+            } as any);
+        });
+
+        it.each(['logout', 'new login', 'temporary login'])(
+            'ignores a late passkey completion after %s',
+            async (change) => {
+                const completion = deferred<any>();
+                const started = deferred<void>();
+                jest.spyOn(
+                    manager.client,
+                    'completeWebAuthnLogin'
+                ).mockImplementation(() => {
+                    started.resolve();
+                    return completion.promise;
+                });
+                const pending = manager.loginWithWebAuthn();
+                await started.promise;
+                const newer = result('newer');
+                if (change === 'logout') await manager.logout(false);
+                else if (change === 'new login')
+                    manager.updateLoginStateFromResult(newer);
+                else
+                    manager.useTemporaryKeys(
+                        newer.sessionKey,
+                        newer.connectionKey
+                    );
+                completion.resolve(result('old'));
+                expect(await pending).toMatchObject({
+                    success: false,
+                    errorCode: 'invalid_request',
+                });
+                expect(manager.currentSessionKey).toBe(
+                    change === 'logout' ? null : newer.sessionKey
+                );
+                expect(manager.currentConnectionKey).toBe(
+                    change === 'logout' ? null : newer.connectionKey
+                );
+            }
+        );
+
+        it('does not open the passkey prompt after logout while options were loading', async () => {
+            const options = deferred<any>();
+            jest.mocked(manager.client.getWebAuthnLoginOptions).mockReturnValue(
+                options.promise
+            );
+            const pending = manager.loginWithWebAuthn();
+            await manager.logout(false);
+            options.resolve({ success: true, requestId: 'old', options: {} });
+            expect(await pending).toMatchObject({ success: false });
+            expect(
+                require('@simplewebauthn/browser').startAuthentication
+            ).not.toHaveBeenCalled();
+        });
+
+        it('does not complete a credential prompt that outlives logout', async () => {
+            const credential = deferred<any>();
+            const started = deferred<void>();
+            require('@simplewebauthn/browser').startAuthentication.mockImplementation(
+                () => {
+                    started.resolve();
+                    return credential.promise;
+                }
+            );
+            const complete = jest.spyOn(
+                manager.client,
+                'completeWebAuthnLogin'
+            );
+            const pending = manager.loginWithWebAuthn();
+            await started.promise;
+            await manager.logout(false);
+            credential.resolve({});
+            expect(await pending).toMatchObject({ success: false });
+            expect(complete).not.toHaveBeenCalled();
+        });
+
+        it('keeps the newer passkey attempt when completions arrive out of order', async () => {
+            const old = deferred<any>();
+            const started = deferred<void>();
+            const newer = result('newer');
+            jest.spyOn(manager.client, 'completeWebAuthnLogin')
+                .mockImplementationOnce(() => {
+                    started.resolve();
+                    return old.promise;
+                })
+                .mockResolvedValueOnce(newer as any);
+            const first = manager.loginWithWebAuthn();
+            await started.promise;
+            expect(await manager.loginWithWebAuthn()).toEqual(newer);
+            old.resolve(result('old'));
+            expect(await first).toMatchObject({ success: false });
+            expect(manager.currentSessionKey).toBe(newer.sessionKey);
+            expect(manager.currentConnectionKey).toBe(newer.connectionKey);
+        });
+    });
+
     describe('session persistence', () => {
         const sessionKey = formatV1SessionKey(
             'user',

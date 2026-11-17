@@ -97,6 +97,8 @@ export class AuthManager {
     private _replaceSessionPromise: ReturnType<
         ReturnType<typeof createRecordsClient>['replaceSession']
     >;
+    // Invalidates pending passkey work even when logout leaves the key unchanged.
+    private _authenticationGeneration = 0;
     private _temporarySessionKey: string;
     private _temporaryConnectionKey: string;
 
@@ -320,18 +322,31 @@ export class AuthManager {
     async loginWithWebAuthn(
         useBrowserAutofill?: boolean
     ): Promise<CompleteWebAuthnLoginResult | RequestWebAuthnLoginResult> {
+        const generation = ++this._authenticationGeneration;
+        const sessionKey = this.currentSessionKey;
+        const isCurrent = () =>
+            this._authenticationGeneration === generation &&
+            this.currentSessionKey === sessionKey;
+        const superseded = {
+            success: false as const,
+            errorCode: 'invalid_request' as const,
+            errorMessage: 'This passkey login attempt is no longer current.',
+        };
         const optionsResult = await this.client.getWebAuthnLoginOptions();
+        if (!isCurrent()) return superseded;
         if (optionsResult.success === true) {
             try {
                 const response = await startAuthentication(
                     optionsResult.options,
                     useBrowserAutofill
                 );
+                if (!isCurrent()) return superseded;
                 const result = await this.client.completeWebAuthnLogin({
                     requestId: optionsResult.requestId,
                     response,
                 });
 
+                if (!isCurrent()) return superseded;
                 if (result.success === true) {
                     this.updateLoginStateFromResult(result);
                 }
@@ -365,6 +380,7 @@ export class AuthManager {
 
     useTemporaryKeys(sessionKey: string, connectionKey: string) {
         if (sessionKey && connectionKey) {
+            this._authenticationGeneration++;
             console.log('[AuthManager] Using temporary keys.');
             const [userId, sessionId] = parseSessionKey(sessionKey);
             this._temporarySessionKey = sessionKey;
@@ -412,6 +428,7 @@ export class AuthManager {
     }
 
     async logout(revokeSessionKey: boolean = true) {
+        this._authenticationGeneration++;
         let logoutUrl: string;
         if (this.currentSessionKey === this.savedSessionKey) {
             const sessionKey = this.savedSessionKey;
@@ -819,6 +836,7 @@ export class AuthManager {
     }
 
     set savedSessionKey(value: string) {
+        this._authenticationGeneration++;
         if (!value) {
             localStorage.removeItem(SESSION_KEY);
         } else {
