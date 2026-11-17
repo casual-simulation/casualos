@@ -8722,6 +8722,11 @@ Object {
                         },
                         "type": "object",
                       },
+                      "instUpdateCompactionThreshold": Object {
+                        "description": "Compact public and temporary branch updates on join at this count. Defaults to 100. Zero disables compaction.",
+                        "optional": true,
+                        "type": "number",
+                      },
                       "numberOfInstUpdatesToKeep": Object {
                         "description": "The number of branch updates that should be kept in permanent storage for each branch. Older updates beyond this count are deleted whenever a branch is merged into permanent storage. If omitted, then all updates are kept.",
                         "optional": true,
@@ -21675,6 +21680,11 @@ Object {
                           },
                         },
                         "type": "object",
+                      },
+                      "instUpdateCompactionThreshold": Object {
+                        "description": "Compact public and temporary branch updates on join at this count. Defaults to 100. Zero disables compaction.",
+                        "optional": true,
+                        "type": "number",
                       },
                       "numberOfInstUpdatesToKeep": Object {
                         "description": "The number of branch updates that should be kept in permanent storage for each branch. Older updates beyond this count are deleted whenever a branch is merged into permanent storage. If omitted, then all updates are kept.",
