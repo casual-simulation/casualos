@@ -788,7 +788,10 @@ export class InstRecordsClient {
         updates: string[],
         updateId: number
     ) {
-        if (this._watchedBranches.has(branch) && !this.connection.isConnected) {
+        if (
+            this._watchedBranches.has(branchKey(recordName, inst, branch)) &&
+            !this.connection.isConnected
+        ) {
             // Skip sending the atoms because we're watching the branch and we're not connected.
             // This means that the new atoms are saved in the sent atoms list so they will be resent
             // when we reconnect.

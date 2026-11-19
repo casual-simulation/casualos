@@ -149,8 +149,18 @@ export class OpenAIChatInterface implements AIChatInterface {
                         name: m.author,
                         function_call: m.functionCall,
                     })),
-                    temperature: request.temperature,
-                    top_p: request.topP,
+                    // GPT-6 reasoning requests reject sampling controls. An
+                    // explicit non-reasoning configuration can still use them.
+                    temperature:
+                        /^gpt-6(?:[.-]|$)/.test(request.model) &&
+                        this._additionalProperties.reasoning_effort !== 'none'
+                            ? undefined
+                            : request.temperature,
+                    top_p:
+                        /^gpt-6(?:[.-]|$)/.test(request.model) &&
+                        this._additionalProperties.reasoning_effort !== 'none'
+                            ? undefined
+                            : request.topP,
                     presence_penalty: request.presencePenalty,
                     frequency_penalty: request.frequencyPenalty,
                     stop: request.stopWords,

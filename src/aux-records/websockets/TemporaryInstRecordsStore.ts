@@ -68,6 +68,20 @@ export interface TemporaryInstRecordsStore extends LockStore {
     ): Promise<BranchUpdates | null>;
 
     /**
+     * Atomically replaces a matching snapshot prefix with a merged update.
+     * Appended updates are preserved. Returns false if another compaction,
+     * deletion, or expiration changed the prefix. Readers must never see a gap.
+     * Size counters are adjusted by the UTF-8 byte difference in the same operation.
+     */
+    compactUpdates(
+        recordName: string | null,
+        inst: string,
+        branch: string,
+        snapshot: Pick<BranchUpdates, 'updates' | 'timestamps'>,
+        mergedUpdate: string
+    ): Promise<boolean>;
+
+    /**
      * Adds the given updates to this temporary store.
      * @param recordName The name of the record.
      * @param inst The name of the inst.

@@ -374,6 +374,62 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
     }
 
     @traced(TRACE_NAME, SPAN_OPTIONS)
+    async compactUpdates(
+        recordName: string | null,
+        inst: string,
+        branch: string,
+        snapshot: Pick<BranchUpdates, 'updates' | 'timestamps'>,
+        mergedUpdate: string
+    ): Promise<boolean> {
+        if (snapshot.updates.length < 2) {
+            return false;
+        }
+        const expected = snapshot.updates.map((update, i) =>
+            snapshot.timestamps[i] === -1
+                ? update
+                : `${update}:${snapshot.timestamps[i]}`
+        );
+        const delta =
+            Buffer.byteLength(mergedUpdate, 'utf8') -
+            snapshot.updates.reduce(
+                (size, update) => size + Buffer.byteLength(update, 'utf8'),
+                0
+            );
+        // Redis serializes this script with reads, appends and other compactors.
+        // LSET/LTRIM and INCRBY preserve the existing expiration times.
+        const result = await this._redis.eval(
+            `
+            local count = #ARGV - 2
+            local current = redis.call('LRANGE', KEYS[1], 0, count - 1)
+            if #current ~= count then return 0 end
+            for i = 1, count do
+                if current[i] ~= ARGV[i + 2] then return 0 end
+            end
+            redis.call('LSET', KEYS[1], count - 1, ARGV[1])
+            redis.call('LTRIM', KEYS[1], count - 1, -1)
+            redis.call('INCRBY', KEYS[2], ARGV[2])
+            redis.call('INCRBY', KEYS[3], ARGV[2])
+            return 1
+        `,
+            {
+                keys: [
+                    this._getUpdatesKey(recordName, inst, branch),
+                    this._getInstSizeKey(recordName, inst),
+                    this._getBranchSizeKey(recordName, inst, branch),
+                ],
+                arguments: [
+                    `${mergedUpdate}:${
+                        snapshot.timestamps[snapshot.timestamps.length - 1]
+                    }`,
+                    String(delta),
+                    ...expected,
+                ],
+            }
+        );
+        return result === 1;
+    }
+
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async addUpdates(
         recordName: string,
         inst: string,
