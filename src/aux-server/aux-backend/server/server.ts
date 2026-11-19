@@ -50,6 +50,7 @@ import type { ViewParams } from '@casual-simulation/aux-records/ViewTemplateRend
 import { renderToStringAsync } from 'preact-render-to-string';
 import type { ServerBuilder } from 'aux-backend/shared/ServerBuilder';
 import { conditional } from './middleware';
+import { getWebsocketClientIp } from './WebsocketClientIp';
 
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -290,7 +291,7 @@ export class Server {
         ) {
             this._wsServer.on('connection', (socket, req) => {
                 const id = websocketMessenger.registerConnection(socket);
-                const ip = req.socket.remoteAddress;
+                const ip = getWebsocketClientIp(req, this._backendApp);
                 const origin = req.headers.origin;
                 console.log('[Server] Got connection:', id, ip);
 
