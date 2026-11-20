@@ -23,6 +23,7 @@ export * from './RecordsStore';
 export * from './Utils';
 export * from './DataRecordsController';
 export * from './DataRecordsStore';
+export * from './DataRecordsFilters';
 
 export * from './FileRecordsController';
 export * from './FileRecordsStore';
